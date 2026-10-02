@@ -726,6 +726,7 @@ impl<'a, Message: Clone + 'a> From<Choice<'a, Message>> for Element<'a, Message>
                 .style(style::container::field_box),
             move || menu(),
         )
+        .edge()
         .into();
         let field = match choice.tip {
             Some(t) => tip(field, t, tooltip::Position::Bottom),

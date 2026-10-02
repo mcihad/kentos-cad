@@ -12,17 +12,19 @@
 //! ```
 
 use iced::widget::text::IntoFragment;
-use iced::widget::{button, container, row, space, text_input, tooltip};
+use iced::widget::{button, container, row, space, tooltip};
 use iced::{Center, Element, Fill};
 
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::theme::typography;
-use crate::widget::{Tip, tip, vertical_divider};
+use crate::theme::{metrics, typography};
+use crate::widget::{InputField, Tip, tip, vertical_divider};
 
 /// Araç çubuğu satırının yüksekliği, 12 piksellik gövde metninde; yazı
-/// boyutuyla büyür ([`typography::scaled`]).
+/// boyutuyla büyür ([`typography::scaled`]). Öğeleri satır içi kontrol
+/// yüksekliğindedir ([`metrics::inline`]): arama kutusu, düğmeler ve
+/// yanlarına konan seçim kutuları aynı boydadır.
 pub const HEIGHT: f32 = 30.0;
 
 /// Araç çubuğu.
@@ -42,9 +44,11 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
 
     /// Yalnızca ikonlu düğme; `on_press` yoksa devre dışıdır.
     pub fn button(self, glyph: Icon, description: &'a str, on_press: Option<Message>) -> Self {
-        let content = button(icon(glyph))
+        let content = button(container(icon(glyph)).center(Fill))
             .on_press_maybe(on_press)
-            .padding([3, 5])
+            .padding(0)
+            .width(metrics::inline() + 4.0)
+            .height(metrics::inline())
             .style(style::button::flat);
 
         self.push(tip(
@@ -65,10 +69,12 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
             button(
                 row![icon(glyph), label::body(text)]
                     .spacing(6)
-                    .align_y(Center),
+                    .align_y(Center)
+                    .height(Fill),
             )
             .on_press_maybe(on_press)
-            .padding([3, 8])
+            .padding([0, 8])
+            .height(metrics::inline())
             .style(style::button::flat),
         )
     }
@@ -92,43 +98,32 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
                     label::body(text)
                 ]
                 .spacing(6)
-                .align_y(Center),
+                .align_y(Center)
+                .height(Fill),
             )
             .on_press(on_press)
-            .padding([3, 8])
+            .padding([0, 8])
+            .height(metrics::inline())
             .style(style::button::tool(active)),
         )
     }
 
-    /// Arama kutusu.
+    /// Arama kutusu: doluyken × ile temizlenir (`on_input` boş metni alır).
     pub fn search(
         self,
         value: &'a str,
         placeholder: &'a str,
         on_input: impl Fn(String) -> Message + 'a,
     ) -> Self {
+        let clear = on_input(String::new());
         let field = container(
-            row![
-                icon(Icon::Search).size(14.0).tone(Tone::Muted),
-                text_input(placeholder, value)
-                    .on_input(on_input)
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding([2, 0])
-                    .style(style::field::bare_input),
-            ]
-            .spacing(6)
-            .align_y(Center),
+            InputField::new(placeholder, value)
+                .on_input(on_input)
+                .icon(Icon::Search)
+                .clear(clear)
+                .inline(),
         )
-        .padding([0, 8])
-        .width(typography::scaled(220.0))
-        .height(typography::scaled(24.0))
-        .align_y(Center)
-        .style(|theme| {
-            let mut container = style::container::badge(theme);
-            container.background = Some(crate::theme::Tokens::of(theme).field.into());
-            container
-        });
+        .width(typography::scaled(220.0));
 
         self.push(field)
     }

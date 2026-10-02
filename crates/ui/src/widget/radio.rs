@@ -202,7 +202,7 @@ fn dot_side() -> f32 {
 /// Radyo işareti: halka, seçiliyse içinde vurgu renginde nokta.
 fn dot<'a, Message: 'a>(selected: bool, enabled: bool) -> Element<'a, Message> {
     let side = dot_side();
-    let inner = (side * 0.45).round();
+    let inner = inner_side(side);
 
     container(
         container(space::horizontal())
@@ -244,6 +244,16 @@ fn dot<'a, Message: 'a>(selected: bool, enabled: bool) -> Element<'a, Message> {
     .into()
 }
 
+/// Seçili noktanın çapı: halkanın yaklaşık %45'i, halkayla aynı teklikte
+/// (ikisi de tek ya da ikisi de çift piksel). Böylece iki yandaki boşluk
+/// tam pikseldir ve nokta her yazı boyutunda halkanın tam ortasında durur
+/// (17 piksellik halkada 8 piksellik nokta yarım piksel kayardı).
+fn inner_side(side: f32) -> f32 {
+    let gap = ((side - side * 0.45) / 2.0).round();
+
+    (side - 2.0 * gap).max(2.0)
+}
+
 /// Seçenek satırı: üzerine gelince hafif zemin.
 fn option(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);
@@ -260,5 +270,22 @@ fn option(theme: &Theme, status: Status) -> Style {
         },
         shadow: iced::Shadow::default(),
         snap: true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::inner_side;
+
+    #[test]
+    fn the_dot_sits_in_the_middle_of_its_ring() {
+        for side in 12..=24 {
+            let side = side as f32;
+            let inner = inner_side(side);
+            let gap = (side - inner) / 2.0;
+
+            assert_eq!(gap, gap.round(), "{side} piksellik halkada {inner}");
+            assert!((inner / side - 0.45).abs() < 0.1, "{side}: {inner}");
+        }
     }
 }

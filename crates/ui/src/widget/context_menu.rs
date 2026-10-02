@@ -566,6 +566,8 @@ pub struct ContextMenu<'a, Message> {
     controlled: Option<(Option<Point>, Message)>,
     /// Klavyeyle açılabilmesi için kimliği ([`open_menu`]).
     id: Option<widget::Id>,
+    /// Menü düğmesinin durumu kenarla gösterilir (kendi zemini olan alan).
+    edge: bool,
 }
 
 /// Menüyü açan tıklama ve menünün yeri.
@@ -598,6 +600,7 @@ impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
             open: None,
             controlled: None,
             id: None,
+            edge: false,
         }
     }
 
@@ -661,6 +664,14 @@ impl<'a, Message: Clone + 'a> MenuButton<'a, Message> {
     /// harf ipucu).
     pub fn id(mut self, id: impl Into<widget::Id>) -> Self {
         self.0.id = Some(id.into());
+        self
+    }
+
+    /// Kendi zemini ve kenarı olan içerik (ör. açılır alan): üzerine
+    /// gelince belirgin kenar, menü açıkken vurgu kenarı içeriğin üstüne
+    /// çizilir; arkadaki hafif zemin çizilmez (alanın zemini onu örterdi).
+    pub fn edge(mut self) -> Self {
+        self.0.edge = true;
         self
     }
 }
@@ -902,7 +913,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        if self.trigger == Trigger::Primary {
+        if self.trigger == Trigger::Primary && !self.edge {
             let open = tree.state.downcast_ref::<State>().anchor.is_some();
             let t = Tokens::of(theme);
 
@@ -936,6 +947,34 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             cursor,
             viewport,
         );
+
+        if self.trigger == Trigger::Primary && self.edge {
+            let open = tree.state.downcast_ref::<State>().anchor.is_some();
+            let t = Tokens::of(theme);
+            let edge = if open {
+                Some(t.accent_line())
+            } else if cursor.is_over(layout.bounds()) {
+                Some(t.border_strong())
+            } else {
+                None
+            };
+
+            if let Some(color) = edge {
+                renderer::Renderer::fill_quad(
+                    renderer,
+                    renderer::Quad {
+                        bounds: layout.bounds(),
+                        border: iced::Border {
+                            color,
+                            width: 1.0,
+                            radius: crate::style::button::radius().into(),
+                        },
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(iced::Color::TRANSPARENT),
+                );
+            }
+        }
     }
 
     fn operate(

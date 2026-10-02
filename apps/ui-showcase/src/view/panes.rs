@@ -6,8 +6,7 @@
 
 use iced::widget::text::Wrapping;
 use iced::widget::{
-    Column, button, column, container, pick_list, row, scrollable, slider, space, text_input,
-    tooltip,
+    Column, button, column, container, row, scrollable, slider, space, text_input, tooltip,
 };
 use iced::{Center, Color, Element, Fill, Right, Theme};
 
@@ -22,7 +21,6 @@ use kentos_ui::widget::{
     ColorPicker, Legend, NumberInput, Tip, ToolWindow, horizontal_divider, tip,
 };
 
-use super::LayerChoice;
 use crate::app::Showcase;
 use crate::layer_tree::NodeId;
 use crate::message::{Keyword, Message, Pane};
@@ -349,18 +347,7 @@ impl Showcase {
             return ToolWindow::new(Pane::Style.title(), space::vertical().height(0));
         };
 
-        let choices = self.layer_choices();
-        let current = choices.get(index).cloned();
-
-        let picker = pick_list(choices, current, |choice: LayerChoice<'_>| {
-            Message::LayerActivated(choice.index)
-        })
-        .font(typography::ui())
-        .text_size(typography::body())
-        .padding([2, 8])
-        .width(Fill)
-        .style(style::field::pick_list)
-        .menu_style(style::field::menu);
+        let picker = self.layer_select(index, Message::LayerActivated);
 
         let swatches = COLORS.chunks(5).map(|colors| {
             row(colors.iter().map(|&color| {

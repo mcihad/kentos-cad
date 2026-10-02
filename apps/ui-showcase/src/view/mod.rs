@@ -38,22 +38,20 @@ mod ribbon;
 mod sheet;
 mod status;
 
-use std::fmt;
-
 use iced::widget::{Column, column, container, stack};
 use iced::{Color, Element, Fill, keyboard};
 
 use kentos_ui::icon::Icon;
 use kentos_ui::spatial::model_space::Backdrop;
-use kentos_ui::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
+use kentos_ui::spatial::{ModelSpace, Tool, ViewCube, format};
 use kentos_ui::style;
 use kentos_ui::theme::typography::{self, Family, Mono, Typography};
 use kentos_ui::theme::{Accent, Mode};
 use kentos_ui::widget::command_line::{self, Prompt};
 use kentos_ui::widget::docking::Side;
 use kentos_ui::widget::{
-    Banner, CommandLine, Compare, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar,
-    NavigationBar, RadialMenu, Toaster, overlay, status_bar,
+    Banner, Choice, CommandLine, Compare, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar,
+    NavigationBar, RadialMenu, Select, Toaster, overlay, status_bar,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
@@ -519,35 +517,20 @@ impl Showcase {
         }
     }
 
-    /// Katman seçim kutularının seçenekleri.
-    fn layer_choices(&self) -> Vec<LayerChoice<'_>> {
-        self.layers
-            .iter()
-            .enumerate()
-            .map(|(index, layer)| LayerChoice::new(index, layer))
-            .collect()
-    }
-}
-
-/// Katman seçim kutusunun seçeneği.
-#[derive(Debug, Clone, PartialEq)]
-struct LayerChoice<'a> {
-    index: usize,
-    name: &'a str,
-}
-
-impl<'a> LayerChoice<'a> {
-    fn new(index: usize, layer: &'a Layer) -> Self {
-        Self {
-            index,
-            name: &layer.name,
-        }
-    }
-}
-
-impl fmt::Display for LayerChoice<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name)
+    /// Katman seçim kutusu: katmanlar renk örnekleriyle, uzun listede
+    /// aranabilir.
+    fn layer_select<'a>(
+        &'a self,
+        selected: usize,
+        on_pick: impl Fn(usize) -> Message + 'a,
+    ) -> Select<'a, Message> {
+        Select::new(
+            self.layers
+                .iter()
+                .map(|layer| Choice::new(layer.name.clone()).color(layer.color)),
+            (selected < self.layers.len()).then_some(selected),
+            on_pick,
+        )
     }
 }
 

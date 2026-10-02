@@ -38,7 +38,7 @@ use crate::attribute::text;
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::theme::typography;
+use crate::theme::{metrics, typography};
 use crate::widget::dropdown::{Dropdown, Reaction};
 use crate::widget::elided::Elided;
 use crate::widget::swatch;
@@ -164,6 +164,7 @@ pub struct Select<'a, Message> {
     placeholder: String,
     searchable: Option<bool>,
     borderless: bool,
+    inline: bool,
 }
 
 impl<'a, Message: Clone + 'a> Select<'a, Message> {
@@ -182,6 +183,7 @@ impl<'a, Message: Clone + 'a> Select<'a, Message> {
             placeholder: "Seçin".to_owned(),
             searchable: None,
             borderless: false,
+            inline: false,
         }
     }
 
@@ -210,9 +212,18 @@ impl<'a, Message: Clone + 'a> Select<'a, Message> {
         self
     }
 
-    /// Kenarsız görünüm: özellik ızgarası hücreleri için.
+    /// Kenarsız görünüm: özellik ızgarası hücreleri için; satır içi
+    /// yükseklikte, kenarı üzerine gelince çıkar.
     pub fn borderless(mut self) -> Self {
         self.borderless = true;
+        self.inline = true;
+        self
+    }
+
+    /// Satır içi yükseklik ([`metrics::inline`]): araç çubuğunda ve
+    /// tablonun üstünde, yanındaki arama kutusuyla aynı boyda.
+    pub fn inline(mut self) -> Self {
+        self.inline = true;
         self
     }
 }
@@ -228,6 +239,7 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             placeholder,
             searchable,
             borderless,
+            inline,
         } = select;
 
         // Panelin genişliği açıkça verilir: esnek satırlar paneli pencere
@@ -286,12 +298,20 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             style::container::field_box
         };
 
+        // Yanındaki metin girişleriyle aynı boyda: kontrol yüksekliği;
+        // hücredeki kenarsız kutu satır içi kontrol yüksekliğinde.
         let anchor = container(
             row![shown, icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted)]
                 .spacing(6)
                 .align_y(Center),
         )
-        .padding([3, if borderless { 4 } else { 8 }])
+        .padding([0, if borderless { 6 } else { 8 }])
+        .height(if inline {
+            metrics::inline()
+        } else {
+            metrics::control()
+        })
+        .align_y(Center)
         .width(Fill)
         .style(anchor_style);
 
@@ -331,6 +351,11 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
         };
 
         let dropdown = Dropdown::new(anchor, String::new, panel, reduce).match_width();
+        let dropdown = if borderless {
+            dropdown.edge_cell()
+        } else {
+            dropdown.edge()
+        };
 
         if searchable {
             dropdown.focus(search_id).into()

@@ -37,12 +37,13 @@ use crate::attribute::text as search;
 use crate::icon::{Icon, icon};
 use crate::style;
 use crate::style::button::radius;
-use crate::theme::{Tokens, typography};
+use crate::theme::{Tokens, metrics, typography};
 use crate::widget::dropdown::propagate;
 
-/// Etiket satırının yüksekliği, iç boşluk ve aralık.
-const LINE: f32 = 22.0;
-const PAD: f32 = 4.0;
+/// İç boşluk ve satırlar arası aralık. Tek satırlık kutu kontrol
+/// yüksekliğindedir ([`metrics::control`]): yanındaki metin girişi ve seçim
+/// kutusuyla aynı boyda.
+const PAD: f32 = 3.0;
 const GAP: f32 = 4.0;
 /// Yazı alanının en az genişliği.
 const FIELD: f32 = 90.0;
@@ -96,7 +97,7 @@ impl<'a, Message: Clone + 'a> ChipInput<'a, Message> {
                     .align_y(Center),
                 )
                 .padding([0, 2])
-                .height(typography::scaled(LINE) - 2.0)
+                .height(line() - 2.0)
                 .align_y(Center)
                 .style(chip_style)
                 .into()
@@ -201,6 +202,11 @@ fn field<'a>(placeholder: &str, content: &str) -> TextInput<'a, Edit, Theme, Ren
         .style(style::field::bare_input)
 }
 
+/// Etiket satırının yüksekliği: tek satırlık kutu kontrol yüksekliğinde.
+fn line() -> f32 {
+    metrics::control() - 2.0 * PAD
+}
+
 /// Etiketin zemini.
 fn chip_style(theme: &Theme) -> container::Style {
     let t = Tokens::of(theme);
@@ -256,7 +262,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ChipInput<'a,
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
         self.build(tree.state.downcast_ref::<State>());
 
-        let line = typography::scaled(LINE);
+        let line = line();
         let width = limits.resolve(self.width, Length::Shrink, Size::ZERO).width;
         let inner = (width - 2.0 * PAD).max(0.0);
         let (fields, tags) = tree.children.split_at_mut(2);

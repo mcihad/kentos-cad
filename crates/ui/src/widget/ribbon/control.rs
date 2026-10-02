@@ -14,6 +14,7 @@ use crate::style;
 use crate::style::button::Ribbon as State;
 use crate::theme::{Mode, brand, typography};
 use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
+use crate::widget::hover_edge::hover_edge;
 use crate::widget::key_tip::{KeyTip, Place, key_tip};
 use crate::widget::{Tip, brand_mark, tip};
 
@@ -408,7 +409,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             Form::Large => {
                 let width = self.width(form);
                 let top = (content_height() * 0.54).round();
-                column![
+                let column = column![
                     key_tip(
                         button(container(self.glyph(form)).center_x(Fill).padding(Padding {
                             top: typography::scaled(6.0),
@@ -444,8 +445,10 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                         Place::Icon(width / 2.0),
                     ),
                 ]
-                .width(width)
-                .into()
+                .width(width);
+
+                // The whole button is outlined while hovered; each part lights on its own.
+                hover_edge(column).into()
             }
             Form::Small | Form::Icon => {
                 let main: Element<'a, Message> = if form == Form::Small {
@@ -476,7 +479,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                 } else {
                     Place::Icon(SMALL_LEFT + ICON / 2.0)
                 };
-                row![
+                hover_edge(row![
                     key_tip(main, face_tip, main_place),
                     key_tip(
                         with_id(MenuButton::new(
@@ -488,7 +491,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                         arrow_tip,
                         Place::Icon(ARROW_PAD + CHEVRON / 2.0),
                     ),
-                ]
+                ])
                 .into()
             }
         }

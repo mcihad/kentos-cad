@@ -49,11 +49,9 @@ use iced::{
 use crate::attribute::number;
 use crate::style;
 use crate::style::button::radius;
-use crate::theme::{Mode, Tokens, typography};
+use crate::theme::{Mode, Tokens, metrics, typography};
 use crate::widget::dropdown::propagate;
 
-/// Alanın yüksekliği, 12 piksellik gövde metnine göre.
-const HEIGHT: f32 = 26.0;
 /// Alanın iç boşluğu ve öndeki etiketin en az genişliği.
 const PAD: f32 = 7.0;
 const HANDLE: f32 = 18.0;
@@ -378,6 +376,8 @@ pub struct NumberInput<'a, Message> {
     step: f64,
     decimals: Option<usize>,
     width: Length,
+    /// Satır içi yükseklik (tablo ve özellik hücresi).
+    inline: bool,
     /// Öndeki etiket, düzenlenen metin ve birim.
     parts: [Element<'a, Edit>; 3],
 }
@@ -396,6 +396,7 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
             step: 1.0,
             decimals: None,
             width: Length::Fill,
+            inline: false,
             parts: [text("").into(), field("").into(), text("").into()],
         }
     }
@@ -441,6 +442,21 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
         self
+    }
+
+    /// Satır içi yükseklik: tablo ve özellik hücresine sığar
+    /// ([`metrics::inline`]).
+    pub fn inline(mut self) -> Self {
+        self.inline = true;
+        self
+    }
+
+    fn height(&self) -> f32 {
+        if self.inline {
+            metrics::inline()
+        } else {
+            metrics::control()
+        }
     }
 
     /// Sürükleme bitince gönderilen mesaj (ör. geri alma adımını kapatmak
@@ -560,13 +576,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
     }
 
     fn size(&self) -> Size<Length> {
-        Size::new(self.width, Length::Fixed(typography::scaled(HEIGHT)))
+        Size::new(self.width, Length::Fixed(self.height()))
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
         self.build(tree.state.downcast_ref::<State>());
 
-        let height = typography::scaled(HEIGHT);
+        let height = self.height();
         let size = limits.resolve(self.width, height, Size::new(0.0, height));
         let children = &mut tree.children;
 
@@ -879,6 +895,15 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
             },
             Background::Color(t.field),
         );
+
+        // Sürüklerken alt kenarda verniyer ölçeği imleçle birlikte kayar.
+        if let (Some(press), true) = (state.press, scrubbing) {
+            let offset = cursor
+                .position()
+                .map_or(0.0, |position| position.x - press.origin.x);
+
+            crate::widget::scrub::vernier(renderer, bounds.shrink(1.0), offset, t.accent);
+        }
 
         let mut parts = layout.children();
 
@@ -1379,9 +1404,8 @@ mod interaction {
     use iced::widget::container;
     use iced::{Element, Point, Size};
 
-    use super::{HEIGHT, NumberInput, units};
+    use super::{NumberInput, units};
     use crate::snapshot::{Input, Snapshot};
-    use crate::theme::typography;
 
     #[derive(Debug, Clone)]
     enum Message {
@@ -1425,7 +1449,7 @@ mod interaction {
         };
         let mut input = |form: &mut Form, input| snapshot.input(form, view, &mut update, input);
 
-        let y = 10.0 + typography::scaled(HEIGHT) / 2.0;
+        let y = 10.0 + crate::theme::metrics::control() / 2.0;
         let field = Point::new(150.0, y);
         let close = |value: f64, expected: f64| (value - expected).abs() < 1e-9;
 

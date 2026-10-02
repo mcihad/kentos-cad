@@ -148,8 +148,14 @@ pub enum Demo {
     SheetLayer(usize),
     SheetHeight(String),
     Inspector(inspector::Event),
+    /// Çoklu seçim örneğinin inceleyicisi: üç yapı.
+    Building(inspector::Event),
     QueryEdited(Edit),
     ModeSelected(SelectionMode),
+    /// Parçalı seçim örnekleri: örneğin sırası ve seçilen parça.
+    Segment(usize, usize),
+    /// Metin alanı örnekleri: alanın sırası ve yazılan.
+    FieldText(usize, String),
     /// Tablo sütununa göre sırala ya da yönü çevir.
     Sorted(usize),
     SearchChanged(String),
@@ -434,8 +440,19 @@ pub struct Gallery {
     /// İnceleyicide gösterilen kayıt.
     pub record: usize,
     pub inspector: inspector::State,
+    /// Çoklu seçim örneği: üç yapının ortak alanları, değerleri ve
+    /// değerleri farklı olanlar.
+    pub building: inspector::State,
+    pub building_schema: Vec<Field>,
+    pub building_values: Vec<Value>,
+    pub building_varied: std::collections::BTreeSet<usize>,
     pub query: Query,
     pub mode: SelectionMode,
+    /// Parçalı seçim örneklerinin seçili parçaları (görünüm, taban harita,
+    /// hizalama, senaryo); senaryoda `None` çoklu seçimde farklı değerdir.
+    pub segments: [Option<usize>; 4],
+    /// Metin alanı örneklerinin metinleri: arama, Y, X, ada/parsel, iki hücre.
+    pub fields: [String; 6],
     pub sort: Option<(usize, SortOrder)>,
     pub search: String,
 
@@ -826,6 +843,14 @@ impl Default for Gallery {
                 inspector.inspect(Some(0));
                 inspector
             },
+            building: {
+                let mut inspector = inspector::State::new();
+                inspector.inspect(Some(1));
+                inspector
+            },
+            building_schema: model_schema(),
+            building_values: model_values(),
+            building_varied: [0, 2, 4, 5, 7].into_iter().collect(),
             query: Query {
                 conditions: vec![Condition {
                     field: 2,
@@ -835,6 +860,15 @@ impl Default for Gallery {
                 ..Query::default()
             },
             mode: SelectionMode::New,
+            segments: [Some(1), Some(0), Some(0), None],
+            fields: [
+                "Kadıköy".to_owned(),
+                "412350.250".to_owned(),
+                "4523180.500".to_owned(),
+                "1204/7a".to_owned(),
+                "Kuleli İş Merkezi".to_owned(),
+                "96.5".to_owned(),
+            ],
             sort: None,
             search: String::new(),
             picked_date: Date::new(2026, 10, 29),
@@ -1000,10 +1034,34 @@ impl Gallery {
                         "Galeri: #{object} nesnesine gitme Giriş sekmesindeki nesne inceleyicide çalışır."
                     ));
                 }
-                Some(inspector::Action::CancelPick) | None => {}
+                Some(inspector::Action::CancelPick | inspector::Action::Copy(_)) | None => {}
             },
+            Demo::Building(event) => {
+                if let Some(inspector::Action::Change { id, value }) = self.building.update(event) {
+                    let valid = self
+                        .building_schema
+                        .get(id)
+                        .is_some_and(|field| field.editable && field.validate(&value).is_ok());
+
+                    if valid && let Some(slot) = self.building_values.get_mut(id) {
+                        // Yazılan değer üç yapıya da uygulanır: artık ortaktır.
+                        *slot = value;
+                        self.building_varied.remove(&id);
+                    }
+                }
+            }
             Demo::QueryEdited(edit) => self.query.apply(edit, &self.schema),
             Demo::ModeSelected(mode) => self.mode = mode,
+            Demo::FieldText(slot, text) => {
+                if let Some(field) = self.fields.get_mut(slot) {
+                    *field = text;
+                }
+            }
+            Demo::Segment(slot, choice) => {
+                if let Some(segment) = self.segments.get_mut(slot) {
+                    *segment = Some(choice);
+                }
+            }
             Demo::Sorted(column) => {
                 self.sort = match self.sort {
                     Some((current, order)) if current == column => Some((column, order.reversed())),
@@ -1453,6 +1511,46 @@ fn building_records() -> Vec<Vec<Value>> {
             city(1),
             "1204/8".into(),
         ],
+    ]
+}
+
+/// Çoklu seçim örneğinin alanları: 3B şehir modelinde bir yapı.
+fn model_schema() -> Vec<Field> {
+    vec![
+        Field::text("Ad").required(),
+        Field::choice("Kullanım", ["Konut", "Ticari", "Karma", "Kamu"]),
+        Field::integer("Kat sayısı")
+            .between(1, 80)
+            .description("Zemin üstündeki kat sayısı; bodrumlar sayılmaz."),
+        Field::real("Kat yüksekliği", 2)
+            .unit("m")
+            .description("Döşemeden döşemeye ortalama yükseklik."),
+        Field::choice("Çatı", ["Düz", "Beşik", "Kırma", "Tonoz"]),
+        Field::real("Taban kotu", 2)
+            .unit("m")
+            .description("Yapının oturduğu zeminin deniz seviyesinden yüksekliği."),
+        Field::range("Hasar olasılığı", 0.0, 100.0, 5.0)
+            .unit("%")
+            .description("Senaryo depreminde ağır hasar görme olasılığı (simülasyon sonucu)."),
+        Field::boolean("Tahliye noktası")
+            .description("Afet anında toplanma alanı olarak kullanılabilir mi."),
+        Field::date("Son denetim"),
+    ]
+}
+
+/// Çoklu seçim örneğinin değerleri: ilk yapınınkiler; farklı olanlar
+/// inceleyicide “Çeşitli” yazar.
+fn model_values() -> Vec<Value> {
+    vec![
+        Value::from("Kule A"),
+        Value::from("Konut"),
+        Value::Integer(12),
+        Value::Real(3.2),
+        Value::from("Düz"),
+        Value::Real(42.35),
+        Value::Real(35.0),
+        Value::Bool(true),
+        Date::new(2026, 6, 14).map_or(Value::Null, Value::Date),
     ]
 }
 

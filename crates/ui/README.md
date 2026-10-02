@@ -20,7 +20,8 @@ src/                     kentos-ui kütüphanesi
 │   ├── query.rs         Query: "öznitelikle seç" ve tablo filtresi koşulları
 │   ├── time.rs          Date, Time, DateTime (harici bağımlılık olmadan)
 │   └── text.rs, number.rs  Türkçe arama, sıralama ve sayı yazımı
-├── theme/               renk belirteçleri (Tokens), vurgu rengi (Accent), yazı ayarı, hareket, iced teması
+├── theme/               renk belirteçleri (Tokens), vurgu rengi (Accent), yazı ayarı, hareket, iced teması;
+│                        metrics: kontrol yükseklikleri (alan 28, satır içi 22, iletişim düğmesi 32)
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
 ├── label.rs             tip ölçeğine bağlı hazır metin biçimleri
@@ -37,7 +38,10 @@ src/                     kentos-ui kütüphanesi
 │   ├── tabs.rs          belge sekmeleri: kapatma, sürükleyerek sıralama, taşma listesi
 │   ├── docking.rs       sekmeli yuva: alanlar, yığınlar, sürükle-bırak, yüzen paneller
 │   ├── viewports.rs     görünüm alanları: 1–4 görünüm, etkin görünüm, büyütme, bölme
-│   ├── number.rs        sayı girişi: birim, ifade, sürükleme; vektör, açı ve kadran
+│   ├── number.rs        sayı girişi: birim, ifade, sürükleme (verniyerli); vektör, açı ve kadran
+│   ├── input_field.rs   çerçeveli metin alanı: ikon ya da etiket, birim, temizle, eylem; hücre türü
+│   ├── scrub.rs         sürükleyerek değer değiştirme tutamağı ve verniyer ölçeği
+│   ├── hover_edge.rs    üzerine gelince ince kenar (şeridin bölünmüş düğmesi)
 │   ├── color.rs         renk seçici (HSV, onaltılık, saydamlık) ve renk rampası
 │   ├── switch.rs, radio.rs  anahtar ve radyo grubu
 │   ├── range.rs         çift uçlu aralık kaydırıcısı, isteğe bağlı histogramla
@@ -54,7 +58,8 @@ src/                     kentos-ui kütüphanesi
 │   ├── tree_view.rs     ağaç tablo: üç durumlu onay kutusu, sürükleyerek taşıma, adlandırma
 │   ├── virtual_list.rs  sanal liste: yalnızca görünen satırları kurar
 │   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
-│   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
+│   ├── inspector.rs     nesne inceleyici: nesne başlığı, arama, kategoriler, yalnız değişenler,
+│   │                    çoklu seçimde “Çeşitli”, özel satırlar, sürüklenen ad sütunu, sağ tık, yardım
 │   ├── legend.rs        lejant: nokta, çizgi, alan simgeleri, bölümler, renk ölçeği
 │   ├── assets.rs        varlık tarayıcısı: aranabilir, kategorili ızgara ya da liste
 │   ├── mini_toolbar.rs  seçimin üstünde beliren, uzaklaştıkça soluklaşan araç çubuğu
@@ -63,7 +68,7 @@ src/                     kentos-ui kütüphanesi
 │   ├── select.rs        aranabilir, açılır seçim kutusu
 │   ├── query_builder.rs sorgu oluşturucu
 │   ├── toolbar.rs       araç çubuğu: arama, eylemler, anahtarlar
-│   ├── segmented.rs     parçalı seçim
+│   ├── segmented.rs     parçalı seçim: ikonlu, yalnız ikon, sıkışık, vurgulu, seçimsiz
 │   ├── property_grid.rs salt okunur özellik ızgarası
 │   ├── command_line.rs  komut kutusu: geçmiş, istem, otomatik tamamlama
 │   ├── python/          JetBrains Mono editör, renklendirilmiş REPL, girinti ve geçmiş
