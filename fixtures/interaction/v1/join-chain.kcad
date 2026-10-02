@@ -1,0 +1,139 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Zincir",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "eski",
+      "name": "Eski yol",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "#8E4EC6",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yol",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486975,
+        "y": 4419995
+      },
+      "b": {
+        "x": 486985,
+        "y": 4419995
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486985,
+        "y": 4419995
+      },
+      "b": {
+        "x": 486995,
+        "y": 4420000
+      }
+    },
+    {
+      "kind": "arc",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "c": {
+        "x": 487000,
+        "y": 4419995
+      },
+      "r": 7.0710678118654755,
+      "a0": 0.7853981633974483,
+      "a1": 2.356194490192345
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 487005,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487015,
+        "y": 4419995
+      }
+    },
+    {
+      "kind": "line",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 487005,
+        "y": 4420000
+      },
+      "b": {
+        "x": 487015,
+        "y": 4420005
+      }
+    },
+    {
+      "kind": "line",
+      "id": 6,
+      "layerId": "eski",
+      "attrs": {},
+      "a": {
+        "x": 486972,
+        "y": 4419992
+      },
+      "b": {
+        "x": 486975,
+        "y": 4419995
+      }
+    }
+  ]
+}

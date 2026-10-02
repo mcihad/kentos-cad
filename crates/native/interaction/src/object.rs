@@ -10,7 +10,11 @@
 //!   end gap tolerance become one polyline each (a chain that closes, a
 //!   closed area), in the place and with the persistent id and the data of
 //!   its first object; the others go. A number typed while picking is the
-//!   tolerance, kept for as long as the app lives;
+//!   tolerance, kept for as long as the app lives. Zincir (Z, kept too;
+//!   docs/adr/0161 §2): a click on a line, an arc or an open polyline joins
+//!   it with the objects joined end to end with it among the visible ones,
+//!   up to a free end, a junction, a locked object or the start again, and
+//!   the tool leaves;
 //! - Patlat: a polyline or a closed area comes apart into lines and arcs, a
 //!   spline into a polyline, a dimension into lines and its text, a
 //!   patterned hatch into lines; the pieces are new objects from it (its
@@ -36,8 +40,8 @@ use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::explode::explode_entity;
-use kentos_geometry_core::ops::join::join_entities;
-use kentos_geometry_core::tools::point_text::parse_number;
+use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
 
@@ -46,7 +50,7 @@ use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Memory};
 
 /// The join tool's id: its command is `tool.join`.
@@ -202,8 +206,77 @@ impl ObjectAction {
         editable
     }
 
-    /// Birleştir (the web's `JoinTool.run`).
-    fn run_join(targets: &[Slot], cx: &mut Context<'_>) {
+    /// Zincir (docs/adr/0161 §2, the web's `JoinTool.joinChain`): the
+    /// visible lines, arcs and polylines walked from `hit` by the core
+    /// (`chain`), then joined as a selection is. Whether a chain was joined.
+    fn join_chain(hit: Slot, cx: &mut Context<'_>) -> bool {
+        let doc = &*cx.doc;
+        let Some(seed) = doc.get(hit) else {
+            return false;
+        };
+        if !matches!(seed, Entity::Line(_) | Entity::Arc(_) | Entity::Polyline(_)) {
+            cx.say(
+                Level::Warn,
+                "Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.",
+            );
+            return false;
+        }
+        if doc.layers().is_locked(&seed.base().layer_id) {
+            cx.say(Level::Warn, "Kilitli katmandaki nesne birleştirilemez.");
+            return false;
+        }
+        let mut slots = Vec::new();
+        let mut objects = Vec::new();
+        for item in cx.spatial.store().overlapping(&cx.view.visible(), None) {
+            let Some(slot) = crate::spatial::slot(item.id) else {
+                continue;
+            };
+            let Some(e) = doc.get(slot) else {
+                continue;
+            };
+            if matches!(e, Entity::Line(_) | Entity::Arc(_) | Entity::Polyline(_)) {
+                slots.push(slot);
+                objects.push(ChainObject {
+                    shape: item.shape.clone(),
+                    locked: doc.layers().is_locked(&e.base().layer_id),
+                });
+            }
+        }
+        let seed_at = match slots.iter().position(|s| *s == hit) {
+            Some(i) => i,
+            None => {
+                slots.push(hit);
+                objects.push(ChainObject {
+                    shape: shape(seed),
+                    locked: false,
+                });
+                slots.len() - 1
+            }
+        };
+        let found = chain(&objects, seed_at, cx.memory.join_tolerance.max(1e-9));
+        if found.members.len() < 2 {
+            cx.say(
+                Level::Warn,
+                "Bu nesneye ucu ucuna bağlanan nesne yok; zincir kurulamadı.",
+            );
+            return false;
+        }
+        // The clicked object keeps its place, its persistent id and its data (docs/adr/0161 §2).
+        let members: Vec<Slot> = found
+            .members
+            .iter()
+            .filter_map(|&i| slots.get(i).copied())
+            .collect();
+        Self::run_join(&members, Some(hit), cx);
+        if found.locked {
+            cx.say(Level::Warn, "Zincir kilitli katmandaki bir nesnede durdu.");
+        }
+        true
+    }
+
+    /// Birleştir (the web's `JoinTool.run`); `keep`, when one of a chain, is
+    /// the object that chain becomes (Zincir's clicked one).
+    fn run_join(targets: &[Slot], keep: Option<Slot>, cx: &mut Context<'_>) {
         let tolerance = cx.memory.join_tolerance.max(1e-9);
         // The core names each object by its `id`: the slot.
         let list: Vec<CoreEntity> = targets
@@ -238,18 +311,20 @@ impl ObjectAction {
         let mut joined = 0;
         for g in &groups {
             let slots: Vec<Slot> = g.sources.iter().filter_map(slot_of).collect();
-            let (Some(first), Some(geometry)) = (slots.first(), edge::geometry(&g.geometry.shape))
-            else {
+            let first = keep
+                .filter(|k| slots.contains(k))
+                .or_else(|| slots.first().copied());
+            let (Some(first), Some(geometry)) = (first, edge::geometry(&g.geometry.shape)) else {
                 continue;
             };
             joined += slots.len();
-            firsts.push(*first);
+            firsts.push(first);
             changes.push(EntityEdit::Replace {
-                uid: edge::uid(cx.doc, *first),
+                uid: edge::uid(cx.doc, first),
                 geometry,
                 keep_data: Some(true),
             });
-            for slot in &slots[1..] {
+            for slot in slots.iter().filter(|&&s| s != first) {
                 changes.push(EntityEdit::Remove {
                     uid: edge::uid(cx.doc, *slot),
                 });
@@ -421,7 +496,7 @@ impl Stages for ObjectAction {
         let targets = Self::targets(cx);
         if !targets.is_empty() {
             match self.kind {
-                Kind::Join => Self::run_join(&targets, cx),
+                Kind::Join => Self::run_join(&targets, None, cx),
                 Kind::Explode => Self::run_explode(&targets, cx),
                 Kind::Readable => Self::run_readable(&targets, cx),
             }
@@ -433,7 +508,7 @@ impl Stages for ObjectAction {
         self.seen = Some((*cx.memory, cx.format()));
     }
 
-    /// Birleştir says its end gap tolerance and how to change it.
+    /// Birleştir says its end gap tolerance and how to change it, and Zincir.
     fn picking_hint(&self, prompt: Prompt) -> Prompt {
         if self.kind != Kind::Join {
             return prompt;
@@ -446,12 +521,28 @@ impl Stages for ObjectAction {
             ))
             .then()
             .note("değiştirmek için sayı yazın")
+            .then()
+            .toggle("Zincir", "Z", m.join_chain)
     }
 
-    /// A number not below zero typed while picking is Birleştir's tolerance.
+    /// With Zincir on, Birleştir asks for one object of the chain.
+    fn picking_prompt(&self, _n: usize) -> Option<Prompt> {
+        let (m, _) = self.seen.unwrap_or_default();
+        (self.kind == Kind::Join && m.join_chain).then(|| {
+            self.picking_hint(Prompt::new(self.label(), "zincirin bir nesnesine tıklayın"))
+        })
+    }
+
+    /// A number not below zero typed while picking is Birleştir's
+    /// tolerance; Z turns Zincir on and off.
     fn picking_input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         if self.kind != Kind::Join {
             return false;
+        }
+        if upper_tr(js_trim(text)) == "Z" {
+            cx.memory.join_chain = !cx.memory.join_chain;
+            self.see(cx);
+            return true;
         }
         match parse_number(text) {
             Some(n) if n >= 0.0 => {
@@ -460,6 +551,19 @@ impl Stages for ObjectAction {
             }
             _ => false,
         }
+    }
+
+    /// Zincir: the clicked object's chain is joined, and the tool leaves;
+    /// when no chain can be joined from it (said), another object may be clicked.
+    fn picked(&mut self, hit: Slot, cx: &mut Context<'_>) -> Option<Flow> {
+        if self.kind != Kind::Join || !cx.memory.join_chain {
+            return None;
+        }
+        Some(if Self::join_chain(hit, cx) {
+            Flow::Exit
+        } else {
+            Flow::Stay
+        })
     }
 
     fn anchor(&self) -> Option<Vec2> {

@@ -110,6 +110,20 @@ Yeni bir sözleşme alanı yoktur.
      - Ortak iz `trace-draw.json` (`trace-draw.kcad`): komşulara yaslanan parselin kapanışta izlenmesi, kesişimlerden dönen ölçü (46 m, 3 kenar), yaylı yol kenarı.
      - Kullanım senaryosu `usage-trace-draw.json`.
 3. Zincir iki platformda: Birleştir'in seçeneği; ortak iz.
+
+   *(2 Ekim: tamam.)*
+   - **Birleştir:** seçim sırasında Zincir (Z) düğmesi; oturumun belleğinde kalır.
+     - Açıkken istem “zincirin bir nesnesine tıklayın” der.
+     - Tık, çekirdeğin `chain`'iyle görünen alandaki çizgi, yay ve çoklu çizgiler arasında yürür; zincir birleştirilir ve araç çıkar.
+     - Tıklanan nesne yerini, kimliğini ve verisini korur: birleştiriciye “tutulacak nesne” verilir.
+     - Zincir kilitli nesnede durduysa söylenir.
+     - Başlayamayan tık (kilitli, zincire girmeyen tür, bağlı nesne yok) söylenir; araç başka bir tık bekler.
+   - **Seçim tabanı:** iki platformda seçim sırasında tıkı alan kanca (`picked`) ve istem kancası (web `pickStep`, masaüstü `picking_prompt`).
+   - **Sınama:**
+     - Birleştir'in seçeneklerine “Z” eklendi: `object-tools` izi ve bir test buna göre.
+     - İki platformda aynı elle hesaplanmış birim testleri (web `joinChain.test.ts`, masaüstü `tests/join_chain.rs`).
+     - Ortak iz `join-chain.json` (`join-chain.kcad`); kullanım senaryosu `usage-join-chain.json`.
+   - **Sınır:** Zincir görünen alanda yürür; görünenin dışına süren zincir için görünüm uzaklaştırılır.
 4. Akış iki platformda: düğme, adım, imleçle köşe; ortak iz; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

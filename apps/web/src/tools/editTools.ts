@@ -9,6 +9,7 @@ import { translation } from '../model/geom/affine';
 import { dimensionLabel } from '../model/geom/dimension';
 import { explodeEntity } from '../model/ops/explode';
 import { joinEntities } from '../model/ops/join';
+import { joinChain } from '../model/ops/trace';
 import { stretchEntity } from '../model/ops/stretch';
 import { topologyChanges } from '../model/ops/topologyEdit';
 import { transformedFrom } from '../model/ops/transform';
@@ -48,16 +49,36 @@ export abstract class SelectionActionTool extends SelectionFirstTool {
   protected point(): void {}
 }
 
+const whenOn = (on: boolean) => (on ? ': açık' : '');
+
+/** The kinds that have ends to join (`ops::join`'s chains). */
+const CHAINED = new Set<Entity['kind']>(['line', 'arc', 'polyline']);
+
+/**
+ * Birleştir. Zincir (Z, kept for the session; docs/adr/0161 §2): a click on a line, an arc or an open polyline joins it
+ * with the objects joined end to end with it among the visible ones (the core's `joinChain`), up to a free end, a
+ * junction, a locked object or the start again, and the tool leaves.
+ */
 export class JoinTool extends SelectionActionTool {
   readonly id = 'join';
   protected readonly label = 'Birleştir';
   private static tolerance = 0.001;
+  private static chain = false;
 
   protected override pickHint(): string {
-    return `[uç boşluğu toleransı ${this.ctx.format.length(JoinTool.tolerance)}; değiştirmek için sayı yazın]`;
+    return `[uç boşluğu toleransı ${this.ctx.format.length(JoinTool.tolerance)}; değiştirmek için sayı yazın; Zincir (Z)${whenOn(JoinTool.chain)}]`;
+  }
+
+  protected override pickStep(n: number): string {
+    return JoinTool.chain ? 'zincirin bir nesnesine tıklayın' : super.pickStep(n);
   }
 
   override input(text: string): boolean {
+    if (this.picking && text.trim().toLocaleUpperCase('tr-TR') === 'Z') {
+      JoinTool.chain = !JoinTool.chain;
+      this.refresh();
+      return true;
+    }
     const n = parseNumber(text);
     if (!this.picking || n === null || n < 0) return super.input(text);
     JoinTool.tolerance = n;
@@ -65,7 +86,40 @@ export class JoinTool extends SelectionActionTool {
     return true;
   }
 
-  protected run(targets: Entity[]): void {
+  /** Zincir: the clicked object's chain is joined and the tool leaves; when none can be (said), another may be clicked. */
+  protected override picked(id: number): boolean {
+    if (!JoinTool.chain) return false;
+    if (this.joinChain(id)) queueMicrotask(() => this.ctx.tools.exit());
+    return true;
+  }
+
+  /** Zincir: the visible lines, arcs and polylines walked from `id` by the core, then joined as a selection is. Whether a chain was joined. */
+  private joinChain(id: number): boolean {
+    const { doc, log, view } = this.ctx;
+    const seed = doc.get(id);
+    const refuse = (text: string) => (log.warn(text), false);
+    if (!seed || !CHAINED.has(seed.kind)) return refuse('Zincir bir çizgiden, yaydan ya da açık çoklu çizgiden başlar.');
+    if (doc.layers.isLocked(seed.layerId)) return refuse('Kilitli katmandaki nesne birleştirilemez.');
+    const objects = view.entitiesIn(view.camera.visibleBounds()).filter((e) => CHAINED.has(e.kind));
+    let at = objects.findIndex((e) => e.id === id);
+    if (at < 0) at = objects.push(seed) - 1;
+    const found = joinChain(
+      objects.map((e) => ({ shape: e, locked: doc.layers.isLocked(e.layerId) })),
+      at,
+      Math.max(JoinTool.tolerance, 1e-9),
+    );
+    if (found.members.length < 2) return refuse('Bu nesneye ucu ucuna bağlanan nesne yok; zincir kurulamadı.');
+    // The clicked object keeps its place, its persistent id and its data (docs/adr/0161 §2).
+    this.run(
+      found.members.map((i) => objects[i]),
+      id,
+    );
+    if (found.locked) log.warn('Zincir kilitli katmandaki bir nesnede durdu.');
+    return true;
+  }
+
+  /** Joins `targets`; `keep`, when one of a chain, is the object that chain becomes (Zincir's clicked one). */
+  protected run(targets: Entity[], keep?: number): void {
     const { log, selection } = this.ctx;
     const { groups } = joinEntities(targets, Math.max(JoinTool.tolerance, 1e-9));
     if (!groups.length) {
@@ -75,12 +129,13 @@ export class JoinTool extends SelectionActionTool {
     // Each chain is its first object, joined (AutoCAD JOIN): it keeps its slot, persistent id
     // (docs/adr/0014), layer, colour, attributes and label; the others are gone. One edit
     // through cad.entities.edit (docs/adr/0047).
+    const keeper = (sources: number[]) => (keep !== undefined && sources.includes(keep) ? keep : sources[0]);
     const changes = groups.flatMap((g): EntityEdit[] => [
-      { kind: 'replace', uid: uidOf(this.ctx, g.sources[0]), geometry: editGeometry(g.geometry), keepData: true },
-      ...g.sources.slice(1).map((id): EntityEdit => ({ kind: 'remove', uid: uidOf(this.ctx, id) })),
+      { kind: 'replace', uid: uidOf(this.ctx, keeper(g.sources)), geometry: editGeometry(g.geometry), keepData: true },
+      ...g.sources.filter((id) => id !== keeper(g.sources)).map((id): EntityEdit => ({ kind: 'remove', uid: uidOf(this.ctx, id) })),
     ]);
     if (!writeEdit(this.ctx, 'join', changes)) return;
-    selection.set(groups.map((g) => g.sources[0]));
+    selection.set(groups.map((g) => keeper(g.sources)));
     const kinds = groups.map((g) => ENTITY_KIND_LABEL[g.geometry.kind].toLocaleLowerCase('tr-TR'));
     log.success(`${groups.reduce((n, g) => n + g.sources.length, 0)} nesne birleştirildi: ${kinds.join(', ')}.`);
   }

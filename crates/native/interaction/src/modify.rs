@@ -23,6 +23,7 @@
 use kentos_contracts::{
     ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Transform,
 };
+use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::tools::point_input::Tracking;
@@ -62,6 +63,12 @@ pub trait Stages {
     /// Typed text while picking (Birleştir's tolerance): whether it was taken.
     fn picking_input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
         false
+    }
+    /// A click on an object while picking, before it is selected: the
+    /// stage's flow when it takes the click (Birleştir's Zincir), else
+    /// `None` and the object is selected as usual.
+    fn picked(&mut self, _hit: Slot, _cx: &mut Context<'_>) -> Option<Flow> {
+        None
     }
     /// Where ortho, polar tracking, perpendicular snaps and typed `@` points
     /// are measured from (the web's `anchor`).
@@ -383,6 +390,10 @@ impl<S: Stages> Tool for Modify<S> {
                 .in_rect(press.from_world, press.to_world, crossing);
             cx.selection.add(ids);
         } else if let Some(hit) = cx.spatial.pick(p.raw, cx.pick_tolerance()) {
+            if let Some(flow) = self.stages.picked(hit, cx) {
+                self.after(flow, cx);
+                return;
+            }
             cx.selection.toggle(hit);
         }
         self.refresh(cx);

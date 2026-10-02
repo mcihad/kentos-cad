@@ -12,7 +12,7 @@
   "clickTolerance": 0.125,
   "steps": [
     { "move": [-20, 0] },
-    { "run": "tool.join", "note": "Seçim yok: araç önce seçtirir; istemde uç boşluğu toleransı.", "expect": { "tool": "join", "options": [], "selected": [] } },
+    { "run": "tool.join", "note": "Seçim yok: araç önce seçtirir; istemde uç boşluğu toleransı ve Zincir (ADR 0161 §2).", "expect": { "tool": "join", "options": ["Z"], "selected": [] } },
     { "click": [4, -4], "expect": { "selected": [8] } },
     { "drag": [[10, -5], [7, -19]], "note": "Sağdan sola kesişim penceresi: dokunduğu çizgiler de eklenir.", "expect": { "selected": [8, 9, 13] } },
     { "rightClick": [20, 10], "note": "Sağ tık birleştirir: kilitli katmandaki çizgi atlanır, iki çizgi ilk nesnenin yerinde çoklu çizgi olur; araç biter.", "expect": { "tool": "select", "log": "success", "entities": 12, "selected": [8], "objects": [{ "id": 8, "kind": "polyline", "points": [[0, -4], [8, -4], [8, -12]] }] } },

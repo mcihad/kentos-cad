@@ -79,10 +79,20 @@ export abstract class SelectionFirstTool implements Tool {
     return '';
   }
 
+  /** What picking asks for (Birleştir's Zincir asks for one object of the chain); `n` is the selection's size. */
+  protected pickStep(n: number): string {
+    return `nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (${n} seçili)`;
+  }
+
+  /** A click on an object while picking, before it is selected: true when the tool took it (Birleştir's Zincir). */
+  protected picked(_id: number): boolean {
+    return false;
+  }
+
   protected refresh(): void {
     const n = this.ctx.selection.size;
     const hint = this.pickHint();
-    const picking = `nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (${n} seçili)${hint ? ` ${hint}` : ''}`;
+    const picking = `${this.pickStep(n)}${hint ? ` ${hint}` : ''}`;
     this.prompt.set(`${this.label}: ${this.picking ? picking : this.stagePrompt()}`);
     this.ctx.view.requestOverlay();
   }
@@ -127,6 +137,7 @@ export abstract class SelectionFirstTool implements Tool {
       this.ctx.selection.add(this.ctx.view.pickRect(r, box.b.x < box.a.x));
     } else {
       const hit = this.ctx.view.pick(p.screen);
+      if (hit && this.picked(hit.id)) return;
       if (hit) this.ctx.selection.toggle(hit.id);
     }
     this.refresh();

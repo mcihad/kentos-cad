@@ -4037,7 +4037,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/object-tools.json"
+        "fixtures/interaction/v1/join-chain.json",
+        "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-join-chain.json"
       ]
     },
     {
@@ -7783,7 +7785,7 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 2,
+      "steps": 3,
       "description": "Uç uca gelen çizgi, yay ve çoklu çizgileri tek çoklu çizgiye; kapanırsa kapalı alana çevirir.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
@@ -7792,7 +7794,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/object-tools.json"
+        "fixtures/interaction/v1/join-chain.json",
+        "fixtures/interaction/v1/object-tools.json",
+        "fixtures/interaction/v1/usage-join-chain.json"
       ]
     },
     {

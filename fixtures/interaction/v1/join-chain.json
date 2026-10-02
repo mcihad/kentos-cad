@@ -1,0 +1,40 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "join-chain",
+  "title": "Zincir: Birleştir'de Z ile açılır; yolun bir parçasına tıklamak ona ucu ucuna bağlanan çizgi ve yayı tek çoklu çizgi yapar; zincir kavşakta ve kilitli eski yolda durur, durduğu söylenir; tıklanan parça kimliğini korur, yay yay olarak kalır; tek adımda geri alınır; bellek başladığı gibi bırakılır",
+  "source": "Web'in JoinTool'u, masaüstünün kentos_interaction::object'i; çekirdeğin chain'i ve join_entities'i; cad.entities.edit join, ADR 0161",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "join-chain.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.join",
+      "note": "Seçim yok: önce nesneler seçilir; Zincir kapalı.",
+      "expect": { "tool": "join", "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" }
+    },
+    {
+      "text": "z",
+      "note": "Zincir bir tuşla açılır.",
+      "expect": { "prompt": "Birleştir: zincirin bir nesnesine tıklayın [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z): açık]" }
+    },
+    {
+      "click": [-10, -2.5],
+      "note": "İkinci parça: batıdaki parça ve doğudaki yay zincire girer; doğuda kavşakta, batıda kilitli eski yolda durur. Tıklanan parça çoklu çizgi olur, öbürleri kalkar.",
+      "expect": {
+        "tool": "select",
+        "ids": [2, 4, 5, 6],
+        "logged": ["3 nesne birleştirildi: çoklu çizgi.", "Zincir kilitli katmandaki bir nesnede durdu."],
+        "objects": [{ "id": 2, "kind": "polyline", "points": [[-25, -5], [-15, -5], [-5, 0], [5, 0]], "bulges": [0, 0, -0.41421356237309503] }]
+      }
+    },
+    { "key": "Ctrl+Z", "note": "Tek adım: “Birleştir”.", "expect": { "ids": [1, 2, 3, 4, 5, 6] } },
+    { "key": "Esc", "note": "Seçim bırakılır (seçimle Birleştir hemen çalışır)." },
+    { "run": "tool.join", "note": "Bellek başladığı gibi bırakılır: Zincir kapatılır." },
+    { "text": "z", "expect": { "prompt": "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]" } },
+    { "key": "Esc" }
+  ]
+}

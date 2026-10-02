@@ -353,7 +353,7 @@ fn join_without_a_selection_picks_first_and_takes_a_typed_tolerance() {
     b.start("join");
     assert_eq!(
         b.session.prompt().text(),
-        "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın]"
+        "Birleştir: nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın (0 seçili) [uç boşluğu toleransı 0.001 m; değiştirmek için sayı yazın; Zincir (Z)]"
     );
     assert!(b.type_text("0.5"));
     assert_eq!(b.memory.join_tolerance, 0.5);

@@ -297,6 +297,9 @@ pub struct Memory {
     pub chamfer: Option<(f64, f64)>,
     /// Birleştir's end gap tolerance (`JoinTool.tolerance`), metres.
     pub join_tolerance: f64,
+    /// Birleştir's Zincir: a click joins the chain of the object clicked
+    /// (`JoinTool.chain`, docs/adr/0161 §2).
+    pub join_chain: bool,
     /// Uzat-kısalt's mode and values (`LengthenTool.mode`, `LengthenTool.values`).
     pub lengthen_mode: LengthenMode,
     pub lengthen_delta: f64,
@@ -528,6 +531,7 @@ impl Default for Memory {
             fillet_radius: None,
             chamfer: None,
             join_tolerance: 0.001,
+            join_chain: false,
             lengthen_mode: LengthenMode::Dynamic,
             lengthen_delta: 1.0,
             lengthen_percent: 100.0,
