@@ -181,6 +181,7 @@ python3 scripts/fixtures/point_editor_cases.py --check   # Nokta editörünün h
 python3 scripts/fixtures/point_edit_cases.py --check   # Nokta editörünün düzenlemelerini (hücreler, bağlı çizgiler, taslak satır) kurallardan denetle (ADR 0153 §3–§4)
 python3 scripts/fixtures/point_batch_cases.py --check   # Nokta editörünün toplu işlemlerini (Yeniden adlandır, Sıralı numara ver, Katmana taşı, hedef satırlar) kurallardan denetle (ADR 0153 §5)
 python3 scripts/fixtures/fit_cases.py --check   # Vektör oturtma'nın çözümünü (Helmert, afin, projektif; artıklar, m0, çözümsüzlükler) tam kesirle bağımsız başvurudan denetle (ADR 0156)
+python3 scripts/fixtures/warp_cases.py --check   # Vektör oturtma'da nesnelerin dönüşmesini (afinde elips, projektifte 0,1 mm'lik köşeler, yazı ve blok kuralı, ufuk reddi) kurallardan denetle (ADR 0156)
 python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını, bağlı çizgilerini ve İçe aktar sonrası hedefini kurallardan denetle (ADR 0153 §5)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
@@ -588,7 +589,7 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   numara ver, Katmana taşı (`batch.json`), Çift noktaları ayıkla ve Çiftleri göster (`dedupe.json`), Dışa aktar (tablonun
   satırları, sırasıyla) ve İçe aktar (aynı adlar için ardından Çift noktaları ayıkla, Aynı ad; `dedupe.json`'un `imports`'u).
   `HYB-05` vektör oturtma ([ADR 0156](docs/adr/0156-vector-fit.md)): 1. adım (çözüm: `ops::fit`, bağımsız başvuru `fit_cases.py`)
-  tamam; sıradaki 2. adım: nesnelerin dönüşmesi (`ops::warp`). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  ve 2. adım (nesnelerin dönüşmesi: `ops::warp`, `warp_cases.py`) tamam; sıradaki 3. adım: `cad.entities.transform`'un üç türü. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

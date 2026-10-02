@@ -57,13 +57,14 @@ Dönüşüm kaynak geometriyi dönüştürür; yuvarlamaz, sadeleştirmez. Benze
 | Elips, elips yayı | tam: elips (yayı) | 0,1 mm ile çoklu çizgi |
 | Çoklu çizgi ve alanın yaylı kenarları | 0,1 mm ile köşelere açılır (nesne tek kalır) | aynı |
 | Eğri (spline) | uydurma noktaları dönüşür; eğri onlardan yeniden geçer | aynı |
-| Yazı, öznitelik tanımı, kılavuzun notu | yeri dönüşür; yönü taban çizgisinin görüntüsü, boyu ve genişlik çarpanı kutunun taban uzunluğunu ve alanını korur (§5) | yerindeki türevle aynı kural |
+| Yazı, öznitelik tanımı, kılavuzun notu | yeri dönüşür; yönü taban çizgisinin görüntüsü, boyu ve genişlik çarpanı kutunun taban uzunluğunu ve alanını korur (§5); kılavuzun notu son köşesindeki türevle | yerindeki türevle aynı kural |
 | Blok yerleştirmesi | yeri dönüşür; dönüklüğü x ekseninin görüntüsü, ölçeği √\|det\| | yerindeki türevle aynı kural |
-| Ölçü | tanım noktaları dönüşür, değer geometriden yeniden ölçülür | aynı |
-| Tarama | sınırları dönüşür (yaylı kenar yukarıdaki gibi); desenin açısı x ekseninin görüntüsü, ölçeği √\|det\| | aynı |
+| Ölçü | tanım noktaları dönüşür, değer geometriden yeniden ölçülür; a ile b'nin ortasındaki türevle ofset ve yazı boyu √\|det\| ile çarpılır, doğrusalın doğrultusu türevin görüntüsüdür | aynı |
+| Tarama | sınırları dönüşür; desenin açısı kendi doğrultusunun görüntüsü (dış sınırın köşelerinin ortalamasındaki türevle, 0 ile 180° arası), aralığı √\|det\| ile çarpılır | aynı |
 | Işın | başlangıcı ve doğrultusu dönüşür | ufuk çizgisini kesen ışın reddedilir |
 
-- **0,1 mm:** ADR 0149'un eğri sınırıdır (`geom::curve_outline`); çoklu çizgiye çevrilen her nesne sayısıyla söylenir: “3 yay ve 1 daire 0,1 mm'lik çoklu çizgiye çevrildi.”
+- **0,1 mm:** ADR 0149'un eğri sınırıdır. Eğri P(t), t₀'dan t₁'e: aralık en çok π/8'lik eşit adımlara bölünür; her adım, ortasının görüntüsü uçlarının görüntülerini birleştiren kirişe 0,1 mm'den uzak oldukça ikiye bölünür (en çok 30 kez); köşeler parametrelerin görüntüleridir, yay kenarının uçları kendi köşeleridir. Tam bir eğrinin son köşesi ilkidir. Yay kenarından açılan yeni köşeler, kenarın iki ucunun kotu varsa onları açıya göre doğrusal alır (ADR 0142 kural 3).
+- **Sayılar söylenir:** çoklu çizgiye çevrilen eğriler sayısıyla söylenir: “4 nesnenin eğrileri 0,1 mm'lik köşelere açıldı.”
 - **Yaklaşıklar söylenir:** yazı, blok ve tarama deseni biçimlerini korur, kesilmez ve eğilmez; dönüşüm benzerlik değilse sayılarıyla söylenir: “12 yazı ve 2 blok yerinde döndürülüp ölçeklendi; biçimleri eğilmez.”
 - **Ufuk:** projektifte payda (c₁·x + c₂·y + 1) kontrol noktalarında pozitiftir. Dönüşecek bir köşede payda sıfıra ya da eksiye inerse (göreli 1e-9) nesneler ufuk çizgisinin ötesindedir; dönüşüm bütünüyle reddedilir.
 - **Kot:** dönüşüm düzlemseldir; kotlar (köşe kotu, noktanın Z'si) değişmez.
@@ -107,7 +108,7 @@ Komut `transform.fit` (Harita › Koordinatlar; takma adlar OTURT, DONUSUM, HELM
 ### 8. Ortak çekirdek
 
 - **`ops::fit`** (WASM `fitTransform`): çiftler (kaynak, hedef, kullan) ve tür → parametreler, artıklar, m0 ya da çözümsüzlüğün nedeni.
-- **`ops::warp`** (WASM `warpEntities`): nesneler ve dönüşüm → dönüşmüş nesneler ve sayılar (§4), ya da ufuk reddi.
+- **`ops::warp`** (WASM `warpShapes`): şekiller, yollarının kotları ve dönüşüm → dönüşmüş şekiller, kotları ve sayılar (§4), ya da ufuk reddiyle reddedilen şeklin sırası. Benzerlik var olan dönüşümle (taşı, döndür, ölçekle gibi), merkezli sistemlerde yapılır.
 - **Bağımsız başvurular:** `scripts/fixtures/fit_cases.py` çözümü kesir aritmetiğiyle (float girdilerin tam kesirleri, merkezleme dahil) yazar; `scripts/fixtures/warp_cases.py` nesnelerin dönüşmesini kurallardan yazar (elipsin eksenleri, yazının boyu, ufuk). Ortak durumlar `fixtures/fit/v1`.
 
 ### 9. Kapsam dışı
@@ -128,6 +129,10 @@ Kauçuk levha (kontrol noktalarına göre parça parça dönüşüm, sabit nokta
    - **Çekirdek:** `ops::fit` (`fit`, `FitPair`, `FitKind`, `Fit::map`, `map_centred`); WASM `fitTransform`, web cephesi `model/ops/fit.ts`.
    - **Başvuru:** `scripts/fixtures/fit_cases.py` 15 durumu (Helmert, afin ve projektif; en az çift, gürültülü ülke koordinatları, çıkarılmış ve kaba hatalı çift; dört çözümsüzlük) float girdilerin tam kesirleriyle yazar: `fixtures/fit/v1/solve.json`. Çekirdek (yerli) ve web (WASM) merkezleri, artıkları ve m0'ı 1e-9 m, sayıları ve türetilen değerleri göreli 1e-12 içinde verir; projektifin tek sayısında milyarda birlik sapma yakalanır.
 2. **Nesnelerin dönüşmesi:** `ops::warp`, bağımsız başvuru ve ortak durumlar.
+
+   *(2 Ekim: tamam.)*
+   - **Çekirdek:** `ops::warp` (`Warp`, `warp_shape`, `warp_shapes`); WASM `warpShapes`, web cephesi `model/ops/warp.ts`.
+   - **Başvuru:** `scripts/fixtures/warp_cases.py` kurallardan 6 durum yazar (`fixtures/fit/v1/warp.json`): güçlü bir afin ve aynalı afin altında on beş türün hepsi (daire, yay ve elips tam elips; yaylı kenarlar köşelere; yazı, blok, ölçü, tarama, kılavuz kuralıyla), projektif (eğriler köşelere), ufka koşan ışının ve ufkun ötesindeki noktanın reddi. Çekirdek (yerli) ve web (WASM) koordinatları 1e-9 m, öbür sayıları göreli 1e-12 içinde, köşeleri bire bir verir; kiriş sınırını %10 gevşetmek ya da genişlik çarpanını bozmak yakalanır.
 3. **Komut:** `cad.entities.transform`'un üç türü, iki platformda ortak durumlar.
 4. **Pencere:** Vektör oturtma iki platformda: tablo, Adla eşle, sonuç, Uygula, rapor, Parametrelerle; resimler.
 
