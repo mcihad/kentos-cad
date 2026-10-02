@@ -6,7 +6,8 @@
 // behaviour both keep.
 //
 // One browser at a time is attached (`attach`); the layout (US or Turkish Q keyboard) and the
-// trace's origin are this module's state.
+// trace's origin are this module's state. interaction.mjs drives several browsers, each from a
+// worker thread with its own instance of this module.
 import http from 'node:http';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
