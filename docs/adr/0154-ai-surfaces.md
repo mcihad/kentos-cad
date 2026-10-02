@@ -1,4 +1,4 @@
-# ADR 0152: Yerel AI Surface bileşenleri
+# ADR 0154: Yerel AI Surface bileşenleri
 
 - **Durum:** kabul edildi (2026-10-01).
 - **Tarih:** 2026-10-01
