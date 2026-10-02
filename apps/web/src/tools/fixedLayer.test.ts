@@ -48,9 +48,9 @@ describe('path tool: G while U waits for a length', () => {
     tool.input('U');
     expect(tool.prompt.value).toBe('Mesafe ölç: son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]');
     tool.input('G');
-    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G) / Bitir (Enter)]');
+    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G) / Bitir (Enter)]');
     tool.input('G');
-    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G)]');
+    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G)]');
     // With one point left there is no direction to continue: before, this said “Uzunluk sıfırdan büyük olmalı.”
     expect(tool.input('5')).toBe(false);
     expect(said()).not.toContain('Uzunluk sıfırdan büyük olmalı.');
@@ -64,7 +64,7 @@ describe('path tool: G while U waits for a length', () => {
     tool.input('U');
     expect(tool.undoStep()).toBe(true);
     expect(tool.pointCount).toBe(2);
-    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G) / Bitir (Enter)]');
+    expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G) / Bitir (Enter)]');
     // U again continues the direction of what is left.
     tool.input('U');
     expect(tool.input('5')).toBe(true);

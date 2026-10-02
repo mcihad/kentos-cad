@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../entities';
 import type { Vec2 } from '../geometry';
-import { joinChain, traceGraph, tracePath, type ChainFound, type ChainObject, type Traced } from './trace';
+import { joinChain, traceGraph, traceNearest, tracePath, type ChainFound, type ChainObject, type Traced } from './trace';
 
 /**
  * İzle and Zincir (docs/adr/0161) through the WASM core, against the independent reference in fixtures/trace/v1/trace.json
@@ -20,6 +20,7 @@ interface Way {
 interface File {
   format: string;
   paths: { name: string; lines: Entity[]; a: Vec2; b: Vec2; expected: { ways: Way[]; length: number } | null }[];
+  nearest: { name: string; lines: Entity[]; p: Vec2; reach: number; expected: Vec2 | null; exact: boolean }[];
   chains: { name: string; objects: ChainObject[]; seed: number; tol: number; expected: ChainFound }[];
 }
 
@@ -50,6 +51,21 @@ describe('İzle ve Zincir', () => {
       expect(got, c.name).not.toBeNull();
       expect(c.expected.ways.some((w) => fits(got!, w)), `${c.name}: ${JSON.stringify(got)}`).toBe(true);
       expect(Math.abs(got!.length - c.expected.length), c.name).toBeLessThanOrEqual(1e-9);
+    }
+  });
+
+  it('finds every nearest point as the reference does (a vertex bit for bit)', () => {
+    expect(file.nearest.length).toBeGreaterThanOrEqual(5);
+    for (const c of file.nearest) {
+      const got = traceNearest(c.lines, c.p, c.reach);
+      const graph = traceGraph(c.lines);
+      try {
+        expect(graph.nearest(c.p, c.reach), c.name).toEqual(got);
+      } finally {
+        graph.free();
+      }
+      if (!c.expected || c.exact) expect(got, c.name).toEqual(c.expected);
+      else expect(Math.hypot(got!.x - c.expected.x, got!.y - c.expected.y), c.name).toBeLessThanOrEqual(1e-9);
     }
   });
 

@@ -410,6 +410,9 @@ pub struct Memory {
     pub measure_fixed: bool,
     pub area_inside: bool,
     pub circle_crossing: bool,
+    /// The path tools' İzle: the next segments follow the visible line work
+    /// (docs/adr/0161 §1).
+    pub trace: bool,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -588,6 +591,7 @@ impl Default for Memory {
             measure_fixed: false,
             area_inside: false,
             circle_crossing: false,
+            trace: false,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

@@ -12,13 +12,13 @@
   "clickTolerance": 0.125,
   "steps": [
     { "run": "tool.polygon", "expect": { "tool": "polygon", "points": 0, "options": [] } },
-    { "click": [0, 0], "expect": { "points": 1, "options": ["Y", "U", "G"] } },
+    { "click": [0, 0], "expect": { "points": 1, "options": ["Y", "U", "İ", "G"] } },
     { "move": [20, 0], "note": "İmleç ilk noktanın doğusunda, aynı piksel satırında: yazılan uzunluk tam doğuya gider." },
     { "text": "1", "note": "İlk karakter değer alanını açar ve alana bir kez girer.", "expect": { "dynamicInput": "1" } },
     { "text": "2", "expect": { "dynamicInput": "12" } },
     { "key": "Enter", "expect": { "dynamicInput": null, "points": 2 } },
     { "text": "@0,8", "expect": { "dynamicInput": "@0,8" } },
-    { "key": "Enter", "expect": { "dynamicInput": null, "points": 3, "options": ["Y", "U", "G", "Enter"] } },
+    { "key": "Enter", "expect": { "dynamicInput": null, "points": 3, "options": ["Y", "U", "İ", "G", "Enter"] } },
     {
       "key": "Enter",
       "note": "Enter alanı kapatıp çizime yazar; araç yeni bir alan için açık kalır.",

@@ -382,6 +382,10 @@ export class CoreTraceGraph {
     return readResult(typed(() => this.get().path(ax, ay, bx, by)));
   }
 
+  nearest(x: number, y: number, reach: number): unknown {
+    return readResult(typed(() => this.get().nearest(x, y, reach)));
+  }
+
   /** Releases the core's copy now instead of when the object is collected. */
   free(): void {
     this.raw?.free();

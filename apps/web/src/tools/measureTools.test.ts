@@ -40,7 +40,7 @@ describe('Mesafe ölç: the chain as it was', () => {
     tool.pointerDown(at(0, 0));
     tool.pointerDown(at(10, 0));
     // fixtures/interaction/v1/measure-parcel.json: Yay, Uzunluk, Geri, Bitir.
-    expect(keys(tool)).toEqual(['Y', 'U', 'G', 'Enter']);
+    expect(keys(tool)).toEqual(['Y', 'U', 'İ', 'G', 'Enter']);
     tool.input('U');
     expect(keys(tool)).toEqual(['G']);
   });
@@ -145,7 +145,7 @@ describe('Mesafe ölç: Sabit ilk nokta', () => {
     tool.pointerDown(at(10, 0));
     // A chain under way is not turned into rays.
     expect(tool.input('S')).toBe(false);
-    expect(keys(tool)).toEqual(['Y', 'U', 'G', 'Enter']);
+    expect(keys(tool)).toEqual(['Y', 'U', 'İ', 'G', 'Enter']);
     tool.confirm();
     tool.input('S');
     tool.pointerDown(at(0, 0));
@@ -392,7 +392,7 @@ describe('Alan hesapla: Alan olarak çiz', () => {
     expect(keys(tool)).toEqual(['I', 'A']);
     // The first corner of the next one takes it away.
     tool.pointerDown(at(20, 20));
-    expect(keys(tool)).toEqual(['Y', 'U', 'G']);
+    expect(keys(tool)).toEqual(['Y', 'U', 'İ', 'G']);
     tool.confirm();
     tool.pointerDown(at(20, 20));
     expect(tool.input('A')).toBe(false);

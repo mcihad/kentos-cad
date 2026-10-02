@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import type { EntityGeometry as NewGeometry } from '../contracts/generated/EntityGeometry';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
+import type { Traced } from '../model/ops/trace';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import { polylineCreate } from '../product/polylineCreate';
@@ -12,6 +13,9 @@ import { fixedLayerLocked, PointInputTool } from './drawTools';
 import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
+import { VisibleTrace } from './visibleTrace';
+
+const whenOn = (on: boolean) => (on ? ': açık' : '');
 
 /**
  * How the next arc segment is shaped (AutoCAD PLINE arc options). The
@@ -34,7 +38,11 @@ type ArcSpec =
  * Open polyline, closed polygon, or a parcel polygon with cadastral
  * attributes. Y switches to arc segments (continuing tangentially, or
  * shaped by the arc options), D back to lines; in line mode U continues
- * the last direction by a typed length.
+ * the last direction by a typed length, and İzle (İ, kept for the session;
+ * docs/adr/0161 §1) has the next segments follow the visible line work: a
+ * pointer near a line goes onto it, and a segment between two points on
+ * connected line work runs along it the shortest way, the line work's own
+ * corners and arcs added.
  */
 export class PathTool extends PointInputTool {
   readonly id: string;
@@ -55,6 +63,10 @@ export class PathTool extends PointInputTool {
   private closing = 0;
   /** Where the pointer went down, while that click is being taken (closing on the first vertex). */
   private pressedAt: Vec2 | null = null;
+  /** İzle (docs/adr/0161 §1): kept for the session, as Sabit ilk nokta is. */
+  private static trace = false;
+  /** The visible line work İzle follows, kept while the view and the drawing stand. */
+  private readonly work: VisibleTrace;
 
   constructor(ctx: AppContext, opts: { id: string; label: string; closed: boolean; measureOnly?: boolean; parcelLayer?: string }) {
     super(ctx);
@@ -63,6 +75,36 @@ export class PathTool extends PointInputTool {
     this.closed = opts.closed;
     this.measureOnly = opts.measureOnly ?? false;
     this.parcelLayer = opts.parcelLayer;
+    this.work = new VisibleTrace(ctx);
+  }
+
+  override activate(): void {
+    this.work.attach();
+    super.activate();
+  }
+
+  deactivate(): void {
+    this.work.detach();
+  }
+
+  /** Whether İzle applies now: on, in line mode (a measuring tool's own modes turn it off). */
+  protected get tracing(): boolean {
+    return PathTool.trace && !this.arcMode;
+  }
+
+  /** The way along the visible line work from `a` to `b`, or null. */
+  private traceTo(a: Vec2, b: Vec2): Traced | null {
+    return this.work.path(a, b);
+  }
+
+  /**
+   * The pointer's point; while İzle applies, an unsnapped one within the snap aperture of the visible line work goes onto
+   * it (a snapped or tracked point is where the user wants it).
+   */
+  protected override constrain(p: ToolPointer): Vec2 {
+    const q = super.constrain(p);
+    if (!this.tracing || p.snap || p.track) return q;
+    return this.work.nearest(q, this.ctx.view.worldTolerance(this.ctx.prefs.snapAperture.value)) ?? q;
   }
 
   protected promptFor(n: number): string {
@@ -71,7 +113,7 @@ export class PathTool extends PointInputTool {
     const done = n < min ? '' : ' / Bitir (Enter)';
     // G is an option here too, so its key reaches the tool (and not Kapalı alan's shortcut).
     if (this.askLength) return 'son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]';
-    if (!this.arcMode) return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G)${done}]`;
+    if (!this.arcMode) return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Geri (G)${done}]`;
     const arcOpts = `Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G)${done}`;
     const s = this.spec;
     switch (s.kind) {
@@ -147,6 +189,15 @@ export class PathTool extends PointInputTool {
     const end = this.endFor(p);
     if (dist(last, end) <= 1e-9) return;
     if (this.closesAt(end)) return this.closeOnFirst();
+    // İzle: along the line work, its corners and arcs as they are.
+    const way = this.tracing ? this.traceTo(last, end) : null;
+    if (way) {
+      for (let i = 1; i < way.pts.length; i++) {
+        this.pts.push(way.pts[i]);
+        this.bulges.push(way.bulges[i - 1]);
+      }
+      return;
+    }
     const bulge = this.nextBulge(end);
     if (bulge === null) {
       if (s.kind === 'radius' && s.r !== null) return this.ctx.log.warn(`Kiriş yarıçapın iki katından (${this.ctx.format.length(2 * s.r)}) uzun; daha yakın bir nokta seçin.`);
@@ -181,6 +232,16 @@ export class PathTool extends PointInputTool {
 
   private closeOnFirst(): void {
     if (this.pts.length < 3) return this.ctx.log.warn(`${this.label} için en az 3 köşe gerekir; ilk köşe ikinci kez eklenmedi.`);
+    // İzle: the way back to the first vertex along the line work, its last edge the closing one.
+    const way = this.tracing ? this.traceTo(this.pts[this.pts.length - 1], this.pts[0]) : null;
+    if (way) {
+      for (let i = 1; i < way.pts.length - 1; i++) {
+        this.pts.push(way.pts[i]);
+        this.bulges.push(way.bulges[i - 1]);
+      }
+      this.closing = way.bulges[way.bulges.length - 1];
+      return this.finish();
+    }
     // In arc mode the segment back to the first vertex is the arc being drawn.
     const bulge = this.nextBulge(this.pts[0]);
     if (bulge === null) return this.ctx.log.warn('İlk köşe yayın tam arkasında kalıyor; alanı Enter ile düz kenarla kapatın.');
@@ -209,7 +270,8 @@ export class PathTool extends PointInputTool {
         return true;
       }
       this.askLength = true;
-    } else if (key === 'G' && this.arcVia) this.arcVia = null;
+    } else if (!this.arcMode && (key === 'İ' || key === 'I') && this.pts.length) PathTool.trace = !PathTool.trace;
+    else if (key === 'G' && this.arcVia) this.arcVia = null;
     else if (key === 'G' && this.pts.length) {
       this.pts.pop();
       this.bulges.pop();
@@ -380,8 +442,15 @@ export class PathTool extends PointInputTool {
     const pts = [...this.pts];
     const bulges = [...this.bulges];
     const end = this.hover ? this.endFor(this.hover) : null;
-    const hb = end ? this.nextBulge(end) : null;
-    if (end && hb !== null) {
+    // İzle: the way along the line work in place of the straight segment.
+    const way = this.tracing && end && this.last ? this.traceTo(this.last, end) : null;
+    const hb = end && !way ? this.nextBulge(end) : null;
+    if (way) {
+      for (let i = 1; i < way.pts.length; i++) {
+        pts.push(way.pts[i]);
+        bulges.push(way.bulges[i - 1]);
+      }
+    } else if (end && hb !== null) {
       pts.push(end);
       bulges.push(hb);
     }
@@ -399,9 +468,11 @@ export class PathTool extends PointInputTool {
     if (s.kind === 'centre' && s.c && this.hover) strokePath(g, view, [s.c, this.hover], { color: pal.accent, dash: [2, 3] });
     if (!this.hover || !last || !end) return;
     const arc = hb ? bulgeArc(last, end, hb) : null;
-    const lines = arc
-      ? [`Yay r ${f.length(arc.r)}`, `Yay boyu ${f.length(arc.r * Math.abs(arc.sweep))}`]
-      : [f.length(dist(last, end)), `Semt ${f.bearing(bearingGrad(last, end))}`];
+    const lines = way
+      ? [f.length(way.length), `İzle: ${way.pts.length - 2} köşe`]
+      : arc
+        ? [`Yay r ${f.length(arc.r)}`, `Yay boyu ${f.length(arc.r * Math.abs(arc.sweep))}`]
+        : [f.length(dist(last, end)), `Semt ${f.bearing(bearingGrad(last, end))}`];
     if (this.measureOnly && !this.closed) lines.push(`Toplam ${f.length(bulgePathLength(pts, bulges, false))}`);
     if (this.closed && pts.length >= 3) lines.push(`Alan ${f.area(Math.abs(bulgeRingArea(pts, bulges)))}`);
     drawTag(g, view.worldToScreen(this.hover), lines, pal.accent, pal.labelHalo);

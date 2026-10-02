@@ -425,6 +425,28 @@ class Graph:
         return pts, bulges, [i for i, x in enumerate(exact) if x]
 
 
+def nearest(lines, p, reach):
+    """The point of the line work nearest to p within reach, and whether it is a given corner."""
+    g = Graph(lines)
+    best = None
+    for k, (piece, _, _) in enumerate(g.pieces):
+        d, t = closest(piece, p)
+        assert abs(d - reach) > mp.mpf("1e-6"), f"{p} on the reach"
+        if d <= reach:
+            assert best is None or abs(d - best[0]) > mp.mpf("1e-6") or hyp(at(piece, t), at(g.pieces[best[1]][0], best[2])) < mp.mpf("1e-12"), "two pieces as near"
+            if best is None or d < best[0]:
+                best = (d, k, t)
+    if best is None:
+        return None, False
+    _, k, t = best
+    piece, a, b = g.pieces[k]
+    if t <= 0 or t >= 1:
+        v = a if t <= 0 else b
+        q = g.pos[v]
+        return q, g.input[v] and (float(q[0]), float(q[1])) in g.given
+    return at(piece, t), False
+
+
 def straight_on(e, f):
     if e[0] == "seg" and f[0] == "seg":
         u = (e[2][0] - e[1][0], e[2][1] - e[1][1])
@@ -564,6 +586,18 @@ def paths():
     ]
 
 
+def nearests():
+    E, N = 487000.0, 4420000.0
+    return [
+        ("Kenarın ortasına", [line((0.0, 0.0), (10.0, 0.0))], (4.0, 0.3), 0.5),
+        ("Köşeye: iki kenarın ortak ucu, bit bit", [line((0.0, 0.0), (10.0, 0.0)), line((10.0, 0.0), (10.0, 10.0))], (10.2, -0.2), 0.5),
+        ("Uzakta: yok", [line((0.0, 0.0), (10.0, 0.0))], (5.0, 2.0), 0.5),
+        ("Yaya: çemberin üstünde", [{"kind": "arc", "c": P(0.0, 0.0), "r": 10.0, "a0": 0.0, "a1": 1.5707963267948966}], (7.2, 7.2), 0.5),
+        ("İki çizginin arasında yakın olana", [line((0.0, 0.0), (10.0, 0.0)), line((0.0, 1.0), (10.0, 1.0))], (5.0, 0.4), 0.5),
+        ("Büyük koordinatlarda", [line((E, N), (E + 20.0, N + 0.5))], (E + 10.0, N + 0.35), 0.5),
+    ]
+
+
 def chains():
     ln = lambda a, b, locked=False: {"shape": line(a, b), "locked": locked}
     return [
@@ -599,6 +633,10 @@ def build():
                     seen.append(item)
             expected = {"ways": seen, "length": float(best)}
         out_paths.append({"name": name, "lines": lines, "a": P(*a), "b": P(*b), "expected": expected})
+    out_nearest = []
+    for name, lines, p, reach in nearests():
+        q, exact = nearest(lines, M(P(*p)), mp.mpf(reach))
+        out_nearest.append({"name": name, "lines": lines, "p": P(*p), "reach": reach, "expected": None if q is None else fl(q), "exact": exact})
     out_chains = [
         {"name": name, "objects": objects, "seed": seed, "tol": tol, "expected": chain(objects, seed, mp.mpf(tol))}
         for name, objects, seed, tol in chains()
@@ -608,6 +646,7 @@ def build():
         "version": 1,
         "about": "İzle ve Zincir (docs/adr/0161): bağımsız başvuru, scripts/fixtures/trace_cases.py",
         "paths": out_paths,
+        "nearest": out_nearest,
         "chains": out_chains,
     }
 
@@ -626,7 +665,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text)
     data = json.loads(text)
-    print(f"{OUT}: {len(data['paths'])} yol, {len(data['chains'])} zincir")
+    print(f"{OUT}: {len(data['paths'])} yol, {len(data['nearest'])} en yakın nokta, {len(data['chains'])} zincir")
     return 0
 
 

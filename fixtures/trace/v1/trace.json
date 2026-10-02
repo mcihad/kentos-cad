@@ -1204,6 +1204,182 @@
    }
   }
  ],
+ "nearest": [
+  {
+   "name": "Kenarın ortasına",
+   "lines": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "p": {
+    "x": 4.0,
+    "y": 0.3
+   },
+   "reach": 0.5,
+   "expected": {
+    "x": 4.0,
+    "y": 0.0
+   },
+   "exact": false
+  },
+  {
+   "name": "Köşeye: iki kenarın ortak ucu, bit bit",
+   "lines": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "a": {
+      "x": 10.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 10.0
+     }
+    }
+   ],
+   "p": {
+    "x": 10.2,
+    "y": -0.2
+   },
+   "reach": 0.5,
+   "expected": {
+    "x": 10.0,
+    "y": 0.0
+   },
+   "exact": true
+  },
+  {
+   "name": "Uzakta: yok",
+   "lines": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "p": {
+    "x": 5.0,
+    "y": 2.0
+   },
+   "reach": 0.5,
+   "expected": null,
+   "exact": false
+  },
+  {
+   "name": "Yaya: çemberin üstünde",
+   "lines": [
+    {
+     "kind": "arc",
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 10.0,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    }
+   ],
+   "p": {
+    "x": 7.2,
+    "y": 7.2
+   },
+   "reach": 0.5,
+   "expected": {
+    "x": 7.0710678118654755,
+    "y": 7.0710678118654755
+   },
+   "exact": false
+  },
+  {
+   "name": "İki çizginin arasında yakın olana",
+   "lines": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "a": {
+      "x": 0.0,
+      "y": 1.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 1.0
+     }
+    }
+   ],
+   "p": {
+    "x": 5.0,
+    "y": 0.4
+   },
+   "reach": 0.5,
+   "expected": {
+    "x": 5.0,
+    "y": 0.0
+   },
+   "exact": false
+  },
+  {
+   "name": "Büyük koordinatlarda",
+   "lines": [
+    {
+     "kind": "line",
+     "a": {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     "b": {
+      "x": 487020.0,
+      "y": 4420000.5
+     }
+    }
+   ],
+   "p": {
+    "x": 487010.0,
+    "y": 4420000.35
+   },
+   "reach": 0.5,
+   "expected": {
+    "x": 487010.00249843847,
+    "y": 4420000.250062461
+   },
+   "exact": false
+  }
+ ],
  "chains": [
   {
    "name": "Üç çizgi uç uca, sonunda kavşak",

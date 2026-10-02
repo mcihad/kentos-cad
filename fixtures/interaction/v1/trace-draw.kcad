@@ -1,0 +1,166 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: İzleyerek çizim",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "7"
+      },
+      "pts": [
+        {
+          "x": 486975,
+          "y": 4419985
+        },
+        {
+          "x": 486995,
+          "y": 4419985
+        },
+        {
+          "x": 486995,
+          "y": 4420005
+        },
+        {
+          "x": 486975,
+          "y": 4420008
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "8"
+      },
+      "pts": [
+        {
+          "x": 486995,
+          "y": 4419985
+        },
+        {
+          "x": 487015,
+          "y": 4419985
+        },
+        {
+          "x": 487015,
+          "y": 4420005
+        },
+        {
+          "x": 486995,
+          "y": 4420005
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 486972,
+          "y": 4419982
+        },
+        {
+          "x": 487018,
+          "y": 4419982
+        },
+        {
+          "x": 487024,
+          "y": 4419988
+        },
+        {
+          "x": 487024,
+          "y": 4420010
+        }
+      ],
+      "bulges": [
+        0,
+        0.41421356237309503,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 487005,
+        "y": 4419980
+      },
+      "b": {
+        "x": 487005,
+        "y": 4419990
+      }
+    }
+  ]
+}

@@ -184,6 +184,39 @@ impl TraceGraph {
         best.map(|(_, piece, t)| Spot::Inside(piece, t))
     }
 
+    /// The point of the line work nearest to `p` within `reach` metres (the
+    /// first piece of equally near ones): a pointer near a line is put on it
+    /// (docs/adr/0161 §1). A piece's end is its vertex's place, bit for bit.
+    pub fn nearest(&self, p: Vec2, reach: f64) -> Option<Vec2> {
+        let q = self.local(p);
+        let around = Bounds {
+            min_x: q.x - reach,
+            min_y: q.y - reach,
+            max_x: q.x + reach,
+            max_y: q.y + reach,
+        };
+        let mut hits = Vec::new();
+        self.tree.search(&around, &mut hits);
+        hits.sort_unstable();
+        let mut best: Option<(f64, usize, f64)> = None;
+        for &h in &hits {
+            let c = closest_on_edge(&self.built.pieces[h as usize].edge, q);
+            if c.d <= reach && best.is_none_or(|(d, ..)| c.d < d) {
+                best = Some((c.d, h as usize, c.t));
+            }
+        }
+        let (_, piece, t) = best?;
+        let piece = &self.built.pieces[piece];
+        Some(if t <= 0.0 {
+            self.place(piece.from)
+        } else if t >= 1.0 {
+            self.place(piece.to)
+        } else {
+            let at = closest_on_edge(&piece.edge, q).p;
+            Vec2::new(at.x + self.origin.x, at.y + self.origin.y)
+        })
+    }
+
     /// The vertex's place: its exact input coordinates when it is an input
     /// corner, else where the cutting put it.
     fn place(&self, v: usize) -> Vec2 {
@@ -378,9 +411,14 @@ impl TraceGraph {
     }
 }
 
-pub(crate) static OPS: &[Op] = &[op!("tracePath", |lines: Vec<Entity>, a: Vec2, b: Vec2| {
-    TraceGraph::of_entities(&lines).path(a, b)
-})];
+pub(crate) static OPS: &[Op] = &[
+    op!("tracePath", |lines: Vec<Entity>, a: Vec2, b: Vec2| {
+        TraceGraph::of_entities(&lines).path(a, b)
+    }),
+    op!("traceNearest", |lines: Vec<Entity>, p: Vec2, reach: f64| {
+        TraceGraph::of_entities(&lines).nearest(p, reach)
+    }),
+];
 
 #[cfg(test)]
 mod tests {
@@ -463,6 +501,37 @@ mod tests {
                 continue;
             };
             off.extend(compare(&name, &got, want));
+        }
+        assert!(off.is_empty(), "{}", off.join("\n"));
+    }
+
+    /// The nearest points of the same reference: within 1e-9 m, a vertex bit for bit.
+    #[test]
+    fn every_nearest_point_is_the_reference_s() {
+        let file = Json::parse(include_str!("../../../../../fixtures/trace/v1/trace.json"))
+            .expect("trace.json reads");
+        let Json::Arr(cases) = file.get("nearest") else {
+            panic!("nearest")
+        };
+        assert!(cases.len() >= 5, "{} cases", cases.len());
+        let mut off = Vec::new();
+        for case in cases {
+            let name = String::from_json(case.get("name")).unwrap_or_default();
+            let lines = Vec::<Entity>::from_json(case.get("lines")).expect("lines");
+            let p = Vec2::from_json(case.get("p")).expect("p");
+            let reach = f64::from_json(case.get("reach")).expect("reach");
+            let got = TraceGraph::of_entities(&lines).nearest(p, reach);
+            let want = Option::<Vec2>::from_json(case.get("expected")).expect("expected");
+            let exact = bool::from_json(case.get("exact")).expect("exact");
+            let ok = match (got, want) {
+                (None, None) => true,
+                (Some(g), Some(w)) if exact => g == w,
+                (Some(g), Some(w)) => js_hypot(g.x - w.x, g.y - w.y) <= 1e-9,
+                _ => false,
+            };
+            if !ok {
+                off.push(format!("{name}: {got:?}, beklenen {want:?}"));
+            }
         }
         assert!(off.is_empty(), "{}", off.join("\n"));
     }

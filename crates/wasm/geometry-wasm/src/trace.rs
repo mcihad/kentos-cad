@@ -37,4 +37,10 @@ impl TraceGraph {
     pub fn path(&self, ax: f64, ay: f64, bx: f64, by: f64) -> String {
         json::to_string(&self.inner.path(Vec2::new(ax, ay), Vec2::new(bx, by)))
     }
+
+    /// The point of the line work nearest to (x, y) within `reach` metres as
+    /// JSON (`null` when none is that near).
+    pub fn nearest(&self, x: f64, y: f64, reach: f64) -> String {
+        json::to_string(&self.inner.nearest(Vec2::new(x, y), reach))
+    }
 }

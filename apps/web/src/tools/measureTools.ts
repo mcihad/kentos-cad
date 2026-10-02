@@ -36,6 +36,11 @@ export class DistanceTool extends PathTool {
     return DistanceTool.fixed;
   }
 
+  /** Rays from the first point follow no line work (docs/adr/0161 §1). */
+  protected override get tracing(): boolean {
+    return super.tracing && !this.fixed;
+  }
+
   protected override promptFor(n: number): string {
     const chip = `Sabit ilk nokta (S)${whenOn(this.fixed)}`;
     // The chip is offered before the first point and, once on, throughout: the chain's own options
@@ -142,12 +147,18 @@ export class AreaMeasureTool extends PathTool {
     return AreaMeasureTool.inside;
   }
 
+  /** A click inside a region is no point on a line (docs/adr/0161 §1). */
+  protected override get tracing(): boolean {
+    return super.tracing && !this.inside;
+  }
+
   override activate(): void {
     this.faces.attach();
     super.activate();
   }
 
-  deactivate(): void {
+  override deactivate(): void {
+    super.deactivate();
     this.faces.detach();
   }
 

@@ -31,10 +31,10 @@ fn prompts_are_the_web_s_text_and_options() {
     b.click(0.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G)]"
+        "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G)]"
     );
     b.click(10.0, 0.0);
-    assert_eq!(b.options(), ["Y", "U", "G", "Enter"], "two points finish");
+    assert_eq!(b.options(), ["Y", "U", "İ", "G", "Enter"], "two points finish");
     assert!(b.type_text("Y"));
     assert_eq!(
         b.session.prompt().text(),

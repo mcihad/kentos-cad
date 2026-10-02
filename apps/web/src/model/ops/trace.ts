@@ -22,9 +22,15 @@ export const tracedKind = (e: Entity): boolean => e.kind === 'line' || e.kind ==
 /** The way from `a` to `b` along `lines`, the graph built for this call alone (tests; tools keep a `TraceGraph`). */
 export const tracePath = op<(lines: readonly Entity[], a: Vec2, b: Vec2) => Traced | null>('tracePath');
 
+/** The point of `lines` nearest to `p` within `reach` metres (tests; tools keep a `TraceGraph`). */
+export const traceNearest = op<(lines: readonly Entity[], p: Vec2, reach: number) => Vec2 | null>('traceNearest');
+
 /** The graph of line work kept in the core: built once per view, asked on every pointer move. */
 export interface TraceGraph {
+  /** The shortest way from `a` to `b` along the line work, or null. */
   path(a: Vec2, b: Vec2): Traced | null;
+  /** The point of the line work nearest to `p` within `reach` metres (a vertex bit for bit), or null. */
+  nearest(p: Vec2, reach: number): Vec2 | null;
   free(): void;
 }
 
@@ -33,6 +39,7 @@ export function traceGraph(entities: readonly Entity[]): TraceGraph {
   const core = CoreTraceGraph.ofEntities(writeArgs(entities));
   return {
     path: (a, b) => core.path(a.x, a.y, b.x, b.y) as Traced | null,
+    nearest: (p, reach) => core.nearest(p.x, p.y, reach) as Vec2 | null,
     free: () => core.free(),
   };
 }

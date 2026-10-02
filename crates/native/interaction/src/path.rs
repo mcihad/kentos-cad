@@ -21,6 +21,14 @@
 //!   shapes write nothing and say the length, or the area and perimeter;
 //!   with fewer points it warns, writes nothing and starts over.
 //!
+//! İzle (İ, kept for the session; docs/adr/0161 §1) has the next segments
+//! of line mode follow the visible line work: an unsnapped pointer within the
+//! snap aperture of a line goes onto it, and a segment between two points on
+//! connected line work runs along it the shortest way, the line work's own
+//! corners and arcs added (the shared core's `ops::trace`); closing on the
+//! first corner goes back along it too. Not for Sabit ilk nokta's rays nor
+//! İçine tıkla.
+//!
 //! Two options of the measuring shapes are docs/adr/0141's:
 //!
 //! - Mesafe ölç's Sabit ilk nokta (S) measures every new point from the first
@@ -53,6 +61,7 @@ use kentos_geometry_core::geom::bulge::{
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::jsmath::{PI, js_hypot};
+use kentos_geometry_core::ops::trace::Traced;
 use kentos_geometry_core::tools::drawing::{
     centre_bulge, offset_along, radial_point, radius_bulge, unit_toward,
 };
@@ -70,6 +79,7 @@ use crate::tool::{
     Area, Context, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
     Tool,
 };
+use crate::trace_work::WorkCache;
 
 /// The closed-area tool's id: its command is `tool.polygon`.
 pub const POLYGON_ID: &str = "polygon";
@@ -193,6 +203,11 @@ pub struct Path {
     faces: FaceCache,
     /// The area last measured, which Alan olarak çiz writes; kept until the next measurement starts.
     measured: Option<Region>,
+    /// The visible line work İzle follows, kept while the view and the drawing stand.
+    work: WorkCache,
+    /// İzle's way from the last point to the cursor, for the preview: its two
+    /// ends and the way (the preview has no context to find it).
+    way: Option<(Vec2, Vec2, Traced)>,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -230,6 +245,8 @@ impl Path {
             inside: None,
             faces: FaceCache::default(),
             measured: None,
+            work: WorkCache::default(),
+            way: None,
         }
     }
 
@@ -263,6 +280,12 @@ impl Path {
     /// Alan hesapla with İçine tıkla on: a click measures the region it is inside.
     fn inside_mode(&self) -> bool {
         self.shape == Shape::MeasureArea && self.memory.area_inside
+    }
+
+    /// Whether İzle applies now: on, in line mode, neither Sabit ilk nokta's
+    /// rays nor İçine tıkla (docs/adr/0161 §1).
+    fn tracing(&self) -> bool {
+        self.memory.trace && !self.arc_mode && !self.fixed() && !self.inside_mode()
     }
 
     /// The point new ones are measured from, and ortho, polar tracking and
@@ -367,6 +390,15 @@ impl Path {
         if self.closes_at(end, cx) {
             return self.close_on_first(cx);
         }
+        // İzle: along the line work, its corners and arcs as they are.
+        if self.tracing()
+            && let Some(way) = self.work.path(last, end, cx)
+        {
+            self.pts
+                .extend_from_slice(way.pts.get(1..).unwrap_or_default());
+            self.bulges.extend_from_slice(&way.bulges);
+            return;
+        }
         let Some(bulge) = self.next_bulge(end) else {
             let text = match self.spec {
                 Spec::Radius { r: Some(r) } => format!(
@@ -416,6 +448,19 @@ impl Path {
                 ),
             );
             return;
+        }
+        // İzle: the way back to the first corner along the line work, its last edge the closing one.
+        if self.tracing()
+            && let (Some(&last), Some(&first)) = (self.pts.last(), self.pts.first())
+            && let Some(way) = self.work.path(last, first, cx)
+        {
+            let n = way.pts.len();
+            self.pts
+                .extend_from_slice(way.pts.get(1..n - 1).unwrap_or_default());
+            self.bulges
+                .extend_from_slice(way.bulges.get(..n - 2).unwrap_or_default());
+            self.closing = way.bulges.get(n - 2).copied().unwrap_or(0.0);
+            return self.finish(cx);
         }
         // In arc mode the segment back to the first corner is the arc being drawn.
         let Some(bulge) = self.next_bulge(self.pts[0]) else {
@@ -568,6 +613,10 @@ impl Path {
                 return true;
             }
             self.ask_length = true;
+        } else if !self.arc_mode && (key == "İ" || key == "I") && !self.pts.is_empty() {
+            cx.memory.trace = !cx.memory.trace;
+            self.memory.trace = cx.memory.trace;
+            self.way = None;
         } else if key == "G" && self.arc_via.is_some() {
             self.arc_via = None;
         } else if key == "G" && !self.pts.is_empty() {
@@ -763,6 +812,7 @@ impl Path {
         self.spec = Spec::Tangent;
         self.ask_length = false;
         self.closing = 0.0;
+        self.way = None;
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -770,6 +820,14 @@ impl Path {
     fn constrain(&mut self, p: &Pointer, cx: &Context<'_>) -> Vec2 {
         let (point, tracking) = points::constrain(self.base(), p, cx);
         self.tracking = tracking;
+        // İzle: an unsnapped point within the snap aperture of the visible
+        // line work goes onto it (a snapped or tracked one is where the user wants it).
+        if self.tracing() && p.snap.is_none() && !p.tracked {
+            let reach = cx.view.world_length(cx.draft.snap_aperture);
+            if let Some(on) = self.work.nearest(point, reach, cx) {
+                return on;
+            }
+        }
         point
     }
 
@@ -1000,6 +1058,7 @@ impl Tool for Path {
             let prompt = Prompt::new(label, "sonraki noktayı belirtin")
                 .option("Yay", "Y")
                 .option("Uzunluk", "U")
+                .toggle("İzle", "İ", self.memory.trace)
                 .option("Geri", "G");
             return if done {
                 prompt.option("Bitir", "Enter")
@@ -1039,6 +1098,12 @@ impl Tool for Path {
         self.see(cx);
         let point = self.constrain(p, cx);
         self.hover = Some(point);
+        // İzle's way to the cursor, for the preview.
+        let end = self.end_for(point);
+        self.way = match self.last() {
+            Some(last) if self.tracing() => self.work.path(last, end, cx).map(|w| (last, end, w)),
+            _ => None,
+        };
         if self.inside_mode() {
             let region = self.face(point, cx);
             self.inside = Some((point, region));
@@ -1129,8 +1194,22 @@ impl Tool for Path {
         let mut pts = self.pts.clone();
         let mut bulges = self.bulges.clone();
         let end = self.hover.map(|h| self.end_for(h));
-        let hb = end.and_then(|e| self.next_bulge(e));
-        if let (Some(end), Some(hb)) = (end, hb) {
+        // İzle: the way along the line work in place of the straight segment,
+        // while it still goes from the last point to the cursor.
+        let way = self
+            .way
+            .as_ref()
+            .filter(|(from, to, _)| {
+                self.tracing() && Some(*from) == self.last() && Some(*to) == end
+            })
+            .map(|(_, _, w)| w);
+        let hb = end
+            .filter(|_| way.is_none())
+            .and_then(|e| self.next_bulge(e));
+        if let Some(way) = way {
+            pts.extend_from_slice(way.pts.get(1..).unwrap_or_default());
+            bulges.extend_from_slice(&way.bulges);
+        } else if let (Some(end), Some(hb)) = (end, hb) {
             pts.push(end);
             bulges.push(hb);
         }
@@ -1159,12 +1238,16 @@ impl Tool for Path {
         let tag = match (self.hover, last, end) {
             (Some(hover), Some(last), Some(end)) => {
                 let arc = hb.and_then(|b| bulge_arc(last, end, b));
-                let mut lines = match arc {
-                    Some(a) => vec![
+                let mut lines = match (way, arc) {
+                    (Some(w), _) => vec![
+                        format.length(w.length),
+                        format!("İzle: {} köşe", w.pts.len().saturating_sub(2)),
+                    ],
+                    (None, Some(a)) => vec![
                         format!("Yay r {}", format.length(a.r)),
                         format!("Yay boyu {}", format.length(a.r * a.sweep.abs())),
                     ],
-                    None => vec![
+                    (None, None) => vec![
                         format.length(dist(last, end)),
                         format!("Semt {}", format.bearing(bearing_grad(last, end))),
                     ],

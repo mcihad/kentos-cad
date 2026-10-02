@@ -178,6 +178,7 @@ pub mod text;
 pub mod text_file;
 pub mod topology;
 mod tool;
+mod trace_work;
 pub mod trim;
 pub mod vertex;
 pub mod vertex_points;

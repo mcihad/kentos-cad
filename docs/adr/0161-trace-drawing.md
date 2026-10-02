@@ -95,6 +95,20 @@ Yeni bir sözleşme alanı yoktur.
      - Verilen koordinatlar bit bit, öbür köşeler 1e-9 m, kabarıklıklar 1e-12 içinde. Eşit yollarda ikisi de kabul edilir; öbür yollar en az 1 mm uzun olmalıdır (betikte denetlenir).
    - **Sonuç:** çekirdek (yerli) ve web (WASM) başvuruyla aynı. Köşe kuralını bozan bir deneme üç durumda ve bir birim testinde düşer.
 2. İzle iki platformda: düğme, önizleme, kart, görünen çizgilerin önbelleği; ortak iz `trace-draw.json`; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Yol aracı:** düz kipte, ilk noktadan sonra İzle (İ) düğmesi.
+     - Açıkken kenetsiz (ve izleme kilitsiz) imleç, kenet yarıçapı içindeki en yakın görünen çizgiye oturur (çekirdeğin `TraceGraph::nearest`; uç bir köşeyse köşenin kendisi).
+     - İki nokta bağlı çizgilerdeyse araya yolun köşeleri ve yayları eklenir; ilk köşeye tıklayınca son kenar da çizgiler boyunca kapanır.
+     - Önizleme yolu çizer, kart “uzunluk, İzle: n köşe” der.
+     - Sabit ilk nokta'nın ışınlarında ve İçine tıkla'da İzle yoktur.
+   - **Görünen çizgilerin önbelleği:** web `tools/visibleTrace.ts`, masaüstü `kentos_interaction::trace_work`. Görünüm ya da çizim değişince yeniden kurulur; web'de çekirdeğin kopyası bayatlayınca bırakılır.
+   - **Seçenek harfi:** bir tuşla çalışır (“i” Türkçe büyük harfle “İ”).
+   - **Sınama:**
+     - Yol aracının seçeneklerine “İ” eklendi: eski izlerin (`measure-parcel`, `polygon-accept`, `polyline-arc`) ve testlerin seçenek listeleri buna göre.
+     - İki platformda aynı elle hesaplanmış birim testleri (web `pathTrace.test.ts`, masaüstü `tests/trace_draw.rs`).
+     - Ortak iz `trace-draw.json` (`trace-draw.kcad`): komşulara yaslanan parselin kapanışta izlenmesi, kesişimlerden dönen ölçü (46 m, 3 kenar), yaylı yol kenarı.
+     - Kullanım senaryosu `usage-trace-draw.json`.
 3. Zincir iki platformda: Birleştir'in seçeneği; ortak iz.
 4. Akış iki platformda: düğme, adım, imleçle köşe; ortak iz; resimler.
 

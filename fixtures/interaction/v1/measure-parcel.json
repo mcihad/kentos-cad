@@ -13,9 +13,9 @@
   "steps": [
     { "run": "tool.measure", "expect": { "tool": "measure", "points": 0, "entities": 10 } },
     { "click": [-14, 4], "expect": { "points": 1, "log": "info" } },
-    { "click": [-14, 10], "expect": { "points": 2, "options": ["Y", "U", "G", "Enter"] } },
+    { "click": [-14, 10], "expect": { "points": 2, "options": ["Y", "U", "İ", "G", "Enter"] } },
     { "key": "U", "note": "Son doğrultuda yazılacak uzunluk beklenir.", "expect": { "options": ["G"] } },
-    { "key": "Ctrl+Z", "note": "Ctrl+Z, Geri (G) gibi, son noktayı alır ve uzunluk beklemesini bitirir; beklerken istem Geri'yi de gösterir.", "expect": { "points": 1, "options": ["Y", "U", "G"] } },
+    { "key": "Ctrl+Z", "note": "Ctrl+Z, Geri (G) gibi, son noktayı alır ve uzunluk beklemesini bitirir; beklerken istem Geri'yi de gösterir.", "expect": { "points": 1, "options": ["Y", "U", "İ", "G"] } },
     { "click": [-14, 10], "expect": { "points": 2 } },
     { "move": [-8, 10], "note": "İmlecin yanında kenarın uzunluğu, semti ve yolun toplamı." },
     { "click": [-8, 10], "expect": { "points": 3 } },
