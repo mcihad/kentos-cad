@@ -11,6 +11,7 @@ import { segmented, textField } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { copyReport, field, Grid, knownField, mmText, nameAt, readNumber, summary, summaryLine, type GridModel, type Row } from './common';
 import { METHOD_HINT, METHODS, PARAMS, PARAMS_HINT, paramLabel, paramsReport, paramsSummary, paramsTransform, readParams, type Method, type Params } from './fitParams';
+import { linksOf, RUBBER_HINT, rubberReport, rubberSummary, type Corrections, type Links } from './fitRubber';
 
 /**
  * Vektör oturtma (docs/adr/0156 §7): a drawing or a layer fitted to another
@@ -24,7 +25,10 @@ import { METHOD_HINT, METHODS, PARAMS, PARAMS_HINT, paramLabel, paramsReport, pa
  * writes the transform through `cad.entities.transform` (one undo step,
  * Oturt) to the selected objects, a layer or the whole drawing, or their
  * copies. Parametrelerle gives the transform by its numbers instead
- * (fitParams.ts). What is typed stays for the session. The desktop's is
+ * (fitParams.ts). Kauçuk levha (fitRubber.ts, docs/adr/0158) takes the used
+ * pairs as links the sheet meets exactly; the table shows Helmert's
+ * residuals, the local corrections, and Sabit makes a row a fixed point.
+ * What is typed stays for the session. The desktop's is
  * `apps/desktop/src/calc/fit/`.
  */
 export function openFit(ctx: AppContext): void {
@@ -32,10 +36,14 @@ export function openFit(ctx: AppContext): void {
 }
 
 type Scope = 'selection' | 'layer' | 'all';
+/** The window's transforms: the core's three least-squares ones and Kauçuk levha. */
+type Kind = FitKind | 'rubber';
+/** The least-squares transform the table is solved by: Kauçuk levha's residuals are Helmert's. */
+const solvedBy = (kind: Kind): FitKind => (kind === 'rubber' ? 'helmert' : kind);
 
 const state = {
   method: 'points' as Method,
-  kind: 'helmert' as FitKind,
+  kind: 'helmert' as Kind,
   rows: [{}, {}, {}, {}] as Row[],
   /** Adla eşle's layers: the source points' and the target points'. */
   source: null as string | null,
@@ -53,17 +61,19 @@ const state = {
 };
 
 const TITLE = 'Vektör oturtma';
-const KINDS: { value: FitKind; label: string }[] = [
+const KINDS: { value: Kind; label: string }[] = [
   { value: 'helmert', label: 'Helmert' },
   { value: 'affine', label: 'Afin' },
   { value: 'projective', label: 'Projektif' },
+  { value: 'rubber', label: 'Kauçuk levha' },
 ];
 /** A kind as a sentence names it. */
-const KIND_NAME: Record<FitKind, string> = { helmert: 'Helmert', affine: 'afin', projective: 'projektif' };
-const KIND_HINT: Record<FitKind, string> = {
+const KIND_NAME: Record<Kind, string> = { helmert: 'Helmert', affine: 'afin', projective: 'projektif', rubber: 'kauçuk levha' };
+const KIND_HINT: Record<Kind, string> = {
   helmert: 'Benzerlik: öteleme, dönüklük ve tek ölçek; en az 2 çift.',
   affine: "X ve Y'ye ayrı ölçek ve kayma; en az 3 çift, bir doğru üstünde olmayan. Daireler ve yaylar elips olur.",
   projective: "Perspektif; en az 4 çift, üçü bir doğru üstünde olmayan. Eğriler 0,1 mm'lik köşelere açılır.",
+  rubber: RUBBER_HINT,
 };
 const FAILURE: Record<FitFailure['error'], string> = {
   too_few: '',
@@ -112,6 +122,8 @@ class FitDialog {
   /** The solution now, and the rows its pairs came from. */
   private fit: Fit | FitFailure | null = null;
   private rowsOfPairs: number[] = [];
+  /** Kauçuk levha now: the used pairs as links and whether they give a sheet. */
+  private links: Links | null = null;
   /** Parametrelerle now: the numbers read, or what is wrong with them. */
   private params: Params | HTMLElement[] = [];
 
@@ -126,6 +138,9 @@ class FitDialog {
       actions: (r) => [
         { icon: 'target', label: `${r + 1}. satırın kaynağını çizimden seç`, tip: 'Çizimdeki yerini gösterin; bir noktaya kenetlenirse adı da gelir.', run: () => this.pick(r, 'source') },
         { icon: 'pin', label: `${r + 1}. satırın hedefini çizimden seç`, tip: 'Ülke sistemindeki noktası çizimdeyse onu gösterin.', run: () => this.pick(r, 'target') },
+        ...(state.kind === 'rubber'
+          ? [{ icon: 'lock', label: `${r + 1}. satırı sabit yap`, tip: 'Hedefe kaynağı yazar: nokta yerinde kalır, levhayı orada tutar.', run: () => this.fix(r) }]
+          : []),
       ],
       canInsertAfter: () => true,
       insertAfter: (r) => state.rows.splice(r + 1, 0, {}),
@@ -158,7 +173,8 @@ class FitDialog {
     for (const box of [this.kindBox, this.matchBox, this.gridBox]) box.hidden = !points;
     this.paramsBox.hidden = points;
     if (!points) this.renderParams();
-    const kind = segmented<FitKind>({ label: 'Dönüşüm', options: KINDS, value: state.kind, onChange: (v) => ((state.kind = v), this.renderControls(), this.solve()) });
+    // A kind change builds the table again: Kauçuk levha's rows have Sabit.
+    const kind = segmented<Kind>({ label: 'Dönüşüm', options: KINDS, value: state.kind, onChange: (v) => ((state.kind = v), this.renderControls(), this.grid.render(), this.solve()) });
     replaceChildren(this.kindBox, h('div', { class: 'io-row' }, field('Dönüşüm', kind, KIND_HINT[state.kind], 'grow')));
     // Adla eşle: the layers holding named points, each with its count.
     const named = new Map<string, number>();
@@ -240,6 +256,7 @@ class FitDialog {
 
   /** The table's pairs solved again; the residuals into their cells, the summary under the table. */
   private solvePoints(): void {
+    const kind = state.kind;
     const pairs: FitPair[] = [];
     this.rowsOfPairs = [];
     state.rows.forEach((row, r) => {
@@ -251,7 +268,7 @@ class FitDialog {
       }
     });
     const used = pairs.filter((p) => p.used).length;
-    this.fit = pairs.length ? fitTransform(pairs, state.kind) : null;
+    this.fit = pairs.length ? fitTransform(pairs, solvedBy(kind)) : null;
     const fit = this.fit;
     if (fit && !('error' in fit))
       fit.residuals.forEach(([vx, vy, v], i) => {
@@ -261,13 +278,19 @@ class FitDialog {
         row.v = fixed(v * 1000, 1);
       });
     this.grid.refresh();
+    if (kind === 'rubber') {
+      this.links = linksOf(pairs);
+      summary(this.summaryBox, rubberSummary(this.links, fit, this.corrections()));
+      return;
+    }
+    this.links = null;
     const lines: HTMLElement[] = [];
     if (!fit || 'error' in fit) {
-      const need = FIT_NEED[state.kind];
-      if (!fit || fit.error === 'too_few') lines.push(summaryLine('info', `${KIND_NAME[state.kind][0].toLocaleUpperCase('tr-TR')}${KIND_NAME[state.kind].slice(1)} için en az ${need} kullanılan çift gerekir; şimdi ${used}. Koordinatları yazın, yapıştırın ya da çizimden seçin.`));
+      const need = FIT_NEED[kind];
+      if (!fit || fit.error === 'too_few') lines.push(summaryLine('info', `${KIND_NAME[kind][0].toLocaleUpperCase('tr-TR')}${KIND_NAME[kind].slice(1)} için en az ${need} kullanılan çift gerekir; şimdi ${used}. Koordinatları yazın, yapıştırın ya da çizimden seçin.`));
       else lines.push(summaryLine('warn', FAILURE[fit.error]));
     } else {
-      const dof = 2 * used - 2 * FIT_NEED[state.kind];
+      const dof = 2 * used - 2 * FIT_NEED[kind];
       lines.push(
         summaryLine(
           'ok',
@@ -285,12 +308,12 @@ class FitDialog {
   }
 
   /**
-   * The parameters in words: Helmert's scale and turn, the affine's scales, turn and shear, the projective's numbers.
-   * The affine's scales by the surveyor's axes (CLAUDE.md §5): Y is east (the core's x scale), X north.
+   * The parameters in words: Helmert's scale and turn (Kauçuk levha's too), the affine's scales, turn and shear, the
+   * projective's numbers. The affine's scales by the surveyor's axes (CLAUDE.md §5): Y is east (the core's x scale), X north.
    */
   private parameters(fit: Fit): string {
     const { format } = this.ctx;
-    if (state.kind === 'helmert' && fit.scale !== undefined && fit.rotation !== undefined)
+    if (solvedBy(state.kind) === 'helmert' && fit.scale !== undefined && fit.rotation !== undefined)
       return `Ölçek ${fixed(fit.scale, 8)} (${fixed((fit.scale - 1) * 1e6, 1)} ppm), dönüklük ${format.angle(fit.rotation)}.`;
     if (state.kind === 'affine' && fit.scaleX !== undefined && fit.scaleY !== undefined && fit.rotation !== undefined && fit.shear !== undefined)
       return `Y ölçeği ${fixed(fit.scaleX, 8)}, X ölçeği ${fixed(fit.scaleY, 8)}, dönüklük ${format.angle(fit.rotation)}, kayma ${format.angle(fit.shear)}.`;
@@ -307,6 +330,37 @@ class FitDialog {
       if (best === null || fit.residuals[i][2] > fit.residuals[best][2]) best = i;
     });
     return best;
+  }
+
+  /** Kauçuk levha's local corrections: Helmert's largest residual among the used pairs and its row's name, and their mean. */
+  private corrections(): Corrections | null {
+    const fit = this.fit;
+    const worst = this.worst();
+    if (!fit || 'error' in fit || worst === null) return null;
+    let sum = 0;
+    let n = 0;
+    this.rowsOfPairs.forEach((r, i) => {
+      if (state.rows[r].use === '0') return;
+      sum += fit.residuals[i][2];
+      n++;
+    });
+    const r = this.rowsOfPairs[worst];
+    return { worst: fit.residuals[worst][2], who: state.rows[r].name?.trim() || `${r + 1}. satır`, mean: sum / n };
+  }
+
+  /** Sabit: the row's target is its source, a fixed point; a row without its source says so and keeps its target. */
+  private fix(r: number): void {
+    const row = state.rows[r];
+    if (!row) return;
+    if (readNumber(row.sy ?? '') === null || readNumber(row.sx ?? '') === null) {
+      this.status.textContent = `${r + 1}. satırın kaynağı eksik; önce kaynağını yazın ya da çizimden seçin.`;
+      this.status.dataset.kind = 'error';
+      return;
+    }
+    [row.ty, row.tx] = [row.sy ?? '', row.sx ?? ''];
+    this.status.textContent = '';
+    this.grid.render();
+    this.solve();
   }
 
   private mark(r: number): string | null {
@@ -333,6 +387,10 @@ class FitDialog {
     if (state.method === 'parameters') {
       const p = this.params;
       return Array.isArray(p) ? null : { transform: paramsTransform(p), how: 'parametrelerle', m0: '' };
+    }
+    if (state.kind === 'rubber') {
+      const l = this.links;
+      return l && !l.error ? { transform: { kind: 'rubbersheet', links: l.links }, how: 'kauçuk levhayla', m0: '' } : null;
     }
     const fit = this.fit;
     if (!fit || 'error' in fit) return null;
@@ -423,6 +481,7 @@ class FitDialog {
   /** The report: the transform, the pairs with their residuals, m0 and the parameters, tab-separated. */
   private report(): void {
     if (state.method === 'parameters') return this.reportParams();
+    if (state.kind === 'rubber') return this.reportRubber();
     const fit = this.fit;
     const lines: string[][] = [[TITLE, KIND_NAME[state.kind]], ['Kullan', 'Ad', 'Kaynak Y', 'Kaynak X', 'Hedef Y', 'Hedef X', 'vY (mm)', 'vX (mm)', 'v (mm)']];
     for (const row of state.rows) {
@@ -437,6 +496,16 @@ class FitDialog {
       lines.push(['Merkezli sayılar', ...fit.params.map(String)]);
     }
     copyReport(this.ctx, TITLE, lines);
+  }
+
+  /** Kauçuk levha's report: the method, the pairs with their local corrections, the links and Helmert's numbers. */
+  private reportRubber(): void {
+    const rows = state.rows
+      .filter((row) => pairOf(row))
+      .map((row) => [row.use === '0' ? 'hayır' : 'evet', row.name ?? '', row.sy ?? '', row.sx ?? '', row.ty ?? '', row.tx ?? '', row.vy ?? '', row.vx ?? '', row.v ?? '']);
+    const fit = this.fit;
+    const parameters = fit && !('error' in fit) ? this.parameters(fit) : null;
+    copyReport(this.ctx, TITLE, rubberReport(TITLE, rows, this.links ?? linksOf([]), fit, this.corrections(), parameters));
   }
 
   /** Parametrelerle's report: the base, the numbers as read and the linear part, tab-separated. */

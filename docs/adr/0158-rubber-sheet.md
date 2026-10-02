@@ -151,6 +151,19 @@ Rapor bağları, Helmert artıklarını ve yöntemi yazar.
    - **Sonuç:** masaüstünün, web'in ve Python SDK'sının çalıştırıcıları 48 durumu geçer.
 4. Pencere: dördüncü dönüşüm iki platformda; resimler.
 
+   *(2 Ekim: tamam.)*
+   - **Pencere:** Vektör oturtma'nın Dönüşüm'ü dört seçeneklidir: Helmert, Afin, Projektif, Kauçuk levha. Masaüstünde `calc/fit/rubber.rs`, web'de `ui/calc/fitRubber.ts`.
+   - **Tablo:** kullanılan çiftler levhanın bağlarıdır. Artık sütunları Helmert'in artıklarıdır, yani her bağda levhanın yaptığı yerel düzeltme. En büyüğü işaretlenir.
+   - **Sabit:** satırın kilit düğmesi hedefe kaynağı yazar. Kaynağı eksik satırda hedefe dokunmaz, nedenini söyler.
+   - **Özet:**
+     - bağ ve sabit nokta sayısı, levhanın her bağdan tam geçtiği;
+     - en büyük yerel düzeltme ve satırı, ortalaması, Helmert m0;
+     - hatalı bağın da tam geçildiği, ölçü hatasının Kullan'dan çıkarılacağı;
+     - bağlar levha vermiyorsa nedeni (3'ten az, aynı kaynak, bir doğru, tek çözümsüz takım, 1000'den çok). O sırada Uygula kapalıdır.
+   - **Uygula ve rapor:** Uygula `rubbersheet` dönüşümünü yazar (adım “Kauçuk levha”); uyarılar günlüğe gider. Rapor yöntemi, bağları, yerel düzeltmeleri ve Helmert'in sayılarını yazar.
+   - **Testler:** masaüstünde 5 yeni test. İki adımlı iş de sınanır: Helmert ile Oturt, sonra Adla eşle, Kauçuk levha, P3 sabit. Kullanılan bağlar 1e-6 m içinde oturur, sabit nokta yerinde kalır, daire daire kalır, geri alma tek adımdır.
+   - **Resimler:** dört sahne (`oturt-levha`, `-sabit`, `-uygulandi`, `-uyari`) iki platformda, iki temada, iki boyutta. Sayılar iki platformda aynıdır: yerel düzeltme en çok 124,5 mm (P5), ortalama 41,8 mm, m0 ±48,5 mm; Helmert'ten sonra en çok 4,3 mm.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ## Sonuçlar

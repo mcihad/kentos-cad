@@ -16,7 +16,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, Tip, tip};
 
 use super::words::{Counted, KINDS, Named, kind_hint};
-use super::{COLUMNS, Event, Form, Method, Param, Scope, Side, TITLE, fit_event};
+use super::{COLUMNS, Event, Form, Kind, Method, Param, Scope, Side, TITLE, fit_event};
 use crate::app::Message;
 use crate::calc::{
     Event as Calc, Field, MAX_HEIGHT, Window, event, footer_button, grid, known_field, knowns,
@@ -98,29 +98,38 @@ impl Form {
             ),
         ]
         .spacing(18);
+        // Kauçuk levha's rows have Sabit too.
+        let rubber = self.kind == Kind::Rubber;
         let table = grid::view_with(
             Window::Fit,
             &COLUMNS,
             self,
             |_, _| String::new(),
-            2,
-            |r| {
-                vec![
-                    row_pick(
-                        r,
-                        Side::Source,
+            if rubber { 3 } else { 2 },
+            move |r| {
+                let mut buttons = vec![
+                    row_button(
+                        Event::Pick(r, Side::Source),
                         "target",
                         format!("{}. satırın kaynağını çizimden seç", r + 1),
                         "Çizimdeki yerini gösterin; bir noktaya kenetlenirse adı da gelir.",
                     ),
-                    row_pick(
-                        r,
-                        Side::Target,
+                    row_button(
+                        Event::Pick(r, Side::Target),
                         "pin",
                         format!("{}. satırın hedefini çizimden seç", r + 1),
                         "Ülke sistemindeki noktası çizimdeyse onu gösterin.",
                     ),
-                ]
+                ];
+                if rubber {
+                    buttons.push(row_button(
+                        Event::Fix(r),
+                        "lock",
+                        format!("{}. satırı sabit yap", r + 1),
+                        "Hedefe kaynağı yazar: nokta yerinde kalır, levhayı orada tutar.",
+                    ));
+                }
+                buttons
             },
         );
         vec![
@@ -249,17 +258,17 @@ impl Form {
     }
 }
 
-/// A row's button that shows its source or target on the drawing (the web's `actions`).
-fn row_pick<'a>(
-    r: usize,
-    side: Side,
+/// A row's button (the web's `actions`): its source or target shown on the
+/// drawing, or Sabit.
+fn row_button<'a>(
+    on: Event,
     glyph: &str,
     title: String,
     body: &'static str,
 ) -> Element<'a, Message> {
     tip(
         button(icon(crate::icons::from_web(Some(glyph))).size(14.0))
-            .on_press(fit_event(Event::Pick(r, side)))
+            .on_press(fit_event(on))
             .padding(6)
             .style(style::button::ghost),
         Tip::new(title).body(body),

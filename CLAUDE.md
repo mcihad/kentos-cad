@@ -33,7 +33,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
   Vektör oturtma: kontrol noktalarından Helmert, afin ya da projektif dönüşüm, artıklar ve m0, Adla eşle, Kullan ile çift çıkarma,
-  ya da Parametrelerle (taban noktası, Y ve X ölçeği, dönüklük, öteleme); seçili nesnelere, katmana ya da bütün çizime (kopya olarak da)
+  ya da Parametrelerle (taban noktası, Y ve X ölçeği, dönüklük, öteleme), ya da Kauçuk levha (bağlardan tam geçen ince plaka eğrisi,
+  Sabit noktalar, Helmert'e göre yerel düzeltmeler; ADR 0158); seçili nesnelere, katmana ya da bütün çizime (kopya olarak da)
   `cad.entities.transform` ile tek adımda (ADR 0156);
   İşlemler: dört yerleşik araç ve Parsel ölçü yazıları modeli, tanımdan üretilen penceresiyle (ADR 0084);
   taşı, kopyala, döndür, ölçekle ve aynala (ADR 0037);
@@ -605,8 +606,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   karolarının merkezine göre, iki platformda ve üç çizim hattında (wgpu, WebGPU, WebGL2); en derin yakınlıkta milimetre altı
   `REN-16`'da açık. Kauçuk levha ([ADR 0158](docs/adr/0158-rubber-sheet.md)): 1. adım (ince plaka eğrisi `ops::rubber`,
   `rubber_cases.py`), 2. adım (nesneler: yalnız köşeler, `rubber_warp_cases.py`) ve 3. adım (`cad.entities.transform`'un
-  `rubbersheet` türü, adım “Kauçuk levha”; durumlar levhanın Python ikiziyle bit bit, `sheet_f64.py`) tamam; sıradaki 4. adım
-  (pencerenin dördüncü dönüşümü), sonra kenar eşlemenin ADR'si. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  `rubbersheet` türü, adım “Kauçuk levha”; durumlar levhanın Python ikiziyle bit bit, `sheet_f64.py`) ve 4. adım (Vektör
+  oturtma'nın dördüncü dönüşümü, Sabit, yerel düzeltmeler) tamam; sıradaki komşu pafta kenar eşlemesinin ADR'si (`HYB-05`'in kalanı). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

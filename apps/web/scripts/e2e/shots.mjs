@@ -2435,6 +2435,30 @@ const openParams = async (ui, base, numbers) => {
   })()`);
   await ui.sleep(200);
 };
+/**
+ * The two steps of a fit (docs/adr/0158): Oturt by Helmert with P5 left out, then the window again over the moved
+ * local layer: Adla eşle, Kauçuk levha, P5 left out again and P3 a fixed point (Sabit). P3's place before the sheet.
+ */
+const sheetAfterHelmert = async (ui) => {
+  await matchFit(ui);
+  await ui.eval(`document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[4].querySelector('input[type="checkbox"]').click()`);
+  await ui.sleep(200);
+  await ui.clickText('.dialog--fit .btn--primary', 'Uygula');
+  await ui.sleep(300);
+  await ui.eval(`window.kentos.commands.execute('transform.fit')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--fit')`, 8000);
+  await ui.sleep(200);
+  await ui.clickText('.dialog--fit .seg__opt', 'Kauçuk levha');
+  await ui.clickText('.dialog--fit .btn', 'Eşle');
+  await ui.sleep(200);
+  await ui.eval(`document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[4].querySelector('input[type="checkbox"]').click()`);
+  await ui.sleep(100);
+  await ui.eval(`document.querySelector('.dialog--fit button[aria-label="3. satırı sabit yap"]').click()`);
+  await ui.sleep(200);
+  const seen = await ui.eval(`({ said: document.querySelector('.dialog--fit .io-summary').textContent, p3: [...window.kentos.doc.all()].find((e) => e.kind === 'point' && e.layerId === 'yerel' && e.label === 'P3')?.p, target: [...document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[2].querySelectorAll('input.calc-grid__cell')].map((i) => i.value) })`);
+  if (!seen.said.startsWith('5 bağ (1 sabit nokta); levha her bağdan tam geçer.') || seen.target[1] !== seen.target[3] || seen.target[2] !== seen.target[4]) throw new Error(`Kauçuk levha, Sabit: ${JSON.stringify(seen)}`);
+  return seen;
+};
 SCENES.vectorfit = [
   { id: 'oturt', open: openFitScene },
   { id: 'oturt-adla-eslendi', open: async (ui) => (await matchFit(ui), await ui.move(2, 2), await ui.sleep(300)) },
@@ -2541,6 +2565,68 @@ SCENES.vectorfit = [
       if (!(Math.abs(after.p2.x - 1093.75) < 1e-9 && Math.abs(after.p2.y - 2003.25) < 1e-9 && after.step === 'Oturt' && after.ellipse && !after.open)) throw new Error(`Parametrelerle Uygula: ${JSON.stringify(after)}`);
       await ui.move(2, 2);
       await ui.sleep(400);
+    },
+  },
+  // Kauçuk levha (docs/adr/0158 §5) over the matched pairs: the links met exactly, Helmert's residuals the local corrections, P5's the largest; Sabit on every row.
+  {
+    id: 'oturt-levha',
+    open: async (ui) => {
+      await matchFit(ui);
+      await ui.clickText('.dialog--fit .seg__opt', 'Kauçuk levha');
+      await ui.sleep(200);
+      const seen = await ui.eval(`({ said: document.querySelector('.dialog--fit .io-summary').textContent, fixes: document.querySelectorAll('.dialog--fit button[aria-label$="satırı sabit yap"]').length, apply: document.querySelector('.dialog--fit .btn--primary').disabled })`);
+      if (!seen.said.startsWith('6 bağ (0 sabit nokta); levha her bağdan tam geçer.') || !seen.said.includes(': P5;') || seen.fixes !== 6 || seen.apply) throw new Error(`Kauçuk levha: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // After Oturt (Helmert, P5 left out): the window again, Adla eşle, Kauçuk levha; P5 left out again, P3 held where Helmert put it.
+  {
+    id: 'oturt-levha-sabit',
+    open: async (ui) => {
+      await sheetAfterHelmert(ui);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Uygula: the links met exactly, P3 stays; one step, Kauçuk levha; the view on the parcel.
+  {
+    id: 'oturt-levha-uygulandi',
+    open: async (ui) => {
+      const before = await sheetAfterHelmert(ui);
+      await ui.clickText('.dialog--fit .btn--primary', 'Uygula');
+      await ui.sleep(300);
+      const after = await ui.eval(`(() => {
+        const k = window.kentos;
+        const named = (layer, n) => [...k.doc.all()].find((e) => e.kind === 'point' && e.layerId === layer && e.label === n)?.p;
+        const gap = (n) => { const a = named('yerel', n), b = named('tm', n); return Math.hypot(a.x - b.x, a.y - b.y); };
+        const step = (() => { const s = k.doc.undo(); k.doc.redo(); return s; })();
+        const p3 = named('yerel', 'P3');
+        k.selection.set([...k.doc.all()].filter((e) => e.layerId === 'yerel').map((e) => e.id));
+        k.commands.execute('view.zoomSelection');
+        k.selection.clear();
+        return { gaps: ['P1', 'P2', 'P4', 'P6'].map(gap), p3, step, open: !!document.querySelector('.dialog--fit') };
+      })()`);
+      const held = Math.hypot(after.p3.x - before.p3.x, after.p3.y - before.p3.y);
+      if (!(after.gaps.every((g) => g < 1e-6) && held < 1e-6 && after.step === 'Kauçuk levha' && !after.open)) throw new Error(`Kauçuk levha Uygula: ${JSON.stringify({ ...after, held })}`);
+      await ui.move(2, 2);
+      await ui.sleep(400);
+    },
+  },
+  // Two links left: the least is three; Uygula off.
+  {
+    id: 'oturt-levha-uyari',
+    open: async (ui) => {
+      await matchFit(ui);
+      await ui.clickText('.dialog--fit .seg__opt', 'Kauçuk levha');
+      await ui.eval(`(() => { const rows = document.querySelectorAll('.dialog--fit .calc-grid tbody tr'); for (const r of [1, 2, 3, 4]) rows[r].querySelector('input[type="checkbox"]').click(); })()`);
+      await ui.sleep(200);
+      const seen = await ui.eval(`({ said: document.querySelector('.dialog--fit .io-summary').textContent, apply: document.querySelector('.dialog--fit .btn--primary').disabled })`);
+      if (!seen.said.startsWith('Kauçuk levha için en az 3 kullanılan bağ gerekir; şimdi 2.') || !seen.apply) throw new Error(`Kauçuk levha uyarı: ${JSON.stringify(seen)}`);
+      // The summary and Uygula in view at the small size too.
+      await ui.eval(`(() => { const b = document.querySelector('.dialog--fit .dialog__body'); b.scrollTop = b.scrollHeight; })()`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
     },
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.selection.clear()`)), ...s }));

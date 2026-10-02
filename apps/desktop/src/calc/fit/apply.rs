@@ -18,6 +18,7 @@ impl App {
             Event::Method(method) => form.method = method,
             Event::Param(p, text) => form.params.set(p, text),
             Event::Kind(kind) => form.kind = kind,
+            Event::Fix(row) => form.status = form.fix(row).err(),
             Event::Source(id) => form.source = (!id.is_empty()).then_some(id),
             Event::Target(id) => form.target = (!id.is_empty()).then_some(id),
             Event::Scope(scope) => form.scope = scope,

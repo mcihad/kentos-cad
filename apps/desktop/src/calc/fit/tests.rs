@@ -9,6 +9,7 @@ use kentos_interaction::Format;
 use super::*;
 use crate::app::{App, Dialog as Asking};
 use crate::calc::Field;
+use crate::exchange::words::Kind as Line;
 use crate::files_testing::last_said;
 
 fn row(cells: [&str; 6]) -> [String; 9] {
@@ -62,19 +63,19 @@ fn the_solution_goes_to_the_command_in_its_centred_form() {
         ],
         ..Form::default()
     };
-    for kind in [FitKind::Helmert, FitKind::Affine, FitKind::Projective] {
+    for kind in [Kind::Helmert, Kind::Affine, Kind::Projective] {
         form.kind = kind;
         form.solve();
         let fit = form.fit().expect("solved");
         let t = transform_of(fit).expect("its numbers");
         let ok = match (kind, &t) {
-            (FitKind::Helmert, Transform::Similarity { a, b, .. }) => {
+            (Kind::Helmert, Transform::Similarity { a, b, .. }) => {
                 (a - 1.0).abs() < 1e-12 && b.abs() < 1e-12
             }
-            (FitKind::Affine, Transform::Affine { m, .. }) => {
+            (Kind::Affine, Transform::Affine { m, .. }) => {
                 (m[0] - 1.0).abs() < 1e-12 && (m[3] - 1.0).abs() < 1e-12
             }
-            (FitKind::Projective, Transform::Projective { h, .. }) => {
+            (Kind::Projective, Transform::Projective { h, .. }) => {
                 h[6].abs() < 1e-12 && h[7].abs() < 1e-12
             }
             _ => false,
@@ -130,7 +131,7 @@ fn matched() -> App {
     let mut app = app_with_fit_drawing();
     let _ = app.run("transform.fit");
     assert_eq!(app.dialog, Some(Asking::Calc));
-    fit(&mut app, Event::Kind(FitKind::Helmert));
+    fit(&mut app, Event::Kind(Kind::Helmert));
     fit(&mut app, Event::Source("yerel".into()));
     fit(&mut app, Event::Target("tm".into()));
     fit(&mut app, Event::Match);
@@ -527,6 +528,171 @@ impl iced::advanced::widget::Operation for SnapAll {
     }
 }
 
+/// Kauçuk levha over the matched pairs: every used pair a link the sheet
+/// meets, Helmert's residuals in the cells (the local corrections), P5's
+/// the largest; Sabit on every row.
+#[test]
+fn kaucuk_levha_takes_the_used_pairs_as_links() {
+    let mut app = matched();
+    let helmert: Vec<String> = app.calc.fit.rows.iter().map(|r| r[RES].clone()).collect();
+    fit(&mut app, Event::Kind(Kind::Rubber));
+    let form = &app.calc.fit;
+    let cells: Vec<String> = form.rows.iter().map(|r| r[RES].clone()).collect();
+    assert_eq!(cells, helmert, "the residuals are Helmert's");
+    assert_eq!(form.mark(4), Some(Mark::Worst));
+    let doc = app.document.as_ref().expect("open");
+    let lines = form.summary_lines(&doc.model, &Format::default());
+    assert_eq!(
+        lines[0].1,
+        "6 bağ (0 sabit nokta); levha her bağdan tam geçer."
+    );
+    assert!(
+        lines[1].1.starts_with("Yerel düzeltme (Helmert'e göre) en çok ")
+            && lines[1].1.contains(" mm: P5; ortalama ")
+            && lines[1].1.contains(", Helmert m0 = ±"),
+        "{}",
+        lines[1].1
+    );
+    let plan = form.plan(&doc.model, &Format::default()).expect("a sheet");
+    let Transform::Rubbersheet { links } = plan.transform else {
+        panic!("{:?}", plan.transform)
+    };
+    assert_eq!(links.len(), 6);
+    assert_eq!(plan.how, "kauçuk levhayla");
+    // P5 left out: five links.
+    calc(&mut app, Calc::Cell(4, USE, "0".into()));
+    let doc = app.document.as_ref().expect("open");
+    let lines = app.calc.fit.summary_lines(&doc.model, &Format::default());
+    assert!(lines[0].1.starts_with("5 bağ (0 sabit nokta)"), "{}", lines[0].1);
+}
+
+/// Sabit writes the row's source into its target; a row without its
+/// source keeps its target and says why.
+#[test]
+fn sabit_makes_a_row_a_fixed_point() {
+    let mut app = matched();
+    fit(&mut app, Event::Kind(Kind::Rubber));
+    fit(&mut app, Event::Fix(2));
+    let form = &app.calc.fit;
+    assert_eq!(form.rows[2][TARGET_Y], form.rows[2][SOURCE_Y]);
+    assert_eq!(form.rows[2][TARGET_X], form.rows[2][SOURCE_X]);
+    assert_eq!(form.status, None);
+    let doc = app.document.as_ref().expect("open");
+    let lines = form.summary_lines(&doc.model, &Format::default());
+    assert!(lines[0].1.starts_with("6 bağ (1 sabit nokta)"), "{}", lines[0].1);
+    // A new row has no source: its target stays.
+    app.calc.fit.rows.push(row(["1", "Q", "", "", "487100", "4420200"]));
+    fit(&mut app, Event::Fix(6));
+    let form = &app.calc.fit;
+    assert_eq!(form.rows[6][TARGET_Y], "487100");
+    assert_eq!(
+        form.status.as_deref(),
+        Some("7. satırın kaynağı eksik; önce kaynağını yazın ya da çizimden seçin.")
+    );
+}
+
+/// Two links left: the least is three, and Uygula has nothing to write.
+#[test]
+fn kaucuk_levha_needs_three_links() {
+    let mut app = matched();
+    fit(&mut app, Event::Kind(Kind::Rubber));
+    for r in 1..5 {
+        calc(&mut app, Calc::Cell(r, USE, "0".into()));
+    }
+    let form = &app.calc.fit;
+    let doc = app.document.as_ref().expect("open");
+    let lines = form.summary_lines(&doc.model, &Format::default());
+    assert_eq!(
+        lines,
+        [(
+            Line::Info,
+            "Kauçuk levha için en az 3 kullanılan bağ gerekir; şimdi 2. Koordinatları yazın, yapıştırın ya da çizimden seçin."
+                .to_owned()
+        )]
+    );
+    assert!(form.plan(&doc.model, &Format::default()).is_none());
+}
+
+/// The two steps of a fit (docs/adr/0158): Oturt by Helmert with P5 left
+/// out, then the window again over the moved local layer: Adla eşle,
+/// Kauçuk levha, P5 left out again, P3 a fixed point. P3's place before
+/// the sheet.
+fn sheet_after_helmert() -> (App, kentos_contracts::Vec2) {
+    let mut app = matched();
+    calc(&mut app, Calc::Cell(4, USE, "0".into()));
+    fit(&mut app, Event::Apply);
+    assert_eq!(app.dialog, None, "Oturt wrote");
+    let _ = app.run("transform.fit");
+    assert_eq!(app.dialog, Some(Asking::Calc));
+    fit(&mut app, Event::Kind(Kind::Rubber));
+    fit(&mut app, Event::Match);
+    calc(&mut app, Calc::Cell(4, USE, "0".into()));
+    fit(&mut app, Event::Fix(2));
+    let p3 = named(&app, "yerel", "P3");
+    (app, p3)
+}
+
+/// Uygula: the used links met exactly, the fixed point held; one step,
+/// Kauçuk levha; the window closes.
+#[test]
+fn kaucuk_levha_meets_every_link_in_one_step() {
+    let (mut app, p3) = sheet_after_helmert();
+    let doc = app.document.as_ref().expect("open");
+    let lines = app.calc.fit.summary_lines(&doc.model, &Format::default());
+    assert_eq!(
+        lines[0].1,
+        "5 bağ (1 sabit nokta); levha her bağdan tam geçer."
+    );
+    let links = ["P1", "P2", "P4", "P6"];
+    let worst = |app: &App| links.iter().map(|n| gap(app, n)).fold(0.0, f64::max);
+    assert!(worst(&app) > 1e-4, "Helmert left millimetres");
+    fit(&mut app, Event::Apply);
+    assert_eq!(app.dialog, None, "the window closes");
+    assert!(worst(&app) < 1e-6, "{}", worst(&app));
+    let held = named(&app, "yerel", "P3");
+    assert!((held.x - p3.x).hypot(held.y - p3.y) < 1e-6, "P3 stays");
+    assert!(gap(&app, "P5") > 0.1, "the blunder is no link");
+    assert!(
+        logged(&app, "Vektör oturtma: 10 nesne kauçuk levhayla oturtuldu. Ctrl+Z geri alır."),
+        "{:?}",
+        app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()
+    );
+    let doc = app.document.as_mut().expect("open");
+    assert!(
+        doc.model
+            .by_layer("yerel")
+            .any(|e| matches!(e, Entity::Circle(_))),
+        "the circle stays a circle"
+    );
+    assert_eq!(doc.model.undo().as_deref(), Some("Kauçuk levha"));
+    assert!(worst(&app) > 1e-4, "undone in one step");
+}
+
+/// The report: the method, the pairs with their local corrections, the
+/// links, the corrections and Helmert's numbers.
+#[test]
+fn the_rubber_report_says_the_links_and_helmert() {
+    let mut app = matched();
+    fit(&mut app, Event::Kind(Kind::Rubber));
+    let doc = app.document.as_ref().expect("open");
+    let lines = app
+        .calc
+        .fit
+        .report(&doc.model, &Format::default())
+        .expect("a report");
+    assert_eq!(lines[0], ["Vektör oturtma", "kauçuk levha"]);
+    assert_eq!(lines[1][0], "Yöntem");
+    assert_eq!(lines[2].len(), 9);
+    assert_eq!(lines[3][1], "P1");
+    assert_eq!(lines[9], ["Bağ", "6", "Sabit nokta", "0"]);
+    assert_eq!(lines[10][0], "En büyük yerel düzeltme (mm)");
+    assert_eq!(lines[10][2], "P5");
+    assert_eq!(lines[11][0], "Ortalama yerel düzeltme (mm)");
+    assert_eq!(lines[12][0], "Helmert m0 (mm)");
+    assert!(lines[13][1].starts_with("Ölçek "), "{:?}", lines[13]);
+    assert_eq!(lines.len(), 14);
+}
+
 /// The window in the web's scenes, for the owner. Not run by default:
 /// `cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture`
 /// (`KENTOS_SHOTS=oturt,…` for some of them); the web's are
@@ -552,16 +718,22 @@ fn screens() {
                 "oturt-parametre",
                 "oturt-parametre-uyari",
                 "oturt-parametre-uygulandi",
+                "oturt-levha",
+                "oturt-levha-sabit",
+                "oturt-levha-uygulandi",
+                "oturt-levha-uyari",
             ] {
                 if !only.is_empty() && !only.split(',').any(|o| o == name) {
                     continue;
                 }
-                let mut app = if name == "oturt" {
-                    let mut app = app_with_fit_drawing();
-                    let _ = app.run("transform.fit");
-                    app
-                } else {
-                    matched()
+                let mut app = match name {
+                    "oturt" => {
+                        let mut app = app_with_fit_drawing();
+                        let _ = app.run("transform.fit");
+                        app
+                    }
+                    "oturt-levha-sabit" | "oturt-levha-uygulandi" => sheet_after_helmert().0,
+                    _ => matched(),
                 };
                 let _ = app
                     .settings
@@ -574,7 +746,20 @@ fn screens() {
                 snapshot.settle(&mut app, App::view, &mut update);
                 match name {
                     "oturt-p5-cikti" => calc(&mut app, Calc::Cell(4, USE, "0".into())),
-                    "oturt-afin" => fit(&mut app, Event::Kind(FitKind::Affine)),
+                    "oturt-afin" => fit(&mut app, Event::Kind(Kind::Affine)),
+                    "oturt-levha" => fit(&mut app, Event::Kind(Kind::Rubber)),
+                    "oturt-levha-uygulandi" => {
+                        fit(&mut app, Event::Apply);
+                        let _ = app.update(Message::Layer(crate::layering::Event::ZoomTo(
+                            "yerel".into(),
+                        )));
+                    }
+                    "oturt-levha-uyari" => {
+                        fit(&mut app, Event::Kind(Kind::Rubber));
+                        for r in 1..5 {
+                            calc(&mut app, Calc::Cell(r, USE, "0".into()));
+                        }
+                    }
                     "oturt-uygulandi" => {
                         calc(&mut app, Calc::Cell(4, USE, "0".into()));
                         fit(&mut app, Event::Apply);
@@ -612,7 +797,7 @@ fn screens() {
                     _ => {}
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
-                if name == "oturt-uygulama" {
+                if matches!(name, "oturt-uygulama" | "oturt-levha-uyari") {
                     snapshot.operate(app.view(), Box::new(SnapAll));
                     snapshot.settle(&mut app, App::view, &mut update);
                 }

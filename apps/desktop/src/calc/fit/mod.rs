@@ -9,8 +9,11 @@
 //! same name on two layers. Uygula writes the transform through
 //! `cad.entities.transform` (one undo step, Oturt) to the selected objects,
 //! a layer or the whole drawing, or their copies. Parametrelerle
-//! ([`params`]) gives the transform by its numbers instead. What is typed
-//! stays while the app runs.
+//! ([`params`]) gives the transform by its numbers instead. Kauçuk levha
+//! ([`rubber`], docs/adr/0158) takes the used pairs as links the sheet
+//! meets exactly; the table shows Helmert's residuals, the local
+//! corrections, and Sabit makes a row a fixed point. What is typed stays
+//! while the app runs.
 //!
 //! The window's parts: the form and its solution here, the words it says
 //! ([`words`]: the summary, the parameters, the report), its view
@@ -19,6 +22,7 @@
 
 mod apply;
 mod params;
+mod rubber;
 #[cfg(test)]
 mod tests;
 mod view;
@@ -90,13 +94,35 @@ pub enum Side {
     Target,
 }
 
+/// The window's transforms: the core's three least-squares ones and
+/// Kauçuk levha (docs/adr/0158).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Kind {
+    Helmert,
+    Affine,
+    Projective,
+    Rubber,
+}
+
+impl Kind {
+    /// The least-squares transform the table is solved by: Kauçuk levha's
+    /// residuals are Helmert's, the local corrections.
+    pub fn solved_by(self) -> FitKind {
+        match self {
+            Kind::Helmert | Kind::Rubber => FitKind::Helmert,
+            Kind::Affine => FitKind::Affine,
+            Kind::Projective => FitKind::Projective,
+        }
+    }
+}
+
 /// What the window asks for.
 #[derive(Clone, Debug)]
 pub enum Event {
     /// Kontrol noktaları or Parametrelerle, and Parametrelerle's numbers.
     Method(Method),
     Param(Param, String),
-    Kind(FitKind),
+    Kind(Kind),
     /// Adla eşle's layers (empty: none) and its button.
     Source(String),
     Target(String),
@@ -108,6 +134,8 @@ pub enum Event {
     Apply,
     /// A row's source or target shown on the drawing.
     Pick(usize, Side),
+    /// Sabit (Kauçuk levha): a row's target is its source.
+    Fix(usize),
 }
 
 fn fit_event(e: Event) -> Message {
@@ -120,7 +148,7 @@ pub struct Form {
     pub method: Method,
     /// Parametrelerle's base point and numbers.
     pub params: params::Typed,
-    pub kind: FitKind,
+    pub kind: Kind,
     pub rows: Vec<[String; 9]>,
     /// Adla eşle's layers: the source points' and the target points'.
     pub source: Option<String>,
@@ -139,6 +167,8 @@ pub struct Form {
     solution: Option<Result<solver::Fit, FitError>>,
     pair_rows: Vec<usize>,
     used: usize,
+    /// Kauçuk levha now: the used pairs as links and whether they give a sheet.
+    links: Option<rubber::Links>,
 }
 
 impl Default for Form {
@@ -146,7 +176,7 @@ impl Default for Form {
         Self {
             method: Method::Points,
             params: params::Typed::default(),
-            kind: FitKind::Helmert,
+            kind: Kind::Helmert,
             rows: vec![Default::default(); 4],
             source: None,
             target: None,
@@ -159,6 +189,7 @@ impl Default for Form {
             solution: None,
             pair_rows: Vec::new(),
             used: 0,
+            links: None,
         }
     }
 }
@@ -280,7 +311,7 @@ impl Form {
             }
         }
         self.used = pairs.iter().filter(|p| p.used).count();
-        self.solution = (!pairs.is_empty()).then(|| solver::fit(&pairs, self.kind));
+        self.solution = (!pairs.is_empty()).then(|| solver::fit(&pairs, self.kind.solved_by()));
         if let Some(Ok(fit)) = &self.solution {
             for (&r, [vx, vy, v]) in self.pair_rows.iter().zip(&fit.residuals) {
                 let row = &mut self.rows[r];
@@ -289,6 +320,50 @@ impl Form {
                 row[RES] = fixed(v * 1000.0, 1);
             }
         }
+        self.links = (self.kind == Kind::Rubber).then(|| rubber::Links::of(&pairs));
+    }
+
+    /// Kauçuk levha's local corrections: Helmert's largest residual among
+    /// the used pairs and its row's name, and their mean.
+    fn corrections(&self) -> Option<rubber::Corrections> {
+        let fit = self.fit()?;
+        let worst = self.worst()?;
+        let (mut sum, mut n) = (0.0, 0.0);
+        for (i, &r) in self.pair_rows.iter().enumerate() {
+            if self.rows.get(r).is_some_and(|row| row[USE] != "0") {
+                sum += fit.residuals[i][2];
+                n += 1.0;
+            }
+        }
+        let r = self.pair_rows[worst];
+        let name = js_trim(&self.rows[r][NAME]);
+        Some(rubber::Corrections {
+            worst: fit.residuals[worst][2],
+            who: if name.is_empty() {
+                format!("{}. satır", r + 1)
+            } else {
+                name.to_owned()
+            },
+            mean: sum / n,
+        })
+    }
+
+    /// Sabit (the web's `fix`): the row's target is its source, a fixed
+    /// point; a row without its source keeps its target and says why.
+    pub fn fix(&mut self, row: usize) -> Result<(), String> {
+        let Some(r) = self.rows.get_mut(row) else {
+            return Ok(());
+        };
+        if read_number(&r[SOURCE_Y]).is_none() || read_number(&r[SOURCE_X]).is_none() {
+            return Err(format!(
+                "{}. satırın kaynağı eksik; önce kaynağını yazın ya da çizimden seçin.",
+                row + 1
+            ));
+        }
+        r[TARGET_Y] = r[SOURCE_Y].clone();
+        r[TARGET_X] = r[SOURCE_X].clone();
+        self.solve();
+        Ok(())
     }
 
     /// The used pair with the largest residual (its index among the pairs).
@@ -411,6 +486,16 @@ impl Form {
                 Some(Plan {
                     transform: p.transform(),
                     how: "parametrelerle".to_owned(),
+                    m0: String::new(),
+                })
+            }
+            Method::Points if self.kind == Kind::Rubber => {
+                let l = self.links.as_ref().filter(|l| l.error.is_none())?;
+                Some(Plan {
+                    transform: Transform::Rubbersheet {
+                        links: l.links.clone(),
+                    },
+                    how: "kauçuk levhayla".to_owned(),
                     m0: String::new(),
                 })
             }

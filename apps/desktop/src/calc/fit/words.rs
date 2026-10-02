@@ -6,11 +6,11 @@
 use std::fmt;
 
 use kentos_domain::Document as Model;
-use kentos_geometry_core::ops::fit::{self as solver, Derived, FitError, FitKind};
+use kentos_geometry_core::ops::fit::{self as solver, Derived, FitError};
 use kentos_interaction::{Format, fixed, js_trim};
 use kentos_processing::text::js_number;
 
-use super::{Form, Method, NAME, Scope, TITLE, USE, pair_of};
+use super::{Form, Kind, Method, NAME, Scope, TITLE, USE, pair_of, rubber};
 use crate::calc::traverse::mm_text;
 use crate::exchange::words::Kind as Line;
 
@@ -31,6 +31,7 @@ impl Form {
     /// control points'.
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         match self.method {
+            Method::Points if self.kind == Kind::Rubber => Some(self.rubber_report(format)),
             Method::Points => Some(self.points_report(format)),
             Method::Parameters => {
                 let p = self.params.read(model, format).ok()?;
@@ -41,7 +42,13 @@ impl Form {
 
     /// The summary under the table (the web's `solvePoints`' lines).
     fn points_summary(&self, format: &Format) -> Vec<(Line, String)> {
-        let need = self.kind.need();
+        if self.kind == Kind::Rubber {
+            let Some(links) = &self.links else {
+                return Vec::new();
+            };
+            return rubber::summary(links, self.fit(), self.corrections().as_ref());
+        }
+        let need = self.kind.solved_by().need();
         let fit = match &self.solution {
             None | Some(Err(FitError::TooFew(_))) => {
                 return vec![(
@@ -91,6 +98,30 @@ impl Form {
         lines
     }
 
+    /// Kauçuk levha's report (the web's `reportRubber`): the method, the
+    /// pairs with their local corrections, the links and Helmert's numbers.
+    pub(super) fn rubber_report(&self, format: &Format) -> Vec<Vec<String>> {
+        let rows = self
+            .rows
+            .iter()
+            .filter(|row| pair_of(row).is_some())
+            .map(|row| {
+                let mut line = vec![if row[USE] == "0" { "hayır" } else { "evet" }.to_owned()];
+                line.extend(row[NAME..].iter().cloned());
+                line
+            })
+            .collect();
+        let none = rubber::Links::of(&[]);
+        rubber::report(
+            TITLE,
+            rows,
+            self.links.as_ref().unwrap_or(&none),
+            self.fit(),
+            self.corrections().as_ref(),
+            self.fit().map(|fit| parameters(fit, format)),
+        )
+    }
+
     /// The control points' report (the web's `report`): the transform, the
     /// pairs with their residuals, m0 and the parameters, tab-separated.
     pub(super) fn points_report(&self, format: &Format) -> Vec<Vec<String>> {
@@ -138,7 +169,8 @@ impl Form {
 }
 
 /// The parameters in words (the web's `parameters`): Helmert's scale and
-/// turn, the affine's scales, turn and shear, the projective's numbers. The
+/// turn (Kauçuk levha's too: its table is solved by Helmert), the affine's
+/// scales, turn and shear, the projective's numbers. The
 /// affine's scales by the surveyor's axes (CLAUDE.md §5): Y is east (the
 /// core's x scale), X north.
 fn parameters(fit: &solver::Fit, format: &Format) -> String {
@@ -175,12 +207,13 @@ fn parameters(fit: &solver::Fit, format: &Format) -> String {
 
 /// A kind as the segmented control names it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Named(pub(super) FitKind);
+pub(super) struct Named(pub(super) Kind);
 
-pub(super) const KINDS: [Named; 3] = [
-    Named(FitKind::Helmert),
-    Named(FitKind::Affine),
-    Named(FitKind::Projective),
+pub(super) const KINDS: [Named; 4] = [
+    Named(Kind::Helmert),
+    Named(Kind::Affine),
+    Named(Kind::Projective),
+    Named(Kind::Rubber),
 ];
 
 impl fmt::Display for Named {
@@ -204,32 +237,35 @@ impl fmt::Display for Counted {
 }
 
 /// A kind as a sentence names it.
-pub(super) fn kind_name(kind: FitKind) -> &'static str {
+pub(super) fn kind_name(kind: Kind) -> &'static str {
     match kind {
-        FitKind::Helmert => "Helmert",
-        FitKind::Affine => "afin",
-        FitKind::Projective => "projektif",
+        Kind::Helmert => "Helmert",
+        Kind::Affine => "afin",
+        Kind::Projective => "projektif",
+        Kind::Rubber => "kauçuk levha",
     }
 }
 
 /// A kind at the start of a sentence, and on its segment.
-fn kind_title(kind: FitKind) -> &'static str {
+fn kind_title(kind: Kind) -> &'static str {
     match kind {
-        FitKind::Helmert => "Helmert",
-        FitKind::Affine => "Afin",
-        FitKind::Projective => "Projektif",
+        Kind::Helmert => "Helmert",
+        Kind::Affine => "Afin",
+        Kind::Projective => "Projektif",
+        Kind::Rubber => "Kauçuk levha",
     }
 }
 
-pub(super) fn kind_hint(kind: FitKind) -> &'static str {
+pub(super) fn kind_hint(kind: Kind) -> &'static str {
     match kind {
-        FitKind::Helmert => "Benzerlik: öteleme, dönüklük ve tek ölçek; en az 2 çift.",
-        FitKind::Affine => {
+        Kind::Helmert => "Benzerlik: öteleme, dönüklük ve tek ölçek; en az 2 çift.",
+        Kind::Affine => {
             "X ve Y'ye ayrı ölçek ve kayma; en az 3 çift, bir doğru üstünde olmayan. Daireler ve yaylar elips olur."
         }
-        FitKind::Projective => {
+        Kind::Projective => {
             "Perspektif; en az 4 çift, üçü bir doğru üstünde olmayan. Eğriler 0,1 mm'lik köşelere açılır."
         }
+        Kind::Rubber => rubber::HINT,
     }
 }
 
