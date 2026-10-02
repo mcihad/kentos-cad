@@ -9,6 +9,7 @@
 
 pub mod accent;
 pub mod brand;
+pub mod metrics;
 pub mod motion;
 pub mod shape;
 pub mod tokens;

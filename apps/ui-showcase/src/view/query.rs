@@ -11,7 +11,7 @@
 //! │                                   [Vazgeç] [Uygula]   │
 //! ```
 
-use iced::widget::{button, column, container, pick_list, row, space};
+use iced::widget::{button, column, container, row, space};
 use iced::{Center, Element, Fill};
 
 use kentos_ui::attribute::{Field, Query};
@@ -21,7 +21,6 @@ use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::{Dialog, QueryBuilder, Segmented, overlay};
 
-use super::LayerChoice;
 use crate::app::{QueryDialog, Showcase};
 use crate::command::{self, Command};
 use crate::message::{Message, QueryPurpose};
@@ -50,21 +49,9 @@ impl Showcase {
         };
 
         let target: Element<'a, Message> = match dialog.purpose {
-            QueryPurpose::Select => {
-                let choices = self.layer_choices();
-                let current = choices.get(dialog.layer).cloned();
-
-                pick_list(choices, current, |choice: LayerChoice<'_>| {
-                    Message::QueryLayerSelected(choice.index)
-                })
-                .font(typography::ui())
-                .text_size(typography::body())
-                .padding([3, 8])
-                .width(Fill)
-                .style(style::field::pick_list)
-                .menu_style(style::field::menu)
-                .into()
-            }
+            QueryPurpose::Select => self
+                .layer_select(dialog.layer, Message::QueryLayerSelected)
+                .into(),
             QueryPurpose::Filter => label::body(layer.name.as_str()).into(),
         };
 

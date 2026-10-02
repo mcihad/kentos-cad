@@ -218,13 +218,14 @@ pub fn floating(theme: &Theme) -> Style {
     }
 }
 
-/// Parçalı seçimin çukur izi (web'in `.seg`'i): alan zemini, ince kenar;
-/// parçalar içinde 2 piksel arayla durur.
+/// Parçalı seçimin gömük yuvası (web'in `.seg`'i): koyu temada alan
+/// zemini, aydınlıkta başlık grisi; ince kenar. Parçalar içinde 2 piksel
+/// arayla durur, seçili olan kalkık yüzeydedir.
 pub fn segmented(theme: &Theme) -> Style {
     let t = Tokens::of(theme);
 
     Style {
-        background: Some(Background::Color(t.field)),
+        background: Some(Background::Color(t.well())),
         border: Border {
             color: t.border,
             width: 1.0,

@@ -1,6 +1,6 @@
 //! Şerit: sekmeler ve Giriş sekmesinin grupları.
 
-use iced::widget::{button, column, container, pick_list, row, space, text, tooltip};
+use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Border, Center, Color, Element, Fill, Font, Theme};
 
 use kentos_ui::icon::Icon;
@@ -104,7 +104,10 @@ impl Showcase {
                         Page::Feedback,
                     ],
                 ))
-                .group(self.gallery_group("CBS ve CAD", &[Page::Attributes, Page::Spatial]))
+                .group(self.gallery_group(
+                    "CBS ve CAD",
+                    &[Page::Attributes, Page::Spatial, Page::Library, Page::City],
+                ))
                 .group(self.interface_group())
                 .into();
         }
@@ -195,7 +198,7 @@ impl Showcase {
             )
             .push(
                 Button::large(Icon::Progress, "Görevler")
-                    .active(self.docks.is_shown(DockPanel::Tasks))
+                    .on(self.docks.is_shown(DockPanel::Tasks))
                     .on_press(Message::PanelToggled(DockPanel::Tasks))
                     .tip(Tip::new("Görevler").body(DockPanel::Tasks.description())),
             )
@@ -293,7 +296,7 @@ impl Showcase {
             Stack::new()
                 .push(
                     Button::small(Icon::Ruler, "Cetveller")
-                        .active(self.rulers)
+                        .on(self.rulers)
                         .on_press(Message::RulersToggled)
                         .tip(
                             Tip::new("Cetveller")
@@ -320,7 +323,7 @@ impl Showcase {
     fn windows_group(&self) -> Group<'_, Message> {
         let pane = |pane: Pane, description: &'static str, command: Command| {
             Button::small(pane.icon(), pane.title())
-                .active(self.windows.is_open(pane))
+                .on(self.windows.is_open(pane))
                 .on_press(Message::PaneToggled(pane))
                 .tip(
                     Tip::new(pane.title())
@@ -361,7 +364,7 @@ impl Showcase {
     fn panels_group(&self) -> Group<'_, Message> {
         let panel = |panel: DockPanel| {
             Button::small(panel.icon(), panel.title())
-                .active(self.docks.is_shown(panel))
+                .on(self.docks.is_shown(panel))
                 .on_press(Message::PanelToggled(panel))
                 .tip(Tip::new(panel.title()).body(panel.description()))
         };
@@ -404,24 +407,27 @@ impl Showcase {
     }
 
     fn layers_group(&self) -> Group<'_, Message> {
-        let choices = self.layer_choices();
-
-        let current = choices.get(self.active_layer).cloned();
-        let color = self
+        let (name, color) = self
             .layers
             .get(self.active_layer)
-            .map(|layer| layer.color)
+            .map(|layer| (layer.name.clone(), layer.color))
             .unwrap_or_default();
 
-        let picker = pick_list(choices, current, |choice: super::LayerChoice<'_>| {
-            Message::LayerActivated(choice.index)
+        // Şeridin açılır alanı: masaüstünün etkin katman alanıyla aynı bileşen.
+        let picker = ribbon::Choice::new(name, move || {
+            self.layers.iter().enumerate().fold(
+                Menu::new().header("Etkin katman"),
+                |menu, (index, layer)| {
+                    menu.radio(
+                        layer.name.clone(),
+                        index == self.active_layer,
+                        Message::LayerActivated(index),
+                    )
+                    .swatch(layer.color)
+                },
+            )
         })
-        .font(typography::ui())
-        .text_size(typography::body())
-        .padding([2, 8])
-        .width(Fill)
-        .style(style::field::pick_list)
-        .menu_style(style::field::menu);
+        .width(typography::scaled(214.0));
 
         Group::new("Katmanlar").push(
             Stack::new()
@@ -471,7 +477,7 @@ impl Showcase {
                 Stack::new()
                     .push(
                         Button::small(Icon::Table, "Öznitelik tablosu")
-                            .active(self.docks.is_shown(DockPanel::Table))
+                            .on(self.docks.is_shown(DockPanel::Table))
                             .on_press(Message::TableToggled),
                     )
                     .push(
@@ -544,7 +550,7 @@ impl Showcase {
         };
 
         let custom = match self.accent {
-            Accent::Custom(_) => Button::small(Icon::Drop, self.accent.name()).active(true),
+            Accent::Custom(_) => Button::small(Icon::Drop, self.accent.name()).on(true),
             _ => Button::small(Icon::Drop, "Özel renk…"),
         }
         .on_press(Message::CommandRun(command::name(Command::Accent).to_owned()))
@@ -586,7 +592,7 @@ impl Showcase {
             .push(
                 Stack::new().push(
                     Button::small(Icon::ViewColumns, "Karşılaştır")
-                        .active(self.compare)
+                        .on(self.compare)
                         .on_press(Message::CompareToggled)
                         .tip(Tip::new("Zeminleri karşılaştır").body(format!(
                             "Harita iki zeminle yan yana çizilir: solda {}, sağda {}. Aradaki \
@@ -694,7 +700,7 @@ impl Showcase {
         pages.iter().fold(Group::new(title), |group, &page| {
             group.push(
                 Button::large(page.icon(), page.label())
-                    .active(self.gallery.page == page)
+                    .on(self.gallery.page == page)
                     .on_press(Message::GalleryPageSelected(page))
                     .tip(Tip::new(page.label()).body(page.description())),
             )

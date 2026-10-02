@@ -17,10 +17,9 @@
 //! uygulama "Uygula" düğmesini kapalı tutabilir.
 
 use std::collections::BTreeMap;
-use std::fmt;
 use std::rc::Rc;
 
-use iced::widget::{Column, button, column, container, pick_list, row, text_input};
+use iced::widget::{Column, button, column, container, row, text_input};
 use iced::{Center, Element, Fill};
 
 use crate::attribute::query::Edit;
@@ -28,8 +27,8 @@ use crate::attribute::{Combinator, Field, FieldKind, Operator, Query};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::theme::typography;
-use crate::widget::Segmented;
+use crate::theme::{metrics, typography};
+use crate::widget::{Choice, Segmented, Select};
 
 /// Sorgu oluşturucu.
 pub struct QueryBuilder<'a, Message> {
@@ -72,21 +71,15 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
 
         match choices {
             Some(choices) => {
-                let selected = choices
-                    .iter()
-                    .find(|choice| choice.as_str() == value)
-                    .cloned();
+                let selected = choices.iter().position(|choice| choice.as_str() == value);
+                let names = choices.clone();
 
-                pick_list(choices, selected, move |choice| {
-                    on_edit(Edit::Value(index, choice))
-                })
+                Select::new(
+                    choices.into_iter().map(Choice::new),
+                    selected,
+                    move |chosen| on_edit(Edit::Value(index, names[chosen].clone())),
+                )
                 .placeholder("Seçin")
-                .font(typography::ui())
-                .text_size(typography::body())
-                .padding([3, 8])
-                .width(Fill)
-                .style(style::field::pick_list)
-                .menu_style(style::field::menu)
                 .into()
             }
             None => {
@@ -99,7 +92,7 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
                     .on_input(move |value| on_edit(Edit::Value(index, value)))
                     .font(typography::ui())
                     .size(typography::body())
-                    .padding([4, 8])
+                    .padding(metrics::padding(metrics::control(), 8.0))
                     .width(Fill)
                     .style(move |theme, status| {
                         let mut style = style::field::input(theme, status);
@@ -121,12 +114,6 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
 struct FieldChoice {
     index: usize,
     name: String,
-}
-
-impl fmt::Display for FieldChoice {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.name)
-    }
 }
 
 impl<'a, Message: Clone + 'a> From<QueryBuilder<'a, Message>> for Element<'a, Message> {
@@ -177,38 +164,45 @@ impl<'a, Message: Clone + 'a> From<QueryBuilder<'a, Message>> for Element<'a, Me
                 builder.value_editor(index, field, &condition.value, error.is_some())
             } else {
                 container(label::muted("—"))
-                    .padding([4, 8])
+                    .padding([0, 8])
+                    .height(metrics::control())
+                    .align_y(Center)
                     .width(Fill)
                     .into()
             };
 
+            let field_targets: Vec<usize> = fields.iter().map(|choice| choice.index).collect();
+            let operators = Operator::for_kind(&field.kind).to_vec();
+            let operator = operators
+                .iter()
+                .position(|operator| *operator == condition.operator);
+
             let line = row![
-                pick_list(
-                    fields.clone(),
-                    fields.get(condition.field).cloned(),
-                    move |choice: FieldChoice| on_field(Edit::Field(index, choice.index)),
-                )
-                .font(typography::ui())
-                .text_size(typography::body())
-                .padding([3, 8])
-                .width(typography::scaled(170.0))
-                .style(style::field::pick_list)
-                .menu_style(style::field::menu),
-                pick_list(
-                    Operator::for_kind(&field.kind).to_vec(),
-                    Some(condition.operator),
-                    move |operator| on_operator(Edit::Operator(index, operator)),
-                )
-                .font(typography::ui())
-                .text_size(typography::body())
-                .padding([3, 8])
-                .width(typography::scaled(120.0))
-                .style(style::field::pick_list)
-                .menu_style(style::field::menu),
+                container(Select::new(
+                    fields
+                        .iter()
+                        .map(|choice| Choice::new(choice.name.clone()))
+                        .collect::<Vec<_>>(),
+                    field_targets
+                        .iter()
+                        .position(|target| *target == condition.field),
+                    move |chosen| on_field(Edit::Field(index, field_targets[chosen])),
+                ))
+                .width(typography::scaled(170.0)),
+                container(Select::new(
+                    operators
+                        .iter()
+                        .map(|operator| Choice::new(operator.to_string()))
+                        .collect::<Vec<_>>(),
+                    operator,
+                    move |chosen| on_operator(Edit::Operator(index, operators[chosen])),
+                ))
+                .width(typography::scaled(120.0)),
                 value,
-                button(icon(Icon::Close).size(12.0))
+                button(container(icon(Icon::Close).size(12.0)).center_y(Fill))
                     .on_press(builder.emit(Edit::Remove(index)))
-                    .padding([4, 5])
+                    .padding([0, 7])
+                    .height(metrics::control())
                     .style(style::button::subtle),
             ]
             .spacing(6)

@@ -1,10 +1,11 @@
 //! Girdiler sayfası: birimli sayı, vektör ve açı girişleri; renk seçici ve
 //! renk rampası.
 
-use iced::widget::{Column, Row, column, container, row, space, text, text_input};
+use iced::widget::{Column, Row, column, container, row, space, text};
 use iced::{Center, Element, Fill};
 
 use kentos_ui::attribute::number::real;
+use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
@@ -12,9 +13,12 @@ use kentos_ui::widget::color::{self, ColorPicker};
 use kentos_ui::widget::number::{self, Dial, units};
 use kentos_ui::widget::range::histogram;
 use kentos_ui::widget::timeline::{self, Marker, Scale};
-use kentos_ui::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch, Timeline};
+use kentos_ui::widget::{
+    ChipInput, Choice, Form, InputField, NumberInput, RadioGroup, RangeSlider, Segmented, Select,
+    Switch, Timeline,
+};
 
-use super::entry;
+use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::gallery::{self, Demo, KEYFRAMES, MILESTONES};
 use crate::message::Message;
@@ -270,12 +274,9 @@ impl Showcase {
             .section("Pafta")
             .field(
                 "Ad",
-                text_input("Pafta adı", &gallery.sheet_name)
+                InputField::new("Pafta adı", &gallery.sheet_name)
                     .on_input(move |name| demo(Demo::SheetName(name)))
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding([4, 8])
-                    .style(style::field::validated(name_error.is_some())),
+                    .invalid(name_error.is_some()),
             )
             .required()
             .help("Antet kutusunda ve sekmede görünür.")
@@ -311,6 +312,29 @@ impl Showcase {
             );
 
         vec![
+            entry(
+                "Metin alanı",
+                "kentos_ui::widget::InputField",
+                "Metin girişi, önündeki ikon ya da kısa etiket, arkasındaki birim, temizleme \
+                 ve eylem düğmeleri tek çerçevede. Çerçeve bütün alanın durumunu gösterir: \
+                 üzerine gelince belirgin çizgi, odakta vurgu çizgisi ve hale, geçersiz \
+                 değerde kırmızı. Boş bir yerine tıklamak girişi odaklar. Yükseklik ortak \
+                 ölçüdendir: yanındaki seçim kutusu, sayı girişi ve parçalı seçimle aynı \
+                 boydadır. Hücre türü, özellik ızgarasında üzerine gelinene dek düz yazı \
+                 gibi durur.",
+                self.text_fields(),
+                Some(
+                    "InputField::new(\"Katman ara\", &self.search)\n    \
+                         .on_input(Message::SearchChanged)\n    \
+                         .icon(Icon::Search)\n    \
+                         .clear(Message::SearchChanged(String::new()))\n\n\
+                     InputField::new(\"\", &self.easting)\n    \
+                         .on_input(Message::EastingTyped)\n    \
+                         .prefix(\"Y\", Some(number::axis_color(0, &theme))) // doğu\n    \
+                         .suffix(\"m\")\n    \
+                         .mono()",
+                ),
+            ),
             entry(
                 "Sayı girişi",
                 "kentos_ui::widget::NumberInput",
@@ -561,6 +585,161 @@ fn sample<'a>(stroke: iced::Color, fill: iced::Color) -> Element<'a, Message> {
 }
 
 /// Form satırı: solda ad, ortada giriş, sağda uygulamadaki değer.
+impl Showcase {
+    /// Metin alanı örnekleri: yan yana kontroller, koordinat, hatalı değer,
+    /// salt okunur alan ve özellik hücreleri.
+    fn text_fields(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let theme = self.theme();
+        let typed = |slot: usize| move |text: String| Message::Gallery(Demo::FieldText(slot, text));
+        let fields = &gallery.fields;
+        let parcel_valid = fields[3]
+            .split('/')
+            .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()));
+
+        let regions: Vec<Choice> = ["Marmara", "Ege", "Akdeniz", "İç Anadolu", "Karadeniz"]
+            .into_iter()
+            .map(Choice::new)
+            .collect();
+
+        let side_by_side = row![
+            container(
+                InputField::new("Katman ara", &fields[0])
+                    .on_input(typed(0))
+                    .icon(Icon::Search)
+                    .clear(Message::Gallery(Demo::FieldText(0, String::new())))
+            )
+            .width(Fill),
+            container(Select::new(regions, gallery.picked_region, |index| {
+                Message::Gallery(Demo::RegionPicked(Some(index)))
+            }))
+            .width(typography::scaled(150.0)),
+            container(
+                NumberInput::new(gallery.length, |value| Message::Gallery(Demo::Length(
+                    value
+                )))
+                .label("G")
+                .units(units::LENGTH)
+                .step(0.1)
+            )
+            .width(typography::scaled(130.0)),
+            Segmented::new(["2B", "3B"], "2B", |_| {
+                Message::Gallery(Demo::Pressed("Görünüm"))
+            }),
+        ]
+        .spacing(8)
+        .align_y(Center);
+
+        let coordinates = row![
+            InputField::new("", &fields[1])
+                .on_input(typed(1))
+                .prefix("Y", Some(number::axis_color(0, &theme)))
+                .suffix("m")
+                .mono(),
+            InputField::new("", &fields[2])
+                .on_input(typed(2))
+                .prefix("X", Some(number::axis_color(1, &theme)))
+                .suffix("m")
+                .mono(),
+            InputField::new("Nesne seçilmedi", "Parsel 1204/7")
+                .on_input(|_| Message::Gallery(Demo::Pressed("Başvuru")))
+                .icon(Icon::Link)
+                .action(Icon::Target, "Haritadan seç", pressed("Haritadan seç")),
+        ]
+        .spacing(8)
+        .align_y(Center);
+
+        let mut parcel = column![
+            InputField::new("Ada/parsel", &fields[3])
+                .on_input(typed(3))
+                .invalid(!parcel_valid)
+                .mono()
+        ]
+        .spacing(4);
+
+        if !parcel_valid {
+            parcel = parcel.push(
+                row![
+                    icon(Icon::Warning).size(12.0).tone(Tone::Danger),
+                    label::caption("Ada ve parsel numarası rakamla yazılır: 1204/7.")
+                        .style(style::text::danger),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+
+        let states = row![
+            container(parcel).width(Fill),
+            container(InputField::new("", "TUREF / TM30 (EPSG:5254)").icon(Icon::Globe))
+                .width(Fill),
+        ]
+        .spacing(8);
+
+        // Özellik hücreleri: değer düz yazı gibi durur, üzerine gelince çerçeve çıkar.
+        let cell_row = |name: &'static str, cell: Element<'static, Message>| {
+            row![
+                container(label::muted(name))
+                    .padding([0, 8])
+                    .width(typography::scaled(120.0))
+                    .height(Fill)
+                    .align_y(Center)
+                    .style(style::container::surface),
+                container(cell)
+                    .padding([0, 3])
+                    .width(Fill)
+                    .height(Fill)
+                    .align_y(Center)
+                    .style(style::container::surface_alt),
+            ]
+            .spacing(1)
+            .height(typography::from_default(28.0))
+        };
+
+        let cells = container(
+            column![
+                cell_row(
+                    "Ad",
+                    InputField::new("", &fields[4])
+                        .on_input(typed(4))
+                        .cell()
+                        .into()
+                ),
+                cell_row(
+                    "Yükseklik",
+                    InputField::new("", &fields[5])
+                        .on_input(typed(5))
+                        .suffix("m")
+                        .mono()
+                        .cell()
+                        .into()
+                ),
+            ]
+            .spacing(1),
+        )
+        .padding([1, 0])
+        .width(typography::scaled(360.0))
+        .style(style::container::grid_lines);
+
+        let caption = |text: &'static str| label::caption(text);
+
+        column![
+            caption(
+                "Yan yana: metin alanı, seçim kutusu, sayı girişi ve parçalı seçim aynı boyda."
+            ),
+            side_by_side,
+            caption("Etiketli ve birimli koordinat, eylemli başvuru."),
+            coordinates,
+            caption("Geçersiz değer ve salt okunur alan."),
+            states,
+            caption("Özellik hücresi: üzerine gelince çerçeve çıkar."),
+            cells,
+        ]
+        .spacing(8)
+        .into()
+    }
+}
+
 fn field<'a>(
     name: &'a str,
     input: impl Into<Element<'a, Message>>,

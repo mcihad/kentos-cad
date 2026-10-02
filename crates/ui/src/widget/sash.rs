@@ -57,6 +57,8 @@ pub struct Sash<'a, Message> {
     on_resize: Box<dyn Fn(f32) -> Message + 'a>,
     on_release: Option<Message>,
     on_double_click: Option<Message>,
+    /// Dinlenirken çizgi çizilmez; yalnız üzerine gelince ve sürüklerken.
+    quiet: bool,
 }
 
 impl<'a, Message: Clone + 'a> Sash<'a, Message> {
@@ -82,7 +84,16 @@ impl<'a, Message: Clone + 'a> Sash<'a, Message> {
             on_resize: Box::new(on_resize),
             on_release: None,
             on_double_click: None,
+            quiet: false,
         }
+    }
+
+    /// Dinlenirken görünmez: bölücü çizgi zaten başka bir öğenin (ör.
+    /// tablonun sütun aralığı) olduğunda; üzerine gelince ve sürüklerken
+    /// vurgu çizgisi görünür.
+    pub fn quiet(mut self) -> Self {
+        self.quiet = true;
+        self
     }
 
     /// Alan tutamağın sağında (ya da altında): sola (yukarı) sürüklemek
@@ -305,6 +316,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Sash<'a, Mess
         let (line, width) = match (state.drag.is_some(), state.hovered) {
             (true, _) => (t.accent, 2.0),
             (false, true) => (t.accent.scale_alpha(0.7), 2.0),
+            (false, false) if self.quiet => return,
             (false, false) => (t.border, 1.0),
         };
 

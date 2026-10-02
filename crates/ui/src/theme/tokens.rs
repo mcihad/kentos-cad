@@ -274,6 +274,26 @@ impl Tokens {
         })
     }
 
+    /// Bir yuvanın içinde kalkık duran yüzey: parçalı seçimin seçili
+    /// parçası. Koyu temada yuvadan bir ton açık; aydınlıkta kâğıt beyazı,
+    /// gri yuvanın üstünde.
+    pub fn raised(&self) -> Color {
+        match self.mode {
+            Mode::Light => self.field,
+            Mode::HighContrast => self.header,
+            Mode::Dark | Mode::Night => mix(self.header, self.text, 0.06),
+        }
+    }
+
+    /// Parçalı seçimin ve benzeri yuvaların zemini: kalkık yüzeyin altında
+    /// gömük durur (koyu temada alan zemini, aydınlıkta başlık grisi).
+    pub fn well(&self) -> Color {
+        match self.mode {
+            Mode::Light => self.header,
+            _ => self.field,
+        }
+    }
+
     /// Devre dışı öğelerin metni ve ikonları.
     pub fn disabled(&self) -> Color {
         self.muted.scale_alpha(0.55)

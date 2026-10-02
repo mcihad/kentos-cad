@@ -47,7 +47,7 @@ use iced::{
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::theme::{Tokens, typography};
+use crate::theme::{Tokens, metrics, typography};
 use crate::widget::context_menu::{Menu, MenuButton};
 use crate::widget::dropdown::{Dropdown, Reaction};
 use crate::widget::number::{NumberInput, units};
@@ -196,6 +196,7 @@ pub struct ColorPicker<'a, Message> {
     recent: Vec<Color>,
     width: Length,
     anchor: Option<Element<'a, Message>>,
+    inline: bool,
 }
 
 impl<'a, Message: 'a> ColorPicker<'a, Message> {
@@ -208,7 +209,15 @@ impl<'a, Message: 'a> ColorPicker<'a, Message> {
             recent: Vec::new(),
             width: Length::Fixed(typography::scaled(132.0)),
             anchor: None,
+            inline: false,
         }
+    }
+
+    /// Satır içi yükseklik: tablo ve özellik hücresine sığar
+    /// ([`metrics::inline`]).
+    pub fn inline(mut self) -> Self {
+        self.inline = true;
+        self
     }
 
     /// Saydamlık şeridi ve sekiz haneli onaltılık yazım.
@@ -371,6 +380,7 @@ impl<'a, Message: 'a> From<ColorPicker<'a, Message>> for Element<'a, Message> {
             }
         };
 
+        let picker_has_own_frame = picker.anchor.is_none();
         let anchor: Element<'a, Message> = match picker.anchor {
             Some(anchor) => anchor,
             None => container(
@@ -385,19 +395,27 @@ impl<'a, Message: 'a> From<ColorPicker<'a, Message>> for Element<'a, Message> {
                 .spacing(8)
                 .align_y(Center),
             )
-            .padding([3, 6])
+            .padding([0, 6])
+            .height(if picker.inline {
+                metrics::inline()
+            } else {
+                metrics::control()
+            })
+            .align_y(Center)
             .width(picker.width)
             .style(style::container::field_box)
             .into(),
         };
+        let framed = picker_has_own_frame;
 
-        Dropdown::new(
+        let dropdown = Dropdown::new(
             anchor,
             move || Picker::new(color),
             move |state| panel(state, &props),
             reduce,
-        )
-        .into()
+        );
+
+        if framed { dropdown.edge() } else { dropdown }.into()
     }
 }
 
@@ -438,11 +456,11 @@ fn panel<'a>(state: &Picker, props: &Props) -> Element<'a, Pick> {
             .on_press(Pick::Swatch(state.original))
             .padding(0)
             .width(typography::scaled(22.0))
-            .height(typography::scaled(24.0))
+            .height(metrics::control())
             .style(solid(state.original)),
         container(space::horizontal())
             .width(typography::scaled(22.0))
-            .height(typography::scaled(24.0))
+            .height(metrics::control())
             .style(style::container::solid(current)),
     ];
 
@@ -451,7 +469,7 @@ fn panel<'a>(state: &Picker, props: &Props) -> Element<'a, Pick> {
         .on_submit(Pick::HexSubmit)
         .font(typography::mono())
         .size(typography::body())
-        .padding([3, 6])
+        .padding(metrics::padding(metrics::control(), 6.0))
         .style(style::field::validated(state.invalid));
 
     body = body.push(row![compare, hex].spacing(8).align_y(Center));
@@ -1208,10 +1226,12 @@ pub fn ramp<'a, Message: Clone + 'a>(
         button(
             row![icon(glyph).size(12.0), label::body(name)]
                 .spacing(6)
-                .align_y(Center),
+                .align_y(Center)
+                .height(Fill),
         )
         .on_press_maybe(message)
-        .padding([3, 8])
+        .padding([0, 8])
+        .height(metrics::control())
         .style(style::button::secondary)
     };
 
@@ -1237,7 +1257,9 @@ pub fn ramp<'a, Message: Clone + 'a>(
                     .spacing(6)
                     .align_y(Center),
                 )
-                .padding([3, 8]),
+                .padding([0, 8])
+                .height(metrics::control())
+                .align_y(Center),
                 move || {
                     presets.iter().fold(
                         Menu::new().header("Hazır rampalar"),

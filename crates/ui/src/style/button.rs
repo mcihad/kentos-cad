@@ -406,16 +406,17 @@ pub fn check(filled: bool) -> impl Fn(&Theme, Status) -> Style {
     }
 }
 
-/// Parçalı seçimin parçası (web'in `.seg__opt`'u): seçili parça çukur
-/// izin içinde kabarık durur (başlık zemini, belirgin kenar, hafif gölge);
-/// öbürleri sönük yazılır, üzerine gelince hafif bir katman alır.
+/// Parçalı seçimin parçası (web'in `.seg__opt`'u): seçili parça gömük
+/// yuvanın içinde kalkık durur (kalkık yüzey, belirgin kenar, hafif gölge);
+/// öbürleri ikincil renkte yazılır, üzerine gelince hafif bir katman,
+/// basılıyken biraz daha koyusunu alır.
 pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
         if selected {
             return Style {
-                background: Some(Background::Color(t.header)),
+                background: Some(Background::Color(t.raised())),
                 text_color: t.text,
                 border: Border {
                     color: t.border_strong(),
@@ -423,7 +424,7 @@ pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
                     radius: radius().into(),
                 },
                 shadow: iced::Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, if t.is_dark { 0.28 } else { 0.1 }),
+                    color: Color::from_rgba(0.0, 0.0, 0.0, if t.is_dark { 0.3 } else { 0.1 }),
                     offset: iced::Vector::new(0.0, 1.0),
                     blur_radius: 2.0,
                 },
@@ -431,14 +432,43 @@ pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
             };
         }
 
-        let (background, text) = match status {
-            Status::Disabled => (Color::TRANSPARENT, t.disabled()),
-            status if is_hovered(status) => (t.layer(0.06), t.text),
-            _ => (Color::TRANSPARENT, t.muted),
-        };
-
-        style(background, text, border::rounded(radius()))
+        unselected_segment(&t, status)
     }
+}
+
+/// Öne çıkan parçalı seçimin parçası (ör. 2B / 3B): seçili parça yumuşak
+/// vurgu zemininde, vurgu kenarı ve vurgu yazısıyla; öbürleri
+/// [`segment`] gibidir.
+pub fn segment_accent(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        if selected {
+            return Style {
+                background: Some(Background::Color(t.selection())),
+                text_color: t.accent_hover,
+                border: Border {
+                    color: t.accent_line(),
+                    width: 1.0,
+                    radius: radius().into(),
+                },
+                ..Style::default()
+            };
+        }
+
+        unselected_segment(&t, status)
+    }
+}
+
+fn unselected_segment(t: &Tokens, status: Status) -> Style {
+    let (background, text) = match status {
+        Status::Disabled => (Color::TRANSPARENT, t.disabled()),
+        Status::Pressed => (t.layer(0.1), t.text),
+        Status::Hovered => (t.layer(0.06), t.text),
+        Status::Active => (Color::TRANSPARENT, t.muted),
+    };
+
+    style(background, text, border::rounded(radius()))
 }
 
 /// Tablo başlığı: sıralanabilir sütun adları; sıralı sütun belirgin.
@@ -562,6 +592,64 @@ pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
             if active { t.accent_hover } else { t.muted },
             border::rounded(radius()),
         )
+    }
+}
+
+/// Süzgeç hapı (ör. kitaplığın kategorileri): seçili değilken ince kenarlı
+/// ve ikincil yazılı, seçiliyken yumuşak vurgu zemininde ve vurgu yazılı.
+/// Hap köşeleri biçim ayarından etkilenmez (DESIGN.md §5.3).
+pub fn chip(active: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, edge, text) = match (active, hovered) {
+            (true, _) => (
+                t.accent.scale_alpha(if hovered { 0.26 } else { 0.16 }),
+                t.accent_line(),
+                t.accent_hover,
+            ),
+            (false, true) => (t.surface_hover, t.border_strong(), t.text),
+            (false, false) => (Color::TRANSPARENT, t.border, t.muted),
+        };
+
+        Style {
+            background: Some(Background::Color(background)),
+            text_color: text,
+            border: Border {
+                color: edge,
+                width: 1.0,
+                radius: 999.0.into(),
+            },
+            ..Style::default()
+        }
+    }
+}
+
+/// Kitaplık karosu (malzeme, 3B nesne): dinlenirken zeminsiz; üzerine
+/// gelince hafif zemin ve belirgin kenar; seçiliyken yumuşak vurgu zemini ve
+/// vurgu kenarı.
+pub fn library_tile(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, edge) = match (selected, hovered) {
+            (true, _) => (t.selection(), t.accent_line()),
+            (false, true) => (t.layer(0.05), t.border_strong()),
+            (false, false) => (Color::TRANSPARENT, Color::TRANSPARENT),
+        };
+
+        Style {
+            background: Some(Background::Color(background)),
+            text_color: t.text,
+            border: Border {
+                color: edge,
+                width: 1.0,
+                radius: crate::theme::shape::md().into(),
+            },
+            ..Style::default()
+        }
     }
 }
 

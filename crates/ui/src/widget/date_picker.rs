@@ -44,7 +44,7 @@ use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::style::button::CellTone;
-use crate::theme::typography;
+use crate::theme::{metrics, typography};
 use crate::widget::dropdown::{Dropdown, Reaction};
 
 // Hücre ölçüleri 12 piksellik gövde metninde tasarlandı ve yazı boyutuyla
@@ -139,6 +139,7 @@ pub struct DatePicker<'a, Message> {
     now: DateTime,
     week_numbers: bool,
     clearable: bool,
+    inline: bool,
 }
 
 impl<'a, Message: 'a> DatePicker<'a, Message> {
@@ -151,6 +152,7 @@ impl<'a, Message: 'a> DatePicker<'a, Message> {
             now: DateTime::now(0),
             week_numbers: true,
             clearable: true,
+            inline: false,
         }
     }
 
@@ -196,6 +198,13 @@ impl<'a, Message: 'a> DatePicker<'a, Message> {
         self.clearable = clearable;
         self
     }
+
+    /// Satır içi boy: alanın yanındaki takvim düğmesi tablo ve özellik
+    /// hücresine sığar ([`metrics::inline`]).
+    pub fn inline(mut self) -> Self {
+        self.inline = true;
+        self
+    }
 }
 
 /// Saat seçici: önce saat, sonra dakika seçilir; dakika seçilince panel
@@ -223,6 +232,11 @@ impl<'a, Message: 'a> TimePicker<'a, Message> {
 
     pub fn clearable(self, clearable: bool) -> Self {
         Self(self.0.clearable(clearable))
+    }
+
+    /// Satır içi boy (bkz. [`DatePicker::inline`]).
+    pub fn inline(self) -> Self {
+        Self(self.0.inline())
     }
 }
 
@@ -269,12 +283,18 @@ impl<'a, Message: 'a> From<DatePicker<'a, Message>> for Element<'a, Message> {
 
         let reduce = move |state: &mut State, pick: Pick| reduce(state, pick, props, &on_change);
 
+        let inline = picker.inline;
         let dropdown = match picker.anchor {
             Some(anchor) => Dropdown::new(anchor, init, move |state| panel(state, props), reduce)
                 .trigger(
-                    button(icon(glyph).size(14.0))
+                    button(container(icon(glyph).size(14.0)).center_y(Fill))
                         .on_press(())
-                        .padding([3, 4])
+                        .padding([0, 5])
+                        .height(if inline {
+                            metrics::inline()
+                        } else {
+                            metrics::control()
+                        })
                         .style(style::button::flat),
                 ),
             None => Dropdown::new(
@@ -282,7 +302,8 @@ impl<'a, Message: 'a> From<DatePicker<'a, Message>> for Element<'a, Message> {
                 init,
                 move |state| panel(state, props),
                 reduce,
-            ),
+            )
+            .edge(),
         };
 
         dropdown.into()
@@ -306,9 +327,11 @@ fn display<'a, Message: 'a>(props: Props, glyph: Icon) -> Element<'a, Message> {
         .spacing(6)
         .align_y(Center),
     )
-    .padding([3, 6])
+    .padding([0, 8])
+    .height(metrics::control())
+    .align_y(Center)
     .width(Fill)
-    .style(style::container::field)
+    .style(style::container::field_box)
     .into()
 }
 

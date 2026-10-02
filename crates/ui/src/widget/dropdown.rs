@@ -82,6 +82,9 @@ pub(crate) struct Dropdown<'a, Message, Local, S> {
     reduce: Reduce<'a, S, Local, Message>,
     focus: Option<widget::Id>,
     match_width: bool,
+    /// Alanın kenarı duruma göre çizilir: üzerine gelince belirgin, açıkken
+    /// vurgu çizgisi (metin girişleri gibi).
+    edge: Option<Edge>,
     /// Kurulmuş panel ve kurulduğu durum sürümü. Panel yalnızca durum
     /// değişince yeniden kurulur: düğmeler durumlarını (üzerinde, basılı)
     /// öğenin kendisinde tutar ve her kurulumda yitirir.
@@ -110,6 +113,7 @@ where
             reduce: Box::new(reduce),
             focus: None,
             match_width: false,
+            edge: None,
             built: None,
         }
     }
@@ -131,12 +135,39 @@ where
         self.match_width = true;
         self
     }
+
+    /// Alanın kenarını duruma göre çizer: üzerine gelince belirgin çizgi,
+    /// panel açıkken vurgu çizgisi (web'in `.dropdown:hover` ve
+    /// `[aria-expanded]`'ı). Alanın kendi kenarı varken kullanılır.
+    pub fn edge(mut self) -> Self {
+        self.edge = Some(Edge::Over);
+        self
+    }
+
+    /// Kenarsız alanın (özellik hücresi) kenarı ve zemini: üzerine gelince
+    /// ya da panel açıkken alanın arkasında belirir, yoksa alan düz yazı
+    /// gibi durur.
+    pub fn edge_cell(mut self) -> Self {
+        self.edge = Some(Edge::Under);
+        self
+    }
+}
+
+/// Alanın duruma göre çizilen kenarı.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Edge {
+    /// Alanın kendi kenarının üstüne.
+    Over,
+    /// Kenarsız alanın arkasına, zeminiyle.
+    Under,
 }
 
 struct State<S> {
     open: Option<Open<S>>,
     /// Açılış, kapanış ve iç mesajlarla artan sürüm.
     revision: u64,
+    /// İmleç alanın üstünde mi; kenar ona göre çizilir.
+    hovered: bool,
 }
 
 struct Open<S> {
@@ -150,6 +181,7 @@ impl<S> Default for State<S> {
         Self {
             open: None,
             revision: 0,
+            hovered: false,
         }
     }
 }
@@ -281,6 +313,18 @@ where
 
         let state = tree.state.downcast_mut::<State<S>>();
 
+        // Kenar, imleç alana girip çıkınca yeniden çizilir.
+        if self.edge.is_some()
+            && let Event::Mouse(mouse::Event::CursorMoved { .. } | mouse::Event::CursorLeft) = event
+        {
+            let hovered = cursor.is_over(anchor_layout.bounds());
+
+            if hovered != state.hovered {
+                state.hovered = hovered;
+                shell.request_redraw();
+            }
+        }
+
         match (&mut self.trigger, layouts.next()) {
             (Some(trigger), Some(trigger_layout)) => {
                 let mut toggles = Vec::new();
@@ -376,6 +420,36 @@ where
         let mut layouts = layout.children();
 
         if let Some(anchor) = layouts.next() {
+            let open = tree.state.downcast_ref::<State<S>>().open.is_some();
+            let t = crate::theme::Tokens::of(theme);
+            let color = if open {
+                Some(t.accent_line())
+            } else if cursor.is_over(anchor.bounds()) {
+                Some(t.border_strong())
+            } else {
+                None
+            };
+            let frame = |renderer: &mut Renderer, color: iced::Color, background: iced::Color| {
+                use iced::advanced::Renderer as _;
+
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: anchor.bounds(),
+                        border: iced::Border {
+                            color,
+                            width: 1.0,
+                            radius: crate::style::button::radius().into(),
+                        },
+                        ..renderer::Quad::default()
+                    },
+                    iced::Background::Color(background),
+                );
+            };
+
+            if let (Some(Edge::Under), Some(color)) = (self.edge, color) {
+                frame(renderer, color, t.field);
+            }
+
             self.anchor.as_widget().draw(
                 &tree.children[0],
                 renderer,
@@ -385,6 +459,10 @@ where
                 cursor,
                 viewport,
             );
+
+            if let (Some(Edge::Over), Some(color)) = (self.edge, color) {
+                frame(renderer, color, iced::Color::TRANSPARENT);
+            }
         }
 
         if let (Some(trigger), Some(layout)) = (&self.trigger, layouts.next()) {

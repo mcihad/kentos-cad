@@ -671,6 +671,11 @@ impl Showcase {
                         inspector::Action::Pick(field) => self.start_pick(field),
                         inspector::Action::CancelPick => self.cancel_pick(),
                         inspector::Action::Navigate { id, object } => self.navigate(id, object),
+                        inspector::Action::Copy(text) => {
+                            self.log(format!("Değer panoya kopyalandı: {text}"));
+
+                            return iced::clipboard::write(text);
+                        }
                     }
                 }
             }
@@ -810,6 +815,14 @@ impl Showcase {
             Message::PythonStudio(event) => return self.python_studio.update(event),
             Message::AiStudio(event) => return self.ai_studio.update(event),
             Message::GalleryPageSelected(page) => self.gallery.page = page,
+            Message::Gallery(
+                Demo::Inspector(inspector::Event::Copy(text))
+                | Demo::Building(inspector::Event::Copy(text)),
+            ) => {
+                self.log(format!("Galeri: değer panoya kopyalandı: {text}"));
+
+                return iced::clipboard::write(text);
+            }
             Message::Gallery(demo) => {
                 if let Demo::Notify(index) = demo {
                     let samples = crate::gallery::sample_toasts();

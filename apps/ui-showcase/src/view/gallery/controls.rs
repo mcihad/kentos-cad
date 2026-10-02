@@ -10,7 +10,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::spatial::Tool;
 use kentos_ui::style;
-use kentos_ui::theme::typography;
+use kentos_ui::theme::{metrics, typography};
 use kentos_ui::widget::assets::Asset;
 use kentos_ui::widget::color::Ramp;
 use kentos_ui::widget::legend::{self, Symbol};
@@ -70,9 +70,11 @@ impl Showcase {
             (
                 "button::subtle",
                 vec![
-                    button(icon(Icon::Target).size(13.0))
+                    button(container(icon(Icon::Target).size(13.0)).center(Fill))
                         .on_press(pressed("subtle"))
-                        .padding([2, 4])
+                        .padding(0)
+                        .width(metrics::inline())
+                        .height(metrics::inline())
                         .style(style::button::subtle)
                         .into(),
                 ],
@@ -163,9 +165,11 @@ impl Showcase {
             entry(
                 "Şerit düğmeleri ve grupları",
                 "kentos_ui::widget::ribbon",
-                "Grup içeriği üç satırlık ızgaraya oturur: büyük düğme üç, küçük düğme ve \
-                 alan bir satır yüksekliğindedir. Etkin düğme vurgulanır; on_press \
-                 verilmeyen düğme ikonuyla birlikte sönükleşir.",
+                "Grup içeriği üç satırlık ızgaraya oturur: büyük düğme üç, küçük düğme ve alan bir \
+                 satır yüksekliğindedir. Çalışan araç dolu vurguyla (Çoklu çizgi), açık anahtar \
+                 yumuşak vurguyla (Alan) gösterilir; dolu vurgu ekranda tektir. on_press \
+                 verilmeyen düğme ikonuyla birlikte sönükleşir. Açılır alanın kenarı üzerine \
+                 gelince belirginleşir, menü açıkken vurgu rengini alır.",
                 self.ribbon_sample(),
                 Some(
                     "ribbon::Group::new(\"Çizim\")\n    \
@@ -202,7 +206,7 @@ impl Showcase {
                     tip(
                         button(label::body("Sade ipucu"))
                             .on_press(pressed("Sade ipucu"))
-                            .padding([3, 10])
+                            .padding(metrics::padding(metrics::control(), 10.0))
                             .style(style::button::secondary),
                         Tip::new("Yakınlaştır"),
                         tooltip::Position::Bottom,
@@ -210,7 +214,7 @@ impl Showcase {
                     tip(
                         button(label::body("Araç ipucu"))
                             .on_press(pressed("Araç ipucu"))
-                            .padding([3, 10])
+                            .padding(metrics::padding(metrics::control(), 10.0))
                             .style(style::button::secondary),
                         Tip::new(Tool::Line.label())
                             .body(Tool::Line.description())
@@ -306,15 +310,22 @@ impl Showcase {
 
     /// Tek başına çizilmiş şerit grupları.
     fn ribbon_sample(&self) -> Element<'_, Message> {
-        let crs = pick_list(Crs::ALL, self.gallery.crs, |crs| {
-            Message::Gallery(Demo::CrsSelected(crs))
-        })
-        .font(typography::ui())
-        .text_size(typography::body())
-        .padding([2, 8])
-        .width(Fill)
-        .style(style::field::pick_list)
-        .menu_style(style::field::menu);
+        let current = self.gallery.crs;
+        let crs = ribbon::Choice::new(
+            current.map_or_else(|| "Koordinat sistemi".to_owned(), |crs| crs.to_string()),
+            move || {
+                Crs::ALL
+                    .into_iter()
+                    .fold(Menu::new().header("Koordinat sistemi"), |menu, crs| {
+                        menu.radio(
+                            crs.to_string(),
+                            current == Some(crs),
+                            Message::Gallery(Demo::CrsSelected(crs)),
+                        )
+                    })
+            },
+        )
+        .width(typography::scaled(222.0));
 
         let color = self
             .layers
@@ -341,7 +352,7 @@ impl Showcase {
                         )
                         .push(
                             ribbon::Button::small(Icon::Polygon, "Alan")
-                                .active(true)
+                                .on(true)
                                 .on_press(pressed("Alan")),
                         )
                         .push(ribbon::Button::small(Icon::Point, "Nokta")),
@@ -648,11 +659,16 @@ impl Showcase {
                 "Giriş alanları",
                 "kentos_ui::style::field",
                 "iced'in kendi kontrolleri kentos-ui stilleriyle; onay kutusu ve kaydırıcı \
-                 renklerini doğrudan temadan alır.",
+                 renklerini doğrudan temadan alır. Metin girişi ve açılır liste \
+                 metrics::padding ile ortak kontrol yüksekliğine (28 piksel) getirilir; \
+                 InputField ve Select bunu kendileri yapar.",
                 self.fields_sample(),
                 Some(
-                    "text_input(\"Katman adı\", &value).style(style::field::input)\n\
+                    "text_input(\"Katman adı\", &value)\n    \
+                     .padding(metrics::padding(metrics::control(), 8.0)) // 28 piksel\n    \
+                     .style(style::field::input)\n\
                      pick_list(Crs::ALL, selected, on_select)\n    \
+                     .padding(metrics::padding(metrics::control(), 8.0))\n    \
                      .style(style::field::pick_list)\n    \
                      .menu_style(style::field::menu)",
                 ),
@@ -924,7 +940,7 @@ impl Showcase {
                     .on_input(|text| Message::Gallery(Demo::TextChanged(text)))
                     .font(typography::ui())
                     .size(typography::body())
-                    .padding([4, 8])
+                    .padding(metrics::padding(metrics::control(), 8.0))
                     .width(280)
                     .style(style::field::input),
             ]
@@ -938,7 +954,7 @@ impl Showcase {
                 .placeholder("Koordinat sistemi")
                 .font(typography::ui())
                 .text_size(typography::body())
-                .padding([3, 8])
+                .padding(metrics::padding(metrics::control(), 8.0))
                 .width(280)
                 .style(style::field::pick_list)
                 .menu_style(style::field::menu),
@@ -995,7 +1011,7 @@ impl Showcase {
 fn sample<'a>(content: &'static str, style: ButtonStyle, enabled: bool) -> Element<'a, Message> {
     button(label::body(content))
         .on_press_maybe(enabled.then(|| pressed(content)))
-        .padding([3, 10])
+        .padding(metrics::padding(metrics::control(), 10.0))
         .style(style)
         .into()
 }
@@ -1013,7 +1029,7 @@ fn sample_icon<'a>(
             .align_y(Center),
     )
     .on_press_maybe(enabled.then(|| pressed(content)))
-    .padding([3, 8])
+    .padding(metrics::padding(metrics::control(), 8.0))
     .style(style)
     .into()
 }

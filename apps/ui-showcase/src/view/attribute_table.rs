@@ -5,19 +5,17 @@
 //! (Shift aralık seçer, Ctrl satırı seçime ekler ya da çıkarır).
 
 use iced::widget::text::Wrapping;
-use iced::widget::{column, pick_list, row, space};
+use iced::widget::{column, container, row, space};
 use iced::{Center, Element};
 
 use kentos_ui::attribute::{FieldKind, text};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::spatial::{Feature, Layer, Tool};
-use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::{EmptyState, Toolbar};
 
-use super::LayerChoice;
 use crate::app::Showcase;
 use crate::message::{Message, QueryPurpose};
 use crate::table::{Column, TableView};
@@ -120,22 +118,16 @@ impl Showcase {
     }
 
     fn table_toolbar<'a>(&'a self, layer: &'a Layer, view: &'a TableView) -> Toolbar<'a, Message> {
-        let choices = self.layer_choices();
-        let current = choices.get(self.active_layer).cloned();
         let has_selection = !self.selection.is_empty();
         let filtered = !view.filter.is_empty();
 
         let mut toolbar = Toolbar::new()
             .push(
-                pick_list(choices, current, |choice: LayerChoice<'_>| {
-                    Message::LayerActivated(choice.index)
-                })
-                .font(typography::ui())
-                .text_size(typography::body())
-                .padding([2, 8])
-                .width(150)
-                .style(style::field::pick_list)
-                .menu_style(style::field::menu),
+                container(
+                    self.layer_select(self.active_layer, Message::LayerActivated)
+                        .inline(),
+                )
+                .width(typography::scaled(150.0)),
             )
             .search(&view.search, "Tabloda ara", Message::TableSearch)
             .separator()
