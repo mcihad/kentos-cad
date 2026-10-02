@@ -242,7 +242,7 @@ fn the_editor_walks_down_right_and_left_as_the_web_does() {
 }
 
 /// Numbers within 1e-9 (a missing field is null), everything else exactly.
-fn same(a: &serde_json::Value, e: &serde_json::Value, path: &str) -> Result<(), String> {
+pub(super) fn same(a: &serde_json::Value, e: &serde_json::Value, path: &str) -> Result<(), String> {
     use serde_json::Value;
     match (a, e) {
         (Value::Number(x), Value::Number(y)) => {
@@ -495,6 +495,42 @@ fn sil_removes_the_selected_rows_in_one_step() {
     assert_eq!(names(&app)[..2], ["101", "102"]);
 }
 
+/// Çift noktaları ayıkla over every row (nothing selected): Çiftleri göster
+/// shows the two groups, Sıra their numbers; Ayıkla from there, Ortalaması,
+/// writes in one step and the table shows its query again (the web's
+/// `noktalar-ciftler` and `noktalar-ayiklandi` scenes).
+#[test]
+fn the_dedupe_window_shows_the_groups_and_writes_them_in_one_step() {
+    use kentos_geometry_core::ops::point_editor::Keep;
+
+    use super::batch::Kind;
+    use super::batch_view::WindowEvent;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let rows = |app: &App| {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.point_rows(doc)
+    };
+    ev(&mut app, Event::Batch(Kind::Dedupe));
+    ev(&mut app, Event::Window(WindowEvent::ShowGroups));
+    assert!(app.dialog.is_none());
+    assert_eq!(rows(&app).group_no, [1, 1, 2, 2]);
+    assert_eq!(names(&app), ["103", "103", "105", "S9"]);
+    ev(&mut app, Event::Batch(Kind::Dedupe));
+    ev(&mut app, Event::Window(WindowEvent::Keep(Keep::Average)));
+    ev(&mut app, Event::Window(WindowEvent::Apply));
+    assert!(app.dialog.is_none());
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Nokta editörü: 2 grupta 2 nokta silindi, 1 nokta ortalamaya taşındı."
+    );
+    let after = rows(&app);
+    assert!(after.group_no.is_empty());
+    assert_eq!(after.points.len(), 34);
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Çift noktaları ayıkla"));
+}
+
 /// A press (or a right one) on the lowest `caption` on screen: the bottom
 /// panel's, below the ribbon's tab of the same name.
 fn press_lowest(
@@ -642,6 +678,9 @@ fn screens() {
                 "noktalar-sirali-numara",
                 "noktalar-sag-tik",
                 "noktalar-katmana-tasi",
+                "noktalar-cift-ayikla",
+                "noktalar-ciftler",
+                "noktalar-ayiklandi",
             ] {
                 let mut app = app_with_points();
                 let _ = app
@@ -724,6 +763,44 @@ fn screens() {
                         ev(
                             &mut app,
                             Event::Window(super::batch_view::WindowEvent::Layer("kot".into())),
+                        );
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Apply),
+                        );
+                    }
+                    // Çift noktaları ayıkla over every row: Ortalaması chosen (the web's scenes).
+                    "noktalar-cift-ayikla" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        ev(&mut app, Event::Batch(super::batch::Kind::Dedupe));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Keep(
+                                kentos_geometry_core::ops::point_editor::Keep::Average,
+                            )),
+                        );
+                    }
+                    "noktalar-ciftler" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        ev(&mut app, Event::Batch(super::batch::Kind::Dedupe));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::ShowGroups),
+                        );
+                    }
+                    "noktalar-ayiklandi" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        ev(&mut app, Event::Batch(super::batch::Kind::Dedupe));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::ShowGroups),
+                        );
+                        ev(&mut app, Event::Batch(super::batch::Kind::Dedupe));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Keep(
+                                kentos_geometry_core::ops::point_editor::Keep::Average,
+                            )),
                         );
                         ev(
                             &mut app,

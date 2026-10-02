@@ -8,7 +8,7 @@ import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
-import { BATCH_STEP, planBatch, runBatch, type BatchOp } from './pointBatch';
+import { BATCH_STEP, planBatch, planDedupe, runBatch, type BatchOp } from './pointBatch';
 import { PREFIX } from './pointEdit';
 
 /** The window shows the editor's words without its prefix. */
@@ -17,16 +17,40 @@ const quoted = (name: string | undefined) => (name?.trim() ? `“${name.trim()}�
 /** How many of the targets' names the window lists under their count. */
 const LISTED = 6;
 
+/** What the window takes from the table. */
+export interface BatchWindowOptions {
+  /** Bağlı çizgiler izler, as the table has it (Çift noktaları ayıkla's kept points). */
+  follow: boolean;
+  /** Çiftleri göster: the table shows the groups (by their members' ids). */
+  showGroups: (groups: number[][]) => void;
+  /** Written: the table forgets the groups it showed. */
+  done: () => void;
+}
+
+/** Çift noktaları ayıkla's choices as its window lists them. */
+const BY = [
+  { value: 'place', label: 'Aynı yer' },
+  { value: 'name', label: 'Aynı ad' },
+] as const;
+const KEEP = [
+  { value: 'first', label: 'İlki' },
+  { value: 'last', label: 'Sonuncusu' },
+  { value: 'average', label: 'Ortalaması' },
+] as const;
+
 /**
  * Nokta editörü's batch windows (docs/adr/0153 §5), loaded on first use: the operation's values over its target rows
  * (named at the top), what it would change (how many points, the first change), Uygula writing it as one undo step
- * named after it (./pointBatch.ts). A refusal is said and shown, and the window stays for another value. The
+ * named after it (./pointBatch.ts). A refusal is said and shown, and the window stays for another value. Çift
+ * noktaları ayıkla's window counts the groups as its values change; Çiftleri göster shows them in the table. The
  * desktop's are `apps/desktop/src/points/batch_view.rs`.
  */
-export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids: readonly number[], header: string): void {
+export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids: readonly number[], header: string, opts: BatchWindowOptions): void {
   const { doc } = ctx;
   let mode: 'add' | 'remove' = 'add';
   let layer = doc.layers.active.value;
+  let by: 'name' | 'place' = 'place';
+  let keep: 'first' | 'last' | 'average' = 'first';
   let refused: string | null = null;
   const points = ids.flatMap((id) => {
     const e = doc.get(id);
@@ -35,11 +59,11 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
   // Sıralı numara ver starts from the first row's name when it ends with a number.
   const firstName = points[0]?.label?.trim() ?? '';
   const text = h('input', {
-    class: 'field',
+    class: `field${kind === 'dedupe' ? ' num' : ''}`,
     spellcheck: 'false',
-    value: kind === 'number' ? (/[0-9]$/.test(firstName) ? firstName : '1') : '',
-    placeholder: kind === 'rename' ? 'ör. P.' : 'ör. 1, P100, 101/1',
-    'aria-label': kind === 'rename' ? 'Önek' : 'Başlangıç adı',
+    value: kind === 'number' ? (/[0-9]$/.test(firstName) ? firstName : '1') : kind === 'dedupe' ? '0.001' : '',
+    placeholder: kind === 'rename' ? 'ör. P.' : kind === 'number' ? 'ör. 1, P100, 101/1' : 'metre',
+    'aria-label': kind === 'rename' ? 'Önek' : kind === 'number' ? 'Başlangıç adı' : 'Tolerans',
   });
   // The layer list as the toolbar's: groups as headers, each layer's count; a locked layer takes nothing.
   const layerPick = new Dropdown({
@@ -72,9 +96,12 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
     },
   });
   const modeBox = h('div');
+  const byBox = h('div');
+  const keepBox = h('div');
   const summary = h('div', { class: 'io-summary' });
-  const apply = h('button', { class: 'btn btn--primary', type: 'button' }, 'Uygula');
+  const apply = h('button', { class: 'btn btn--primary', type: 'button' }, kind === 'dedupe' ? 'Ayıkla' : 'Uygula');
   const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const show = h('button', { class: 'btn', type: 'button' }, 'Çiftleri göster');
   const listed = points.slice(0, LISTED).map((e) => e.label?.trim() || '(adsız)');
   const targets = h(
     'div',
@@ -83,7 +110,18 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
     h('div', { class: 'io-file__text' }, h('span', { class: 'io-file__name' }, header), h('span', { class: 'io-file__meta' }, listed.join(', ') + (points.length > LISTED ? ' …' : ''))),
   );
 
-  const op = (): BatchOp => (kind === 'rename' ? { kind, mode, prefix: text.value } : kind === 'number' ? { kind, start: text.value } : { kind, layer });
+  const op = (): BatchOp =>
+    kind === 'rename'
+      ? { kind, mode, prefix: text.value }
+      : kind === 'number'
+        ? { kind, start: text.value }
+        : kind === 'layer'
+          ? { kind, layer }
+          : { kind, by, tolerance: text.value, keep };
+  const groups = (): number[][] => {
+    const o = op();
+    return o.kind === 'dedupe' ? planDedupe(doc, ids, o).groups : [];
+  };
 
   function refresh(): void {
     if (kind === 'rename')
@@ -103,7 +141,19 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
       const l = doc.layers.get(layer);
       if (l) layerPick.set(h('span', { class: 'swatch', style: `--swatch:${layerSwatch(l, ctx.view.palette)}` }), h('span', { class: 'dropdown__text' }, l.name));
     }
-    const plan = planBatch(doc, ids, op());
+    const o = op();
+    if (o.kind === 'dedupe') {
+      replaceChildren(byBox, segmented({ label: 'Ölçüt', options: [...BY], value: by, onChange: (v) => ((by = v), (refused = null), refresh()) }));
+      replaceChildren(keepBox, segmented({ label: 'Tutulan', options: [...KEEP], value: keep, onChange: (v) => ((keep = v), (refused = null), refresh()) }));
+      text.disabled = by === 'name';
+      const plan = planDedupe(doc, ids, o);
+      const lines = [plan.error ? summaryLine('warn', plain(plan.error)) : summaryLine('info', plan.summary ?? '')];
+      if (refused) lines.push(summaryLine('warn', plain(refused)));
+      replaceChildren(summary, ...lines);
+      apply.disabled = show.disabled = plan.error !== null || plan.groups.length === 0;
+      return;
+    }
+    const plan = planBatch(doc, ids, o);
     const lines: HTMLElement[] = [];
     if (plan.error) lines.push(summaryLine(text.value.trim() ? 'warn' : 'info', plain(plan.error)));
     else if (!plan.changes.length) lines.push(summaryLine('info', kind === 'layer' ? 'Taşınacak nokta yok.' : 'Adı değişen nokta yok.'));
@@ -119,12 +169,13 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
 
   const run = () => {
     if (apply.disabled) return;
-    const out = runBatch(doc, ids, op());
+    const out = runBatch(doc, ids, op(), opts.follow);
     if (out.step) {
       const [done, ...rest] = out.said;
       if (done) ctx.log.success(done);
       for (const line of rest) ctx.log.warn(line);
       dialog.close();
+      opts.done();
       return;
     }
     for (const line of out.said) ctx.log.warn(line);
@@ -134,16 +185,37 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
 
   const values =
     kind === 'rename'
-      ? h('div', { class: 'io-row' }, field('İşlem', modeBox), field('Önek', text, undefined, 'grow'))
+      ? [h('div', { class: 'io-row' }, field('İşlem', modeBox), field('Önek', text, undefined, 'grow'))]
       : kind === 'number'
-        ? h('div', { class: 'io-row' }, field('Başlangıç adı', text, 'İlk satır bu adı, her sonraki bir fazlasını alır (Artır).', 'grow'))
-        : h('div', { class: 'io-row' }, field('Katman', layerPick.el, undefined, 'grow'));
+        ? [h('div', { class: 'io-row' }, field('Başlangıç adı', text, 'İlk satır bu adı, her sonraki bir fazlasını alır (Artır).', 'grow'))]
+        : kind === 'layer'
+          ? [h('div', { class: 'io-row' }, field('Katman', layerPick.el, undefined, 'grow'))]
+          : [
+              h('div', { class: 'io-row' }, field('Ölçüt', byBox), field('Tolerans (m)', text, 'Aynı yerde: ilk noktasına bu kadar yakın olan gruba katılır.', 'grow')),
+              h(
+                'div',
+                { class: 'io-row' },
+                field(
+                  'Tutulan',
+                  keepBox,
+                  opts.follow
+                    ? 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır.'
+                    : 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır.',
+                  'grow',
+                ),
+              ),
+            ];
   const dialog = new Dialog({
     title: BATCH_STEP[kind],
-    width: 480,
+    width: kind === 'dedupe' ? 540 : 480,
     className: 'dialog--io dialog--point-batch',
-    content: [targets, values, summary],
-    footer: [h('div', { class: 'dialog__spacer' }), cancel, apply],
+    content: [targets, ...values, summary],
+    footer: [h('div', { class: 'dialog__spacer' }), ...(kind === 'dedupe' ? [show] : []), cancel, apply],
+  });
+  show.addEventListener('click', () => {
+    if (show.disabled) return;
+    opts.showGroups(groups());
+    dialog.close();
   });
   text.addEventListener('input', () => ((refused = null), refresh()));
   text.addEventListener('keydown', (e) => {
@@ -155,7 +227,7 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
   apply.addEventListener('click', run);
   cancel.addEventListener('click', () => dialog.close());
   refresh();
-  if (kind === 'layer') layerPick.el.focus();
+  if (kind === 'layer' || kind === 'dedupe') (kind === 'layer' ? layerPick.el : (byBox.querySelector('[aria-checked="true"]') as HTMLElement | null))?.focus();
   else {
     text.focus();
     text.select();

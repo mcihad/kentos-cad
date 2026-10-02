@@ -2,7 +2,9 @@
 //! `ui/bottom/PointBatchDialog.ts`): the operation's values over its target
 //! rows (named at the top), what it would change (how many points, the first
 //! change), Uygula writing it as one undo step named after it (`batch.rs`). A
-//! refusal is said and shown, and the window stays for another value.
+//! refusal is said and shown, and the window stays for another value. Çift
+//! noktaları ayıkla's window counts the groups as its values change;
+//! Çiftleri göster shows them in the table.
 
 use std::fmt;
 
@@ -10,6 +12,7 @@ use iced::widget::{Id, column, container, row, space, text, text_input};
 use iced::{Center, Color, Element, Fill, Task};
 use kentos_contracts::{Entity, LayerNode, LayerNodeType};
 use kentos_domain::Slot;
+use kentos_geometry_core::ops::point_editor::Keep;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -40,8 +43,11 @@ pub(crate) struct Window {
     header: String,
     /// Önek ekle (else Önek kaldır).
     add: bool,
-    /// Önek, or Başlangıç adı.
+    /// Önek, Başlangıç adı or Tolerans.
     text: String,
+    /// Çift noktaları ayıkla: Aynı ad (else Aynı yer), and the one kept.
+    by_name: bool,
+    keep: Keep,
     layer: String,
     /// The command's refusal at the last Uygula.
     refused: Option<String>,
@@ -60,6 +66,11 @@ impl Window {
             Kind::Layer => Op::Layer {
                 layer: self.layer.clone(),
             },
+            Kind::Dedupe => Op::Dedupe {
+                by_name: self.by_name,
+                tolerance: self.text.clone(),
+                keep: self.keep,
+            },
         }
     }
 }
@@ -70,6 +81,11 @@ pub enum WindowEvent {
     Mode(bool),
     Text(String),
     Layer(String),
+    /// Çift noktaları ayıkla: Aynı ad (true) or Aynı yer; the one kept.
+    By(bool),
+    Keep(Keep),
+    /// Çiftleri göster.
+    ShowGroups,
     Apply,
     Close,
 }
@@ -88,6 +104,30 @@ impl fmt::Display for Mode {
             "Önek ekle"
         } else {
             "Önek kaldır"
+        })
+    }
+}
+
+/// Aynı yer or Aynı ad (`true`), as the segmented control shows them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct By(bool);
+
+impl fmt::Display for By {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(if self.0 { "Aynı ad" } else { "Aynı yer" })
+    }
+}
+
+/// İlki, Sonuncusu or Ortalaması.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Kept(Keep);
+
+impl fmt::Display for Kept {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self.0 {
+            Keep::First => "İlki",
+            Keep::Last => "Sonuncusu",
+            Keep::Average => "Ortalaması",
         })
     }
 }
@@ -139,6 +179,7 @@ impl App {
         let text = match kind {
             Kind::Number if first.as_bytes().last().is_some_and(u8::is_ascii_digit) => first,
             Kind::Number => "1".to_owned(),
+            Kind::Dedupe => "0.001".to_owned(),
             _ => String::new(),
         };
         let layer = doc.model.layers().active().to_owned();
@@ -148,11 +189,13 @@ impl App {
             header,
             add: true,
             text,
+            by_name: false,
+            keep: Keep::First,
             layer,
             refused: None,
         });
         self.dialog = Some(Dialog::PointBatch);
-        if kind == Kind::Layer {
+        if matches!(kind, Kind::Layer | Kind::Dedupe) {
             return Task::none();
         }
         let id = Id::new(FIELD);
@@ -170,21 +213,44 @@ impl App {
             WindowEvent::Mode(add) => w.add = add,
             WindowEvent::Text(t) => w.text = t,
             WindowEvent::Layer(layer) => w.layer = layer,
+            WindowEvent::By(by_name) => w.by_name = by_name,
+            WindowEvent::Keep(keep) => w.keep = keep,
             WindowEvent::Close => {
+                self.points.batch = None;
+                self.dialog = None;
+                return Task::none();
+            }
+            WindowEvent::ShowGroups => {
+                let (slots, op) = (w.slots.clone(), w.op());
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                let groups = batch::plan_dedupe(&doc.model, &slots, &op).groups;
+                if groups.is_empty() {
+                    return Task::none();
+                }
+                self.points.show_groups(Some(groups));
                 self.points.batch = None;
                 self.dialog = None;
                 return Task::none();
             }
             WindowEvent::Apply => {
                 let (slots, op) = (w.slots.clone(), w.op());
+                let follow = self.points.follow;
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
                 let plan = batch::plan(&doc.model, &slots, &op);
-                if plan.error.is_some() || plan.changes.is_empty() {
+                let nothing = match &op {
+                    Op::Dedupe { .. } => batch::plan_dedupe(&doc.model, &slots, &op)
+                        .groups
+                        .is_empty(),
+                    _ => plan.changes.is_empty(),
+                };
+                if plan.error.is_some() || nothing {
                     return Task::none();
                 }
-                let out = batch::run(&mut doc.model, &slots, &op);
+                let out = batch::run(&mut doc.model, &slots, &op, follow);
                 if out.step.is_some() {
                     let mut said = out.said.into_iter();
                     if let Some(done) = said.next() {
@@ -195,6 +261,8 @@ impl App {
                     }
                     self.points.batch = None;
                     self.dialog = None;
+                    // The groups shown are done with.
+                    self.points.show_groups(None);
                 } else {
                     for line in &out.said {
                         self.warn(line.clone());
@@ -346,9 +414,83 @@ impl App {
                 Some("İlk satır bu adı, her sonraki bir fazlasını alır (Artır).".to_owned()),
             ),
             Kind::Layer => words::field("Katman", self.batch_layer_field(doc, &w.layer), None),
+            Kind::Dedupe => {
+                let tolerance = focus_ring(
+                    text_input("metre", &w.text)
+                        .id(Id::new(FIELD))
+                        .on_input_maybe((!w.by_name).then_some(|t| msg(WindowEvent::Text(t))))
+                        .on_submit(msg(WindowEvent::Apply))
+                        .font(typography::mono())
+                        .padding([5, 8])
+                        .style(style::field::input),
+                );
+                let kept_hint = if self.points.follow {
+                    "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır."
+                } else {
+                    "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır."
+                };
+                column![
+                    row![
+                        words::field(
+                            "Ölçüt",
+                            Segmented::new([By(false), By(true)], By(w.by_name), |b| {
+                                msg(WindowEvent::By(b.0))
+                            }),
+                            None
+                        ),
+                        container(words::field(
+                            "Tolerans (m)",
+                            tolerance,
+                            Some(
+                                "Aynı yerde: ilk noktasına bu kadar yakın olan gruba katılır."
+                                    .to_owned()
+                            ),
+                        ))
+                        .width(Fill),
+                    ]
+                    .spacing(18),
+                    words::field(
+                        "Tutulan",
+                        Segmented::new(
+                            [Kept(Keep::First), Kept(Keep::Last), Kept(Keep::Average)],
+                            Kept(w.keep),
+                            |k| msg(WindowEvent::Keep(k.0)),
+                        ),
+                        Some(kept_hint.to_owned()),
+                    ),
+                ]
+                .spacing(12)
+                .into()
+            }
         };
-        let plan = batch::plan(model, &w.slots, &w.op());
         let plain = |t: &str| t.strip_prefix(PREFIX).unwrap_or(t).to_owned();
+        if w.kind == Kind::Dedupe {
+            let plan = batch::plan_dedupe(model, &w.slots, &w.op());
+            let mut lines = vec![match &plan.error {
+                Some(error) => words::text_line(Line::Warn, plain(error)),
+                None => words::text_line(Line::Info, plan.summary.clone().unwrap_or_default()),
+            }];
+            if let Some(refused) = &w.refused {
+                lines.push(words::text_line(Line::Warn, plain(refused)));
+            }
+            let can = plan.error.is_none() && !plan.groups.is_empty();
+            return overlay::modal(
+                Frame::new(w.kind.step())
+                    .push(column![chip, values, words::summary(lines)].spacing(12))
+                    .action(words::secondary(
+                        "Çiftleri göster",
+                        can.then(|| msg(WindowEvent::ShowGroups)),
+                    ))
+                    .action(words::secondary("Vazgeç", Some(msg(WindowEvent::Close))))
+                    .action(words::primary(
+                        "Ayıkla",
+                        can.then(|| msg(WindowEvent::Apply)),
+                    ))
+                    .width(540.0),
+                msg(WindowEvent::Close),
+            );
+        }
+        let plan = batch::plan(model, &w.slots, &w.op());
         let mut lines = Vec::new();
         if let Some(error) = &plan.error {
             let kind = if js_trim(&w.text).is_empty() {

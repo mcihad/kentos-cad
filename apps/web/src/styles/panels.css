@@ -796,3 +796,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Çiftleri göster: the groups shown instead of the query; a click shows the query again. */
+.ptable__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: calc(24px * var(--ui-scale));
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ptable__chip:hover {
+  background: var(--c-accent-line);
+}
+.ptable__chip[hidden] {
+  display: none;
+}

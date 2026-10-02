@@ -372,7 +372,9 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
   - Düzenlenen hücre (çift tık) kendi içinde 22 px'lik alan olur: vurgu çizgili çerçeve, sayılarda sağa dayalı tabular yazı; açılınca değer seçilidir.
   - Satır ekle'nin taslak satırı tablonun en altındadır: vurgu tonunda zemin, Sıra hücresinde vurgu renginde yarı kalın "Yeni".
   - İşlemler ▾ menüsü hedefi başlıkta söyler ("3 seçili nokta", "Tablodaki 36 nokta"); her komut simgesi ve ikinci satırda ne yaptığıyla. Satırın sağ tık menüsü: başlık, Göster, ayraç, aynı komutlar, ayraç, Sil; seçili olmayan satırda başlık noktanın adıdır ("Nokta 105").
-  - Toplu işlemin penceresi (480 px): üstte hedefin kartı (nokta simgesi, yarı kalın sayı, altında ilk altı ad), değerler (Yeniden adlandır'da İşlem ve Önek yan yana), özet satırı (ne değişeceği, ilk değişiklik örnekle), altta Vazgeç ve Uygula.
+  - Toplu işlemin penceresi (480 px): üstte hedefin kartı (nokta simgesi, yarı kalın sayı, altında ilk altı ad), değerler (Yeniden adlandır'da İşlem ve Önek yan yana), özet satırı (ne değişeceği, ilk değişiklik örnekle), altta Vazgeç ve Uygula. Çift noktaları ayıkla'nın penceresi 540 px: Ölçüt ve Tolerans (m, tabular) yan yana, altında Tutulan ve Bağlı çizgiler izler'in durumunu söyleyen ipucu; altta Çiftleri göster, Vazgeç, Ayıkla.
+  - Çiftleri göster'de tablo grup grup durur, Sıra grubun numarasıdır; çubuğun sol grubunun sonunda vurgu tonunda, yarı kalın "Çiftler: 6 grup ×" çipi; basınca sorguya döner.
+  - Toplu işlemlerin simgeleri kendilerinindir: Yeniden adlandır etiketli nokta, Sıralı numara ver üç noktanın üstünde "1 2 3", Katmana taşı katmana inen nokta, Çift noktaları ayıkla birleşen iki halka.
 
 ### 7.7 Durum çubuğu
 

@@ -4,7 +4,7 @@
 //! double-clicked holds the editor's field (`cell.rs`), the draft row after
 //! the points, a row's right click its menu.
 
-use iced::widget::{button, container, mouse_area, row, space};
+use iced::widget::{button, container, mouse_area, row, space, text};
 use iced::{Center, Element, Fill, Length};
 use kentos_contracts::Entity;
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -54,14 +54,25 @@ fn bar_button<'a>(
 /// each sends `on(kind)`; none without rows.
 fn batch_items(menu: Menu<Message>, on: impl Fn(Kind) -> Message, any: bool) -> Menu<Message> {
     [
-        (Kind::Rename, texts::RENAME, "edit", texts::RENAME_HINT),
+        (
+            Kind::Rename,
+            texts::RENAME,
+            "pointRename",
+            texts::RENAME_HINT,
+        ),
         (
             Kind::Number,
             texts::NUMBER,
-            "numberVertices",
+            "pointNumber",
             texts::NUMBER_HINT,
         ),
-        (Kind::Layer, texts::LAYER, "layers", texts::LAYER_HINT),
+        (Kind::Layer, texts::LAYER, "pointLayer", texts::LAYER_HINT),
+        (
+            Kind::Dedupe,
+            texts::DEDUPE,
+            "pointDedupe",
+            texts::DEDUPE_HINT,
+        ),
     ]
     .into_iter()
     .fold(menu, |menu, (kind, words, glyph, detail)| {
@@ -159,7 +170,7 @@ impl App {
                 ),
                 iced::widget::tooltip::Position::Top,
             );
-            let filters = row![
+            let mut filters = row![
                 container(search).width(Length::Fixed(200.0)),
                 container(layer).width(Length::Fixed(170.0)),
                 only,
@@ -167,6 +178,28 @@ impl App {
             ]
             .spacing(10)
             .align_y(Center);
+            // Çiftleri göster: the groups' chip; a press shows the query again.
+            let groups = rows.group_no.last().copied();
+            if let Some(n) = groups {
+                let chip = button(
+                    row![
+                        text(format!("Çiftler: {n} grup"))
+                            .font(typography::ui_strong())
+                            .size(typography::caption()),
+                        icon(Icon::Close).size(11.0),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                )
+                .padding([3, 10])
+                .style(style::button::toggle(true))
+                .on_press(msg(Event::ClearGroups));
+                filters = filters.push(tip(
+                    chip,
+                    Tip::new(format!("Çiftler: {n} grup")).body(texts::GROUPS_HINT),
+                    iced::widget::tooltip::Position::Top,
+                ));
+            }
             // İşlemler ▾: its menu headed by the rows it takes.
             let any = !rows.shown.is_empty();
             let face = container(
@@ -216,7 +249,9 @@ impl App {
             .spacing(10)
             .align_y(Center);
             // Before the area reports its size, one row.
-            let one_row = width <= 0.0 || width >= typography::from_default(BAR_ONE_ROW);
+            // The groups' chip takes its own room.
+            let need = BAR_ONE_ROW + if groups.is_some() { 130.0 } else { 0.0 };
+            let one_row = width <= 0.0 || width >= typography::from_default(need);
             let bar: Element<'_, Message> = if one_row {
                 row![filters, space::horizontal(), actions]
                     .align_y(Center)
@@ -280,6 +315,7 @@ impl App {
         let model = &doc.model;
         let selection = &self.selection;
         let shown = rows.shown.clone();
+        let group_no = rows.group_no.clone();
         let editing = panel.editing;
         let text = panel.text.clone();
         let draft = panel.draft.clone();
@@ -357,7 +393,8 @@ impl App {
                     _ => cell_text(p, col),
                 };
                 let values = [
-                    (i + 1).to_string(),
+                    // Under Çiftleri göster, Sıra is the group's number.
+                    group_no.get(i).copied().unwrap_or(i + 1).to_string(),
                     value(EditColumn::Name),
                     value(EditColumn::East),
                     value(EditColumn::North),

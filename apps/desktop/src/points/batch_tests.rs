@@ -1,13 +1,17 @@
 //! Nokta editörü's batch operations against
-//! `fixtures/point-editor/v1/batch.json` (scripts/fixtures/point_batch_cases.py,
-//! worked out from the rules with no KentOS code): every case's drawing after
-//! the operation, the messages said and the undo step, and the rows the
-//! operations take; as the web's `ui/bottom/pointBatch.test.ts`.
+//! `fixtures/point-editor/v1/batch.json` and `dedupe.json`
+//! (scripts/fixtures/point_batch_cases.py, point_dedupe_cases.py, worked out
+//! from the rules with no KentOS code): every case's drawing after the
+//! operation, the messages said and the undo step, the rows the operations
+//! take, Çift noktaları ayıkla's groups and summary; as the web's
+//! `ui/bottom/pointBatch.test.ts`.
 
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
-use super::batch::{Op, run, targets};
+use kentos_geometry_core::ops::point_editor::Keep;
+
+use super::batch::{Op, plan_dedupe, run, targets};
 
 fn file() -> Value {
     serde_json::from_str(include_str!(
@@ -16,7 +20,7 @@ fn file() -> Value {
     .expect("batch.json reads")
 }
 
-/// The reference's drawing: its layers (one hidden, one locked) and objects.
+/// A reference's drawing: its layers (one hidden or locked) and objects.
 fn drawing(file: &Value) -> kentos_domain::Document {
     let layers: Vec<Value> = file["layers"]
         .as_array()
@@ -86,7 +90,7 @@ fn every_operation_is_written_as_the_reference_writes_it() {
     for c in cases {
         let name = c["name"].as_str().unwrap_or_default();
         let mut doc = drawing(&file);
-        let out = run(&mut doc, &slots(&c["targets"]), &op(&c["op"]));
+        let out = run(&mut doc, &slots(&c["targets"]), &op(&c["op"]), true);
         let objects: Vec<Value> = doc.entities().map(view).collect();
         let step = match out.step {
             Some(_) => doc.undo(),
@@ -121,4 +125,69 @@ fn the_selected_rows_in_the_tables_order_or_every_row() {
             c["name"]
         );
     }
+}
+
+/// An object with line work's paths too (dedupe.json's view).
+fn seen(e: &kentos_contracts::Entity) -> Value {
+    let mut v = view(e);
+    if !matches!(e, kentos_contracts::Entity::Point(_)) {
+        v["paths"] = kentos_native_application::elevation::paths(e)
+            .iter()
+            .map(|p| json!({ "pts": p.pts.iter().map(|q| [q.x, q.y]).collect::<Vec<_>>(), "zs": p.zs }))
+            .collect();
+    }
+    v
+}
+
+#[test]
+fn every_dedupe_finds_the_groups_and_writes_as_the_reference_does() {
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/point-editor/v1/dedupe.json"
+    ))
+    .expect("dedupe.json reads");
+    assert_eq!(file["format"], "kentos.point-editor-dedupe");
+    let cases = file["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 15, "{} cases", cases.len());
+    let mut off = Vec::new();
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or_default();
+        let mut doc = drawing(&file);
+        let op = Op::Dedupe {
+            by_name: c["by"] == "name",
+            tolerance: c["tolerance"].as_str().unwrap_or_default().to_owned(),
+            keep: match c["keep"].as_str() {
+                Some("last") => Keep::Last,
+                Some("average") => Keep::Average,
+                _ => Keep::First,
+            },
+        };
+        let targets = slots(&c["targets"]);
+        let plan = plan_dedupe(&doc, &targets, &op);
+        let groups: Vec<Vec<u32>> = plan
+            .groups
+            .iter()
+            .map(|g| g.iter().map(|s| s.0).collect())
+            .collect();
+        let out = run(
+            &mut doc,
+            &targets,
+            &op,
+            c["follow"].as_bool().unwrap_or(false),
+        );
+        let objects: Vec<Value> = doc.entities().map(seen).collect();
+        let step = match out.step {
+            Some(_) => doc.undo(),
+            None => doc.can_undo().then(|| "yazıldı".to_owned()),
+        };
+        let got = json!({ "groups": groups, "summary": plan.summary, "said": out.said, "step": step, "objects": objects });
+        if let Err(e) = super::tests::same(&got, &c["expected"], name) {
+            off.push(e);
+        }
+    }
+    assert!(
+        off.is_empty(),
+        "{} durum farklı:\n{}",
+        off.len(),
+        off.join("\n")
+    );
 }

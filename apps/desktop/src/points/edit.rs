@@ -58,6 +58,8 @@ pub const PREFIX: &str = "Nokta editörü: ";
 pub const STEP: &str = "Nokta düzenle";
 /// Satır ekle's step: the point command's.
 pub const DRAFT_STEP: &str = "Ekle";
+/// A line work that would follow the point is on a locked layer.
+pub const FOLLOW_LOCKED: &str = "Nokta editörü: Bağlı çizgilerden biri kilitli katmanda; katmanın kilidini açın ya da Bağlı çizgiler izler'i kapatın.";
 
 /// What came of a write: what to say (warnings), the undo step written
 /// (none: nothing), and whether the cell stays open.
@@ -329,9 +331,7 @@ pub fn write_cell(
             // The point is the first change: a refusal of another is a line work's lock.
             let other = !e.path.as_deref().unwrap_or("").starts_with("changes[0]");
             if e.code == "layer_locked" && other {
-                format!(
-                    "{PREFIX}Bağlı çizgilerden biri kilitli katmanda; katmanın kilidini açın ya da Bağlı çizgiler izler'i kapatın."
-                )
+                FOLLOW_LOCKED.to_owned()
             } else {
                 e.message
             }

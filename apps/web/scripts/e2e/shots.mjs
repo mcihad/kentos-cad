@@ -2060,6 +2060,17 @@ const openPointEditor = async (ui) => {
 /** The centre of row `i`'s cell `j` (in the order shown). */
 const rowCell = (ui, i, j) =>
   ui.eval(`(() => { const td = document.querySelectorAll('.ptable tbody tr[data-at="${i}"] td')[${j}]; const r = td.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+/** Çift noktaları ayıkla's window over every row: nothing selected, İşlemler ▾ → Çift noktaları ayıkla…. */
+const openDedupe = async (ui) => {
+  await openPointEditor(ui);
+  await ui.eval(`window.kentos.selection.clear()`);
+  await ui.sleep(200);
+  await ui.clickText('.ptable__btn', 'İşlemler');
+  await ui.clickText('.menu__title', 'Çift noktaları ayıkla…');
+  await ui.waitFor(`!!document.querySelector('.dialog--point-batch')`, 3000);
+  const said = await ui.eval(`document.querySelector('.dialog--point-batch .io-summary').textContent`);
+  if (said !== '2 grupta 4 nokta; 2 nokta silinecek.') throw new Error(`Çift noktaları ayıkla: ${said}`);
+};
 /** Rows `a` to `b` selected: a click on the first, Shift and a click on the last. */
 const pickRows = async (ui, a, b) => {
   await ui.clickAt(...(await rowCell(ui, a, 1)));
@@ -2231,6 +2242,53 @@ SCENES.pointeditor = [
       await ui.sleep(300);
       const layers = await ui.eval(`[...document.querySelectorAll('.ptable tbody tr[data-at] td:nth-child(7)')].slice(0, 3).map((td) => td.textContent)`);
       if (JSON.stringify(layers) !== JSON.stringify(['Kot', 'Kot', 'Nokta'])) throw new Error(`Katmana taşı: ${JSON.stringify(layers)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Çift noktaları ayıkla over every row (nothing selected): Aynı yer, 1 mm; Ortalaması chosen, the count follows.
+  {
+    id: 'noktalar-cift-ayikla',
+    open: async (ui) => {
+      await openDedupe(ui);
+      await ui.clickText('.dialog--point-batch .seg__opt', 'Ortalaması');
+      const said = await ui.eval(`document.querySelector('.dialog--point-batch .io-summary').textContent`);
+      if (said !== '2 grupta 4 nokta; 2 nokta silinecek, 1 nokta ortalamaya taşınacak.') throw new Error(`Çift noktaları ayıkla: ${said}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Çiftleri göster: the table shows the two groups, Sıra their numbers, the chip over them.
+  {
+    id: 'noktalar-ciftler',
+    open: async (ui) => {
+      await openDedupe(ui);
+      await ui.clickText('.dialog--point-batch .btn', 'Çiftleri göster');
+      await ui.sleep(300);
+      const rows = await ui.eval(`[...document.querySelectorAll('.ptable tbody tr[data-at]')].map((tr) => tr.children[0].textContent + ' ' + tr.children[1].textContent)`);
+      if (JSON.stringify(rows) !== JSON.stringify(['1 103', '1 103', '2 105', '2 S9'])) throw new Error(`Çiftleri göster: ${JSON.stringify(rows)}`);
+      const chip = await ui.eval(`document.querySelector('.ptable__chip').textContent`);
+      if (chip !== 'Çiftler: 2 grup') throw new Error(`Çip: ${chip}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Ayıkla over the groups shown, Ortalaması: one step; the extras go, the table shows its query again.
+  {
+    id: 'noktalar-ayiklandi',
+    open: async (ui) => {
+      await openDedupe(ui);
+      await ui.clickText('.dialog--point-batch .btn', 'Çiftleri göster');
+      await ui.clickText('.ptable__btn', 'İşlemler');
+      await ui.clickText('.menu__title', 'Çift noktaları ayıkla…');
+      await ui.waitFor(`!!document.querySelector('.dialog--point-batch')`, 3000);
+      await ui.clickText('.dialog--point-batch .seg__opt', 'Ortalaması');
+      await ui.clickText('.dialog--point-batch .btn--primary', 'Ayıkla');
+      await ui.sleep(300);
+      const after = await ui.eval(`[window.kentos.doc.size, document.querySelector('.ptable__count').textContent, document.querySelector('.ptable__chip').hidden]`);
+      if (JSON.stringify(after) !== JSON.stringify([37, '34 / 34 nokta', true])) throw new Error(`Ayıkla: ${JSON.stringify(after)}`);
+      const step = await ui.eval(`(() => { const d = window.kentos.doc; const s = d.undo(); d.redo(); return s; })()`);
+      if (step !== 'Çift noktaları ayıkla') throw new Error(`Adım: ${step}`);
       await ui.move(2, 2);
       await ui.sleep(300);
     },

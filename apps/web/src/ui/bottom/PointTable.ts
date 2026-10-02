@@ -55,13 +55,16 @@ export const POINT_TEXTS = {
   show: 'Göster',
   showHint: 'Seçili noktalara yakınlaştırır',
   actions: 'İşlemler',
-  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı.',
+  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla.',
   rename: 'Yeniden adlandır…',
   renameHint: 'Adların başına önek ekler ya da baştaki öneki kaldırır',
   number: 'Sıralı numara ver…',
   numberHint: 'Tablodaki sırayla birer artan adlar verir',
   layer: 'Katmana taşı…',
   layerHint: 'Noktaları seçilen katmana taşır',
+  dedupe: 'Çift noktaları ayıkla…',
+  dedupeHint: 'Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler',
+  groupsHint: 'Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.',
   draft: 'Yeni',
   none: 'Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.',
   noMatch: 'Süzgece uyan nokta yok.',
@@ -139,6 +142,10 @@ export class PointTable extends Component {
   /** The open editor's field, while it is on screen; its blur writes unless a key already did. */
   private field: HTMLInputElement | null = null;
   private draft: Draft | null = null;
+  /** Çiftleri göster: the groups shown (their members' ids), and each row's group number. */
+  private groups: number[][] | null = null;
+  private groupNo: number[] = [];
+  private readonly groupsChip: HTMLButtonElement;
 
   constructor(ctx: AppContext) {
     super();
@@ -177,6 +184,9 @@ export class PointTable extends Component {
     actions.append(icon('chevronDown', 12));
     this.removeBtn = button('erase', POINT_TEXTS.remove, POINT_TEXTS.removeHint, () => ctx.commands.execute('tool.erase'));
     this.showBtn = button('zoomSelection', POINT_TEXTS.show, POINT_TEXTS.showHint, () => ctx.commands.execute('view.zoomSelection'));
+    this.groupsChip = h('button', { class: 'ptable__chip', type: 'button', hidden: true });
+    this.d.add(listen(this.groupsChip, 'click', () => this.showGroups(null)));
+    this.d.add(tooltip(this.groupsChip, () => ({ title: this.groupsChip.textContent ?? '', description: POINT_TEXTS.groupsHint }), 'top'));
 
     const head = h(
       'tr',
@@ -202,7 +212,7 @@ export class PointTable extends Component {
       h(
         'div',
         { class: 'ptable__bar' },
-        h('div', { class: 'ptable__group' }, search, this.layerPick.el, h('label', { class: 'io-check ptable__only' }, this.onlyBox, POINT_TEXTS.onlySelected), follow),
+        h('div', { class: 'ptable__group' }, search, this.layerPick.el, h('label', { class: 'io-check ptable__only' }, this.onlyBox, POINT_TEXTS.onlySelected), follow, this.groupsChip),
         h('div', { class: 'ptable__group ptable__group--end' }, this.count, actions, add, this.removeBtn, this.showBtn),
       ),
       this.scroller,
@@ -274,9 +284,10 @@ export class PointTable extends Component {
       run: () => (first(), this.openBatch(kind)),
     });
     return [
-      item('rename', POINT_TEXTS.rename, 'edit', POINT_TEXTS.renameHint),
-      item('number', POINT_TEXTS.number, 'numberVertices', POINT_TEXTS.numberHint),
-      item('layer', POINT_TEXTS.layer, 'layers', POINT_TEXTS.layerHint),
+      item('rename', POINT_TEXTS.rename, 'pointRename', POINT_TEXTS.renameHint),
+      item('number', POINT_TEXTS.number, 'pointNumber', POINT_TEXTS.numberHint),
+      item('layer', POINT_TEXTS.layer, 'pointLayer', POINT_TEXTS.layerHint),
+      item('dedupe', POINT_TEXTS.dedupe, 'pointDedupe', POINT_TEXTS.dedupeHint),
     ];
   }
 
@@ -309,9 +320,20 @@ export class PointTable extends Component {
   private openBatch(kind: BatchOp['kind']): void {
     const { ids, header } = this.targets();
     import('./PointBatchDialog').then(
-      (m) => m.openPointBatchDialog(this.ctx, kind, ids, header),
+      (m) =>
+        m.openPointBatchDialog(this.ctx, kind, ids, header, {
+          follow: kept.follow,
+          showGroups: (groups) => this.showGroups(groups),
+          done: () => this.showGroups(null),
+        }),
       (e: Error) => this.ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`),
     );
+  }
+
+  /** Çiftleri göster (docs/adr/0153 §5): the table shows only the groups, group by group; none shows the query again. */
+  private showGroups(groups: number[][] | null): void {
+    this.groups = groups?.length ? groups : null;
+    this.schedule();
   }
 
   /** Changes come in bursts (an undo changes many objects): one refresh after them. */
@@ -352,8 +374,24 @@ export class PointTable extends Component {
     // A layer chosen that no longer holds points shows all.
     if (kept.layer !== null && !this.points.some((e) => name(e.layerId) === kept.layer)) kept.layer = null;
     const data = this.points.map((e) => rowOf(e, name(e.layerId), selected.has(e.id)));
-    this.shown = pointTable(data, kept);
+    if (this.groups) {
+      // The groups as found, their points still in the drawing; the query waits.
+      const at = new Map(this.points.map((e, i) => [e.id, i]));
+      this.shown = [];
+      this.groupNo = [];
+      this.groups.forEach((g, n) =>
+        g.forEach((id) => {
+          const i = at.get(id);
+          if (i !== undefined) (this.shown.push(i), this.groupNo.push(n + 1));
+        }),
+      );
+    } else {
+      this.shown = pointTable(data, kept);
+      this.groupNo = [];
+    }
     this.ids = this.shown.map((i) => this.points[i].id);
+    this.groupsChip.hidden = !this.groups;
+    if (this.groups) replaceChildren(this.groupsChip, `Çiftler: ${this.groups.length} grup`, icon('close', 12));
     // A point edited that went away (an undo) closes its editor.
     if (typeof this.editing?.id === 'number' && !this.ids.includes(this.editing.id)) this.editing = null;
     this.layerPick.set(kept.layer ?? POINT_TEXTS.allLayers);
@@ -393,7 +431,9 @@ export class PointTable extends Component {
     if (i >= this.shown.length) return this.draftRow(i);
     const e = this.points[this.shown[i]];
     const { format: f, doc, selection } = this.ctx;
-    const cells = [String(i + 1), e.label ?? '', f.coord(e.p.x), f.coord(e.p.y), e.z !== undefined ? f.length(e.z, false) : '', e.attrs.Kod ?? '', doc.layers.get(e.layerId)?.name ?? ''];
+    // Under Çiftleri göster, Sıra is the group's number.
+    const no = this.groups ? this.groupNo[i] : i + 1;
+    const cells = [String(no), e.label ?? '', f.coord(e.p.x), f.coord(e.p.y), e.z !== undefined ? f.length(e.z, false) : '', e.attrs.Kod ?? '', doc.layers.get(e.layerId)?.name ?? ''];
     const on = selection.has(e.id);
     const ed = this.editing?.id === e.id ? this.editing.col : null;
     return h(

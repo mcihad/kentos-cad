@@ -1,20 +1,28 @@
 //! Nokta editörü's batch operations (docs/adr/0153 §5; the web's
 //! `ui/bottom/pointBatch.ts`): Yeniden adlandır, Sıralı numara ver and Katmana
-//! taşı over the table's target rows, each one undo step named after it,
-//! written through `cad.entities.set`. fixtures/point-editor/v1/batch.json
-//! holds both platforms to the same drawing, messages and steps.
+//! taşı over the table's target rows, written through `cad.entities.set`, and
+//! Çift noktaları ayıkla, through `cad.entities.edit` and
+//! `cad.entities.delete`; each one undo step named after it.
+//! fixtures/point-editor/v1/batch.json and dedupe.json hold both platforms to
+//! the same drawing, messages and steps.
 
 use std::collections::HashMap;
 
 use kentos_contracts::{
-    CommandResult, EntitiesSetProperties, Entity, PointEntity, PropertiesOperation,
+    CommandResult, EditOperation, EntitiesDelete, EntitiesEdit, EntitiesSetProperties, Entity,
+    EntityEdit, EntityGeometry, PointEntity, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::ops::point_editor::{
+    DupBy, DupPoint, Keep, duplicate_points, follow_point,
+};
 use kentos_geometry_core::text::edit::increment;
-use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::{ExecutionContext, set};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_native_application::elevation::paths as elevated_paths;
+use kentos_native_application::{ExecutionContext, delete, edit, set};
 
-use super::edit::{PREFIX, in_step, refusal};
+use super::edit::{FOLLOW_LOCKED, PREFIX, in_step, refusal, with_paths};
 
 /// An operation's kind: its window and its undo step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,6 +30,7 @@ pub enum Kind {
     Rename,
     Number,
     Layer,
+    Dedupe,
 }
 
 impl Kind {
@@ -31,6 +40,7 @@ impl Kind {
             Kind::Rename => "Yeniden adlandır",
             Kind::Number => "Sıralı numara ver",
             Kind::Layer => "Katmana taşı",
+            Kind::Dedupe => "Çift noktaları ayıkla",
         }
     }
 }
@@ -49,6 +59,12 @@ pub enum Op {
     Layer {
         layer: String,
     },
+    /// Aynı ad (`by_name`) or Aynı yer within `tolerance` (the window's text, metres).
+    Dedupe {
+        by_name: bool,
+        tolerance: String,
+        keep: Keep,
+    },
 }
 
 impl Op {
@@ -57,6 +73,7 @@ impl Op {
             Op::Rename { .. } => Kind::Rename,
             Op::Number { .. } => Kind::Number,
             Op::Layer { .. } => Kind::Layer,
+            Op::Dedupe { .. } => Kind::Dedupe,
         }
     }
 }
@@ -120,7 +137,7 @@ pub fn planned_names(points: &[&PointEntity], op: &Op) -> Result<Vec<Option<Stri
                 })
                 .collect())
         }
-        Op::Layer { .. } => Ok(points.iter().map(|_| None).collect()),
+        Op::Layer { .. } | Op::Dedupe { .. } => Ok(points.iter().map(|_| None).collect()),
     }
 }
 
@@ -144,6 +161,13 @@ fn points_of(doc: &Document, slots: &[Slot]) -> Vec<(Slot, PointEntity)> {
 
 pub fn plan(doc: &Document, slots: &[Slot], op: &Op) -> Plan {
     let points = points_of(doc, slots);
+    if let Op::Dedupe { .. } = op {
+        let d = plan_dedupe(doc, slots, op);
+        return Plan {
+            error: d.error,
+            changes: d.removed.iter().map(|&s| (s, None)).collect(),
+        };
+    }
     if let Op::Layer { layer } = op {
         return Plan {
             error: None,
@@ -197,8 +221,12 @@ fn input(uids: Vec<String>, label: Option<String>, layer: Option<String>) -> Ent
 /// by one in the targets' order, a layer move in one call; a refusal of the
 /// command is said as it is and nothing is written. Then it is said what
 /// changed: for names, also how many of the new names another point has too;
-/// for a move, the command's warning (a hidden layer).
-pub fn run(doc: &mut Document, slots: &[Slot], op: &Op) -> Outcome {
+/// for a move, the command's warning (a hidden layer). Çift noktaları ayıkla
+/// takes Bağlı çizgiler izler (`follow`).
+pub fn run(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome {
+    if let Op::Dedupe { .. } = op {
+        return run_dedupe(doc, slots, op, follow);
+    }
     let plan = plan(doc, slots, op);
     if let Some(error) = plan.error {
         return Outcome {
@@ -312,6 +340,257 @@ pub fn run(doc: &mut Document, slots: &[Slot], op: &Op) -> Outcome {
         format!("{PREFIX}{n} noktanın adı değişti; {shared} ad başka noktalarda da var.")
     } else {
         format!("{PREFIX}{n} noktanın adı değişti.")
+    };
+    Outcome {
+        said: vec![said],
+        step: Some(step),
+    }
+}
+
+/// A kept point whose place or elevation changes: where to, and whether its
+/// elevation does.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Move {
+    pub slot: Slot,
+    pub from: Vec2,
+    pub to: Vec2,
+    pub z: Option<f64>,
+    pub z_changed: bool,
+}
+
+/// Çift noktaları ayıkla's plan (the web's `DedupePlan`): the groups, the
+/// points removed, the kept ones that move, and the window's summary.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DedupePlan {
+    /// Why nothing may be done (a tolerance that is no number).
+    pub error: Option<String>,
+    /// The groups' members, in the drawing's order.
+    pub groups: Vec<Vec<Slot>>,
+    /// “6 grupta 15 nokta; 9 nokta silinecek.”, or “Çift nokta yok.”; none with an error.
+    pub summary: Option<String>,
+    pub removed: Vec<Slot>,
+    pub moves: Vec<Move>,
+}
+
+/// The drawing's order of its objects.
+fn drawing_order(doc: &Document) -> HashMap<Slot, usize> {
+    doc.entities()
+        .enumerate()
+        .map(|(k, e)| (Slot(e.base().id), k))
+        .collect()
+}
+
+/// The groups of duplicates among the target points (docs/adr/0153 §5), by
+/// the shared core (`duplicate_points`): by name, or by place within the
+/// tolerance (zero or more); the points taken in the drawing's order.
+pub fn plan_dedupe(doc: &Document, slots: &[Slot], op: &Op) -> DedupePlan {
+    let Op::Dedupe {
+        by_name,
+        tolerance,
+        keep,
+    } = op
+    else {
+        return DedupePlan::default();
+    };
+    let by = if *by_name {
+        DupBy::Name
+    } else {
+        match parse_number(tolerance) {
+            Some(t) if t >= 0.0 => DupBy::Place(t),
+            _ => {
+                return DedupePlan {
+                    error: Some(format!(
+                        "{PREFIX}Tolerans sıfır ya da daha büyük bir sayı olmalı."
+                    )),
+                    ..DedupePlan::default()
+                };
+            }
+        }
+    };
+    let order = drawing_order(doc);
+    let mut points = points_of(doc, slots);
+    points.sort_by_key(|(s, _)| order.get(s).copied().unwrap_or(usize::MAX));
+    let input: Vec<DupPoint> = points
+        .iter()
+        .map(|(_, p)| DupPoint {
+            p: Vec2::new(p.p.x, p.p.y),
+            z: p.z,
+            name: p.base.label.clone(),
+        })
+        .collect();
+    let found = duplicate_points(&input, by, *keep);
+    let groups: Vec<Vec<Slot>> = found
+        .groups
+        .iter()
+        .map(|g| g.members.iter().map(|&i| points[i as usize].0).collect())
+        .collect();
+    let removed: Vec<Slot> = found
+        .removed
+        .iter()
+        .map(|&i| points[i as usize].0)
+        .collect();
+    let moves: Vec<Move> = found
+        .groups
+        .iter()
+        .filter_map(|g| {
+            let (slot, p) = &points[g.kept as usize];
+            let from = Vec2::new(p.p.x, p.p.y);
+            let z_changed = g.z != p.z;
+            (g.p != from || z_changed).then_some(Move {
+                slot: *slot,
+                from,
+                to: g.p,
+                z: g.z,
+                z_changed,
+            })
+        })
+        .collect();
+    let total: usize = groups.iter().map(Vec::len).sum();
+    let summary = if groups.is_empty() {
+        "Çift nokta yok.".to_owned()
+    } else if moves.is_empty() {
+        format!(
+            "{} grupta {total} nokta; {} nokta silinecek.",
+            groups.len(),
+            removed.len()
+        )
+    } else {
+        format!(
+            "{} grupta {total} nokta; {} nokta silinecek, {} nokta ortalamaya taşınacak.",
+            groups.len(),
+            removed.len(),
+            moves.len()
+        )
+    };
+    DedupePlan {
+        error: None,
+        groups,
+        summary: Some(summary),
+        removed,
+        moves,
+    }
+}
+
+/// Çift noktaları ayıkla written as one undo step (docs/adr/0153 §5; the
+/// web's `runDedupe`): the kept points moved group by group (with `follow`,
+/// the line work at a kept point's place moves with it and takes its new
+/// elevation when that changes), then the others removed. The first point
+/// that would change, in the drawing's order, on a locked layer stops it all
+/// with the edit command's words; so does a line work that would follow on
+/// one.
+fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outcome {
+    let plan = plan_dedupe(doc, slots, op);
+    if let Some(error) = plan.error {
+        return Outcome {
+            said: vec![error],
+            step: None,
+        };
+    }
+    if plan.groups.is_empty() {
+        return Outcome {
+            said: vec![format!("{PREFIX}Çift nokta yok.")],
+            step: None,
+        };
+    }
+    let order = drawing_order(doc);
+    let mut changing: Vec<Slot> = plan
+        .moves
+        .iter()
+        .map(|m| m.slot)
+        .chain(plan.removed.iter().copied())
+        .collect();
+    changing.sort_by_key(|s| order.get(s).copied().unwrap_or(usize::MAX));
+    let layers = doc.layers();
+    if let Some(layer) = changing
+        .iter()
+        .filter_map(|&s| doc.get(s))
+        .map(|e| e.base().layer_id.clone())
+        .find(|l| layers.is_locked(l))
+    {
+        let name = layers
+            .get(&layer)
+            .map_or_else(|| layer.clone(), |n| n.name.clone());
+        return Outcome {
+            said: vec![format!(
+                "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+            )],
+            step: None,
+        };
+    }
+    let step = Kind::Dedupe.step();
+    let uid = |doc: &Document, s: Slot| doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
+    let removed: Vec<String> = plan.removed.iter().map(|&s| uid(doc, s)).collect();
+    let refused = in_step(doc, step, |doc| {
+        for m in &plan.moves {
+            let mut changes = vec![EntityEdit::Update {
+                uid: uid(doc, m.slot),
+                geometry: EntityGeometry::Point {
+                    p: kentos_contracts::Vec2 {
+                        x: m.to.x,
+                        y: m.to.y,
+                    },
+                    z: m.z,
+                },
+            }];
+            if follow {
+                for other in doc.entities() {
+                    if !matches!(
+                        other,
+                        Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+                    ) {
+                        continue;
+                    }
+                    let Some(moved) = follow_point(
+                        &elevated_paths(other),
+                        m.from,
+                        m.to,
+                        m.z_changed,
+                        if m.z_changed { m.z } else { None },
+                    ) else {
+                        continue;
+                    };
+                    let Some(geometry) = with_paths(other, &moved) else {
+                        continue;
+                    };
+                    if doc.layers().is_locked(&other.base().layer_id) {
+                        return Some(FOLLOW_LOCKED.to_owned());
+                    }
+                    changes.push(EntityEdit::Update {
+                        uid: uid(doc, Slot(other.base().id)),
+                        geometry,
+                    });
+                }
+            }
+            let input = EntitiesEdit {
+                operation: EditOperation::Properties,
+                changes,
+                expected_revision: None,
+            };
+            if let Some(e) = refusal(edit::execute(&mut ExecutionContext::new(doc), input)) {
+                return Some(e.message);
+            }
+        }
+        let input = EntitiesDelete {
+            uids: removed,
+            expected_revision: None,
+        };
+        refusal(delete::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
+    });
+    if let Some(refused) = refused {
+        return Outcome {
+            said: vec![refused],
+            step: None,
+        };
+    }
+    let n = plan.groups.len();
+    let gone = plan.removed.len();
+    let said = if plan.moves.is_empty() {
+        format!("{PREFIX}{n} grupta {gone} nokta silindi.")
+    } else {
+        format!(
+            "{PREFIX}{n} grupta {gone} nokta silindi, {} nokta ortalamaya taşındı.",
+            plan.moves.len()
+        )
     };
     Outcome {
         said: vec![said],

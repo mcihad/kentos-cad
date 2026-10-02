@@ -100,8 +100,13 @@ Ad, Y, X, Z ve Kod düzenlenir; Sıra ve Katman düzenlenmez (katmanı Katmana t
     - Aynı yerde noktalar çizim sırasıyla gezilir; her nokta, ilk noktası toleransla değen ilk gruba katılır, yoksa yeni grup açar. Zincirleme olmaz: grubun her noktası ilk noktaya tolerans içindedir.
   - **Tutulan:** İlki, Sonuncusu (çizim sırasıyla) ya da Ortalaması.
     - Ortalamada tutulan, grubun ilk noktasıdır. Yeri grubun yerlerinin ortalamasına taşınır; kotu, kotu olanların ortalamasıdır (hiçbirinin yoksa kotsuz). Adı ve kodu ilkininkidir.
-  - **Önce sayılar söylenir:** “6 grupta 15 nokta; 9 nokta silinecek.” Çiftleri göster tabloyu gruplara süzer.
-  - **Ayıkla:** fazlalar silinir, ortalamada tutulan taşınır (Bağlı çizgiler izler açıksa onlar da izler). Tek adım “Çift noktaları ayıkla”.
+  - **Varsayılan:** Aynı yer, 0,001 m, İlki. Tolerans nokta girişinin sayı dilbilgisiyle okunur; sayı olmayan ya da eksi tolerans söylenir: “Tolerans sıfır ya da daha büyük bir sayı olmalı.” 0 yalnız tam aynı yeri gruplar.
+  - **Önce sayılar söylenir:** “6 grupta 15 nokta; 9 nokta silinecek.”, taşınacak tutulan varsa “…, 2 nokta ortalamaya taşınacak.”; grup yoksa “Çift nokta yok.” ve Ayıkla kapalıdır.
+  - **Çiftleri göster:** pencere kapanır, tablo yalnız grupları gösterir, grup grup; Sıra grubun numarasıdır. Çubukta vurgu tonunda “Çiftler: 6 grup ×” çipi durur; ona basmak ya da Ayıkla sorguya döner. Bu görünümde İşlemler ▾ gruplardaki satırları alır.
+  - **Ayıkla:** fazlalar silinir, ortalamada tutulan taşınır (Bağlı çizgiler izler açıksa onlar da izler). Tek adım “Çift noktaları ayıkla”; ileti “6 grupta 9 nokta silindi.”, taşınan varsa “…, 2 nokta ortalamaya taşındı.”
+    - **Kilit:** değişecek ilk nokta (silinen ya da taşınan tutulan; çizim sırasıyla) kilitli katmandaysa düzenleme komutunun reddi söylenir ve hiçbir şey yazılmaz. Değişmeyen kilitli tutulan engel değildir.
+    - **Bağlı çizgiler:** tutulanın eski yerindeki (1 µm) köşeler yeni yerine taşınır; tutulanın kotu değiştiyse yeni kotunu alır, değişmediyse kendi kotlarını korur. Bağlı çizgi kilitli katmandaysa iş reddedilir (§3'ün iletisi).
+    - **Ortak durumlar:** `fixtures/point-editor/v1/dedupe.json` (`scripts/fixtures/point_dedupe_cases.py`, ortalama kesirlerle).
 - **Dışa aktar:** tablodaki (süzülen) noktalar ADR 0048'in koordinat listesi verme penceresiyle yazılır.
 - **İçe aktar:** ADR 0048'in koordinat listesi alma penceresi.
   - Çizimde aynı adlı nokta varsa içe aktarma yine ekler. Sonra Çift noktaları ayıkla, Aynı ad ile, Netcad'in seçeneklerini verir: Sonuncusu dosyadakini, İlki çizimdekini tutar, Ortalaması ikisinin ortalamasıdır.
@@ -173,6 +178,12 @@ Python ve MCP aynısını betiğin tek adımlık grubuyla yapar.
       - **Çubuk:** masaüstünde iki kutu da web'inki gibi onay kutusudur; 1440×900'de çubuk iki platformda tek satırdır.
       - **Sınama ve resimler:** tarayıcıda `shots.mjs pointeditor`'ın beş yeni sahnesi (İşlemler ▾, Yeniden adlandır'ın penceresi, Sıralı numara ver'in yazılması ve adımı, satırın sağ tık menüsü ve seçimin değişmemesi, Katmana taşı); masaüstünde `points::tests` aynı akışları ve resimleri.
    2. Çift noktaları ayıkla: pencere, sayılar, Çiftleri göster, Ayıkla; ortak durumlar.
+
+      *(2 Ekim: tamam.)*
+      - **Kurallar:** gruplar çekirdeğin `duplicate_points`'inden; web'de `pointBatch.ts`'in `planDedupe`'u ve yazması, masaüstünde `batch.rs`'in `plan_dedupe`'u. İki platform `dedupe.json`'un 20 durumunu geçer: gruplar, pencerenin satırı, iletiler, adım ve çizim (sayılar 1e-9 içinde). Bozulan kuralları (kotu değişmeyen tutulanda çizginin kotu, kilit, çizim sırası) yakalar.
+      - **Pencere ve tablo:** Ölçüt, Tolerans (m), Tutulan; Çiftleri göster, Vazgeç, Ayıkla. Tablonun grup görünümü ve çipi iki platformda.
+      - **Simgeler:** dört toplu işlemin kendi simgeleri: Yeniden adlandır (etiketli nokta), Sıralı numara ver (1 2 3), Katmana taşı (katmana inen nokta), Çift noktaları ayıkla (birleşen iki halka); web'in `icons.ts`'inde, masaüstüne envanterle gelir.
+      - **Sınama ve resimler:** tarayıcıda üç sahne (pencere ve sayılar, çiftlerin görünümü, Ayıkla ve adımı); masaüstünde `points::tests` aynı akışı ve resimleri.
    3. Dışa aktar (tablodaki noktalar) ve İçe aktar.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

@@ -76,13 +76,16 @@ pub mod texts {
     pub const REMOVE: &str = "Sil";
     pub const SHOW: &str = "Göster";
     pub const ACTIONS: &str = "İşlemler";
-    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı.";
+    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla.";
     pub const RENAME: &str = "Yeniden adlandır…";
     pub const RENAME_HINT: &str = "Adların başına önek ekler ya da baştaki öneki kaldırır";
     pub const NUMBER: &str = "Sıralı numara ver…";
     pub const NUMBER_HINT: &str = "Tablodaki sırayla birer artan adlar verir";
     pub const LAYER: &str = "Katmana taşı…";
     pub const LAYER_HINT: &str = "Noktaları seçilen katmana taşır";
+    pub const DEDUPE: &str = "Çift noktaları ayıkla…";
+    pub const DEDUPE_HINT: &str = "Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler";
+    pub const GROUPS_HINT: &str = "Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.";
     pub const DRAFT: &str = "Yeni";
     pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
@@ -227,6 +230,8 @@ pub enum Event {
     Row(usize, RowAction),
     /// The operation's window.
     Window(batch_view::WindowEvent),
+    /// The groups' chip pressed: the table shows its query again.
+    ClearGroups,
 }
 
 /// The rows as worked out for a drawing, a selection and a query.
@@ -240,6 +245,8 @@ pub(crate) struct Rows {
     first_selected: Option<usize>,
     /// The layers holding points, in the layer list's order: name and count.
     layers: Vec<(String, usize)>,
+    /// Under Çiftleri göster, each row's group number (Sıra shows it); empty else.
+    group_no: Vec<usize>,
 }
 
 /// The open drawing (its session), its changes, the selection's version and the query's.
@@ -262,6 +269,8 @@ pub(crate) struct PointsPanel {
     draft: Option<Draft>,
     /// An operation's window, while it is open.
     batch: Option<batch_view::Window>,
+    /// Çiftleri göster: the groups the table shows instead of the query.
+    groups: Option<Vec<Vec<Slot>>>,
     /// Bumped at every change of the query.
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
@@ -281,6 +290,7 @@ impl Default for PointsPanel {
             text: String::new(),
             draft: None,
             batch: None,
+            groups: None,
             version: 0,
             cache: RefCell::default(),
         }
@@ -310,6 +320,13 @@ impl PointsPanel {
     /// The operation's window given up (Esc, a press beside it).
     pub(crate) fn close_batch(&mut self) {
         self.batch = None;
+    }
+
+    /// Çiftleri göster (docs/adr/0153 §5): the table shows only the groups,
+    /// group by group; none shows the query again.
+    fn show_groups(&mut self, groups: Option<Vec<Vec<Slot>>>) {
+        self.groups = groups.filter(|g| !g.is_empty());
+        self.changed();
     }
 }
 
@@ -382,16 +399,32 @@ impl App {
         {
             query.layer = None;
         }
-        let shown: Vec<Slot> = point_table(&data, &query)
-            .into_iter()
-            .map(|i| points[i as usize])
-            .collect();
+        let mut group_no = Vec::new();
+        let shown: Vec<Slot> = match &panel.groups {
+            // The groups as found, their points still in the drawing; the query waits.
+            Some(groups) => {
+                let present: std::collections::HashSet<Slot> = points.iter().copied().collect();
+                let mut shown = Vec::new();
+                for (n, g) in groups.iter().enumerate() {
+                    for &s in g.iter().filter(|s| present.contains(s)) {
+                        shown.push(s);
+                        group_no.push(n + 1);
+                    }
+                }
+                shown
+            }
+            None => point_table(&data, &query)
+                .into_iter()
+                .map(|i| points[i as usize])
+                .collect(),
+        };
         let first_selected = shown.iter().position(|&s| self.selection.contains(s));
         let rows = Rows {
             points,
             shown,
             first_selected,
             layers,
+            group_no,
         };
         *panel.cache.borrow_mut() = Some((key, rows.clone()));
         rows
@@ -497,6 +530,7 @@ impl App {
                 };
             }
             Event::Window(event) => return self.point_batch_event(event),
+            Event::ClearGroups => self.points.show_groups(None),
         }
         Task::none()
     }

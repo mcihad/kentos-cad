@@ -1,21 +1,33 @@
+import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import type { CadDocument } from '../../model/document';
 import type { PointEntity } from '../../model/entities';
+import type { Vec2 } from '../../model/geometry';
+import { duplicatePoints, followPoint } from '../../model/ops/pointEditor';
 import { textIncrement } from '../../model/textEdit';
+import { elevatedPaths } from '../../product/elevation';
+import { entitiesDelete } from '../../product/entitiesDelete';
+import { entitiesEdit } from '../../product/entitiesEdit';
 import { entitiesSet } from '../../product/entitiesSet';
-import { PREFIX, inStep } from './pointEdit';
+import { parseNumber } from '../../tools/coordinateInput';
+import { FOLLOW_LOCKED, PREFIX, inStep, withPaths } from './pointEdit';
 
 /**
  * Nokta editörü's batch operations (docs/adr/0153 §5), apart from the DOM: Yeniden adlandır, Sıralı numara ver and
- * Katmana taşı over the table's target rows, each one undo step named after it, written through cad.entities.set.
- * fixtures/point-editor/v1/batch.json holds both platforms to the same drawing, messages and steps; the desktop's is
+ * Katmana taşı over the table's target rows, written through cad.entities.set, and Çift noktaları ayıkla, through
+ * cad.entities.edit and cad.entities.delete; each one undo step named after it. fixtures/point-editor/v1/batch.json and
+ * dedupe.json hold both platforms to the same drawing, messages and steps; the desktop's is
  * `apps/desktop/src/points/batch.rs`.
  */
 
 /** An operation as its window gives it. */
-export type BatchOp = { kind: 'rename'; mode: 'add' | 'remove'; prefix: string } | { kind: 'number'; start: string } | { kind: 'layer'; layer: string };
+export type BatchOp =
+  | { kind: 'rename'; mode: 'add' | 'remove'; prefix: string }
+  | { kind: 'number'; start: string }
+  | { kind: 'layer'; layer: string }
+  | { kind: 'dedupe'; by: 'name' | 'place'; tolerance: string; keep: 'first' | 'last' | 'average' };
 
 /** The undo steps (and the windows' titles), by the operations' kinds. */
-export const BATCH_STEP = { rename: 'Yeniden adlandır', number: 'Sıralı numara ver', layer: 'Katmana taşı' } as const;
+export const BATCH_STEP = { rename: 'Yeniden adlandır', number: 'Sıralı numara ver', layer: 'Katmana taşı', dedupe: 'Çift noktaları ayıkla' } as const;
 
 /** What came of an operation: what to say, and the undo step written (null: nothing). */
 export interface BatchOutcome {
@@ -38,7 +50,7 @@ export function batchTargets(shown: readonly number[], selected: (id: number) =>
  * with it, the rest trimmed (a name left empty stays); Sıralı numara ver gives the first the start, every next one the
  * one before's Artır.
  */
-export function plannedNames(points: readonly PointEntity[], op: Exclude<BatchOp, { kind: 'layer' }>): (string | null)[] | string {
+export function plannedNames(points: readonly PointEntity[], op: Extract<BatchOp, { kind: 'rename' | 'number' }>): (string | null)[] | string {
   if (op.kind === 'rename') {
     const prefix = op.prefix.trim();
     if (!prefix) return `${PREFIX}Önek yazılmalı.`;
@@ -71,7 +83,7 @@ const pointsOf = (doc: CadDocument, ids: readonly number[]): PointEntity[] =>
     return e?.kind === 'point' ? [e] : [];
   });
 
-export function planBatch(doc: CadDocument, ids: readonly number[], op: BatchOp): BatchPlan {
+export function planBatch(doc: CadDocument, ids: readonly number[], op: Exclude<BatchOp, { kind: 'dedupe' }>): BatchPlan {
   const points = pointsOf(doc, ids);
   if (op.kind === 'layer') return { error: null, changes: points.filter((e) => e.layerId !== op.layer).map((e) => ({ e, name: null })) };
   const names = plannedNames(points, op);
@@ -89,9 +101,10 @@ export function planBatch(doc: CadDocument, ids: readonly number[], op: BatchOp)
  * The operation written as one undo step named after it (docs/adr/0153 §5). Only the points that change are written,
  * names one by one in the targets' order, a layer move in one call; a refusal of the command is said as it is and
  * nothing is written. Then it is said what changed: for names, also how many of the new names another point has too;
- * for a move, the command's warning (a hidden layer).
+ * for a move, the command's warning (a hidden layer). Çift noktaları ayıkla takes Bağlı çizgiler izler (`follow`).
  */
-export function runBatch(doc: CadDocument, ids: readonly number[], op: BatchOp): BatchOutcome {
+export function runBatch(doc: CadDocument, ids: readonly number[], op: BatchOp, follow = true): BatchOutcome {
+  if (op.kind === 'dedupe') return runDedupe(doc, ids, op, follow);
   const plan = planBatch(doc, ids, op);
   if (plan.error) return { said: [plan.error], step: null };
   const step = BATCH_STEP[op.kind];
@@ -126,4 +139,95 @@ export function runBatch(doc: CadDocument, ids: readonly number[], op: BatchOp):
   const shared = plan.changes.filter((c) => (count.get(c.name ?? '') ?? 0) > 1).length;
   const done = `${PREFIX}${plan.changes.length} noktanın adı değişti`;
   return { said: [shared ? `${done}; ${shared} ad başka noktalarda da var.` : `${done}.`], step };
+}
+
+/** Çift noktaları ayıkla's plan: the groups, the points removed, the kept ones that move, and the window's summary. */
+export interface DedupePlan {
+  /** Why nothing may be done (a tolerance that is no number), or null. */
+  error: string | null;
+  /** The groups' members' ids, in the drawing's order. */
+  groups: number[][];
+  /** “6 grupta 15 nokta; 9 nokta silinecek.”, or “Çift nokta yok.”; null with an error. */
+  summary: string | null;
+  removed: PointEntity[];
+  /** The kept points whose place or elevation changes: where to, and whether the elevation does. */
+  moves: { e: PointEntity; to: Vec2; z: number | null; zChanged: boolean }[];
+}
+
+/**
+ * The groups of duplicates among the target points (docs/adr/0153 §5), by the shared core (`duplicatePoints`): by name,
+ * or by place within the tolerance (the window's text, metres, zero or more); the points taken in the drawing's order.
+ */
+export function planDedupe(doc: CadDocument, ids: readonly number[], op: Extract<BatchOp, { kind: 'dedupe' }>): DedupePlan {
+  const tolerance = op.by === 'place' ? parseNumber(op.tolerance) : 0;
+  if (tolerance === null || tolerance < 0) return { error: `${PREFIX}Tolerans sıfır ya da daha büyük bir sayı olmalı.`, groups: [], summary: null, removed: [], moves: [] };
+  const order = new Map<number, number>();
+  let k = 0;
+  for (const e of doc.all()) order.set(e.id, k++);
+  const points = pointsOf(doc, ids).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  const found = duplicatePoints(
+    points.map((e) => ({ p: e.p, z: e.z ?? null, name: e.label ?? null })),
+    op.by,
+    tolerance,
+    op.keep,
+  );
+  const groups = found.groups.map((g) => g.members.map((i) => points[i].id));
+  const removed = found.removed.map((i) => points[i]);
+  const moves = found.groups.flatMap((g) => {
+    const e = points[g.kept];
+    const z = g.z ?? null;
+    const zChanged = z !== (e.z ?? null);
+    return g.p.x !== e.p.x || g.p.y !== e.p.y || zChanged ? [{ e, to: g.p, z, zChanged }] : [];
+  });
+  const total = groups.reduce((n, g) => n + g.length, 0);
+  const summary = groups.length
+    ? `${groups.length} grupta ${total} nokta; ${removed.length} nokta silinecek${moves.length ? `, ${moves.length} nokta ortalamaya taşınacak.` : '.'}`
+    : 'Çift nokta yok.';
+  return { error: null, groups, summary, removed, moves };
+}
+
+/**
+ * Çift noktaları ayıkla written as one undo step (docs/adr/0153 §5): the kept points moved group by group (with
+ * `follow`, the line work at a kept point's place moves with it and takes its new elevation when that changes), then
+ * the others removed. The first point that would change, in the drawing's order, on a locked layer stops it all with
+ * the edit command's words; so does a line work that would follow on one.
+ */
+function runDedupe(doc: CadDocument, ids: readonly number[], op: Extract<BatchOp, { kind: 'dedupe' }>, follow: boolean): BatchOutcome {
+  const plan = planDedupe(doc, ids, op);
+  if (plan.error) return { said: [plan.error], step: null };
+  if (!plan.groups.length) return { said: [`${PREFIX}Çift nokta yok.`], step: null };
+  const order = new Map<number, number>();
+  let k = 0;
+  for (const e of doc.all()) order.set(e.id, k++);
+  const changing = [...plan.moves.map((m) => m.e), ...plan.removed].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  const locked = changing.find((e) => doc.layers.isLocked(e.layerId));
+  if (locked) {
+    const name = doc.layers.get(locked.layerId)?.name ?? locked.layerId;
+    return { said: [`“${name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.`], step: null };
+  }
+  const step = BATCH_STEP.dedupe;
+  const refused = inStep(doc, step, () => {
+    for (const m of plan.moves) {
+      const changes = [{ kind: 'update' as const, uid: doc.uidOf(m.e.id) ?? '', geometry: { kind: 'point', p: m.to, ...(m.z !== null && { z: m.z }) } as EditGeometry }];
+      if (follow) {
+        for (const other of doc.all()) {
+          if (other.kind !== 'line' && other.kind !== 'polyline' && other.kind !== 'polygon') continue;
+          const moved = followPoint(elevatedPaths(other), m.e.p, m.to, m.zChanged, m.zChanged ? m.z : null);
+          const geometry = moved && withPaths(other, moved);
+          if (!geometry) continue;
+          if (doc.layers.isLocked(other.layerId)) return FOLLOW_LOCKED;
+          changes.push({ kind: 'update', uid: doc.uidOf(other.id) ?? '', geometry });
+        }
+      }
+      const r = entitiesEdit.execute({ doc }, { operation: 'properties', changes });
+      if (r.status !== 'completed') return 'error' in r ? r.error.message : `${PREFIX}nokta taşınamadı.`;
+    }
+    const r = entitiesDelete.execute({ doc }, { uids: plan.removed.map((e) => doc.uidOf(e.id) ?? '') });
+    if (r.status !== 'completed') return 'error' in r ? r.error.message : `${PREFIX}noktalar silinemedi.`;
+    return null;
+  });
+  if (refused) return { said: [refused], step: null };
+  const n = plan.groups.length;
+  const done = `${PREFIX}${n} grupta ${plan.removed.length} nokta silindi`;
+  return { said: [plan.moves.length ? `${done}, ${plan.moves.length} nokta ortalamaya taşındı.` : `${done}.`], step };
 }

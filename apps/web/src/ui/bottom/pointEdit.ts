@@ -25,7 +25,7 @@ export type EditColumn = 'name' | 'east' | 'north' | 'z' | 'code';
 export const PREFIX = 'Nokta editörü: ';
 export const STEP = 'Nokta düzenle';
 const WORD = { east: 'Y', north: 'X', z: 'Z' } as const;
-const FOLLOW_LOCKED = `${PREFIX}Bağlı çizgilerden biri kilitli katmanda; katmanın kilidini açın ya da Bağlı çizgiler izler'i kapatın.`;
+export const FOLLOW_LOCKED = `${PREFIX}Bağlı çizgilerden biri kilitli katmanda; katmanın kilidini açın ya da Bağlı çizgiler izler'i kapatın.`;
 
 /** What came of a write: what to say (warnings), the undo step written (null: none), and whether the cell stays open. */
 export interface Outcome {
