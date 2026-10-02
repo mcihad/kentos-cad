@@ -139,6 +139,19 @@ Uygulandığı araçlar §2'ninkilerdir, kip Serbest olsa da.
      - Ortak iz `overlap.json` (`overlap.kcad`); köşeler yazılarak verilir, ileti alanları tam karşılaştırılır. Masaüstünde hücre ve menüsü `overlap_tests.rs`'te, web'de yerleşim denetiminin `status-overlap` görünümlerinde.
      - Kullanım senaryosu `usage-overlap.json`.
 3. Bitişik alan iki platformda: araç, ikon, önizleme, `cad.entities.create`'in `adjoin` işlemi; ortak iz; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Komut:** `cad.entities.create`'in `adjoin` işlemi (`CreateOperation::Adjoin`); adım “Bitişik alan”. Ortak durum (`create_command_cases.py`): iki parçalı, ilki delikli, ikincisi yaylı kenarlı alan, güncel renkle; web, masaüstü ve Python SDK'sı geçer.
+   - **Araç:** yol aracının biçimi (web `tools/adjoinTool.ts`, `PathTool`'un alt sınıfı; masaüstü `path::Shape::Adjoin` ve `kentos_interaction::adjoin`). Giriş › Çizim'de Kapalı alan'ın yanında; ikon: solda komşu, ona yaslanan yeni alan, yalnız yeni sınırı çizili, uçları komşunun kenarında. Komut satırında BITISIKALAN, BITISIK, KOMSUALAN.
+     - Komşular görünümdeki, çakışma katmanlarındaki alanlardır. Serbest'te ve Seçili katmanlarda önle'de katman seçilmemişken etkin katmanınkiler. Görünüm, çizim ya da katmanlar değişene dek tutulur: web'de `VisibleNeighbours` (çekirdekte `AdjoinWork`), masaüstünde `NeighbourCache`.
+     - Önizleme imleci sonraki nokta sayar, İzle'nin yolu da dahil. Bölge vurgu renginde dolar, delikleriyle. Kartta parçanın uzunluğu ve semti, sonra “Yol” (yolun uzunluğu) ve “Alan” (bölgenin net alanı). Komşuların kenarları 2 000'den çoksa bölge yalnız tıklarda hesaplanır.
+     - Enter ya da sağ tık bölgeyi önizlemenin komşularıyla yeniden bulur ve yazar: etkin katmana, güncel renk ve kalınlıkla, tek nesne olarak (parçaları ve delikleriyle). Önce çakışma denetimi (§2) görünümün dışındaki örtüşenleri de kırpar. İleti: “Bitişik alan eklendi: 384.00 m²”; birden çok parçada “(2 parça)” eklenir.
+     - Bölge yoksa, örtülmüşse ya da komut reddederse ileti söylenir ve yol kalır. “Geri” son noktayı siler.
+   - **Kırpma birden çok parçada:** `clip_new_areas` / `clipNewAreas`. Komşular bütün parçaların kutusundan bulunur, her komşu bir kez sayılır. Tek alanda davranış öncekidir.
+   - **Sınama:**
+     - Elle hesaplanmış aynı birim testleri iki platformda (web `tools/adjoinTool.test.ts`, masaüstü `tests/adjoin.rs`): Serbest'te kapanmayan yol ve kalan yol; yol katmanı seçilince boşluk ve trafo deliği (384 m²) ve tek geri alma adımı; Geri; iki yanı kapalı boşluk (464 m²); komşuyu kesen yol, iki parça (240 m²); önizlemenin bölgesi ve kartı; 2 000 kenar bütçesi; gizli katman.
+     - Kuralı bozan iki deneme (komşular hep etkin katmandan; bütçe yok) iki platformda da testleri düşürür.
+     - Ortak iz `adjoin.json` (`adjoin.kcad`) iki platformda, bütün değişkelerde geçer. Kullanım senaryosu `usage-adjoin.json`.
 4. Topoloji açıkken komşulara köşe iki platformda; ortak iz; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

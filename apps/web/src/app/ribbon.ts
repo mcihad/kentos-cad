@@ -85,7 +85,7 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'edit', sections: ['Pano'] },
       { tools: 'select' },
       { menu: 'edit', sections: ['Seçim'] },
-      { pick: 'Çizim', icon: 'line', commands: ['tool.line', 'tool.polyline', 'tool.circle', 'tool.arc', 'tool.polygon', 'tool.rectangle'], more: 'draw' },
+      { pick: 'Çizim', icon: 'line', commands: ['tool.line', 'tool.polyline', 'tool.circle', 'tool.arc', 'tool.polygon', 'tool.adjoin', 'tool.rectangle'], more: 'draw' },
       {
         pick: 'Değiştir',
         icon: 'move',

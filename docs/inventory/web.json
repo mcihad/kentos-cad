@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 210,
-      "implemented": 197,
+      "total": 211,
+      "implemented": 198,
       "partial": 0,
       "pending": 13
     },
     "tools": {
-      "total": 88,
-      "implemented": 86,
+      "total": 89,
+      "implemented": 87,
       "partial": 0,
       "pending": 2
     },
@@ -74,19 +74,19 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 61,
-    "commandsOnDesktop": 195,
+    "commandsOnDesktop": 196,
     "desktop": {
       "commands": {
-        "total": 210,
-        "implemented": 195,
+        "total": 211,
+        "implemented": 196,
         "partial": 0,
         "pending": 13,
         "none": 0,
         "n/a": 2
       },
       "tools": {
-        "total": 88,
-        "implemented": 86,
+        "total": 89,
+        "implemented": 87,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -1084,6 +1084,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/usage-adjoin.json",
         "fixtures/interaction/v1/usage-overlap.json"
       ]
     },
@@ -1143,7 +1144,9 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/adjoin.json",
         "fixtures/interaction/v1/overlap.json",
+        "fixtures/interaction/v1/usage-adjoin.json",
         "fixtures/interaction/v1/usage-overlap.json"
       ]
     },
@@ -2934,6 +2937,39 @@
       },
       "tests": [
         "fixtures/interaction/v1/find-replace.json"
+      ]
+    },
+    {
+      "id": "tool.adjoin",
+      "title": "Bitişik alan",
+      "category": "Çizim",
+      "icon": "adjoin",
+      "description": "Komşu alanların arasına yeni alanı yalnız yeni sınırını çizerek ekler: yolun komşu alanlarla kapattığı bölge alan olur, ortak sınır komşularınkidir.",
+      "aliases": [
+        "BITISIKALAN",
+        "BITISIK",
+        "KOMSUALAN"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Çizgi"
+      ],
+      "ribbon": [
+        "Giriş › Çizim",
+        "Çizim › Çizgi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/adjoin.json",
+        "fixtures/interaction/v1/usage-adjoin.json"
       ]
     },
     {
@@ -6966,6 +7002,33 @@
     }
   ],
   "tools": [
+    {
+      "id": "adjoin",
+      "label": "Bitişik alan",
+      "icon": "adjoin",
+      "group": "draw",
+      "section": "line",
+      "aliases": [
+        "BITISIKALAN",
+        "BITISIK",
+        "KOMSUALAN"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 4,
+      "description": "Komşu alanların arasına yeni alanı yalnız yeni sınırını çizerek ekler: yolun komşu alanlarla kapattığı bölge alan olur, ortak sınır komşularınkidir.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/adjoin.json",
+        "fixtures/interaction/v1/usage-adjoin.json"
+      ]
+    },
     {
       "id": "align",
       "label": "Hizala",
@@ -15564,6 +15627,7 @@
               "tool.line",
               "tool.polyline",
               "tool.polygon",
+              "tool.adjoin",
               "tool.parallel"
             ]
           },
@@ -16260,6 +16324,10 @@
                 "size": "small"
               },
               {
+                "command": "tool.adjoin",
+                "size": "small"
+              },
+              {
                 "split": [
                   {
                     "command": "tool.rectangle",
@@ -16609,6 +16677,10 @@
               },
               {
                 "command": "tool.polygon",
+                "size": "small"
+              },
+              {
+                "command": "tool.adjoin",
                 "size": "small"
               },
               {
@@ -18476,6 +18548,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.adjoin",
+                  "size": "small"
+                },
+                {
                   "split": [
                     {
                       "command": "tool.rectangle",
@@ -18825,6 +18901,10 @@
                 },
                 {
                   "command": "tool.polygon",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.adjoin",
                   "size": "small"
                 },
                 {
@@ -20475,6 +20555,10 @@
                 {
                   "command": "tool.polygon",
                   "size": "small"
+                },
+                {
+                  "command": "tool.adjoin",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -20658,6 +20742,10 @@
                 },
                 {
                   "command": "tool.polygon",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.adjoin",
                   "size": "small"
                 }
               ],
@@ -21913,6 +22001,7 @@
     "rectangle3": "<path d=\"M3 12.5 11 4l6.5 6.5-8 8.5z\"/><rect x=\"1.5\" y=\"11\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"9.5\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"17.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "regularPolygon": "<path d=\"M10 2.8 16.3 6.4v7.2L10 17.2l-6.3-3.6V6.4z\"/><circle cx=\"10\" cy=\"10\" r=\".9\" fill=\"currentColor\"/><rect x=\"8.5\" y=\"1.2999999999999998\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "polygon": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"2.3\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.3\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.8\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "adjoin": "<path d=\"M2.5 4.5h7v11h-7z\"/><path d=\"M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5z\" fill=\"currentColor\" fill-opacity=\".16\" stroke=\"none\"/><path d=\"M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5\"/><rect x=\"8\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "spline": "<path d=\"M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "text": "<path d=\"M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5\"/>",
     "textFile": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9.5h5M10 9.5v5\"/>",

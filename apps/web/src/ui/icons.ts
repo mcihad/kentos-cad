@@ -30,6 +30,8 @@ export const ICONS = {
   rectangle3: `<path d="M3 12.5 11 4l6.5 6.5-8 8.5z"/>${grip(3, 12.5)}${grip(11, 4)}${grip(9.5, 19)}`,
   regularPolygon: `<path d="M10 2.8 16.3 6.4v7.2L10 17.2l-6.3-3.6V6.4z"/><circle cx="10" cy="10" r=".9" fill="currentColor"/>${grip(10, 2.8)}`,
   polygon: `<path d="m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z" fill="currentColor" fill-opacity=".14"/>${grip(3.8, 8)}${grip(9.8, 3.5)}${grip(16.3, 7)}${grip(14.5, 16)}${grip(5.6, 16)}`,
+  // Bitişik alan: a neighbour on the left, the new area against it, only its new boundary drawn (docs/adr/0162 §3).
+  adjoin: `<path d="M2.5 4.5h7v11h-7z"/><path d="M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5"/>${grip(9.5, 6.5)}${grip(9.5, 15.5)}`,
   spline: `<path d="M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9"/>${grip(3, 15)}${grip(17, 6)}`,
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.

@@ -492,24 +492,39 @@ export class PathTool extends PointInputTool {
     this.ctx.log.success(`Parsel ${next} oluşturuldu; geometrik alanı ${this.ctx.format.area(area)}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.`);
   }
 
-  override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
-    const pal = this.ctx.view.palette;
-    const f = this.ctx.format;
+  /**
+   * The path as the preview draws it: the points given, then İzle's way to the cursor, or the segment to it (none while
+   * a value is waited for); with the cursor's end, İzle's way and the segment's bulge for the tag.
+   */
+  protected previewPath(): { pts: Vec2[]; bulges: number[]; end: Vec2 | null; way: Traced | null; hb: number | null } {
     const pts = [...this.pts];
     const bulges = [...this.bulges];
     const end = this.hover ? this.endFor(this.hover) : null;
+    const last = this.last;
     // İzle: the way along the line work in place of the straight segment.
-    const way = this.tracing && end && this.last ? this.traceTo(this.last, end) : null;
+    const way = this.tracing && end && last ? this.traceTo(last, end) : null;
     const hb = end && !way ? this.nextBulge(end) : null;
     if (way) {
       for (let i = 1; i < way.pts.length; i++) {
         pts.push(way.pts[i]);
         bulges.push(way.bulges[i - 1]);
       }
-    } else if (end && hb !== null) {
+    } else if (end && hb !== null && (!last || dist(last, end) > 1e-9)) {
       pts.push(end);
       bulges.push(hb);
     }
+    return { pts, bulges, end, way, hb };
+  }
+
+  /** Lines a shape adds to the tag beside the cursor (Bitişik alan's path and region). */
+  protected extraTag(_pts: Vec2[], _bulges: number[]): string[] {
+    return [];
+  }
+
+  override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
+    const pal = this.ctx.view.palette;
+    const f = this.ctx.format;
+    const { pts, bulges, end, way, hb } = this.previewPath();
     bulges.push(0);
     if (this.closed && pts.length >= 3) {
       strokePath(g, view, bulgePathOutline(pts, bulges, true), { color: pal.accent, closed: true, dash: [4, 4], fill: tint(pal.accent, 0.08) });
@@ -531,6 +546,7 @@ export class PathTool extends PointInputTool {
         : [f.length(dist(last, end)), `Semt ${f.bearing(bearingGrad(last, end))}`];
     if (this.measureOnly && !this.closed) lines.push(`Toplam ${f.length(bulgePathLength(pts, bulges, false))}`);
     if (this.closed && pts.length >= 3) lines.push(`Alan ${f.area(Math.abs(bulgeRingArea(pts, bulges)))}`);
+    lines.push(...this.extraTag(pts, bulges));
     drawTag(g, view.worldToScreen(this.hover), lines, pal.accent, pal.labelHalo);
     this.drawTracking(g, view);
   }

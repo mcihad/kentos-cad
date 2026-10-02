@@ -5,7 +5,7 @@ import type { RingGeometry } from '../contracts/generated/RingGeometry';
 import type { Bounds } from '../model/geometry';
 import type { Area, Ring } from '../model/geom/overlay';
 import { netArea } from '../model/geom/region';
-import { adjoinAvoid } from '../model/ops/adjoin';
+import { adjoinWork } from '../model/ops/adjoin';
 
 /**
  * The overlap control (docs/adr/0162 §1–§2): while it is on, a new area drawn by its outline loses what overlaps the
@@ -55,15 +55,35 @@ export interface Clipped {
  * the area's.
  */
 export function clipNewArea(ctx: AppContext, area: Area, layerId: string): Clipped | null {
+  return clipNewAreas(ctx, [area], layerId);
+}
+
+/**
+ * The overlap control on the parts of one new area (Bitişik alan's, §3): as `clipNewArea`, the neighbours those whose
+ * box meets the parts' box, each counted once.
+ */
+export function clipNewAreas(ctx: AppContext, areas: readonly Area[], layerId: string): Clipped | null {
   const layers = new Set(overlapLayers(ctx, layerId));
   if (!layers.size) {
     if (ctx.settings.overlap.value === 'layers') ctx.log.warn('Seçili katmanlarda önle kipinde seçili katman yok: alan olduğu gibi yazıldı. Katmanları Çakışma hücresinin menüsünden seçin.');
     return null;
   }
-  const neighbours = ctx.view.entitiesIn(ringBox(area.outer)).filter((e) => layers.has(e.layerId));
+  const box = areas.map((a) => ringBox(a.outer)).reduce((b, r) => ({ minX: Math.min(b.minX, r.minX), minY: Math.min(b.minY, r.minY), maxX: Math.max(b.maxX, r.maxX), maxY: Math.max(b.maxY, r.maxY) }));
+  const neighbours = ctx.view.entitiesIn(box).filter((e) => layers.has(e.layerId));
   if (!neighbours.length) return null;
-  const got = adjoinAvoid(area, neighbours);
-  return got.overlapped.length ? { areas: got.areas, overlapped: got.overlapped.length } : null;
+  const work = adjoinWork(neighbours);
+  try {
+    const overlapped = new Set<number>();
+    const left: Area[] = [];
+    for (const area of areas) {
+      const got = work.avoid(area);
+      got.overlapped.forEach((k) => overlapped.add(k));
+      left.push(...got.areas);
+    }
+    return overlapped.size ? { areas: left, overlapped: overlapped.size } : null;
+  } finally {
+    work.free();
+  }
 }
 
 const ring = (r: Ring): RingGeometry => ({ pts: r.pts, ...(r.bulges && { bulges: r.bulges }) });

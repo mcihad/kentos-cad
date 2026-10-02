@@ -1,8 +1,8 @@
-//! Kapalı alan, Çoklu çizgi, Mesafe ölç, Alan hesapla and Parsel oluştur:
-//! the web's `PathTool` (`apps/web/src/tools/pathTool.ts`) with its
-//! `closed`, `measureOnly` and `parcelLayer` flags, on its `PointInputTool`
-//! base (`drawTools.ts`), step for step. One tool, five shapes (docs/adr/0021,
-//! 0027, 0067):
+//! Kapalı alan, Çoklu çizgi, Mesafe ölç, Alan hesapla, Parsel oluştur and
+//! Bitişik alan: the web's `PathTool` (`apps/web/src/tools/pathTool.ts`) with
+//! its `closed`, `measureOnly` and `parcelLayer` flags and its `AdjoinTool`
+//! (`adjoinTool.ts`), on its `PointInputTool` base (`drawTools.ts`), step for
+//! step. One tool, six shapes (docs/adr/0021, 0027, 0067, 0162):
 //!
 //! - points come from clicks (ortho and polar tracking applied) and from
 //!   typed text (the shared grammar, `point_text`);
@@ -20,6 +20,11 @@
 //!   `cad.entities.create` on the parcel layer, numbered; the measuring
 //!   shapes write nothing and say the length, or the area and perimeter;
 //!   with fewer points it warns, writes nothing and starts over.
+//!
+//! Bitişik alan (docs/adr/0162 §3) draws an open path whose ends lie in or on
+//! the neighbouring areas; the region it closes with them is written, filled
+//! in the preview as the cursor goes (`adjoin`). With no region, Enter says
+//! why and the path stays.
 //!
 //! İzle (İ, kept for the session; docs/adr/0161 §1) has the next segments
 //! of line mode follow the visible line work: an unsnapped pointer within the
@@ -74,6 +79,7 @@ use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_
 use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
+use crate::adjoin;
 use crate::faces;
 use crate::format::Format;
 use crate::log::Level;
@@ -119,6 +125,8 @@ pub enum Shape {
     MeasureArea,
     /// Parsel oluştur: a closed area on the parcel layer, numbered.
     Parcel,
+    /// Bitişik alan: an open path; the region it closes with the neighbouring areas is written.
+    Adjoin,
 }
 
 impl Shape {
@@ -129,6 +137,7 @@ impl Shape {
             Shape::MeasureLength => MEASURE_ID,
             Shape::MeasureArea => AREA_ID,
             Shape::Parcel => PARCEL_ID,
+            Shape::Adjoin => adjoin::ID,
         }
     }
 
@@ -139,6 +148,7 @@ impl Shape {
             Shape::MeasureLength => MEASURE_LABEL,
             Shape::MeasureArea => AREA_LABEL,
             Shape::Parcel => PARCEL_LABEL,
+            Shape::Adjoin => adjoin::LABEL,
         }
     }
 
@@ -217,6 +227,11 @@ pub struct Path {
     /// İzle's way from the last point to the cursor, for the preview: its two
     /// ends and the way (the preview has no context to find it).
     way: Option<(Vec2, Vec2, Traced)>,
+    /// Bitişik alan: the neighbouring areas in view, kept while the view, the drawing and the layers stand.
+    neighbours: adjoin::NeighbourCache,
+    /// Bitişik alan: the region the preview fills (the path to the cursor, or
+    /// as the last click left it when the neighbours are many).
+    region: Vec<Region>,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -258,6 +273,8 @@ impl Path {
             measured: None,
             work: WorkCache::default(),
             way: None,
+            neighbours: adjoin::NeighbourCache::default(),
+            region: Vec::new(),
         }
     }
 
@@ -365,6 +382,61 @@ impl Path {
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
         points::echo(p, cx);
         self.on_point(p, cx);
+        self.refill(false, cx);
+    }
+
+    /// Bitişik alan: the region the preview fills. `live`, the path goes on
+    /// to the cursor, unless the neighbours are too many to cut through at
+    /// every move (then the region stays as the last click left it).
+    fn refill(&mut self, live: bool, cx: &Context<'_>) {
+        if self.shape != Shape::Adjoin {
+            return;
+        }
+        let (pts, bulges) = if live {
+            self.preview_path()
+        } else {
+            (self.pts.clone(), self.bulges.clone())
+        };
+        let neighbours = self.neighbours.get(cx);
+        if live && neighbours.edge_count() > adjoin::PREVIEW_EDGES {
+            return;
+        }
+        let region = adjoin::fill(neighbours, &pts, &bulges);
+        self.region = region;
+    }
+
+    /// The path as the preview draws it: the points given, then İzle's way to
+    /// the cursor, or the segment to it (none while a value is waited for).
+    fn preview_path(&self) -> (Vec<Vec2>, Vec<f64>) {
+        let mut pts = self.pts.clone();
+        let mut bulges = self.bulges.clone();
+        let end = self.hover.map(|h| self.end_for(h));
+        match (self.preview_way(end), end) {
+            (Some(way), _) => {
+                pts.extend_from_slice(way.pts.get(1..).unwrap_or_default());
+                bulges.extend_from_slice(&way.bulges);
+            }
+            (None, Some(end)) => {
+                if let Some(hb) = self.next_bulge(end)
+                    && self.last().is_none_or(|last| dist(last, end) > SAME)
+                {
+                    pts.push(end);
+                    bulges.push(hb);
+                }
+            }
+            (None, None) => {}
+        }
+        (pts, bulges)
+    }
+
+    /// İzle's way to `end`, while it still goes from the last point there.
+    fn preview_way(&self, end: Option<Vec2>) -> Option<&Traced> {
+        self.way
+            .as_ref()
+            .filter(|(from, to, _)| {
+                self.tracing() && Some(*from) == self.last() && Some(*to) == end
+            })
+            .map(|(_, _, w)| w)
     }
 
     fn on_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
@@ -694,6 +766,15 @@ impl Path {
             self.reset();
             return;
         }
+        // Bitişik alan: the region the path closes, with the neighbours the
+        // preview had; with none (or a refusal), the path stays.
+        if self.shape == Shape::Adjoin {
+            let region = adjoin::fill(self.neighbours.get(cx), &self.pts, &self.bulges);
+            if adjoin::write(region, cx) {
+                self.reset();
+            }
+            return;
+        }
         let pts = self.pts.clone();
         let bulges = self.full_bulges();
         match self.shape {
@@ -733,6 +814,7 @@ impl Path {
                     cx.say(Level::Success, text);
                 }
             }
+            Shape::Adjoin => {}
         }
         self.reset();
     }
@@ -909,6 +991,7 @@ impl Path {
         self.ask_step = false;
         self.closing = 0.0;
         self.way = None;
+        self.region.clear();
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -1130,6 +1213,12 @@ impl Tool for Path {
                 "alanı ölçülecek bölgenin içine tıklayın",
             ));
         }
+        if n == 0 && self.shape == Shape::Adjoin {
+            return Prompt::new(
+                label,
+                "ilk noktayı komşu alanın içinde ya da sınırında belirtin",
+            );
+        }
         if n == 0 {
             return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
         }
@@ -1223,6 +1312,7 @@ impl Tool for Path {
             let region = self.face(point, cx);
             self.inside = Some((point, region));
         }
+        self.refill(true, cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -1316,28 +1406,14 @@ impl Tool for Path {
         if self.fixed() {
             return self.fixed_preview(format);
         }
-        let mut pts = self.pts.clone();
-        let mut bulges = self.bulges.clone();
         let end = self.hover.map(|h| self.end_for(h));
         // İzle: the way along the line work in place of the straight segment,
         // while it still goes from the last point to the cursor.
-        let way = self
-            .way
-            .as_ref()
-            .filter(|(from, to, _)| {
-                self.tracing() && Some(*from) == self.last() && Some(*to) == end
-            })
-            .map(|(_, _, w)| w);
+        let way = self.preview_way(end);
         let hb = end
             .filter(|_| way.is_none())
             .and_then(|e| self.next_bulge(e));
-        if let Some(way) = way {
-            pts.extend_from_slice(way.pts.get(1..).unwrap_or_default());
-            bulges.extend_from_slice(&way.bulges);
-        } else if let (Some(end), Some(hb)) = (end, hb) {
-            pts.push(end);
-            bulges.push(hb);
-        }
+        let (pts, mut bulges) = self.preview_path();
         bulges.push(0.0);
         let area_shape = self.closed() && pts.len() >= 3;
         let ring = area_shape.then(|| bulge_path_outline(&pts, Some(&bulges), true, DEFAULT_STEP));
@@ -1385,15 +1461,26 @@ impl Tool for Path {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Alan {}", format.area(area)));
                 }
+                // Bitişik alan: the path's length and the region's area.
+                if self.shape == Shape::Adjoin {
+                    let length = bulge_path_length(&pts, Some(&bulges), false);
+                    lines.push(format!("Yol {}", format.length(length)));
+                    if !self.region.is_empty() {
+                        let area: f64 = self.region.iter().map(net_area).sum();
+                        lines.push(format!("Alan {}", format.area(area)));
+                    }
+                }
                 Some(Tag { at: hover, lines })
             }
             _ => None,
         };
-        // The area last measured stays in view, dashed, until the next measurement starts.
+        // The area last measured stays in view, dashed, until the next
+        // measurement starts; Bitişik alan's region is filled.
         let areas = self
             .measured
             .iter()
             .map(|region| region_area(region, 0.1, Some([5.0, 4.0])))
+            .chain(self.region.iter().map(|r| region_area(r, 0.16, None)))
             .collect();
         Preview {
             path,

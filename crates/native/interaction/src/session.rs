@@ -56,11 +56,11 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    angle, area, between, block_define, block_insert, boundary, cleanup, construction, coordinate,
-    dimension, dimension_chain, divide, donut, ellipse, hatch, leader, match_properties, meeting,
-    parallel, polygonize, quick_dimension, revcloud, sector, select_circle, select_containing,
-    select_fence, set_elevation, spline, split, station_offset, text, text_file, topology,
-    vertex_points,
+    adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
+    coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, leader,
+    match_properties, meeting, parallel, polygonize, quick_dimension, revcloud, sector,
+    select_circle, select_containing, select_fence, set_elevation, spline, split, station_offset,
+    text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -72,6 +72,8 @@ pub const TOOLS: &[&str] = &[
     path::MEASURE_ID,
     path::AREA_ID,
     path::PARCEL_ID,
+    // Bitişik alan: the path tool's shape that closes on the neighbouring areas (docs/adr/0162 §3).
+    adjoin::ID,
     erase::ID,
     point::ID,
     circle::ID,
@@ -209,6 +211,7 @@ impl Session {
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),
             path::PARCEL_ID => Box::new(Path::new(path::Shape::Parcel)),
+            adjoin::ID => Box::new(Path::new(path::Shape::Adjoin)),
             line::ID => Box::new(Line::new()),
             erase::ID => Box::new(Erase::new()),
             point::ID => Box::new(Point::new()),

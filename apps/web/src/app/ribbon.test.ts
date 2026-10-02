@@ -83,7 +83,7 @@ describe('ribbon', () => {
   it('sizes by meaning: main tools large, the rest small, a panel of one or two large, a compact pick small', () => {
     const home = tabs.find((t) => t.id === 'home')!;
     const draw = home.panels.find((p) => p.label === 'Çizim')!;
-    expect(sized(draw.items)).toEqual(['tool.line:large', 'tool.polyline:large', 'tool.circle▾:large', 'tool.arc▾:large', 'tool.polygon:small', 'tool.rectangle▾:small']);
+    expect(sized(draw.items)).toEqual(['tool.line:large', 'tool.polyline:large', 'tool.circle▾:large', 'tool.arc▾:large', 'tool.polygon:small', 'tool.adjoin:small', 'tool.rectangle▾:small']);
     expect(draw.launcher).toEqual({ tab: 'draw', title: 'Tüm araçlar: Çizim sekmesi' });
     // AutoCAD's Modify panel: every button small.
     expect(home.panels.find((p) => p.label === 'Değiştir')!.items.every((i) => i.kind !== 'builtin' && i.size === 'small')).toBe(true);

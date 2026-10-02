@@ -222,6 +222,8 @@ pub const PORTED: &[&str] = &[
     "tool.boundary",
     // Toplu alan: every region the line work closes, its label the attribute (polygonize.rs, docs/adr/0151).
     "tool.polygonize",
+    // Bitişik alan: the region a drawn path closes with the neighbouring areas (adjoin.rs, docs/adr/0162 §3).
+    "tool.adjoin",
     // Köşelere nokta: a named point at every vertex of the selection (vertex_points.rs, docs/adr/0152 §5).
     "tool.vertexPoints",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala

@@ -67,6 +67,13 @@ pub(crate) struct Clipped {
 /// left. The neighbours are the visible objects of the overlap layers whose
 /// box meets the area's.
 pub(crate) fn clip_new_area(cx: &mut Context<'_>, area: &Area, layer: &str) -> Option<Clipped> {
+    clip_new_areas(cx, std::slice::from_ref(area), layer)
+}
+
+/// The overlap control on the parts of one new area (Bitişik alan's, §3):
+/// as [`clip_new_area`], the neighbours those whose box meets the parts' box,
+/// each counted once.
+pub(crate) fn clip_new_areas(cx: &mut Context<'_>, areas: &[Area], layer: &str) -> Option<Clipped> {
     let layers = overlap_layers(cx, layer);
     if layers.is_empty() {
         if cx.draft.overlap == Overlap::Layers {
@@ -77,7 +84,18 @@ pub(crate) fn clip_new_area(cx: &mut Context<'_>, area: &Area, layer: &str) -> O
         }
         return None;
     }
-    let (min, max) = ring_box(&area.outer);
+    let (min, max) = areas.iter().map(|a| ring_box(&a.outer)).fold(
+        (
+            Vec2::new(f64::INFINITY, f64::INFINITY),
+            Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+        ),
+        |(min, max), (a, b)| {
+            (
+                Vec2::new(min.x.min(a.x), min.y.min(a.y)),
+                Vec2::new(max.x.max(b.x), max.y.max(b.y)),
+            )
+        },
+    );
     let sets: Vec<Vec<Area>> = cx
         .spatial
         .in_rect(min, max, true)
@@ -90,10 +108,17 @@ pub(crate) fn clip_new_area(cx: &mut Context<'_>, area: &Area, layer: &str) -> O
     if sets.is_empty() {
         return None;
     }
-    let got = Neighbours::new(sets).avoid(area);
-    (!got.overlapped.is_empty()).then_some(Clipped {
-        areas: got.areas,
-        overlapped: got.overlapped.len(),
+    let neighbours = Neighbours::new(sets);
+    let mut overlapped = std::collections::BTreeSet::new();
+    let mut left = Vec::new();
+    for area in areas {
+        let got = neighbours.avoid(area);
+        overlapped.extend(got.overlapped);
+        left.extend(got.areas);
+    }
+    (!overlapped.is_empty()).then_some(Clipped {
+        areas: left,
+        overlapped: overlapped.len(),
     })
 }
 

@@ -76,6 +76,9 @@
 //! - docs/adr/0151: Toplu alan ([`polygonize`]), which makes every region
 //!   the line work closes an area, its label the attribute, through
 //!   `cad.entities.create`;
+//! - docs/adr/0162: Bitişik alan ([`adjoin`], a shape of [`path`]), which
+//!   writes the region a drawn path closes with the neighbouring areas
+//!   through `cad.entities.create`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -90,6 +93,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod adjoin;
 pub mod align;
 pub mod angle;
 pub mod arc;
