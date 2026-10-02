@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 203 | 190 | 0 | 13 |
+| Komutlar | 204 | 191 | 0 | 13 |
 | Araçlar | 88 | 86 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 60 | 60 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 262 | 0 | 0 |
-| Pencereler ve paneller | 70 | 70 | 0 | 0 |
+| Pencereler ve paneller | 71 | 71 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -50,7 +50,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 188 | 0 | 0 | 13 | 2 | 203 |
+| Komutlar | 189 | 0 | 0 | 13 | 2 | 204 |
 | Araçlar | 86 | 0 | 0 | 2 | 0 | 88 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -58,7 +58,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 59 | 0 | 0 | 0 | 1 | 60 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 0 | 0 | 0 | 0 | 262 |
-| Pencereler ve paneller | 67 | 2 | 0 | 0 | 1 | 70 |
+| Pencereler ve paneller | 68 | 2 | 0 | 0 | 1 | 71 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,7 +77,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 203; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 204; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -123,11 +123,11 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (2 / 70)
+#### Pencereler ve paneller (2 / 71)
 
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 
-61 / 203 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+61 / 204 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

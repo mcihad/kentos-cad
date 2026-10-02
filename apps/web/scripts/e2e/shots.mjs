@@ -2631,6 +2631,143 @@ SCENES.vectorfit = [
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.selection.clear()`)), ...s }));
 
+// Kenar eşleme (docs/adr/0159 §9) on fixtures/interaction/v1/edgematch.kcad, the scenes the desktop's
+// `calc::edgematch::tests::screens` draws: two sheets digitised apart, their roads, a building line and a fence reaching
+// the shared edge a few centimetres short, over or beside their continuation; a street crossing the edge at right angles,
+// two roads meeting at the edge, a parcel. What is typed stays for the session: each scene sets every choice itself.
+const EDGEMATCH = readFileSync(new URL('../../../../fixtures/interaction/v1/edgematch.kcad', import.meta.url), 'utf8');
+const EDGE_X = 487200;
+const EDGE_Y = 4420000;
+const openEdgeScene = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(EDGEMATCH)}, null))) throw new Error('edgematch.kcad did not load');
+    k.view.zoomExtents();
+    const c = k.view.camera;
+    c.scale = c.scale * 0.85;
+    c.panBy(0, 0);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(`window.kentos.commands.execute('transform.edgematch')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--edgematch')`, 8000);
+  await ui.sleep(200);
+  // The scene's choices: Pafta 1 and Pafta 2, no border, the first values.
+  await ui.clickText('.dialog--edgematch .seg__opt', 'Katman');
+  await ui.eval(`(() => {
+    const dlg = document.querySelector('.dialog--edgematch');
+    const set = (key, value) => { const s = dlg.querySelector('select[data-key="' + key + '"]'); s.value = value; s.dispatchEvent(new Event('change')); };
+    set('source', 'pafta1');
+    set('adjacent', 'pafta2');
+    set('key', '');
+    const clear = dlg.querySelector('[aria-label="Sınırı kaldır"]');
+    if (clear && !clear.disabled) clear.click();
+    for (const [key, value] of [['distance', '0.5'], ['angle', '30']]) { const i = dlg.querySelector('input[data-key="' + key + '"]'); i.value = value; i.dispatchEvent(new Event('input')); }
+  })()`);
+  await ui.clickText('.dialog--edgematch .seg__opt', 'Komşunun ucunda');
+  await ui.clickText('.dialog--edgematch .seg__opt', 'Ucu taşı');
+  await ui.sleep(200);
+};
+/** Sınır shown on the drawing: the sheets' edge, past the frames' corners so that only it lies under the pointer; Enter keeps it. */
+const pickEdge = async (ui) => {
+  await ui.clickSel('.dialog--edgematch [aria-label="Sınırı çizimden seç"]');
+  await ui.sleep(200);
+  await ui.clickAt(...(await ui.eval(PAGE_AT(EDGE_X, EDGE_Y + 152.5))));
+  await ui.sleep(100);
+  await ui.key('Enter');
+  await ui.waitFor(`!!document.querySelector('.dialog--edgematch')`, 8000);
+  await ui.sleep(200);
+};
+const edgeSaid = (ui) => ui.eval(`document.querySelector('.dialog--edgematch .io-summary').textContent`);
+SCENES.edgematch = [
+  // The links found: four continuations, the fence that turns north unmatched, the junction and the parcel said.
+  {
+    id: 'kenar',
+    open: async (ui) => {
+      await openEdgeScene(ui);
+      const said = await edgeSaid(ui);
+      const rows = await ui.eval(`document.querySelectorAll('.dialog--edgematch .calc-grid tbody tr').length`);
+      if (rows !== 4 || !said.startsWith('4 bağ bulundu; 4 bağ kullanılacak.') || !said.includes('1 uç eşsiz kaldı') || !said.includes('2 kavşak ucu eşlenmedi') || !said.includes('1 nesne katılmadı'))
+        throw new Error(`Kenar eşleme: ${rows} | ${said}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Sınır picked on the drawing; the ends meet on it, the shift fading along the lines.
+  {
+    id: 'kenar-sinir',
+    open: async (ui) => {
+      await openEdgeScene(ui);
+      await pickEdge(ui);
+      await ui.clickText('.dialog--edgematch .seg__opt', 'Sınırda');
+      await ui.clickText('.dialog--edgematch .seg__opt', 'Köşeleri ayarla');
+      await ui.sleep(200);
+      const seen = await ui.eval(`({ border: document.querySelector('.dialog--edgematch .calc-border__name').textContent, said: document.querySelector('.dialog--edgematch .io-summary').textContent, apply: document.querySelector('.dialog--edgematch .btn--primary').disabled })`);
+      if (!seen.border.startsWith('Pafta sınırı: Pafta kenarı') || !seen.said.startsWith('4 bağ bulundu') || !seen.said.includes('sınıra yakın') || seen.apply) throw new Error(`Kenar eşleme, sınır: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Göster: the window steps aside, the link's two lines selected, the view on the link; the prompt says how to come back.
+  {
+    id: 'kenar-goster',
+    open: async (ui) => {
+      await openEdgeScene(ui);
+      await ui.clickSel('.dialog--edgematch .calc-grid tbody tr:nth-child(2) [aria-label="2. bağı çizimde göster"]');
+      await ui.sleep(400);
+      const seen = await ui.eval(`({ open: !!document.querySelector('.dialog--edgematch'), selected: window.kentos.selection.size, tool: window.kentos.tools.active?.id ?? null })`);
+      if (seen.open || seen.selected !== 2 || seen.tool !== 'look') throw new Error(`Kenar eşleme, göster: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+    close: async (ui) => {
+      await ui.key('Escape');
+      await ui.waitFor(`!!document.querySelector('.dialog--edgematch')`, 8000);
+      const back = await ui.eval(`window.kentos.selection.size`);
+      if (back !== 0) throw new Error(`Kenar eşleme, göster: the selection came back as ${back}`);
+      await ui.escapeAll(2);
+    },
+  },
+  // Uygula on the border: every used link meets on the edge in one step (Kenar eşle); the lines put right selected.
+  {
+    id: 'kenar-uygulandi',
+    open: async (ui) => {
+      await openEdgeScene(ui);
+      await pickEdge(ui);
+      await ui.clickText('.dialog--edgematch .seg__opt', 'Sınırda');
+      await ui.clickText('.dialog--edgematch .seg__opt', 'Köşeleri ayarla');
+      await ui.clickText('.dialog--edgematch .btn--primary', 'Uygula');
+      await ui.sleep(300);
+      const after = await ui.eval(`(() => {
+        const k = window.kentos;
+        const ends = (layer) => [...k.doc.all()].filter((e) => e.layerId === layer && (e.kind === 'line' || e.kind === 'polyline')).map((e) => (e.kind === 'line' ? [e.a, e.b] : [e.pts[0], e.pts[e.pts.length - 1]]));
+        const onEdge = ends('pafta1').flat().filter((p) => Math.abs(p.x - ${EDGE_X}) < 1e-9).length;
+        const step = (() => { const s = k.doc.undo(); k.doc.redo(); return s; })();
+        const box = { minX: ${EDGE_X} - 6, minY: ${EDGE_Y} + 55, maxX: ${EDGE_X} + 6, maxY: ${EDGE_Y} + 67 };
+        k.view.zoomToBox(box, 24);
+        return { onEdge, step, selected: k.selection.size, open: !!document.querySelector('.dialog--edgematch') };
+      })()`);
+      if (!(after.onEdge === 4 && after.step === 'Kenar eşle' && after.selected === 8 && !after.open)) throw new Error(`Kenar eşleme, Uygula: ${JSON.stringify(after)}`);
+      await ui.move(2, 2);
+      await ui.sleep(400);
+    },
+  },
+  // A search distance of nothing: said, Uygula off.
+  {
+    id: 'kenar-uyari',
+    open: async (ui) => {
+      await openEdgeScene(ui);
+      await ui.eval(`(() => { const i = document.querySelector('.dialog--edgematch input[data-key="distance"]'); i.value = '0'; i.dispatchEvent(new Event('input')); })()`);
+      await ui.sleep(200);
+      const seen = await ui.eval(`({ said: document.querySelector('.dialog--edgematch .io-summary').textContent, apply: document.querySelector('.dialog--edgematch .btn--primary').disabled })`);
+      if (!seen.said.startsWith('Arama uzaklığı sıfırdan büyük') || !seen.apply) throw new Error(`Kenar eşleme, uyarı: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.selection.clear()`)), ...s }));
+
 SCENES.leaders = [
   {
     id: 'leaders',

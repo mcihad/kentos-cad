@@ -190,6 +190,24 @@ Düzeltme `cad.entities.edit`'in yeni işlemi **`edgematch`** ile yazılır. Ad�
    - **Sonuç:** masaüstünün, web'in ve Python SDK'sının çalıştırıcıları 86 durumu geçer.
 3. Pencere iki platformda; sahne `fixtures/interaction/v1/edgematch.kcad` (kenarında aralıklı çizgileri olan iki pafta); resimler.
 
+   *(2 Ekim: tamam.)*
+   - **Pencere:** `transform.edgematch` (Harita › Koordinatlar, Vektör oturtma'nın yanında, kendi simgesiyle). Masaüstünde `calc/edgematch/`, web'de `ui/calc/EdgematchDialog.ts` ve `edgematchWords.ts`.
+   - **Hesap:** bağlar her değişiklikte çekirdekte yeniden bulunur. Kullan, bağın uçlarıyla hatırlanır; bağlar yeniden bulunduğunda da dışarıda kalır. Uygula'nın yazacağı da her değişiklikte çekirdekte hesaplanır; yazılamayacak bağlar özette satır numaralarıyla söylenir.
+   - **Sınır:** Sahneden seç ile tek nesne seçilir (çizgi, çoklu çizgi ya da alan). Esc vazgeçer, seçim eski hâline döner.
+   - **Göster:** pencere kenara çekilir, bağın iki çizgisi seçilir ve çizim bağa yakınlaşır. Tıklama, Enter ya da Esc pencereyi ve eski seçimi geri getirir; bunun için iki platformda küçük bir bakma aracı var (`tools/lookTool.ts`, `kentos_interaction::look`).
+   - **Tablo:** ekleme düğmesi yoktur; satırlar bağlardan gelir (iki platformda ızgaranın yeni seçeneği).
+   - **Kilitli katman:** kilitli katmandaki kaynak hiç katılmaz. Komşu da, ortada ya da sınırda buluşmada katılmaz; ikisi de sayısıyla söylenir.
+   - **Testler:** masaüstünde 8 test, sahnenin gerçek akışıyla:
+     - bağlar ve özet;
+     - Kullan;
+     - Sınır'ın tıklama ve Enter'la seçimi, Esc'le vazgeçilmesi;
+     - sınırda Köşeleri ayarla ile dört bağın tek adımda tam kenarda buluşması ve geri alınması;
+     - Göster'in dönüşü;
+     - Parça ekle ile çizginin yerinde çoklu çizgi olması;
+     - uyarılar;
+     - rapor.
+   - **Resimler:** web'in beş sahnesi denetimleriyle, ikisi aynı sayılarla (4 bağ; en büyük aralık 215,4 mm, ortalama 123,7 mm), iki temada ve iki boyutta. Yerleşim denetimi pencereyi açar.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ### 12. Kapsam dışı

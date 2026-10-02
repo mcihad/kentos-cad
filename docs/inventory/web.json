@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 203,
-      "implemented": 190,
+      "total": 204,
+      "implemented": 191,
       "partial": 0,
       "pending": 13
     },
@@ -67,18 +67,18 @@
       "pending": 0
     },
     "screens": {
-      "total": 70,
-      "implemented": 70,
+      "total": 71,
+      "implemented": 71,
       "partial": 0,
       "pending": 0
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 61,
-    "commandsOnDesktop": 188,
+    "commandsOnDesktop": 189,
     "desktop": {
       "commands": {
-        "total": 203,
-        "implemented": 188,
+        "total": 204,
+        "implemented": 189,
         "partial": 0,
         "pending": 13,
         "none": 0,
@@ -141,8 +141,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 70,
-        "implemented": 67,
+        "total": 71,
+        "implemented": 68,
         "partial": 2,
         "pending": 0,
         "none": 0,
@@ -5898,6 +5898,39 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs",
         "apps/web/scripts/e2e/visual.mjs"
+      ]
+    },
+    {
+      "id": "transform.edgematch",
+      "title": "Kenar eşleme…",
+      "short": "Kenar eşle",
+      "category": "Koordinat",
+      "icon": "edgematch",
+      "description": "Komşu paftaların kenarında buluşmayan çizgileri birleştirir: arama uzaklığı ve açı toleransı içinde çizginin devamı olan uçlar eşlenir, her bağ tabloda görülür ve çıkarılabilir. Uçlar komşunun ucunda, ortada ya da pafta sınırında buluşur; uç taşınır, parça eklenir ya da kayma çizgi boyunca dağıtılır. Uygula tek adımda yazar.",
+      "aliases": [
+        "KENARESLE",
+        "KENAREŞLE",
+        "KENARESLEME",
+        "EDGEMATCH"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Koordinat › Koordinatlar"
+      ],
+      "ribbon": [
+        "Harita › Koordinatlar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -14267,6 +14300,18 @@
       "desktopWhere": "apps/desktop/src/points/ (ADR 0153)"
     },
     {
+      "id": "apps/web/src/ui/calc/EdgematchDialog.ts#openEdgematch",
+      "name": "openEdgematch",
+      "role": "window",
+      "source": "apps/web/src/ui/calc/EdgematchDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/edgematch/ (ADR 0159)"
+    },
+    {
       "id": "apps/web/src/ui/calc/FitDialog.ts#openFit",
       "name": "openFit",
       "role": "window",
@@ -15457,7 +15502,8 @@
               "crs.points",
               "view.coords",
               "point.editor",
-              "transform.fit"
+              "transform.fit",
+              "transform.edgematch"
             ]
           }
         ]
@@ -17187,6 +17233,10 @@
               },
               {
                 "command": "transform.fit",
+                "size": "small"
+              },
+              {
+                "command": "transform.edgematch",
                 "size": "small"
               }
             ],
@@ -20893,6 +20943,10 @@
                 {
                   "command": "transform.fit",
                   "size": "small"
+                },
+                {
+                  "command": "transform.edgematch",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -21570,6 +21624,7 @@
     "pointRename": "<circle cx=\"4.6\" cy=\"15\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"4.6\" cy=\"15\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8.6 4.4h7.2a1.3 1.3 0 0 1 1.3 1.3v3.6a1.3 1.3 0 0 1-1.3 1.3H8.6L6 7.5z\"/><circle cx=\"8.6\" cy=\"7.5\" r=\".7\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M5.6 13.1 7 10.6\" stroke-width=\"1.1\"/>",
     "pointNumber": "<circle cx=\"3.6\" cy=\"15\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"3.6\" cy=\"15\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"15\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"10\" cy=\"15\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"16.4\" cy=\"15\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"16.4\" cy=\"15\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M3.6 9.4V4.6M8.6 4.6h2.6v2.3H8.8v2.5h2.6M14.6 4.6h2.6v2.4h-2M17.2 7v2.4h-2.6\" stroke-width=\"1.1\"/>",
     "pointLayer": "<circle cx=\"10\" cy=\"3.6\" r=\"2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"10\" cy=\"3.6\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M10 6.2v3.6M8.3 8.2 10 9.9l1.7-1.7\" stroke-width=\"1.2\"/><path d=\"m10 11 7 3.3-7 3.3-7-3.3z\" fill=\"currentColor\" fill-opacity=\".14\"/>",
+    "edgematch": "<path d=\"M10 2.5v15\" stroke-dasharray=\"2 1.6\"/><path d=\"M2.5 6.8 8.6 7.3M11.4 7.9l6.1.5\"/><path d=\"m2.5 14.2 6.1-1.1M11.4 12.4l6.1-1.1\"/><rect x=\"8.5\" y=\"6.1\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.5\" y=\"11.3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "vectorFit": "<path d=\"m2.6 9.4 6.6-1.2 1.4 7.4-6.8 1.6z\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M11 2.6h6.6v6.6H11z\" fill=\"currentColor\" fill-opacity=\".18\"/><path d=\"M5.6 7.6 10.2 3.2M10.2 3.2H7.8M10.2 3.2v2.4\" stroke-width=\"1.1\"/><circle cx=\"2.6\" cy=\"9.4\" r=\"1.15\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"11\" cy=\"2.6\" r=\"1.15\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"17.6\" cy=\"9.2\" r=\"1.15\" fill=\"currentColor\" stroke=\"none\"/>",
     "pointDedupe": "<circle cx=\"5\" cy=\"10\" r=\"2.6\"/><circle cx=\"8.4\" cy=\"10\" r=\"2.6\" stroke-dasharray=\"1 1.1\"/><path d=\"M12.1 10h2.6M13.6 8.6 15 10l-1.4 1.4\" stroke-width=\"1.2\"/><circle cx=\"17.6\" cy=\"10\" r=\"1.9\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"17.6\" cy=\"10\" r=\".55\" fill=\"currentColor\" stroke=\"none\"/>",
     "toArea": "<path d=\"m3.8 8 6-4.5 6.5 3.5-1.8 9H5.6z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-dasharray=\"2.2 1.5\"/>",

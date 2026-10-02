@@ -94,7 +94,7 @@ const ITEMS = [
   { id: 'export-dxf', open: (ui) => ui.run('file.export.dxf') },
   { id: 'export-geojson', open: (ui) => ui.run('file.export.geojson') },
   { id: 'export-ncn', open: (ui) => ui.run('file.export.ncn') },
-  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
+  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit', 'transform.edgematch'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
   // Vektör oturtma's Kauçuk levha (docs/adr/0158 §5): four kinds and Sabit on every row; Helmert again on closing (what is typed stays for the session).
   {
     id: 'transform-fit-rubber',

@@ -19,6 +19,7 @@
 //! What is typed stays while the app runs, whatever drawing is open, as on
 //! the web; nothing of it is saved.
 
+pub mod edgematch;
 pub mod fit;
 pub mod grid;
 pub mod intersection;
@@ -51,6 +52,7 @@ pub const COMMANDS: &[&str] = &[
     "calc.resection",
     "calc.stakeout",
     "transform.fit",
+    "transform.edgematch",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -65,6 +67,7 @@ pub enum Window {
     Intersection,
     Stakeout,
     Fit,
+    Edgematch,
 }
 
 /// A known point field of the window it is in.
@@ -123,6 +126,8 @@ pub enum Event {
     FromSelection,
     /// Vektör oturtma's own controls.
     Fit(fit::Event),
+    /// Kenar eşleme's own controls.
+    Edgematch(edgematch::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -134,6 +139,7 @@ pub struct Calc {
     pub intersection: intersection::Form,
     pub stakeout: stakeout::Form,
     pub fit: fit::Form,
+    pub edgematch: edgematch::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -146,6 +152,7 @@ impl Calc {
             Window::Polar => Some(&mut self.polar),
             Window::Stakeout => Some(&mut self.stakeout),
             Window::Fit => Some(&mut self.fit),
+            Window::Edgematch => Some(&mut self.edgematch),
             Window::Intersection => None,
         }
     }
@@ -156,7 +163,7 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse.layer),
             Window::Polar => Some(&mut self.polar.layer),
             Window::Intersection => Some(&mut self.intersection.layer),
-            Window::Stakeout | Window::Fit => None,
+            Window::Stakeout | Window::Fit | Window::Edgematch => None,
         }
     }
 }
@@ -202,6 +209,7 @@ impl App {
             }
             "calc.stakeout" => self.calc_show(Window::Stakeout),
             "transform.fit" => self.calc_show(Window::Fit),
+            "transform.edgematch" => self.calc_show(Window::Edgematch),
             _ => {}
         }
         Task::none()
@@ -236,6 +244,10 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.sync(&doc.model, self.selection.len());
         }
+        if window == Window::Edgematch {
+            self.calc.edgematch.sync(&doc.model, self.selection.len());
+            self.calc.edgematch.solve(&doc.model, self.selection.ids());
+        }
         self.calc.open = Some(window);
         self.dialog = Some(Asking::Calc);
     }
@@ -264,6 +276,10 @@ impl App {
             }
             Event::Fit(e) => {
                 self.fit_event(e);
+                Task::none()
+            }
+            Event::Edgematch(e) => {
+                self.edgematch_event(e);
                 Task::none()
             }
             Event::CopyReport => self.calc_copy_report(window),
@@ -371,6 +387,13 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.solve();
         }
+        // Kenar eşleme finds its links again (the window may have closed: Göster, Sınır's pick).
+        if window == Window::Edgematch
+            && self.calc.open == Some(Window::Edgematch)
+            && let Some(doc) = &self.document
+        {
+            self.calc.edgematch.solve(&doc.model, self.selection.ids());
+        }
         task
     }
 
@@ -392,6 +415,7 @@ impl App {
             Window::Intersection => self.calc.intersection.kind.title(),
             Window::Stakeout => stakeout::TITLE,
             Window::Fit => fit::TITLE,
+            Window::Edgematch => edgematch::TITLE,
         }
     }
 
@@ -412,12 +436,17 @@ impl App {
             (Window::Stakeout, _) => &mut calc.stakeout.station,
             (Window::Fit, Field::Base) => &mut calc.fit.params.base,
             (Window::Fit, _) => return None,
+            (Window::Edgematch, _) => return None,
         })
     }
 
     /// Çizimden's answer: the field takes the point's name when it lies on a
     /// named point, else its coordinates; the window opens again either way.
     pub(crate) fn calc_picked(&mut self, p: Option<Vec2>) {
+        // Kenar eşleme's Göster: the look is over.
+        if self.edgematch_looked() {
+            return;
+        }
         // Vektör oturtma's row: its source or target, and the name it snapped to.
         if let Some((row, side)) = self.calc.fit.picking.take() {
             if let (Some(p), Some(doc)) = (p, &self.document) {
@@ -453,6 +482,7 @@ impl App {
             Window::Intersection => self.calc.intersection.report(model, &format),
             Window::Stakeout => self.calc.stakeout.report(model, &format),
             Window::Fit => self.calc.fit.report(model, &format),
+            Window::Edgematch => self.calc.edgematch.report(model, self.selection.len()),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -513,7 +543,7 @@ impl App {
                     &calc.intersection.layer,
                 )
             }
-            Window::Stakeout | Window::Fit => return,
+            Window::Stakeout | Window::Fit | Window::Edgematch => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -632,6 +662,7 @@ impl App {
             Window::Intersection => self.calc.intersection.view(model, &format),
             Window::Stakeout => self.calc.stakeout.view(model, &format),
             Window::Fit => self.calc.fit.view(model, &format, self.selection.len()),
+            Window::Edgematch => self.calc.edgematch.view(model, self.selection.len()),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -658,6 +689,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Intersection, Field::C) => "C noktası",
         (Window::Intersection, _) => "A noktası",
         (Window::Fit, _) => "Taban noktası",
+        (Window::Edgematch, _) => "Sınır",
     }
 }
 

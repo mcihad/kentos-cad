@@ -44,6 +44,28 @@
 .calc-known__value[data-kind='error'] {
   color: var(--c-danger);
 }
+/* Kenar eşleme's Sınır (docs/adr/0159 §9): the object picked, read-only as a field, with Sahneden seç and its removal beside it. */
+.calc-border {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.calc-border__name {
+  flex: 1;
+  min-width: 0;
+  height: calc(28px * var(--ui-scale));
+  line-height: calc(26px * var(--ui-scale));
+  padding: 0 8px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .calc-num {
   width: calc(130px * var(--ui-scale));
   font-variant-numeric: tabular-nums;

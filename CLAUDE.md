@@ -36,6 +36,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ya da Parametrelerle (taban noktası, Y ve X ölçeği, dönüklük, öteleme), ya da Kauçuk levha (bağlardan tam geçen ince plaka eğrisi,
   Sabit noktalar, Helmert'e göre yerel düzeltmeler; ADR 0158); seçili nesnelere, katmana ya da bütün çizime (kopya olarak da)
   `cad.entities.transform` ile tek adımda (ADR 0156);
+  kenar eşleme: komşu paftaların kenarında buluşmayan çizgiler, çizginin devamı ölçütüyle (arama uzaklığı, açı toleransı, isteğe bağlı
+  öznitelik ya da katman adı) eşlenir; komşunun ucunda, ortada ya da pafta sınırında buluşur; ucu taşı, parça ekle ya da köşeleri ayarla;
+  bağlar tablosu (Kullan, Göster), `cad.entities.edit`'in `edgematch` işlemiyle tek adımda (ADR 0159);
   İşlemler: dört yerleşik araç ve Parsel ölçü yazıları modeli, tanımdan üretilen penceresiyle (ADR 0084);
   taşı, kopyala, döndür, ölçekle ve aynala (ADR 0037);
   ötele, buda, uzat, köşe yuvarla, pah, kır, birleştir, patlat, uzat-kısalt, köşe ekle/sil, esnet, dizi,
@@ -191,6 +194,7 @@ python3 scripts/fixtures/rubber_cases.py --check   # Kauçuk levha'nın ince pla
 python3 scripts/fixtures/edgematch_cases.py --check   # Kenar eşleme'nin bağlarını (aday, puan, bire bir eşleme, kavşak, eşsiz uç) ve yöntemlerini (Ucu taşı, Parça ekle, Köşeleri ayarla; üç buluşma yeri, kotlar) mpmath ile 50 basamaklı bağımsız başvurudan denetle (ADR 0159)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
+KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop calc::edgematch::tests::screens -- --ignored --nocapture   # Kenar eşleme penceresinin resimleri, .run/shots/kenar-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs edgematch; ADR 0159)
 python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını, bağlı çizgilerini ve İçe aktar sonrası hedefini kurallardan denetle (ADR 0153 §5)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
@@ -609,8 +613,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `rubber_cases.py`), 2. adım (nesneler: yalnız köşeler, `rubber_warp_cases.py`) ve 3. adım (`cad.entities.transform`'un
   `rubbersheet` türü, adım “Kauçuk levha”; durumlar levhanın Python ikiziyle bit bit, `sheet_f64.py`) ve 4. adım (Vektör
   oturtma'nın dördüncü dönüşümü, Sabit, yerel düzeltmeler) tamam. Kenar eşleme ([ADR 0159](docs/adr/0159-edgematch.md), `HYB-05`'in
-  kalanı): 1. adım (çekirdek `ops::edgematch`, `edgematch_cases.py`) ve 2. adım (`cad.entities.edit`'in `edgematch` işlemi, adım
-  “Kenar eşle”) tamam; sıradaki 3. adım (pencere, sahne `edgematch.kcad`, resimler). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  kalanı): 1. adım (çekirdek `ops::edgematch`, `edgematch_cases.py`), 2. adım (`cad.entities.edit`'in `edgematch` işlemi, adım
+  “Kenar eşle”) ve 3. adım (pencere iki platformda, sahne `edgematch.kcad`) tamam; `HYB-05` bitti. Sıradaki `HYB-06` topolojik
+  düzenleme kipi (önce ADR'si). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

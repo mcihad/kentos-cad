@@ -74,6 +74,18 @@ export function registerCalcCommands(ctx: AppContext): void {
       aliases: ['OTURT', 'OTURTMA', 'DONUSUM', 'DÖNÜŞÜM', 'HELMERT', 'AFIN', 'AFİN'],
       run: () => void import('../ui/calc/FitDialog').then((m) => m.openFit(ctx)).catch(failed),
     },
+    {
+      // Kenar eşleme (docs/adr/0159): the line ends of two sheets put together across their common edge.
+      id: 'transform.edgematch',
+      title: 'Kenar eşleme…',
+      short: 'Kenar eşle',
+      category: 'Koordinat',
+      icon: 'edgematch',
+      description:
+        'Komşu paftaların kenarında buluşmayan çizgileri birleştirir: arama uzaklığı ve açı toleransı içinde çizginin devamı olan uçlar eşlenir, her bağ tabloda görülür ve çıkarılabilir. Uçlar komşunun ucunda, ortada ya da pafta sınırında buluşur; uç taşınır, parça eklenir ya da kayma çizgi boyunca dağıtılır. Uygula tek adımda yazar.',
+      aliases: ['KENARESLE', 'KENAREŞLE', 'KENARESLEME', 'EDGEMATCH'],
+      run: () => void import('../ui/calc/EdgematchDialog').then((m) => m.openEdgematch(ctx)).catch(failed),
+    },
   ];
   ctx.commands.registerAll(list);
 }

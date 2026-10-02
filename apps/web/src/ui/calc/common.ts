@@ -106,8 +106,8 @@ export interface GridAction {
 export interface GridModel {
   columns: GridColumn[];
   rows(): Row[];
-  /** The add button's words; “Satır ekle” when not given. */
-  addLabel?: string;
+  /** The add button's words; “Satır ekle” when not given; none for a table whose rows come from elsewhere (Kenar eşleme's links). */
+  addLabel?: string | null;
   /** A row's own buttons, before its delete button. */
   actions?(row: number): GridAction[];
   /** A cell that cannot be typed in (a known station's name, a leg after the last point). */
@@ -210,15 +210,17 @@ export class Grid {
         ),
       ),
     );
-    const add = h('button', { class: 'btn calc-grid__add', type: 'button' }, icon('plus', 14), model.addLabel ?? 'Satır ekle');
+    const add = model.addLabel === null ? null : h('button', { class: 'btn calc-grid__add', type: 'button' }, icon('plus', 14), model.addLabel ?? 'Satır ekle');
     const last = rows.length - 1;
     const after = [...rows.keys()].reverse().find((r) => model.canInsertAfter(r)) ?? -1;
-    add.disabled = after < 0 && last >= 0;
-    add.addEventListener('click', () => {
-      model.insertAfter(after);
-      this.render({ row: after + 1, key: model.columns.find((c) => !model.readonly(after + 1, c.key))?.key ?? model.columns[0].key });
-      this.onChange();
-    });
+    if (add) {
+      add.disabled = after < 0 && last >= 0;
+      add.addEventListener('click', () => {
+        model.insertAfter(after);
+        this.render({ row: after + 1, key: model.columns.find((c) => !model.readonly(after + 1, c.key))?.key ?? model.columns[0].key });
+        this.onChange();
+      });
+    }
     replaceChildren(this.el, h('div', { class: 'calc-grid__wrap' }, h('table', { class: 'io-table calc-grid__table' }, h('thead', null, head), h('tbody', null, body))), add);
     if (focus) this.focus(focus.row, focus.key);
   }

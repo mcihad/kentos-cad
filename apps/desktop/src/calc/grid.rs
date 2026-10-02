@@ -39,6 +39,11 @@ pub trait Owner: Copy {
     fn add_label(self) -> &'static str {
         "Satır ekle"
     }
+    /// Whether the table has an add button: not when its rows come from
+    /// elsewhere (Kenar eşleme's links; the web's `addLabel: null`).
+    fn adds(self) -> bool {
+        true
+    }
 }
 
 /// A Hesap window's table.
@@ -67,6 +72,9 @@ impl Owner for Window {
             Window::Fit => "Çift ekle",
             _ => "Satır ekle",
         }
+    }
+    fn adds(self) -> bool {
+        self != Window::Edgematch
     }
 }
 
@@ -389,6 +397,9 @@ pub fn view_with<'a>(
     .on_press_maybe(can_add.then(|| owner.add_row()))
     .padding([5, 10])
     .style(style::button::secondary);
+    if !owner.adds() {
+        return sheet.into();
+    }
     column![sheet, add].spacing(6).into()
 }
 

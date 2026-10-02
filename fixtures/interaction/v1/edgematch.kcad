@@ -1,0 +1,403 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Kenar eşleme",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "hybrid",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487200.0,
+  "y": 4420075.0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta1",
+   "name": "Pafta 1",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "pafta2",
+   "name": "Pafta 2",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#12A594",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "sinir",
+   "name": "Pafta sınırı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "dashed",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "line",
+   "layerId": "sinir",
+   "attrs": {
+    "Ad": "Pafta kenarı"
+   },
+   "a": {
+    "x": 487200.0,
+    "y": 4419995.0
+   },
+   "b": {
+    "x": 487200.0,
+    "y": 4420155.0
+   },
+   "id": 1
+  },
+  {
+   "kind": "polygon",
+   "layerId": "sinir",
+   "attrs": {},
+   "label": "Pafta 1",
+   "pts": [
+    {
+     "x": 487040.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487200.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487200.0,
+     "y": 4420150.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420150.0
+    }
+   ],
+   "id": 2
+  },
+  {
+   "kind": "polygon",
+   "layerId": "sinir",
+   "attrs": {},
+   "label": "Pafta 2",
+   "pts": [
+    {
+     "x": 487200.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487360.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487360.0,
+     "y": 4420150.0
+    },
+    {
+     "x": 487200.0,
+     "y": 4420150.0
+    }
+   ],
+   "id": 3
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487050.0,
+    "y": 4420020.0
+   },
+   "b": {
+    "x": 487199.94,
+    "y": 4420022.03
+   },
+   "id": 4
+  },
+  {
+   "kind": "polyline",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4420046.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4420055.0
+    },
+    {
+     "x": 487200.05,
+     "y": 4420061.0
+    }
+   ],
+   "id": 5
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Bina"
+   },
+   "a": {
+    "x": 487080.0,
+    "y": 4420080.0
+   },
+   "b": {
+    "x": 487199.88,
+    "y": 4420084.1
+   },
+   "id": 6
+  },
+  {
+   "kind": "polyline",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "pts": [
+    {
+     "x": 487045.0,
+     "y": 4420108.0
+    },
+    {
+     "x": 487140.0,
+     "y": 4420106.0
+    },
+    {
+     "x": 487199.97,
+     "y": 4420104.98
+    }
+   ],
+   "id": 7
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Çit"
+   },
+   "a": {
+    "x": 487090.0,
+    "y": 4420132.0
+   },
+   "b": {
+    "x": 487199.8,
+    "y": 4420133.0
+   },
+   "id": 8
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487110.0,
+    "y": 4420010.0
+   },
+   "b": {
+    "x": 487199.92,
+    "y": 4420008.0
+   },
+   "id": 9
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta1",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487199.92,
+    "y": 4420008.0
+   },
+   "b": {
+    "x": 487170.0,
+    "y": 4420000.0
+   },
+   "id": 10
+  },
+  {
+   "kind": "polygon",
+   "layerId": "pafta1",
+   "attrs": {
+    "Ada": "214"
+   },
+   "label": "214",
+   "pts": [
+    {
+     "x": 487130.0,
+     "y": 4420062.0
+    },
+    {
+     "x": 487180.0,
+     "y": 4420063.0
+    },
+    {
+     "x": 487178.0,
+     "y": 4420078.0
+    },
+    {
+     "x": 487129.0,
+     "y": 4420076.0
+    }
+   ],
+   "id": 11
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487200.04,
+    "y": 4420022.06
+   },
+   "b": {
+    "x": 487350.0,
+    "y": 4420026.0
+   },
+   "id": 12
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487199.97,
+    "y": 4420061.04
+   },
+   "b": {
+    "x": 487320.0,
+    "y": 4420074.0
+   },
+   "id": 13
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Bina"
+   },
+   "a": {
+    "x": 487200.08,
+    "y": 4420084.02
+   },
+   "b": {
+    "x": 487340.0,
+    "y": 4420087.0
+   },
+   "id": 14
+  },
+  {
+   "kind": "polyline",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "pts": [
+    {
+     "x": 487200.05,
+     "y": 4420105.01
+    },
+    {
+     "x": 487280.0,
+     "y": 4420103.0
+    },
+    {
+     "x": 487350.0,
+     "y": 4420108.0
+    }
+   ],
+   "id": 15
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Çit"
+   },
+   "a": {
+    "x": 487200.15,
+    "y": 4420133.3
+   },
+   "b": {
+    "x": 487200.15,
+    "y": 4420148.0
+   },
+   "id": 16
+  },
+  {
+   "kind": "line",
+   "layerId": "pafta2",
+   "attrs": {
+    "Tür": "Yol"
+   },
+   "a": {
+    "x": 487200.1,
+    "y": 4420008.05
+   },
+   "b": {
+    "x": 487330.0,
+    "y": 4420009.0
+   },
+   "id": 17
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

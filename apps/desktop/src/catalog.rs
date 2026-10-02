@@ -210,6 +210,9 @@ pub const PORTED: &[&str] = &[
     // Vektör oturtma: control points, Helmert, affine or projective by least squares,
     // written through cad.entities.transform (calc/fit/, docs/adr/0156 §7).
     "transform.fit",
+    // Kenar eşleme: the line ends of two sheets put together across their edge,
+    // written through cad.entities.edit (calc/edgematch/, docs/adr/0159 §9).
+    "transform.edgematch",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",
