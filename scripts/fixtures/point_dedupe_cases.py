@@ -45,6 +45,13 @@ The rules:
 9. The window's summary: “6 grupta 15 nokta; 9 nokta silinecek.”, with “, 2
    nokta ortalamaya taşınacak” when some would move; “Çift nokta yok.”
    without groups.
+10. After İçe aktar from the table (`imports`): the imported points' names,
+   trimmed (a point without one is left out), and of them those two points
+   or more of the drawing carry. The window's targets are the points that
+   carry one of them, in the drawing's order, its header “Aynı adlı 8
+   nokta”, its criterion Aynı ad; none: no window opens (targets empty,
+   header null). An import case's drawing is `importObjects`, the imported
+   points last.
 
 What is compared: the groups (their members' ids, in the drawing's order);
 the summary; the messages said; the undo step's name (null: nothing
@@ -313,6 +320,68 @@ def cases():
     return out
 
 
+def import_drawing():
+    """A drawing that has had a coordinate list imported: the imported points (7–13) are last."""
+    def pt(i, label, x, y, layer, z=None):
+        o = {"kind": "point", "id": i, "layerId": layer, "attrs": {}, "p": P(x, y)}
+        if label is not None:
+            o["label"] = label
+        if z is not None:
+            o["z"] = z
+        return o
+    return [
+        pt(1, "101", 0, 0, "cizim", z=100.0),
+        pt(2, "102", 10, 0, "cizim"),
+        pt(3, "103", 20, 0, "cizim"),
+        pt(4, None, 30, 0, "cizim"),
+        pt(5, "104", 40, 0, "kilitli"),
+        {"kind": "line", "id": 6, "layerId": "cizim", "attrs": {}, "a": P(0, 0), "b": P(10, 0), "za": 100.0},
+        pt(7, "101", 0.02, -0.01, "kot", z=100.3),
+        pt(8, " 102 ", 10.01, 0, "kot"),
+        pt(9, "105", 50, 0, "kot"),
+        pt(10, None, 60, 0, "kot"),
+        pt(11, "106", 70, 0, "kot"),
+        pt(12, "106", 70.5, 0, "kot"),
+        pt(13, "104", 40.01, 0, "kot"),
+    ]
+
+
+def import_targets(objects, imported):
+    """Rule 10: the points carrying an imported name that two points or more carry, and the window's header."""
+    points = [o for o in objects if o["kind"] == "point"]
+    by_id = {o["id"]: o for o in points}
+    names = {trim(by_id[i].get("label") or "") for i in imported if i in by_id} - {""}
+    carriers = {}
+    for o in points:
+        name = trim(o.get("label") or "")
+        if name in names:
+            carriers.setdefault(name, []).append(o["id"])
+    twice = {n for n, ids in carriers.items() if len(ids) > 1}
+    ids = [o["id"] for o in points if trim(o.get("label") or "") in twice]
+    return ids, (f"Aynı adlı {len(ids)} nokta" if ids else None)
+
+
+def import_cases():
+    objs = import_drawing()
+    everything = [7, 8, 9, 10, 11, 12, 13]
+    rows = [
+        ("İlki çizimdekini tutar: dosyanın aynı adlıları silinir, kilitli tutulan değişmez", everything, "first", True),
+        ("Sonuncusu dosyadakini tutar: kilitli katmandaki çizim noktası silinecek", everything, "last", True),
+        ("Sonuncusu dosyadakini tutar", [7, 8, 9, 10, 11, 12], "last", True),
+        ("Ortalaması ikisinin ortalaması; bağlı çizgi izler", [7, 8, 9, 10, 11, 12], "average", True),
+        ("Adı başka noktada olmayan içe aktarmada pencere açılmaz", [9, 10], "first", True),
+    ]
+    out = []
+    for name, imported, keep, fol in rows:
+        targets, header = import_targets(objs, imported)
+        expected = {"targets": targets, "header": header}
+        if targets:
+            after, groups, summary, said, step = run(objs, targets, "name", "", keep, fol)
+            expected.update({"groups": groups, "summary": summary, "said": said, "step": step, "objects": [view(o) for o in after]})
+        out.append({"name": name, "imported": imported, "keep": keep, "follow": fol, "expected": expected})
+    return out
+
+
 def build():
     return {
         "format": "kentos.point-editor-dedupe",
@@ -320,6 +389,8 @@ def build():
         "layers": [{"id": k, "name": v, "locked": k in LOCKED, "visible": True} for k, v in LAYERS.items()],
         "objects": drawing(),
         "cases": cases(),
+        "importObjects": import_drawing(),
+        "imports": import_cases(),
     }
 
 

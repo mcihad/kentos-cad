@@ -48,6 +48,8 @@ pub(crate) struct Window {
     /// Çift noktaları ayıkla: Aynı ad (else Aynı yer), and the one kept.
     by_name: bool,
     keep: Keep,
+    /// After İçe aktar: the file's points are last (Tutulan says whose is kept).
+    imported: bool,
     layer: String,
     /// The command's refusal at the last Uygula.
     refused: Option<String>,
@@ -132,6 +134,25 @@ impl fmt::Display for Kept {
     }
 }
 
+/// Tutulan's hint: whose point each choice keeps after İçe aktar (the
+/// file's points are last), and what Ortalaması moves (the web's `keptHint`).
+pub fn kept_hint(imported: bool, follow: bool) -> &'static str {
+    match (imported, follow) {
+        (true, true) => {
+            "İlki çizimdekini, Sonuncusu dosyadakini tutar; Ortalamada çizimdeki nokta taşınır, bağlı çizgileri de."
+        }
+        (true, false) => {
+            "İlki çizimdekini, Sonuncusu dosyadakini tutar; Ortalamada çizimdeki nokta taşınır, çizgiler yerinde kalır."
+        }
+        (false, true) => {
+            "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır."
+        }
+        (false, false) => {
+            "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır."
+        }
+    }
+}
+
 /// A point's name as the window quotes it, “(adsız)” without one.
 fn name_of(model: &kentos_domain::Document, slot: Slot) -> Option<String> {
     match model.get(slot) {
@@ -160,15 +181,42 @@ enum LayerLine {
 }
 
 impl App {
-    /// An operation's window over the target rows (İşlemler ▾, a row's menu):
-    /// Sıralı numara ver starts from the first row's name when it ends with a
-    /// number, Katmana taşı from the active layer.
+    /// An operation's window over the target rows (İşlemler ▾, a row's menu).
     pub(crate) fn open_point_batch(&mut self, kind: Kind) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
         };
         let shown = self.point_rows(doc).shown;
         let (slots, header) = batch::targets(&shown, |s| self.selection.contains(s));
+        self.open_point_batch_over(kind, slots, header, false)
+    }
+
+    /// After İçe aktar (docs/adr/0153 §5): Çift noktaları ayıkla by Aynı ad
+    /// over the points whose names the file brought again; nothing when none.
+    pub(crate) fn points_imported(&mut self, imported: &[Slot]) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
+        match batch::import_targets(&doc.model, imported) {
+            Some((slots, header)) => self.open_point_batch_over(Kind::Dedupe, slots, header, true),
+            None => Task::none(),
+        }
+    }
+
+    /// An operation's window over `slots`, `header` naming them; after İçe
+    /// aktar (`imported`) Çift noktaları ayıkla by Aynı ad. Sıralı numara ver
+    /// starts from the first row's name when it ends with a number, Katmana
+    /// taşı from the active layer.
+    fn open_point_batch_over(
+        &mut self,
+        kind: Kind,
+        slots: Vec<Slot>,
+        header: String,
+        imported: bool,
+    ) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
         if slots.is_empty() {
             return Task::none();
         }
@@ -189,8 +237,9 @@ impl App {
             header,
             add: true,
             text,
-            by_name: false,
+            by_name: imported,
             keep: Keep::First,
+            imported,
             layer,
             refused: None,
         });
@@ -424,11 +473,7 @@ impl App {
                         .padding([5, 8])
                         .style(style::field::input),
                 );
-                let kept_hint = if self.points.follow {
-                    "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır."
-                } else {
-                    "Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır."
-                };
+                let kept_hint = kept_hint(w.imported, self.points.follow);
                 column![
                     row![
                         words::field(

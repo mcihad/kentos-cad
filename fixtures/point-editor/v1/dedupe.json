@@ -6392,5 +6392,877 @@
     ]
    }
   }
+ ],
+ "importObjects": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "label": "101",
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 10.0,
+    "y": 0.0
+   },
+   "label": "102"
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 20.0,
+    "y": 0.0
+   },
+   "label": "103"
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 30.0,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "kilitli",
+   "attrs": {},
+   "p": {
+    "x": 40.0,
+    "y": 0.0
+   },
+   "label": "104"
+  },
+  {
+   "kind": "line",
+   "id": 6,
+   "layerId": "cizim",
+   "attrs": {},
+   "a": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 10.0,
+    "y": 0.0
+   },
+   "za": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 7,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 0.02,
+    "y": -0.01
+   },
+   "label": "101",
+   "z": 100.3
+  },
+  {
+   "kind": "point",
+   "id": 8,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 10.01,
+    "y": 0.0
+   },
+   "label": " 102 "
+  },
+  {
+   "kind": "point",
+   "id": 9,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 50.0,
+    "y": 0.0
+   },
+   "label": "105"
+  },
+  {
+   "kind": "point",
+   "id": 10,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 60.0,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 70.0,
+    "y": 0.0
+   },
+   "label": "106"
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 70.5,
+    "y": 0.0
+   },
+   "label": "106"
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 40.01,
+    "y": 0.0
+   },
+   "label": "104"
+  }
+ ],
+ "imports": [
+  {
+   "name": "İlki çizimdekini tutar: dosyanın aynı adlıları silinir, kilitli tutulan değişmez",
+   "imported": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "keep": "first",
+   "follow": true,
+   "expected": {
+    "targets": [
+     1,
+     2,
+     5,
+     7,
+     8,
+     11,
+     12,
+     13
+    ],
+    "header": "Aynı adlı 8 nokta",
+    "groups": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      8
+     ],
+     [
+      5,
+      13
+     ],
+     [
+      11,
+      12
+     ]
+    ],
+    "summary": "4 grupta 8 nokta; 4 nokta silinecek.",
+    "said": [
+     "Nokta editörü: 4 grupta 4 nokta silindi."
+    ],
+    "step": "Çift noktaları ayıkla",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {},
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "paths": [
+       {
+        "pts": [
+         [
+          0.0,
+          0.0
+         ],
+         [
+          10.0,
+          0.0
+         ]
+        ],
+        "zs": [
+         100.0,
+         null
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": null,
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sonuncusu dosyadakini tutar: kilitli katmandaki çizim noktası silinecek",
+   "imported": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "keep": "last",
+   "follow": true,
+   "expected": {
+    "targets": [
+     1,
+     2,
+     5,
+     7,
+     8,
+     11,
+     12,
+     13
+    ],
+    "header": "Aynı adlı 8 nokta",
+    "groups": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      8
+     ],
+     [
+      5,
+      13
+     ],
+     [
+      11,
+      12
+     ]
+    ],
+    "summary": "4 grupta 8 nokta; 4 nokta silinecek.",
+    "said": [
+     "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {},
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "paths": [
+       {
+        "pts": [
+         [
+          0.0,
+          0.0
+         ],
+         [
+          10.0,
+          0.0
+         ]
+        ],
+        "zs": [
+         100.0,
+         null
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "101",
+      "attrs": {},
+      "at": [
+       0.02,
+       -0.01
+      ],
+      "z": 100.3
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": " 102 ",
+      "attrs": {},
+      "at": [
+       10.01,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": null,
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.5,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.01,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sonuncusu dosyadakini tutar",
+   "imported": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "keep": "last",
+   "follow": true,
+   "expected": {
+    "targets": [
+     1,
+     2,
+     7,
+     8,
+     11,
+     12
+    ],
+    "header": "Aynı adlı 6 nokta",
+    "groups": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      8
+     ],
+     [
+      11,
+      12
+     ]
+    ],
+    "summary": "3 grupta 6 nokta; 3 nokta silinecek.",
+    "said": [
+     "Nokta editörü: 3 grupta 3 nokta silindi."
+    ],
+    "step": "Çift noktaları ayıkla",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "paths": [
+       {
+        "pts": [
+         [
+          0.0,
+          0.0
+         ],
+         [
+          10.0,
+          0.0
+         ]
+        ],
+        "zs": [
+         100.0,
+         null
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "101",
+      "attrs": {},
+      "at": [
+       0.02,
+       -0.01
+      ],
+      "z": 100.3
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": " 102 ",
+      "attrs": {},
+      "at": [
+       10.01,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": null,
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.5,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.01,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Ortalaması ikisinin ortalaması; bağlı çizgi izler",
+   "imported": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "keep": "average",
+   "follow": true,
+   "expected": {
+    "targets": [
+     1,
+     2,
+     7,
+     8,
+     11,
+     12
+    ],
+    "header": "Aynı adlı 6 nokta",
+    "groups": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      8
+     ],
+     [
+      11,
+      12
+     ]
+    ],
+    "summary": "3 grupta 6 nokta; 3 nokta silinecek, 3 nokta ortalamaya taşınacak.",
+    "said": [
+     "Nokta editörü: 3 grupta 3 nokta silindi, 3 nokta ortalamaya taşındı."
+    ],
+    "step": "Çift noktaları ayıkla",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {},
+      "at": [
+       0.01,
+       -0.005
+      ],
+      "z": 100.15
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.004999999999999,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "paths": [
+       {
+        "pts": [
+         [
+          0.01,
+          -0.005
+         ],
+         [
+          10.004999999999999,
+          0.0
+         ]
+        ],
+        "zs": [
+         100.15,
+         null
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": null,
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.25,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       40.01,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Adı başka noktada olmayan içe aktarmada pencere açılmaz",
+   "imported": [
+    9,
+    10
+   ],
+   "keep": "first",
+   "follow": true,
+   "expected": {
+    "targets": [],
+    "header": null
+   }
+  }
  ]
 }

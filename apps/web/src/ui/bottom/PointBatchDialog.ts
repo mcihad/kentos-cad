@@ -25,6 +25,24 @@ export interface BatchWindowOptions {
   showGroups: (groups: number[][]) => void;
   /** Written: the table forgets the groups it showed. */
   done: () => void;
+  /** Çift noktaları ayıkla's criterion as the window opens (after İçe aktar: Aynı ad); Aynı yer else. */
+  by?: 'name' | 'place';
+  /** After İçe aktar: the file's points are last, so Tutulan says which is whose. */
+  imported?: boolean;
+}
+
+/**
+ * Tutulan's hint: whose point each choice keeps after İçe aktar (the file's points are last), and what Ortalaması moves;
+ * the desktop's `kept_hint`.
+ */
+export function keptHint(imported: boolean, follow: boolean): string {
+  if (imported)
+    return follow
+      ? 'İlki çizimdekini, Sonuncusu dosyadakini tutar; Ortalamada çizimdeki nokta taşınır, bağlı çizgileri de.'
+      : 'İlki çizimdekini, Sonuncusu dosyadakini tutar; Ortalamada çizimdeki nokta taşınır, çizgiler yerinde kalır.';
+  return follow
+    ? 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır.'
+    : 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır.';
 }
 
 /** Çift noktaları ayıkla's choices as its window lists them. */
@@ -49,7 +67,7 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
   const { doc } = ctx;
   let mode: 'add' | 'remove' = 'add';
   let layer = doc.layers.active.value;
-  let by: 'name' | 'place' = 'place';
+  let by: 'name' | 'place' = opts.by ?? 'place';
   let keep: 'first' | 'last' | 'average' = 'first';
   let refused: string | null = null;
   const points = ids.flatMap((id) => {
@@ -195,14 +213,7 @@ export function openPointBatchDialog(ctx: AppContext, kind: BatchOp['kind'], ids
               h(
                 'div',
                 { class: 'io-row' },
-                field(
-                  'Tutulan',
-                  keepBox,
-                  opts.follow
-                    ? 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler açık: çizgileri de taşınır.'
-                    : 'Ortalamada tutulan grubun ilk noktasıdır; Bağlı çizgiler izler kapalı: çizgiler yerinde kalır.',
-                  'grow',
-                ),
+                field('Tutulan', keepBox, keptHint(opts.imported ?? false, opts.follow), 'grow'),
               ),
             ];
   const dialog = new Dialog({

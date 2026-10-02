@@ -253,7 +253,9 @@ fn a_coordinate_list_export_writes_every_point_exactly() {
     run(&mut app, "file.export.ncn");
     send(
         &mut app,
-        Event::CoordExport(coord_export::Event::Scope(dxf_export::Scope::All)),
+        Event::CoordExport(coord_export::Event::Scope(coord_export::Pick::Of(
+            dxf_export::Scope::All,
+        ))),
     );
     send(&mut app, Event::CoordExport(coord_export::Event::Run));
     let text = std::fs::read_to_string(&path).expect("written");

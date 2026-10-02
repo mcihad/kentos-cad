@@ -98,6 +98,50 @@ pub fn targets(shown: &[Slot], selected: impl Fn(Slot) -> bool) -> (Vec<Slot>, S
     }
 }
 
+/// After İçe aktar from the table (docs/adr/0153 §5): the imported points'
+/// names (trimmed; one without a name is left out) that two points or more of
+/// the drawing carry, and the points carrying them in the drawing's order,
+/// for Çift noktaları ayıkla by Aynı ad (İlki keeps the drawing's, Sonuncusu
+/// the file's), with the window's header; none when there are none: no
+/// window (the web's `importTargets`).
+pub fn import_targets(doc: &Document, imported: &[Slot]) -> Option<(Vec<Slot>, String)> {
+    fn name_of(e: Option<&Entity>) -> &str {
+        match e {
+            Some(Entity::Point(p)) => p.base.label.as_deref().map_or("", js_trim),
+            _ => "",
+        }
+    }
+    let names: std::collections::HashSet<&str> = imported
+        .iter()
+        .map(|&s| name_of(doc.get(s)))
+        .filter(|n| !n.is_empty())
+        .collect();
+    if names.is_empty() {
+        return None;
+    }
+    let points: Vec<&Entity> = doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Point(_)))
+        .collect();
+    let mut carried: HashMap<&str, usize> = HashMap::new();
+    for &e in &points {
+        let name = name_of(Some(e));
+        if names.contains(name) {
+            *carried.entry(name).or_default() += 1;
+        }
+    }
+    let slots: Vec<Slot> = points
+        .iter()
+        .filter(|&&e| carried.get(name_of(Some(e))).is_some_and(|&n| n > 1))
+        .map(|e| Slot(e.base().id))
+        .collect();
+    if slots.is_empty() {
+        return None;
+    }
+    let header = format!("Aynı adlı {} nokta", slots.len());
+    Some((slots, header))
+}
+
 /// The names the points would take, in order (none: the point keeps its
 /// own), or why none can be given (the web's `plannedNames`).
 pub fn planned_names(points: &[&PointEntity], op: &Op) -> Result<Vec<Option<String>>, String> {

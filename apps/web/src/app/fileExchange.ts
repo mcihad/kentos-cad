@@ -1,4 +1,5 @@
 import type { Command } from '../core/commands';
+import { COORD_FILES } from '../ui/io/coordFiles';
 import type { AppContext } from './context';
 import type { FileKind, PickedFile } from './fileIO';
 
@@ -10,7 +11,6 @@ import type { FileKind, PickedFile } from './fileIO';
  * is always asked, never guessed, and nothing is reprojected (§5).
  */
 
-export const COORD_FILES: FileKind = { description: 'Koordinat listesi (NCN, TXT, CSV)', accept: { 'text/plain': ['.ncn', '.txt', '.csv', '.xyz', '.dat', '.asc'] } };
 export const DXF_FILES: FileKind = { description: 'AutoCAD DXF (DWG değil)', accept: { 'application/dxf': ['.dxf'] } };
 export const NCZ_FILES: FileKind = { description: 'Netcad çizimi (NCZ)', accept: { 'application/x-netcad-ncz': ['.ncz'] } };
 export const GEOJSON_FILES: FileKind = { description: 'GeoJSON', accept: { 'application/geo+json': ['.geojson', '.json'] } };

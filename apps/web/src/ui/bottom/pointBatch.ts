@@ -1,6 +1,6 @@
 import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import type { CadDocument } from '../../model/document';
-import type { PointEntity } from '../../model/entities';
+import type { Entity, PointEntity } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import { duplicatePoints, followPoint } from '../../model/ops/pointEditor';
 import { textIncrement } from '../../model/textEdit';
@@ -42,6 +42,25 @@ export interface BatchOutcome {
 export function batchTargets(shown: readonly number[], selected: (id: number) => boolean): { ids: number[]; header: string } {
   const picked = shown.filter((id) => selected(id));
   return picked.length ? { ids: picked, header: `${picked.length} seçili nokta` } : { ids: [...shown], header: `Tablodaki ${shown.length} nokta` };
+}
+
+/**
+ * After İçe aktar from the table (docs/adr/0153 §5): the imported points' names (trimmed; one without a name is left
+ * out) that two points or more of the drawing carry, and the points carrying them in the drawing's order, for Çift
+ * noktaları ayıkla by Aynı ad (İlki keeps the drawing's, Sonuncusu the file's); null when there are none: no window.
+ */
+export function importTargets(doc: CadDocument, imported: readonly number[]): { ids: number[]; header: string } | null {
+  const nameOf = (e: Entity | undefined) => (e?.kind === 'point' ? (e.label?.trim() ?? '') : '');
+  const names = new Set(imported.map((id) => nameOf(doc.get(id))).filter((n) => n !== ''));
+  if (!names.size) return null;
+  const points = [...doc.all()].filter((e): e is PointEntity => e.kind === 'point');
+  const carried = new Map<string, number>();
+  for (const e of points) {
+    const name = nameOf(e);
+    if (names.has(name)) carried.set(name, (carried.get(name) ?? 0) + 1);
+  }
+  const ids = points.filter((e) => (carried.get(nameOf(e)) ?? 0) > 1).map((e) => e.id);
+  return ids.length ? { ids, header: `Aynı adlı ${ids.length} nokta` } : null;
 }
 
 /**

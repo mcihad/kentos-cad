@@ -181,6 +181,9 @@ pub struct State {
     name: String,
     crs: CrsQuestion,
     status: Option<(bool, String)>,
+    /// Started from Noktalar's İçe aktar: once the points are in, Çift
+    /// noktaları ayıkla by name (docs/adr/0153 §5).
+    for_table: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -238,7 +241,7 @@ fn read(id: u64, bytes: Arc<[u8]>, options: CoordReadOptions) -> Task<Message> {
 }
 
 impl App {
-    pub(super) fn coord_import_picked(&mut self, file: Picked) -> Task<Message> {
+    pub(super) fn coord_import_picked(&mut self, file: Picked, for_table: bool) -> Task<Message> {
         let srid = self.project_srid();
         let (crs, target) = match &self.exchange {
             Some(Window::CoordImport(s)) => (s.crs.clone(), s.target.clone()),
@@ -260,6 +263,7 @@ impl App {
             target,
             crs,
             status: None,
+            for_table,
         };
         let task = read(id, state.file.bytes.clone(), state.options());
         self.open_window(Window::CoordImport(state));
@@ -268,11 +272,17 @@ impl App {
 
     pub(super) fn coord_import_event(&mut self, e: Event) -> Task<Message> {
         match e {
-            Event::Another => return self.pick(Kind::Coords),
+            Event::Another => {
+                // Another file, for the same use.
+                let kind = match &self.exchange {
+                    Some(Window::CoordImport(s)) if s.for_table => Kind::TableCoords,
+                    _ => Kind::Coords,
+                };
+                return self.pick(kind);
+            }
             Event::Run => return self.coord_import_run(),
             Event::Imported { id, result } => {
-                self.coord_import_apply(id, *result);
-                return Task::none();
+                return self.coord_import_apply(id, *result);
             }
             _ => {}
         }
@@ -428,17 +438,22 @@ impl App {
         )
     }
 
-    fn coord_import_apply(&mut self, id: u64, result: Result<ImportResult, String>) {
+    fn coord_import_apply(
+        &mut self,
+        id: u64,
+        result: Result<ImportResult, String>,
+    ) -> Task<Message> {
         let Some(Window::CoordImport(s)) = &self.exchange else {
-            return;
+            return Task::none();
         };
         if id != s.reading_id {
-            return;
+            return Task::none();
         }
         let (Some(target), Some(read)) = (self.coord_target(s), s.read.clone()) else {
-            return;
+            return Task::none();
         };
         let name = s.file.name.clone();
+        let for_table = s.for_table;
         let result = match result {
             Ok(result) => result,
             Err(e) => {
@@ -446,7 +461,7 @@ impl App {
                     s.importing = false;
                     s.status = Some((true, format!("Noktalar okunamadı: {e}")));
                 }
-                return;
+                return Task::none();
             }
         };
         let layer_name = match &target {
@@ -459,7 +474,7 @@ impl App {
             group: None,
         };
         let Some(doc) = &mut self.document else {
-            return;
+            return Task::none();
         };
         match apply::apply_import(&mut doc.model, result.entities, Vec::new(), &plan) {
             Err(error) => {
@@ -467,6 +482,7 @@ impl App {
                     s.importing = false;
                     s.status = Some((true, error));
                 }
+                Task::none()
             }
             Ok(applied) => {
                 self.zoom_to(&applied.slots);
@@ -493,6 +509,10 @@ impl App {
                     ));
                 }
                 self.close_exchange();
+                if for_table {
+                    return self.points_imported(&applied.slots);
+                }
+                Task::none()
             }
         }
     }

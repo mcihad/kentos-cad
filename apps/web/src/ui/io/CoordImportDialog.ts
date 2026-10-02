@@ -22,10 +22,12 @@ import { zoomToImported } from './zoom';
  * decimal mark, header, what each column holds) with the first rows, and
  * every choice re-reads the file. The coordinate system is asked, the
  * project's by default; any other blocks the import (no silent
- * reprojection, CLAUDE.md §5). The points go in as one undo step.
+ * reprojection, CLAUDE.md §5). The points go in as one undo step;
+ * `imported` then hears of them (Noktalar's İçe aktar: Çift noktaları
+ * ayıkla by name, docs/adr/0153 §5).
  */
-export function openCoordImport(ctx: AppContext, file: PickedFile, kind: FileKind): void {
-  new CoordImportDialog(ctx, file, kind);
+export function openCoordImport(ctx: AppContext, file: PickedFile, kind: FileKind, opts: { imported?: (ids: readonly number[]) => void } = {}): void {
+  new CoordImportDialog(ctx, file, kind, opts.imported ?? null);
 }
 
 const PREVIEW_ROWS = 12;
@@ -58,12 +60,15 @@ class CoordImportDialog {
   private readonly layerHost = h('div', { class: 'io-row' });
   private readonly status = h('span', { class: 'io-status', role: 'status' });
   private readonly primary = h('button', { class: 'btn btn--primary', type: 'button' }, 'İçe aktar');
+  /** Told the points' ids once they are in and the window is closed. */
+  private readonly imported: ((ids: readonly number[]) => void) | null;
   private readonly dialog: Dialog;
 
-  constructor(ctx: AppContext, file: PickedFile, kind: FileKind) {
+  constructor(ctx: AppContext, file: PickedFile, kind: FileKind, imported: ((ids: readonly number[]) => void) | null) {
     this.ctx = ctx;
     this.file = file;
     this.kind = kind;
+    this.imported = imported;
     this.crs = new CrsQuestion(ctx, () => this.updateButton());
     this.nameInput = h('input', { class: 'field', value: baseName(file.name), 'aria-label': 'Yeni katmanın adı', spellcheck: 'false', dataset: { key: 'name' } });
     this.nameInput.addEventListener('input', () => this.updateButton());
@@ -329,5 +334,6 @@ class CoordImportDialog {
     ctx.log.success(`“${this.file.name}”: ${applied.ids.length} nokta “${layerName}” katmanına alındı${applied.created.length ? ' (yeni katman)' : ''}. Tek adımda geri alınabilir.`);
     if (r.errorCount) ctx.log.warn(`“${this.file.name}”: ${r.errorCount} satır nokta olmadığı için alınmadı (${r.errors.slice(0, 3).map((e) => `satır ${e.line}`).join(', ')}${r.errorCount > 3 ? ' …' : ''}).`);
     this.dialog.close();
+    this.imported?.(applied.ids);
   }
 }

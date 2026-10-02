@@ -3,7 +3,7 @@ import { CadDocument } from '../../model/document';
 import type { Entity, NewEntity } from '../../model/entities';
 import { LayerStore, type LayerInit } from '../../model/layers';
 import { elevatedPaths } from '../../product/elevation';
-import { batchTargets, planDedupe, runBatch, type BatchOp } from './pointBatch';
+import { batchTargets, importTargets, planDedupe, runBatch, type BatchOp } from './pointBatch';
 
 /**
  * Nokta editörü's batch operations against fixtures/point-editor/v1/batch.json and dedupe.json
@@ -94,6 +94,8 @@ interface DedupeFile {
     follow: boolean;
     expected: { groups: number[][]; summary: string | null; said: string[]; step: string | null; objects: unknown[] };
   }[];
+  importObjects: (NewEntity & { id: number })[];
+  imports: { name: string; imported: number[]; keep: 'first' | 'last' | 'average'; follow: boolean; expected: Record<string, unknown> }[];
 }
 
 describe('Nokta editörü: çift noktaları ayıkla', () => {
@@ -119,6 +121,29 @@ describe('Nokta editörü: çift noktaları ayıkla', () => {
       const objects = [...doc.all()].map(seen);
       const step = got.step === null ? (doc.revision === before ? null : 'yazıldı') : doc.undo();
       const d = differ({ groups: plan.groups, summary: plan.summary, said: got.said, step, objects }, c.expected, c.name);
+      return d ? [d] : [];
+    });
+    expect(off).toEqual([]);
+  });
+
+  it('after İçe aktar takes the points named like the imported ones, by Aynı ad, as the reference does', () => {
+    expect(file.imports.length).toBeGreaterThanOrEqual(5);
+    const off = file.imports.flatMap((c) => {
+      const doc = new CadDocument({ name: 'Deneme', layers: new LayerStore(file.layers, 'cizim'), origin: { x: 0, y: 0 } });
+      for (const { id: _id, ...o } of file.importObjects) doc.add(o as NewEntity);
+      const t = importTargets(doc, c.imported);
+      const head = { targets: t?.ids ?? [], header: t?.header ?? null };
+      if (!t) {
+        const d = differ(head, c.expected, c.name);
+        return d ? [d] : [];
+      }
+      const op: BatchOp = { kind: 'dedupe', by: 'name', tolerance: '', keep: c.keep };
+      const plan = planDedupe(doc, t.ids, op);
+      const before = doc.revision;
+      const got = runBatch(doc, t.ids, op, c.follow);
+      const objects = [...doc.all()].map(seen);
+      const step = got.step === null ? (doc.revision === before ? null : 'yazıldı') : doc.undo();
+      const d = differ({ ...head, groups: plan.groups, summary: plan.summary, said: got.said, step, objects }, c.expected, c.name);
       return d ? [d] : [];
     });
     expect(off).toEqual([]);

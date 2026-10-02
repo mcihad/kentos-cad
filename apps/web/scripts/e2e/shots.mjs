@@ -2033,6 +2033,36 @@ const openDedupe = async (ui) => {
   const said = await ui.eval(`document.querySelector('.dialog--point-batch .io-summary').textContent`);
   if (said !== '2 grupta 4 nokta; 2 nokta silinecek.') throw new Error(`Çift noktaları ayıkla: ${said}`);
 };
+/**
+ * The files the next pick and save see: an open gives `text` as `name`; a save keeps what is written in
+ * `window.__io.written` (the smoke test's picker). The scenes' close puts the app's own picker back.
+ */
+const fakeFiles = (ui, name, text) =>
+  ui.eval(`(() => {
+    const k = window.kentos;
+    const io = (window.__io ??= { original: k.files.picker });
+    io.written = null;
+    k.files.picker = {
+      open: async () => ({ name: ${JSON.stringify(name)}, getFile: async () => new Blob([${JSON.stringify(text)}]) }),
+      save: async (n) => ({ name: n, getFile: async () => new Blob([]), createWritable: async () => { const parts = []; return { write: async (d) => { parts.push(d); }, close: async () => { io.written = { name: n, text: parts.map((p) => (typeof p === 'string' ? p : new TextDecoder().decode(p))).join('') }; } }; } }),
+    };
+  })()`);
+/** A list of three points: 101 and 105 again (measured anew), 201 new; for İçe aktar. */
+const IMPORTED = '101 487000.02 4419999.99 100.3\r\n105 487024.01 4420018 101.8\r\n201 487050 4420010 103\r\n';
+/** İçe aktar from İşlemler ▾ with IMPORTED: the import window, İçe aktar, then the window Çift noktaları ayıkla opens. */
+const importAgain = async (ui) => {
+  await openPointEditor(ui);
+  await ui.eval(`window.kentos.selection.clear()`);
+  await fakeFiles(ui, 'olcum.ncn', IMPORTED);
+  await ui.clickText('.ptable__btn', 'İşlemler');
+  await ui.clickText('.menu__title', 'İçe aktar…');
+  await ui.waitFor(`!!document.querySelector('.dialog--io .io-table tbody tr')`, 10000);
+  await ui.clickText('.dialog--io .btn--primary', 'İçe aktar');
+  await ui.waitFor(`!!document.querySelector('.dialog--point-batch')`, 10000);
+  const seen = await ui.eval(`({ header: document.querySelector('.dialog--point-batch .io-file__name').textContent, by: document.querySelector('.dialog--point-batch .seg__opt[aria-checked="true"]').textContent, said: document.querySelector('.dialog--point-batch .io-summary').textContent })`);
+  const want = { header: 'Aynı adlı 4 nokta', by: 'Aynı ad', said: '2 grupta 4 nokta; 2 nokta silinecek.' };
+  if (JSON.stringify(seen) !== JSON.stringify(want)) throw new Error(`İçe aktar: ${JSON.stringify(seen)}`);
+};
 /** Rows `a` to `b` selected: a click on the first, Shift and a click on the last. */
 const pickRows = async (ui, a, b) => {
   await ui.clickAt(...(await rowCell(ui, a, 1)));
@@ -2255,8 +2285,76 @@ SCENES.pointeditor = [
       await ui.sleep(300);
     },
   },
+  // Dışa aktar with nothing selected, the table sorted by Ad: the coordinate list window offers the table's rows first.
+  {
+    id: 'noktalar-disa-aktar',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.eval(`window.kentos.selection.clear()`);
+      await ui.clickText('.ptable__sort', 'Ad');
+      await ui.clickText('.ptable__btn', 'İşlemler');
+      await ui.clickText('.menu__title', 'Dışa aktar…');
+      await ui.waitFor(`!!document.querySelector('.dialog--io .seg')`, 10000);
+      const seen = await ui.eval(`({ scope: document.querySelector('.dialog--io .seg__opt[aria-checked="true"]').textContent, options: [...document.querySelectorAll('.dialog--io .seg')[0].querySelectorAll('.seg__opt')].map((o) => o.textContent), said: document.querySelector('.dialog--io .io-summary').textContent })`);
+      if (seen.scope !== 'Tablodaki (36)' || seen.options.length !== 3 || !seen.said.startsWith('36 nokta yazılacak')) throw new Error(`Dışa aktar: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Dışa aktar over two selected rows, written: the file holds them in the table's order (sorted by Ad, descending).
+  {
+    id: 'noktalar-disa-aktarildi',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await fakeFiles(ui, 'kullanilmaz.ncn', '');
+      // Nothing selected first, so the table stays at its top: clickText's scrollIntoView on the sticky header of a
+      // scrolled table would scroll the whole page.
+      await ui.eval(`window.kentos.selection.clear()`);
+      await ui.sleep(200);
+      await ui.clickText('.ptable__sort', 'Ad');
+      await ui.clickText('.ptable__sort', 'Ad');
+      await pickRows(ui, 0, 1);
+      const shown = await ui.eval(`[...document.querySelectorAll('.ptable tbody tr[data-at] td:nth-child(2)')].slice(0, 2).map((td) => td.textContent)`);
+      await ui.contextClick(...(await rowCell(ui, 0, 1)));
+      await ui.clickText('.menu__title', 'Dışa aktar…');
+      await ui.waitFor(`!!document.querySelector('.dialog--io .seg')`, 10000);
+      const scope = await ui.eval(`document.querySelector('.dialog--io .seg__opt[aria-checked="true"]').textContent`);
+      if (scope !== 'Seçili satırlar (2)') throw new Error(`Kapsam: ${scope}`);
+      await ui.clickText('.dialog--io .btn--primary', 'Dışa aktar');
+      await ui.waitFor(`!!window.__io.written`, 10000);
+      const names = await ui.eval(`window.__io.written.text.trim().split(/\\r?\\n/).map((l) => l.split(' ')[0])`);
+      if (JSON.stringify(names) !== JSON.stringify(shown)) throw new Error(`Yazılan sıra: ${JSON.stringify(names)}, tablo: ${JSON.stringify(shown)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // İçe aktar from İşlemler ▾ with 101 and 105 measured anew and 201: in, then Çift noktaları ayıkla by Aynı ad.
+  { id: 'noktalar-ice-aktar', open: importAgain },
+  // Sonuncusu keeps the file's: the drawing's 101 and 105 go in one step, after the import's.
+  {
+    id: 'noktalar-ice-aktarildi',
+    open: async (ui) => {
+      await importAgain(ui);
+      await ui.clickText('.dialog--point-batch .seg__opt', 'Sonuncusu');
+      await ui.clickText('.dialog--point-batch .btn--primary', 'Ayıkla');
+      await ui.sleep(300);
+      const after = await ui.eval(`(() => {
+        const k = window.kentos;
+        const named = (n) => [...k.doc.all()].filter((e) => e.kind === 'point' && e.label === n).map((e) => [e.p.x, e.p.y, e.z ?? null]);
+        return { count: document.querySelector('.ptable__count').textContent, p101: named('101'), p105: named('105'), p201: named('201') };
+      })()`);
+      const want = { count: '37 / 37 nokta', p101: [[487000.02, 4419999.99, 100.3]], p105: [[487024.01, 4420018, 101.8]], p201: [[487050, 4420010, 103]] };
+      if (JSON.stringify(after) !== JSON.stringify(want)) throw new Error(`Ayıkla: ${JSON.stringify(after)}`);
+      const steps = await ui.eval(`(() => { const d = window.kentos.doc; const a = d.undo(); const b = d.undo(); d.redo(); d.redo(); return [a, b]; })()`);
+      if (JSON.stringify(steps) !== JSON.stringify(['Çift noktaları ayıkla', 'Koordinat listesi: olcum.ncn'])) throw new Error(`Adımlar: ${JSON.stringify(steps)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
 ].map((s) => ({
-  close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const k = window.kentos; k.selection.clear(); k.ui.bottomExpanded.set(false); })()`)),
+  close: async (ui) =>
+    (await ui.escapeAll(2),
+    await ui.eval(`(() => { const k = window.kentos; if (window.__io?.original) k.files.picker = window.__io.original; k.selection.clear(); k.ui.bottomExpanded.set(false); })()`)),
   ...s,
 }));
 

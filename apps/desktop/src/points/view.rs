@@ -51,8 +51,13 @@ fn bar_button<'a>(
 }
 
 /// The batch operations as a menu lists them (İşlemler ▾, a row's menu):
-/// each sends `on(kind)`; none without rows.
-fn batch_items(menu: Menu<Message>, on: impl Fn(Kind) -> Message, any: bool) -> Menu<Message> {
+/// each sends `on(kind)`, then Dışa aktar `export`; none without rows.
+fn batch_items(
+    menu: Menu<Message>,
+    on: impl Fn(Kind) -> Message,
+    export: Message,
+    any: bool,
+) -> Menu<Message> {
     [
         (
             Kind::Rename,
@@ -80,6 +85,10 @@ fn batch_items(menu: Menu<Message>, on: impl Fn(Kind) -> Message, any: bool) -> 
             .icon(from_web(Some(glyph)))
             .detail(detail)
     })
+    .separator()
+    .item(texts::EXPORT, any.then_some(export))
+    .icon(from_web(Some("export")))
+    .detail(texts::EXPORT_HINT)
 }
 
 /// A row's menu's header when the row is not selected: the point by its
@@ -107,10 +116,15 @@ fn row_menu(at: usize, header: String) -> Menu<Message> {
         .item(texts::SHOW, Some(on(RowAction::Show)))
         .icon(from_web(Some("zoomSelection")))
         .separator();
-    batch_items(menu, |k| on(RowAction::Batch(k)), true)
-        .separator()
-        .item(texts::REMOVE, Some(on(RowAction::Remove)))
-        .icon(from_web(Some("erase")))
+    batch_items(
+        menu,
+        |k| on(RowAction::Batch(k)),
+        on(RowAction::Export),
+        true,
+    )
+    .separator()
+    .item(texts::REMOVE, Some(on(RowAction::Remove)))
+    .icon(from_web(Some("erase")))
 }
 
 /// What the bar needs in one row, logical pixels at the default type size
@@ -218,8 +232,12 @@ impl App {
                     batch_items(
                         Menu::new().header(header.clone()),
                         |k| msg(Event::Batch(k)),
+                        msg(Event::Export),
                         any,
                     )
+                    .item(texts::IMPORT, Some(msg(Event::Import)))
+                    .icon(from_web(Some("import")))
+                    .detail(texts::IMPORT_HINT)
                 }),
                 Tip::new(texts::ACTIONS).body(texts::ACTIONS_HINT),
                 iced::widget::tooltip::Position::Top,

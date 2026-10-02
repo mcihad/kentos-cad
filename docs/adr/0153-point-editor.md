@@ -107,9 +107,14 @@ Ad, Y, X, Z ve Kod düzenlenir; Sıra ve Katman düzenlenmez (katmanı Katmana t
     - **Kilit:** değişecek ilk nokta (silinen ya da taşınan tutulan; çizim sırasıyla) kilitli katmandaysa düzenleme komutunun reddi söylenir ve hiçbir şey yazılmaz. Değişmeyen kilitli tutulan engel değildir.
     - **Bağlı çizgiler:** tutulanın eski yerindeki (1 µm) köşeler yeni yerine taşınır; tutulanın kotu değiştiyse yeni kotunu alır, değişmediyse kendi kotlarını korur. Bağlı çizgi kilitli katmandaysa iş reddedilir (§3'ün iletisi).
     - **Ortak durumlar:** `fixtures/point-editor/v1/dedupe.json` (`scripts/fixtures/point_dedupe_cases.py`, ortalama kesirlerle).
-- **Dışa aktar:** tablodaki (süzülen) noktalar ADR 0048'in koordinat listesi verme penceresiyle yazılır.
-- **İçe aktar:** ADR 0048'in koordinat listesi alma penceresi.
-  - Çizimde aynı adlı nokta varsa içe aktarma yine ekler. Sonra Çift noktaları ayıkla, Aynı ad ile, Netcad'in seçeneklerini verir: Sonuncusu dosyadakini, İlki çizimdekini tutar, Ortalaması ikisinin ortalamasıdır.
+- **Dışa aktar:** hedef satırlar, tablonun sırasıyla, ADR 0048'in koordinat listesi verme penceresiyle yazılır.
+  - Pencere tablodan açılınca ilk kapsam tablonun satırlarıdır: seçili satır yoksa “Tablodaki (36)”, varsa “Seçili satırlar (3)”. Çizimin seçimi (Seçili) bu durumda listelenmez; Görünen katmanlar ve Tümü yine seçilebilir.
+  - Hem İşlemler ▾'de hem satırın menüsündedir.
+- **İçe aktar:** ADR 0048'in koordinat listesi alma penceresi; yalnız İşlemler ▾'dedir (bir satıra ait değildir), tablo boşken de açılır.
+  - Çizimde aynı adlı nokta varsa içe aktarma yine ekler. Sonra Çift noktaları ayıkla Aynı ad ile açılır ve Netcad'in seçeneklerini verir: Sonuncusu dosyadakini, İlki çizimdekini tutar, Ortalaması ikisinin ortalamasıdır. Dosyanın noktaları içe aktarmayla çizimin sonuna eklendiğinden bu, pencerenin kendi kuralıdır; Tutulan'ın açıklaması bunu söyler.
+  - **Pencerenin hedefi:** içe aktarılan noktaların adları (baştaki ve sondaki boşluklar atılarak; adsız nokta sayılmaz) arasından çizimde iki ya da daha çok noktanın taşıdıkları; o adları taşıyan bütün noktalar, çizim sırasıyla. Başlığı “Aynı adlı 8 nokta”. Böyle ad yoksa pencere açılmaz.
+  - İçe aktarma ve ayıklama ayrı geri alma adımlarıdır; pencereden vazgeçilince iki nokta da kalır.
+  - **Ortak durumlar:** `dedupe.json`'un `imports` bölümü (çizim `importObjects`, içe aktarılanlar sonda): hedef, başlık, sonra Aynı ad ile ayıklamanın grupları, iletileri, adımı ve çizimi.
 
 ### 6. Hesap (ortak çekirdek)
 
@@ -185,6 +190,11 @@ Python ve MCP aynısını betiğin tek adımlık grubuyla yapar.
       - **Simgeler:** dört toplu işlemin kendi simgeleri: Yeniden adlandır (etiketli nokta), Sıralı numara ver (1 2 3), Katmana taşı (katmana inen nokta), Çift noktaları ayıkla (birleşen iki halka); web'in `icons.ts`'inde, masaüstüne envanterle gelir.
       - **Sınama ve resimler:** tarayıcıda üç sahne (pencere ve sayılar, çiftlerin görünümü, Ayıkla ve adımı); masaüstünde `points::tests` aynı akışı ve resimleri.
    3. Dışa aktar (tablodaki noktalar) ve İçe aktar.
+
+      *(2 Ekim: tamam.)*
+      - **Kurallar:** içe aktarma sonrası hedef web'de `pointBatch.ts`'in `importTargets`'ı, masaüstünde `batch.rs`'in `import_targets`'ı; iki platform `dedupe.json`'un 5 içe aktarma durumunu geçer (`scripts/fixtures/point_dedupe_cases.py`, kural 10). Bozulan kural (adı bir kez geçeni de hedefe almak) iki platformda yakalanır.
+      - **Pencereler:** koordinat listesi verme penceresi tablonun satırlarını ilk kapsam olarak alır (web `CoordExportDialog`'un `table`'ı, masaüstü `coord_export`'un `Pick::Table`'ı); alma penceresi içe aktardıklarını tabloya bildirir (web `imported`, masaüstü `Kind::TableCoords`). Çift noktaları ayıkla Aynı ad ve Tutulan'ın içe aktarma açıklamasıyla açılır.
+      - **Sınama ve resimler:** tarayıcıda dört sahne (Dışa aktar penceresi; iki seçili satırın yazılması ve dosyada tablonun sırası; İçe aktar ve açılan pencere; Sonuncusu ve iki adım); masaüstünde `points::tests` aynı akışları (yazılan dosyanın sırası, içe aktarma, Sonuncusu, yeni adlarda pencere açılmaması) ve resimleri.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

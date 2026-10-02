@@ -180,7 +180,7 @@ python3 scripts/fixtures/vertex_points_cases.py --check   # Köşelere nokta'nı
 python3 scripts/fixtures/point_editor_cases.py --check   # Nokta editörünün hesaplarını (doğal sıra, tablonun süzgeç ve sıralaması, çift noktalar, bağlı köşeler) kurallardan denetle (ADR 0153)
 python3 scripts/fixtures/point_edit_cases.py --check   # Nokta editörünün düzenlemelerini (hücreler, bağlı çizgiler, taslak satır) kurallardan denetle (ADR 0153 §3–§4)
 python3 scripts/fixtures/point_batch_cases.py --check   # Nokta editörünün toplu işlemlerini (Yeniden adlandır, Sıralı numara ver, Katmana taşı, hedef satırlar) kurallardan denetle (ADR 0153 §5)
-python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını ve bağlı çizgilerini kurallardan denetle (ADR 0153 §5)
+python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını, bağlı çizgilerini ve İçe aktar sonrası hedefini kurallardan denetle (ADR 0153 §5)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
@@ -581,12 +581,13 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `#ad` dilbilgisi ve `ops::vertex_points` bağımsız başvurusuyla, `cad.entities.create`'in `vertexPoints` işlemi, Nokta'nın Ad, Kod
   ve Kot'u, aynı yer sorusu, `#ad` çözümü (adlı noktanın yeri araca tıklanmış gibi verilir) ve Köşelere nokta iki platformda
   (ortak izler `survey-points.json`, `vertex-points.json`; iz biçimi etiketi, öznitelikleri ve kotu da denetler). Sıradaki
-  `HYB-04` nokta editörü ([ADR 0153](docs/adr/0153-point-editor.md)): 1. adım (çekirdek: doğal sıra, tablo, çift noktalar, bağlı
-  köşeler, bağımsız başvurusuyla), 2. adım (alt panelin Noktalar sekmesi: sıralama, süzgeç, seçim, Göster) ve 3. adım (yerinde
-  düzenleme, Bağlı çizgiler izler, Satır ekle, Sil; ortak durumlar `edits.json`) ve 4.1 (İşlemler ▾ ve satırın menüsü:
-  Yeniden adlandır, Sıralı numara ver, Katmana taşı; ortak durumlar `batch.json`) ve 4.2 (Çift noktaları ayıkla, Çiftleri
-  göster; ortak durumlar `dedupe.json`) tamam; sıradaki 4.3: Dışa ve İçe aktar. 2 Ekim: web'in klasik arayüzü
-  kaldırıldı, iki platformda yalnız şerit var (sahibin kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
+  `HYB-04` nokta editörü ([ADR 0153](docs/adr/0153-point-editor.md)) bitti (2 Ekim): çekirdek (doğal sıra, tablo, çift
+  noktalar, bağlı köşeler, bağımsız başvurusuyla); alt panelin Noktalar sekmesi (sıralama, süzgeç, seçim, Göster); yerinde
+  düzenleme, Bağlı çizgiler izler, Satır ekle, Sil (`edits.json`); İşlemler ▾ ve satırın menüsü: Yeniden adlandır, Sıralı
+  numara ver, Katmana taşı (`batch.json`), Çift noktaları ayıkla ve Çiftleri göster (`dedupe.json`), Dışa aktar (tablonun
+  satırları, sırasıyla) ve İçe aktar (aynı adlar için ardından Çift noktaları ayıkla, Aynı ad; `dedupe.json`'un `imports`'u).
+  Sıradaki `HYB-05` vektör oturtma. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.
 - Web `pnpm e2e` duman testi 2 Ekim'de bütünüyle geçiyor (203 denetim). ADR 0143'ten önce de düşen

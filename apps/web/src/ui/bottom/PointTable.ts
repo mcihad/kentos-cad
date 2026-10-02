@@ -10,7 +10,8 @@ import { Dropdown } from '../widgets/Dropdown';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
-import { batchTargets, type BatchOp } from './pointBatch';
+import { COORD_FILES } from '../io/coordFiles';
+import { batchTargets, importTargets, type BatchOp } from './pointBatch';
 import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn, type Outcome } from './pointEdit';
 
 /**
@@ -27,7 +28,9 @@ import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, ty
  * İşlemler ▾ and a row's right-click menu hold the batch operations (§5; ./pointBatch.ts, their windows
  * ./PointBatchDialog.ts, loaded on first use) over the selected rows, or every row when none is selected. A right
  * click leaves the selection as it is; on a row not selected its menu is that row's (its header names it), and a
- * command chosen there selects it alone first. The desktop's is `apps/desktop/src/points/`.
+ * command chosen there selects it alone first. Dışa aktar writes the same rows, in the table's order, through the
+ * coordinate list window; İçe aktar (İşlemler ▾ only) reads one, then opens Çift noktaları ayıkla by Aynı ad over the
+ * points whose names the file brought again. The desktop's is `apps/desktop/src/points/`.
  */
 
 /** The columns: their header, the core's sort key (none: Sıra, the drawing's order), whether they hold numbers, the cell edited. */
@@ -55,7 +58,7 @@ export const POINT_TEXTS = {
   show: 'Göster',
   showHint: 'Seçili noktalara yakınlaştırır',
   actions: 'İşlemler',
-  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla.',
+  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar. İçe aktar koordinat listesinden nokta alır.',
   rename: 'Yeniden adlandır…',
   renameHint: 'Adların başına önek ekler ya da baştaki öneki kaldırır',
   number: 'Sıralı numara ver…',
@@ -64,9 +67,13 @@ export const POINT_TEXTS = {
   layerHint: 'Noktaları seçilen katmana taşır',
   dedupe: 'Çift noktaları ayıkla…',
   dedupeHint: 'Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler',
+  exportList: 'Dışa aktar…',
+  exportHint: 'Noktaları tablonun sırasıyla koordinat listesi olarak yazar (NCN, TXT, CSV)',
+  importList: 'İçe aktar…',
+  importHint: 'Koordinat listesinden nokta alır; adları çizimde de varsa Çift noktaları ayıkla Aynı ad ile açılır',
   groupsHint: 'Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.',
   draft: 'Yeni',
-  none: 'Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.',
+  none: 'Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da İşlemler ▾ › İçe aktar ile ekleyin.',
   noMatch: 'Süzgece uyan nokta yok.',
 } as const;
 
@@ -179,7 +186,8 @@ export class PointTable extends Component {
     const add = button('plus', POINT_TEXTS.add, POINT_TEXTS.addHint, () => this.addRow());
     const actions = button('processing', POINT_TEXTS.actions, POINT_TEXTS.actionsHint, () => {
       const r = actions.getBoundingClientRect();
-      PopupMenu.open([{ kind: 'header', label: this.targets().header }, ...this.batchItems()], r, { owner: actions });
+      const read: MenuItem = { label: POINT_TEXTS.importList, icon: 'import', detail: POINT_TEXTS.importHint, run: () => this.importList() };
+      PopupMenu.open([{ kind: 'header', label: this.targets().header }, ...this.batchItems(), read], r, { owner: actions });
     });
     actions.append(icon('chevronDown', 12));
     this.removeBtn = button('erase', POINT_TEXTS.remove, POINT_TEXTS.removeHint, () => ctx.commands.execute('tool.erase'));
@@ -288,6 +296,8 @@ export class PointTable extends Component {
       item('number', POINT_TEXTS.number, 'pointNumber', POINT_TEXTS.numberHint),
       item('layer', POINT_TEXTS.layer, 'pointLayer', POINT_TEXTS.layerHint),
       item('dedupe', POINT_TEXTS.dedupe, 'pointDedupe', POINT_TEXTS.dedupeHint),
+      { kind: 'separator' },
+      { label: POINT_TEXTS.exportList, icon: 'export', detail: POINT_TEXTS.exportHint, disabled: this.ids.length === 0, run: () => (first(), this.exportList()) },
     ];
   }
 
@@ -316,18 +326,54 @@ export class PointTable extends Component {
     ];
   }
 
-  /** The operation's window over the target rows (loaded on first use; a failed load says so). */
-  private openBatch(kind: BatchOp['kind']): void {
-    const { ids, header } = this.targets();
+  /** The operation's window over the target rows, or `targets` (loaded on first use; a failed load says so). */
+  private openBatch(kind: BatchOp['kind'], targets = this.targets(), imported = false): void {
+    const { ids, header } = targets;
     import('./PointBatchDialog').then(
       (m) =>
         m.openPointBatchDialog(this.ctx, kind, ids, header, {
           follow: kept.follow,
           showGroups: (groups) => this.showGroups(groups),
           done: () => this.showGroups(null),
+          ...(imported ? { by: 'name' as const, imported } : {}),
         }),
-      (e: Error) => this.ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`),
+      (e: Error) => this.loadFailed(e),
     );
+  }
+
+  private loadFailed(e: Error): void {
+    this.ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`);
+  }
+
+  /** Dışa aktar (docs/adr/0153 §5): the coordinate list window over the target rows, in the table's order. */
+  private exportList(): void {
+    const { ids } = this.targets();
+    const selected = this.ids.some((id) => this.ctx.selection.has(id));
+    import('../io/CoordExportDialog').then(
+      (m) => m.openCoordExport(this.ctx, { table: { ids, selected } }),
+      (e: Error) => this.loadFailed(e),
+    );
+  }
+
+  /**
+   * İçe aktar (docs/adr/0153 §5): the coordinate list window. The points go in even where their names are taken; then
+   * Çift noktaları ayıkla opens by Aynı ad over the points carrying those names (İlki keeps the drawing's, Sonuncusu
+   * the file's). The file is picked at the click itself (the browser's dialog needs the gesture), the window loading
+   * alongside.
+   */
+  private importList(): void {
+    const { ctx } = this;
+    const file = ctx.files.pickForImport(COORD_FILES);
+    const ui = import('../io/CoordImportDialog');
+    void Promise.all([file, ui]).then(
+      ([f, m]) => f && m.openCoordImport(ctx, f, COORD_FILES, { imported: (ids) => this.afterImport(ids) }),
+      (e: Error) => this.loadFailed(e),
+    );
+  }
+
+  private afterImport(imported: readonly number[]): void {
+    const t = importTargets(this.ctx.doc, imported);
+    if (t) this.openBatch('dedupe', t, true);
   }
 
   /** Çiftleri göster (docs/adr/0153 §5): the table shows only the groups, group by group; none shows the query again. */

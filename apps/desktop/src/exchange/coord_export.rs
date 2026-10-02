@@ -3,6 +3,10 @@
 //! drawing, one per line (name, Y, X, Z) as Netcad NCN, TXT or CSV. Values
 //! are written as the shortest decimal that reads back to the same float64:
 //! nothing is rounded (CLAUDE.md §23).
+//!
+//! Opened from Noktalar (docs/adr/0153 §5) it offers the table's rows first,
+//! in the table's order: its selected rows, or every row it shows (“Seçili
+//! satırlar”, “Tablodaki”), in place of the drawing's selection.
 
 use std::fmt;
 
@@ -11,6 +15,7 @@ use iced::{Element, Task};
 use kentos_contracts::{
     CoordDelimiter, CoordPoint, CoordWriteInput, Entity, ExportReport, TextEncoding, Vec2,
 };
+use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
@@ -78,9 +83,46 @@ impl fmt::Display for Encoding {
     }
 }
 
+/// Noktalar's target rows (docs/adr/0153 §5), in the table's order;
+/// `selected`: they are its selected rows.
+#[derive(Debug, Clone)]
+pub struct TableRows {
+    pub slots: Vec<Slot>,
+    pub selected: bool,
+}
+
+/// What the window writes: the table's rows, or a scope of the drawing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pick {
+    Table,
+    Of(Scope),
+}
+
+/// A choice with its count, as the segmented control shows it:
+/// “Tablodaki (36)”, “Seçili satırlar (3)”, “Tümü (120)”.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Shown {
+    pick: Pick,
+    count: usize,
+    /// The table's rows are its selected ones.
+    rows_selected: bool,
+}
+
+impl fmt::Display for Shown {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.pick {
+            Pick::Table if self.rows_selected => write!(f, "Seçili satırlar ({})", self.count),
+            Pick::Table => write!(f, "Tablodaki ({})", self.count),
+            Pick::Of(scope) => write!(f, "{}", Counted(scope, self.count)),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct State {
-    scope: Scope,
+    scope: Pick,
+    /// Opened from Noktalar: its rows.
+    table: Option<TableRows>,
     format: usize,
     order: usize,
     header: bool,
@@ -92,7 +134,7 @@ pub struct State {
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Scope(Scope),
+    Scope(Pick),
     Format(usize),
     Order(usize),
     Header(bool),
@@ -130,12 +172,25 @@ pub fn coord_points<'a>(entities: impl IntoIterator<Item = &'a Entity>) -> Vec<C
 impl State {
     pub fn new(app: &App) -> Self {
         let selected = coord_points(app.scope_entities(Scope::Selection)).len();
-        Self {
-            scope: if selected > 0 {
-                Scope::Selection
+        Self::with(
+            if selected > 0 {
+                Pick::Of(Scope::Selection)
             } else {
-                Scope::Visible
+                Pick::Of(Scope::Visible)
             },
+            None,
+        )
+    }
+
+    /// Opened from Noktalar: its rows first.
+    pub fn for_table(rows: TableRows) -> Self {
+        Self::with(Pick::Table, Some(rows))
+    }
+
+    fn with(scope: Pick, table: Option<TableRows>) -> Self {
+        Self {
+            scope,
+            table,
             format: 0,
             order: 0,
             header: FORMATS[0].header,
@@ -148,8 +203,17 @@ impl State {
 }
 
 impl App {
-    fn points(&self, scope: Scope) -> Vec<CoordPoint> {
-        coord_points(self.scope_entities(scope))
+    fn coord_rows(&self, table: Option<&TableRows>, pick: Pick) -> Vec<CoordPoint> {
+        match pick {
+            Pick::Of(scope) => coord_points(self.scope_entities(scope)),
+            Pick::Table => {
+                let Some(doc) = &self.document else {
+                    return Vec::new();
+                };
+                let slots = table.map_or(&[][..], |t| t.slots.as_slice());
+                coord_points(slots.iter().filter_map(|s| doc.model.get(*s)))
+            }
+        }
     }
 
     pub(super) fn coord_export_event(&mut self, e: Event) -> Task<Message> {
@@ -187,7 +251,7 @@ impl App {
         let Some(Window::CoordExport(s)) = &self.exchange else {
             return Task::none();
         };
-        let points = self.points(s.scope);
+        let points = self.coord_rows(s.table.as_ref(), s.scope);
         if s.writing || points.is_empty() {
             return Task::none();
         }
@@ -233,20 +297,33 @@ impl App {
     }
 
     pub(super) fn coord_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let counts: Vec<Counted> = Scope::ALL
+        let picks: Vec<Pick> = match &s.table {
+            Some(_) => vec![Pick::Table, Pick::Of(Scope::Visible), Pick::Of(Scope::All)],
+            None => Scope::ALL.iter().map(|&scope| Pick::Of(scope)).collect(),
+        };
+        let rows_selected = s.table.as_ref().is_some_and(|t| t.selected);
+        let counts: Vec<Shown> = picks
             .iter()
-            .map(|scope| Counted(*scope, self.points(*scope).len()))
+            .map(|&pick| Shown {
+                pick,
+                count: self.coord_rows(s.table.as_ref(), pick).len(),
+                rows_selected,
+            })
             .collect();
         let current = counts
             .iter()
             .copied()
-            .find(|c| c.0 == s.scope)
-            .unwrap_or(Counted(s.scope, 0));
+            .find(|c| c.pick == s.scope)
+            .unwrap_or(Shown {
+                pick: s.scope,
+                count: 0,
+                rows_selected,
+            });
         let scope = Segmented::new_with(
             counts.clone(),
             current,
-            |c| event(Event::Scope(c.0)),
-            |c| c.1 > 0,
+            |c| event(Event::Scope(c.pick)),
+            |c| c.count > 0,
         );
         let format = Select::new(
             FORMATS.iter().map(|f| Choice::new(f.label)),
@@ -270,7 +347,7 @@ impl App {
             Encoding(s.encoding),
             |e| event(Event::Encoding(e.0)),
         );
-        let points = self.points(s.scope);
+        let points = self.coord_rows(s.table.as_ref(), s.scope);
         let no_z = points.iter().filter(|p| p.z.is_none()).count();
         let unnamed = points.iter().filter(|p| p.name.is_empty()).count();
         let mut lines = vec![if points.is_empty() {

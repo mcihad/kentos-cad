@@ -13,8 +13,8 @@
 //! closed since, carries a generation and is dropped.
 
 pub mod apply;
-mod coord_export;
-mod coord_import;
+pub(crate) mod coord_export;
+pub(crate) mod coord_import;
 #[cfg(test)]
 mod dimension_tests;
 pub(crate) mod drawing_import;
@@ -27,6 +27,7 @@ mod gis_tests;
 mod tests;
 pub(crate) mod words;
 
+pub(crate) use coord_export::TableRows;
 pub(crate) use dxf_export::dimension_text;
 
 use std::path::PathBuf;
@@ -55,6 +56,9 @@ pub enum Kind {
     /// A Netcad NCZ drawing (docs/adr/0138).
     Ncz,
     Coords,
+    /// A coordinate list for Noktalar's İçe aktar: once the points are in,
+    /// Çift noktaları ayıkla by name (docs/adr/0153 §5).
+    TableCoords,
     GeoJson,
     /// A Shapefile layer's files chosen together, or its zip archive.
     Shapefile,
@@ -156,6 +160,22 @@ impl App {
         self.dialog = Some(Dialog::Exchange);
     }
 
+    /// Noktalar's Dışa aktar (docs/adr/0153 §5): the coordinate list window
+    /// over the table's target rows, in its order.
+    pub(crate) fn export_table_points(&mut self, rows: TableRows) -> Task<Message> {
+        self.open_window(Window::CoordExport(coord_export::State::for_table(rows)));
+        Task::none()
+    }
+
+    /// Noktalar's İçe aktar: the coordinate list window; once the points are
+    /// in, Çift noktaları ayıkla by name over the points carrying their names.
+    pub(crate) fn import_table_points(&mut self) -> Task<Message> {
+        if self.document.is_none() {
+            return Task::none();
+        }
+        self.pick(Kind::TableCoords)
+    }
+
     /// Asks for the file to import, straight from the command, and reads it.
     fn pick(&mut self, kind: Kind) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
@@ -173,7 +193,7 @@ impl App {
         let (title, filter, extensions): (&str, &str, &[&str]) = match kind {
             Kind::Dxf => ("DXF içe aktar", "AutoCAD DXF (DWG değil)", &["dxf"]),
             Kind::Ncz => ("NCZ içe aktar", "Netcad çizimi (NCZ)", &["ncz"]),
-            Kind::Coords => (
+            Kind::Coords | Kind::TableCoords => (
                 "Koordinat listesi içe aktar",
                 "Koordinat listesi (NCN, TXT, CSV)",
                 &["ncn", "txt", "csv", "xyz", "dat", "asc"],
@@ -239,7 +259,9 @@ impl App {
             Event::Picked(Kind::Ncz, Some(Ok(file))) => {
                 self.drawing_import_picked(drawing_import::Source::Ncz, file)
             }
-            Event::Picked(Kind::Coords, Some(Ok(file))) => self.coord_import_picked(file),
+            Event::Picked(kind @ (Kind::Coords | Kind::TableCoords), Some(Ok(file))) => {
+                self.coord_import_picked(file, kind == Kind::TableCoords)
+            }
             Event::Picked(Kind::GeoJson, Some(Ok(file))) => {
                 self.gis_import_picked(Ok(gis_import::Source::GeoJson(file)))
             }

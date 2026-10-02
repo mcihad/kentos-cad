@@ -646,11 +646,126 @@ fn a_rows_menu_takes_that_row_alone_when_it_is_not_selected() {
     assert!(app.dialog.is_none());
 }
 
+/// The coordinate list import the table's İçe aktar reads (the web's `IMPORTED`):
+/// 101 and 105 measured anew, 201 new.
+const IMPORTED: &str =
+    "101 487000.02 4419999.99 100.3\r\n105 487024.01 4420018 101.8\r\n201 487050 4420010 103\r\n";
+
+fn exchange(app: &mut App, event: crate::exchange::Event) {
+    let task = app.update(Message::Exchange(Box::new(event)));
+    crate::files_testing::drive(app, task);
+}
+
+/// Dışa aktar with nothing selected, the table sorted by Ad descending: the
+/// coordinate list window takes the table's rows, and the file holds them in
+/// the table's order, not the drawing's (the web's `noktalar-disa-aktar`).
+#[test]
+fn the_export_writes_the_tables_rows_in_its_order() {
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    app.selection.set(Vec::<Slot>::new());
+    ev(&mut app, Event::Sort(1));
+    ev(&mut app, Event::Sort(1));
+    let shown = names(&app);
+    let path = crate::files_testing::scratch("points-export").join("noktalar.ncn");
+    app.picker = crate::app::Picker::File(path.clone());
+    let task = app.update(Message::Points(Event::Export));
+    crate::files_testing::drive(&mut app, task);
+    assert!(matches!(
+        app.exchange,
+        Some(crate::exchange::Window::CoordExport(_))
+    ));
+    exchange(
+        &mut app,
+        crate::exchange::Event::CoordExport(crate::exchange::coord_export::Event::Run),
+    );
+    let text = std::fs::read_to_string(&path).expect("written");
+    let written: Vec<&str> = text
+        .lines()
+        .map(|l| l.split(' ').next().unwrap_or_default())
+        .collect();
+    assert_eq!(written, shown);
+    assert_eq!(written[..3], ["S9", "P18", "P16"]);
+}
+
+/// İçe aktar: the points go in as one step, then Çift noktaları ayıkla opens
+/// by Aynı ad over the points carrying the names the file brought again;
+/// Sonuncusu keeps the file's in a step of its own (the web's
+/// `noktalar-ice-aktar` and `noktalar-ice-aktarildi`).
+#[test]
+fn the_import_offers_the_names_brought_again_and_the_last_keeps_the_files() {
+    use kentos_geometry_core::ops::point_editor::Keep;
+
+    use super::batch_view::WindowEvent;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let path = crate::files_testing::scratch("points-import").join("olcum.ncn");
+    std::fs::write(&path, IMPORTED).expect("the list");
+    app.picker = crate::app::Picker::File(path);
+    let task = app.update(Message::Points(Event::Import));
+    crate::files_testing::drive(&mut app, task);
+    assert!(matches!(
+        app.exchange,
+        Some(crate::exchange::Window::CoordImport(_))
+    ));
+    exchange(
+        &mut app,
+        crate::exchange::Event::CoordImport(crate::exchange::coord_import::Event::Run),
+    );
+    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    ev(&mut app, Event::Window(WindowEvent::Keep(Keep::Last)));
+    ev(&mut app, Event::Window(WindowEvent::Apply));
+    assert!(app.dialog.is_none());
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Nokta editörü: 2 grupta 2 nokta silindi."
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let named = |doc: &crate::document::Document, n: &str| -> Vec<(f64, f64, Option<f64>)> {
+        doc.model
+            .entities()
+            .filter_map(|e| match e {
+                kentos_contracts::Entity::Point(p) if p.base.label.as_deref() == Some(n) => {
+                    Some((p.p.x, p.p.y, p.z))
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    assert_eq!(named(doc, "101"), [(487_000.02, 4_419_999.99, Some(100.3))]);
+    assert_eq!(named(doc, "105"), [(487_024.01, 4_420_018.0, Some(101.8))]);
+    assert_eq!(named(doc, "201"), [(487_050.0, 4_420_010.0, Some(103.0))]);
+    assert_eq!(doc.model.undo().as_deref(), Some("Çift noktaları ayıkla"));
+    assert_eq!(
+        doc.model.undo().as_deref(),
+        Some("Koordinat listesi: olcum.ncn")
+    );
+}
+
+/// An import whose names are new opens no window after it.
+#[test]
+fn an_import_of_new_names_opens_nothing_after_it() {
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let path = crate::files_testing::scratch("points-import-new").join("yeni.ncn");
+    std::fs::write(&path, "301 487060 4420010\r\n302 487061 4420011\r\n").expect("the list");
+    app.picker = crate::app::Picker::File(path);
+    let task = app.update(Message::Points(Event::Import));
+    crate::files_testing::drive(&mut app, task);
+    exchange(
+        &mut app,
+        crate::exchange::Event::CoordImport(crate::exchange::coord_import::Event::Run),
+    );
+    assert!(app.dialog.is_none());
+    assert_eq!(names(&app).len(), 38);
+}
+
 /// Pictures of Noktalar for the owner, the scenes the web's
 /// `node apps/web/scripts/e2e/shots.mjs pointeditor` takes: three points
 /// selected in the drawing; sorted by Ad; a search; one layer; a cell
-/// written with Enter; two rows added; two rows removed. Dark and light, at
-/// 1440×900 and 1100×650; `.run/shots/noktalar-*`:
+/// written with Enter; two rows added; two rows removed; the batch windows;
+/// Dışa aktar and İçe aktar. Dark and light, at 1440×900 and 1100×650;
+/// `.run/shots/noktalar-*`:
 ///
 /// ```text
 /// cargo test -p kentos-desktop points::tests::screens -- --ignored --nocapture
@@ -681,6 +796,10 @@ fn screens() {
                 "noktalar-cift-ayikla",
                 "noktalar-ciftler",
                 "noktalar-ayiklandi",
+                "noktalar-disa-aktar",
+                "noktalar-disa-aktarildi",
+                "noktalar-ice-aktar",
+                "noktalar-ice-aktarildi",
             ] {
                 let mut app = app_with_points();
                 let _ = app
@@ -806,6 +925,61 @@ fn screens() {
                             &mut app,
                             Event::Window(super::batch_view::WindowEvent::Apply),
                         );
+                    }
+                    // Dışa aktar with nothing selected, sorted by Ad: the window on the table's
+                    // rows (the web's scene).
+                    "noktalar-disa-aktar" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        ev(&mut app, Event::Sort(1));
+                        let task = app.update(Message::Points(Event::Export));
+                        crate::files_testing::drive(&mut app, task);
+                    }
+                    // The first two rows (by Ad, descending) written from a row's menu.
+                    "noktalar-disa-aktarildi" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        ev(&mut app, Event::Sort(1));
+                        ev(&mut app, Event::Sort(1));
+                        pick_rows(&mut app, 1);
+                        let path =
+                            crate::files_testing::scratch("points-shot").join("noktalar.ncn");
+                        app.picker = crate::app::Picker::File(path);
+                        let task =
+                            app.update(Message::Points(Event::Row(0, super::RowAction::Export)));
+                        crate::files_testing::drive(&mut app, task);
+                        exchange(
+                            &mut app,
+                            crate::exchange::Event::CoordExport(
+                                crate::exchange::coord_export::Event::Run,
+                            ),
+                        );
+                    }
+                    // İçe aktar with 101 and 105 measured anew: in, then Çift noktaları ayıkla by
+                    // Aynı ad; Sonuncusu applied in the second.
+                    "noktalar-ice-aktar" | "noktalar-ice-aktarildi" => {
+                        app.selection.set(Vec::<Slot>::new());
+                        let path = crate::files_testing::scratch("points-shot").join("olcum.ncn");
+                        std::fs::write(&path, IMPORTED).expect("the list");
+                        app.picker = crate::app::Picker::File(path);
+                        let task = app.update(Message::Points(Event::Import));
+                        crate::files_testing::drive(&mut app, task);
+                        exchange(
+                            &mut app,
+                            crate::exchange::Event::CoordImport(
+                                crate::exchange::coord_import::Event::Run,
+                            ),
+                        );
+                        if name == "noktalar-ice-aktarildi" {
+                            ev(
+                                &mut app,
+                                Event::Window(super::batch_view::WindowEvent::Keep(
+                                    kentos_geometry_core::ops::point_editor::Keep::Last,
+                                )),
+                            );
+                            ev(
+                                &mut app,
+                                Event::Window(super::batch_view::WindowEvent::Apply),
+                            );
+                        }
                     }
                     _ => {}
                 }

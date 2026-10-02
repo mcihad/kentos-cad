@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 
 use kentos_geometry_core::ops::point_editor::Keep;
 
-use super::batch::{Op, plan_dedupe, run, targets};
+use super::batch::{Op, import_targets, plan_dedupe, run, targets};
 
 fn file() -> Value {
     serde_json::from_str(include_str!(
@@ -180,6 +180,76 @@ fn every_dedupe_finds_the_groups_and_writes_as_the_reference_does() {
             None => doc.can_undo().then(|| "yazıldı".to_owned()),
         };
         let got = json!({ "groups": groups, "summary": plan.summary, "said": out.said, "step": step, "objects": objects });
+        if let Err(e) = super::tests::same(&got, &c["expected"], name) {
+            off.push(e);
+        }
+    }
+    assert!(
+        off.is_empty(),
+        "{} durum farklı:\n{}",
+        off.len(),
+        off.join("\n")
+    );
+}
+
+#[test]
+fn after_an_import_the_points_named_like_the_imported_ones_by_name() {
+    let file: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/point-editor/v1/dedupe.json"
+    ))
+    .expect("dedupe.json reads");
+    let cases = file["imports"].as_array().expect("imports");
+    assert!(cases.len() >= 5, "{} cases", cases.len());
+    // The import cases' drawing in place of the others'.
+    let mut imports = file.clone();
+    imports["objects"] = file["importObjects"].clone();
+    let mut off = Vec::new();
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or_default();
+        let mut doc = drawing(&imports);
+        let found = import_targets(&doc, &slots(&c["imported"]));
+        let head = json!({
+            "targets": found.as_ref().map_or_else(Vec::new, |(s, _)| s.iter().map(|s| s.0).collect()),
+            "header": found.as_ref().map(|(_, h)| h.clone()),
+        });
+        let got = match found {
+            None => head,
+            Some((targets, _)) => {
+                let op = Op::Dedupe {
+                    by_name: true,
+                    tolerance: String::new(),
+                    keep: match c["keep"].as_str() {
+                        Some("last") => Keep::Last,
+                        Some("average") => Keep::Average,
+                        _ => Keep::First,
+                    },
+                };
+                let plan = plan_dedupe(&doc, &targets, &op);
+                let groups: Vec<Vec<u32>> = plan
+                    .groups
+                    .iter()
+                    .map(|g| g.iter().map(|s| s.0).collect())
+                    .collect();
+                let out = run(
+                    &mut doc,
+                    &targets,
+                    &op,
+                    c["follow"].as_bool().unwrap_or(false),
+                );
+                let objects: Vec<Value> = doc.entities().map(seen).collect();
+                let step = match out.step {
+                    Some(_) => doc.undo(),
+                    None => doc.can_undo().then(|| "yazıldı".to_owned()),
+                };
+                let mut got = head;
+                got["groups"] = json!(groups);
+                got["summary"] = json!(plan.summary);
+                got["said"] = json!(out.said);
+                got["step"] = json!(step);
+                got["objects"] = json!(objects);
+                got
+            }
+        };
         if let Err(e) = super::tests::same(&got, &c["expected"], name) {
             off.push(e);
         }

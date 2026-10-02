@@ -16,16 +16,30 @@ import { SCOPE_LABEL, scopeEntities, type ExportScope } from './scope';
  * visible layers or of the whole drawing, one per line (name, Y, X, Z) as
  * Netcad NCN, TXT or CSV. Values are written as the shortest decimal that
  * reads back to the same float64: nothing is rounded (CLAUDE.md §23).
+ *
+ * Opened from Noktalar (docs/adr/0153 §5) it offers the table's rows first,
+ * in the table's order: its selected rows, or every row it shows (“Seçili
+ * satırlar”, “Tablodaki”), in place of the drawing's selection.
  */
-export function openCoordExport(ctx: AppContext): void {
-  new CoordExportDialog(ctx);
+export function openCoordExport(ctx: AppContext, opts: { table?: TableRows } = {}): void {
+  new CoordExportDialog(ctx, opts.table ?? null);
 }
+
+/** Noktalar's target rows: their ids in the table's order; `selected`: they are its selected rows. */
+export interface TableRows {
+  ids: readonly number[];
+  selected: boolean;
+}
+
+/** What the window writes: the table's rows, or a scope of the drawing. */
+type Scope = ExportScope | 'table';
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 class CoordExportDialog {
   private readonly ctx: AppContext;
-  private scope: ExportScope;
+  private readonly table: TableRows | null;
+  private scope: Scope;
   private format: CoordFormat = COORD_FORMATS[0];
   private order: readonly CoordColumn[] = COORD_ORDERS[0].columns;
   private header = COORD_FORMATS[0].header;
@@ -37,9 +51,10 @@ class CoordExportDialog {
   private readonly primary = h('button', { class: 'btn btn--primary', type: 'button' }, 'Dışa aktar…');
   private readonly dialog: Dialog;
 
-  constructor(ctx: AppContext) {
+  constructor(ctx: AppContext, table: TableRows | null) {
     this.ctx = ctx;
-    this.scope = this.points('selection').length ? 'selection' : 'visible';
+    this.table = table;
+    this.scope = table ? 'table' : this.points('selection').length ? 'selection' : 'visible';
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     this.dialog = new Dialog({
       title: 'Koordinat listesi dışa aktar',
@@ -53,16 +68,24 @@ class CoordExportDialog {
     this.render();
   }
 
-  private points(scope: ExportScope) {
-    return coordPoints(scopeEntities(this.ctx, scope));
+  private points(scope: Scope) {
+    if (scope !== 'table') return coordPoints(scopeEntities(this.ctx, scope));
+    const { doc } = this.ctx;
+    return coordPoints((this.table?.ids ?? []).flatMap((id) => doc.get(id) ?? []));
+  }
+
+  private label(scope: Scope): string {
+    if (scope !== 'table') return SCOPE_LABEL[scope];
+    return this.table?.selected ? 'Seçili satırlar' : 'Tablodaki';
   }
 
   private render(): void {
     const focus = (document.activeElement as HTMLElement | null)?.dataset?.key;
-    const counts = { selection: this.points('selection').length, visible: this.points('visible').length, all: this.points('all').length };
-    const scope = segmented<ExportScope>({
+    const scopes: Scope[] = this.table ? ['table', 'visible', 'all'] : ['selection', 'visible', 'all'];
+    const counts = new Map(scopes.map((s) => [s, this.points(s).length]));
+    const scope = segmented<Scope>({
       label: 'Yazılacak noktalar',
-      options: (['selection', 'visible', 'all'] as ExportScope[]).map((s) => ({ value: s, label: `${SCOPE_LABEL[s]} (${counts[s]})`, disabled: !counts[s] })),
+      options: scopes.map((s) => ({ value: s, label: `${this.label(s)} (${counts.get(s) ?? 0})`, disabled: !counts.get(s) })),
       value: this.scope,
       onChange: (s) => ((this.scope = s), this.render()),
     });

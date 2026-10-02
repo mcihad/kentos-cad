@@ -17,6 +17,10 @@
 //!   their windows `batch_view.rs`) over the selected rows, or every row when
 //!   none is selected. A right click leaves the selection; on a row not
 //!   selected the menu is that row's, and its command selects it alone first.
+//!   Dışa aktar writes the same rows, in the table's order, through the
+//!   coordinate list window; İçe aktar (İşlemler ▾ only) reads one, then
+//!   opens Çift noktaları ayıkla by Aynı ad over the points whose names the
+//!   file brought again.
 //! - The query (search, layer, only the selected, sort) and Bağlı çizgiler
 //!   izler are kept for as long as the app lives.
 //!
@@ -76,7 +80,7 @@ pub mod texts {
     pub const REMOVE: &str = "Sil";
     pub const SHOW: &str = "Göster";
     pub const ACTIONS: &str = "İşlemler";
-    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla.";
+    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar. İçe aktar koordinat listesinden nokta alır.";
     pub const RENAME: &str = "Yeniden adlandır…";
     pub const RENAME_HINT: &str = "Adların başına önek ekler ya da baştaki öneki kaldırır";
     pub const NUMBER: &str = "Sıralı numara ver…";
@@ -85,9 +89,14 @@ pub mod texts {
     pub const LAYER_HINT: &str = "Noktaları seçilen katmana taşır";
     pub const DEDUPE: &str = "Çift noktaları ayıkla…";
     pub const DEDUPE_HINT: &str = "Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler";
+    pub const EXPORT: &str = "Dışa aktar…";
+    pub const EXPORT_HINT: &str =
+        "Noktaları tablonun sırasıyla koordinat listesi olarak yazar (NCN, TXT, CSV)";
+    pub const IMPORT: &str = "İçe aktar…";
+    pub const IMPORT_HINT: &str = "Koordinat listesinden nokta alır; adları çizimde de varsa Çift noktaları ayıkla Aynı ad ile açılır";
     pub const GROUPS_HINT: &str = "Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.";
     pub const DRAFT: &str = "Yeni";
-    pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.";
+    pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da İşlemler ▾ › İçe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
 }
 
@@ -186,6 +195,8 @@ pub enum RowAction {
     Show,
     Remove,
     Batch(batch::Kind),
+    /// Dışa aktar.
+    Export,
 }
 
 /// The cell edited: a point's, or the draft's.
@@ -226,6 +237,10 @@ pub enum Event {
     Remove,
     /// İşlemler ▾: an operation's window over the target rows.
     Batch(batch::Kind),
+    /// Dışa aktar: the coordinate list window over the target rows.
+    Export,
+    /// İçe aktar: a coordinate list read, then Çift noktaları ayıkla by name.
+    Import,
     /// A row's menu, by the row's place: a row not selected is selected alone first.
     Row(usize, RowAction),
     /// The operation's window.
@@ -512,6 +527,8 @@ impl App {
             }
             Event::Remove => return self.update(Message::Run("tool.erase")),
             Event::Batch(kind) => return self.open_point_batch(kind),
+            Event::Export => return self.export_point_rows(),
+            Event::Import => return self.import_table_points(),
             Event::Row(at, action) => {
                 let Some(&slot) = self.shown_points().get(at) else {
                     return Task::none();
@@ -527,12 +544,25 @@ impl App {
                     }
                     RowAction::Remove => self.update(Message::Run("tool.erase")),
                     RowAction::Batch(kind) => self.open_point_batch(kind),
+                    RowAction::Export => self.export_point_rows(),
                 };
             }
             Event::Window(event) => return self.point_batch_event(event),
             Event::ClearGroups => self.points.show_groups(None),
         }
         Task::none()
+    }
+
+    /// Dışa aktar (docs/adr/0153 §5): the coordinate list window over the
+    /// target rows, in the table's order.
+    fn export_point_rows(&mut self) -> Task<Message> {
+        let shown = self.shown_points();
+        let selected = shown.iter().any(|&s| self.selection.contains(s));
+        let (slots, _) = batch::targets(&shown, |s| self.selection.contains(s));
+        if slots.is_empty() {
+            return Task::none();
+        }
+        self.export_table_points(crate::exchange::TableRows { slots, selected })
     }
 
     /// The cell edited from now (none: no editor), its text the value's.
