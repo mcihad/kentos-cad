@@ -609,8 +609,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `rubber_cases.py`), 2. adım (nesneler: yalnız köşeler, `rubber_warp_cases.py`) ve 3. adım (`cad.entities.transform`'un
   `rubbersheet` türü, adım “Kauçuk levha”; durumlar levhanın Python ikiziyle bit bit, `sheet_f64.py`) ve 4. adım (Vektör
   oturtma'nın dördüncü dönüşümü, Sabit, yerel düzeltmeler) tamam. Kenar eşleme ([ADR 0159](docs/adr/0159-edgematch.md), `HYB-05`'in
-  kalanı): 1. adım (çekirdek `ops::edgematch`, `edgematch_cases.py`) tamam; sıradaki 2. adım (`cad.entities.edit`'in `edgematch`
-  işlemi), sonra 3. adım (pencere). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  kalanı): 1. adım (çekirdek `ops::edgematch`, `edgematch_cases.py`) ve 2. adım (`cad.entities.edit`'in `edgematch` işlemi, adım
+  “Kenar eşle”) tamam; sıradaki 3. adım (pencere, sahne `edgematch.kcad`, resimler). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

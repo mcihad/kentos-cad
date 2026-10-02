@@ -182,6 +182,12 @@ Düzeltme `cad.entities.edit`'in yeni işlemi **`edgematch`** ile yazılır. Ad�
      - katılmayan türler.
    - **Sonuç:** çekirdek (yerli) ve web (WASM) bağları, sayıları, geometriyi 1e-9 m, açıyı 1e-9°, puanı 1e-12 içinde, kotları ve yazılmayan bağları bire bir verir. Puanın açı payını bozan bir deneme testi 17 uyuşmazlıkla düşürür.
 2. Komut: `cad.entities.edit`'in `edgematch` işlemi iki platformda, ortak komut durumlarıyla.
+
+   *(2 Ekim: tamam.)*
+   - **Sözleşme:** `EditOperation`'ın `edgematch` değeri (katalog, TS tipleri, Python SDK'sının tipleri yeniden üretildi); adım “Kenar eşle”.
+   - **Durum:** `scripts/fixtures/edit_command_cases.py` bir durum ekler. Parça ekle çizgiyi yerinde çoklu çizgi yapar; kimliği, verisi ve kotları kalır. Öbür nesnenin ucu taşınır. Geri alma tek adımdır.
+   - **Bulunan:** web'de türü değiştiren `update`, eski türün kot alanlarını (çizginin `za` ve `zb`'si) yeni `zs`'nin yanında bırakıyordu. Bu yolu önce hiçbir işlem kullanmadığı için gizli kalmıştı. Masaüstü nesneyi geometriden kurar. Web artık tür değişince eski türün kotlarını da bırakır (`entitiesEdit.ts` `reshaped`).
+   - **Sonuç:** masaüstünün, web'in ve Python SDK'sının çalıştırıcıları 86 durumu geçer.
 3. Pencere iki platformda; sahne `fixtures/interaction/v1/edgematch.kcad` (kenarında aralıklı çizgileri olan iki pafta); resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

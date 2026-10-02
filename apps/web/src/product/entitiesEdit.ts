@@ -76,6 +76,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   replaceText: 'Bul ve değiştir',
   // Topolojik temizlik (docs/adr/0148).
   topology: 'Topolojik temizlik',
+  // Kenar eşleme (docs/adr/0159).
+  edgematch: 'Kenar eşle',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -138,14 +140,20 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   return out;
 }
 
+/** The elevations an object holds beside its geometry fields (docs/adr/0142): a line's two ends, a path's vertices. */
+const ELEVATION_FIELDS: Partial<Record<Entity['kind'], readonly string[]>> = { line: ['za', 'zb'], polyline: ['zs'], polygon: ['zs'] };
+
 /**
  * `e` with another geometry: every field but its geometry kept (`update`),
  * in the object's own order, so an update that changes nothing is no edit
- * (`CadDocument.replace` compares as JSON writes, key order included).
+ * (`CadDocument.replace` compares as JSON writes, key order included). An
+ * update that changes the kind (Kenar eşle's Parça ekle makes a line a
+ * polyline, docs/adr/0159) leaves the old kind's elevations too: they were
+ * its vertices'; the desktop builds the object from the geometry alike.
  */
 function reshaped(e: Entity, g: EntityGeometry): NewEntity {
   const src = e as unknown as Record<string, unknown>;
-  const old = new Set(SHAPE_FIELDS[e.kind] ?? []);
+  const old = new Set([...(SHAPE_FIELDS[e.kind] ?? []), ...(e.kind !== g.kind ? (ELEVATION_FIELDS[e.kind] ?? []) : [])]);
   const geometry = geometryOf(g);
   const out: Record<string, unknown> = {};
   for (const key of Object.keys(src)) {

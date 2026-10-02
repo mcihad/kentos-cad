@@ -1101,6 +1101,23 @@ cases.append({
     ],
 })
 
+# Kenar eşle (docs/adr/0159): the window computes every geometry with its elevations (the core's `ops::edgematch`);
+# Parça ekle makes a line a polyline in its place, its id and data kept. One step named after the window.
+EDGE_LINE = {"kind": "polyline", "pts": [P(487000, 4420050), P(487020, 4420050), P(487020.04, 4420050.01)], "bulges": [0, 0], "zs": [10, 20, 20]}
+EDGE_PATH = {"kind": "polyline", "pts": [P(487000, 4420060), P(487010, 4420060), P(487010.02, 4420070.03)], "zs": [1, 2, None]}
+cases.append({
+    "name": "Kenar eşle: Parça ekle çizgiyi yerinde çoklu çizgi yapar (kimliği ve verisi kalır), öbür nesnenin ucu taşınır; kotlar yazıldığı gibi; tek adım, adı Kenar eşle",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "cizgi"},
+        {"op": "execute", "input": {"operation": "edgematch", "changes": [{"kind": "update", "uid": uid(1), "geometry": EDGE_LINE}, {"kind": "update", "uid": uid(2), "geometry": EDGE_PATH}]},
+         "result": done(changed=[uid(1), uid(2)]),
+         "expect": {"entities": {"1": z_updated(1, {k: v for k, v in EDGE_LINE.items() if k != "zs"}, zs=[10, 20, 20]), "2": z_updated(2, {"kind": "polyline", "pts": EDGE_PATH["pts"]}, zs=[1, 2, None])},
+                    "uids": {"1": "cizgi"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Kenar eşle", "expect": {"entities": {"1": ZE(1), "2": ZE(2)}, "canUndo": False}},
+    ],
+})
+
 ELEVATIONS_MESSAGE = "Kotların sayısı köşelerin sayısıyla aynı olmalı; {} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null."
 cases.append({
     "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",

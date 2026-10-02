@@ -23428,6 +23428,11 @@
                 "const": "topology",
                 "description": "Topolojik temizlik (docs/adr/0148): line work and area outlines put\nright within a tolerance, objects updated in place, each geometry with\nits elevations as the cleanup carried them.",
                 "type": "string"
+              },
+              {
+                "const": "edgematch",
+                "description": "Kenar eşle (docs/adr/0159): the line ends of two sheets put together\nacross their common edge, objects updated in place (Parça ekle makes\na line a polyline), each geometry with its elevations as the core's\n`ops::edgematch` gave them.",
+                "type": "string"
               }
             ]
           },

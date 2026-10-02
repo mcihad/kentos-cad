@@ -168,6 +168,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::ReplaceText => "Bul ve değiştir",
         // Topolojik temizlik (docs/adr/0148).
         EditOperation::Topology => "Topolojik temizlik",
+        // Kenar eşleme (docs/adr/0159).
+        EditOperation::Edgematch => "Kenar eşle",
     }
 }
 

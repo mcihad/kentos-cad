@@ -118,6 +118,11 @@ pub enum EditOperation {
     /// right within a tolerance, objects updated in place, each geometry with
     /// its elevations as the cleanup carried them.
     Topology,
+    /// Kenar eşle (docs/adr/0159): the line ends of two sheets put together
+    /// across their common edge, objects updated in place (Parça ekle makes
+    /// a line a polyline), each geometry with its elevations as the core's
+    /// `ops::edgematch` gave them.
+    Edgematch,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
