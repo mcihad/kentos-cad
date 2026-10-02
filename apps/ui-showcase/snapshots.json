@@ -132,8 +132,8 @@
         "--senaryo",
         "onay"
       ],
-      "bytes": 213131,
-      "sha256": "560502b4091717b4bfc3e05ae0e582f560f4d1ff2d5f783ef7e2ce752178edf4"
+      "bytes": 213898,
+      "sha256": "aa0cd8d27290f423b9f7a9b088f553939bd73b491094dc1b062528195e1bd6b7"
     },
     {
       "name": "bos-durumlar",
@@ -233,8 +233,8 @@
         "--sayfa",
         "renkler"
       ],
-      "bytes": 182414,
-      "sha256": "3f2143450be52a7fd053939e4b9817c101d2eb233bf60f2cd1dfc95a123c70fa"
+      "bytes": 184442,
+      "sha256": "5248478221783a7a0dd45bd3692a75eb013842d5d35f813be3e182aea7bd97d6"
     },
     {
       "name": "galeri-yazi",
@@ -244,8 +244,8 @@
         "--sayfa",
         "yazi"
       ],
-      "bytes": 171918,
-      "sha256": "7776217855de50493d8dc3eb95ae88c7491cd1208251a2c67263bf86d9454c3c"
+      "bytes": 173885,
+      "sha256": "5f463ce8de5db02a72fcb90dca7db2b3208751e6b9b5d7ffd17230621328cb54"
     },
     {
       "name": "galeri-ikonlar",
@@ -255,8 +255,8 @@
         "--sayfa",
         "ikonlar"
       ],
-      "bytes": 128434,
-      "sha256": "8b9db06a3cf02080931a39f4c009e543d9a48ef16778723fca9b64a0cd01e16c"
+      "bytes": 130549,
+      "sha256": "addd398d31c40f2de262127e05300bdc6a155c70ffff8c090ad7ce57edf8a367"
     },
     {
       "name": "galeri-dugmeler",
@@ -266,8 +266,8 @@
         "--sayfa",
         "dugmeler"
       ],
-      "bytes": 164471,
-      "sha256": "8ed64ca6f7bcb1700deb250c8f4c6ac43e1a38c3e8a64a609f36e7907930eb83"
+      "bytes": 166472,
+      "sha256": "b0ef1f77b837ab84a18f4fe475f991571c45048d69383f78a1605e2340fe1029"
     },
     {
       "name": "galeri-veri",
@@ -277,8 +277,8 @@
         "--sayfa",
         "veri"
       ],
-      "bytes": 145672,
-      "sha256": "e37101e255e400b6b3994d9ab10a76299d1318b1bc3204715029a77cdc0aba9e"
+      "bytes": 147559,
+      "sha256": "a06f343f2ec75b87ab737e44dda6267596d721a5f22964c3a7fc76f29e052512"
     },
     {
       "name": "galeri-cerceve",
@@ -288,8 +288,8 @@
         "--sayfa",
         "cerceve"
       ],
-      "bytes": 152885,
-      "sha256": "cf59a636e4256251c2ecbd5614a94ecaebb89d9c5fa825344ab9b2893aa2d57f"
+      "bytes": 154835,
+      "sha256": "46b6819785bd4a1a3da943341fbbe15bff631aee0ca0a15c9e0b67cf9b79b127"
     },
     {
       "name": "galeri-yerlesim",
@@ -299,8 +299,8 @@
         "--sayfa",
         "yerlesim"
       ],
-      "bytes": 151032,
-      "sha256": "65b7b60114298168250fef62eefd839d3bd3c9614c9135fb21474789af9201e0"
+      "bytes": 152992,
+      "sha256": "0abc1ba3d8069e98c12243c0772a5a32b23ebb6eb55b513ac6dd91a4cc814034"
     },
     {
       "name": "galeri-girdiler",
@@ -310,8 +310,8 @@
         "--sayfa",
         "girdiler"
       ],
-      "bytes": 170906,
-      "sha256": "15a6d7b656b283a31517cec96daf48009692a961f36737bc1628bd43ed0ca6b7"
+      "bytes": 172789,
+      "sha256": "7ea0e4411bda0363835cc25678eda7b9fe6edcc7fc1747383a1cee54ef1f1557"
     },
     {
       "name": "galeri-geri-bildirim",
@@ -321,8 +321,8 @@
         "--sayfa",
         "geri-bildirim"
       ],
-      "bytes": 156605,
-      "sha256": "f6e36cc7e8e4c10144e8348ad1ad1c492ba004974d93f5d3fac58c063cbfebdc"
+      "bytes": 158514,
+      "sha256": "8c08fda3abde969a955c91a3017450b7a0b61b1dcf7535038ea8dd91d2eca081"
     },
     {
       "name": "galeri-oznitelikler",
@@ -332,8 +332,8 @@
         "--sayfa",
         "oznitelikler"
       ],
-      "bytes": 188827,
-      "sha256": "41c029d6c2b14cd6efcdaf96635d70ffb2829772195771cf1c7fa9b29e4d2bfd"
+      "bytes": 190824,
+      "sha256": "72a20d00b986289da5d208eebf972d845843ad071268436ae3b878ba6fb0c9cc"
     },
     {
       "name": "galeri-mekansal",
@@ -343,8 +343,30 @@
         "--sayfa",
         "mekansal"
       ],
-      "bytes": 120681,
-      "sha256": "484d5b044ecbfbc6ad9918eec7251673fb8404861592d0ce7cb0a634f123c78c"
+      "bytes": 122787,
+      "sha256": "8f65d69939f69c318135a0936df28ce99be4b7e4f34ed0e64fd6f4fa6b517c8e"
+    },
+    {
+      "name": "galeri-kitaplik",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "kitaplik"
+      ],
+      "bytes": 326935,
+      "sha256": "675b12c5e3565210cab96d235a692f30de850d6f1ee51f981c6c5f54fc55b41f"
+    },
+    {
+      "name": "galeri-sehir",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "sehir"
+      ],
+      "bytes": 181349,
+      "sha256": "607608fc9fda309875dd39932dc92c2bdada5668b6d91a780517df70e019af3d"
     }
   ]
 }

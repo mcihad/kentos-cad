@@ -48,6 +48,7 @@ pub enum Page {
     Attributes,
     Spatial,
     Library,
+    City,
 }
 
 impl Page {
@@ -67,6 +68,7 @@ impl Page {
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
             Page::Library => "Kitaplık",
+            Page::City => "Şehir ve afet",
         }
     }
 
@@ -86,6 +88,7 @@ impl Page {
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
             Page::Library => Icon::Layers,
+            Page::City => Icon::Svg(CITY),
         }
     }
 
@@ -129,9 +132,16 @@ impl Page {
                 "Malzeme ve 3B nesne tarayıcıları: kitaplığın, projenin ve bulutun öğeleri, \
                  görüntü dosyası gerekmeden önizlenir."
             }
+            Page::City => {
+                "Dijital ikiz ve afet simülasyonu: gösterge kartları, sınıf ölçeği ve kat \
+                 seçici; örnekler bir deprem senaryosundan."
+            }
         }
     }
 }
+
+/// Şehir ve afet sayfasının ikonu: kent silueti.
+const CITY: &str = r#"<path d="M2.5 17h15M4 17V9.5l3-2V17M7 17V5h4.5v12M11.5 17v-6.5l4 1.5V17"/><path d="M8.5 8h1.5M8.5 11h1.5M8.5 14h1.5"/>"#;
 
 /// Örneklerle etkileşim.
 #[derive(Debug, Clone)]
@@ -178,6 +188,10 @@ pub enum Demo {
     ObjectSearch(String),
     ObjectCategory(Option<String>),
     ObjectLod(object_browser::LodFilter),
+    /// Şehir ve afet sayfası: kat, hasar sınıfı ve gösterge kartı seçimi.
+    FloorChosen(Option<usize>),
+    ClassChosen(Option<usize>),
+    CardChosen(usize),
     /// Tablo sütununa göre sırala ya da yönü çevir.
     Sorted(usize),
     SearchChanged(String),
@@ -489,6 +503,16 @@ pub struct Gallery {
     pub object_query: String,
     pub object_category: Option<String>,
     pub object_lod: object_browser::LodFilter,
+    /// Şehir ve afet sayfası: seçili kat, hasar sınıfı ve gösterge kartı;
+    /// katların her seçimi için yapının ağı (önizleme önbelleği bozulmasın).
+    pub floor: Option<usize>,
+    pub damage_class: Option<usize>,
+    pub card: usize,
+    pub building_floors: Vec<std::rc::Rc<kentos_ui::widget::mesh::Mesh>>,
+    /// Hasar sınıfları, su derinliği sınıfları ve yapının katları.
+    pub damage: Vec<kentos_ui::widget::class_scale::Class>,
+    pub depth: Vec<kentos_ui::widget::class_scale::Class>,
+    pub floors: Vec<kentos_ui::widget::floor_picker::Floor>,
     pub sort: Option<(usize, SortOrder)>,
     pub search: String,
 
@@ -915,6 +939,13 @@ impl Default for Gallery {
             object_query: String::new(),
             object_category: None,
             object_lod: object_browser::LodFilter::All,
+            floor: Some(3),
+            damage_class: None,
+            card: 0,
+            building_floors: crate::models::floor_meshes(),
+            damage: crate::models::damage_classes(),
+            depth: crate::models::depth_classes(),
+            floors: crate::models::building_floors(),
             sort: None,
             search: String::new(),
             picked_date: Date::new(2026, 10, 29),
@@ -1120,6 +1151,9 @@ impl Gallery {
                     ));
                 }
             }
+            Demo::FloorChosen(floor) => self.floor = floor,
+            Demo::ClassChosen(class) => self.damage_class = class,
+            Demo::CardChosen(card) => self.card = card,
             Demo::ObjectSearch(query) => self.object_query = query,
             Demo::ObjectCategory(category) => self.object_category = category,
             Demo::ObjectLod(lod) => self.object_lod = lod,

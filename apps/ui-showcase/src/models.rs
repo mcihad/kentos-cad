@@ -7,6 +7,8 @@ use std::rc::Rc;
 
 use iced::Color;
 
+use kentos_ui::widget::class_scale::Class;
+use kentos_ui::widget::floor_picker::Floor;
 use kentos_ui::widget::mesh::Mesh;
 use kentos_ui::widget::object_browser::{Lod, Object3d, Source};
 
@@ -360,4 +362,96 @@ fn scale(color: Color, amount: f32) -> Color {
         b: (color.b * amount).min(1.0),
         a: color.a,
     }
+}
+
+/// Şehir ve afet sayfasının yapısı: iki bodrum, zemin ve beş kat; her kat
+/// ayrı bir dilim. Dizinin ilki bütün katlar, sonrakiler sırasıyla katın
+/// vurgulandığı hâller (önizlemenin önbelleği seçime göre değişsin diye
+/// önceden kurulur).
+pub fn floor_meshes() -> Vec<Rc<Mesh>> {
+    let shell = rgb(0xcfc8b8);
+    let accent = rgb(0x4c7fe0);
+    let floors = 8;
+    let height = 3.2;
+    let build = |highlight: Option<usize>| {
+        let mut mesh = Mesh::new();
+
+        for floor in 0..floors {
+            // İlk iki dilim zeminin altındadır.
+            let z0 = (floor as f32 - 2.0) * height;
+            let color = if highlight == Some(floor) {
+                accent
+            } else if floor < 2 {
+                rgb(0x9a9488)
+            } else {
+                shell
+            };
+
+            mesh = mesh
+                .merge(Mesh::cuboid(
+                    [0.0, 0.0, z0],
+                    [16.0, 11.0, z0 + height - 0.25],
+                    color,
+                ))
+                .merge(Mesh::cuboid(
+                    [-0.15, -0.15, z0 + height - 0.25],
+                    [16.15, 11.15, z0 + height],
+                    rgb(0x8e8b84),
+                ));
+        }
+
+        Rc::new(mesh)
+    };
+
+    std::iter::once(build(None))
+        .chain((0..floors).map(|floor| build(Some(floor))))
+        .collect()
+}
+
+/// Hasar sınıflarının renkleri: yeşilden koyu kırmızıya (veridir; sınıfın
+/// adı ve sayısı her zaman yazar).
+pub fn damage_classes() -> Vec<Class> {
+    vec![
+        Class::new("Hasarsız", rgb(0x4fa86b)).count(612),
+        Class::new("Az hasarlı", rgb(0xc9c24f)).count(318),
+        Class::new("Orta hasarlı", rgb(0xe3923c)).count(201),
+        Class::new("Ağır hasarlı", rgb(0xd24b3e)).count(112),
+        Class::new("Göçmüş", rgb(0x7d1f24)).count(41),
+    ]
+}
+
+/// Sel senaryosunun su derinliği sınıfları: aralıklarıyla, eşit bantlı.
+pub fn depth_classes() -> Vec<Class> {
+    vec![
+        Class::new("Islak zemin", rgb(0xbfddee))
+            .note("0–0,1 m")
+            .count(2_140),
+        Class::new("Sığ", rgb(0x86bfe0))
+            .note("0,1–0,5 m")
+            .count(860),
+        Class::new("Orta", rgb(0x4a95cf)).note("0,5–1 m").count(310),
+        Class::new("Derin", rgb(0x2263a8)).note("1–2 m").count(96),
+        Class::new("Çok derin", rgb(0x133a6e))
+            .note("2 m üstü")
+            .count(18),
+    ]
+}
+
+/// Yapının katları, alttan üste: iki bodrum, zemin ve beş kat; katın rengi
+/// senaryodaki hasar sınıfı.
+pub fn building_floors() -> Vec<Floor> {
+    let classes = damage_classes();
+    let tone = |class: usize| classes[class].color;
+    let floor = |name: &str, index: i32| Floor::new(name, index as f32 * 3.2);
+
+    vec![
+        floor("−2", -2).note("Otopark"),
+        floor("−1", -1).note("Sığınak"),
+        floor("Z", 0).note("Ağır hasar").tone(tone(3)),
+        floor("1", 1).note("Orta hasar").tone(tone(2)),
+        floor("2", 2).note("Orta hasar").tone(tone(2)),
+        floor("3", 3).note("Az hasar").tone(tone(1)),
+        floor("4", 4).note("Az hasar").tone(tone(1)),
+        floor("5", 5).note("Hasarsız").tone(tone(0)),
+    ]
 }

@@ -61,6 +61,13 @@ src/                     kentos-ui kütüphanesi
 │   ├── inspector.rs     nesne inceleyici: nesne başlığı, arama, kategoriler, yalnız değişenler,
 │   │                    çoklu seçimde “Çeşitli”, özel satırlar, sürüklenen ad sütunu, sağ tık, yardım
 │   ├── legend.rs        lejant: nokta, çizgi, alan simgeleri, bölümler, renk ölçeği
+│   ├── material.rs      malzeme: görünüş (renk, pürüzlülük, metaliklik, desen), küre ve karo önizlemesi
+│   ├── material_browser.rs  malzeme tarayıcısı: arama, kategoriler, küre/karo, ayrıntı (görüntüleyici)
+│   ├── mesh.rs          hafif 3B ağ ve yapı taşları; döndürülebilir, ölçülü tuval önizlemesi
+│   ├── object_browser.rs    3B nesne tarayıcısı: LOD süzgeci, ölçüler, döner önizleme (görüntüleyici)
+│   ├── floor_picker.rs  kat seçici: kesit gibi katlar, zemin çizgisi, kotlar, kat rengi
+│   ├── class_scale.rs   sınıf ölçeği: hasar sınıfı, su derinliği; paylı bantlar, işaret, seçim
+│   ├── stat_card.rs     gösterge kartı: değer, anlamına göre renkli değişim, eğilim çizgisi
 │   ├── assets.rs        varlık tarayıcısı: aranabilir, kategorili ızgara ya da liste
 │   ├── mini_toolbar.rs  seçimin üstünde beliren, uzaklaştıkça soluklaşan araç çubuğu
 │   ├── radial.rs        dairesel menü: yöne göre seçim, basılı tutup bırakma

@@ -12,6 +12,7 @@
 
 mod ai;
 mod attributes;
+mod city;
 mod controls;
 mod feedback;
 mod foundations;
@@ -57,6 +58,7 @@ impl Showcase {
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),
             Page::Library => self.library_page(),
+            Page::City => self.city_page(),
         };
 
         let header = column![
