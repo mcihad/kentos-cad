@@ -127,6 +127,7 @@
     "calc.stakeout",
     "calc.traverse",
     "calc.polar",
+    "transform.fit",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",

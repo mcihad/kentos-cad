@@ -101,7 +101,9 @@ Hesap pencereleri gibi (ADR 0070, 0075); yazılanlar oturum boyunca kalır, penc
 - **Sonuç:** m0 (kullanılan çift sayısı ve serbestlik derecesiyle), parametreler (Helmert: ölçek ve dönüklük; afin: X ve Y ölçeği, dönüklük, kayma; projektif: merkezleriyle sekiz sayı) ve en büyük artık; çözüm yoksa nedeni.
 - **Uygula:** nesneler (Seçili, bir Katman, Tümü) ve Kopya olarak; Uygula `cad.entities.transform` ile tek adımda yazar, iletiyi ve uyarıları söyler, pencere kapanır.
 - **Rapor:** sistem panosuna metin olarak (dönüşüm, çiftler, artıklar, m0, parametreler).
-- **Parametrelerle:** dönüşüm sayılarla da verilebilir: taban noktası, X ve Y ölçeği, dönüklük, öteleme (Netcad'in XY Yönünde Ölçekle'si); tablo kapanır, Uygula aynı komutla afin olarak yazar.
+- **Parametrelerle:** dönüşüm sayılarla da verilebilir (pencerenin üstündeki Yöntem: Kontrol noktaları | Parametrelerle): taban noktası (adı ya da Y,X; çizimden), Y (sağa) ve X (yukarı) ölçeği, dönüklük (projenin açı biriminde, saat yönünün tersine, özetteki dönüklük gibi) ve öteleme (ΔY, ΔX; metre). Dönüşüm p′ = taban + öteleme + R(dönüklük)·S(Y ölçeği, X ölçeği)·(p − taban)'dır; komuta merkezli afin olarak gider (`from` taban, `to` taban + öteleme, `m` = [sY·cos, sY·sin, −sX·sin, sX·cos], çekirdeğin `ops::fit::scale_turn`'ü). İki ölçek eşitse dönüşüm benzerliktir, her tür tam taşınır (§4). Boş ölçek 1, boş dönüklük ve öteleme 0 sayılır; ölçek sıfır olamaz (eksi ölçek aynalar). Tablo ve Adla eşle gizlenir; özet dönüşümü sözle söyler, ölçekler farklıysa eğrilerin elips olacağını ekler. Dönüklük ve öteleme sıfırken Netcad'in XY Yönünde Ölçekle'sidir.
+
+Afinin özetindeki ölçekler de bu adlarla söylenir: Y ölçeği doğu ekseninin (kodda x), X ölçeği kuzey ekseninin (kodda y) görüntüsünün boyudur (CLAUDE.md §5).
 
 Komut `transform.fit` (Harita › Koordinatlar; takma adlar OTURT, DONUSUM, HELMERT, AFIN), ikonu kendinindir.
 
@@ -141,6 +143,11 @@ Kauçuk levha (kontrol noktalarına göre parça parça dönüşüm, sabit nokta
    - **Ortak durumlar:** `cad.entities.transform.json`'a beş durum (benzerlik her türle; afin, kilitli katman ve iki uyarıyla; afin kopyası; projektif; retler: sonlu olmayan sayı yolu ve sırası, tekil afin, ufuk). Beklenen değerler dönüşümlerin tanımından, aynı işlem sırasıyla çift duyarlıkla; iki platform bit bit geçer. Eğrilerin ve yazıların kuralları `warp.json`'da. `affine_reference.py` artık alanın deliklerini ve parçalarını da taşır (önceki durumlarda delikli alan yoktu, hiçbiri değişmedi).
 4. **Pencere:** Vektör oturtma iki platformda; resimler. İki parçada:
    1. tablo (Kullan sütunuyla; Hesap pencerelerinin tablosuna onay kutusu sütunu eklenir), Adla eşle, canlı çözüm ve artıklar, Uygula (kapsam, Kopya), rapor;
+
+      *(2 Ekim: tamam.)*
+      - **Tablo:** Hesap pencerelerinin tablosu onay kutusu sütunu (`check`; yapıştırma ona yazmaz) ve satır işareti (`mark`: kullanılmayan soluk, en büyük artıklı uyarı rengiyle) aldı: web `ui/calc/common.ts` (`Grid.refresh` girdileri yeniden kurmadan değerleri ve işaretleri yeniler), masaüstü `calc/grid.rs` (`Table::check`, `Table::mark`).
+      - **Pencere:** web `ui/calc/FitDialog.ts`, masaüstü `calc/fit/`; komut `transform.fit` (Harita › Koordinatlar, ikonu `vectorFit`). Çözüm her değişiklikte çekirdekten; türetilen değerler (ölçek, dönüklük, kayma) çekirdeğin `Fit::derived`'ından, iki platformda aynı. Satırın iki düğmesi kaynağı ve hedefi çizimden seçer (noktaya kenetlenirse ad boşsa adı da gelir); Adla eşle aynı adlı noktaları çift yapar, bir katmanda birden çok geçen adı sayarak dışarıda bırakır; Uygula Seçili, Katman ya da Tümü'nü, istenirse kopyalarını tek adımda (Oturt) yazar, kopyaları seçer; ret pencerede kalır.
+      - **Sahne:** `fixtures/interaction/v1/vector-fit.kcad` (yerel ölçü ve aynı altı noktanın TUREF ölçüsü, P5'te 15 cm kaba hata). Masaüstü `calc::fit::tests` (Adla eşle, P5'in en büyük artığı, P5 çıkınca m0'ın 48,5 mm'den 3,6 mm'ye inmesi, Uygula'nın tek adımı, kopyalar, kilitli katman, satırdan çizimden seçme, yapıştırma); web `shots.mjs vectorfit` aynı adımları denetler. İki platform aynı sayıları verir (m0 ±3,6 mm, ölçek 1,00015444, dönüklük 22,2845 g).
    2. Parametrelerle.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

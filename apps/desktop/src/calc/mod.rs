@@ -1,6 +1,7 @@
 //! Hesap: the surveying windows (the web's `ui/calc/`, docs/adr/0070,
 //! 0071): Poligon hesabı ([`traverse`]), Kutupsal alım ([`polar`]), Önden
-//! and Geriden kestirme ([`intersection`]) and Aplikasyon ([`stakeout`]).
+//! and Geriden kestirme ([`intersection`]), Aplikasyon ([`stakeout`]) and
+//! Vektör oturtma ([`fit`], docs/adr/0156).
 //! What they share, as the web's `common.ts`:
 //!
 //! - a known point: a point object's name in the drawing or “Y,X”, or shown
@@ -18,6 +19,7 @@
 //! What is typed stays while the app runs, whatever drawing is open, as on
 //! the web; nothing of it is saved.
 
+pub mod fit;
 pub mod grid;
 pub mod intersection;
 mod parts;
@@ -48,6 +50,7 @@ pub const COMMANDS: &[&str] = &[
     "calc.forward",
     "calc.resection",
     "calc.stakeout",
+    "transform.fit",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -61,6 +64,7 @@ pub enum Window {
     Polar,
     Intersection,
     Stakeout,
+    Fit,
 }
 
 /// A known point field of the window it is in.
@@ -115,6 +119,8 @@ pub enum Event {
     RemoveRow(usize),
     /// Aplikasyon: the selected points into the table.
     FromSelection,
+    /// Vektör oturtma's own controls.
+    Fit(fit::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -125,6 +131,7 @@ pub struct Calc {
     pub polar: polar::Form,
     pub intersection: intersection::Form,
     pub stakeout: stakeout::Form,
+    pub fit: fit::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -136,6 +143,7 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse),
             Window::Polar => Some(&mut self.polar),
             Window::Stakeout => Some(&mut self.stakeout),
+            Window::Fit => Some(&mut self.fit),
             Window::Intersection => None,
         }
     }
@@ -146,7 +154,7 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse.layer),
             Window::Polar => Some(&mut self.polar.layer),
             Window::Intersection => Some(&mut self.intersection.layer),
-            Window::Stakeout => None,
+            Window::Stakeout | Window::Fit => None,
         }
     }
 }
@@ -191,6 +199,7 @@ impl App {
                 self.calc_show(Window::Intersection);
             }
             "calc.stakeout" => self.calc_show(Window::Stakeout),
+            "transform.fit" => self.calc_show(Window::Fit),
             _ => {}
         }
         Task::none()
@@ -222,6 +231,9 @@ impl App {
         if window == Window::Traverse {
             self.calc.traverse.sync(&doc.model);
         }
+        if window == Window::Fit {
+            self.calc.fit.sync(&doc.model, self.selection.len());
+        }
         self.calc.open = Some(window);
         self.dialog = Some(Asking::Calc);
     }
@@ -238,18 +250,18 @@ impl App {
             }
             Event::Pick(field) => {
                 let title = self.calc_title(window);
-                let label = field_label(window, field);
                 self.calc.picking = Some((window, field));
-                self.dialog = None;
-                self.field = None;
-                self.snap = None;
-                self.session.run(Box::new(PickPoint::new(title, label)));
-                self.with_tool(|s, cx| s.activate(cx));
-                self.say(Level::Command, format!("{title}: {label}"));
+                self.calc_pick(title, field_label(window, field).to_owned());
                 Task::none()
             }
             Event::Known(field, text) => {
-                *self.calc_known_text(window, field) = text;
+                if let Some(known) = self.calc_known_text(window, field) {
+                    *known = text;
+                }
+                Task::none()
+            }
+            Event::Fit(e) => {
+                self.fit_event(e);
                 Task::none()
             }
             Event::CopyReport => self.calc_copy_report(window),
@@ -348,13 +360,27 @@ impl App {
             }
         };
         // The station rows are named after the known points, as the web's
-        // table is on every change.
+        // table is on every change; Vektör oturtma solves again.
         if window == Window::Traverse
             && let Some(doc) = &self.document
         {
             self.calc.traverse.sync(&doc.model);
         }
+        if window == Window::Fit {
+            self.calc.fit.solve();
+        }
         task
+    }
+
+    /// Çizimden: the window closes and the pick tool asks for `label`'s point.
+    fn calc_pick(&mut self, title: &'static str, label: String) {
+        self.dialog = None;
+        self.field = None;
+        self.snap = None;
+        let said = format!("{title}: {label}");
+        self.session.run(Box::new(PickPoint::new(title, label)));
+        self.with_tool(|s, cx| s.activate(cx));
+        self.say(Level::Command, said);
     }
 
     fn calc_title(&self, window: Window) -> &'static str {
@@ -363,12 +389,14 @@ impl App {
             Window::Polar => polar::TITLE,
             Window::Intersection => self.calc.intersection.kind.title(),
             Window::Stakeout => stakeout::TITLE,
+            Window::Fit => fit::TITLE,
         }
     }
 
-    fn calc_known_text(&mut self, window: Window, field: Field) -> &mut String {
+    /// A known point field's text; Vektör oturtma has none.
+    fn calc_known_text(&mut self, window: Window, field: Field) -> Option<&mut String> {
         let calc = &mut self.calc;
-        match (window, field) {
+        Some(match (window, field) {
             (Window::Traverse, Field::Back) => &mut calc.traverse.back,
             (Window::Traverse, Field::End) => &mut calc.traverse.end,
             (Window::Traverse, Field::Fore) => &mut calc.traverse.fore,
@@ -380,18 +408,30 @@ impl App {
             (Window::Intersection, _) => &mut calc.intersection.a,
             (Window::Stakeout, Field::Back) => &mut calc.stakeout.back,
             (Window::Stakeout, _) => &mut calc.stakeout.station,
-        }
+            (Window::Fit, _) => return None,
+        })
     }
 
     /// Çizimden's answer: the field takes the point's name when it lies on a
     /// named point, else its coordinates; the window opens again either way.
     pub(crate) fn calc_picked(&mut self, p: Option<Vec2>) {
+        // Vektör oturtma's row: its source or target, and the name it snapped to.
+        if let Some((row, side)) = self.calc.fit.picking.take() {
+            if let (Some(p), Some(doc)) = (p, &self.document) {
+                let name = read::name_at(&doc.model, p);
+                self.calc.fit.picked(row, side, p, name);
+            }
+            self.calc_show(Window::Fit);
+            return;
+        }
         let Some((window, field)) = self.calc.picking.take() else {
             return;
         };
         if let (Some(p), Some(doc)) = (p, &self.document) {
             let text = read::name_at(&doc.model, p).unwrap_or_else(|| format!("{},{}", p.x, p.y));
-            *self.calc_known_text(window, field) = text;
+            if let Some(known) = self.calc_known_text(window, field) {
+                *known = text;
+            }
         }
         self.calc_show(window);
     }
@@ -409,6 +449,7 @@ impl App {
             Window::Polar => self.calc.polar.report(model, &format),
             Window::Intersection => self.calc.intersection.report(model, &format),
             Window::Stakeout => self.calc.stakeout.report(model, &format),
+            Window::Fit => Some(self.calc.fit.report(&format)),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -469,7 +510,7 @@ impl App {
                     &calc.intersection.layer,
                 )
             }
-            Window::Stakeout => return,
+            Window::Stakeout | Window::Fit => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -587,6 +628,7 @@ impl App {
             Window::Polar => self.calc.polar.view(model, &format),
             Window::Intersection => self.calc.intersection.view(model, &format),
             Window::Stakeout => self.calc.stakeout.view(model, &format),
+            Window::Fit => self.calc.fit.view(model, &format, self.selection.len()),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -612,6 +654,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Intersection, Field::B) => "B noktası",
         (Window::Intersection, Field::C) => "C noktası",
         (Window::Intersection, _) => "A noktası",
+        (Window::Fit, _) => "Nokta",
     }
 }
 

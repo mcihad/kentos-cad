@@ -2380,6 +2380,109 @@ const openTextExtras = async (ui) => {
 // draws: the four arrowheads, one without a note, one masked, one turned and one in a block; the second selected so
 // that Öznitelikler shows it.
 const LEADERS = readFileSync(new URL('../../../../fixtures/interaction/v1/leaders.kcad', import.meta.url), 'utf8');
+// Vektör oturtma (docs/adr/0156 §7) on fixtures/interaction/v1/vector-fit.kcad, the scenes the desktop's
+// `calc::fit::tests::screens` draws: a parcel surveyed in a local system and the same points measured in TUREF (P5 with a
+// 15 cm blunder); Adla eşle fills the pairs, P5 shows as the worst residual and is left out, Uygula fits the local layer.
+const VECTOR_FIT = readFileSync(new URL('../../../../fixtures/interaction/v1/vector-fit.kcad', import.meta.url), 'utf8');
+const openFitScene = async (ui) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(VECTOR_FIT)}, null))) throw new Error('vector-fit.kcad did not load');
+    k.view.zoomExtents();
+    const c = k.view.camera;
+    c.scale = c.scale * 0.85;
+    c.panBy(0, 0);
+    k.selection.clear();
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(`window.kentos.commands.execute('transform.fit')`);
+  await ui.waitFor(`!!document.querySelector('.dialog--fit')`, 8000);
+  await ui.sleep(300);
+};
+/** Adla eşle with the scene's two layers, Helmert, the objects of the local layer. */
+const matchFit = async (ui) => {
+  await openFitScene(ui);
+  await ui.clickText('.dialog--fit .seg__opt', 'Helmert');
+  await ui.eval(`(() => {
+    const set = (key, value) => { const s = document.querySelector('.dialog--fit select[data-key="' + key + '"]'); s.value = value; s.dispatchEvent(new Event('change')); };
+    set('source', 'yerel');
+    set('target', 'tm');
+  })()`);
+  await ui.clickText('.dialog--fit .btn', 'Eşle');
+  await ui.sleep(200);
+  await ui.clickText('.dialog--fit .seg__opt', 'Katman');
+  await ui.eval(`(() => { const s = document.querySelector('.dialog--fit select[data-key="layer"]'); s.value = 'yerel'; s.dispatchEvent(new Event('change')); })()`);
+  await ui.sleep(200);
+  const seen = await ui.eval(`({ rows: [...document.querySelectorAll('.dialog--fit .calc-grid tbody tr')].map((tr) => tr.children[2].querySelector('input')?.value), worst: document.querySelector('.dialog--fit tr[data-mark="worst"] input[data-key="name"]')?.value ?? null, said: document.querySelector('.dialog--fit .io-summary').textContent })`);
+  if (JSON.stringify(seen.rows) !== JSON.stringify(['P1', 'P2', 'P3', 'P4', 'P5', 'P6']) || seen.worst !== 'P5' || !seen.said.startsWith('m0 = ±')) throw new Error(`Adla eşle: ${JSON.stringify(seen)}`);
+};
+SCENES.vectorfit = [
+  { id: 'oturt', open: openFitScene },
+  { id: 'oturt-adla-eslendi', open: async (ui) => (await matchFit(ui), await ui.move(2, 2), await ui.sleep(300)) },
+  // The window's foot: the objects it applies to (a layer) and Kopya, the body scrolled to its end.
+  {
+    id: 'oturt-uygulama',
+    open: async (ui) => {
+      await matchFit(ui);
+      await ui.eval(`(() => { const b = document.querySelector('.dialog--fit .dialog__body'); b.scrollTop = b.scrollHeight; })()`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // P5 left out: m0 falls to millimetres, its row fades, its residual still shown.
+  {
+    id: 'oturt-p5-cikti',
+    open: async (ui) => {
+      await matchFit(ui);
+      const before = await ui.eval(`document.querySelector('.dialog--fit .io-summary').textContent`);
+      await ui.eval(`document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[4].querySelector('input[type="checkbox"]').click()`);
+      await ui.sleep(200);
+      const after = await ui.eval(`({ said: document.querySelector('.dialog--fit .io-summary').textContent, off: document.querySelectorAll('.dialog--fit tr[data-mark="off"]').length, v5: document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[4].querySelector('td[data-key="v"]').textContent })`);
+      const m0 = (t) => Number(/m0 = ±([\d.,]+) mm/.exec(t)?.[1].replace(',', '.'));
+      if (!(m0(after.said) < 5 && m0(before) > 20 && after.off === 1 && Number(after.v5.replace(',', '.')) > 100)) throw new Error(`P5 çıktı: ${before} | ${JSON.stringify(after)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Afin: its own parameters.
+  {
+    id: 'oturt-afin',
+    open: async (ui) => {
+      await matchFit(ui);
+      await ui.clickText('.dialog--fit .seg__opt', 'Afin');
+      await ui.sleep(200);
+      const said = await ui.eval(`document.querySelector('.dialog--fit .io-summary').textContent`);
+      if (!said.includes('X ölçeği') || !said.includes('kayma')) throw new Error(`Afin: ${said}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Uygula with P5 left out: the local layer lands on the TUREF points; one step, Oturt; the curves and the text said.
+  {
+    id: 'oturt-uygulandi',
+    open: async (ui) => {
+      await matchFit(ui);
+      await ui.eval(`document.querySelectorAll('.dialog--fit .calc-grid tbody tr')[4].querySelector('input[type="checkbox"]').click()`);
+      await ui.sleep(200);
+      await ui.clickText('.dialog--fit .btn--primary', 'Uygula');
+      await ui.sleep(300);
+      const after = await ui.eval(`(() => {
+        const k = window.kentos;
+        const named = (layer, n) => [...k.doc.all()].find((e) => e.kind === 'point' && e.layerId === layer && e.label === n)?.p;
+        const gap = (n) => { const a = named('yerel', n), b = named('tm', n); return Math.hypot(a.x - b.x, a.y - b.y); };
+        const step = (() => { const s = k.doc.undo(); k.doc.redo(); return s; })();
+        const circle = [...k.doc.all()].find((e) => e.layerId === 'yerel' && e.kind === 'circle');
+        return { p1: gap('P1'), p5: gap('P5'), step, circle: !!circle, open: !!document.querySelector('.dialog--fit') };
+      })()`);
+      if (!(after.p1 < 0.01 && after.p5 > 0.1 && after.step === 'Oturt' && after.circle && !after.open)) throw new Error(`Uygula: ${JSON.stringify(after)}`);
+      await ui.eval(`(() => { const k = window.kentos; k.view.zoomExtents(); const c = k.view.camera; c.scale = c.scale * 0.85; c.panBy(0, 0); })()`);
+      await ui.move(2, 2);
+      await ui.sleep(400);
+    },
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.selection.clear()`)), ...s }));
+
 SCENES.leaders = [
   {
     id: 'leaders',

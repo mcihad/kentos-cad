@@ -1,0 +1,306 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Vektör oturtma",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "hybrid",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487100,
+  "y": 4420200
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yerel",
+   "name": "Yerel ölçü",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "tm",
+   "name": "TUREF noktaları",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P1"
+   },
+   "label": "P1",
+   "p": {
+    "x": 1000.0,
+    "y": 2000.0
+   },
+   "id": 1
+  },
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P2"
+   },
+   "label": "P2",
+   "p": {
+    "x": 1062.5,
+    "y": 2003.25
+   },
+   "id": 2
+  },
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P3"
+   },
+   "label": "P3",
+   "p": {
+    "x": 1060.75,
+    "y": 2041.5
+   },
+   "id": 3
+  },
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P4"
+   },
+   "label": "P4",
+   "p": {
+    "x": 998.25,
+    "y": 2038.0
+   },
+   "id": 4
+  },
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P5"
+   },
+   "label": "P5",
+   "p": {
+    "x": 1030.5,
+    "y": 2020.25
+   },
+   "id": 5
+  },
+  {
+   "kind": "point",
+   "layerId": "yerel",
+   "attrs": {
+    "Ad": "P6"
+   },
+   "label": "P6",
+   "p": {
+    "x": 1015.0,
+    "y": 2052.75
+   },
+   "id": 6
+  },
+  {
+   "kind": "polygon",
+   "layerId": "yerel",
+   "attrs": {
+    "Parsel": "12"
+   },
+   "label": "12",
+   "pts": [
+    {
+     "x": 1000.0,
+     "y": 2000.0
+    },
+    {
+     "x": 1062.5,
+     "y": 2003.25
+    },
+    {
+     "x": 1060.75,
+     "y": 2041.5
+    },
+    {
+     "x": 998.25,
+     "y": 2038.0
+    }
+   ],
+   "id": 7
+  },
+  {
+   "kind": "polyline",
+   "layerId": "yerel",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 1012.0,
+     "y": 2010.0
+    },
+    {
+     "x": 1032.0,
+     "y": 2010.0
+    },
+    {
+     "x": 1032.0,
+     "y": 2026.0
+    },
+    {
+     "x": 1012.0,
+     "y": 2026.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.0,
+    0.35
+   ],
+   "id": 8
+  },
+  {
+   "kind": "circle",
+   "layerId": "yerel",
+   "attrs": {},
+   "c": {
+    "x": 1048.0,
+    "y": 2030.0
+   },
+   "r": 3.0,
+   "id": 9
+  },
+  {
+   "kind": "text",
+   "layerId": "yerel",
+   "attrs": {},
+   "p": {
+    "x": 1020.0,
+    "y": 2033.0
+   },
+   "text": "Parsel 12",
+   "height": 2.5,
+   "rotation": 0,
+   "id": 10
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P1"
+   },
+   "label": "P1",
+   "p": {
+    "x": 487120.352,
+    "y": 4420210.514
+   },
+   "id": 11
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P2"
+   },
+   "label": "P2",
+   "p": {
+    "x": 487177.949,
+    "y": 4420235.009
+   },
+   "id": 12
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P3"
+   },
+   "label": "P3",
+   "p": {
+    "x": 487163.193,
+    "y": 4420270.341
+   },
+   "id": 13
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P4"
+   },
+   "label": "P4",
+   "p": {
+    "x": 487105.668,
+    "y": 4420245.616
+   },
+   "id": 14
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P5"
+   },
+   "label": "P5",
+   "p": {
+    "x": 487142.178,
+    "y": 4420239.911
+   },
+   "id": 15
+  },
+  {
+   "kind": "point",
+   "layerId": "tm",
+   "attrs": {
+    "Ad": "P6"
+   },
+   "label": "P6",
+   "p": {
+    "x": 487116.351,
+    "y": 4420265.223
+   },
+   "id": 16
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

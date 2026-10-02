@@ -116,6 +116,41 @@ impl Fit {
         let (x, y) = self.map_centred(p.x - self.from.x, p.y - self.from.y)?;
         Some(Vec2::new(self.to.x + x, self.to.y + y))
     }
+
+    /// What the numbers mean, as the window says them (docs/adr/0156 §7).
+    pub fn derived(&self) -> Derived {
+        match (self.kind, self.params.as_slice()) {
+            (FitKind::Helmert, &[a, b]) => Derived::Helmert {
+                scale: js_hypot(a, b),
+                rotation: atan2(b, a),
+            },
+            (FitKind::Affine, &[a, b, c, d]) => Derived::Affine {
+                scale_x: js_hypot(a, b),
+                scale_y: js_hypot(c, d),
+                rotation: atan2(b, a),
+                shear: atan2(a * c + b * d, a * d - b * c),
+            },
+            _ => Derived::Projective,
+        }
+    }
+}
+
+/// A solution's derived values (radians): Helmert's scale and turn, the
+/// affine's X and Y scales, turn and shear; a projective transform's
+/// numbers say nothing simpler.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Derived {
+    Helmert {
+        scale: f64,
+        rotation: f64,
+    },
+    Affine {
+        scale_x: f64,
+        scale_y: f64,
+        rotation: f64,
+        shear: f64,
+    },
+    Projective,
 }
 
 /// The centred mapping of `kind` with `params` (none beyond a projective
@@ -141,25 +176,23 @@ impl ToJson for Fit {
         field(out, &mut first, "params", &self.params);
         field(out, &mut first, "residuals", &self.residuals);
         field(out, &mut first, "m0", &self.m0);
-        let p = &self.params;
-        match self.kind {
-            FitKind::Helmert => {
-                field(out, &mut first, "scale", &js_hypot(p[0], p[1]));
-                field(out, &mut first, "rotation", &atan2(p[1], p[0]));
+        match self.derived() {
+            Derived::Helmert { scale, rotation } => {
+                field(out, &mut first, "scale", &scale);
+                field(out, &mut first, "rotation", &rotation);
             }
-            FitKind::Affine => {
-                let (a, b, c, d) = (p[0], p[1], p[2], p[3]);
-                field(out, &mut first, "scaleX", &js_hypot(a, b));
-                field(out, &mut first, "scaleY", &js_hypot(c, d));
-                field(out, &mut first, "rotation", &atan2(b, a));
-                field(
-                    out,
-                    &mut first,
-                    "shear",
-                    &atan2(a * c + b * d, a * d - b * c),
-                );
+            Derived::Affine {
+                scale_x,
+                scale_y,
+                rotation,
+                shear,
+            } => {
+                field(out, &mut first, "scaleX", &scale_x);
+                field(out, &mut first, "scaleY", &scale_y);
+                field(out, &mut first, "rotation", &rotation);
+                field(out, &mut first, "shear", &shear);
             }
-            FitKind::Projective => {}
+            Derived::Projective => {}
         }
         out.push('}');
     }

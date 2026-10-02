@@ -93,6 +93,25 @@
   color: var(--c-text-2);
   font-weight: 500;
 }
+.calc-grid__table td.calc-grid__fixed.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* A checkbox column (Vektör oturtma's Kullan): the box in the middle of its cell. */
+.calc-grid__table td.calc-grid__check {
+  width: 1%;
+  padding: 0 8px;
+  text-align: center;
+}
+/* A row's mark: the pair left out reads faded; the worst residual of the pairs used reads in the warning colour. */
+.calc-grid__table tr[data-mark='off'] td:not(.calc-grid__check):not(.calc-grid__act) {
+  opacity: 0.55;
+}
+.calc-grid__table tr[data-mark='worst'] td.calc-grid__fixed {
+  color: var(--c-warn);
+  font-weight: 600;
+}
 .calc-grid__table td.calc-grid__act,
 .calc-grid__table th.calc-grid__act {
   width: 1%;
@@ -185,3 +204,4 @@
 .calc-sketch svg text[fill] {
   fill: var(--c-accent);
 }
+

@@ -7,16 +7,20 @@
 //! head fixed above its rows, which scroll past a height. Blok öznitelikleri
 //! (block_attributes.rs) uses it too: its [`Owner`] names the cells and the
 //! messages, and its rows have a button of their own (Sahneden seç).
+//! Vektör oturtma (fit/) has a check box column (Kullan) and marks its
+//! rows: a pair left out reads faded, the worst residual in the warning
+//! colour (the web's `check` and `mark`).
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, Row, button, column, container, row, scrollable, text_input};
-use iced::{Center, Element, Fill, Length, Right, Task};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_input};
+use iced::{Center, Element, Fill, Length, Right, Task, Theme};
 use kentos_interaction::{is_js_space, js_trim};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::typography;
+use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::horizontal_divider;
+use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Tip, tip};
 
 use super::read::read_number;
@@ -57,6 +61,13 @@ impl Owner for Window {
     fn add_row(self) -> Message {
         event(Event::AddRow)
     }
+    /// Vektör oturtma's rows are pairs (the web's `addLabel`).
+    fn add_label(self) -> &'static str {
+        match self {
+            Window::Fit => "Çift ekle",
+            _ => "Satır ekle",
+        }
+    }
 }
 
 /// A column: its heading, the unit after it, whether its values are numbers.
@@ -65,6 +76,15 @@ pub struct Col {
     pub label: &'static str,
     pub unit: Option<&'static str>,
     pub numeric: bool,
+}
+
+/// How a row reads (the web's `data-mark`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Mark {
+    /// Left out (a pair not used): the row reads faded.
+    Off,
+    /// The worst residual of the pairs used: its fixed cells in the warning colour.
+    Worst,
 }
 
 /// What a table's rows are and what may be done to them (the web's `GridModel`).
@@ -76,6 +96,15 @@ pub trait Table {
     /// A cell that cannot be typed in (a known station's name, a leg after the last point).
     fn readonly(&self, _row: usize, _col: usize) -> bool {
         false
+    }
+    /// A check box column (the web's `GridColumn.check`): on unless the
+    /// cell holds "0"; a click writes "1" or "0". Nothing is pasted into it.
+    fn check(&self, _col: usize) -> bool {
+        false
+    }
+    /// How a row reads (the web's `GridModel.mark`).
+    fn mark(&self, _row: usize) -> Option<Mark> {
+        None
     }
     /// Whether a new row may follow this one.
     fn can_insert_after(&self, _row: usize) -> bool {
@@ -164,7 +193,7 @@ pub fn add(table: &mut dyn Table, owner: impl Owner) -> Task<Message> {
         None => return Task::none(),
     };
     let col = (0..table.columns())
-        .find(|&c| !table.readonly(row, c))
+        .find(|&c| !table.readonly(row, c) && !table.check(c))
         .unwrap_or(0);
     iced::widget::operation::focus(owner.cell_id(row, col))
 }
@@ -228,7 +257,7 @@ pub fn paste(table: &mut dyn Table, row: usize, col: usize, raw: &str) -> Option
         }
         for (j, value) in cells(line).into_iter().enumerate() {
             let c = col + j;
-            if c < table.columns() && !table.readonly(at, c) {
+            if c < table.columns() && !table.readonly(at, c) && !table.check(c) {
                 table.set(at, c, value);
             }
         }
@@ -239,6 +268,10 @@ pub fn paste(table: &mut dyn Table, row: usize, col: usize, raw: &str) -> Option
 /// The row number's and the delete button's columns.
 const NO: f32 = 34.0;
 const ACT: f32 = 30.0;
+/// A check box column's width: its heading's (the web's `width: 1%`).
+const CHECK: f32 = 60.0;
+/// A row left out (the web's `opacity: .55`).
+const FADED: f32 = 0.55;
 /// Where the rows start to scroll (the web's 280 px box).
 const HEIGHT: f32 = 280.0;
 
@@ -263,21 +296,31 @@ pub fn view_with<'a>(
     row_actions: impl Fn(usize) -> Vec<Element<'a, Message>>,
 ) -> Element<'a, Message> {
     let act = ACT * (actions + 1) as f32;
-    let number = |n: String| -> Element<'a, Message> {
-        container(label::caption(n))
+    let check_width = Length::Fixed(typography::scaled(CHECK));
+    let number = |n: String, off: bool| -> Element<'a, Message> {
+        let words = label::caption(n);
+        let words = if off {
+            words.style(faded(style::text::muted))
+        } else {
+            words
+        };
+        container(words)
             .width(Length::Fixed(NO))
             .padding([0, 8])
             .align_x(Right)
             .into()
     };
-    let mut head = Row::new().push(number("#".to_owned())).align_y(Center);
-    for c in columns {
+    let mut head = Row::new()
+        .push(number("#".to_owned(), false))
+        .align_y(Center);
+    for (i, c) in columns.iter().enumerate() {
         let mut words = Row::new().push(label::caption(c.label).style(style::text::default));
         if let Some(unit) = c.unit {
             words = words.push(label::caption(format!(" ({unit})")));
         }
         // Left, over numbers too, as the web's heads are.
-        head = head.push(container(words).width(Fill).padding([5, 8]));
+        let width = if table.check(i) { check_width } else { Fill };
+        head = head.push(container(words).width(width).padding([5, 8]));
     }
     head = head.push(container(label::caption("")).width(Length::Fixed(act)));
     let mut body = Column::new();
@@ -285,16 +328,20 @@ pub fn view_with<'a>(
         if r > 0 {
             body = body.push(horizontal_divider());
         }
+        let mark = table.mark(r);
+        let off = mark == Some(Mark::Off);
         let mut line = Row::new()
-            .push(number(format!("{}", r + 1)))
+            .push(number(format!("{}", r + 1), off))
             .height(Length::Fixed(typography::scaled(28.0)))
             .align_y(Center);
         for (c, col) in columns.iter().enumerate() {
             let value = table.get(r, c);
-            line = line.push(if table.readonly(r, c) {
-                fixed(value, col.numeric)
+            line = line.push(if table.check(c) {
+                check(owner, r, c, value, check_width)
+            } else if table.readonly(r, c) {
+                fixed(value, col.numeric, mark)
             } else {
-                cell(owner, r, c, col, value, placeholder(r, c))
+                cell(owner, r, c, col, value, placeholder(r, c), off)
             });
         }
         let remove: Element<'a, Message> = if table.can_remove(r) {
@@ -346,7 +393,8 @@ pub fn view_with<'a>(
 }
 
 /// A cell that is typed in: borderless in the sheet, the accent edge while
-/// typed in, a red one while its number cannot be read.
+/// typed in, a red one while its number cannot be read; faded in a row
+/// left out.
 fn cell<'a>(
     owner: impl Owner + 'a,
     r: usize,
@@ -354,8 +402,10 @@ fn cell<'a>(
     col: &Col,
     value: &'a str,
     placeholder: String,
+    off: bool,
 ) -> Element<'a, Message> {
     let bad = col.numeric && read_number(value).is_some_and(f64::is_nan);
+    let look = style::field::cell(bad);
     let input = text_input(&placeholder, value)
         .id(owner.cell_id(r, c))
         .on_input(move |t| owner.cell(r, c, t))
@@ -364,7 +414,14 @@ fn cell<'a>(
         .padding([4, 8])
         .width(Fill)
         .size(typography::body())
-        .style(style::field::cell(bad));
+        .style(move |theme: &Theme, status| {
+            let mut s = look(theme, status);
+            if off {
+                s.value = s.value.scale_alpha(FADED);
+                s.placeholder = s.placeholder.scale_alpha(FADED);
+            }
+            s
+        });
     // Numbers in the figures' face; a hint in the words' face, as the web's.
     if col.numeric && !value.is_empty() {
         input.font(typography::mono()).align_x(Right).into()
@@ -375,17 +432,56 @@ fn cell<'a>(
     }
 }
 
-/// A fixed cell: a known station's name, or a dash where nothing is measured.
-fn fixed<'a>(value: &str, numeric: bool) -> Element<'a, Message> {
+/// A fixed cell: a known station's name, a dash where nothing is measured,
+/// a computed number (a residual) in the figures' face; in the warning
+/// colour in the worst row, faded in a row left out.
+fn fixed<'a>(value: &str, numeric: bool, mark: Option<Mark>) -> Element<'a, Message> {
     let shown = if value.is_empty() { "—" } else { value };
-    let words = label::body(shown.to_owned())
-        .font(typography::ui_strong())
-        .style(style::text::muted);
+    let words = label::body(shown.to_owned()).font(if numeric && !value.is_empty() {
+        typography::mono()
+    } else {
+        typography::ui_strong()
+    });
+    let words = match mark {
+        Some(Mark::Worst) => words.style(|theme: &Theme| text::Style {
+            color: Some(Tokens::of(theme).warning),
+        }),
+        Some(Mark::Off) => words.style(faded(style::text::muted)),
+        None => words.style(style::text::muted),
+    };
     let boxed = container(words).width(Fill).padding([4, 9]);
     if numeric {
         boxed.align_x(Right).into()
     } else {
         boxed.into()
+    }
+}
+
+/// A check box cell (the web's `calc-grid__check`): on unless the cell
+/// holds "0"; never faded, so a pair left out can be taken back.
+fn check<'a>(
+    owner: impl Owner + 'a,
+    r: usize,
+    c: usize,
+    value: &str,
+    width: Length,
+) -> Element<'a, Message> {
+    let on = value != "0";
+    let state = if on { Check::Checked } else { Check::Unchecked };
+    let flip = owner.cell(r, c, if on { "0" } else { "1" }.to_owned());
+    container(check_box(state, Some(flip)))
+        .width(width)
+        .align_x(Center)
+        .into()
+}
+
+/// A text style faded as a row left out reads.
+fn faded(look: fn(&Theme) -> text::Style) -> impl Fn(&Theme) -> text::Style {
+    move |theme| {
+        let s = look(theme);
+        text::Style {
+            color: s.color.map(|c| c.scale_alpha(FADED)),
+        }
     }
 }
 

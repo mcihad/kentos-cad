@@ -31,7 +31,7 @@ export function resolvePoint(ctx: AppContext, text: string): Known {
 }
 
 /** The name a point object at exactly `p` has, if any (a picked point snapped to a named point). */
-function nameAt(ctx: AppContext, p: Vec2): string | null {
+export function nameAt(ctx: AppContext, p: Vec2): string | null {
   for (const e of ctx.doc.all()) if (e.kind === 'point' && e.p.x === p.x && e.p.y === p.y && e.label) return e.label;
   return null;
 }
@@ -85,6 +85,8 @@ export interface GridColumn {
   /** Shown after the label ("g", "m"). */
   unit?: string;
   numeric?: boolean;
+  /** A checkbox: on unless the row's value is "0" (Vektör oturtma's Kullan). */
+  check?: boolean;
   placeholder?: (row: number) => string;
 }
 
@@ -110,6 +112,8 @@ export interface GridModel {
   actions?(row: number): GridAction[];
   /** A cell that cannot be typed in (a known station's name, a leg after the last point). */
   readonly(row: number, key: string): boolean;
+  /** A row's mark (`data-mark`): the worst residual, a pair left out. */
+  mark?(row: number): string | null;
   /** Whether a new row may follow this one, and adds it. */
   canInsertAfter(row: number): boolean;
   insertAfter(row: number): void;
@@ -147,10 +151,18 @@ export class Grid {
     const body = rows.map((row, r) =>
       h(
         'tr',
-        null,
+        { dataset: { row: String(r), ...(model.mark?.(r) ? { mark: model.mark(r) as string } : {}) } },
         h('td', { class: 'calc-grid__no' }, String(r + 1)),
         model.columns.map((c) => {
-          if (model.readonly(r, c.key)) return h('td', { class: 'calc-grid__fixed' }, row[c.key] || '—');
+          if (c.check) {
+            const box = h('input', { type: 'checkbox', checked: row[c.key] !== '0', 'aria-label': `${r + 1}. satır ${c.label}`, dataset: { row: String(r), key: c.key } });
+            box.addEventListener('change', () => {
+              row[c.key] = box.checked ? '1' : '0';
+              this.onChange();
+            });
+            return h('td', { class: 'calc-grid__check' }, box);
+          }
+          if (model.readonly(r, c.key)) return h('td', { class: `calc-grid__fixed${c.numeric ? ' num' : ''}`, dataset: { row: String(r), key: c.key } }, row[c.key] || '—');
           const input = h('input', {
             class: `calc-grid__cell${c.numeric ? ' num' : ''}`,
             type: 'text',
@@ -211,6 +223,17 @@ export class Grid {
     if (focus) this.focus(focus.row, focus.key);
   }
 
+  /** The fixed cells and the rows' marks again, from the model, without building the inputs anew (focus stays). */
+  refresh(): void {
+    const rows = this.model.rows();
+    for (const td of this.el.querySelectorAll<HTMLElement>('td.calc-grid__fixed[data-row]')) td.textContent = rows[Number(td.dataset.row)]?.[td.dataset.key ?? ''] || '—';
+    for (const tr of this.el.querySelectorAll<HTMLElement>('tbody tr[data-row]')) {
+      const mark = this.model.mark?.(Number(tr.dataset.row)) ?? null;
+      if (mark) tr.dataset.mark = mark;
+      else delete tr.dataset.mark;
+    }
+  }
+
   private focus(row: number, key: string): void {
     this.el.querySelector<HTMLInputElement>(`input[data-row="${row}"][data-key="${key}"]`)?.focus();
   }
@@ -251,7 +274,7 @@ export class Grid {
       const target = model.rows()[row];
       cells.forEach((v, j) => {
         const k = cols[start + j];
-        if (k && !model.readonly(row, k)) target[k] = v;
+        if (k && !model.readonly(row, k) && !model.columns[start + j].check) target[k] = v;
       });
     }
     this.render({ row, key });

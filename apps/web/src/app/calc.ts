@@ -62,6 +62,18 @@ export function registerCalcCommands(ctx: AppContext): void {
       aliases: ['GERIDEN', 'GERİDEN', 'GERIDENKESTIRME'],
       run: () => void import('../ui/calc/IntersectionDialog').then((m) => m.openIntersection(ctx, 'resection')).catch(failed),
     },
+    {
+      // Vektör oturtma (docs/adr/0156): a drawing or a layer fitted to another system by control points.
+      id: 'transform.fit',
+      title: 'Vektör oturtma…',
+      short: 'Oturt',
+      category: 'Koordinat',
+      icon: 'vectorFit',
+      description:
+        'Çizimi ya da bir katmanı ortak noktalarla başka bir sisteme oturtur: Helmert, afin ya da projektif dönüşüm en küçük kareler ile; her çiftin artığı ve m0 görünür, kötü çift çıkarılınca çözüm yenilenir. Çiftler yazılır, yapıştırılır, çizimden seçilir ya da iki katmandaki aynı adlı noktalardan eşlenir; Uygula tek adımda yazar.',
+      aliases: ['OTURT', 'OTURTMA', 'DONUSUM', 'DÖNÜŞÜM', 'HELMERT', 'AFIN', 'AFİN'],
+      run: () => void import('../ui/calc/FitDialog').then((m) => m.openFit(ctx)).catch(failed),
+    },
   ];
   ctx.commands.registerAll(list);
 }

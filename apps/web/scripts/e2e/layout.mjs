@@ -94,7 +94,7 @@ const ITEMS = [
   { id: 'export-dxf', open: (ui) => ui.run('file.export.dxf') },
   { id: 'export-geojson', open: (ui) => ui.run('file.export.geojson') },
   { id: 'export-ncn', open: (ui) => ui.run('file.export.ncn') },
-  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
+  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },
   { id: 'layer-style', open: async (ui) => (await ui.eval(`window.kentos.doc.layers.setActive('ada')`), await ui.run('style.layerStyle')) },
