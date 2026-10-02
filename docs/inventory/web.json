@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 204,
-      "implemented": 191,
+      "total": 206,
+      "implemented": 193,
       "partial": 0,
       "pending": 13
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 60,
-      "implemented": 60,
+      "total": 62,
+      "implemented": 62,
       "partial": 0,
       "pending": 0
     },
@@ -74,11 +74,11 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 61,
-    "commandsOnDesktop": 189,
+    "commandsOnDesktop": 191,
     "desktop": {
       "commands": {
-        "total": 204,
-        "implemented": 189,
+        "total": 206,
+        "implemented": 191,
         "partial": 0,
         "pending": 13,
         "none": 0,
@@ -117,8 +117,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 60,
-        "implemented": 59,
+        "total": 62,
+        "implemented": 61,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -1090,6 +1090,71 @@
         "desktop": "implemented"
       },
       "tests": []
+    },
+    {
+      "id": "draft.topology",
+      "title": "Topolojik düzenleme",
+      "category": "Çizim yardımcıları",
+      "icon": "topologyEdit",
+      "description": "Tutamaçla taşınan köşe, kenar ortasından eklenen köşe ve biçimlenen yay, görünen ve kilitsiz katmanlardaki komşu nesnelerin ortak köşe ve kenarlarında da birlikte değişir; hepsi tek adımda geri alınır.",
+      "aliases": [
+        "TOPOLOJIKDUZENLEME",
+        "TOPODUZENLE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Araçlar › Komut › Çizim yardımcıları"
+      ],
+      "ribbon": [
+        "Araçlar › Çizim yardımcıları"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts",
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/topology-edit.json",
+        "fixtures/interaction/v1/usage-topology-edit.json"
+      ]
+    },
+    {
+      "id": "draft.topologyPoints",
+      "title": "Topolojik düzenlemede noktalar da",
+      "short": "Noktalar da",
+      "category": "Çizim yardımcıları",
+      "icon": "topologyPoints",
+      "description": "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Araçlar › Komut › Çizim yardımcıları"
+      ],
+      "ribbon": [
+        "Araçlar › Çizim yardımcıları"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/topology-edit.json"
+      ]
     },
     {
       "id": "draft.tracking",
@@ -10170,6 +10235,34 @@
       }
     },
     {
+      "id": "session.topology",
+      "key": "topology",
+      "scope": "session",
+      "persistence": "none",
+      "type": "boolean",
+      "default": false,
+      "setting": "drafting.topology",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "session.topologyPoints",
+      "key": "topologyPoints",
+      "scope": "session",
+      "persistence": "none",
+      "type": "boolean",
+      "default": false,
+      "setting": "drafting.topologyPoints",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "session.tracking",
       "key": "tracking",
       "scope": "session",
@@ -15598,7 +15691,9 @@
                       "draft.grid",
                       "draft.ortho",
                       "draft.polar",
-                      "draft.tracking"
+                      "draft.tracking",
+                      "draft.topology",
+                      "draft.topologyPoints"
                     ]
                   }
                 ]
@@ -17540,6 +17635,14 @@
               },
               {
                 "command": "draft.tracking",
+                "size": "small"
+              },
+              {
+                "command": "draft.topology",
+                "size": "small"
+              },
+              {
+                "command": "draft.topologyPoints",
                 "size": "small"
               }
             ],
@@ -19517,6 +19620,14 @@
                 {
                   "command": "draft.tracking",
                   "size": "small"
+                },
+                {
+                  "command": "draft.topology",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.topologyPoints",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -21250,6 +21361,14 @@
                 {
                   "command": "draft.tracking",
                   "size": "small"
+                },
+                {
+                  "command": "draft.topology",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.topologyPoints",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -21574,6 +21693,8 @@
     "split": "<path d=\"M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1\"/><path d=\"m7.4 9.4 1.9 4M10.6 7.6l1.9 4\" stroke-width=\"1.1\"/><rect x=\"1.5\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5.6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "cleanup": "<path d=\"M14.5 2.8 10.4 9\"/><path d=\"M6.4 9.4h7.2l1.2 7.1H5.2z\"/><path d=\"M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3\"/>",
     "topology": "<circle cx=\"10\" cy=\"10.5\" r=\"2.3\"/><path d=\"M10 2.8v5.4M3.2 16.6l5.1-4.6M16.8 16.6l-5.1-4.6\"/><circle cx=\"10\" cy=\"10.5\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "topologyEdit": "<path d=\"M2.5 4.5h15v11h-15z\"/><path d=\"M8.5 4.5v11\" stroke-dasharray=\"1.6 1.5\" stroke-width=\"1.1\"/><path d=\"M12.5 4.5 8.5 15.5\"/><rect x=\"11\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "topologyPoints": "<path d=\"M10.1 4.5H2.5v11h15v-11h-2.6\"/><path d=\"M8.5 4.5v11\" stroke-dasharray=\"1.6 1.5\" stroke-width=\"1.1\"/><path d=\"M11.7 6.75 8.5 15.5\"/><circle cx=\"12.5\" cy=\"4.5\" r=\"2.2\" fill=\"currentColor\" fill-opacity=\".25\"/><circle cx=\"12.5\" cy=\"4.5\" r=\".6\" fill=\"currentColor\" stroke=\"none\"/>",
     "matchProperties": "<path d=\"m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z\"/><path d=\"M6.3 8.3 3.2 16.8l8.5-3.1\"/><path d=\"M4.6 12.9 7 15.4\"/>",
     "setElevation": "<path d=\"M3 16.5h14\"/><path d=\"M10 13.5V3.5\"/><path d=\"m7 6.5 3-3 3 3\"/><path d=\"M13.5 13.5h3M13.5 10.5h2\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "sector": "<path d=\"M5 15.5V4.5a11 11 0 0 1 11 11z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"3.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"3.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",

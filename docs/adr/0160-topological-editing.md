@@ -109,6 +109,16 @@ Düzenleme `cad.entities.edit`'in var olan işlemleriyle (`grip`, `vertexRemove`
      - 7 fark durumu (köşe taşıma, kapanış kenarına köşe, çizginin çoklu çizgi olması, yaylı kenar, köşe silme, Esnet, açık yolun ucu).
    - **Sonuç:** çekirdek (yerli) ve web (WASM) bit bit aynı. Ters yöndeki kenarın kabarıklığını ters çevirmeyi bozan bir deneme testi düşürür.
 2. Kip ve tutamaçlar iki platformda: durum çubuğu, ayar, köşe taşıma, kenar ortası, önizleme; ortak iz `topology-edit.json`.
+
+   *(2 Ekim: tamam.)*
+   - **Ayar ve komutlar:** `drafting.topology`, `drafting.topologyPoints` (oturum ayarı, iki platform). Komutlar kendi simgeleriyle: `draft.topology` (Topolojik düzenleme) ve `draft.topologyPoints` (Topolojik düzenlemede noktalar da; şeritte “Noktalar da”). İkisi de Araçlar › Çizim yardımcıları'nda; Topolojik düzenleme, komut sürerken çizim alanının sağ tık menüsünde de.
+   - **Durum çubuğu:** Topoloji hücresi. Noktalar da, hücrenin sağ tık menüsündedir.
+   - **Tutamaç:** köşe taşıma, kenar ortasından yeni köşe ve yaylı kenarın biçimlenmesi komşuları aynı `cad.entities.edit` (`grip`) adımında yazar.
+     - Komşular deponun dizininden, değişen yerlerin 1 µm çevresinden bulunur (web `tools/neighbours.ts`, masaüstü `kentos_interaction::neighbours`).
+     - Yazıdan sonra iletiler: kaç komşunun da değiştiği, kilitli kaç komşunun değişmediği. Geçersiz kalacak komşu, köşe silmeyle (3. adım) olabilir.
+   - **Nokta:** Noktalar da açıkken tutamaçla taşınan nokta da bir köşedir; yerindeki köşeler onunla gelir. Çekirdeğin `changes`'i noktanın taşınmasını `move` sayar; başvuruya iki fark durumu eklendi.
+   - **Önizleme:** sürüklerken komşuların değişen biçimleri de kesikli çizilir.
+   - **İz:** `topology-edit.json` (`topology-edit.kcad`) iki platformda. İz biçimine `bulges` ve `zs` beklentileri (1e-9 içinde) eklendi; yaylı ortak kenar ve kenar üstüne eklenen köşenin kotu böyle denetlenir.
 3. Tutamaç menüsü ve Esnet iki platformda; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

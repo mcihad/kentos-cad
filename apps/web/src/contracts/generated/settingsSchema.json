@@ -241,6 +241,38 @@
       "apply": "live"
     },
     {
+      "key": "drafting.topology",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Topolojik düzenleme",
+      "description": "Tutamaçla taşınan köşe, kenar ortasından eklenen köşe ve biçimlenen yay, görünen ve kilitsiz katmanlardaki komşu nesnelerin ortak köşe ve kenarlarında da birlikte değişir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.topologyPoints",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Noktalar da",
+      "description": "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "snap.endpoint",
       "type": "boolean",
       "default": true,

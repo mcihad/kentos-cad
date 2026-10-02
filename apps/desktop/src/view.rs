@@ -989,6 +989,21 @@ impl App {
         if runs {
             toggle = toggle.on_press(Message::Run(id));
         }
+        // Topolojik düzenleme's option, Noktalar da, on the cell's right-click menu (docs/adr/0160 §1).
+        if id == "draft.topology" {
+            return ContextMenu::new(toggle, move |_| {
+                let points = "draft.topologyPoints";
+                match catalog().get(points) {
+                    Some(command) => Menu::new().check(
+                        "Noktalar da",
+                        self.checked(points).unwrap_or(false),
+                        enabled(command),
+                    ),
+                    None => Menu::new(),
+                }
+            })
+            .into();
+        }
         toggle.into()
     }
 
@@ -1212,12 +1227,13 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 6] = [
+const STATUS_AIDS: [(&str, &str); 7] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
     ("draft.polar", "Kutupsal"),
     ("draft.tracking", "İzleme"),
+    ("draft.topology", "Topoloji"),
     ("view.lineWeights", "Kalınlık"),
 ];
 

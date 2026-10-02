@@ -108,6 +108,8 @@ mod leader_scenes;
 #[cfg(test)]
 mod topology_scenes;
 #[cfg(test)]
+mod topology_tests;
+#[cfg(test)]
 mod text_scenes;
 #[cfg(test)]
 mod tools_scenes;

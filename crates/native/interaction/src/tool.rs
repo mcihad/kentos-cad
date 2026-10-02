@@ -169,6 +169,12 @@ pub struct Draft {
     pub pick_aperture: f64,
     /// Object tracking is on (Shift+F3, `drafting.tracking`, docs/adr/0085).
     pub tracking: bool,
+    /// Topological editing is on (`drafting.topology`, docs/adr/0160): a
+    /// grip puts the shared corners and edges of the objects around it right
+    /// with the object it edits.
+    pub topology: bool,
+    /// Points count as shared corners too (Noktalar da, `drafting.topologyPoints`).
+    pub topology_points: bool,
     /// The colour new objects take (the ribbon's Renk, the web's
     /// `ctx.settings.color`): one of the drawing colours (`ink`, `#E5484D`
     /// …), explicit in the product command's input (CMD-07); `None`: the
@@ -183,7 +189,8 @@ pub struct Draft {
 impl Default for Draft {
     /// The web's defaults: ortho and polar off, an 11 px snap aperture,
     /// snapping on with its default kinds (all but nearest), a 5 px pick
-    /// aperture, the layer's colour and weight (app/state.ts, the settings schema).
+    /// aperture, topological editing off, the layer's colour and weight
+    /// (app/state.ts, the settings schema).
     fn default() -> Self {
         Self {
             ortho: false,
@@ -193,6 +200,8 @@ impl Default for Draft {
             snap_kinds: snap_kinds(|key| key != "snap.nearest"),
             pick_aperture: 5.0,
             tracking: true,
+            topology: false,
+            topology_points: false,
             color: None,
             line_weight: None,
         }

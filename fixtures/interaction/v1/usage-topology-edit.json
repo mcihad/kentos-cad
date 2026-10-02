@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-topology-edit",
+  "title": "Kullanım: Topolojik düzenleme; ortak köşenin tutamacı taşınırken komşu parsel ve yol da önizlenir, kilitli pafta yerinde kalır; yaylı ortak kenar iki parselde birlikte biçimlenir",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0160",
+  "covers": ["UX-01", "UX-09"],
+  "document": "topology-edit.kcad",
+  "view": { "center": [487000, 4420001], "metresPerPixel": 0.17 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.17,
+  "steps": [
+    { "run": "draft.topology", "note": "Topolojik düzenleme açılır: durum çubuğunda Topoloji yanar." },
+    { "click": [-40, -6], "note": "21 numaralı parsel seçilir.", "expect": { "selected": [1] } },
+    { "shot": "secim" },
+    { "click": [-20, 9], "note": "Ortak köşenin tutamacı sıcak." },
+    { "move": [-16, 13] },
+    { "shot": "onizleme" },
+    {
+      "click": [-16, 13],
+      "note": "Köşe, komşu parsel ve yolun ucu birlikte; kilitli paftanın üçgeni yerinde.",
+      "expect": { "logged": ["Topolojik düzenleme: 2 komşu nesne de değişti.", "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."] }
+    },
+    { "shot": "sonuc" },
+    { "click": [17, -11], "note": "31 numaralı parsel seçilir.", "expect": { "selected": [7] } },
+    { "click": [27.5, -1], "note": "Yaylı ortak kenarın orta tutamacı sıcak." },
+    { "move": [31, -1] },
+    { "shot": "yay-onizleme" },
+    { "click": [31, -1], "expect": { "logged": ["Topolojik düzenleme: 1 komşu nesne de değişti."] } },
+    { "shot": "yay" }
+  ]
+}

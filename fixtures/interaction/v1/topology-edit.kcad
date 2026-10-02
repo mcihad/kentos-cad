@@ -1,0 +1,294 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Topolojik düzenleme",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "komsu",
+      "name": "Komşu pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "#8E4EC6",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F76B15",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 7
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "21"
+      },
+      "pts": [
+        {
+          "x": 486960,
+          "y": 4419980
+        },
+        {
+          "x": 486980,
+          "y": 4419980
+        },
+        {
+          "x": 486980,
+          "y": 4420010
+        },
+        {
+          "x": 486960,
+          "y": 4420010
+        }
+      ],
+      "zs": [
+        null,
+        100.0,
+        103.0,
+        null
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "22"
+      },
+      "pts": [
+        {
+          "x": 486980,
+          "y": 4419980
+        },
+        {
+          "x": 487000,
+          "y": 4419980
+        },
+        {
+          "x": 487000,
+          "y": 4420010
+        },
+        {
+          "x": 486980,
+          "y": 4420010
+        }
+      ],
+      "zs": [
+        100.0,
+        null,
+        null,
+        103.0
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "komsu",
+      "attrs": {
+        "Parsel": "40"
+      },
+      "pts": [
+        {
+          "x": 486960,
+          "y": 4420010
+        },
+        {
+          "x": 486980,
+          "y": 4420010
+        },
+        {
+          "x": 486970,
+          "y": 4420022
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486980,
+        "y": 4420010
+      },
+      "b": {
+        "x": 486995,
+        "y": 4420022
+      }
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "ST"
+      },
+      "label": "P1",
+      "p": {
+        "x": 486980,
+        "y": 4420010
+      },
+      "z": 103.0
+    },
+    {
+      "kind": "line",
+      "id": 6,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+        "x": 486980,
+        "y": 4420010
+      },
+      "b": {
+        "x": 486980,
+        "y": 4420022
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "31"
+      },
+      "pts": [
+        {
+          "x": 487010,
+          "y": 4419990
+        },
+        {
+          "x": 487025,
+          "y": 4419990
+        },
+        {
+          "x": 487025,
+          "y": 4420010
+        },
+        {
+          "x": 487010,
+          "y": 4420010
+        }
+      ],
+      "bulges": [
+        0,
+        0.25,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "32"
+      },
+      "pts": [
+        {
+          "x": 487025,
+          "y": 4419990
+        },
+        {
+          "x": 487040,
+          "y": 4419990
+        },
+        {
+          "x": 487040,
+          "y": 4420010
+        },
+        {
+          "x": 487025,
+          "y": 4420010
+        }
+      ],
+      "bulges": [
+        0,
+        0,
+        0,
+        -0.25
+      ]
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { webgpuSupported } from '../../render/webgpu/support';
 import { fitBar } from '../widgets/fit';
-import { PopupMenu } from '../widgets/PopupMenu';
+import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { hideTooltip, tooltip } from '../widgets/tooltip';
 import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
@@ -50,6 +50,8 @@ export class StatusBar extends Component {
       this.toggle('draft.ortho', 'Orto'),
       this.toggle('draft.polar', 'Kutupsal'),
       this.toggle('draft.tracking', 'İzleme'),
+      // Topolojik düzenleme (docs/adr/0160 §1): its option, Noktalar da, is on the cell's right-click menu.
+      this.toggle('draft.topology', 'Topoloji', () => [commandItem(ctx, 'draft.topologyPoints', { label: 'Noktalar da' })]),
       this.toggle('view.lineWeights', 'Kalınlık'),
     );
 
@@ -183,10 +185,16 @@ export class StatusBar extends Component {
     );
   }
 
-  private toggle(id: string, label: string): HTMLElement {
+  /** A drafting aid's cell; `options`, its right-click menu. */
+  private toggle(id: string, label: string, options?: () => MenuItem[]): HTMLElement {
     const cmd = this.ctx.commands.get(id)!;
-    const b = h('button', { class: 'status__toggle', type: 'button', 'aria-pressed': 'false' }, label);
+    const b = h('button', { class: 'status__toggle', type: 'button', 'aria-pressed': 'false', 'data-command': id }, label);
     b.addEventListener('click', () => this.ctx.commands.execute(id));
+    if (options)
+      b.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        PopupMenu.open(options(), { x: e.clientX, y: e.clientY }, { placement: 'point' });
+      });
     const sync = () => b.setAttribute('aria-pressed', String(!!cmd.isChecked?.()));
     sync();
     if (cmd.watch) this.d.add(watchAll(cmd.watch, sync));

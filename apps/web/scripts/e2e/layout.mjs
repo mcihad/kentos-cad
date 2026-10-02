@@ -71,6 +71,8 @@ const ITEMS = [
   },
   { id: 'status-renderer', open: (ui) => ui.click('.status__renderer') },
   { id: 'status-mode', open: (ui) => ui.click('.status__mode') },
+  // Topoloji's right-click menu: Noktalar da (docs/adr/0160 §1).
+  { id: 'status-topology', open: (ui) => ui.rightClick('.status__toggle[data-command="draft.topology"]') },
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
   { id: 'layer-row', open: (ui) => ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name') },
   { id: 'layer-color', open: (ui) => ui.click('.panel--layers .tree__row[data-id="taslak"] .swatch--btn') },

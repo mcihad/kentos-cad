@@ -8,6 +8,7 @@ import { withoutElevations } from '../product/elevation';
 import { geometryOf } from '../product/entitiesEdit';
 import { gripElevation, hasVertexElevation, nearestVertex } from '../product/elevationValues';
 import { writeEdit } from './editCommand';
+import { neighbours, sayNeighbours } from './neighbours';
 import type { ViewTransform } from '../viewport/Camera';
 import { GRIP_HIT_PX } from '../viewport/overlay';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
@@ -30,7 +31,9 @@ interface GripEdit {
 /**
  * Default tool. Click picks the most specific entity; dragging draws a
  * window (left→right, fully inside) or crossing (right→left, touching) box.
- * Dragging a grip of a selected entity edits that vertex (snaps apply).
+ * Dragging a grip of a selected entity edits that vertex (snaps apply); with
+ * Topolojik düzenleme on, the shared corners and edges of the objects around
+ * it go with it in the same step (docs/adr/0160, `neighbours`).
  */
 export class SelectTool implements Tool {
   readonly id = 'select';
@@ -111,8 +114,13 @@ export class SelectTool implements Tool {
     const moved = e ? moveGrip(e, g.index, p) : null;
     if (!e) log.warn('Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.');
     else if (!moved) log.warn('Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.');
-    // No elevations go with it: the moved vertex keeps its own by place, as every other does (docs/adr/0142, 0143).
-    else if (dist(g.origin, p) > 1e-9) writeEdit(this.ctx, 'grip', [{ kind: 'update', uid: g.uid, geometry: withoutElevations(geometryOf(moved as unknown as EditGeometry)) as unknown as EditGeometry }]);
+    else if (dist(g.origin, p) > 1e-9) {
+      // The neighbours sharing what moved go in the same step (docs/adr/0160 §6).
+      const follow = neighbours(this.ctx, e, moved);
+      // No elevations go with it: the moved vertex keeps its own by place, as every other does (docs/adr/0142, 0143).
+      const geometry = withoutElevations(geometryOf(moved as unknown as EditGeometry)) as unknown as EditGeometry;
+      if (writeEdit(this.ctx, 'grip', [{ kind: 'update', uid: g.uid, geometry }, ...(follow?.changes ?? [])])) sayNeighbours(this.ctx, follow);
+    }
     this.endGrip();
   }
 
@@ -243,7 +251,9 @@ export class SelectTool implements Tool {
       const pal = this.ctx.view.palette;
       const e = this.ctx.doc.get(this.grip.id);
       const moved = e ? moveGrip(e, this.grip.index, this.gripPoint) : null;
-      if (moved) strokeGeometry(g, view, moved, { color: pal.accent, dash: [4, 3], width: 1.5 });
+      // The object and the neighbours that follow it (docs/adr/0160 §5), alike.
+      const follow = e && moved ? (neighbours(this.ctx, e, moved)?.shapes ?? []) : [];
+      for (const shape of moved ? [moved, ...follow] : []) strokeGeometry(g, view, shape, { color: pal.accent, dash: [4, 3], width: 1.5 });
       strokePath(g, view, [this.grip.origin, this.gripPoint], { color: pal.accent, dash: [2, 3] });
       // The vertex keeps its elevation as it moves (docs/adr/0142): the tag says which.
       const z = e ? gripElevation(e, this.grip.index) : null;

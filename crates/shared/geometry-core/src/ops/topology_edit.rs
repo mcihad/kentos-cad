@@ -379,8 +379,16 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
 /// ends stayed and whose bulge changed a bulge; with one vertex more, the
 /// first that differs is an insert on the edge it splits; with one fewer, a
 /// remove with its two path neighbours (neither at an open path's end). The
-/// moves come first.
+/// moves come first. A point is a corner of its own (Noktalar da): moved, it
+/// is a move of its place.
 pub fn changes(before: &Shape, after: &Shape) -> Vec<Change> {
+    if let (Shape::Point { p: at, .. }, Shape::Point { p: to, .. }) = (before, after) {
+        return if at == to {
+            Vec::new()
+        } else {
+            vec![Change::Move { at: *at, to: *to }]
+        };
+    }
     let (Some((pb, _)), Some((pa, _))) = (paths_of(before), paths_of(after)) else {
         return Vec::new();
     };
@@ -518,7 +526,7 @@ mod tests {
         let Json::Arr(diffs) = file.get("diffs") else {
             panic!("diffs")
         };
-        assert!(diffs.len() >= 7, "{} diffs", diffs.len());
+        assert!(diffs.len() >= 9, "{} diffs", diffs.len());
         let mut off = Vec::new();
         for d in diffs {
             let name = String::from_json(d.get("name")).unwrap_or_default();

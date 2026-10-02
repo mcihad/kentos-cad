@@ -75,6 +75,7 @@ function commandItems(ctx: AppContext): MenuItem[] {
     commandItem(ctx, 'draft.ortho'),
     commandItem(ctx, 'draft.polar'),
     commandItem(ctx, 'draft.tracking'),
+    commandItem(ctx, 'draft.topology'),
     { kind: 'separator' },
     commandItem(ctx, 'view.zoomExtents'),
   ];

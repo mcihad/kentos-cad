@@ -44,7 +44,7 @@ pub struct View {
 }
 
 #[derive(Debug, Default, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct DraftSpec {
     #[serde(default)]
     pub(super) snap: bool,
@@ -56,6 +56,11 @@ pub struct DraftSpec {
     pub(super) polar: bool,
     #[serde(default)]
     pub(super) tracking: bool,
+    /// Topological editing and its Noktalar da (docs/adr/0160).
+    #[serde(default)]
+    pub(super) topology: bool,
+    #[serde(default)]
+    pub(super) topology_points: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -205,6 +210,11 @@ pub struct Newest {
     pub(super) attrs: Option<std::collections::BTreeMap<String, String>>,
     #[serde(default, deserialize_with = "present")]
     pub(super) z: Option<Option<f64>>,
+    /// The outer path's bulges, each within 1e-9, one left out a straight
+    /// edge; its vertex elevations (a line's two ends), each within 1e-9,
+    /// `null` none (docs/adr/0160: a shared arc, an elevation along an edge).
+    pub(super) bulges: Option<Vec<f64>>,
+    pub(super) zs: Option<Vec<Option<f64>>>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

@@ -270,6 +270,9 @@ pub const PORTED: &[&str] = &[
     "processing.history",
     // Nesne izleme, Shift+F3 (docs/adr/0085).
     "draft.tracking",
+    // Topolojik düzenleme and its Noktalar da (docs/adr/0160).
+    "draft.topology",
+    "draft.topologyPoints",
     // The styled drawing's view choices (docs/adr/0090): layer line weights on or off
     // (Kalınlık), symbols at the plot scale or at a fixed size on the screen.
     "view.lineWeights",

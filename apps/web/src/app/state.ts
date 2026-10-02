@@ -20,6 +20,10 @@ export class DraftingSettings {
   readonly polar = new Signal(sessionDefault('drafting.polar'));
   /** Object snap tracking: alignment lines from acquired snap points. */
   readonly tracking = new Signal(sessionDefault('drafting.tracking'));
+  /** Topological editing (docs/adr/0160): an edit puts its neighbours' shared corners and edges right with it. */
+  readonly topology = new Signal(sessionDefault('drafting.topology'));
+  /** Points count as shared corners too (Noktalar da). */
+  readonly topologyPoints = new Signal(sessionDefault('drafting.topologyPoints'));
   /** Current properties for new entities; null = katmana göre. */
   readonly color = new Signal<string | null>(null);
   readonly lineType = new Signal<LineType | null>(null);

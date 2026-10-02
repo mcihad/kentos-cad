@@ -1168,6 +1168,8 @@ impl App {
             snap_kinds: snap_kinds(|key| s.bool(key)),
             pick_aperture: s.number("drafting.pickAperture"),
             tracking: s.bool("drafting.tracking"),
+            topology: s.bool("drafting.topology"),
+            topology_points: s.bool("drafting.topologyPoints"),
             // The session's, not settings: kept through a settings change.
             color: self.draft.color,
             line_weight: self.draft.line_weight,
@@ -1358,6 +1360,11 @@ impl App {
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.tracking" => self.toggle_session("drafting.tracking", "Nesne izleme"),
+            "draft.topology" => self.toggle_session("drafting.topology", "Topolojik düzenleme"),
+            "draft.topologyPoints" => self.toggle_session(
+                "drafting.topologyPoints",
+                "Topolojik düzenlemede noktalar da",
+            ),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // The styled drawing's view choices (style/, docs/adr/0090).
@@ -1463,6 +1470,8 @@ impl App {
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
             "draft.tracking" => self.draft.tracking,
+            "draft.topology" => self.draft.topology,
+            "draft.topologyPoints" => self.draft.topology_points,
             "draft.grid" => self.settings.bool("drafting.grid"),
             "view.lineWeights" => self.settings.bool("graphics.lineWeights"),
             "view.symbols.plot" => self.settings.text("graphics.symbolSize") != "screen",

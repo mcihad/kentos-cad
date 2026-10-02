@@ -2159,6 +2159,57 @@
     ]
    },
    "expected": []
+  },
+  {
+   "name": "Nokta taşınır: yeri bir köşe",
+   "before": {
+    "kind": "point",
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    },
+    "z": 101.5
+   },
+   "after": {
+    "kind": "point",
+    "p": {
+     "x": 10.5,
+     "y": 9.75
+    },
+    "z": 101.5
+   },
+   "expected": [
+    {
+     "kind": "move",
+     "at": {
+      "x": 10.0,
+      "y": 10.0
+     },
+     "to": {
+      "x": 10.5,
+      "y": 9.75
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta yerinde: değişiklik yok",
+   "before": {
+    "kind": "point",
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    }
+   },
+   "after": {
+    "kind": "point",
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    },
+    "z": 99.0
+   },
+   "expected": []
   }
  ]
 }

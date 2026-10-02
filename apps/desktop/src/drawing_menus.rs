@@ -302,12 +302,20 @@ impl App {
         let menu = menu
             .submenu("Tek seferlik kenet", self.snap_menu(Menu::new()))
             .icon(crate::icons::from_web(Some("snap")));
-        ["draft.snap", "draft.ortho", "draft.polar", "draft.tracking", "-", "view.zoomExtents"]
-            .into_iter()
-            .fold(menu, |menu, id| match id {
-                "-" => menu.separator(),
-                id => self.command_item(menu, id),
-            })
+        [
+            "draft.snap",
+            "draft.ortho",
+            "draft.polar",
+            "draft.tracking",
+            "draft.topology",
+            "-",
+            "view.zoomExtents",
+        ]
+        .into_iter()
+        .fold(menu, |menu, id| match id {
+            "-" => menu.separator(),
+            id => self.command_item(menu, id),
+        })
     }
 
     /// The one-shot snaps (the web's `snapItems`), after `menu`'s header.

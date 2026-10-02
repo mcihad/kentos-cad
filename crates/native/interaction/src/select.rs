@@ -21,6 +21,10 @@
 //! Hidden layers' objects are never picked; locked layers' are, as on the
 //! web (the erase tool leaves them in place), but their grips are not
 //! taken. Ctrl does nothing here, as on the web.
+//!
+//! With Topolojik düzenleme on (docs/adr/0160) a grip's edit puts the shared
+//! corners and edges of the objects around it right too, in the same step
+//! (`neighbours`): they are drawn dashed while the grip moves.
 
 use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::{Slot, Uuid};
@@ -38,6 +42,7 @@ use crate::edge::Outline;
 use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
+use crate::neighbours;
 use crate::points;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Pointer, Preview, Stroke, Tag, Tone};
@@ -111,6 +116,9 @@ pub struct Select {
     tracking: Option<Tracking>,
     /// The object as the grip would leave it, for the preview.
     moved: Option<Shape>,
+    /// The neighbours as the grip would leave them (Topolojik düzenleme,
+    /// docs/adr/0160), for the preview.
+    follow: Vec<Shape>,
     /// The pointer rests on the grip of a vertex that has an elevation: where
     /// the pointer is, and the elevation, for the tag beside it (docs/adr/0142).
     hover_grip: Option<(Vec2, f64)>,
@@ -160,11 +168,17 @@ impl Select {
             let (point, tracking) = points::constrain(Some(g.origin), p, cx);
             self.grip_point = Some(point);
             self.tracking = tracking;
-            self.moved = cx
-                .doc
-                .get(g.slot)
-                .and_then(|e| move_grip(&CoreEntity::new(shape(e)), g.index, point))
+            let before = cx.doc.get(g.slot).map(shape);
+            self.moved = before
+                .as_ref()
+                .and_then(|b| move_grip(&CoreEntity::new(b.clone()), g.index, point))
                 .map(|e| e.shape);
+            self.follow = match (&before, &self.moved) {
+                (Some(before), Some(moved)) => neighbours::neighbours(cx, g.slot, before, moved)
+                    .map(|n| n.shapes)
+                    .unwrap_or_default(),
+                _ => Vec::new(),
+            };
             return;
         }
         let Some(start) = self.start else {
@@ -315,6 +329,7 @@ impl Select {
         self.grip_point = None;
         self.tracking = None;
         self.moved = None;
+        self.follow.clear();
     }
 
     /// The object with its grip at `at`, written through `cad.entities.edit`,
@@ -330,8 +345,8 @@ impl Select {
         let found = g
             .uid
             .and_then(|uid| Some((uid, cx.doc.slot_of(uid)?)))
-            .and_then(|(uid, slot)| Some((uid, cx.doc.get(slot)?.clone())));
-        let Some((uid, e)) = found else {
+            .and_then(|(uid, slot)| Some((uid, slot, cx.doc.get(slot)?.clone())));
+        let Some((uid, slot, e)) = found else {
             cx.say(
                 Level::Warn,
                 "Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.",
@@ -349,16 +364,22 @@ impl Select {
                 let Some(geometry) = edit_geometry(shape(&m)) else {
                     return;
                 };
+                // The neighbours sharing what moved go in the same step (docs/adr/0160 §6).
+                let follow = neighbours::neighbours(cx, slot, &shape(&e), &shape(&m));
+                let mut changes = vec![EntityEdit::Update {
+                    uid: uid.to_string(),
+                    geometry,
+                }];
+                changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
                 let input = EntitiesEdit {
                     operation: EditOperation::Grip,
-                    changes: vec![EntityEdit::Update {
-                        uid: uid.to_string(),
-                        geometry,
-                    }],
+                    changes,
                     expected_revision: None,
                 };
                 let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
-                let _ = points::written(result, cx);
+                if points::written(result, cx).is_some() {
+                    neighbours::say(follow.as_ref(), cx);
+                }
             }
             Some(_) => {}
         }
@@ -379,8 +400,9 @@ impl Select {
             });
         };
         let mut strokes = Vec::new();
-        if let Some(moved) = &self.moved {
-            strokes.extend(Outline::of(moved, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
+        // The object and the neighbours that follow it (docs/adr/0160 §5), alike.
+        for shape in self.moved.iter().chain(&self.follow) {
+            strokes.extend(Outline::of(shape, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
         }
         strokes.push(Stroke::dashed(vec![g.origin, at], false, [2.0, 3.0]));
         let mut lines = vec![format.length(dist(g.origin, at))];

@@ -68,6 +68,9 @@ pub struct Seen {
     pub label: Option<String>,
     pub attrs: std::collections::BTreeMap<String, String>,
     pub z: Option<f64>,
+    /// The outer path's vertex elevations, a line's two ends', `None` none
+    /// (docs/adr/0142, 0160); empty for other kinds.
+    pub zs: Vec<Option<f64>>,
 }
 
 impl Seen {
@@ -189,6 +192,13 @@ impl Seen {
                 Entity::Point(p) => p.z,
                 _ => None,
             },
+            zs: match e {
+                Entity::Line(l) => vec![l.za, l.zb],
+                Entity::Polygon(p) | Entity::Polyline(p) => {
+                    p.zs.clone().unwrap_or_else(|| vec![None; p.pts.len()])
+                }
+                _ => Vec::new(),
+            },
         }
     }
 }
@@ -307,6 +317,8 @@ impl<'a> Player<'a> {
             ("drafting.polar", d.polar.into()),
             ("drafting.snap", d.snap.into()),
             ("drafting.tracking", d.tracking.into()),
+            ("drafting.topology", d.topology.into()),
+            ("drafting.topologyPoints", d.topology_points.into()),
             (
                 "drafting.cursorInput",
                 trace.prefs.cursor_input.unwrap_or(true).into(),

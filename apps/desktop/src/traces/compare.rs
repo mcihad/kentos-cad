@@ -345,6 +345,39 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.z: {:?}, beklenen {z:?}", seen.z));
     }
+    // A shared arc and an elevation along an edge (docs/adr/0160) come from
+    // the core's arithmetic: within 1e-9.
+    if let Some(want_bulges) = &want.bulges {
+        let at = |i: usize| bulges.get(i).copied().unwrap_or(0.0);
+        let near = want_bulges
+            .iter()
+            .enumerate()
+            .all(|(i, b)| (at(i) - b).abs() <= 1e-9)
+            && bulges.iter().skip(want_bulges.len()).all(|b| *b == 0.0);
+        if !near {
+            bad.push(format!(
+                "{name}.bulges: {bulges:?}, beklenen {want_bulges:?} (±1e-9)"
+            ));
+        }
+    }
+    if let Some(want_zs) = &want.zs {
+        let near = seen.zs.len() == want_zs.len()
+            && seen
+                .zs
+                .iter()
+                .zip(want_zs)
+                .all(|(have, want)| match (have, want) {
+                    (Some(h), Some(w)) => (h - w).abs() <= 1e-9,
+                    (None, None) => true,
+                    _ => false,
+                });
+        if !near {
+            bad.push(format!(
+                "{name}.zs: {:?}, beklenen {want_zs:?} (±1e-9)",
+                seen.zs
+            ));
+        }
+    }
     if let Some(arcs) = want.arcs {
         let have = bulges.iter().filter(|b| **b != 0.0).count();
         if have != arcs {

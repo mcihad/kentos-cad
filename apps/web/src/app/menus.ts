@@ -179,7 +179,7 @@ export const MAIN_MENU: TopMenu[] = [
     items: [
       sec('Komut'),
       'commandline.focus',
-      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking'] },
+      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints'] },
       sec('Stil'),
       'style.manager',
       'style.svgEditor',

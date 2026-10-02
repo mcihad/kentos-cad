@@ -272,6 +272,10 @@ async function setUp(t) {
     const opened = ${JSON.stringify(opened)};
     if (opened) k.files.picker.open = async () => ({ name: ${JSON.stringify(t.openFile ?? '')}, async getFile() { return new Blob([new Uint8Array(opened)]); } });
     k.files.ask = async () => 'drop';
+    // Topological editing is off unless the trace turns it on, as the desktop's player reads a missing key
+    // (docs/adr/0160): an earlier trace's never carries over.
+    k.settings.topology.set(false);
+    k.settings.topologyPoints.set(false);
     for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.prefs ?? {})})) k.prefs[key].set(v);
     const c = k.view.camera;
@@ -463,6 +467,8 @@ const observe = (mark) =>
       label: e.label ?? null,
       attrs: e.attrs ?? {},
       z: e.kind === 'point' ? (e.z ?? null) : null,
+      // The outer path's vertex elevations, a line's two ends' (docs/adr/0142, 0160).
+      zs: e.kind === 'line' ? [e.za ?? null, e.zb ?? null] : e.kind === 'polygon' || e.kind === 'polyline' ? (e.zs ?? e.pts.map(() => null)) : [],
     });
     return {
       tool: k.tools.activeId.value,
@@ -528,6 +534,15 @@ function compareShape(name, have, want, t) {
   // A dimension's direction (docs/adr/0147), within 1e-9: a typed angle in grads comes back through radians.
   if (want.angle !== undefined && (have.angle === null || Math.abs(have.angle - want.angle) > 1e-9))
     bad.push(`${name}.angle: ${JSON.stringify(have.angle)}, beklenen ${want.angle}`);
+  // A shared arc and an elevation along an edge (docs/adr/0160) come from the core's arithmetic: within 1e-9.
+  if (want.bulges !== undefined) {
+    const near = want.bulges.every((b, i) => Math.abs((have.bulges[i] ?? 0) - b) <= 1e-9) && have.bulges.slice(want.bulges.length).every((b) => b === 0);
+    if (!near) bad.push(`${name}.bulges: ${JSON.stringify(have.bulges)}, beklenen ${JSON.stringify(want.bulges)} (±1e-9)`);
+  }
+  if (want.zs !== undefined) {
+    const near = have.zs.length === want.zs.length && have.zs.every((z, i) => (z === null || want.zs[i] === null ? z === want.zs[i] : Math.abs(z - want.zs[i]) <= 1e-9));
+    if (!near) bad.push(`${name}.zs: ${JSON.stringify(have.zs)}, beklenen ${JSON.stringify(want.zs)} (±1e-9)`);
+  }
   if (want.arcs !== undefined) {
     const arcs = have.bulges.filter((bulge) => bulge !== 0).length;
     if (arcs !== want.arcs) bad.push(`${name}.arcs: ${arcs}, beklenen ${want.arcs}`);

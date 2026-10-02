@@ -4,12 +4,12 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 204 | 191 | 0 | 13 |
+| Komutlar | 206 | 193 | 0 | 13 |
 | Araçlar | 88 | 86 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
-| Ayarlar | 60 | 60 | 0 | 0 |
+| Ayarlar | 62 | 62 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 262 | 0 | 0 |
 | Pencereler ve paneller | 71 | 71 | 0 | 0 |
@@ -50,12 +50,12 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 189 | 0 | 0 | 13 | 2 | 204 |
+| Komutlar | 191 | 0 | 0 | 13 | 2 | 206 |
 | Araçlar | 86 | 0 | 0 | 2 | 0 | 88 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 59 | 0 | 0 | 0 | 1 | 60 |
+| Ayarlar | 61 | 0 | 0 | 0 | 1 | 62 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 0 | 0 | 0 | 0 | 262 |
 | Pencereler ve paneller | 68 | 2 | 0 | 0 | 1 | 71 |
@@ -77,7 +77,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 204; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 206; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -111,7 +111,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (0 / 60)
+#### Ayarlar (0 / 62)
 
 Yok.
 
@@ -130,4 +130,4 @@ Yok.
 
 ## Test başvurusu
 
-61 / 204 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+61 / 206 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

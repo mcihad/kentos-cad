@@ -223,6 +223,9 @@ def apply(case):
 
 
 def diff(before, after):
+    # A point is a corner of its own (Noktalar da): moved, it is a move of its place.
+    if before["kind"] == "point" and after["kind"] == "point":
+        return [] if before["p"] == after["p"] else [{"kind": "move", "at": before["p"], "to": after["p"]}]
     pb, _ = paths_of(before)
     pa, _ = paths_of(after)
     if pb is None or pa is None or len(pb) != len(pa):
@@ -263,6 +266,8 @@ def diffs():
         ("Köşe sil", {"kind": "polygon", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(10.0, 5.0), P(10.0, 10.0), P(0.0, 10.0)]}, {"kind": "polygon", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(10.0, 10.0), P(0.0, 10.0)], "bulges": [0.0] * 4}),
         ("Esnet: iki köşe birlikte", sq, {**sq, "pts": [P(0.0, 0.0), P(12.0, 0.0), P(12.0, 10.0), P(0.0, 10.0)]}),
         ("Açık yolun ucuna köşe: kenar ekleme değil", {"kind": "polyline", "pts": [P(0.0, 0.0), P(10.0, 0.0)]}, {"kind": "polyline", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(15.0, 0.0)]}),
+        ("Nokta taşınır: yeri bir köşe", {"kind": "point", "p": P(10.0, 10.0), "z": 101.5}, {"kind": "point", "p": P(10.5, 9.75), "z": 101.5}),
+        ("Nokta yerinde: değişiklik yok", {"kind": "point", "p": P(10.0, 10.0)}, {"kind": "point", "p": P(10.0, 10.0), "z": 99.0}),
     ]
 
 

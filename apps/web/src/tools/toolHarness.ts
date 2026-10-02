@@ -53,7 +53,15 @@ export function toolHarness() {
     log,
     selection: new Selection(),
     format,
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), ortho: new Signal(false), polar: new Signal(false) },
+    settings: {
+      color: new Signal<string | null>(null),
+      lineWeight: new Signal<number | null>(null),
+      ortho: new Signal(false),
+      polar: new Signal(false),
+      // Topological editing (docs/adr/0160): off, as every session starts.
+      topology: new Signal(false),
+      topologyPoints: new Signal(false),
+    },
     prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15) },
     view: {
       palette,

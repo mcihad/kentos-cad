@@ -167,6 +167,21 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Nesne izleme",
                 "Bir kenet noktasının üzerinde kısa süre beklenince o noktadan yatay ve dikey kılavuzlar çıkar (Shift+F3).",
             ),
+        // Topological editing (docs/adr/0160 §1): off at the start of every session.
+        boolean("drafting.topology", false)
+            .scope(SettingScope::Session)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Topolojik düzenleme",
+                "Tutamaçla taşınan köşe, kenar ortasından eklenen köşe ve biçimlenen yay, görünen ve kilitsiz katmanlardaki komşu nesnelerin ortak köşe ve kenarlarında da birlikte değişir.",
+            ),
+        boolean("drafting.topologyPoints", false)
+            .scope(SettingScope::Session)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Noktalar da",
+                "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
+            ),
         // ── Snap kinds ──────────────────────────────────────────────────
         snap_kind(
             "snap.endpoint",

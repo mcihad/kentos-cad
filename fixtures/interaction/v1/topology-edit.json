@@ -1,0 +1,133 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "topology-edit",
+  "title": "Topolojik düzenleme: kip kapalıyken tutamaç yalnız nesnesini değiştirir; açıkken ortak köşe komşu parselde ve yolda da taşınır, kilitli pafta yerinde kalır ve söylenir, gizli katman katılmaz; Noktalar da açıkken nokta da gelir; ortak kenarın ortasından eklenen köşe komşuya da eklenir (kenarın üstündeyse kotu kenardan, değilse kotsuz); yaylı ortak kenar komşuda ters işaretle biçimlenir; her düzenleme tek adımda geri alınır",
+  "source": "Web'in SelectTool'u ve neighbours.ts'i, masaüstünün kentos_interaction::select'i ve neighbours'ı; çekirdeğin topology_edit'i; cad.entities.edit grip, ADR 0160",
+  "covers": ["UX-01", "UX-09", "CMD-04"],
+  "document": "topology-edit.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.2 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.2,
+  "steps": [
+    { "click": [-40, -5], "note": "21 numaralı parsel batı kenarından seçilir.", "expect": { "tool": "select", "selected": [1] } },
+    {
+      "drag": [[-20, 10], [-19, 11]],
+      "note": "Topolojik düzenleme kapalı (ilk değeri): yalnız parselin köşesi taşınır; komşu parsel ve yol yerinde kalır.",
+      "expect": {
+        "selected": [1],
+        "canUndo": true,
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-19, 11], [-40, 10]] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10]] },
+          { "id": 4, "kind": "line", "points": [[-20, 10], [-5, 22]] }
+        ]
+      }
+    },
+    { "key": "Ctrl+Z", "expect": { "canUndo": false, "objects": [{ "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, 10], [-40, 10]] }] } },
+    { "run": "draft.topology", "note": "Topolojik düzenleme açılır (durum çubuğunda Topoloji)." },
+    {
+      "drag": [[-20, 10], [-19, 11]],
+      "note": "Ortak köşe komşu parselde ve yolun ucunda da taşınır; köşeler kotlarını korur. Kilitli paftanın üçgeni değişmez, söylenir; gizli katmandaki çizgi ve P1 (Noktalar da kapalı) yerinde.",
+      "expect": {
+        "selected": [1],
+        "logged": ["Topolojik düzenleme: 2 komşu nesne de değişti.", "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."],
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-19, 11], [-40, 10]], "zs": [null, 100, 103, null] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-19, 11]], "zs": [100, null, null, 103] },
+          { "id": 3, "kind": "polygon", "points": [[-40, 10], [-20, 10], [-30, 22]] },
+          { "id": 4, "kind": "line", "points": [[-19, 11], [-5, 22]] },
+          { "id": 5, "kind": "point", "points": [[-20, 10]], "z": 103 },
+          { "id": 6, "kind": "line", "points": [[-20, 10], [-20, 22]] }
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adım: parsel, komşusu ve yol birlikte geri gelir.",
+      "expect": {
+        "canUndo": false,
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, 10], [-40, 10]] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10]] },
+          { "id": 4, "kind": "line", "points": [[-20, 10], [-5, 22]] }
+        ]
+      }
+    },
+    { "run": "draft.topologyPoints", "note": "Noktalar da: P1 de ortak köşe sayılır." },
+    {
+      "drag": [[-20, 10], [-19, 11]],
+      "note": "P1 köşeyle gelir; adı, kodu ve kotu kalır.",
+      "expect": {
+        "logged": ["Topolojik düzenleme: 3 komşu nesne de değişti.", "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."],
+        "objects": [
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-19, 11]] },
+          { "id": 4, "kind": "line", "points": [[-19, 11], [-5, 22]] },
+          { "id": 5, "kind": "point", "points": [[-19, 11]], "label": "P1", "attrs": { "Kod": "ST" }, "z": 103 }
+        ]
+      }
+    },
+    { "key": "Ctrl+Z", "expect": { "canUndo": false, "objects": [{ "id": 5, "kind": "point", "points": [[-20, 10]], "z": 103 }] } },
+    { "click": [-20, -5], "note": "Ortak kenarın orta tutamacı: sürüklenmeden tıklanınca sıcak kalır." },
+    { "text": "@0,-3" },
+    {
+      "key": "Enter",
+      "note": "Yazılan nokta kenarın üstünde: yeni köşe komşu parselin ortak kenarına da eklenir; ikisinde de kotu kenarın kotlarından uzunluğa göre, 100 + 3 × 0,4.",
+      "expect": {
+        "logged": ["Topolojik düzenleme: 1 komşu nesne de değişti."],
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, -8], [-20, 10], [-40, 10]], "zs": [null, 100, 101.2, 103, null] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10], [-20, -8]], "zs": [100, null, null, 103, 101.2] }
+        ]
+      }
+    },
+    {
+      "drag": [[-20, 1], [-18, 1]],
+      "note": "Yeni kenarın ortası kenarın dışına sürüklenir: iki parsele aynı köşe; kenarın üstünde olmadığı için kotsuz.",
+      "expect": {
+        "logged": ["Topolojik düzenleme: 1 komşu nesne de değişti."],
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, -8], [-18, 1], [-20, 10], [-40, 10]], "zs": [null, 100, 101.2, null, 103, null] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10], [-18, 1], [-20, -8]], "zs": [100, null, null, 103, null, 101.2] }
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adım: köşe iki parselden birlikte kalkar.",
+      "expect": {
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, -8], [-20, 10], [-40, 10]] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10], [-20, -8]] }
+        ]
+      }
+    },
+    { "click": [17, -10], "note": "31 numaralı parsel güney kenarından seçilir.", "expect": { "selected": [7] } },
+    { "click": [27.5, 0], "note": "Yaylı ortak kenarın orta tutamacı sıcak." },
+    { "text": "@1.5,0" },
+    {
+      "key": "Enter",
+      "note": "Yay yazılan noktadan geçer (yükseklik 4, yarım kiriş 10: kabarıklık 0,4); komşu parselde aynı yay ters yönde, ters işaretle.",
+      "expect": {
+        "logged": ["Topolojik düzenleme: 1 komşu nesne de değişti."],
+        "objects": [
+          { "id": 7, "kind": "polygon", "points": [[10, -10], [25, -10], [25, 10], [10, 10]], "bulges": [0, 0.4, 0, 0] },
+          { "id": 8, "kind": "polygon", "points": [[25, -10], [40, -10], [40, 10], [25, 10]], "bulges": [0, 0, 0, -0.4] }
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adım: iki yay da geri gelir.",
+      "expect": {
+        "objects": [
+          { "id": 7, "kind": "polygon", "points": [[10, -10], [25, -10], [25, 10], [10, 10]], "bulges": [0, 0.25, 0, 0] },
+          { "id": 8, "kind": "polygon", "points": [[25, -10], [40, -10], [40, 10], [25, 10]], "bulges": [0, 0, 0, -0.25] }
+        ]
+      }
+    },
+    { "run": "draft.topologyPoints" },
+    { "run": "draft.topology", "note": "Kip ve seçeneği kapanır." }
+  ]
+}

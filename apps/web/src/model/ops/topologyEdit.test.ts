@@ -27,7 +27,7 @@ describe('Topolojik düzenleme', () => {
   });
 
   it('finds the changes of every edit as the reference does', () => {
-    expect(file.diffs.length).toBeGreaterThanOrEqual(7);
+    expect(file.diffs.length).toBeGreaterThanOrEqual(9);
     for (const d of file.diffs) expect(topologyChanges(d.before, d.after), d.name).toEqual(d.expected);
   });
 });

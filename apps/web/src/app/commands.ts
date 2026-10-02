@@ -520,6 +520,20 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       icon: 'tracking',
       description: 'Bir kenet noktasının üzerinde kısa süre bekleyin: o noktadan yatay ve dikey kılavuzlar çıkar, imleç bu hizalara ve kesişimlerine yapışır.',
     }),
+    // Topolojik düzenleme (docs/adr/0160 §1): a drafting aid, off at the start of every session.
+    toggle('draft.topology', 'Topolojik düzenleme', settings.topology, {
+      category: 'Çizim yardımcıları',
+      icon: 'topologyEdit',
+      aliases: ['TOPOLOJIKDUZENLEME', 'TOPODUZENLE'],
+      description:
+        'Tutamaçla taşınan köşe, kenar ortasından eklenen köşe ve biçimlenen yay, görünen ve kilitsiz katmanlardaki komşu nesnelerin ortak köşe ve kenarlarında da birlikte değişir; hepsi tek adımda geri alınır.',
+    }),
+    toggle('draft.topologyPoints', 'Topolojik düzenlemede noktalar da', settings.topologyPoints, {
+      short: 'Noktalar da',
+      category: 'Çizim yardımcıları',
+      icon: 'topologyPoints',
+      description: 'Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.',
+    }),
 
     // Harita / Koordinat / Analiz
     pending(ctx, 'map.contours', 'Eşyükselti üret…', M, 'contours'),

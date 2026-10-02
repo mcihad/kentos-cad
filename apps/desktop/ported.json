@@ -169,6 +169,8 @@
     "processing.toolbox",
     "processing.history",
     "draft.tracking",
+    "draft.topology",
+    "draft.topologyPoints",
     "view.lineWeights",
     "view.symbols.plot",
     "view.symbols.screen",
