@@ -82,6 +82,8 @@ pub enum Field {
     Start,
     End,
     Fore,
+    /// Vektör oturtma's base point (Parametrelerle).
+    Base,
 }
 
 /// What the windows ask for.
@@ -408,6 +410,7 @@ impl App {
             (Window::Intersection, _) => &mut calc.intersection.a,
             (Window::Stakeout, Field::Back) => &mut calc.stakeout.back,
             (Window::Stakeout, _) => &mut calc.stakeout.station,
+            (Window::Fit, Field::Base) => &mut calc.fit.params.base,
             (Window::Fit, _) => return None,
         })
     }
@@ -449,7 +452,7 @@ impl App {
             Window::Polar => self.calc.polar.report(model, &format),
             Window::Intersection => self.calc.intersection.report(model, &format),
             Window::Stakeout => self.calc.stakeout.report(model, &format),
-            Window::Fit => Some(self.calc.fit.report(&format)),
+            Window::Fit => self.calc.fit.report(model, &format),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -654,7 +657,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Intersection, Field::B) => "B noktası",
         (Window::Intersection, Field::C) => "C noktası",
         (Window::Intersection, _) => "A noktası",
-        (Window::Fit, _) => "Nokta",
+        (Window::Fit, _) => "Taban noktası",
     }
 }
 

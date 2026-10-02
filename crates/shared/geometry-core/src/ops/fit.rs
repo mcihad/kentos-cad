@@ -10,7 +10,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{atan2, js_hypot, js_max};
+use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -151,6 +151,17 @@ pub enum Derived {
         shear: f64,
     },
     Projective,
+}
+
+/// Parametrelerle (docs/adr/0156 §7): the linear part that scales east by
+/// `east` and north by `north`, then turns the plane by `rotation` radians
+/// counter-clockwise (as [`Derived`]'s rotation turns), in the core's
+/// `Affine` order [a, b, c, d]. A scale below zero mirrors; with equal
+/// scales the part is a similarity (a = d and b = −c exactly). The
+/// independent reference is `scripts/fixtures/fit_parameters.py`.
+pub fn scale_turn(east: f64, north: f64, rotation: f64) -> [f64; 4] {
+    let (c, s) = (cos(rotation), sin(rotation));
+    [east * c, east * s, -north * s, north * c]
 }
 
 /// The centred mapping of `kind` with `params` (none beyond a projective
@@ -423,12 +434,17 @@ fn solve(mut a: [[f64; 8]; 8], mut b: [f64; 8], least: f64) -> Option<[f64; 8]> 
     Some(x)
 }
 
-pub(crate) static OPS: &[Op] = &[op!("fitTransform", |pairs: Vec<FitPair>, kind: String| {
-    FitAnswer(match FitKind::from_name(&kind) {
-        Some(kind) => fit(&pairs, kind),
-        None => Err(FitError::Singular),
-    })
-})];
+pub(crate) static OPS: &[Op] = &[
+    op!("fitTransform", |pairs: Vec<FitPair>, kind: String| {
+        FitAnswer(match FitKind::from_name(&kind) {
+            Some(kind) => fit(&pairs, kind),
+            None => Err(FitError::Singular),
+        })
+    }),
+    op!("fitScaleTurn", |east: f64, north: f64, rotation: f64| {
+        scale_turn(east, north, rotation)
+    }),
+];
 
 #[cfg(test)]
 mod tests {
@@ -530,5 +546,59 @@ mod tests {
             "{p:?}"
         );
         assert_eq!(f.m0, None);
+    }
+
+    /// Parametrelerle's linear part as the reference writes it
+    /// (scripts/fixtures/fit_parameters.py); equal scales give a similarity
+    /// exactly, as the warp tells one; the derived values give the typed
+    /// numbers back (no shear) for scales above zero.
+    #[test]
+    fn scale_turn_is_the_references_and_reads_back() {
+        let text = include_str!("../../../../../fixtures/fit/v1/parameters.json");
+        let file = Json::parse(text).expect("parameters.json reads");
+        let tolerance = f64::from_json(file.get("tolerance")).expect("tolerance");
+        let Json::Arr(cases) = file.get("cases") else {
+            panic!("cases")
+        };
+        assert!(cases.len() >= 12, "{} cases", cases.len());
+        for case in cases {
+            let name = String::from_json(case.get("name")).unwrap_or_default();
+            let n = |key: &str| f64::from_json(case.get(key)).expect("a number");
+            let (east, north, rotation) = (n("east"), n("north"), n("rotation"));
+            let expected = <[f64; 4]>::from_json(case.get("m")).expect("m");
+            let m = scale_turn(east, north, rotation);
+            let size = js_max(1.0, js_max(east.abs(), north.abs()));
+            for (got, want) in m.iter().zip(expected) {
+                assert!((got - want).abs() <= tolerance * size, "{name}: {m:?} ≠ {expected:?}");
+            }
+            if east == north {
+                let [a, b, c, d] = m;
+                assert!(a == d && b == -c, "{name}: not a similarity: {m:?}");
+            }
+            if east > 0.0 && north > 0.0 {
+                let fit = Fit {
+                    kind: FitKind::Affine,
+                    from: Vec2::new(0.0, 0.0),
+                    to: Vec2::new(0.0, 0.0),
+                    params: m.to_vec(),
+                    residuals: Vec::new(),
+                    m0: None,
+                };
+                let Derived::Affine {
+                    scale_x,
+                    scale_y,
+                    rotation: turned,
+                    shear,
+                } = fit.derived()
+                else {
+                    panic!("{name}: an affine's values")
+                };
+                let turn = atan2(sin(rotation), cos(rotation));
+                assert!((scale_x - east).abs() < 1e-14 * size, "{name}: {scale_x}");
+                assert!((scale_y - north).abs() < 1e-14 * size, "{name}: {scale_y}");
+                assert!((turned - turn).abs() < 1e-14, "{name}: {turned} ≠ {turn}");
+                assert!(shear.abs() < 1e-15, "{name}: shear {shear}");
+            }
+        }
     }
 }

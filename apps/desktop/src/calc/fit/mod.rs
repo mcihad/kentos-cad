@@ -8,8 +8,9 @@
 //! again at every change. Adla eşle fills the table with the points of the
 //! same name on two layers. Uygula writes the transform through
 //! `cad.entities.transform` (one undo step, Oturt) to the selected objects,
-//! a layer or the whole drawing, or their copies. What is typed stays while
-//! the app runs.
+//! a layer or the whole drawing, or their copies. Parametrelerle
+//! ([`params`]) gives the transform by its numbers instead. What is typed
+//! stays while the app runs.
 //!
 //! The window's parts: the form and its solution here, the words it says
 //! ([`words`]: the summary, the parameters, the report), its view
@@ -17,23 +18,28 @@
 //! the picks).
 
 mod apply;
+mod params;
 #[cfg(test)]
 mod tests;
 mod view;
 mod words;
+
+pub use params::{Method, Param};
 
 use std::collections::HashMap;
 
 use kentos_contracts::{Entity, Transform};
 use kentos_domain::{Document as Model, Slot};
 use kentos_geometry_core::ops::fit::{self as solver, FitError, FitKind, FitPair};
-use kentos_interaction::{Vec2, fixed, js_trim};
+use kentos_interaction::{Format, Vec2, fixed, js_trim};
 use kentos_processing::text::js_number;
 
 use super::grid::{Col, Mark, Table};
 use super::read::read_number;
+use super::traverse::mm_text;
 use super::{Event as Calc, event};
 use crate::app::Message;
+use words::kind_name;
 
 pub const TITLE: &str = "Vektör oturtma";
 
@@ -87,6 +93,9 @@ pub enum Side {
 /// What the window asks for.
 #[derive(Clone, Debug)]
 pub enum Event {
+    /// Kontrol noktaları or Parametrelerle, and Parametrelerle's numbers.
+    Method(Method),
+    Param(Param, String),
     Kind(FitKind),
     /// Adla eşle's layers (empty: none) and its button.
     Source(String),
@@ -108,6 +117,9 @@ fn fit_event(e: Event) -> Message {
 /// What is typed, kept while the app runs; four empty rows at first.
 #[derive(Clone, Debug)]
 pub struct Form {
+    pub method: Method,
+    /// Parametrelerle's base point and numbers.
+    pub params: params::Typed,
     pub kind: FitKind,
     pub rows: Vec<[String; 9]>,
     /// Adla eşle's layers: the source points' and the target points'.
@@ -132,6 +144,8 @@ pub struct Form {
 impl Default for Form {
     fn default() -> Self {
         Self {
+            method: Method::Points,
+            params: params::Typed::default(),
             kind: FitKind::Helmert,
             rows: vec![Default::default(); 4],
             source: None,
@@ -377,6 +391,41 @@ impl Form {
             r[NAME] = name;
         }
         self.solve();
+    }
+}
+
+/// What Uygula writes, and how the log says it (the web's `plan`).
+struct Plan {
+    transform: Transform,
+    how: String,
+    m0: String,
+}
+
+impl Form {
+    /// The transform Uygula writes now: the solution's, or the parameters';
+    /// none while there is none.
+    fn plan(&self, model: &Model, format: &Format) -> Option<Plan> {
+        match self.method {
+            Method::Parameters => {
+                let p = self.params.read(model, format).ok()?;
+                Some(Plan {
+                    transform: p.transform(),
+                    how: "parametrelerle".to_owned(),
+                    m0: String::new(),
+                })
+            }
+            Method::Points => {
+                let fit = self.fit()?;
+                Some(Plan {
+                    transform: transform_of(fit)?,
+                    how: format!("{} dönüşümle", kind_name(self.kind)),
+                    m0: fit
+                        .m0
+                        .map(|m0| format!(" (m0 ±{})", mm_text(m0)))
+                        .unwrap_or_default(),
+                })
+            }
+        }
     }
 }
 

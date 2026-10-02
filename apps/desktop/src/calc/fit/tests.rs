@@ -8,6 +8,7 @@ use kentos_interaction::Format;
 
 use super::*;
 use crate::app::{App, Dialog as Asking};
+use crate::calc::Field;
 use crate::files_testing::last_said;
 
 fn row(cells: [&str; 6]) -> [String; 9] {
@@ -94,7 +95,7 @@ fn the_report_lists_the_pairs_and_the_solution() {
         ..Form::default()
     };
     form.solve();
-    let lines = form.report(&Format::default());
+    let lines = form.points_report(&Format::default());
     assert_eq!(lines[0], ["Vektör oturtma", "Helmert"]);
     assert_eq!(lines[1].len(), 9);
     assert_eq!(lines[3][0], "hayır");
@@ -328,6 +329,184 @@ fn pasted_lines_fill_the_pairs_past_kullan() {
     assert!(form.fit().is_some(), "two pairs: Helmert");
 }
 
+/// Parametrelerle from the matched scene: the base and the numbers typed.
+fn with_params(base: &str, numbers: &[(Param, &str)]) -> App {
+    let mut app = matched();
+    fit(&mut app, Event::Method(Method::Parameters));
+    calc(&mut app, Calc::Known(Field::Base, base.into()));
+    for (p, text) in numbers {
+        fit(&mut app, Event::Param(*p, (*text).into()));
+    }
+    app
+}
+
+/// The summary's words now.
+fn said_now(app: &App) -> Vec<String> {
+    let doc = app.document.as_ref().expect("open");
+    let format = Format::of(doc.settings());
+    app.calc
+        .fit
+        .summary_lines(&doc.model, &format)
+        .into_iter()
+        .map(|(_, t)| t)
+        .collect()
+}
+
+/// Whether the log has said `text`.
+fn logged(app: &App, text: &str) -> bool {
+    app.log.lines().any(|l| l.text == text)
+}
+
+/// Parametrelerle: what is wrong is said in the fields' order, and nothing
+/// is written while it is.
+#[test]
+fn parametrelerle_says_what_is_wrong_in_the_fields_order() {
+    let mut app = matched();
+    fit(&mut app, Event::Method(Method::Parameters));
+    assert_eq!(
+        said_now(&app),
+        ["Taban noktasını yazın ya da çizimden seçin."]
+    );
+    let mut app = with_params(
+        "P9",
+        &[
+            (Param::ScaleY, "0"),
+            (Param::ScaleX, "x"),
+            (Param::Rotation, "1e400"),
+        ],
+    );
+    assert_eq!(
+        said_now(&app),
+        [
+            "Taban noktası: “P9” adlı nokta çizimde yok. Adını denetleyin ya da Y,X yazın.",
+            "Y ölçeği sıfır olamaz; eksi ölçek aynalar.",
+            "X ölçeği sayı olmalı.",
+            "Dönüklük sayı olmalı.",
+        ]
+    );
+    fit(&mut app, Event::Apply);
+    assert_eq!(app.dialog, Some(Asking::Calc), "the window stays");
+    assert!(gap(&app, "P1") > 1000.0, "nothing written");
+}
+
+/// About P1, east doubled: the local layer stretches in one step (Oturt),
+/// the base stays, the circle becomes an ellipse and the log says the
+/// curves and the shapes kept.
+#[test]
+fn parametrelerle_stretches_the_local_layer_about_its_base() {
+    let mut app = with_params("P1", &[(Param::ScaleY, "2")]);
+    assert_eq!(
+        said_now(&app),
+        [
+            "Y ölçeği 2, X ölçeği 1, dönüklük 0.0000 g, öteleme ΔY 0.000 m, ΔX 0.000 m.",
+            "Taban noktası Y 1000.000  X 2000.000 → Y 1000.000  X 2000.000.",
+            "Ölçekler farklı: afin dönüşüm; daireler ve yaylar elips olur, yazılar, bloklar ve ölçüler yerinde biçimini korur.",
+        ]
+    );
+    fit(&mut app, Event::Apply);
+    assert_eq!(app.dialog, None, "the window closes");
+    let close = |a: kentos_contracts::Vec2, x: f64, y: f64| {
+        (a.x - x).abs() < 1e-9 && (a.y - y).abs() < 1e-9
+    };
+    assert!(
+        close(named(&app, "yerel", "P1"), 1000.0, 2000.0),
+        "the base stays"
+    );
+    assert!(close(named(&app, "yerel", "P2"), 1125.0, 2003.25));
+    assert!(close(named(&app, "yerel", "P4"), 996.5, 2038.0));
+    assert!(logged(
+        &app,
+        "Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır."
+    ));
+    let doc = app.document.as_mut().expect("open");
+    assert!(
+        doc.model
+            .by_layer("yerel")
+            .any(|e| matches!(e, Entity::Ellipse(_)))
+            && !doc
+                .model
+                .by_layer("yerel")
+                .any(|e| matches!(e, Entity::Circle(_))),
+        "the circle is an ellipse now"
+    );
+    assert_eq!(doc.model.undo().as_deref(), Some("Oturt"));
+    assert!(close(named(&app, "yerel", "P2"), 1062.5, 2003.25), "undone");
+}
+
+/// Equal scales, a quarter turn (100 g) and a shift: a similarity; every
+/// kind moves exactly, the circle stays a circle, nothing is warned.
+#[test]
+fn equal_scales_a_turn_and_a_shift_keep_every_shape() {
+    let mut app = with_params(
+        "1000,2000",
+        &[
+            (Param::Rotation, "100"),
+            (Param::ShiftY, "10"),
+            (Param::ShiftX, "20"),
+        ],
+    );
+    assert_eq!(
+        said_now(&app)[2],
+        "Ölçekler eşit: benzerlik; her nesne biçimini korur."
+    );
+    fit(&mut app, Event::Apply);
+    assert_eq!(
+        last_said(&app),
+        "Vektör oturtma: 10 nesne parametrelerle oturtuldu. Ctrl+Z geri alır."
+    );
+    let p2 = named(&app, "yerel", "P2");
+    assert!(
+        (p2.x - 1006.75).abs() < 1e-9 && (p2.y - 2082.5).abs() < 1e-9,
+        "{p2:?}"
+    );
+    let doc = app.document.as_ref().expect("open");
+    assert!(
+        doc.model
+            .by_layer("yerel")
+            .any(|e| matches!(e, Entity::Circle(_)))
+    );
+}
+
+/// The base point shown on the drawing takes the name of the point it lies
+/// on; the window opens again on Parametrelerle.
+#[test]
+fn the_base_point_is_shown_on_the_drawing() {
+    let mut app = app_with_fit_drawing();
+    let _ = app.run("transform.fit");
+    fit(&mut app, Event::Method(Method::Parameters));
+    calc(&mut app, Calc::Pick(Field::Base));
+    assert_eq!(app.dialog, None);
+    assert_eq!(
+        app.session.prompt().text(),
+        "Vektör oturtma: Taban noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
+    );
+    let _ = app.submit_line("1062.5,2003.25");
+    assert_eq!(app.dialog, Some(Asking::Calc));
+    assert_eq!(app.calc.fit.params.base, "P2");
+    assert_eq!(app.calc.fit.method, Method::Parameters);
+}
+
+/// Parametrelerle's report: the base, the numbers as read and the linear
+/// part; none while a number is wrong.
+#[test]
+fn parametrelerle_reports_its_numbers() {
+    let mut app = with_params("P1", &[(Param::ScaleY, "1,5"), (Param::Rotation, "50")]);
+    let report = |app: &App| {
+        let doc = app.document.as_ref().expect("open");
+        app.calc.fit.report(&doc.model, &Format::of(doc.settings()))
+    };
+    let lines = report(&app).expect("a report");
+    assert_eq!(lines[0], ["Vektör oturtma", "Parametrelerle"]);
+    assert_eq!(lines[1], ["Taban Y", "1000", "Taban X", "2000"]);
+    assert_eq!(lines[2], ["Y ölçeği", "1.5"]);
+    assert_eq!(lines[3], ["X ölçeği", "1"]);
+    assert_eq!(lines[4], ["Dönüklük (g)", "50"]);
+    assert_eq!(lines[5], ["Öteleme ΔY (m)", "0"]);
+    assert_eq!(lines[7].len(), 5, "the four numbers");
+    fit(&mut app, Event::Param(Param::ScaleX, "0".into()));
+    assert_eq!(report(&app), None);
+}
+
 /// Snaps every scrollable to its end (the dialog's body has no id).
 struct SnapAll;
 
@@ -370,6 +549,9 @@ fn screens() {
                 "oturt-p5-cikti",
                 "oturt-afin",
                 "oturt-uygulandi",
+                "oturt-parametre",
+                "oturt-parametre-uyari",
+                "oturt-parametre-uygulandi",
             ] {
                 if !only.is_empty() && !only.split(',').any(|o| o == name) {
                     continue;
@@ -397,6 +579,35 @@ fn screens() {
                         calc(&mut app, Calc::Cell(4, USE, "0".into()));
                         fit(&mut app, Event::Apply);
                         let _ = app.update(Message::Run("view.zoomExtents"));
+                    }
+                    // Parametrelerle: about P1, the scales of the solution
+                    // with P5 left out, its turn, no shift.
+                    "oturt-parametre" => {
+                        fit(&mut app, Event::Method(Method::Parameters));
+                        calc(&mut app, Calc::Known(Field::Base, "P1".into()));
+                        for (p, t) in [
+                            (Param::ScaleY, "1.0002"),
+                            (Param::ScaleX, "0.9997"),
+                            (Param::Rotation, "0.5"),
+                        ] {
+                            fit(&mut app, Event::Param(p, t.into()));
+                        }
+                    }
+                    "oturt-parametre-uyari" => {
+                        fit(&mut app, Event::Method(Method::Parameters));
+                        calc(&mut app, Calc::Known(Field::Base, "P9".into()));
+                        fit(&mut app, Event::Param(Param::ScaleY, "0".into()));
+                        fit(&mut app, Event::Param(Param::ShiftX, "12,5x".into()));
+                    }
+                    "oturt-parametre-uygulandi" => {
+                        fit(&mut app, Event::Method(Method::Parameters));
+                        calc(&mut app, Calc::Known(Field::Base, "P1".into()));
+                        fit(&mut app, Event::Param(Param::ScaleY, "1.5".into()));
+                        fit(&mut app, Event::Apply);
+                        // The local layer stays far from the TUREF points: the view on it.
+                        let _ = app.update(Message::Layer(crate::layering::Event::ZoomTo(
+                            "yerel".into(),
+                        )));
                     }
                     _ => {}
                 }

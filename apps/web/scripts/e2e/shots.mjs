@@ -2403,6 +2403,8 @@ const openFitScene = async (ui) => {
 /** Adla eşle with the scene's two layers, Helmert, the objects of the local layer. */
 const matchFit = async (ui) => {
   await openFitScene(ui);
+  // What is typed stays for the session: a scene before may have left Parametrelerle on.
+  await ui.clickText('.dialog--fit .seg__opt', 'Kontrol noktaları');
   await ui.clickText('.dialog--fit .seg__opt', 'Helmert');
   await ui.eval(`(() => {
     const set = (key, value) => { const s = document.querySelector('.dialog--fit select[data-key="' + key + '"]'); s.value = value; s.dispatchEvent(new Event('change')); };
@@ -2416,6 +2418,19 @@ const matchFit = async (ui) => {
   await ui.sleep(200);
   const seen = await ui.eval(`({ rows: [...document.querySelectorAll('.dialog--fit .calc-grid tbody tr')].map((tr) => tr.children[2].querySelector('input')?.value), worst: document.querySelector('.dialog--fit tr[data-mark="worst"] input[data-key="name"]')?.value ?? null, said: document.querySelector('.dialog--fit .io-summary').textContent })`);
   if (JSON.stringify(seen.rows) !== JSON.stringify(['P1', 'P2', 'P3', 'P4', 'P5', 'P6']) || seen.worst !== 'P5' || !seen.said.startsWith('m0 = ±')) throw new Error(`Adla eşle: ${JSON.stringify(seen)}`);
+};
+/** Parametrelerle over the matched scene: the base and the numbers typed into their fields. */
+const openParams = async (ui, base, numbers) => {
+  await matchFit(ui);
+  await ui.clickText('.dialog--fit .seg__opt', 'Parametrelerle');
+  await ui.sleep(200);
+  await ui.eval(`(() => {
+    const set = (key, value) => { const i = document.querySelector('.dialog--fit input[data-key="' + key + '"]'); i.value = value; i.dispatchEvent(new Event('input')); };
+    set('base', ${JSON.stringify(base)});
+    // Every number, the scene's or its empty value: what an earlier scene typed stays for the session.
+    for (const [k, v] of Object.entries(${JSON.stringify({ scaleY: '1', scaleX: '1', rotation: '0', shiftY: '0', shiftX: '0', ...numbers })})) set(k, v);
+  })()`);
+  await ui.sleep(200);
 };
 SCENES.vectorfit = [
   { id: 'oturt', open: openFitScene },
@@ -2477,6 +2492,50 @@ SCENES.vectorfit = [
       })()`);
       if (!(after.p1 < 0.01 && after.p5 > 0.1 && after.step === 'Oturt' && after.circle && !after.open)) throw new Error(`Uygula: ${JSON.stringify(after)}`);
       await ui.eval(`(() => { const k = window.kentos; k.view.zoomExtents(); const c = k.view.camera; c.scale = c.scale * 0.85; c.panBy(0, 0); })()`);
+      await ui.move(2, 2);
+      await ui.sleep(400);
+    },
+  },
+  // Parametrelerle: about P1, the scales of the solution with P5 left out, its turn, no shift.
+  {
+    id: 'oturt-parametre',
+    open: async (ui) => {
+      await openParams(ui, 'P1', { scaleY: '1.0002', scaleX: '0.9997', rotation: '0.5' });
+      const said = await ui.eval(`document.querySelector('.dialog--fit .io-summary').textContent`);
+      if (!said.includes('Y ölçeği 1.0002, X ölçeği 0.9997') || !said.includes('Ölçekler farklı')) throw new Error(`Parametrelerle: ${said}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // What is wrong, in the fields' order; Uygula and the report off.
+  {
+    id: 'oturt-parametre-uyari',
+    open: async (ui) => {
+      await openParams(ui, 'P9', { scaleY: '0', shiftX: '12,5x' });
+      const seen = await ui.eval(`({ warns: document.querySelectorAll('.dialog--fit .io-summary [data-kind="warn"], .dialog--fit .io-summary .summary__line--warn').length, said: document.querySelector('.dialog--fit .io-summary').textContent, apply: document.querySelector('.dialog--fit .btn--primary').disabled })`);
+      if (!seen.said.includes('Y ölçeği sıfır olamaz') || !seen.said.includes('Öteleme ΔX sayı olmalı') || !seen.apply) throw new Error(`Parametrelerle uyarı: ${JSON.stringify(seen)}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Uygula: about P1, east 1.5 times; one step, Oturt; the circle an ellipse; the view on the local layer.
+  {
+    id: 'oturt-parametre-uygulandi',
+    open: async (ui) => {
+      await openParams(ui, 'P1', { scaleY: '1.5' });
+      await ui.clickText('.dialog--fit .btn--primary', 'Uygula');
+      await ui.sleep(300);
+      const after = await ui.eval(`(() => {
+        const k = window.kentos;
+        const p2 = [...k.doc.all()].find((e) => e.kind === 'point' && e.layerId === 'yerel' && e.label === 'P2')?.p;
+        const step = (() => { const s = k.doc.undo(); k.doc.redo(); return s; })();
+        const ellipse = [...k.doc.all()].some((e) => e.layerId === 'yerel' && e.kind === 'ellipse');
+        k.selection.set([...k.doc.all()].filter((e) => e.layerId === 'yerel').map((e) => e.id));
+        k.commands.execute('view.zoomSelection');
+        k.selection.clear();
+        return { p2, step, ellipse, open: !!document.querySelector('.dialog--fit') };
+      })()`);
+      if (!(Math.abs(after.p2.x - 1093.75) < 1e-9 && Math.abs(after.p2.y - 2003.25) < 1e-9 && after.step === 'Oturt' && after.ellipse && !after.open)) throw new Error(`Parametrelerle Uygula: ${JSON.stringify(after)}`);
       await ui.move(2, 2);
       await ui.sleep(400);
     },

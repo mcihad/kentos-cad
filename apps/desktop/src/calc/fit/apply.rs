@@ -4,19 +4,19 @@
 
 use kentos_contracts::{CommandResult, EntitiesTransform};
 use kentos_domain::Slot;
-use kentos_interaction::Level;
+use kentos_interaction::{Format, Level};
 use kentos_native_application::{ExecutionContext, transform};
 
-use super::words::kind_name;
-use super::{Event, Side, TITLE, transform_of};
+use super::{Event, Side, TITLE};
 use crate::app::App;
-use crate::calc::traverse::mm_text;
 
 impl App {
     /// Vektör oturtma's own controls.
     pub(crate) fn fit_event(&mut self, e: Event) {
         let form = &mut self.calc.fit;
         match e {
+            Event::Method(method) => form.method = method,
+            Event::Param(p, text) => form.params.set(p, text),
             Event::Kind(kind) => form.kind = kind,
             Event::Source(id) => form.source = (!id.is_empty()).then_some(id),
             Event::Target(id) => form.target = (!id.is_empty()).then_some(id),
@@ -66,32 +66,25 @@ impl App {
         );
     }
 
-    /// Uygula (the web's `write`): the transform through
-    /// `cad.entities.transform` as one undo step (Oturt); copies are
-    /// selected; the window closes. A refusal stays in the window.
+    /// Uygula (the web's `write`): the solution's or the parameters'
+    /// transform through `cad.entities.transform` as one undo step (Oturt);
+    /// copies are selected; the window closes. A refusal stays in the window.
     fn fit_apply(&mut self) {
         let Some(doc) = &mut self.document else {
             return;
         };
         let form = &self.calc.fit;
-        let (Some(fit), true) = (
-            form.fit(),
+        let format = Format::of(doc.settings());
+        let (Some(plan), true) = (
+            form.plan(&doc.model, &format),
             form.has_targets(&doc.model, self.selection.len()),
         ) else {
             return;
         };
-        let Some(transform) = transform_of(fit) else {
-            return;
-        };
-        let m0 = fit
-            .m0
-            .map(|m0| format!(" (m0 ±{})", mm_text(m0)))
-            .unwrap_or_default();
         let copy = form.copy;
-        let kind = form.kind;
         let input = EntitiesTransform {
             uids: form.targets(&doc.model, self.selection.ids()),
-            transform,
+            transform: plan.transform,
             copy: copy.then_some(true),
             expected_revision: None,
         };
@@ -125,8 +118,8 @@ impl App {
         self.say(
             Level::Success,
             format!(
-                "{TITLE}: {n} nesne{copies} {} dönüşümle oturtuldu{m0}. Ctrl+Z geri alır.",
-                kind_name(kind)
+                "{TITLE}: {n} nesne{copies} {} oturtuldu{}. Ctrl+Z geri alır.",
+                plan.how, plan.m0
             ),
         );
         for w in warnings {

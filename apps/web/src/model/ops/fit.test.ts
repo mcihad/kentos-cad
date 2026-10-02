@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fitTransform, type FitKind, type FitPair } from './fit';
+import { fitScaleTurn, fitTransform, type FitKind, type FitPair } from './fit';
 
 /**
  * Vektör oturtma's solution (docs/adr/0156 §2–§3) through the WASM core, against the independent reference in
@@ -53,6 +53,27 @@ describe('Vektör oturtma: çözüm', () => {
     const off = file.cases.flatMap((c) => {
       const d = differ(fitTransform(c.pairs, c.kind), c.expected, '', file.tolerance);
       return d ? [`${c.name}: ${d}`] : [];
+    });
+    expect(off).toEqual([]);
+  });
+});
+
+describe('Vektör oturtma: Parametrelerle', () => {
+  const file = JSON.parse(fs.readFileSync(new URL('../../../../../fixtures/fit/v1/parameters.json', import.meta.url), 'utf8')) as {
+    format: string;
+    tolerance: number;
+    cases: { name: string; east: number; north: number; rotation: number; m: number[] }[];
+  };
+
+  it('turns the scales and the rotation into the reference’s linear part', () => {
+    expect(file.format).toBe('kentos.fit-parameters');
+    expect(file.cases.length).toBeGreaterThanOrEqual(12);
+    const off = file.cases.flatMap((c) => {
+      const m = fitScaleTurn(c.east, c.north, c.rotation);
+      const size = Math.max(1, Math.abs(c.east), Math.abs(c.north));
+      const bad = m.some((v, i) => Math.abs(v - c.m[i]) > file.tolerance * size);
+      const similar = c.east !== c.north || (m[0] === m[3] && m[1] === -m[2]);
+      return bad || !similar ? [`${c.name}: ${m.join(', ')} ≠ ${c.m.join(', ')}`] : [];
     });
     expect(off).toEqual([]);
   });

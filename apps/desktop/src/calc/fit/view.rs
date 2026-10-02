@@ -1,5 +1,6 @@
-//! Vektör oturtma's view (the web's `FitDialog.ts`): the kind, Adla eşle,
-//! the control points' table with its picks, the summary, what Uygula takes,
+//! Vektör oturtma's view (the web's `FitDialog.ts`): the method; the kind,
+//! Adla eşle and the control points' table with its picks, or
+//! Parametrelerle's base point and numbers; the summary, what Uygula takes,
 //! and the buttons.
 
 use iced::widget::tooltip::Position;
@@ -15,9 +16,12 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, Tip, tip};
 
 use super::words::{Counted, KINDS, Named, kind_hint};
-use super::{COLUMNS, Event, Form, Scope, Side, TITLE, fit_event};
+use super::{COLUMNS, Event, Form, Method, Param, Scope, Side, TITLE, fit_event};
 use crate::app::Message;
-use crate::calc::{Event as Calc, MAX_HEIGHT, Window, event, footer_button, grid, summary};
+use crate::calc::{
+    Event as Calc, Field, MAX_HEIGHT, Window, event, footer_button, grid, known_field, knowns,
+    number_field, summary,
+};
 use crate::exchange::words;
 
 impl Form {
@@ -27,6 +31,45 @@ impl Form {
         format: &Format,
         selected: usize,
     ) -> Element<'a, Message> {
+        let method = words::field(
+            "Yöntem",
+            Segmented::new(Method::ALL, self.method, |m| fit_event(Event::Method(m))),
+            Some(self.method.hint().to_owned()),
+        );
+        let mut body = column![method].spacing(16);
+        body = match self.method {
+            Method::Points => body.extend(self.points_body()),
+            Method::Parameters => body.push(self.params_body(model, format)),
+        };
+        if let Some(summary) = summary(self.summary_lines(model, format)) {
+            body = body.push(summary);
+        }
+        body = body.push(self.apply_row(model, selected));
+        let can_apply = self.plan(model, format).is_some() && self.has_targets(model, selected);
+        let can_report = self.method == Method::Points || self.plan(model, format).is_some();
+        let mut dialog = Dialog::new(TITLE)
+            .scroll(body)
+            .action(footer_button(
+                "Raporu kopyala",
+                can_report.then(|| event(Calc::CopyReport)),
+                false,
+            ))
+            .action(footer_button("Kapat", Some(event(Calc::Close)), false))
+            .action(footer_button(
+                "Uygula",
+                can_apply.then(|| fit_event(Event::Apply)),
+                true,
+            ))
+            .max_height(MAX_HEIGHT)
+            .width(980.0);
+        if let Some(status) = &self.status {
+            dialog = dialog.aside(label::caption(status.clone()).style(style::text::danger));
+        }
+        dialog.into()
+    }
+
+    /// Kontrol noktaları: the kind, Adla eşle and the table with its picks.
+    fn points_body<'a>(&'a self) -> Vec<Element<'a, Message>> {
         let kind = words::field(
             "Dönüşüm",
             Segmented::new(KINDS, Named(self.kind), |k| fit_event(Event::Kind(k.0))),
@@ -80,36 +123,50 @@ impl Form {
                 ]
             },
         );
-        let mut body = column![
+        vec![
             kind,
-            matching,
-            column![label::strong("Kontrol noktaları"), table].spacing(8),
+            matching.into(),
+            column![label::strong("Kontrol noktaları"), table]
+                .spacing(8)
+                .into(),
         ]
-        .spacing(16);
-        if let Some(summary) = summary(self.summary_lines(format)) {
-            body = body.push(summary);
+    }
+
+    /// Parametrelerle: the base point (shown on the drawing too) and the five numbers.
+    fn params_body<'a>(&'a self, model: &Model, format: &Format) -> Element<'a, Message> {
+        let base = knowns(vec![known_field(
+            model,
+            format,
+            "Taban noktası",
+            Field::Base,
+            &self.params.base,
+            Some("Ölçek ve dönüklük bu noktanın çevresinde"),
+        )]);
+        let unit = format.angle_unit_label();
+        let mut numbers = row![].spacing(18);
+        for p in Param::ALL {
+            let title = match p {
+                Param::Rotation => format!("{} ({unit})", p.label()),
+                Param::ScaleY | Param::ScaleX => p.label().to_owned(),
+                Param::ShiftY | Param::ShiftX => format!("{} (m)", p.label()),
+            };
+            numbers = numbers.push(number_field(
+                title,
+                self.params.get(p),
+                p.empty(),
+                move |t| fit_event(Event::Param(p, t)),
+            ));
         }
-        body = body.push(self.apply_row(model, selected));
-        let can_apply = self.fit().is_some() && self.has_targets(model, selected);
-        let mut dialog = Dialog::new(TITLE)
-            .scroll(body)
-            .action(footer_button(
-                "Raporu kopyala",
-                Some(event(Calc::CopyReport)),
-                false,
-            ))
-            .action(footer_button("Kapat", Some(event(Calc::Close)), false))
-            .action(footer_button(
-                "Uygula",
-                can_apply.then(|| fit_event(Event::Apply)),
-                true,
-            ))
-            .max_height(MAX_HEIGHT)
-            .width(980.0);
-        if let Some(status) = &self.status {
-            dialog = dialog.aside(label::caption(status.clone()).style(style::text::danger));
-        }
-        dialog.into()
+        column![
+            base,
+            numbers,
+            label::caption(
+                "Önce Y (sağa) ve X (yukarı) yönünde ölçeklenir, sonra saat yönünün tersine döner, sonra ötelenir. Eksi ölçek aynalar; ölçekler eşitse her nesne biçimini korur."
+            )
+            .width(Fill),
+        ]
+        .spacing(12)
+        .into()
     }
 
     /// A layer select over the layers holding named points, with their counts.

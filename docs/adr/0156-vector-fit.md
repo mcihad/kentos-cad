@@ -150,6 +150,11 @@ Kauçuk levha (kontrol noktalarına göre parça parça dönüşüm, sabit nokta
       - **Sahne:** `fixtures/interaction/v1/vector-fit.kcad` (yerel ölçü ve aynı altı noktanın TUREF ölçüsü, P5'te 15 cm kaba hata). Masaüstü `calc::fit::tests` (Adla eşle, P5'in en büyük artığı, P5 çıkınca m0'ın 48,5 mm'den 3,6 mm'ye inmesi, Uygula'nın tek adımı, kopyalar, kilitli katman, satırdan çizimden seçme, yapıştırma); web `shots.mjs vectorfit` aynı adımları denetler. İki platform aynı sayıları verir (m0 ±3,6 mm, ölçek 1,00015444, dönüklük 22,2845 g).
    2. Parametrelerle.
 
+      *(2 Ekim: tamam.)*
+      - **Çekirdek:** `ops::fit::scale_turn` (WASM `fitScaleTurn`): Y ve X ölçeği, sonra saat yönünün tersine dönüklük. Bağımsız başvuru `scripts/fixtures/fit_parameters.py` 12 durum yazar (`fixtures/fit/v1/parameters.json`): birim, tek eksen ölçeği, eşit ölçekle benzerlik, çeyrek ve yarım tur, saat yönünde, bir turdan büyük, eksi ölçek, 1 cc, derece. Çekirdek ve web (WASM) 1e-15 içinde; eşit ölçekte tam benzerlik (a = d, b = −c); afinin türetilen değerleri ölçekleri ve dönüklüğü kaymasız geri verir.
+      - **Pencere:** Yöntem (Kontrol noktaları | Parametrelerle); taban noktası (adı ya da Y,X; Çizimden), beş sayı; özet sayıları, tabanın nereye gittiğini ve nesnelerin ne olacağını söyler; yanlışlar alanların sırasıyla (taban, sıfır ölçek, sayı olmayan); Uygula aynı komutla afin olarak yazar (eşit ölçekte benzerlik gibi taşınır); rapor taban, sayılar ve doğrusal parçayla. Masaüstü `calc/fit/params.rs`, testleri `calc::fit::tests`; web sahneleri `oturt-parametre*` aynı denetimlerle.
+      - **Bulunan:** projenin orijininden binlerce kilometre uzaktaki bir katmanda (yerel ölçü TM projesinde) eğriler iki platformda basamaklı çizilir: stilli çizimin konumları orijine göre tek float32'dir (`style::batch`), 4 400 km'de adımı 0,5 m. Oturtmanın değil çizim hattının sınırıdır; ayrı dilimde düzeltilir.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ## Sonuçlar

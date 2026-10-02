@@ -33,7 +33,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
   Vektör oturtma: kontrol noktalarından Helmert, afin ya da projektif dönüşüm, artıklar ve m0, Adla eşle, Kullan ile çift çıkarma,
-  seçili nesnelere, katmana ya da bütün çizime (kopya olarak da) `cad.entities.transform` ile tek adımda (ADR 0156);
+  ya da Parametrelerle (taban noktası, Y ve X ölçeği, dönüklük, öteleme); seçili nesnelere, katmana ya da bütün çizime (kopya olarak da)
+  `cad.entities.transform` ile tek adımda (ADR 0156);
   İşlemler: dört yerleşik araç ve Parsel ölçü yazıları modeli, tanımdan üretilen penceresiyle (ADR 0084);
   taşı, kopyala, döndür, ölçekle ve aynala (ADR 0037);
   ötele, buda, uzat, köşe yuvarla, pah, kır, birleştir, patlat, uzat-kısalt, köşe ekle/sil, esnet, dizi,
@@ -184,6 +185,7 @@ python3 scripts/fixtures/point_edit_cases.py --check   # Nokta editörünün dü
 python3 scripts/fixtures/point_batch_cases.py --check   # Nokta editörünün toplu işlemlerini (Yeniden adlandır, Sıralı numara ver, Katmana taşı, hedef satırlar) kurallardan denetle (ADR 0153 §5)
 python3 scripts/fixtures/fit_cases.py --check   # Vektör oturtma'nın çözümünü (Helmert, afin, projektif; artıklar, m0, çözümsüzlükler) tam kesirle bağımsız başvurudan denetle (ADR 0156)
 python3 scripts/fixtures/warp_cases.py --check   # Vektör oturtma'da nesnelerin dönüşmesini (afinde elips, projektifte 0,1 mm'lik köşeler, yazı ve blok kuralı, ufuk reddi) kurallardan denetle (ADR 0156)
+python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
 python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını, bağlı çizgilerini ve İçe aktar sonrası hedefini kurallardan denetle (ADR 0153 §5)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
@@ -593,9 +595,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   satırları, sırasıyla) ve İçe aktar (aynı adlar için ardından Çift noktaları ayıkla, Aynı ad; `dedupe.json`'un `imports`'u).
   `HYB-05` vektör oturtma ([ADR 0156](docs/adr/0156-vector-fit.md)): 1. adım (çözüm: `ops::fit`, bağımsız başvuru `fit_cases.py`)
   ve 2. adım (nesnelerin dönüşmesi: `ops::warp`, `warp_cases.py`) ve 3. adım (`cad.entities.transform`'un `similarity`, `affine`,
-  `projective` türleri, adım “Oturt”) ve 4.1 (Vektör oturtma penceresi iki platformda: Kullan sütunu, Adla eşle, canlı çözüm,
-  Uygula, rapor; sahne `vector-fit.kcad`) tamam; sıradaki 4.2: Parametrelerle (sayısal afin), sonra kauçuk levha ve kenar
-  eşlemenin ADR'si. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  `projective` türleri, adım “Oturt”), 4.1 (Vektör oturtma penceresi iki platformda: Kullan sütunu, Adla eşle, canlı çözüm,
+  Uygula, rapor; sahne `vector-fit.kcad`) ve 4.2 (Parametrelerle: `scale_turn`, `fit_parameters.py`) tamam. Sıradaki: 4.2'de
+  bulunan çizim hattı sınırı (orijinden binlerce km uzaktaki katmanın eğrileri stilli çizimde tek float32 konumla basamaklı),
+  sonra kauçuk levha ve kenar eşlemenin ADR'si. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

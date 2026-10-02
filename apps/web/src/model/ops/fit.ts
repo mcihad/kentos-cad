@@ -44,3 +44,10 @@ export interface FitFailure {
 
 /** The transform of `kind` that best carries the used pairs' sources onto their targets, or why there is none. */
 export const fitTransform = op<(pairs: readonly FitPair[], kind: FitKind) => Fit | FitFailure>('fitTransform');
+
+/**
+ * Parametrelerle (docs/adr/0156 §7): the linear part that scales east (Y) by `east` and north (X) by `north`, then
+ * turns by `rotation` radians counter-clockwise, as [a, b, c, d] (x′ = a·x + c·y, y′ = b·x + d·y); with equal scales
+ * a similarity. The reference is scripts/fixtures/fit_parameters.py.
+ */
+export const fitScaleTurn = op<(east: number, north: number, rotation: number) => [number, number, number, number]>('fitScaleTurn');

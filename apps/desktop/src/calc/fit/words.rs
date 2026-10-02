@@ -1,20 +1,46 @@
 //! Vektör oturtma's words (the web's `FitDialog.ts`): the summary under
-//! the table, the parameters in words, the report, the kinds' names and
-//! hints, and the reasons there is no solution.
+//! the table (or under Parametrelerle's fields), the parameters in words,
+//! the report, the kinds' names and hints, and the reasons there is no
+//! solution.
 
 use std::fmt;
 
+use kentos_domain::Document as Model;
 use kentos_geometry_core::ops::fit::{self as solver, Derived, FitError, FitKind};
 use kentos_interaction::{Format, fixed, js_trim};
 use kentos_processing::text::js_number;
 
-use super::{Form, NAME, Scope, TITLE, USE, pair_of};
+use super::{Form, Method, NAME, Scope, TITLE, USE, pair_of};
 use crate::calc::traverse::mm_text;
 use crate::exchange::words::Kind as Line;
 
 impl Form {
-    /// The summary under the table (the web's `solve`'s lines).
-    pub(super) fn summary_lines(&self, format: &Format) -> Vec<(Line, String)> {
+    /// The summary now: the control points' solution, or Parametrelerle's
+    /// numbers (at most six problems with them, as the Hesap windows say).
+    pub(super) fn summary_lines(&self, model: &Model, format: &Format) -> Vec<(Line, String)> {
+        match self.method {
+            Method::Points => self.points_summary(format),
+            Method::Parameters => match self.params.read(model, format) {
+                Ok(p) => p.summary(format),
+                Err(problems) => problems.into_iter().take(6).collect(),
+            },
+        }
+    }
+
+    /// The report to copy: Parametrelerle's while its numbers read, else the
+    /// control points'.
+    pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
+        match self.method {
+            Method::Points => Some(self.points_report(format)),
+            Method::Parameters => {
+                let p = self.params.read(model, format).ok()?;
+                Some(p.report(&self.params, format))
+            }
+        }
+    }
+
+    /// The summary under the table (the web's `solvePoints`' lines).
+    fn points_summary(&self, format: &Format) -> Vec<(Line, String)> {
         let need = self.kind.need();
         let fit = match &self.solution {
             None | Some(Err(FitError::TooFew(_))) => {
@@ -65,9 +91,9 @@ impl Form {
         lines
     }
 
-    /// The report (the web's `report`): the transform, the pairs with their
-    /// residuals, m0 and the parameters, tab-separated.
-    pub fn report(&self, format: &Format) -> Vec<Vec<String>> {
+    /// The control points' report (the web's `report`): the transform, the
+    /// pairs with their residuals, m0 and the parameters, tab-separated.
+    pub(super) fn points_report(&self, format: &Format) -> Vec<Vec<String>> {
         let strings = |words: &[&str]| words.iter().map(|w| (*w).to_owned()).collect::<Vec<_>>();
         let mut lines = vec![
             strings(&[TITLE, kind_name(self.kind)]),

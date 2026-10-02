@@ -7,9 +7,10 @@ import { PickPointTool } from '../../tools/pickPointTool';
 import { fixed } from '../../core/displayNumber';
 import { h, replaceChildren } from '../dom';
 import { checkField, select } from '../io/common';
-import { segmented } from '../widgets/controls';
+import { segmented, textField } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
-import { copyReport, field, Grid, mmText, nameAt, readNumber, summary, summaryLine, type GridModel, type Row } from './common';
+import { copyReport, field, Grid, knownField, mmText, nameAt, readNumber, summary, summaryLine, type GridModel, type Row } from './common';
+import { METHOD_HINT, METHODS, PARAMS, PARAMS_HINT, paramLabel, paramsReport, paramsSummary, paramsTransform, readParams, type Method, type Params } from './fitParams';
 
 /**
  * Vektör oturtma (docs/adr/0156 §7): a drawing or a layer fitted to another
@@ -22,7 +23,8 @@ import { copyReport, field, Grid, mmText, nameAt, readNumber, summary, summaryLi
  * fills the table with the points of the same name on two layers. Uygula
  * writes the transform through `cad.entities.transform` (one undo step,
  * Oturt) to the selected objects, a layer or the whole drawing, or their
- * copies. What is typed stays for the session. The desktop's is
+ * copies. Parametrelerle gives the transform by its numbers instead
+ * (fitParams.ts). What is typed stays for the session. The desktop's is
  * `apps/desktop/src/calc/fit/`.
  */
 export function openFit(ctx: AppContext): void {
@@ -32,6 +34,7 @@ export function openFit(ctx: AppContext): void {
 type Scope = 'selection' | 'layer' | 'all';
 
 const state = {
+  method: 'points' as Method,
   kind: 'helmert' as FitKind,
   rows: [{}, {}, {}, {}] as Row[],
   /** Adla eşle's layers: the source points' and the target points'. */
@@ -40,6 +43,13 @@ const state = {
   scope: 'selection' as Scope,
   layer: null as string | null,
   copy: false,
+  /** Parametrelerle: the base point (a name or Y,X) and the numbers as typed. */
+  base: { text: '' },
+  scaleY: '1',
+  scaleX: '1',
+  rotation: '0',
+  shiftY: '0',
+  shiftX: '0',
 };
 
 const TITLE = 'Vektör oturtma';
@@ -87,7 +97,9 @@ function pairOf(row: Row): FitPair | null {
 
 class FitDialog {
   private readonly ctx: AppContext;
+  private readonly methodBox = h('div', { class: 'io-row' });
   private readonly kindBox = h('div');
+  private readonly paramsBox = h('div', { class: 'calc-section' });
   private readonly matchBox = h('div', { class: 'io-row' });
   private readonly applyBox = h('div', { class: 'io-row' });
   private readonly summaryBox = h('div', { class: 'io-summary' });
@@ -95,10 +107,13 @@ class FitDialog {
   private readonly apply = h('button', { class: 'btn btn--primary', type: 'button' }, 'Uygula');
   private readonly copy = h('button', { class: 'btn', type: 'button' }, 'Raporu kopyala');
   private readonly grid: Grid;
+  private readonly gridBox: HTMLElement;
   private readonly dialog: Dialog;
   /** The solution now, and the rows its pairs came from. */
   private fit: Fit | FitFailure | null = null;
   private rowsOfPairs: number[] = [];
+  /** Parametrelerle now: the numbers read, or what is wrong with them. */
+  private params: Params | HTMLElement[] = [];
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -118,12 +133,13 @@ class FitDialog {
       remove: (r) => state.rows.splice(r, 1),
     };
     this.grid = new Grid(model, () => this.solve());
+    this.gridBox = h('div', { class: 'calc-section' }, h('h3', { class: 'calc-results__title' }, 'Kontrol noktaları'), this.grid.el);
     const close = h('button', { class: 'btn', type: 'button' }, 'Kapat');
     this.dialog = new Dialog({
       title: TITLE,
       width: 980,
       className: 'dialog--io dialog--calc dialog--fit',
-      content: [this.kindBox, this.matchBox, h('div', { class: 'calc-section' }, h('h3', { class: 'calc-results__title' }, 'Kontrol noktaları'), this.grid.el), this.summaryBox, this.applyBox],
+      content: [this.methodBox, this.kindBox, this.matchBox, this.gridBox, this.paramsBox, this.summaryBox, this.applyBox],
       footer: [this.status, this.copy, close, this.apply],
     });
     close.addEventListener('click', () => this.dialog.close());
@@ -136,6 +152,12 @@ class FitDialog {
   private renderControls(): void {
     const { ctx } = this;
     const layers = ctx.doc.layers;
+    const method = segmented<Method>({ label: 'Yöntem', options: METHODS, value: state.method, onChange: (v) => ((state.method = v), this.renderControls(), this.solve()) });
+    replaceChildren(this.methodBox, field('Yöntem', method, METHOD_HINT[state.method], 'grow'));
+    const points = state.method === 'points';
+    for (const box of [this.kindBox, this.matchBox, this.gridBox]) box.hidden = !points;
+    this.paramsBox.hidden = points;
+    if (!points) this.renderParams();
     const kind = segmented<FitKind>({ label: 'Dönüşüm', options: KINDS, value: state.kind, onChange: (v) => ((state.kind = v), this.renderControls(), this.solve()) });
     replaceChildren(this.kindBox, h('div', { class: 'io-row' }, field('Dönüşüm', kind, KIND_HINT[state.kind], 'grow')));
     // Adla eşle: the layers holding named points, each with its count.
@@ -183,8 +205,41 @@ class FitDialog {
     replaceChildren(this.applyBox, field('Uygulanacak nesneler', scope), layer ? field('Katman', layer, null, 'wide') : null, copy);
   }
 
-  /** The table's pairs solved again; the residuals into their cells, the summary under the table. */
+  /** The solution again from what is typed: the table's pairs, or the parameters. */
   private solve(): void {
+    if (state.method === 'parameters') this.solveParams();
+    else this.solvePoints();
+    this.updateButton();
+  }
+
+  /** Parametrelerle's fields: the base point (shown on the drawing too) and the five numbers. */
+  private renderParams(): void {
+    const { ctx } = this;
+    const picker = { ctx, title: TITLE, close: () => this.dialog.close(), reopen: () => openFit(ctx) };
+    const num = (p: (typeof PARAMS)[number]) => {
+      const label = paramLabel(ctx, p);
+      const f = textField({ label, value: state[p.key], placeholder: String(p.empty), onChange: (v) => ((state[p.key] = v), this.solve()) });
+      f.classList.add('calc-num');
+      f.dataset.key = p.key;
+      return field(label, f);
+    };
+    replaceChildren(
+      this.paramsBox,
+      h('div', { class: 'calc-knowns' }, knownField(picker, 'Taban noktası', state.base, () => this.solve(), 'base', 'Ölçek ve dönüklük bu noktanın çevresinde')),
+      h('div', { class: 'io-row' }, PARAMS.map(num)),
+      h('p', { class: 'io-field__hint' }, PARAMS_HINT),
+    );
+  }
+
+  /** Parametrelerle's summary: the numbers, where the base lands, and what the objects become; or what is wrong. */
+  private solveParams(): void {
+    const read = readParams(this.ctx, state);
+    this.params = read;
+    summary(this.summaryBox, Array.isArray(read) ? read.slice(0, 6) : paramsSummary(this.ctx, read));
+  }
+
+  /** The table's pairs solved again; the residuals into their cells, the summary under the table. */
+  private solvePoints(): void {
     const pairs: FitPair[] = [];
     this.rowsOfPairs = [];
     state.rows.forEach((row, r) => {
@@ -227,7 +282,6 @@ class FitDialog {
       }
     }
     summary(this.summaryBox, lines);
-    this.updateButton();
   }
 
   /**
@@ -269,8 +323,20 @@ class FitDialog {
   }
 
   private updateButton(): void {
+    const ready = this.plan() !== null;
+    this.apply.disabled = !ready || !this.targets().length;
+    this.copy.disabled = state.method === 'parameters' && !ready;
+  }
+
+  /** What Uygula writes: the transform (`cad.entities.transform`'s centred form) and how it is said. */
+  private plan(): { transform: Transform; how: string; m0: string } | null {
+    if (state.method === 'parameters') {
+      const p = this.params;
+      return Array.isArray(p) ? null : { transform: paramsTransform(p), how: 'parametrelerle', m0: '' };
+    }
     const fit = this.fit;
-    this.apply.disabled = !fit || 'error' in fit || !this.targets().length;
+    if (!fit || 'error' in fit) return null;
+    return { transform: this.transform(fit), how: `${KIND_NAME[state.kind]} dönüşümle`, m0: fit.m0 === null ? '' : ` (m0 ±${mmText(fit.m0)})` };
   }
 
   /** The solution as `cad.entities.transform`'s transform (its centred form). */
@@ -282,19 +348,18 @@ class FitDialog {
   }
 
   private write(): void {
-    const fit = this.fit;
-    if (this.apply.disabled || !fit || 'error' in fit) return;
+    const plan = this.plan();
+    if (this.apply.disabled || !plan) return;
     const { ctx } = this;
     const uids = this.targets();
-    const result = entitiesTransform.execute({ doc: ctx.doc }, { uids, transform: this.transform(fit), ...(state.copy ? { copy: true } : {}) });
+    const result = entitiesTransform.execute({ doc: ctx.doc }, { uids, transform: plan.transform, ...(state.copy ? { copy: true } : {}) });
     if (result.status !== 'completed') {
       this.status.textContent = 'error' in result ? result.error.message : 'Yazılamadı.';
       this.status.dataset.kind = 'error';
       return;
     }
     const n = state.copy ? result.output.created.length : result.output.changed.length;
-    const m0 = fit.m0 === null ? '' : ` (m0 ±${mmText(fit.m0)})`;
-    ctx.log.success(`${TITLE}: ${n} nesne${state.copy ? 'nin kopyası' : ''} ${KIND_NAME[state.kind]} dönüşümle oturtuldu${m0}. Ctrl+Z geri alır.`);
+    ctx.log.success(`${TITLE}: ${n} nesne${state.copy ? 'nin kopyası' : ''} ${plan.how} oturtuldu${plan.m0}. Ctrl+Z geri alır.`);
     for (const w of result.warnings) ctx.log.warn(w.message);
     if (state.copy) ctx.selection.set(result.output.created.flatMap((uid) => ctx.doc.byUid(uid)?.id ?? []));
     this.dialog.close();
@@ -357,6 +422,7 @@ class FitDialog {
 
   /** The report: the transform, the pairs with their residuals, m0 and the parameters, tab-separated. */
   private report(): void {
+    if (state.method === 'parameters') return this.reportParams();
     const fit = this.fit;
     const lines: string[][] = [[TITLE, KIND_NAME[state.kind]], ['Kullan', 'Ad', 'Kaynak Y', 'Kaynak X', 'Hedef Y', 'Hedef X', 'vY (mm)', 'vX (mm)', 'v (mm)']];
     for (const row of state.rows) {
@@ -371,5 +437,11 @@ class FitDialog {
       lines.push(['Merkezli sayılar', ...fit.params.map(String)]);
     }
     copyReport(this.ctx, TITLE, lines);
+  }
+
+  /** Parametrelerle's report: the base, the numbers as read and the linear part, tab-separated. */
+  private reportParams(): void {
+    const p = this.params;
+    if (!Array.isArray(p)) copyReport(this.ctx, TITLE, paramsReport(this.ctx, TITLE, p, state));
   }
 }
