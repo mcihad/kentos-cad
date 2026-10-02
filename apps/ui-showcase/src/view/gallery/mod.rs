@@ -10,6 +10,7 @@
 //! └─────────────────────────────────────────────────────────────┘
 //! ```
 
+mod ai;
 mod attributes;
 mod controls;
 mod feedback;
@@ -50,6 +51,7 @@ impl Showcase {
             Page::Layout => self.layout_page(),
             Page::Inputs => self.inputs_page(),
             Page::Python => self.python_page(),
+            Page::Ai => self.ai_page(),
             Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),
@@ -61,7 +63,7 @@ impl Showcase {
         ]
         .spacing(4);
 
-        let width = if page == Page::Python {
+        let width = if matches!(page, Page::Python | Page::Ai) {
             1280.0
         } else {
             PAGE_WIDTH

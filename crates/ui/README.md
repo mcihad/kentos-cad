@@ -67,6 +67,7 @@ src/                     kentos-ui kütüphanesi
 │   ├── property_grid.rs salt okunur özellik ızgarası
 │   ├── command_line.rs  komut kutusu: geçmiş, istem, otomatik tamamlama
 │   ├── python/          JetBrains Mono editör, renklendirilmiş REPL, girinti ve geçmiş
+│   ├── ai/              konuşma, prompt, karakter akışı, düşünme özeti, soru ve araç kartları
 │   ├── status_bar.rs    durum çubuğu: menülü göstergeler ve anahtarlar
 │   ├── dialog.rs        iletişim kutusu, onay kutusu, kısayol listesi
 │   ├── navigation_bar.rs, overlay.rs, tip.rs
@@ -101,7 +102,7 @@ assets/fonts/            gömülü yazı tipleri ve lisansları (SIL Open Font L
 
 Vitrindeki **Galeri** sekmesi kütüphanenin kataloğudur: renkler, yazı, ikonlar,
 düğmeler, veri bileşenleri, çerçeve, yerleşim, girdiler, geri bildirim,
-Python, öznitelikler ve CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve
+Python, AI Surface, öznitelikler ve CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve
 kullanım koduyla.
 
 ## Python editörü ve REPL
@@ -158,6 +159,79 @@ bir dil sunucusu bağlayabilir.
 
 Showcase standart Python kütüphanesini kullanır; `input()` için hata gösterir.
 Bu sayfanın çalıştırıcısı çizim belgesine veya `kentos.cad` SDK'sına bağlanmaz.
+
+## AI Surface
+
+**Galeri → AI Surface** metin akışı, kullanıcı sorusu, araç onayı ve hata
+senaryolarını çalıştırır. Gönder, Durdur, Yeniden dene, geri bildirim, ekler ve
+soru yanıtları etkileşimlidir. Bu sayfa yerel örnek veriler kullanır; uzak bir
+AI sağlayıcısına istek göndermez.
+
+| Bileşen | Kullanım |
+| --- | --- |
+| `AiConversation` | Başlık, konuşma geçmişi, boş durum önerileri ve prompt alanı |
+| `AiMessage` | Kullanıcı / asistan / sistem mesajı, kaynaklar, kullanım bilgisi ve geri bildirim |
+| `AiPrompt` | Çok satırlı prompt, ekler, model etiketi, Gönder / Durdur |
+| `AiContent` | Başlıklar, vurgu, liste, alıntı, tablo, bağlantı ve kod blokları |
+| `AiStream` | Büyüyen UTF-8 metnin yumuşak karakter akışı ve ışıklı yazım imleci |
+| `AiActivity` | Etkinlik sırasında dönen ışık parçacıkları, dururken yıldız simgesi |
+| `AiThinking` | Açılır düşünme özeti / işlem ilerlemesi ve süre |
+| `AiToolCall` | Araç durumu, açılır girdi/çıktı, açık onay / red eylemleri |
+| `AiQuestion` | Tekli / çoklu seçim, açıklamalar, öneri, serbest yanıt ve isteğe bağlı atlama |
+
+```rust,ignore
+use kentos_ui::widget::ai::{AiAction, AiConversation, Conversation};
+
+AiConversation::new(&conversation, Message::Ai)
+    .title("KentOS Asistan")
+    .model("Çizim asistanı")
+    .output_id("ai-output")
+    .height(560);
+
+// update: sağlayıcı ve işletim sistemi işleri uygulamaya aittir.
+if let Some(AiAction::Send(request)) = conversation.update(event) {
+    // Modelin yanıt parçaları geldikçe:
+    conversation.append(request.id, "Yanıtın ilk parçası");
+    // Tamamlanınca conversation.finish(request.id, usage).
+}
+```
+
+`Conversation::thought`, `tool`, `ask`, `append`, `finish` ve `fail` aynı istek
+kimliğini kullanır. İptal edilmiş istekler yeni yanıtı değiştiremez. Bekleyen
+soru veya araç onayı açık kullanıcı eylemi gerektirir; önerilen seçenek otomatik
+gönderilmez. `AiAction::Answer` ve `ToolApproval` uygulamanın akışı sürdürmesini
+sağlar. Hata/durdurma kısmi yanıtı ve sonraki prompt taslağını korur.
+
+Düşünme kartına sağlayıcının gösterilebilir özeti veya gözlemlenen işlem
+ilerlemesi verilir. `AiContent` belirtilen Markdown alt kümesini çizer; desteklenmeyen
+işaretler metin olarak görünür. Python kod blokları aynı JetBrains Mono
+renklendiriciyi kullanır. Kopyalama, bağlantı açma, ek seçme ve araç çalıştırma
+`AiAction` ile uygulamaya devredilir.
+
+Enter prompt'u gönderir; Shift+Enter yeni satır açar. Çalışırken sonraki mesaj
+yazılabilir. Görünüm, karakterler ekrana geldikçe akışın sonunu izler.
+Kullanıcı geçmişe kaydırınca `following()` false olur ve okuduğu konum korunur;
+alta dönünce izleme sürer. Yerleşim değişiklikleri kullanıcı kaydırması sayılmaz. Konuşma 100 mesaj,
+yanıt 512 KiB, bir yanıttaki araçlar 32 ve sorular 16 ile sınırlıdır.
+
+Animasyonlar Iced'in yerel çizimi ve wgpu üzerinde yuvarlatılmış şekiller,
+gradyanlar ve gölgeler kullanır: odak halesi, hareketli ışık izi, sonuç geçişi,
+parçacık yörüngesi, karakter akışı ve yumuşak açılır kartlar. Dekorasyon için
+uygulama zamanlayıcısı gerekmez. Yalnız görünür, etkin bileşenler kare ister;
+`motion::set_reduced(true)` geçişleri tamamlar ve sürekli hareketi durdurur.
+Renkler dört temaya, boyutlar uygulamanın yazı ölçeğine uyar.
+Akış bitince aynı rich-text bileşeni ve genişliği korunur; son paragraf
+başka bir bileşene dönüşmez. Köşe dolguları, ışık izleri ve tablo satırları
+`shape` ayarındaki yarıçaplara uyar.
+`widget::Responsive` aynı ölçülerdeki animasyon yerleşimlerinde kurulu çocuğu
+korur; AI sahnesi ve prompt düğmeleri yeniden yerleşirken soluklaşmaz.
+
+```sh
+cargo run -p kentos-ui-showcase -- snapshot python.png --senaryo galeri --sayfa python --boyut 1440x1050
+cargo run -p kentos-ui-showcase -- snapshot ai.png --senaryo galeri --sayfa ai --boyut 1440x1050
+cargo test -p kentos-ui -p kentos-ui-showcase --offline
+cargo clippy -p kentos-ui -p kentos-ui-showcase --all-targets --offline -- -D warnings
+```
 
 ## Öznitelikler ve seçim
 

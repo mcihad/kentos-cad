@@ -9,6 +9,7 @@
 //! Hepsi uygulamanın `Message` türünden bağımsızdır ve renklerini temadan
 //! okur.
 
+pub mod ai;
 mod animated_surface;
 pub mod app_menu;
 pub mod assets;
@@ -50,6 +51,7 @@ pub mod query_builder;
 pub mod radial;
 pub mod radio;
 pub mod range;
+pub mod responsive;
 pub mod ribbon;
 pub mod rulers;
 pub mod sash;
@@ -74,6 +76,10 @@ pub mod wizard;
 
 mod tip;
 
+pub use ai::{
+    AiActivity, AiContent, AiConversation, AiMessage, AiPrompt, AiQuestion, AiStream, AiThinking,
+    AiToolCall,
+};
 pub use app_menu::AppMenu;
 pub use assets::AssetBrowser;
 pub use beside::{beside, beside_pointer};
@@ -110,6 +116,7 @@ pub use query_builder::QueryBuilder;
 pub use radial::RadialMenu;
 pub use radio::RadioGroup;
 pub use range::RangeSlider;
+pub use responsive::Responsive;
 pub use ribbon::Ribbon;
 pub use rulers::{Guides, Rulers};
 pub use sash::Sash;
