@@ -57,7 +57,7 @@ fn a_new_parcel_closes_along_its_neighbours_boundary() {
     assert!(b.type_text("İ"));
     assert_eq!(
         b.session.prompt().text(),
-        "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Geri (G)]"
+        "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Akış (A) / Geri (G)]"
     );
     // Free corners: no line within the aperture, straight edges.
     b.click(40.0, 20.0);
@@ -120,4 +120,50 @@ fn icine_tikla_measures_the_region_clicked_in() {
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
     assert_eq!(said[0], "  Y 487010.000  X 4420001.000");
     assert!(said[1].starts_with("Alan 220.00 m²"), "{said:?}");
+}
+
+/// Akış (docs/adr/0161 §3) on the empty drawing: B asks for the step (0 is
+/// refused), the pointer leaves a vertex where it is each time it is the step
+/// from the last; Sabit ilk nokta's rays stream nothing.
+#[test]
+fn akis_leaves_a_vertex_every_step_the_pointer_goes() {
+    let mut b = Bench::on(include_str!(
+        "../../../../fixtures/interaction/v1/empty.kcad"
+    ));
+    b.draft.snap = false;
+    b.start("polyline");
+    b.click(-20.0, 0.0);
+    assert!(b.type_text("A"));
+    assert!(b.type_text("B"));
+    assert_eq!(
+        b.session.prompt().text(),
+        "Çoklu çizgi: akışın adım boyunu yazın [Geri (G)]"
+    );
+    let before = b.log.len();
+    assert!(b.type_text("0"));
+    assert_eq!(b.last_text(), Some("Adım boyu sıfırdan büyük olmalı."));
+    assert!(b.log.len() > before);
+    assert!(b.type_text("2"));
+    for (to, points) in [
+        ([-19.0, 0.0], 1),
+        ([-17.5, 0.0], 2),
+        ([-16.0, 0.5], 2),
+        ([-15.0, 1.0], 3),
+        ([-13.0, 2.0], 4),
+    ] {
+        b.move_to(to[0], to[1]);
+        assert_eq!(b.points(), points, "at {to:?}");
+    }
+    b.confirm();
+    assert_eq!(
+        newest_pts(&b),
+        [[-20.0, 0.0], [-17.5, 0.0], [-15.0, 1.0], [-13.0, 2.0]]
+    );
+
+    // Sabit ilk nokta: rays from the first point, nothing streamed.
+    b.start("measure");
+    assert!(b.type_text("S"));
+    b.click(0.0, 0.0);
+    b.move_to(10.0, 0.0);
+    assert_eq!(b.points(), 1);
 }

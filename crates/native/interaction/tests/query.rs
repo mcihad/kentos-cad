@@ -149,7 +149,7 @@ fn a_fixed_first_point_takes_typed_points_from_the_first_and_has_no_arcs() {
     b.click(-14.0, 4.0);
     assert_eq!(
         b.options(),
-        ["Y", "U", "İ", "G"],
+        ["Y", "U", "İ", "A", "G"],
         "the chain's own options, none for the switch"
     );
 }
@@ -158,7 +158,7 @@ fn a_fixed_first_point_takes_typed_points_from_the_first_and_has_no_arcs() {
 fn a_chain_is_measured_as_it_always_was_and_the_switch_is_not_offered_mid_run() {
     let mut b = bench("measure");
     clicks(&mut b, &[[-14.0, 4.0], [-14.0, 10.0]]);
-    assert_eq!(b.options(), ["Y", "U", "İ", "G", "Enter"]);
+    assert_eq!(b.options(), ["Y", "U", "İ", "A", "G", "Enter"]);
     assert!(!b.type_text("s"), "not offered now: it would drop the run");
     b.click(-8.0, 10.0);
     b.confirm();
@@ -298,7 +298,8 @@ fn a_ring_drawn_by_its_corners_can_be_drawn_too_until_the_next_starts() {
     assert_eq!(preview(&b).areas.len(), 1);
     // The next ring's first corner ends it.
     b.click(-14.0, 4.0);
-    assert!(!b.session.prompt().keys().contains(&"A"));
+    // Line mode's A is Akış (docs/adr/0161 §3): Alan olarak çiz is offered no more.
+    assert!(!b.session.prompt().text().contains("Alan olarak çiz"));
     assert!(preview(&b).areas.is_empty());
     b.session.exit();
     // A new run starts without one.

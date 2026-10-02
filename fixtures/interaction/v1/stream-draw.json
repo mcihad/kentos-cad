@@ -1,0 +1,42 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "stream-draw",
+  "title": "Akış: Çoklu çizgi'de A ile açılır; Adım boyu (B) 2 m yazılır; imleç son noktadan 2 m uzaklaştıkça köşe bırakır, yakındaki hareketler bırakmaz; kapatılınca imleç köşe bırakmaz; Enter bitirir; bellek başladığı gibi bırakılır",
+  "source": "Web'in PathTool'u, masaüstünün kentos_interaction::path'i, ADR 0161 §3",
+  "covers": ["UX-01", "UX-06"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polyline" },
+    { "click": [-20, 0], "expect": { "points": 1 } },
+    {
+      "text": "a",
+      "note": "Akış bir tuşla açılır; adım boyu 1 m.",
+      "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 1.000 m / Geri (G)]" }
+    },
+    { "text": "b", "expect": { "prompt": "Çoklu çizgi: akışın adım boyunu yazın [Geri (G)]" } },
+    { "text": "2" },
+    {
+      "key": "Enter",
+      "expect": { "points": 1, "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A): açık / Adım boyu (B): 2.000 m / Geri (G)]" }
+    },
+    { "move": [-19, 0], "note": "1 m: köşe yok.", "expect": { "points": 1 } },
+    { "move": [-17.5, 0], "note": "2,5 m: köşe imlecin yerinde.", "expect": { "points": 2 } },
+    { "move": [-16, 0.5], "expect": { "points": 2 } },
+    { "move": [-15, 1], "expect": { "points": 3 } },
+    { "move": [-13, 2], "expect": { "points": 4 } },
+    { "text": "b" },
+    { "text": "1" },
+    { "key": "Enter", "note": "Adım boyu 1 m'ye döner." },
+    { "text": "a", "note": "Akış kapanır: imleç köşe bırakmaz.", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G) / Bitir (Enter)]" } },
+    { "move": [-8, 2], "expect": { "points": 4 } },
+    {
+      "key": "Enter",
+      "expect": { "entities": 1, "newest": { "kind": "polyline", "points": [[-20, 0], [-17.5, 0], [-15, 1], [-13, 2]] } }
+    }
+  ]
+}

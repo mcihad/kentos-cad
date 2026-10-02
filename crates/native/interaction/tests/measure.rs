@@ -179,7 +179,7 @@ fn g_while_a_length_is_waited_for_takes_the_point_back_and_ends_the_wait() {
     assert_eq!(b.options(), ["G"]);
     b.type_text("G");
     assert_eq!(b.points(), 1);
-    assert_eq!(b.options(), ["Y", "U", "İ", "G"]);
+    assert_eq!(b.options(), ["Y", "U", "İ", "A", "G"]);
     // A number is a point again, not a length.
     assert!(b.type_text("@0,5"));
     assert_eq!(b.points(), 2);

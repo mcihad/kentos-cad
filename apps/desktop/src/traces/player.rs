@@ -268,6 +268,9 @@ pub struct Player<'a> {
     /// number in it is chosen, and typing replaces it (the widget's `select_all`).
     field_at: Option<Vec2>,
     field_fresh: bool,
+    /// The pointer goes to the trace's point itself, not to the device pixel
+    /// it falls in (`exact_pointer`).
+    exact: bool,
 }
 
 impl<'a> Player<'a> {
@@ -300,6 +303,7 @@ impl<'a> Player<'a> {
             file,
             field_at: None,
             field_fresh: false,
+            exact: false,
         };
         player.app.picker = Picker::File(match &trace.open_file {
             Some(name) => super::folder().join(name),
@@ -335,6 +339,14 @@ impl<'a> Player<'a> {
         camera.center = player.origin;
         camera.scale = 1.0 / trace.view.metres_per_pixel;
         Ok(player)
+    }
+
+    /// Puts the pointer on the trace's point itself, a fraction of a pixel as
+    /// it may be, as the web's player does: a usage scenario's pictures of the
+    /// two platforms then show what the same points give (`kentos-cad
+    /// kullan`). The tests keep the screen's device pixels.
+    pub fn exact_pointer(&mut self) {
+        self.exact = true;
     }
 
     /// Plays the steps up to and including `last` (all when `None`);
@@ -509,13 +521,15 @@ impl<'a> Player<'a> {
     }
 
     /// The window pixel a trace point (east, north from the view's centre)
-    /// falls on, rounded to the screen's device pixels. A point off the
-    /// drawing area stops the trace instead of missing silently.
+    /// falls on, rounded to the screen's device pixels (not with
+    /// `exact_pointer`). A point off the drawing area stops the trace instead
+    /// of missing silently.
     fn window_point(&self, [de, dn]: [f64; 2]) -> Result<Point, String> {
         let world = Vec2::new(self.origin.x + de, self.origin.y + dn);
         let [x, y] = self.app.viewport.camera.world_to_screen(world);
         let dpr = f64::from(self.variant.dpr);
-        let round = |v: f64| (v * dpr).round() / dpr;
+        let exact = self.exact;
+        let round = |v: f64| if exact { v } else { (v * dpr).round() / dpr };
         let window = Point::new(
             round(f64::from(self.area.x) + x) as f32,
             round(f64::from(self.area.y) + y) as f32,

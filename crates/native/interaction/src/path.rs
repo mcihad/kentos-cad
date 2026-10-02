@@ -29,6 +29,10 @@
 //! first corner goes back along it too. Not for Sabit ilk nokta's rays nor
 //! İçine tıkla.
 //!
+//! Akış (A, kept for the session; docs/adr/0161 §3): from the first point on,
+//! the pointer leaves a vertex each time it is a step (Adım boyu, B; 1 m at
+//! first) from the last; snaps, ortho and tracking do not apply to them.
+//!
 //! Two options of the measuring shapes are docs/adr/0141's:
 //!
 //! - Mesafe ölç's Sabit ilk nokta (S) measures every new point from the first
@@ -191,12 +195,16 @@ pub struct Path {
     arc_via: Option<Vec2>,
     /// Line mode: waiting for a typed length along the last direction.
     ask_length: bool,
+    /// Akış: waiting for a typed step.
+    ask_step: bool,
     /// Bulge of the closing segment: an arc when the area was closed on its first corner in arc mode.
     closing: f64,
     /// Where the button went down, while that click is being taken (closing on the first corner).
     pressed_at: Option<[f64; 2]>,
     /// What the session remembered, as of the last call (the prompt sees no context).
     memory: Memory,
+    /// The project's units, as of the last call (Adım boyu's value in the prompt).
+    format: Format,
     /// İçine tıkla: where the pointer is and the region around it.
     inside: Option<(Vec2, Option<Region>)>,
     /// The faces of the visible line work, kept while the drawing and the view stand.
@@ -239,9 +247,11 @@ impl Path {
             spec: Spec::Tangent,
             arc_via: None,
             ask_length: false,
+            ask_step: false,
             closing: 0.0,
             pressed_at: None,
             memory: Memory::default(),
+            format: Format::default(),
             inside: None,
             faces: FaceCache::default(),
             measured: None,
@@ -270,6 +280,7 @@ impl Path {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
+        self.format = cx.format();
     }
 
     /// Mesafe ölç with Sabit ilk nokta on: rays from the first point, not a chain.
@@ -286,6 +297,16 @@ impl Path {
     /// rays nor İçine tıkla (docs/adr/0161 §1).
     fn tracing(&self) -> bool {
         self.memory.trace && !self.arc_mode && !self.fixed() && !self.inside_mode()
+    }
+
+    /// Whether Akış applies now, as İzle does, and no number is waited for (docs/adr/0161 §3).
+    fn streaming(&self) -> bool {
+        self.memory.stream
+            && !self.arc_mode
+            && !self.fixed()
+            && !self.inside_mode()
+            && !self.ask_length
+            && !self.ask_step
     }
 
     /// The point new ones are measured from, and ortho, polar tracking and
@@ -617,6 +638,14 @@ impl Path {
             cx.memory.trace = !cx.memory.trace;
             self.memory.trace = cx.memory.trace;
             self.way = None;
+        } else if !self.arc_mode && key == "A" && !self.pts.is_empty() {
+            cx.memory.stream = !cx.memory.stream;
+            self.memory.stream = cx.memory.stream;
+        } else if !self.arc_mode && key == "B" && self.memory.stream && !self.pts.is_empty() {
+            self.ask_step = true;
+        } else if key == "G" && self.ask_step {
+            // Geri leaves the step as it was; the points stay.
+            self.ask_step = false;
         } else if key == "G" && self.arc_via.is_some() {
             self.arc_via = None;
         } else if key == "G" && !self.pts.is_empty() {
@@ -811,6 +840,7 @@ impl Path {
         self.arc_mode = false;
         self.spec = Spec::Tangent;
         self.ask_length = false;
+        self.ask_step = false;
         self.closing = 0.0;
         self.way = None;
     }
@@ -1054,12 +1084,23 @@ impl Tool for Path {
             return Prompt::new(label, "son doğrultuda devam edilecek uzunluğu yazın")
                 .option("Geri", "G");
         }
+        if self.ask_step {
+            return Prompt::new(label, "akışın adım boyunu yazın").option("Geri", "G");
+        }
         if !self.arc_mode {
-            let prompt = Prompt::new(label, "sonraki noktayı belirtin")
+            let mut prompt = Prompt::new(label, "sonraki noktayı belirtin")
                 .option("Yay", "Y")
                 .option("Uzunluk", "U")
                 .toggle("İzle", "İ", self.memory.trace)
-                .option("Geri", "G");
+                .toggle("Akış", "A", self.memory.stream);
+            if self.memory.stream {
+                prompt = prompt.option_with(
+                    "Adım boyu",
+                    "B",
+                    self.format.length(self.memory.stream_step),
+                );
+            }
+            let prompt = prompt.option("Geri", "G");
             return if done {
                 prompt.option("Bitir", "Enter")
             } else {
@@ -1098,6 +1139,14 @@ impl Tool for Path {
         self.see(cx);
         let point = self.constrain(p, cx);
         self.hover = Some(point);
+        // Akış: the pointer leaves a vertex every step it goes, where it is.
+        if self.streaming()
+            && let Some(last) = self.last()
+            && dist(last, p.raw) >= self.memory.stream_step
+        {
+            self.pts.push(p.raw);
+            self.bulges.push(0.0);
+        }
         // İzle's way to the cursor, for the preview.
         let end = self.end_for(point);
         self.way = match self.last() {
@@ -1126,6 +1175,16 @@ impl Tool for Path {
         }
         let number = parse_number(text);
         let plain = number.filter(|_| !text.contains([',', ';', '@', '<']));
+        if let Some(n) = plain.filter(|_| self.ask_step) {
+            if n > 0.0 {
+                cx.memory.stream_step = n;
+                self.memory.stream_step = n;
+                self.ask_step = false;
+            } else {
+                cx.say(Level::Warn, "Adım boyu sıfırdan büyük olmalı.");
+            }
+            return true;
+        }
         if let Some(n) = plain {
             if self.ask_length {
                 match (self.tangent(), self.last()) {

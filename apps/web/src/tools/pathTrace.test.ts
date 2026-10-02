@@ -56,7 +56,7 @@ describe('İzle', () => {
     const tool = polyline(h, true);
     tool.pointerDown(at(200, 50));
     if (!on(tool)) expect(tool.input('İ')).toBe(true);
-    expect(tool.prompt.value).toBe('Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Geri (G)]');
+    expect(tool.prompt.value).toBe('Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Akış (A) / Geri (G)]');
     // Free corners: no line within the aperture, straight edges.
     tool.pointerDown(at(200, 100));
     tool.pointerDown(at(0, 120));
@@ -108,5 +108,50 @@ describe('İzle', () => {
     expect(tool.input('I')).toBe(true);
     setTrace(h, false);
     tool.deactivate();
+  });
+});
+
+describe('Akış', () => {
+  it('leaves a vertex every step the pointer goes; B asks for the step; Sabit ilk nokta streams nothing', () => {
+    const h = toolHarness();
+    const tool = polyline(h as ReturnType<typeof scene>);
+    tool.pointerDown(at(-20, 0));
+    expect(tool.input('A')).toBe(true);
+    expect(tool.input('B')).toBe(true);
+    expect(tool.prompt.value).toBe('Çoklu çizgi: akışın adım boyunu yazın [Geri (G)]');
+    expect(tool.input('0')).toBe(true);
+    expect(h.said().at(-1)).toBe('Adım boyu sıfırdan büyük olmalı.');
+    expect(tool.input('2')).toBe(true);
+    const steps: [[number, number], number][] = [
+      [[-19, 0], 1],
+      [[-17.5, 0], 2],
+      [[-16, 0.5], 2],
+      [[-15, 1], 3],
+      [[-13, 2], 4],
+    ];
+    for (const [[x, y], n] of steps) {
+      tool.pointerMove(at(x, y));
+      expect(tool.pointCount, `${x}, ${y}`).toBe(n);
+    }
+    // The step back to 1 m and Akış off, as the session began.
+    expect(tool.input('B')).toBe(true);
+    expect(tool.input('1')).toBe(true);
+    tool.confirm();
+    expect(newest(h as ReturnType<typeof scene>).pts).toEqual([pt(-20, 0), pt(-17.5, 0), pt(-15, 1), pt(-13, 2)]);
+    tool.deactivate();
+    const measure = h.use(new DistanceTool(h.ctx));
+    measure.activate();
+    if (!measure.prompt.value.includes('Sabit ilk nokta (S): açık')) expect(measure.input('S')).toBe(true);
+    measure.pointerDown(at(0, 0));
+    measure.pointerMove(at(10, 0));
+    expect(measure.pointCount).toBe(1);
+    expect(measure.input('S')).toBe(true);
+    measure.deactivate();
+    // Akış off for the session again.
+    const off = polyline(h as ReturnType<typeof scene>);
+    off.pointerDown(at(50, 50));
+    expect(off.input('A')).toBe(true);
+    expect(off.prompt.value).not.toContain('Akış (A): açık');
+    off.deactivate();
   });
 });

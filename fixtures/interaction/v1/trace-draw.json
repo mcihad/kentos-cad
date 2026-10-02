@@ -16,7 +16,7 @@
     {
       "text": "i",
       "note": "İzle bir tuşla açılır (seçeneğin harfi).",
-      "expect": { "tool": "polygon", "prompt": "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Geri (G)]" }
+      "expect": { "tool": "polygon", "prompt": "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ): açık / Akış (A) / Geri (G)]" }
     },
     { "click": [15, 15], "note": "Yakında çizgi yok: düz kenar.", "expect": { "points": 2 } },
     { "click": [-25, 15], "expect": { "points": 3 } },
@@ -51,7 +51,7 @@
       }
     },
     { "click": [-15, 12], "note": "Bellek başladığı gibi bırakılır: İzle kapatılır." },
-    { "text": "i", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G)]" } },
+    { "text": "i", "expect": { "prompt": "Çoklu çizgi: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]" } },
     { "key": "Esc" },
     { "key": "Esc" }
   ]

@@ -31,11 +31,11 @@ fn prompts_are_the_web_s_text_and_options() {
     b.click(0.0, 0.0);
     assert_eq!(
         b.session.prompt().text(),
-        "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Geri (G)]"
+        "Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ) / Akış (A) / Geri (G)]"
     );
     b.click(10.0, 0.0);
     b.click(10.0, 10.0);
-    assert_eq!(b.options(), ["Y", "U", "İ", "G", "Enter"]);
+    assert_eq!(b.options(), ["Y", "U", "İ", "A", "G", "Enter"]);
     assert!(b.type_text("y"));
     assert_eq!(
         b.session.prompt().text(),

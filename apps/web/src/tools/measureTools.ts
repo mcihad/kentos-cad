@@ -36,9 +36,13 @@ export class DistanceTool extends PathTool {
     return DistanceTool.fixed;
   }
 
-  /** Rays from the first point follow no line work (docs/adr/0161 §1). */
+  /** Rays from the first point follow no line work and stream nothing (docs/adr/0161 §1, §3). */
   protected override get tracing(): boolean {
     return super.tracing && !this.fixed;
+  }
+
+  protected override get streaming(): boolean {
+    return super.streaming && !this.fixed;
   }
 
   protected override promptFor(n: number): string {
@@ -147,9 +151,13 @@ export class AreaMeasureTool extends PathTool {
     return AreaMeasureTool.inside;
   }
 
-  /** A click inside a region is no point on a line (docs/adr/0161 §1). */
+  /** A click inside a region is no point on a line, and İçine tıkla streams nothing (docs/adr/0161 §1, §3). */
   protected override get tracing(): boolean {
     return super.tracing && !this.inside;
+  }
+
+  protected override get streaming(): boolean {
+    return super.streaming && !this.inside;
   }
 
   override activate(): void {

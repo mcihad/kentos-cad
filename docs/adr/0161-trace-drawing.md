@@ -126,6 +126,20 @@ Yeni bir sözleşme alanı yoktur.
    - **Sınır:** Zincir görünen alanda yürür; görünenin dışına süren zincir için görünüm uzaklaştırılır.
 4. Akış iki platformda: düğme, adım, imleçle köşe; ortak iz; resimler.
 
+   *(2 Ekim: tamam.)*
+   - **Yol aracı:** düz kipte, ilk noktadan sonra Akış (A) düğmesi; açıkken istemde Adım boyu (B) ve değeri.
+     - Açıkken imleç son köşeden en az adım boyu kadar uzaklaştığında kenetsiz yerinde köşe bırakır. Kenet, orto, kutupsal izleme ve nesne izleme bu köşelere uygulanmaz; tık her zamanki gibi nokta alır.
+     - B adım boyunu sorar: sıfır ya da eksi değer söylenir, Geri (G) eskisini bırakır.
+     - Akış ve adım boyu oturumun belleğindedir: web'de statik alanlar, masaüstünde `Memory::stream` ve `stream_step`.
+     - Yay kipinde ve Uzunluk ya da Adım boyu beklenirken akış yoktur. Sabit ilk nokta'nın ışınlarında ve İçine tıkla'da da yoktur.
+   - **Harfler:** A yay kipinde Açı, düz kipte Akış'tır. Alan hesapla'nın Alan olarak çiz (A) seçeneği yalnız ilk noktadan önce sunulur; ilk noktadan sonra A Akış'tır. İki testin denetimi buna göre: Alan olarak çiz'in kalktığı A tuşundan değil, istemin yazısından okunur.
+   - **Sınama:**
+     - Yol aracının seçeneklerine “A” eklendi: eski izlerin (`measure-parcel`, `polygon-accept`, `polyline-arc`, `trace-draw`) ve testlerin seçenek listeleri buna göre.
+     - İki platformda aynı elle hesaplanmış birim testleri (web `pathTrace.test.ts`, masaüstü `tests/trace_draw.rs`): adım boyunun sorulması ve reddi, 2 m'lik adımda köşelerin yeri, Sabit ilk nokta'da akış olmaması.
+     - Ortak iz `stream-draw.json`: A ile açma, B ile 2 m, yakın hareketin köşe bırakmaması, kapatınca imlecin köşe bırakmaması, Enter ile dört köşeli çizgi.
+     - Kullanım senaryosu `usage-stream-draw.json`.
+   - **Resim oynatıcısı:** masaüstünün kullanım oynatıcısı (`kentos-cad kullan`) imleci artık web'inki gibi noktanın kendisine koyar (`Player::exact_pointer`); testler ekran pikseline yuvarlamayı sürdürür. 2. adımın İzle resmindeki alan farkı (masaüstü 371,14, web 370,00 m²) hesaptan değil, serbest köşelerin piksele yuvarlanmasındandı; iki platform artık 370,00 m² gösterir.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ### 7. Kapsam dışı

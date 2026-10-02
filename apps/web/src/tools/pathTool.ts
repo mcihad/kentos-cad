@@ -42,7 +42,8 @@ type ArcSpec =
  * docs/adr/0161 §1) has the next segments follow the visible line work: a
  * pointer near a line goes onto it, and a segment between two points on
  * connected line work runs along it the shortest way, the line work's own
- * corners and arcs added.
+ * corners and arcs added. Akış (A, kept for the session; docs/adr/0161 §3) has the pointer leave a vertex each time it
+ * is a step (Adım boyu, B; 1 m at first) from the last; snaps, ortho and tracking do not apply to them.
  */
 export class PathTool extends PointInputTool {
   readonly id: string;
@@ -59,12 +60,17 @@ export class PathTool extends PointInputTool {
   private arcVia: Vec2 | null = null;
   /** Line mode: waiting for a typed length along the last direction. */
   private askLength = false;
+  /** Akış: waiting for a typed step. */
+  private askStep = false;
   /** Bulge of the closing segment: an arc when the shape was closed on its first vertex in arc mode. */
   private closing = 0;
   /** Where the pointer went down, while that click is being taken (closing on the first vertex). */
   private pressedAt: Vec2 | null = null;
   /** İzle (docs/adr/0161 §1): kept for the session, as Sabit ilk nokta is. */
   private static trace = false;
+  /** Akış and its step, metres (docs/adr/0161 §3): kept for the session. */
+  private static stream = false;
+  private static streamStep = 1;
   /** The visible line work İzle follows, kept while the view and the drawing stand. */
   private readonly work: VisibleTrace;
 
@@ -92,6 +98,22 @@ export class PathTool extends PointInputTool {
     return PathTool.trace && !this.arcMode;
   }
 
+  /** Whether Akış applies now: on, in line mode (a measuring tool's own modes turn it off), no number waited for. */
+  protected get streaming(): boolean {
+    return PathTool.stream && !this.arcMode && !this.askLength && !this.askStep;
+  }
+
+  /** Akış: the pointer leaves a vertex every step it goes, where it is (no snap, ortho or tracking). */
+  override pointerMove(p: ToolPointer): void {
+    super.pointerMove(p);
+    const last = this.last;
+    if (this.streaming && last && dist(last, p.raw) >= PathTool.streamStep) {
+      this.pts.push(p.raw);
+      this.bulges.push(0);
+      this.refreshPrompt();
+    }
+  }
+
   /** The way along the visible line work from `a` to `b`, or null. */
   private traceTo(a: Vec2, b: Vec2): Traced | null {
     return this.work.path(a, b);
@@ -113,7 +135,11 @@ export class PathTool extends PointInputTool {
     const done = n < min ? '' : ' / Bitir (Enter)';
     // G is an option here too, so its key reaches the tool (and not Kapalı alan's shortcut).
     if (this.askLength) return 'son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]';
-    if (!this.arcMode) return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Geri (G)${done}]`;
+    if (this.askStep) return 'akışın adım boyunu yazın [Geri (G)]';
+    if (!this.arcMode) {
+      const step = PathTool.stream ? ` / Adım boyu (B): ${this.ctx.format.length(PathTool.streamStep)}` : '';
+      return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Akış (A)${whenOn(PathTool.stream)}${step} / Geri (G)${done}]`;
+    }
     const arcOpts = `Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G)${done}`;
     const s = this.spec;
     switch (s.kind) {
@@ -271,6 +297,10 @@ export class PathTool extends PointInputTool {
       }
       this.askLength = true;
     } else if (!this.arcMode && (key === 'İ' || key === 'I') && this.pts.length) PathTool.trace = !PathTool.trace;
+    else if (!this.arcMode && key === 'A' && this.pts.length) PathTool.stream = !PathTool.stream;
+    else if (!this.arcMode && key === 'B' && PathTool.stream && this.pts.length) this.askStep = true;
+    // Geri leaves the step as it was; the points stay.
+    else if (key === 'G' && this.askStep) this.askStep = false;
     else if (key === 'G' && this.arcVia) this.arcVia = null;
     else if (key === 'G' && this.pts.length) {
       this.pts.pop();
@@ -289,6 +319,14 @@ export class PathTool extends PointInputTool {
     const n = parseNumber(text);
     const plain = n !== null && !/[,;@<]/.test(text);
     const s = this.spec;
+    if (plain && this.askStep) {
+      if (n! > 0) {
+        PathTool.streamStep = n!;
+        this.askStep = false;
+      } else this.ctx.log.warn('Adım boyu sıfırdan büyük olmalı.');
+      this.refreshPrompt();
+      return true;
+    }
     if (plain && this.askLength) {
       const t = this.tangent();
       if (t && n! > 0) {
@@ -318,6 +356,7 @@ export class PathTool extends PointInputTool {
     this.arcMode = false;
     this.spec = { kind: 'tangent' };
     this.askLength = false;
+    this.askStep = false;
     this.closing = 0;
     super.reset();
   }

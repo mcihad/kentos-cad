@@ -416,6 +416,10 @@ pub struct Memory {
     /// The path tools' İzle: the next segments follow the visible line work
     /// (docs/adr/0161 §1).
     pub trace: bool,
+    /// The path tools' Akış and its step, metres: the pointer leaves a vertex
+    /// every step it goes (docs/adr/0161 §3).
+    pub stream: bool,
+    pub stream_step: f64,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
     pub block_insert: Option<kentos_contracts::BlockId>,
@@ -596,6 +600,8 @@ impl Default for Memory {
             area_inside: false,
             circle_crossing: false,
             trace: false,
+            stream: false,
+            stream_step: 1.0,
             block_insert: None,
             block_scale: 1.0,
             block_rotation: 0.0,

@@ -154,6 +154,9 @@ fn play(
     let file = traces::scratch_file(trace, variant);
     let problems = {
         let mut player = Player::new(&mut app, trace, variant, area, file)?;
+        // The web's player puts the pointer on the points themselves: the two
+        // platforms' pictures see the same points, not each its own pixels.
+        player.exact_pointer();
         let problems = player.play_shots(&mut take);
         if count.get() == 0 {
             let line = player.line_has_keyboard();

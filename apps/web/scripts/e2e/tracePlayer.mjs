@@ -196,8 +196,9 @@ export async function replacePointer() {
  * The page point of a trace point, not rounded to a whole pixel: the view's
  * centre may fall between pixels (a drawing area of odd size), and a rounded
  * pointer would land half a pixel off the point the trace names (0.0625 m at
- * 0.125 m/px), where the desktop, which takes fractional pointers, lands on
- * it. Chrome carries the fraction to the pointer events the app reads. A
+ * 0.125 m/px), where the desktop's usage player (`kentos-cad kullan`) lands on
+ * it; the desktop's tests round to device pixels, their expectations allowing
+ * `clickTolerance`. Chrome carries the fraction to the pointer events the app reads. A
  * point off the drawing (under the ribbon or a panel) would silently miss
  * the canvas, so it stops the trace instead.
  */

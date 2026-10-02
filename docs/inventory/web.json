@@ -4809,7 +4809,9 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json",
+        "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ]
     },
@@ -8339,7 +8341,7 @@
       "primary": false,
       "rare": false,
       "methods": [],
-      "steps": 3,
+      "steps": 4,
       "description": "Kapalı çoklu çizgi (alan) çizer.",
       "productCommand": "cad.polygon.create",
       "status": "implemented",
@@ -8401,7 +8403,7 @@
       "primary": true,
       "rare": false,
       "methods": [],
-      "steps": 4,
+      "steps": 5,
       "description": "Tek parça, açık çoklu çizgi çizer; Y ile yay parçası (teğet, açı, merkez, yarıçap, ikinci nokta, doğrultu), D ile düz parça, U ile son doğrultuda uzunluk.",
       "productCommand": "cad.polyline.create",
       "status": "implemented",
@@ -8413,7 +8415,9 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polyline-arc.json",
+        "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ]
     },

@@ -11,7 +11,9 @@
 //!   subscription (`keys::key_event`);
 //! - the pointer is Iced mouse events through the drawing area's own
 //!   gesture code (`viewport::gesture`), at the window pixel the world point
-//!   falls on through the same camera, rounded to the screen's device pixels;
+//!   falls on through the same camera, rounded to the screen's device pixels
+//!   (a usage scenario's pictures take the point itself, as the web's player
+//!   does: `Player::exact_pointer`);
 //! - while the command line has the keyboard, keys go to a model of the
 //!   KentOS UI command line as `view.rs` configures it, its suggestion list
 //!   included; the widget operations of the app's own tasks (focusing the
