@@ -167,7 +167,7 @@ impl Rectangle {
         let (pts, bulges) = Self::styled(ring, cx);
         let w = dist(ring[0], ring[1]);
         let h = dist(ring[1], ring[2]);
-        if points::write_ring(&mut self.d, &pts, bulges, cx) {
+        if points::write_area(&mut self.d, &pts, bulges, cx).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",

@@ -10,6 +10,7 @@ import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL, type ConfirmMods } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { ThemeId } from './appearance';
+import type { OverlapMode } from './state';
 import { checkExtent } from './extentCheck';
 import { WORKSPACES, type WorkspaceSpec } from './workspaces';
 
@@ -27,6 +28,24 @@ function pending(ctx: AppContext, id: string, title: string, category: string, i
 
 function toggle(id: string, title: string, s: Signal<boolean>, opts: Partial<Command> = {}): Command {
   return { id, title, run: () => s.set(!s.value), isChecked: () => s.value, watch: [s], ...opts };
+}
+
+/** One of the overlap control's modes as a radio command (docs/adr/0162 §1); a mode that avoids is the cell's next. */
+function overlapMode(ctx: AppContext, mode: OverlapMode, title: string, icon: string, description: string): Command {
+  const s = ctx.settings;
+  return {
+    id: `draft.overlap.${mode}`,
+    title,
+    category: 'Çizim yardımcıları',
+    icon,
+    description,
+    run: () => {
+      s.overlap.set(mode);
+      if (mode !== 'allow') s.overlapLast.set(mode);
+    },
+    isChecked: () => s.overlap.value === mode,
+    watch: [s.overlap],
+  };
 }
 
 /**
@@ -534,6 +553,27 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       icon: 'topologyPoints',
       description: 'Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.',
     }),
+    // Çakışma denetimi (docs/adr/0162 §1): a drafting aid; the cell's click goes between Serbest and the last mode that avoids.
+    {
+      id: 'draft.overlap',
+      title: 'Çakışmayı önle',
+      short: 'Çakışma',
+      category: 'Çizim yardımcıları',
+      icon: 'overlap',
+      aliases: ['CAKISMA', 'CAKISMAYIONLE'],
+      description:
+        'Açıkken çizilen yeni alan, komşu alanlarla örtüşen kısmı çıkarılarak yazılır; ortak sınır komşunun sınırı olur. Kendi katmanında ya da seçili katmanlarda önlenir (sağ tık menüsü).',
+      run: () => {
+        const next = settings.overlap.value === 'allow' ? settings.overlapLast.value : 'allow';
+        settings.overlap.set(next);
+        ctx.log.info(next === 'allow' ? 'Çakışma serbest.' : `Çakışma önleniyor: ${next === 'layer' ? 'kendi katmanında' : 'seçili katmanlarda'}.`);
+      },
+      isChecked: () => settings.overlap.value !== 'allow',
+      watch: [settings.overlap],
+    },
+    overlapMode(ctx, 'allow', 'Serbest', 'overlapAllow', 'Yeni alan komşularıyla örtüşebilir; olduğu gibi yazılır.'),
+    overlapMode(ctx, 'layer', 'Kendi katmanında önle', 'overlapLayer', 'Yeni alan, yazılacağı katmandaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.'),
+    overlapMode(ctx, 'layers', 'Seçili katmanlarda önle', 'overlapLayers', 'Yeni alan, seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır; katmanlar Çakışma hücresinin menüsünden seçilir.'),
 
     // Harita / Koordinat / Analiz
     pending(ctx, 'map.contours', 'Eşyükselti üret…', M, 'contours'),

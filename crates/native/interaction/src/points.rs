@@ -110,6 +110,41 @@ pub(crate) fn write_ring(
     }
 }
 
+/// A new area a tool built by its outline (a rectangle, a regular polygon,
+/// a sector), written as [`write_ring`] writes it, the overlap control
+/// first (docs/adr/0162 §2; the web's `writeArea`): what overlaps the
+/// neighbours is cut away and what is left written as one object through
+/// `cad.entities.create`. Its area as written; `None` when nothing was.
+pub(crate) fn write_area(
+    d: &mut Taken,
+    pts: &[Vec2],
+    bulges: Option<Vec<f64>>,
+    cx: &mut Context<'_>,
+) -> Option<f64> {
+    use crate::overlap::{clip_new_area, clipped_geometry, say_clipped, written_area};
+    use kentos_geometry_core::geom::arrangement::{Area, Ring};
+    use kentos_geometry_core::geom::bulge::bulge_ring_area;
+    let area = Area {
+        outer: Ring {
+            pts: pts.to_vec(),
+            bulges: bulges.clone(),
+        },
+        holes: Vec::new(),
+    };
+    let layer = cx.doc.layers().active().to_owned();
+    let Some(clipped) = clip_new_area(cx, &area, &layer) else {
+        let drawn = bulge_ring_area(pts, bulges.as_deref()).abs();
+        return write_ring(d, pts, bulges, cx).then_some(drawn);
+    };
+    say_clipped(cx, &clipped);
+    let geometry = clipped_geometry(&clipped.areas)?;
+    let out = write_objects(vec![geometry], None, cx)?;
+    if let Some(&id) = out.ids.first() {
+        d.note(id, cx);
+    }
+    Some(written_area(&clipped.areas))
+}
+
 /// Objects a tool built (an ellipse, a spline, a perpendicular …) written
 /// through the product command `cad.entities.create` (docs/adr/0057): the
 /// active layer and the current colour explicit in its input (CMD-07; the

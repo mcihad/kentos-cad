@@ -73,6 +73,13 @@ const ITEMS = [
   { id: 'status-mode', open: (ui) => ui.click('.status__mode') },
   // Topoloji's right-click menu: Noktalar da (docs/adr/0160 §1).
   { id: 'status-topology', open: (ui) => ui.rightClick('.status__toggle[data-command="draft.topology"]') },
+  // Çakışma's right-click menu: the modes, and Katmanlar opened (docs/adr/0162 §1).
+  { id: 'status-overlap', open: (ui) => ui.rightClick('.status__toggle[data-command="draft.overlap"]') },
+  {
+    id: 'status-overlap-layers',
+    open: async (ui) => (await ui.rightClick('.status__toggle[data-command="draft.overlap"]'), await ui.clickText('.menu__item', 'Katmanlar')),
+    close: (ui) => ui.escapeAll(2),
+  },
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
   { id: 'layer-row', open: (ui) => ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name') },
   { id: 'layer-color', open: (ui) => ui.click('.panel--layers .tree__row[data-id="taslak"] .swatch--btn') },

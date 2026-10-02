@@ -110,13 +110,13 @@ impl RegularPolygon {
             );
             return;
         };
-        if points::write_ring(&mut self.d, &ring, None, cx) {
+        if let Some(area) = points::write_area(&mut self.d, &ring, None, cx) {
             let format = cx.format();
             let line = format!(
                 "{} kenarlı düzgün çokgen eklendi: kenar {}, alan {}",
                 ring.len(),
                 format.length(dist(ring[0], ring[1])),
-                format.area(signed_area(&ring).abs())
+                format.area(area)
             );
             cx.say(Level::Success, line);
         }

@@ -77,6 +77,7 @@ use crate::Vec2;
 use crate::faces;
 use crate::format::Format;
 use crate::log::Level;
+use crate::overlap;
 use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
@@ -566,10 +567,32 @@ impl Path {
     /// Alan olarak çiz: the area last measured, holes and all, written to the
     /// active layer through `cad.polygon.create` as one undo step. A refusal
     /// (a locked layer) is the command's own message, and nothing is written.
+    /// With the overlap control on (docs/adr/0162 §2), what overlaps the
+    /// neighbours is cut away first and the rest written through
+    /// `cad.entities.create`, in the same step.
     fn draw_measured(&mut self, cx: &mut Context<'_>) {
         let Some(region) = self.measured.clone() else {
             return;
         };
+        let layer = cx.doc.layers().active().to_owned();
+        if let Some(clipped) = overlap::clip_new_area(cx, &region, &layer) {
+            overlap::say_clipped(cx, &clipped);
+            let Some(geometry) = overlap::clipped_geometry(&clipped.areas) else {
+                return;
+            };
+            let group = cx.doc.begin_group(DRAW_AREA_LABEL);
+            if points::write_objects(vec![geometry], None, cx).is_none() {
+                cx.doc.cancel_group(group);
+                return;
+            }
+            cx.doc.end_group(group);
+            let text = format!(
+                "Alan olarak çizildi: {}.",
+                cx.format().area(overlap::written_area(&clipped.areas))
+            );
+            cx.say(Level::Success, text);
+            return;
+        }
         let group = cx.doc.begin_group(DRAW_AREA_LABEL);
         let input = PolygonCreate {
             layer_id: cx.doc.layers().active().to_owned(),
@@ -698,8 +721,7 @@ impl Path {
             }
             Shape::Parcel => self.create_parcel(&pts, bulges, cx),
             Shape::Closed => {
-                let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
-                if self.create_polygon(&pts, bulges, cx) {
+                if let Some(area) = self.create_polygon(&pts, bulges, cx) {
                     let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
                     cx.say(Level::Success, text);
                 }
@@ -727,9 +749,32 @@ impl Path {
     /// Writes the area through the product command `cad.polygon.create`
     /// (docs/adr/0022), as one undo step. What the web's tool knows
     /// implicitly is explicit in its input (CMD-07): the active layer and
-    /// the current colour. False, with the command's message, when it
-    /// refused (a locked layer); a hidden layer is written with its warning.
-    fn create_polygon(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
+    /// the current colour. The area written; `None`, with the command's
+    /// message, when it refused (a locked layer), or when the neighbours
+    /// covered it; a hidden layer is written with its warning.
+    fn create_polygon(
+        &self,
+        pts: &[Vec2],
+        bulges: Option<Vec<f64>>,
+        cx: &mut Context<'_>,
+    ) -> Option<f64> {
+        // The overlap control (docs/adr/0162 §2): what overlaps the neighbours
+        // is cut away, the rest written as one object.
+        let area = Region {
+            outer: Ring {
+                pts: pts.to_vec(),
+                bulges: bulges.clone(),
+            },
+            holes: Vec::new(),
+        };
+        let layer = cx.doc.layers().active().to_owned();
+        if let Some(clipped) = overlap::clip_new_area(cx, &area, &layer) {
+            overlap::say_clipped(cx, &clipped);
+            let geometry = overlap::clipped_geometry(&clipped.areas)?;
+            points::write_objects(vec![geometry], None, cx)?;
+            return Some(overlap::written_area(&clipped.areas));
+        }
+        let drawn = bulge_ring_area(pts, bulges.as_deref()).abs();
         let input = PolygonCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
@@ -741,7 +786,7 @@ impl Path {
             expected_revision: None,
         };
         let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-        points::written(result, cx).is_some()
+        points::written(result, cx).map(|_| drawn)
     }
 
     /// Writes the polyline through the product command `cad.polyline.create`
@@ -783,12 +828,39 @@ impl Path {
             cx.say(Level::Warn, text);
             return;
         }
+        // The overlap control (docs/adr/0162 §2) on the parcel layer: the parcel is what is left.
+        let drawn = Region {
+            outer: Ring {
+                pts: pts.to_vec(),
+                bulges: bulges.clone(),
+            },
+            holes: Vec::new(),
+        };
+        let clipped = overlap::clip_new_area(cx, &drawn, PARCEL_LAYER);
+        let (geometry, area) = match &clipped {
+            Some(c) => {
+                overlap::say_clipped(cx, c);
+                let Some(g) = overlap::clipped_geometry(&c.areas) else {
+                    return;
+                };
+                (g, overlap::written_area(&c.areas))
+            }
+            None => (
+                EntityGeometry::Polygon {
+                    pts: wire_all(pts),
+                    bulges: bulges.clone(),
+                    holes: None,
+                    zs: None,
+                    parts: None,
+                },
+                bulge_ring_area(pts, bulges.as_deref()).abs(),
+            ),
+        };
         // A drawing without the parcel layer gets it, in the parcel's own undo step.
         let Ok(opened) = crate::standard_layer::open_if_missing(PARCEL_LAYER, "parsel", cx) else {
             return;
         };
         let number = next_parcel(cx).to_string();
-        let area = bulge_ring_area(pts, bulges.as_deref()).abs();
         let attrs = [
             ("Ada", ""),
             ("Parsel", number.as_str()),
@@ -800,13 +872,7 @@ impl Path {
         let input = EntitiesCreate {
             layer_id: PARCEL_LAYER.to_owned(),
             objects: vec![NewObject {
-                geometry: EntityGeometry::Polygon {
-                    pts: wire_all(pts),
-                    bulges,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                },
+                geometry,
                 color: cx.draft.color.map(str::to_owned),
                 line_weight: cx.draft.line_weight,
                 attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),

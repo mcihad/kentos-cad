@@ -18,6 +18,8 @@ import { writeOnStandardLayer } from './standardLayer';
 import { writableLayer } from './targetLayer';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
 import { fixed } from '../core/displayNumber';
+import { bulgeRingArea } from '../model/geom/bulge';
+import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -213,6 +215,19 @@ export abstract class PointInputTool implements Tool {
   protected writeRing(pts: Vec2[], bulges?: number[]): boolean {
     const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour(), ...this.weight() };
     return this.written(polygonCreate.execute({ doc: this.ctx.doc }, input)) !== null;
+  }
+
+  /**
+   * A new area the tool built by its outline (a rectangle, a regular polygon, a sector) written as `writeRing` writes
+   * it, the overlap control first (docs/adr/0162 §2): what overlaps the neighbours is cut away and what is left
+   * written as one object through `cad.entities.create`. Its area as written, or null when nothing was written.
+   */
+  protected writeArea(pts: Vec2[], bulges?: number[]): number | null {
+    const clipped = clipNewArea(this.ctx, { outer: { pts, ...(bulges && { bulges }) }, holes: [] }, this.ctx.doc.layers.active.value);
+    if (!clipped) return this.writeRing(pts, bulges) ? Math.abs(bulgeRingArea(pts, bulges)) : null;
+    sayClipped(this.ctx, clipped);
+    if (!clipped.areas.length) return null;
+    return this.writeObjects([clippedGeometry(clipped.areas)]) ? writtenArea(clipped.areas) : null;
   }
 
   /**

@@ -89,6 +89,7 @@ impl App {
                 view_changes: &mut changes,
                 tracking: &self.tracking,
                 shift: self.modifiers.shift(),
+                overlap_layers: &self.overlap_layers,
             },
         );
         for change in changes {

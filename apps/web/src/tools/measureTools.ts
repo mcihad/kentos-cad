@@ -2,9 +2,11 @@ import type { AppContext } from '../app/context';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgePathLength, bulgeRingArea } from '../model/geom/bulge';
 import { netArea, type Area, type Ring } from '../model/geom/region';
+import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { indexMark, ringMark } from './constructPreview';
+import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { PathTool } from './pathTool';
 import { drawArea, drawTag, strokePath, tint } from './preview';
 import type { ToolPointer } from './Tool';
@@ -233,11 +235,29 @@ export class AreaMeasureTool extends PathTool {
   /**
    * Alan olarak çiz: the area last measured on the active layer, in the current colour and line
    * weight, through `cad.polygon.create`; one undo step, “Alan olarak çiz”. What the command refuses
-   * (a locked layer) it says in its own words, and nothing is written.
+   * (a locked layer) it says in its own words, and nothing is written. With the overlap control on
+   * (docs/adr/0162 §2), what overlaps the neighbours is cut away first and the rest written through
+   * `cad.entities.create`, in the same step.
    */
   private drawMeasured(m: Measured): void {
     const { doc, format, log } = this.ctx;
     const { ring, holes } = m;
+    const clipped = clipNewArea(this.ctx, { outer: ring, holes }, doc.layers.active.value);
+    if (clipped) {
+      sayClipped(this.ctx, clipped);
+      if (!clipped.areas.length) return;
+      const objects = [{ geometry: clippedGeometry(clipped.areas), ...this.colour(), ...this.weight() }];
+      const result = doc.transact('Alan olarak çiz', () => entitiesCreate.execute({ doc }, { layerId: doc.layers.active.value, objects }));
+      if (result.status !== 'completed') {
+        if ('error' in result) log.warn(result.error.message);
+        return;
+      }
+      for (const w of result.warnings) log.warn(w.message);
+      this.noteMade(result.output.ids[0]);
+      log.success(`Alan olarak çizildi: ${format.area(writtenArea(clipped.areas))}.`);
+      this.ctx.view.requestOverlay();
+      return;
+    }
     const input = {
       layerId: doc.layers.active.value,
       pts: ring.pts,

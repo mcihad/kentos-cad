@@ -273,11 +273,14 @@ async function setUp(t) {
     const opened = ${JSON.stringify(opened)};
     if (opened) k.files.picker.open = async () => ({ name: ${JSON.stringify(t.openFile ?? '')}, async getFile() { return new Blob([new Uint8Array(opened)]); } });
     k.files.ask = async () => 'drop';
-    // Topological editing is off unless the trace turns it on, as the desktop's player reads a missing key
-    // (docs/adr/0160): an earlier trace's never carries over.
+    // Topological editing and the overlap control are off unless the trace turns them on, as the desktop's player
+    // reads a missing key (docs/adr/0160, 0162): an earlier trace's never carries over. The chosen layers are a set.
     k.settings.topology.set(false);
     k.settings.topologyPoints.set(false);
-    for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(v);
+    k.settings.overlap.set('allow');
+    k.settings.overlapLast.set('layer');
+    k.settings.overlapLayers.set(new Set());
+    for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(key === 'overlapLayers' ? new Set(v) : v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.prefs ?? {})})) k.prefs[key].set(v);
     const c = k.view.camera;
     c.center = { x: ${origin.x}, y: ${origin.y} };

@@ -27,7 +27,7 @@ function harness(weight: number | null) {
     log: new MessageLog(),
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(weight) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(weight), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()) },
     view: { requestOverlay: () => {} },
     tools: { exit: () => {} },
   } as unknown as AppContext;

@@ -61,6 +61,12 @@ pub struct DraftSpec {
     pub(super) topology: bool,
     #[serde(default)]
     pub(super) topology_points: bool,
+    /// The overlap control's mode (`allow`, `layer`, `layers`) and Seçili
+    /// katmanlarda önle's layers (docs/adr/0162); absent: Serbest, none.
+    #[serde(default)]
+    pub(super) overlap: Option<String>,
+    #[serde(default)]
+    pub(super) overlap_layers: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]

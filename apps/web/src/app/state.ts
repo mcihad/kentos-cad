@@ -8,6 +8,9 @@ import type { SettingsStore } from './settings/store';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 
+/** The overlap control's modes (`drafting.overlap`, docs/adr/0162 §1): Serbest, Kendi katmanında önle, Seçili katmanlarda önle. */
+export type OverlapMode = 'allow' | 'layer' | 'layers';
+
 /**
  * Drafting aids toggled from the status bar (F3/F7/F8/F10): the typed
  * schema's session settings (`drafting.*`, docs/adr/0023), so every session
@@ -24,6 +27,12 @@ export class DraftingSettings {
   readonly topology = new Signal(sessionDefault('drafting.topology'));
   /** Points count as shared corners too (Noktalar da). */
   readonly topologyPoints = new Signal(sessionDefault('drafting.topologyPoints'));
+  /** The overlap control (docs/adr/0162 §1): a new area drawn by its outline loses what overlaps its neighbours. */
+  readonly overlap = new Signal(settingDefault('drafting.overlap') as OverlapMode);
+  /** The mode the cell's click turns on again: the last that avoided overlap. */
+  readonly overlapLast = new Signal<Exclude<OverlapMode, 'allow'>>('layer');
+  /** Seçili katmanlarda önle's layers, by id: the session's, not a setting (settings hold no lists). */
+  readonly overlapLayers = new Signal<ReadonlySet<string>>(new Set());
   /** Current properties for new entities; null = katmana göre. */
   readonly color = new Signal<string | null>(null);
   readonly lineType = new Signal<LineType | null>(null);

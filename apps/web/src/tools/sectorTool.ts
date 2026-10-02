@@ -87,7 +87,7 @@ export class SectorTool extends PointInputTool {
     if (!ring) return void this.ctx.log.warn('Bitiş doğrultusu başlangıçla aynı; dilim oluşmuyor. Başka bir doğrultu ya da açı verin.');
     const f = this.ctx.format;
     const sweep = turn(end - this.start);
-    if (this.writeRing(ring.pts, ring.bulges)) this.ctx.log.success(`Daire dilimi eklendi: r = ${f.length(this.radius)}, açı ${f.angle(sweep)}`);
+    if (this.writeArea(ring.pts, ring.bulges) !== null) this.ctx.log.success(`Daire dilimi eklendi: r = ${f.length(this.radius)}, açı ${f.angle(sweep)}`);
     this.reset();
   }
 

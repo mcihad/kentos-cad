@@ -29,6 +29,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
+  çakışma denetimi: durum çubuğundaki Çakışma açıkken yeni alan (Kapalı alan, Parsel oluştur, Dikdörtgen, Düzgün çokgen, Daire dilimi, Alan olarak çiz) kendi katmanındaki ya da seçili katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır (ADR 0162);
   izleyerek çizim: yol aracının İzle (İ) düğmesi açıkken çizgiye yakın tık çizginin üstüne oturur, iki nokta arası görünen çizgiler boyunca kısa yoldan, köşeleri ve yaylarıyla; Birleştir'in Zincir (Z) seçeneği tıklanan çizginin bağlı zincirini tek çoklu çizgi yapar; yol aracının Akış (A) düğmesi açıkken imleç Adım boyu (B) kadar ilerledikçe köşe bırakır (ADR 0161);
   toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
@@ -627,8 +628,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   çizim ([ADR 0161](docs/adr/0161-trace-drawing.md)): 1. adım (çekirdek `ops::trace` ve `ops::join::chain`, `trace_cases.py`) ve 2. adım
   (yol aracında İzle iki platformda, ortak iz `trace-draw.json`), 3. adım (Birleştir'in Zincir seçeneği, ortak iz `join-chain.json`)
   ve 4. adım (yol aracında Akış ve Adım boyu, ortak iz `stream-draw.json`) tamam; `HYB-07` bitti. `HYB-08` bitişik alan ve çakışma
-  denetimi ([ADR 0162](docs/adr/0162-adjoining-areas.md)): 1. adım (çekirdek `ops::adjoin`, `adjoin_cases.py`) tamam; sıradaki 2. adım
-  (Çakışma kipi iki platformda). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  denetimi ([ADR 0162](docs/adr/0162-adjoining-areas.md)): 1. adım (çekirdek `ops::adjoin`, `adjoin_cases.py`) ve 2. adım (Çakışma kipi
+  iki platformda, durum çubuğunda Çakışma; ortak iz `overlap.json`) tamam. Sahibin isteğiyle sırada: PR 16 (KentOS UI) birleşti; alt
+  panelin Python konsolu KentOS UI'ın Python konsoluyla değiştirilecek, nokta editöründeki üst üste binmeler düzeltilecek; sonra
+  ADR 0162'nin 3. adımı (Bitişik alan aracı). 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

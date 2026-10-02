@@ -324,6 +324,13 @@ impl<'a> Player<'a> {
             ("drafting.topology", d.topology.into()),
             ("drafting.topologyPoints", d.topology_points.into()),
             (
+                "drafting.overlap",
+                d.overlap
+                    .clone()
+                    .unwrap_or_else(|| "allow".to_owned())
+                    .into(),
+            ),
+            (
                 "drafting.cursorInput",
                 trace.prefs.cursor_input.unwrap_or(true).into(),
             ),
@@ -331,6 +338,7 @@ impl<'a> Player<'a> {
         if !refused.is_empty() {
             return Err(format!("{}: ayarlar alınmadı: {refused:?}", trace.id));
         }
+        player.app.overlap_layers = d.overlap_layers.clone();
         player.app.apply_settings();
         // The area reports its place first, as it does before any pointer event.
         player.mouse(mouse::Event::CursorLeft, mouse::Cursor::Unavailable)?;

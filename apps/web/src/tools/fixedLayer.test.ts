@@ -28,7 +28,7 @@ function harness(layers: LayerInit[] = [{ id: 'cizim', name: 'Çizim' }, { id: '
     log,
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()) },
     prefs: { snapAperture: new Signal(8) },
     view: { requestOverlay: () => {}, trackAlong: () => null, camera: { worldToScreen: (p: unknown) => p } },
     tools: { exit: () => {} },

@@ -273,6 +273,11 @@ pub const PORTED: &[&str] = &[
     // Topolojik düzenleme and its Noktalar da (docs/adr/0160).
     "draft.topology",
     "draft.topologyPoints",
+    // Çakışma denetimi and its modes (docs/adr/0162).
+    "draft.overlap",
+    "draft.overlap.allow",
+    "draft.overlap.layer",
+    "draft.overlap.layers",
     // The styled drawing's view choices (docs/adr/0090): layer line weights on or off
     // (Kalınlık), symbols at the plot scale or at a fixed size on the screen.
     "view.lineWeights",

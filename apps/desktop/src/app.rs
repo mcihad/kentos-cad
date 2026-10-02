@@ -351,6 +351,8 @@ pub enum Message {
     Appearance(crate::appearance::Event),
     /// The server's answer to `server.check` (view_commands.rs).
     ServerChecked(Result<kentos_contracts::Health, String>),
+    /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
+    OverlapLayer(String),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -512,6 +514,11 @@ pub struct App {
     pub calc: crate::calc::Calc,
     /// Nesne izleme: the points acquired by resting on a snap and the cursor's lock (tracking.rs, docs/adr/0085).
     pub tracking: kentos_interaction::object_tracking::ObjectTracking,
+    /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
+    /// session's, not a setting; the tools see them in their context.
+    pub(crate) overlap_layers: Vec<String>,
+    /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
+    pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
     pub(crate) tracking_tool: &'static str,
     pub(crate) tracking_waited: u64,
@@ -691,6 +698,8 @@ impl App {
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
+            overlap_layers: Vec::new(),
+            overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
             dwell_on_time: true,
@@ -1149,6 +1158,7 @@ impl App {
             Message::Saving(event) => return self.saving_event(event),
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
+            Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
         }
         Task::none()
     }
@@ -1170,6 +1180,7 @@ impl App {
             tracking: s.bool("drafting.tracking"),
             topology: s.bool("drafting.topology"),
             topology_points: s.bool("drafting.topologyPoints"),
+            overlap: kentos_interaction::Overlap::parse(&s.text("drafting.overlap")),
             // The session's, not settings: kept through a settings change.
             color: self.draft.color,
             line_weight: self.draft.line_weight,
@@ -1251,6 +1262,45 @@ impl App {
     }
 
     /// A drafting aid of this session turned over (F8, F10): said as AutoCAD says it.
+    /// Çakışma's cell: between Serbest and the last mode that avoided overlap (docs/adr/0162 §1).
+    fn toggle_overlap(&mut self) {
+        use kentos_interaction::Overlap;
+        let next = if self.draft.overlap == Overlap::Allow {
+            self.overlap_last
+        } else {
+            Overlap::Allow
+        };
+        self.choose_overlap(next);
+        self.output(match next {
+            Overlap::Allow => "Çakışma serbest.".to_owned(),
+            Overlap::Layer => "Çakışma önleniyor: kendi katmanında.".to_owned(),
+            Overlap::Layers => "Çakışma önleniyor: seçili katmanlarda.".to_owned(),
+        });
+    }
+
+    /// One of the overlap control's modes: the session's setting; a mode that avoids is the cell's next.
+    pub(crate) fn choose_overlap(&mut self, mode: kentos_interaction::Overlap) {
+        let _ = self
+            .settings
+            .choose(&[("drafting.overlap", Value::String(mode.key().to_owned()))]);
+        if mode != kentos_interaction::Overlap::Allow {
+            self.overlap_last = mode;
+        }
+        self.apply_settings();
+    }
+
+    /// A layer ticked on the Çakışma cell's menu joins Seçili katmanlarda önle's
+    /// layers (unticked, it leaves them), and that mode is put on (docs/adr/0162 §1).
+    fn toggle_overlap_layer(&mut self, id: String) {
+        match self.overlap_layers.iter().position(|l| *l == id) {
+            Some(i) => {
+                self.overlap_layers.remove(i);
+            }
+            None => self.overlap_layers.push(id),
+        }
+        self.choose_overlap(kentos_interaction::Overlap::Layers);
+    }
+
     fn toggle_session(&mut self, key: &'static str, name: &str) {
         let on = !self.settings.bool(key);
         let _ = self.settings.choose(&[(key, Value::Bool(on))]);
@@ -1365,6 +1415,10 @@ impl App {
                 "drafting.topologyPoints",
                 "Topolojik düzenlemede noktalar da",
             ),
+            "draft.overlap" => self.toggle_overlap(),
+            "draft.overlap.allow" => self.choose_overlap(kentos_interaction::Overlap::Allow),
+            "draft.overlap.layer" => self.choose_overlap(kentos_interaction::Overlap::Layer),
+            "draft.overlap.layers" => self.choose_overlap(kentos_interaction::Overlap::Layers),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // The styled drawing's view choices (style/, docs/adr/0090).
@@ -1472,6 +1526,10 @@ impl App {
             "draft.tracking" => self.draft.tracking,
             "draft.topology" => self.draft.topology,
             "draft.topologyPoints" => self.draft.topology_points,
+            "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
+            "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,
+            "draft.overlap.layer" => self.draft.overlap == kentos_interaction::Overlap::Layer,
+            "draft.overlap.layers" => self.draft.overlap == kentos_interaction::Overlap::Layers,
             "draft.grid" => self.settings.bool("drafting.grid"),
             "view.lineWeights" => self.settings.bool("graphics.lineWeights"),
             "view.symbols.plot" => self.settings.text("graphics.symbolSize") != "screen",

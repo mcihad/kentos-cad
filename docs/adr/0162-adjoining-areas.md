@@ -128,6 +128,16 @@ Uygulandığı araçlar §2'ninkilerdir, kip Serbest olsa da.
    - **Sonuç:** çekirdek (yerli) ve web (WASM) başvuruyla aynı; tutulan komşular (`AdjoinWork`) işlemlerle aynı. Kuralı bozan üç deneme durumları düşürür: sarkan uç bitişik sayılır, komşunun içi tutulur, yalnız değen komşu da kırpar.
    - **Ölçüm** (yerli, release; ızgara parseller arasında bir boşluk ve onu kapatan yol): 396 kenarda 0,6 ms, 1 596'da 2,7 ms, 4 092'de 7,2 ms, 8 096'da 17,8 ms. Sürenin çoğu düzenlemenin kurulumunda (`arrangement::build`); önizleme bütçesi bu yüzden 2 000 kenardır.
 2. Çakışma kipi iki platformda: ayar, komutlar, durum çubuğu hücresi ve menüsü, araçlarda kırpma; ortak iz; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Ayar ve durum:** `drafting.overlap` (oturum, `allow`, `layer`, `layers`); seçili katmanlar ve hücrenin döneceği son kip oturumun durumudur (web `DraftingSettings.overlapLayers`, `overlapLast`; masaüstü `App::overlap_layers`, `overlap_last`; araçlar `Context::overlap_layers` ile görür).
+   - **Komutlar:** `draft.overlap` (aç/kapat) ve üç kipin radyo komutları; Araçlar › Çizim yardımcıları ve Çakışma alt menüsü. Dört ikon: iki alan üst üste (Serbest), kırpılmış alan ve eski kenarı kesik (Çakışmayı önle), bir tabaka (kendi katmanı), iki tabaka (seçili katmanlar).
+   - **Durum çubuğu:** Çakışma hücresi; sağ tık menüsü üç kip ve Katmanlar ▸ (renk örnekleri, gizli notu). Web `ui/statusbar/overlapMenu.ts`, masaüstü `view.rs`'in `overlap_menu`'su.
+   - **Araçlar:** ortak yardımcı (web `tools/overlap.ts`, masaüstü `kentos_interaction::overlap`): komşular görünen nesnelerden kutusu yeni alanınkine değenler, çekirdeğin `adjoinAvoid`'iyle kırpılır; kırpılan alan `cad.entities.create` ile tek nesne (delikleri ve parçalarıyla). Kapalı alan, Parsel oluştur (parsel katmanına), Dikdörtgen, Döndürülmüş dikdörtgen, Düzgün çokgen, Daire dilimi (`writeArea` / `write_area`) ve Alan olarak çiz (kendi adımında). Daire dilimi de yeni alanın sınırını çizdiği için listeye girdi.
+   - **Sınama:**
+     - İki platformda aynı elle hesaplanmış birim testleri (web `tools/overlap.test.ts`, masaüstü `tests/overlap.rs`): Serbest, kendi katmanı, başka katmanın komşusu yalnız seçilince, örtülen alan, seçili katmansız uyarı, gizli katman, iki parça, Dikdörtgen, Parsel oluştur, Alan olarak çiz.
+     - Ortak iz `overlap.json` (`overlap.kcad`); köşeler yazılarak verilir, ileti alanları tam karşılaştırılır. Masaüstünde hücre ve menüsü `overlap_tests.rs`'te, web'de yerleşim denetiminin `status-overlap` görünümlerinde.
+     - Kullanım senaryosu `usage-overlap.json`.
 3. Bitişik alan iki platformda: araç, ikon, önizleme, `cad.entities.create`'in `adjoin` işlemi; ortak iz; resimler.
 4. Topoloji açıkken komşulara köşe iki platformda; ortak iz; resimler.
 

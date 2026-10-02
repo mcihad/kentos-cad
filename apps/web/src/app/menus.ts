@@ -179,7 +179,8 @@ export const MAIN_MENU: TopMenu[] = [
     items: [
       sec('Komut'),
       'commandline.focus',
-      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints'] },
+      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints', 'draft.overlap'] },
+      { label: 'Çakışma', icon: 'overlap', items: ['draft.overlap.allow', 'draft.overlap.layer', 'draft.overlap.layers'] },
       sec('Stil'),
       'style.manager',
       'style.svgEditor',
@@ -295,7 +296,8 @@ function processingMenu(ctx: AppContext, nodes: CategoryNode[]): MenuItem[] {
  * action (its icon, never checked) though it reports being active.
  */
 export function menuRowLook(id: string, checked: boolean | undefined): { icon: boolean; checked: boolean | undefined; radio: boolean } {
-  const radio = (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.');
+  const radio =
+    (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.') || id.startsWith('draft.overlap.');
   const tool = id.startsWith('tool.');
   return { icon: checked === undefined || radio || tool, checked: tool ? undefined : checked, radio };
 }

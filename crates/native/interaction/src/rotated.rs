@@ -53,7 +53,7 @@ impl RotatedRectangle {
             );
             return;
         };
-        if points::write_ring(&mut self.d, &ring, None, cx) {
+        if points::write_area(&mut self.d, &ring, None, cx).is_some() {
             let format = cx.format();
             let line = format!(
                 "Dikdörtgen eklendi: {} × {}",

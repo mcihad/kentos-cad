@@ -55,6 +55,8 @@ pub struct Bench {
     pub views: Vec<ViewChange>,
     /// Object tracking (docs/adr/0085): off in these tests unless one acquires a point.
     pub tracking: ObjectTracking,
+    /// Seçili katmanlarda önle's layers (docs/adr/0162 §1).
+    pub overlap_layers: Vec<String>,
 }
 
 impl Bench {
@@ -79,6 +81,7 @@ impl Bench {
             selection: Selection::new(),
             memory: Memory::default(),
             shift: false,
+            overlap_layers: Vec::new(),
             views: Vec::new(),
             tracking: ObjectTracking::new(),
         }
@@ -103,6 +106,7 @@ impl Bench {
             view_changes: &mut self.views,
             tracking: &self.tracking,
             shift: self.shift,
+            overlap_layers: &self.overlap_layers,
         };
         act(&mut self.session, &mut cx)
     }

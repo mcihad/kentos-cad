@@ -81,6 +81,14 @@ export const ICONS = {
   topologyEdit: `<path d="M2.5 4.5h15v11h-15z"/><path d="M8.5 4.5v11" stroke-dasharray="1.6 1.5" stroke-width="1.1"/><path d="M12.5 4.5 8.5 15.5"/>${grip(12.5, 4.5)}`,
   topologyPoints:
     '<path d="M10.1 4.5H2.5v11h15v-11h-2.6"/><path d="M8.5 4.5v11" stroke-dasharray="1.6 1.5" stroke-width="1.1"/><path d="M11.7 6.75 8.5 15.5"/><circle cx="12.5" cy="4.5" r="2.2" fill="currentColor" fill-opacity=".25"/><circle cx="12.5" cy="4.5" r=".6" fill="currentColor" stroke="none"/>',
+  // The overlap control (docs/adr/0162): two areas overlapping; the second cut back (its old edge dashed); one layer; two layers.
+  overlapAllow: '<path d="M2.5 3.5h9v9h-9z"/><path d="M8.5 7.5h9v9h-9z"/><path d="M8.5 7.5h3v5h-3z" fill="currentColor" fill-opacity=".3" stroke="none"/>',
+  overlap:
+    '<path d="M2.5 3.5h9v9h-9z"/><path d="M11.5 7.5h6v9h-9v-4h3z" fill="currentColor" fill-opacity=".14"/><path d="M8.5 12.5v-5h3" stroke-dasharray="1.4 1.4" stroke-width="1.1"/>',
+  overlapLayer:
+    '<path d="M2.5 2.5h8v8h-8z"/><path d="M10.5 5h6v8.5h-9v-3h3z" fill="currentColor" fill-opacity=".14"/><path d="M2 15.6 5.5 14 9 15.6 5.5 17.2z" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/>',
+  overlapLayers:
+    '<path d="M2.5 2.5h8v8h-8z"/><path d="M10.5 5h6v8.5h-9v-3h3z" fill="currentColor" fill-opacity=".14"/><path d="M2 14.8 5.5 13.2 9 14.8 5.5 16.4z" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="M2 17 5.5 18.6 9 17" stroke-width="1.1"/>',
   matchProperties: '<path d="m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z"/><path d="M6.3 8.3 3.2 16.8l8.5-3.1"/><path d="M4.6 12.9 7 15.4"/>',
   setElevation: `<path d="M3 16.5h14"/><path d="M10 13.5V3.5"/><path d="m7 6.5 3-3 3 3"/><path d="M13.5 13.5h3M13.5 10.5h2" stroke-width="1.1"/>${grip(10, 13.5)}`,
   sector: `<path d="M5 15.5V4.5a11 11 0 0 1 11 11z" fill="currentColor" fill-opacity=".14"/>${grip(5, 15.5)}${grip(5, 4.5)}${grip(16, 15.5)}`,

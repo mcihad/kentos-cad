@@ -1004,7 +1004,53 @@ impl App {
             })
             .into();
         }
+        // Çakışma denetimi's modes and Seçili katmanlarda önle's layers on the cell's right-click menu (docs/adr/0162 §1).
+        if id == "draft.overlap" {
+            return ContextMenu::new(toggle, move |_| self.overlap_menu()).into();
+        }
         toggle.into()
+    }
+
+    /// The Çakışma cell's menu (the web's `overlapMenu`): the three modes,
+    /// and Seçili katmanlarda önle's layers with their swatches, a hidden
+    /// one said so (its areas do not count while it is hidden). Ticking a
+    /// layer puts the mode on Seçili katmanlarda önle.
+    fn overlap_menu(&self) -> Menu<Message> {
+        let mut menu = Menu::new().header("Çakışma");
+        for (id, label) in [
+            ("draft.overlap.allow", "Serbest"),
+            ("draft.overlap.layer", "Kendi katmanında önle"),
+            ("draft.overlap.layers", "Seçili katmanlarda önle"),
+        ] {
+            let on_press = catalog().get(id).and_then(enabled);
+            menu = menu.radio(label, self.checked(id).unwrap_or(false), on_press);
+        }
+        let mut layers_menu = Menu::new();
+        if let Some(doc) = &self.document {
+            let layers = doc.model.layers();
+            let mut stack: Vec<&kentos_contracts::LayerNode> =
+                layers.nodes().iter().rev().collect();
+            while let Some(node) = stack.pop() {
+                if node.kind == kentos_contracts::LayerNodeType::Group {
+                    layers_menu =
+                        layers_menu.header(crate::properties::layer_path(layers, &node.id));
+                    stack.extend(node.children.iter().rev());
+                    continue;
+                }
+                let chosen = self.overlap_layers.contains(&node.id);
+                layers_menu = layers_menu
+                    .check(
+                        node.name.clone(),
+                        chosen,
+                        Message::OverlapLayer(node.id.clone()),
+                    )
+                    .swatch(self.drawing_color(&node.style.color));
+                if !layers.is_visible(&node.id) {
+                    layers_menu = layers_menu.hint("gizli");
+                }
+            }
+        }
+        menu.separator().submenu("Katmanlar", layers_menu)
     }
 
     /// About how wide the status bar's cells are with `fit` of its steps
@@ -1227,13 +1273,14 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 7] = [
+const STATUS_AIDS: [(&str, &str); 8] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
     ("draft.polar", "Kutupsal"),
     ("draft.tracking", "İzleme"),
     ("draft.topology", "Topoloji"),
+    ("draft.overlap", "Çakışma"),
     ("view.lineWeights", "Kalınlık"),
 ];
 

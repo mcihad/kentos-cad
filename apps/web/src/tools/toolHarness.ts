@@ -61,6 +61,10 @@ export function toolHarness() {
       // Topological editing (docs/adr/0160): off, as every session starts.
       topology: new Signal(false),
       topologyPoints: new Signal(false),
+      // The overlap control (docs/adr/0162): Serbest, as every session starts.
+      overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'),
+      overlapLast: new Signal<'layer' | 'layers'>('layer'),
+      overlapLayers: new Signal<ReadonlySet<string>>(new Set()),
     },
     prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15) },
     view: {
@@ -72,7 +76,8 @@ export function toolHarness() {
       pickRect: () => state.inWindow,
       trackAlong: () => null,
       camera: { visibleBounds: () => ({ minX: -50, minY: -50, maxX: 50, maxY: 50 }), worldToScreen: (p: { x: number; y: number }) => p },
-      entitiesIn: () => [...doc.all()],
+      // The view's: the visible objects (a hidden layer's are none).
+      entitiesIn: () => [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId)),
       trim: (target: Entity, at: { x: number; y: number }) => trimEntity(target, at, boundaries(target)),
       extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
       ghosts: () => new Float64Array(),

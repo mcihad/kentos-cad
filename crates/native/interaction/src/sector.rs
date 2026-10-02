@@ -120,7 +120,7 @@ impl Sector {
             );
             return;
         };
-        if points::write_ring(&mut self.d, &ring.pts, ring.bulges, cx) {
+        if points::write_area(&mut self.d, &ring.pts, ring.bulges, cx).is_some() {
             let f = cx.format();
             let sweep = (end - a0).rem_euclid(TAU);
             cx.say(

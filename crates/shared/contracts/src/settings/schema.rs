@@ -182,6 +182,22 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Noktalar da",
                 "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
             ),
+        // The overlap control (docs/adr/0162 §1): Serbest at the start of every session.
+        choice(
+            "drafting.overlap",
+            "allow",
+            &[
+                ("allow", "Serbest"),
+                ("layer", "Kendi katmanında önle"),
+                ("layers", "Seçili katmanlarda önle"),
+            ],
+        )
+        .scope(SettingScope::Session)
+        .hosts(&[Web, Desktop])
+        .text(
+            "Çakışma denetimi",
+            "Çizilen yeni alanın komşu alanlarla örtüşen kısmı: serbest bırakılır ya da yeni alanın katmanındaki veya seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.",
+        ),
         // ── Snap kinds ──────────────────────────────────────────────────
         snap_kind(
             "snap.endpoint",

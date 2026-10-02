@@ -273,6 +273,36 @@
       "apply": "live"
     },
     {
+      "key": "drafting.overlap",
+      "type": "enum",
+      "default": "allow",
+      "choices": [
+        {
+          "value": "allow",
+          "label": "Serbest"
+        },
+        {
+          "value": "layer",
+          "label": "Kendi katmanında önle"
+        },
+        {
+          "value": "layers",
+          "label": "Seçili katmanlarda önle"
+        }
+      ],
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Çakışma denetimi",
+      "description": "Çizilen yeni alanın komşu alanlarla örtüşen kısmı: serbest bırakılır ya da yeni alanın katmanındaki veya seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "snap.endpoint",
       "type": "boolean",
       "default": true,

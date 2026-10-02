@@ -175,6 +175,9 @@ pub struct Draft {
     pub topology: bool,
     /// Points count as shared corners too (Noktalar da, `drafting.topologyPoints`).
     pub topology_points: bool,
+    /// The overlap control (`drafting.overlap`, docs/adr/0162 §1): a new
+    /// area drawn by its outline loses what overlaps its neighbours.
+    pub overlap: Overlap,
     /// The colour new objects take (the ribbon's Renk, the web's
     /// `ctx.settings.color`): one of the drawing colours (`ink`, `#E5484D`
     /// …), explicit in the product command's input (CMD-07); `None`: the
@@ -202,8 +205,40 @@ impl Default for Draft {
             tracking: true,
             topology: false,
             topology_points: false,
+            overlap: Overlap::Allow,
             color: None,
             line_weight: None,
+        }
+    }
+}
+
+/// The overlap control's modes (`drafting.overlap`, docs/adr/0162 §1).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Overlap {
+    /// Serbest: a new area is written as drawn.
+    #[default]
+    Allow,
+    /// Kendi katmanında önle: the visible areas of its own layer.
+    Layer,
+    /// Seçili katmanlarda önle: those of the chosen layers ([`Context::overlap_layers`]).
+    Layers,
+}
+
+impl Overlap {
+    /// The setting's value: `allow`, `layer` or `layers` (anything else: Serbest).
+    pub fn parse(value: &str) -> Overlap {
+        match value {
+            "layer" => Overlap::Layer,
+            "layers" => Overlap::Layers,
+            _ => Overlap::Allow,
+        }
+    }
+
+    pub fn key(self) -> &'static str {
+        match self {
+            Overlap::Allow => "allow",
+            Overlap::Layer => "layer",
+            Overlap::Layers => "layers",
         }
     }
 }
@@ -643,6 +678,9 @@ pub struct Context<'a> {
     /// selection instead of replacing it (docs/adr/0141). A pointer event
     /// carries it too ([`Pointer::shift`]); this is for Enter and the like.
     pub shift: bool,
+    /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
+    /// session's, not a setting (settings hold no lists).
+    pub overlap_layers: &'a [String],
 }
 
 impl Context<'_> {

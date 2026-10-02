@@ -10,6 +10,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { fixedLayerLocked, PointInputTool } from './drawTools';
+import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
@@ -427,6 +428,13 @@ export class PathTool extends PointInputTool {
   private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const color = this.ctx.settings.color.value;
     const lineWeight = this.ctx.settings.lineWeight.value;
+    // The overlap control (docs/adr/0162 §2): what overlaps the neighbours is cut away, the rest written as one object.
+    const clipped = clipNewArea(this.ctx, { outer: { pts, ...(bulges && { bulges }) }, holes: [] }, this.ctx.doc.layers.active.value);
+    if (clipped) {
+      sayClipped(this.ctx, clipped);
+      if (clipped.areas.length && this.writeObjects([clippedGeometry(clipped.areas)])) this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(writtenArea(clipped.areas))}`);
+      return;
+    }
     const result = polygonCreate.execute(
       { doc: this.ctx.doc },
       { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
@@ -448,11 +456,20 @@ export class PathTool extends PointInputTool {
    * the title deed's, not the drawing's (CLAUDE.md §7, §23); the log gives
    * the geometric area. The new parcel is selected, so Öznitelikler shows it.
    */
-  private createParcel(geom: { kind: 'polygon' | 'polyline'; pts: Vec2[]; bulges?: number[] }, layerId: string): void {
+  private createParcel(drawn: { kind: 'polygon' | 'polyline'; pts: Vec2[]; bulges?: number[] }, layerId: string): void {
+    let geom = drawn;
     if (fixedLayerLocked(this.ctx, layerId, this.label)) return;
     const parcels = this.ctx.doc.byLayer(layerId);
     const next = parcels.reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1;
-    const area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
+    let area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
+    // The overlap control (docs/adr/0162 §2) on the parcel layer: the parcel is what is left.
+    const clipped = clipNewArea(this.ctx, { outer: { pts: geom.pts, ...(geom.bulges && { bulges: geom.bulges }) }, holes: [] }, layerId);
+    if (clipped) {
+      sayClipped(this.ctx, clipped);
+      if (!clipped.areas.length) return;
+      geom = clippedGeometry(clipped.areas) as unknown as typeof geom;
+      area = writtenArea(clipped.areas);
+    }
     const color = this.ctx.settings.color.value;
     const lineWeight = this.ctx.settings.lineWeight.value;
     const parcel = {

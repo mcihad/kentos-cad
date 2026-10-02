@@ -133,7 +133,7 @@ export class RectangleTool extends PointInputTool {
     const g = this.styled(ring);
     const w = dist(ring[0], ring[1]);
     const h = dist(ring[1], ring[2]);
-    if (this.writeRing(g.pts, g.bulges)) {
+    if (this.writeArea(g.pts, g.bulges) !== null) {
       this.ctx.log.success(`Dikdörtgen eklendi: ${this.ctx.format.length(w, false)} × ${this.ctx.format.length(h)}`);
     }
     this.size = null;
@@ -211,7 +211,7 @@ export class RotatedRectangleTool extends PointInputTool {
   private commit(width: number): void {
     const ring = rectFromEdge(this.pts[0], this.pts[1], width);
     if (!ring) return this.ctx.log.warn('Genişlik sıfır olamaz; kenardan uzaklaşarak tıklayın.');
-    if (this.writeRing(ring)) {
+    if (this.writeArea(ring) !== null) {
       const f = this.ctx.format;
       this.ctx.log.success(`Dikdörtgen eklendi: ${f.length(dist(ring[0], ring[1]), false)} × ${f.length(Math.abs(width))}`);
     }
@@ -314,9 +314,10 @@ export class RegularPolygonTool extends PointInputTool {
 
   private commit(ring: Vec2[] | null): void {
     if (!ring) return this.ctx.log.warn('Çokgen için merkezden uzakta bir nokta gösterin.');
-    if (this.writeRing(ring)) {
+    const area = this.writeArea(ring);
+    if (area !== null) {
       const f = this.ctx.format;
-      this.ctx.log.success(`${ring.length} kenarlı düzgün çokgen eklendi: kenar ${f.length(dist(ring[0], ring[1]))}, alan ${f.area(Math.abs(signedArea(ring)))}`);
+      this.ctx.log.success(`${ring.length} kenarlı düzgün çokgen eklendi: kenar ${f.length(dist(ring[0], ring[1]))}, alan ${f.area(area)}`);
     }
     this.pts = [];
     this.ctx.view.requestOverlay();

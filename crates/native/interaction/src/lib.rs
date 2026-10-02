@@ -140,6 +140,7 @@ pub mod object;
 pub mod object_tracking;
 pub mod offset;
 mod outlines;
+mod overlap;
 pub mod parallel;
 pub mod paste;
 pub mod path;
@@ -207,6 +208,6 @@ pub use tool::{Area, Label};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
-    Memory, Name, OptionChoice, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View,
-    ViewChange, snap_kinds,
+    Memory, Name, OptionChoice, Overlap, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool,
+    View, ViewChange, snap_kinds,
 };
