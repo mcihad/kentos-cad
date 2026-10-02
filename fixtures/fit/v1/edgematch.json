@@ -1,0 +1,2849 @@
+{
+ "format": "kentos.fit-edgematch",
+ "version": 1,
+ "description": "Kenar eşleme (docs/adr/0159): bağlar (aday, puan, eşleme, eşsiz ve kavşak uçları, katılmayan türler) ve üç buluşma yeriyle üç yöntemin geometrisi, kotlarıyla. scripts/fixtures/edgematch_cases.py mpmath ile 50 basamakta, kurallardan yazar.",
+ "tolerance": {
+  "metres": 1e-09,
+  "degrees": 1e-09,
+  "score": 1e-12
+ },
+ "cases": [
+  {
+   "name": "Pafta kenarı: beş yol santimetrelerle kısa, taşan ya da yana kaymış",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 100.0
+      },
+      "b": {
+       "x": 999.97,
+       "y": 100.02
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 880.0,
+        "y": 170.0
+       },
+       {
+        "x": 950.0,
+        "y": 182.0
+       },
+       {
+        "x": 999.95,
+        "y": 180.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 920.0,
+       "y": 250.0
+      },
+      "b": {
+       "x": 1000.04,
+       "y": 250.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 910.0,
+        "y": 300.0
+       },
+       {
+        "x": 960.0,
+        "y": 320.0
+       },
+       {
+        "x": 999.9,
+        "y": 331.5
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 930.0,
+       "y": 420.0
+      },
+      "b": {
+       "x": 999.98,
+       "y": 419.99
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.01,
+       "y": 100.05
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 101.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 1000.03,
+        "y": 180.04
+       },
+       {
+        "x": 1050.0,
+        "y": 178.0
+       },
+       {
+        "x": 1120.0,
+        "y": 190.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 999.96,
+       "y": 250.03
+      },
+      "b": {
+       "x": 1080.0,
+       "y": 250.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 1000.12,
+        "y": 331.62
+       },
+       {
+        "x": 1060.0,
+        "y": 349.0
+       }
+      ],
+      "bulges": [
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.0,
+       "y": 420.0
+      },
+      "b": {
+       "x": 1090.0,
+       "y": 425.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false,
+    "border": {
+     "kind": "line",
+     "a": {
+      "x": 1000.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1000.0,
+      "y": 500.0
+     }
+    }
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 0,
+      "adjacentEnd": "first",
+      "gap": 0.04999999999997158,
+      "angle": 0.5328853685977467,
+      "score": 0.11776284561986805
+     },
+     {
+      "source": 4,
+      "sourceEnd": "last",
+      "adjacent": 4,
+      "adjacentEnd": "first",
+      "gap": 0.02236067977497756,
+      "angle": 3.1880175704391185,
+      "score": 0.15098861189792573
+     },
+     {
+      "source": 2,
+      "sourceEnd": "last",
+      "adjacent": 2,
+      "adjacentEnd": "first",
+      "gap": 0.08544003745310759,
+      "angle": 0.021475178721899853,
+      "score": 0.17159591419694517
+     },
+     {
+      "source": 1,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.08944271909992295,
+      "angle": 0.0448725824937682,
+      "score": 0.18038119094963817
+     },
+     {
+      "source": 3,
+      "sourceEnd": "last",
+      "adjacent": 3,
+      "adjacentEnd": "first",
+      "gap": 0.2505992817228595,
+      "angle": 0.10715220335630447,
+      "score": 0.5047703035575958
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 100.0
+        },
+        "b": {
+         "x": 1000.01,
+         "y": 100.05
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 880.0,
+          "y": 170.0
+         },
+         {
+          "x": 950.0,
+          "y": 182.0
+         },
+         {
+          "x": 1000.03,
+          "y": 180.04
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 920.0,
+         "y": 250.0
+        },
+        "b": {
+         "x": 999.96,
+         "y": 250.03
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 910.0,
+          "y": 300.0
+         },
+         {
+          "x": 960.0,
+          "y": 320.0
+         },
+         {
+          "x": 1000.12,
+          "y": 331.62
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 930.0,
+         "y": 420.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 420.0
+        }
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "middle",
+     "method": "move",
+     "use": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 100.0
+        },
+        "b": {
+         "x": 999.99,
+         "y": 100.035
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 880.0,
+          "y": 170.0
+         },
+         {
+          "x": 950.0,
+          "y": 182.0
+         },
+         {
+          "x": 999.99,
+          "y": 180.01999999999998
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 920.0,
+         "y": 250.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 250.015
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 910.0,
+          "y": 300.0
+         },
+         {
+          "x": 960.0,
+          "y": 320.0
+         },
+         {
+          "x": 1000.01,
+          "y": 331.56
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 930.0,
+         "y": 420.0
+        },
+        "b": {
+         "x": 999.99,
+         "y": 419.995
+        }
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 999.99,
+         "y": 100.035
+        },
+        "b": {
+         "x": 1100.0,
+         "y": 101.0
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 999.99,
+          "y": 180.01999999999998
+         },
+         {
+          "x": 1050.0,
+          "y": 178.0
+         },
+         {
+          "x": 1120.0,
+          "y": 190.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 1000.0,
+         "y": 250.015
+        },
+        "b": {
+         "x": 1080.0,
+         "y": 250.0
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 1000.01,
+          "y": 331.56
+         },
+         {
+          "x": 1060.0,
+          "y": 349.0
+         }
+        ],
+        "bulges": [
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 999.99,
+         "y": 419.995
+        },
+        "b": {
+         "x": 1090.0,
+         "y": 425.0
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "border",
+     "method": "adjust",
+     "use": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 100.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 100.035
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 880.0,
+          "y": 170.0
+         },
+         {
+          "x": 950.0293448682263,
+          "y": 182.01173794729053
+         },
+         {
+          "x": 1000.0,
+          "y": 180.01999999999998
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 920.0,
+         "y": 250.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 250.01500000000001
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 910.0,
+          "y": 300.0
+         },
+         {
+          "x": 960.0564625569509,
+          "y": 320.0338775341706
+         },
+         {
+          "x": 1000.0,
+          "y": 331.56
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 930.0,
+         "y": 420.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 419.995
+        }
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 1000.0,
+         "y": 100.035
+        },
+        "b": {
+         "x": 1100.0,
+         "y": 101.0
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 1000.0,
+          "y": 180.01999999999998
+         },
+         {
+          "x": 1049.9823962212158,
+          "y": 177.98826414747714
+         },
+         {
+          "x": 1120.0,
+          "y": 190.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 1000.0,
+         "y": 250.01500000000001
+        },
+        "b": {
+         "x": 1080.0,
+         "y": 250.0
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 1000.0,
+          "y": 331.56
+         },
+         {
+          "x": 1060.0,
+          "y": 349.0
+         }
+        ],
+        "bulges": [
+         0.0
+        ]
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 1000.0,
+         "y": 419.995
+        },
+        "b": {
+         "x": 1090.0,
+         "y": 425.0
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "adjacent",
+     "method": "segment",
+     "use": [
+      0,
+      1,
+      2,
+      3,
+      4
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 900.0,
+          "y": 100.0
+         },
+         {
+          "x": 999.97,
+          "y": 100.02
+         },
+         {
+          "x": 1000.01,
+          "y": 100.05
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 880.0,
+          "y": 170.0
+         },
+         {
+          "x": 950.0,
+          "y": 182.0
+         },
+         {
+          "x": 999.95,
+          "y": 180.0
+         },
+         {
+          "x": 1000.03,
+          "y": 180.04
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 920.0,
+          "y": 250.0
+         },
+         {
+          "x": 1000.04,
+          "y": 250.0
+         },
+         {
+          "x": 999.96,
+          "y": 250.03
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 910.0,
+          "y": 300.0
+         },
+         {
+          "x": 960.0,
+          "y": 320.0
+         },
+         {
+          "x": 999.9,
+          "y": 331.5
+         },
+         {
+          "x": 1000.12,
+          "y": 331.62
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 930.0,
+          "y": 420.0
+         },
+         {
+          "x": 999.98,
+          "y": 419.99
+         },
+         {
+          "x": 1000.0,
+          "y": 420.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0,
+      2,
+      4
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 100.0
+        },
+        "b": {
+         "x": 1000.01,
+         "y": 100.05
+        }
+       },
+       null,
+       {
+        "kind": "line",
+        "a": {
+         "x": 920.0,
+         "y": 250.0
+        },
+        "b": {
+         "x": 999.96,
+         "y": 250.03
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 910.0,
+          "y": 300.0
+         },
+         {
+          "x": 960.0,
+          "y": 320.0
+         },
+         {
+          "x": 1000.12,
+          "y": 331.62
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       null
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       null,
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ],
+       null
+      ],
+      "adjacent": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki aday: yakın olan döner, uzak olan doğru gider; devamı uzak olan",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 50.0
+      },
+      "b": {
+       "x": 999.9,
+       "y": 50.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 999.95,
+       "y": 50.04
+      },
+      "b": {
+       "x": 1045.3154,
+       "y": 71.1706
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.2,
+       "y": 50.0105
+      },
+      "b": {
+       "x": 1060.1634,
+       "y": 52.1045
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.3001836937610718,
+      "angle": 2.00003047298289,
+      "score": 0.6670350699549066
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 50.0
+        },
+        "b": {
+         "x": 1000.2,
+         "y": 50.0105
+        }
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dik açıyla gelen çizgi aday değil; uç eşsiz kalır",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 60.0
+      },
+      "b": {
+       "x": 999.9,
+       "y": 60.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.1,
+       "y": 60.2
+      },
+      "b": {
+       "x": 1000.1,
+       "y": 160.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false,
+    "border": {
+     "kind": "line",
+     "a": {
+      "x": 1000.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1000.0,
+      "y": 500.0
+     }
+    }
+   },
+   "expected": {
+    "links": [],
+    "unmatched": [
+     {
+      "source": 0,
+      "end": "last"
+     }
+    ],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": []
+  },
+  {
+   "name": "Kavşak uçları eşlenmez, sayılır: iki çizginin ve bir alan köşesinin ucu",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 80.0
+      },
+      "b": {
+       "x": 999.95,
+       "y": 80.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 999.95,
+       "y": 80.0
+      },
+      "b": {
+       "x": 980.0,
+       "y": 120.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 960.0,
+       "y": 150.0
+      },
+      "b": {
+       "x": 999.93,
+       "y": 150.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 999.93,
+        "y": 150.0
+       },
+       {
+        "x": 990.0,
+        "y": 150.0
+       },
+       {
+        "x": 990.0,
+        "y": 160.0
+       }
+      ]
+     },
+     "zs": []
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.05,
+       "y": 80.02
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 80.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.06,
+       "y": 150.01
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 150.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false,
+    "border": {
+     "kind": "line",
+     "a": {
+      "x": 1000.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1000.0,
+      "y": 500.0
+     }
+    }
+   },
+   "expected": {
+    "links": [],
+    "unmatched": [],
+    "junctions": 3,
+    "others": 1
+   },
+   "apply": []
+  },
+  {
+   "name": "Yaylı kenar: dışa yön yayın teğeti; Köşeleri ayarla yayın boyuyla",
+   "sources": [
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 950.0,
+        "y": 200.0
+       },
+       {
+        "x": 980.0,
+        "y": 200.0
+       },
+       {
+        "x": 999.92,
+        "y": 205.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.08
+      ]
+     },
+     "zs": [
+      [
+       101.0,
+       102.0,
+       103.0
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 999.97,
+       "y": 205.02
+      },
+      "b": {
+       "x": 1036.7904,
+       "y": 220.6492
+      }
+     },
+     "zs": [
+      [
+       103.5,
+       104.0
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 0,
+      "adjacentEnd": "first",
+      "gap": 0.05385164807141218,
+      "angle": 0.2383899257293412,
+      "score": 0.11564962700046906
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "adjust",
+     "use": [
+      0
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 950.0,
+          "y": 200.0
+         },
+         {
+          "x": 980.0296293706358,
+          "y": 200.0118517482543
+         },
+         {
+          "x": 999.97,
+          "y": 205.02
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.08
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         101.0,
+         102.0,
+         103.0
+        ]
+       ]
+      ],
+      "adjacent": [
+       null
+      ],
+      "adjacentZs": [
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "middle",
+     "method": "adjust",
+     "use": [
+      0
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 950.0,
+          "y": 200.0
+         },
+         {
+          "x": 980.0148146853179,
+          "y": 200.00592587412714
+         },
+         {
+          "x": 999.9449999999999,
+          "y": 205.01
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.08
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         101.0,
+         102.0,
+         103.0
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 999.9449999999999,
+         "y": 205.01
+        },
+        "b": {
+         "x": 1036.7904,
+         "y": 220.6492
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         103.5,
+         104.0
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kotlar: Parça ekle yeni köşeye ucun kotunu verir, öbür yöntemler kotları korur",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 30.0
+      },
+      "b": {
+       "x": 999.8,
+       "y": 30.1
+      }
+     },
+     "zs": [
+      [
+       100.0,
+       100.5
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 900.0,
+        "y": 10.0
+       },
+       {
+        "x": 950.0,
+        "y": 12.0
+       },
+       {
+        "x": 999.85,
+        "y": 11.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       99.0,
+       99.5,
+       100.25
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.15,
+       "y": 30.12
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 31.0
+      }
+     },
+     "zs": [
+      [
+       100.7,
+       101.0
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.1,
+       "y": 11.05
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 12.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 1,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.25495097567963937,
+      "angle": 1.6940478835298738,
+      "score": 0.5663702141436079
+     },
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 0,
+      "adjacentEnd": "first",
+      "gap": 0.35057096285918476,
+      "angle": 0.4475366453729166,
+      "score": 0.7160598138974668
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "segment",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 900.0,
+          "y": 30.0
+         },
+         {
+          "x": 999.8,
+          "y": 30.1
+         },
+         {
+          "x": 1000.15,
+          "y": 30.12
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 900.0,
+          "y": 10.0
+         },
+         {
+          "x": 950.0,
+          "y": 12.0
+         },
+         {
+          "x": 999.85,
+          "y": 11.0
+         },
+         {
+          "x": 1000.1,
+          "y": 11.05
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         100.0,
+         100.5,
+         100.5
+        ]
+       ],
+       [
+        [
+         99.0,
+         99.5,
+         100.25,
+         100.25
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 30.0
+        },
+        "b": {
+         "x": 1000.15,
+         "y": 30.12
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 900.0,
+          "y": 10.0
+         },
+         {
+          "x": 950.0,
+          "y": 12.0
+         },
+         {
+          "x": 1000.1,
+          "y": 11.05
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         100.0,
+         100.5
+        ]
+       ],
+       [
+        [
+         99.0,
+         99.5,
+         100.25
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "middle",
+     "method": "adjust",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 30.0
+        },
+        "b": {
+         "x": 999.9749999999999,
+         "y": 30.11
+        }
+       },
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 900.0,
+          "y": 10.0
+         },
+         {
+          "x": 950.0626125844018,
+          "y": 12.012522516880352
+         },
+         {
+          "x": 999.975,
+          "y": 11.025
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         100.0,
+         100.5
+        ]
+       ],
+       [
+        [
+         99.0,
+         99.5,
+         100.25
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 999.9749999999999,
+         "y": 30.11
+        },
+        "b": {
+         "x": 1100.0,
+         "y": 31.0
+        }
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 999.975,
+         "y": 11.025
+        },
+        "b": {
+         "x": 1100.0,
+         "y": 12.0
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         100.7,
+         101.0
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki ucu da bağlı nesne: kaymalar toplanır",
+   "sources": [
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 1000.05,
+        "y": 400.0
+       },
+       {
+        "x": 1010.0,
+        "y": 400.5
+       },
+       {
+        "x": 1019.9,
+        "y": 400.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 950.0,
+       "y": 400.1
+      },
+      "b": {
+       "x": 999.98,
+       "y": 400.02
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1020.07,
+       "y": 399.97
+      },
+      "b": {
+       "x": 1080.0,
+       "y": 400.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "first",
+      "adjacent": 0,
+      "adjacentEnd": "last",
+      "gap": 0.07280109889273897,
+      "angle": 2.968474923172354,
+      "score": 0.24455136189122306
+     },
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.1726267650163876,
+      "angle": 2.919950945157942,
+      "score": 0.4425852282047066
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "adjust",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 999.98,
+          "y": 400.02
+         },
+         {
+          "x": 1010.0503015018085,
+          "y": 400.49493718712324
+         },
+         {
+          "x": 1020.07,
+          "y": 399.97
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": []
+     }
+    },
+    {
+     "meet": "middle",
+     "method": "move",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 1000.015,
+          "y": 400.01
+         },
+         {
+          "x": 1010.0,
+          "y": 400.5
+         },
+         {
+          "x": 1019.985,
+          "y": 399.985
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0
+        ]
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 950.0,
+         "y": 400.1
+        },
+        "b": {
+         "x": 1000.015,
+         "y": 400.01
+        }
+       },
+       {
+        "kind": "line",
+        "a": {
+         "x": 1019.985,
+         "y": 399.985
+        },
+        "b": {
+         "x": 1080.0,
+         "y": 400.0
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ],
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşleşme ölçütü: daha iyi aday başka türse aynı tür alınır",
+   "sources": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 140.0
+      },
+      "b": {
+       "x": 999.95,
+       "y": 140.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ],
+     "key": " Yol "
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.03,
+       "y": 140.01
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 140.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ],
+     "key": "ÇİT"
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.2,
+       "y": 140.06
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 140.5
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ],
+     "key": "YOL"
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": true
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.2570992026436493,
+      "angle": 0.2526050064678325,
+      "score": 0.5226185721695598
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0
+     ],
+     "expected": {
+      "sources": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 140.0
+        },
+        "b": {
+         "x": 1000.2,
+         "y": 140.06
+        }
+       }
+      ],
+      "sourceZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfır boylu kenar kalacaksa nesnenin bağı yazılmaz; öbürü yazılır",
+   "sources": [
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 990.0,
+        "y": 75.0
+       },
+       {
+        "x": 999.8,
+        "y": 75.0
+       },
+       {
+        "x": 999.95,
+        "y": 75.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 90.0
+      },
+      "b": {
+       "x": 999.9,
+       "y": 90.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.1,
+       "y": 75.0
+      },
+      "b": {
+       "x": 999.8000002,
+       "y": 75.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.1,
+       "y": 90.05
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 90.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 0,
+      "sourceEnd": "last",
+      "adjacent": 0,
+      "adjacentEnd": "last",
+      "gap": 0.14999980000004598,
+      "angle": 0.0,
+      "score": 0.29999960000009196
+     },
+     {
+      "source": 1,
+      "sourceEnd": "last",
+      "adjacent": 1,
+      "adjacentEnd": "first",
+      "gap": 0.20615528128092644,
+      "angle": 0.028676563928362295,
+      "score": 0.41326644802613166
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 0
+   },
+   "apply": [
+    {
+     "meet": "adjacent",
+     "method": "move",
+     "use": [
+      0,
+      1
+     ],
+     "expected": {
+      "sources": [
+       null,
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 90.0
+        },
+        "b": {
+         "x": 1000.1,
+         "y": 90.05
+        }
+       }
+      ],
+      "sourceZs": [
+       null,
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       null,
+       null
+      ],
+      "adjacentZs": [
+       null,
+       null
+      ],
+      "refused": [
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katılmayan türler sayılır",
+   "sources": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 990.0,
+        "y": 0.0
+       },
+       {
+        "x": 999.0,
+        "y": 0.0
+       },
+       {
+        "x": 999.0,
+        "y": 5.0
+       }
+      ]
+     },
+     "zs": []
+    },
+    {
+     "shape": {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 990.0,
+        "y": 20.0
+       },
+       {
+        "x": 999.0,
+        "y": 20.0
+       },
+       {
+        "x": 995.0,
+        "y": 25.0
+       },
+       {
+        "x": 990.0,
+        "y": 20.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "zs": [
+      [
+       null,
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 995.0,
+       "y": 40.0
+      },
+      "r": 2.0
+     },
+     "zs": []
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 900.0,
+       "y": 45.0
+      },
+      "b": {
+       "x": 999.9,
+       "y": 45.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "adjacent": [
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 1000.05,
+       "y": 45.02
+      },
+      "b": {
+       "x": 1100.0,
+       "y": 45.0
+      }
+     },
+     "zs": [
+      [
+       null,
+       null
+      ]
+     ]
+    }
+   ],
+   "settings": {
+    "distance": 0.5,
+    "angle": 30.0,
+    "keyed": false,
+    "border": {
+     "kind": "line",
+     "a": {
+      "x": 1000.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1000.0,
+      "y": 500.0
+     }
+    }
+   },
+   "expected": {
+    "links": [
+     {
+      "source": 3,
+      "sourceEnd": "last",
+      "adjacent": 0,
+      "adjacentEnd": "first",
+      "gap": 0.15132745950419343,
+      "angle": 0.011464888193773492,
+      "score": 0.3030370819481793
+     }
+    ],
+    "unmatched": [],
+    "junctions": 0,
+    "others": 3
+   },
+   "apply": [
+    {
+     "meet": "border",
+     "method": "move",
+     "use": [
+      0
+     ],
+     "expected": {
+      "sources": [
+       null,
+       null,
+       null,
+       {
+        "kind": "line",
+        "a": {
+         "x": 900.0,
+         "y": 45.0
+        },
+        "b": {
+         "x": 1000.0,
+         "y": 45.010000000000005
+        }
+       }
+      ],
+      "sourceZs": [
+       null,
+       null,
+       null,
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "adjacent": [
+       {
+        "kind": "line",
+        "a": {
+         "x": 1000.0,
+         "y": 45.010000000000005
+        },
+        "b": {
+         "x": 1100.0,
+         "y": 45.0
+        }
+       }
+      ],
+      "adjacentZs": [
+       [
+        [
+         null,
+         null
+        ]
+       ]
+      ],
+      "refused": []
+     }
+    }
+   ]
+  }
+ ]
+}
