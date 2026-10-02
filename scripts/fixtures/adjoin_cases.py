@@ -635,6 +635,239 @@ def fill_random(seed):
             return (f"rastgele boşluk {seed}", path, neighbours)
 
 
+# ── Corners shared (§4) ─────────────────────────────────────────────────────
+
+SAME = F(1, 10**6)
+
+
+def near(u, v):
+    d = sub(u, v)
+    return dot(d, d) <= SAME * SAME
+
+
+def seg_t(p, a, b):
+    """Where p lies along the straight edge a→b when it is within 1 µm of it and farther than that from both
+    ends; else None."""
+    ab = sub(b, a)
+    t = min(max(dot(sub(p, a), ab) / dot(ab, ab), F(0)), F(1))
+    if not near(p, (a[0] + ab[0] * t, a[1] + ab[1] * t)) or near(p, a) or near(p, b):
+        return None
+    return t
+
+
+def arc_of(a, b, k):
+    """The arc a→b of bulge k (50 digits): its centre, radius and signed sweep."""
+    ax, ay, bx, by = (to_mp(v) for v in (a[0], a[1], b[0], b[1]))
+    sweep = 4 * mp.atan(mp.mpf(k))
+    c = mp.sqrt((bx - ax) ** 2 + (by - ay) ** 2)
+    h = (c / 2) / mp.tan(sweep / 2)
+    # The centre lies to the left of the chord for a counter-clockwise arc shorter than a half circle.
+    cx = (ax + bx) / 2 - (by - ay) / c * h
+    cy = (ay + by) / 2 + (bx - ax) / c * h
+    return cx, cy, c / (2 * abs(mp.sin(sweep / 2))), sweep
+
+
+def arc_t(p, a, b, k):
+    """Where p lies along the arc a→b of bulge k, as a share of its sweep, when it is within 1 µm of it and
+    farther than that from both ends; else None."""
+    cx, cy, r, sweep = arc_of(a, b, k)
+    px, py = to_mp(p[0]), to_mp(p[1])
+    if abs(mp.sqrt((px - cx) ** 2 + (py - cy) ** 2) - r) > to_mp(SAME) or near(p, a) or near(p, b):
+        return None
+    turn = mp.atan2(py - cy, px - cx) - mp.atan2(to_mp(a[1]) - cy, to_mp(a[0]) - cx)
+    turn = turn % (2 * mp.pi) if sweep > 0 else -((-turn) % (2 * mp.pi))
+    t = turn / sweep
+    return t if 0 < t < 1 else None
+
+
+def with_corners(pts, bulges, closed, extra):
+    """The path with each point of extra that lies on an edge added in its place along it: the point as given,
+    an arc split on its circle (tan of a quarter of its share of the sweep); corners within 1 µm of each other
+    are one, the first along the edge kept. The path, and how many points were added."""
+    n = len(pts)
+    out_p, out_b, added = [], [], 0
+    for j in range(n if closed else n - 1):
+        a, b, k = pts[j], pts[(j + 1) % n], bulges[j]
+        on = [(t, e) for e in extra for t in [arc_t(e, a, b, k) if k else seg_t(e, a, b)] if t is not None]
+        on.sort(key=lambda te: te[0])
+        kept = []
+        for t, e in on:
+            if not kept or not near(e, kept[-1][1]):
+                kept.append((t, e))
+        out_p.append(a)
+        if not kept:
+            out_b.append(k)
+        elif not k:
+            for _, e in kept:
+                out_b.append(0)
+                out_p.append(e)
+            out_b.append(0)
+        else:
+            sweep, last = arc_of(a, b, k)[3], 0
+            for t, e in kept:
+                out_b.append(float(mp.tan(sweep * (t - last) / 4)))
+                out_p.append(e)
+                last = t
+            out_b.append(float(mp.tan(sweep * (1 - last) / 4)))
+        added += len(kept)
+    if not closed:
+        out_p.append(pts[-1])
+    return out_p, out_b, added
+
+
+def padded(bulges, n):
+    b = list(bulges or [])
+    return (b + [0] * n)[:n]
+
+
+def paths_of(shape):
+    """A neighbour's paths as the core walks them: a line's two ends, a polyline, an area's ring and its holes,
+    then each further part's ring and holes (points (x, y), bulges, closed)."""
+    kind = shape["kind"]
+    if kind == "line":
+        return [([q(shape["a"]), q(shape["b"])], [0], False)]
+    if kind == "polyline":
+        pts = [q(v) for v in shape["pts"]]
+        return [(pts, padded(shape.get("bulges"), len(pts) - 1), False)]
+    if kind == "polygon":
+        out = []
+        for ring in [shape] + list(shape.get("parts") or []):
+            for r in [ring] + list(ring.get("holes") or []):
+                pts = [q(v) for v in r["pts"]]
+                out.append((pts, padded(r.get("bulges"), len(pts)), True))
+        return out
+    return None
+
+
+def junctions(areas, neighbours, points):
+    """§4: a corner of the new area (its own) on a neighbour's edge goes to the neighbour, unless its layer is
+    locked (then it is counted); a neighbour's corner, locked or not (and with points a point), on the new area's
+    edge goes to the new area."""
+    rings = [[q(v) for v in r["pts"]] for a in areas for r in [a["outer"]] + a["holes"]]
+    corners = [v for r in rings for v in r]
+    theirs, edited, given, locked = [], [], 0, 0
+    for i, n in enumerate(neighbours):
+        shape = n["shape"]
+        if shape["kind"] == "point":
+            if points:
+                theirs.append(q(shape["p"]))
+            continue
+        paths = paths_of(shape)
+        if paths is None:
+            continue
+        theirs += [v for pts, _, _ in paths for v in pts]
+        done = [with_corners(pts, b, closed, corners) for pts, b, closed in paths]
+        count = sum(d[2] for d in done)
+        if not count:
+            continue
+        if n.get("locked"):
+            locked += 1
+            continue
+        given += count
+        kind = "polyline" if shape["kind"] == "line" else shape["kind"]
+        edited.append({"index": i, "kind": kind, "paths": [{"pts": [list(fl(v)) for v in d[0]], "bulges": [float(x) for x in d[1]]} for d in done]})
+    out, taken = [], 0
+    for a in areas:
+        parts = []
+        for r in [a["outer"]] + a["holes"]:
+            pts = [q(v) for v in r["pts"]]
+            new_p, new_b, added = with_corners(pts, padded(r.get("bulges"), len(pts)), True, theirs)
+            taken += added
+            ring = {"pts": [list(fl(v)) for v in new_p]}
+            if r.get("bulges") is not None or any(new_b):
+                ring["bulges"] = [float(x) for x in new_b]
+            parts.append(ring)
+        out.append({"outer": parts[0], "holes": parts[1:]})
+    return {"areas": out, "taken": taken, "edited": edited, "given": given, "locked": locked}
+
+
+def N(shape, locked=False):
+    return {"shape": shape, "locked": locked} if locked else {"shape": shape}
+
+
+def POLY(pts, holes=(), parts=(), bulges=None):
+    out = {"kind": "polygon", "pts": [P(*v) for v in pts]}
+    if bulges is not None:
+        out["bulges"] = bulges
+    if holes:
+        out["holes"] = [{"pts": [P(*v) for v in h]} for h in holes]
+    if parts:
+        out["parts"] = [{"pts": [P(*v) for v in pt]} for pt in parts]
+    return out
+
+
+def junction_hand(de, dn):
+    """Corner joining by hand, at the origin and in TM coordinates."""
+    m = lambda x, y: (x + de, y + dn)
+    sq = lambda x0, y0, x1, y1: [m(x0, y0), m(x1, y0), m(x1, y1), m(x0, y1)]
+    new = AREA(sq(0, 0, 10, 10))
+    out = [
+        ("yeni alanın köşesi komşunun kenarında: komşuya eklenir", [new], [N(POLY(sq(10, -5, 20, 5)))], False),
+        ("komşunun köşesi yeni alanın kenarında: yeni alana eklenir", [new], [N(POLY(sq(10, 4, 20, 20)))], False),
+        ("iki yönde birden; komşuların ortak köşesi yeni alana bir kez eklenir", [new], [N(POLY(sq(10, -5, 20, 5))), N(POLY(sq(-10, 5, 0, 15))), N(POLY(sq(-10, -5, 0, 5)))], False),
+        ("köşe komşunun köşesinde: zaten ortak, eklenmez", [new], [N(POLY(sq(10, 0, 20, 10)))], False),
+        ("kilitli komşu köşe almaz, sayılır; köşesini yeni alan yine alır", [new], [N(POLY(sq(10, 4, 20, 20)), locked=True), N(POLY(sq(10, -5, 20, 4)))], False),
+        ("çizgi ve açık çoklu çizgi: çizgi köşe alınca çoklu çizgi olur", [new], [N({"kind": "line", "a": P(*m(10, -5)), "b": P(*m(10, 5))}), N({"kind": "polyline", "pts": [P(*m(-5, 10)), P(*m(5, 10)), P(*m(5, 20))]})], False),
+        ("komşunun deliğinin kenarı ve ikinci parçası", [AREA(sq(0, 0, 4, 4))], [N(POLY(sq(-10, -10, 10, 10), holes=[[m(-2, -2), m(-2, 4), m(2, 4), m(2, -2)]], parts=[sq(4, 2, 8, 8)]))], False),
+        ("bir kenarda birden çok köşe, kenar boyunca sırayla", [AREA(sq(0, 0, 30, 10))], [N(POLY(sq(5, 10, 10, 20))), N(POLY(sq(20, 10, 25, 20))), N(POLY(sq(12, 10, 18, 20)))], False),
+        ("1 µm içinde kenarda sayılır, köşe olduğu gibi eklenir; 3 µm dışarıda sayılmaz", [new], [N(POLY([m(10, -5), m(20, -5), m(20, 3), (F(10) + de + F(1, 2 * 10**6), F(3) + dn)])), N(POLY([m(-10, 7), (F(0) + de - F(3, 10**6), F(7) + dn), m(0, 20), m(-10, 20)]))], False),
+        ("nokta yalnız Noktalar da açıkken köşedir", [new], [N({"kind": "point", "p": P(*m(5, 0))}), N({"kind": "point", "p": P(*m(0, 6))})], False),
+        ("nokta, Noktalar da açık", [new], [N({"kind": "point", "p": P(*m(5, 0))}), N({"kind": "point", "p": P(*m(0, 6))})], True),
+        ("yeni alanın deliğinin kenarında komşu köşesi", [AREA(sq(0, 0, 20, 20), holes=[[m(5, 5), m(5, 15), m(15, 15), m(15, 5)]])], [N(POLY(sq(10, 10, 15, 15)))], False),
+    ]
+    return out
+
+
+def junction_arcs(de, dn):
+    """The arc cases: a neighbour's half disc of radius 5 about (5, 10) running from (10, 10) round to (0, 10)
+    takes the new area's corner (8, 14) on its circle; the new area's own arc takes a neighbour's corner there."""
+    m = lambda x, y: (x + de, y + dn)
+    half = {"kind": "polygon", "pts": [P(*m(0, 10)), P(*m(10, 10))], "bulges": [0, 1]}
+    spike = AREA([m(8, 14), m(9, 20), m(7, 20)])
+    dome = {"outer": {"pts": [P(*m(0, 0)), P(*m(10, 0)), P(*m(10, 10)), P(*m(0, 10))], "bulges": [0, 0, 1, 0]}, "holes": []}
+    return [
+        ("komşunun yayı yeni alanın köşesini alır, çemberinde bölünür", [spike], [N(half)], False),
+        ("yeni alanın yayı komşunun köşesini alır", [dome], [N(POLY([m(8, 14), m(12, 18), m(6, 22)]))], False),
+    ]
+
+
+def junction_random(seed):
+    """A block of parcels on whole metres about (487000, 4420000) and a new area whose corners lie on parcels'
+    edges or off them, whose edges run through parcels' corners or not; a line, a point and a locked parcel."""
+    rnd = random.Random(1000 + seed)
+    x0, y0 = E0 + rnd.randint(-100, 100), N0 + rnd.randint(-100, 100)
+    xs = [x0]
+    for _ in range(rnd.randint(2, 4)):
+        xs.append(xs[-1] + rnd.randint(8, 20))
+    ys = [y0]
+    for _ in range(rnd.randint(2, 3)):
+        ys.append(ys[-1] + rnd.randint(8, 16))
+    neighbours = []
+    for i in range(len(xs) - 1):
+        for j in range(len(ys) - 1):
+            neighbours.append(N(POLY([(xs[i], ys[j]), (xs[i + 1], ys[j]), (xs[i + 1], ys[j + 1]), (xs[i], ys[j + 1])]), locked=rnd.random() < 0.15))
+    rnd.shuffle(neighbours)
+    # The new area: corners on the grid's lines or between them, on whole and half metres.
+    pick = lambda vs: rnd.choice(vs) if rnd.random() < 0.6 else rnd.randint(vs[0] * 2 - 20, vs[-1] * 2 + 20) / 2
+    while True:
+        ax, bx = sorted((pick(xs), pick(xs)))
+        ay, by = sorted((pick(ys), pick(ys)))
+        if bx - ax >= 4 and by - ay >= 4:
+            break
+    ring = [(ax, ay), (bx, ay), (bx, by), (ax, by)]
+    if rnd.random() < 0.5:
+        k = rnd.randrange(4)
+        a, b = ring[k], ring[(k + 1) % 4]
+        ring.insert(k + 1, ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2))
+    neighbours.append(N({"kind": "line", "a": P(ax - 5, ay), "b": P(bx + 5, ay)}))
+    neighbours.append(N({"kind": "point", "p": P((ax + bx) / 2, by)}))
+    return (f"rastgele köşe bağlama {seed}", [AREA(ring)], neighbours, rnd.random() < 0.5)
+
+
+def junction_case(name, areas, neighbours, points):
+    return {"name": name, "areas": areas, "neighbours": neighbours, "points": points, "expect": junctions(areas, neighbours, points)}
+
+
 # ── Build ───────────────────────────────────────────────────────────────────
 
 
@@ -662,12 +895,19 @@ def build():
     for seed in range(1, 21):
         avoids.append(avoid_case(*avoid_random(seed)))
         fills.append(fill_case(*fill_random(seed)))
+    joins = []
+    for de, dn, suffix in ((0, 0, ""), (E0, N0, ", TM koordinatlarında")):
+        for name, areas, neighbours, points in junction_hand(de, dn) + junction_arcs(de, dn):
+            joins.append(junction_case(name + suffix, areas, neighbours, points))
+    for seed in range(1, 21):
+        joins.append(junction_case(*junction_random(seed)))
     return {
         "format": "kentos.adjoin",
         "version": 1,
-        "source": "scripts/fixtures/adjoin_cases.py (docs/adr/0162 §2, §3, §5)",
+        "source": "scripts/fixtures/adjoin_cases.py (docs/adr/0162 §2, §3, §4, §5)",
         "avoid": avoids,
         "fill": fills,
+        "junctions": joins,
     }
 
 
@@ -695,7 +935,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text)
     d = json.loads(text)
-    print(f"{OUT}: {len(d['avoid'])} kırpma, {len(d['fill'])} doldurma")
+    print(f"{OUT}: {len(d['avoid'])} kırpma, {len(d['fill'])} doldurma, {len(d['junctions'])} köşe bağlama")
 
 
 if __name__ == "__main__":

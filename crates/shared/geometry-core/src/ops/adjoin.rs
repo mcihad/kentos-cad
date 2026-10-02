@@ -1,19 +1,24 @@
 //! Bitişik alan and the overlap control (docs/adr/0162): a new area less
-//! the neighbours it overlaps (`Neighbours::avoid`, §2) and the region a
-//! drawn path closes with them (`Neighbours::fill`, §3). The web reaches it
-//! through WASM (`AdjoinWork`; ops `adjoinAvoid`, `adjoinFill`); the
-//! independent reference is `scripts/fixtures/adjoin_cases.py`.
+//! the neighbours it overlaps (`Neighbours::avoid`, §2), the region a
+//! drawn path closes with them (`Neighbours::fill`, §3) and, with Topoloji
+//! on, the corners it shares with them (`junctions`, §4). The web reaches
+//! it through WASM (`AdjoinWork`; ops `adjoinAvoid`, `adjoinFill`,
+//! `adjoinJunctions`); the independent reference is
+//! `scripts/fixtures/adjoin_cases.py`.
 
 use crate::api::Op;
-use crate::entity::Entity;
-use crate::geom::arrangement::{Area, Source, TOL, edge_box};
-use crate::geom::bulge::bulge_path_edges;
+use crate::api::json::{ToJson, field};
+use crate::entity::{Entity, Shape};
+use crate::geom::arrangement::{Area, Ring, Source, TOL, edge_box};
+use crate::geom::bulge::{bulge_of_sweep, bulge_path_edges};
+use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::adjoin_faces;
 use crate::geom::region::{area_source, intersect_area_sets, ring_edges, subtract_areas};
-use crate::geometry::Bounds;
+use crate::geometry::{Bounds, dist};
 use crate::jsmath::{js_max, js_min};
 use crate::op;
 use crate::ops::areas::areas_of_entity;
+use crate::ops::topology_edit::{Neighbour, Path, SAME, padded, paths_of, shape_of};
 use crate::vec2::Vec2;
 
 /// What the overlap control leaves of a new area (§2).
@@ -151,6 +156,184 @@ impl Neighbours {
     }
 }
 
+/// What joining a new area with its neighbours corner by corner gives
+/// (§4): the corners each lacks where the other's lie on its edges.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Joined {
+    /// The new area's parts, the neighbours' corners on their edges added.
+    pub areas: Vec<Area>,
+    /// How many corners the new area took.
+    pub taken: usize,
+    /// The neighbours given corners of the new area: their places and shapes.
+    pub edited: Vec<(usize, Shape)>,
+    /// How many corners the neighbours were given, all together.
+    pub given: usize,
+    /// How many neighbours would have been given one but lie on a locked layer.
+    pub locked: usize,
+}
+
+impl ToJson for Joined {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        let mut first = true;
+        field(out, &mut first, "areas", &self.areas);
+        field(out, &mut first, "taken", &(self.taken as f64));
+        out.push_str(",\"edited\":[");
+        for (k, (i, shape)) in self.edited.iter().enumerate() {
+            if k > 0 {
+                out.push(',');
+            }
+            out.push('{');
+            let mut first = true;
+            field(out, &mut first, "index", &(*i as f64));
+            field(out, &mut first, "shape", shape);
+            out.push('}');
+        }
+        out.push(']');
+        field(out, &mut first, "given", &(self.given as f64));
+        field(out, &mut first, "locked", &(self.locked as f64));
+        out.push('}');
+    }
+}
+
+/// A path (one bulge per edge) with each point of `extra` that lies on one
+/// of its edges, within 1 µm and farther than that from the edge's ends,
+/// added in its place along the edge: the point as given, an arc split on
+/// its circle. The path, and how many points were added.
+fn with_corners(path: &Path, extra: &[Vec2]) -> (Path, usize) {
+    let n = path.pts.len();
+    let edges = bulge_path_edges(&path.pts, Some(&path.bulges), path.closed);
+    let mut pts = Vec::with_capacity(n);
+    let mut bulges = Vec::with_capacity(path.bulges.len());
+    let mut added = 0;
+    for (j, edge) in edges.iter().enumerate() {
+        let (a, b) = (path.pts[j], path.pts[(j + 1) % n]);
+        let mut on: Vec<(f64, Vec2)> = extra
+            .iter()
+            .filter_map(|&p| {
+                let c = closest_on_edge(edge, p);
+                (c.d <= SAME && dist(p, a) > SAME && dist(p, b) > SAME).then_some((c.t, p))
+            })
+            .collect();
+        on.sort_by(|x, y| x.0.total_cmp(&y.0));
+        // Corners within 1 µm of each other are one.
+        on.dedup_by(|later, kept| dist(later.1, kept.1) <= SAME);
+        pts.push(a);
+        let bulge = path.bulges.get(j).copied().unwrap_or(0.0);
+        match *edge {
+            _ if on.is_empty() => bulges.push(bulge),
+            Edge::Seg { .. } => {
+                for &(_, p) in &on {
+                    bulges.push(0.0);
+                    pts.push(p);
+                }
+                bulges.push(0.0);
+            }
+            Edge::Arc { sweep, .. } => {
+                let mut from = 0.0;
+                for &(t, p) in &on {
+                    bulges.push(bulge_of_sweep(sweep * (t - from)));
+                    pts.push(p);
+                    from = t;
+                }
+                bulges.push(bulge_of_sweep(sweep * (1.0 - from)));
+            }
+        }
+        added += on.len();
+    }
+    if !path.closed
+        && let Some(&last) = path.pts.last()
+    {
+        pts.push(last);
+    }
+    let path = Path {
+        pts,
+        bulges,
+        closed: path.closed,
+    };
+    (path, added)
+}
+
+/// A ring of the new area with `extra`'s points on its edges added; a ring
+/// without bulges stays without when its new edges are straight.
+fn ring_with(ring: &Ring, extra: &[Vec2]) -> (Ring, usize) {
+    let path = Path {
+        pts: ring.pts.clone(),
+        bulges: padded(&ring.bulges, ring.pts.len()),
+        closed: true,
+    };
+    let (path, added) = with_corners(&path, extra);
+    let straight = ring.bulges.is_none() && path.bulges.iter().all(|&b| b == 0.0);
+    let ring = Ring {
+        pts: path.pts,
+        bulges: (!straight).then_some(path.bulges),
+    };
+    (ring, added)
+}
+
+/// The new area (its parts) and its neighbours joined corner by corner
+/// (§4): a corner of the new area on a neighbour's edge is added to the
+/// neighbour, a neighbour's corner on the new area's edge to the new area;
+/// with `points`, a point on its edge too (Topoloji's Noktalar da). Only
+/// the new area's own corners are given; a locked neighbour is counted and
+/// left as it is, though the new area takes its corners. The neighbours'
+/// elevations are their command's (`cad.entities.edit` carries them along
+/// the edge, docs/adr/0142).
+pub fn junctions(areas: &[Area], neighbours: &[Neighbour], points: bool) -> Joined {
+    let corners: Vec<Vec2> = areas
+        .iter()
+        .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
+        .flat_map(|r| r.pts.iter().copied())
+        .collect();
+    let mut joined = Joined::default();
+    let mut theirs = Vec::new();
+    for (i, n) in neighbours.iter().enumerate() {
+        if let Shape::Point { p, .. } = &n.shape {
+            if points {
+                theirs.push(*p);
+            }
+            continue;
+        }
+        let Some((paths, plan)) = paths_of(&n.shape) else {
+            continue;
+        };
+        theirs.extend(paths.iter().flat_map(|p| p.pts.iter().copied()));
+        let mut given = 0;
+        let paths: Vec<Path> = paths
+            .iter()
+            .map(|path| {
+                let (path, added) = with_corners(path, &corners);
+                given += added;
+                path
+            })
+            .collect();
+        if given == 0 {
+            continue;
+        }
+        if n.locked {
+            joined.locked += 1;
+            continue;
+        }
+        joined.given += given;
+        joined.edited.push((i, shape_of(paths, plan)));
+    }
+    for a in areas {
+        let (outer, taken) = ring_with(&a.outer, &theirs);
+        joined.taken += taken;
+        let holes = a
+            .holes
+            .iter()
+            .map(|h| {
+                let (hole, taken) = ring_with(h, &theirs);
+                joined.taken += taken;
+                hole
+            })
+            .collect();
+        joined.areas.push(Area { outer, holes });
+    }
+    joined
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("adjoinAvoid", |area: Area, neighbours: Vec<Entity>| {
         Neighbours::of_entities(&neighbours).avoid(&area)
@@ -169,6 +352,12 @@ pub(crate) static OPS: &[Op] = &[
         "adjoinFillAreas",
         |pts: Vec<Vec2>, bulges: Option<Vec<f64>>, neighbours: Vec<Vec<Area>>| {
             Neighbours::new(neighbours).fill(&pts, bulges.as_deref())
+        }
+    ),
+    op!(
+        "adjoinJunctions",
+        |areas: Vec<Area>, neighbours: Vec<Neighbour>, points: bool| {
+            junctions(&areas, &neighbours, points)
         }
     ),
 ];
@@ -221,6 +410,104 @@ mod tests {
         assert!(cut.overlapped.is_empty());
         assert_eq!(cut.areas.len(), 1);
         assert_eq!(cut.areas[0].outer.pts, area.outer.pts);
+    }
+
+    fn neighbour(shape: Shape) -> Neighbour {
+        Neighbour {
+            shape,
+            locked: false,
+        }
+    }
+
+    fn polygon(pts: &[(f64, f64)]) -> Shape {
+        Shape::Polygon {
+            pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+            bulges: None,
+            holes: None,
+            parts: None,
+        }
+    }
+
+    #[test]
+    fn corners_go_both_ways_and_a_locked_neighbour_only_gives() {
+        // The new square 0..10. The neighbour on its right (y −5..4) takes
+        // the square's corner (10, 0) and gives it its own (10, 4); the
+        // locked one above it (y 4..20) would take (10, 10).
+        let right = neighbour(polygon(&[
+            (10.0, -5.0),
+            (20.0, -5.0),
+            (20.0, 4.0),
+            (10.0, 4.0),
+        ]));
+        let above = Neighbour {
+            shape: polygon(&[(10.0, 4.0), (20.0, 4.0), (20.0, 20.0), (10.0, 20.0)]),
+            locked: true,
+        };
+        let joined = junctions(&[square(0.0, 0.0, 10.0)], &[right, above], false);
+        assert_eq!(
+            joined.areas[0].outer.pts,
+            [
+                Vec2::new(0.0, 0.0),
+                Vec2::new(10.0, 0.0),
+                Vec2::new(10.0, 4.0),
+                Vec2::new(10.0, 10.0),
+                Vec2::new(0.0, 10.0)
+            ]
+        );
+        assert_eq!(joined.areas[0].outer.bulges, None);
+        assert_eq!(joined.taken, 1);
+        // The right one takes (10, 0) on its left edge; the locked one would take (10, 10).
+        assert_eq!(joined.given, 1);
+        assert_eq!(joined.locked, 1);
+        let [(0, Shape::Polygon { pts, .. })] = joined.edited.as_slice() else {
+            panic!("one edited polygon: {:?}", joined.edited);
+        };
+        assert_eq!(
+            pts,
+            &[
+                Vec2::new(10.0, -5.0),
+                Vec2::new(20.0, -5.0),
+                Vec2::new(20.0, 4.0),
+                Vec2::new(10.0, 4.0),
+                Vec2::new(10.0, 0.0)
+            ]
+        );
+    }
+
+    #[test]
+    fn an_arc_is_split_on_its_circle() {
+        // A half disc of radius 5 about (5, 10), its arc running from
+        // (10, 10) round to (0, 10) (bulge 1); the new area's corner (5, 15)
+        // lies half way along it.
+        let half = neighbour(Shape::Polygon {
+            pts: vec![Vec2::new(0.0, 10.0), Vec2::new(10.0, 10.0)],
+            bulges: Some(vec![0.0, 1.0]),
+            holes: None,
+            parts: None,
+        });
+        let top = Vec2::new(5.0, 15.0);
+        let spike = Area {
+            outer: Ring {
+                pts: vec![
+                    Vec2::new(4.0, 20.0),
+                    Vec2::new(5.0, 15.0),
+                    Vec2::new(6.0, 20.0),
+                ],
+                bulges: None,
+            },
+            holes: Vec::new(),
+        };
+        let joined = junctions(&[spike], &[half], false);
+        let [(0, Shape::Polygon { pts, bulges, .. })] = joined.edited.as_slice() else {
+            panic!("one edited polygon: {:?}", joined.edited);
+        };
+        assert_eq!(pts[2], top);
+        let b = bulges.as_deref().unwrap_or_default();
+        let quarter = crate::jsmath::tan(crate::jsmath::PI / 8.0);
+        assert!(
+            (b[1] - quarter).abs() < 1e-12 && (b[2] - quarter).abs() < 1e-12,
+            "{b:?}"
+        );
     }
 
     #[test]

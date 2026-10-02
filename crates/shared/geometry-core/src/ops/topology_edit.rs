@@ -97,21 +97,21 @@ impl ToJson for Answer {
 
 /// A path of a neighbour: a line's two ends, a polyline, or one of an
 /// area's rings and holes.
-struct Path {
-    pts: Vec<Vec2>,
-    bulges: Vec<f64>,
-    closed: bool,
+pub(crate) struct Path {
+    pub(crate) pts: Vec<Vec2>,
+    pub(crate) bulges: Vec<f64>,
+    pub(crate) closed: bool,
 }
 
 /// How the paths go back into a shape: a line, a polyline (with its holes
 /// as they were), or an area's parts with how many holes each has.
-enum Plan {
+pub(crate) enum Plan {
     Line,
     Polyline(Option<Vec<Ring>>),
     Polygon(Vec<usize>),
 }
 
-fn padded(bulges: &Option<Vec<f64>>, n: usize) -> Vec<f64> {
+pub(crate) fn padded(bulges: &Option<Vec<f64>>, n: usize) -> Vec<f64> {
     let mut b = bulges.clone().unwrap_or_default();
     b.resize(n, 0.0);
     b
@@ -119,7 +119,7 @@ fn padded(bulges: &Option<Vec<f64>>, n: usize) -> Vec<f64> {
 
 /// A neighbour's paths in the elevations' order: an area's outer ring, its
 /// holes, then each further part's ring and holes.
-fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
+pub(crate) fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
     match shape {
         Shape::Line { a, b } => Some((
             vec![Path {
@@ -172,7 +172,7 @@ fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
     }
 }
 
-fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
+pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
     let mut paths = paths.into_iter();
     match plan {
         Plan::Line | Plan::Polyline(_) => {

@@ -154,6 +154,12 @@ Uygulandığı araçlar §2'ninkilerdir, kip Serbest olsa da.
      - Ortak iz `adjoin.json` (`adjoin.kcad`) iki platformda, bütün değişkelerde geçer. Kullanım senaryosu `usage-adjoin.json`.
 4. Topoloji açıkken komşulara köşe iki platformda; ortak iz; resimler.
 
+   *(2 Ekim: çekirdek tamam.)*
+   - **`junctions(areas, neighbours, points)`** (`ops::adjoin`, işlem `adjoinJunctions`): komşular `topology_edit::Neighbour`'dır (şekil, kilitli mi). Yeni alanın kendi köşeleri, komşunun bir kenarının 1 µm yakınında ve uçlarından 1 µm'den uzaksa o kenara eklenir; komşunun köşeleri (kilitli olsa da; `points` ile noktalar da) aynı kuralla yeni alanın kenarlarına. Kenar boyunca sırayla; birbirine 1 µm yakın köşeler bir köşedir.
+   - Eklenen köşe verildiği gibidir, bit bit; yay kendi çemberinde bölünür (Köşe ekle'nin kuralı: payın tan(θ·Δt/4)'ü). Çizgi köşe alınca çoklu çizgi olur. Delikler ve parçalar da kenardır.
+   - Kilitli komşu köşe almaz, sayılır. Komşunun eklenen köşesinin kotu çekirdeğin işi değildir: `cad.entities.edit` kenar boyunca taşır (ADR 0142).
+   - **Başvuru:** `adjoin_cases.py`'nin `junctions`'ı: elle 14 durum iki yerde (başlangıçta ve TM koordinatlarında; 1 µm içi ve dışı, deliğin ve parçanın kenarı, kenarda birden çok köşe, kilitli komşu, çizgi ve çoklu çizgi, Noktalar da, yeni alanın deliği; yaylar 50 basamaklı mpmath ile) ve 20 rastgele durum (tam ve yarım metrelerde parsel blokları, kilitli parseller, çizgi ve nokta): 48 durum. Çekirdek (yerli) ve web (WASM) aynı; köşeler bit bit, kabarıklıklar 1e-12 içinde. Kilitliyi saymayan ve yakın köşeleri birleştirmeyen iki deneme 6 ve 17 durumu düşürür.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ### 7. Kapsam dışı

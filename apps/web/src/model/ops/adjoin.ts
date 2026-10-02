@@ -29,6 +29,33 @@ export const adjoinFill = op<(pts: readonly Vec2[], bulges: readonly number[] | 
 /** As `adjoinFill`, the neighbours given as their areas. */
 export const adjoinFillAreas = op<(pts: readonly Vec2[], bulges: readonly number[] | null, neighbours: readonly (readonly Area[])[]) => Area[]>('adjoinFillAreas');
 
+/** A neighbour of a new area for joining corners: its shape and whether its layer is locked. */
+export interface JunctionNeighbour<S> {
+  shape: S;
+  locked?: boolean;
+}
+
+/** What joining a new area with its neighbours corner by corner gives (§4). */
+export interface Joined<S> {
+  /** The new area's parts, the neighbours' corners on their edges added. */
+  areas: Area[];
+  /** How many corners the new area took. */
+  taken: number;
+  /** The neighbours given corners of the new area: their places in the list and their shapes. */
+  edited: { index: number; shape: S }[];
+  /** How many corners the neighbours were given, all together. */
+  given: number;
+  /** How many neighbours would have been given one but lie on a locked layer. */
+  locked: number;
+}
+
+/**
+ * The new area (its parts) and its neighbours joined corner by corner (§4): a corner of the new area on a neighbour's
+ * edge goes to the neighbour, a neighbour's corner on the new area's edge to the new area, within 1 µm; with `points` a
+ * point on its edge too (Topoloji's Noktalar da). A locked neighbour is counted and left as it is.
+ */
+export const adjoinJunctions = op<<S>(areas: readonly Area[], neighbours: readonly JunctionNeighbour<S>[], points: boolean) => Joined<S>>('adjoinJunctions');
+
 /** The neighbours kept in the core: taken once per view and drawing, asked on every pointer move. */
 export interface AdjoinWork {
   /** How many edges the neighbours have (the preview's budget). */

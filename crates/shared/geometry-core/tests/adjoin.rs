@@ -1,5 +1,5 @@
-//! Bitişik alan and the overlap control (docs/adr/0162) against the
-//! independent reference in `fixtures/adjoin/v1/cases.json`
+//! Bitişik alan, the overlap control and corner joining (docs/adr/0162)
+//! against the independent reference in `fixtures/adjoin/v1/cases.json`
 //! (`scripts/fixtures/adjoin_cases.py`: exact rationals, the arc cases by
 //! hand with 50-digit mpmath, no KentOS code). The operations, called by name
 //! as the web calls them through WASM, give every case's areas: a vertex
@@ -265,6 +265,158 @@ fn every_path_fills_what_the_reference_fills() {
             }
         };
         if let Some(e) = differ(&got, &c["expect"], &inputs_of(c, "path")) {
+            failures.push(format!("{name}: {e}"));
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "{} of {} cases differ:\n{}",
+        failures.len(),
+        cases.len(),
+        failures.join("\n")
+    );
+}
+
+/// A path of a shape as the core walks a neighbour's: a line's ends, a
+/// polyline, an area's ring and holes, then each further part's.
+fn shape_paths(shape: &Value) -> Vec<Ring> {
+    let flat = |v: &Value, n: usize| -> Vec<f64> {
+        let mut b: Vec<f64> = v
+            .as_array()
+            .map(|a| a.iter().map(|x| x.as_f64().unwrap()).collect())
+            .unwrap_or_default();
+        b.resize(n, 0.0);
+        b
+    };
+    let path = |v: &Value, closed: bool| {
+        let pts: Vec<Pt> = v["pts"].as_array().unwrap().iter().map(pt).collect();
+        let n = if closed { pts.len() } else { pts.len() - 1 };
+        Ring {
+            bulges: flat(&v["bulges"], n),
+            pts,
+        }
+    };
+    match shape["kind"].as_str().unwrap() {
+        "line" => vec![Ring {
+            pts: vec![pt(&shape["a"]), pt(&shape["b"])],
+            bulges: vec![0.0],
+        }],
+        "polyline" => vec![path(shape, false)],
+        _ => std::iter::once(shape)
+            .chain(shape["parts"].as_array().into_iter().flatten())
+            .flat_map(|ring| {
+                std::iter::once(path(ring, true)).chain(
+                    ring["holes"]
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .map(|h| path(h, true)),
+                )
+            })
+            .collect(),
+    }
+}
+
+/// Corners joined (§4): every vertex is an input's, bit for bit; bulges
+/// within 1e-12; a ring without bulges stays without; the counts exact.
+fn joined_differ(got: &Value, want: &Value) -> Option<String> {
+    let ring = |v: &Value| Ring {
+        pts: v["pts"].as_array().unwrap().iter().map(pt).collect(),
+        bulges: v["bulges"]
+            .as_array()
+            .map(|b| b.iter().map(|x| x.as_f64().unwrap()).collect())
+            .unwrap_or_default(),
+    };
+    let same = |g: &Ring, w: &Ring| -> Result<(), String> {
+        if g.pts != w.pts {
+            return Err(format!("köşeler {:?} ≠ {:?}", g.pts, w.pts));
+        }
+        if g.bulges.len() != w.bulges.len()
+            || g.bulges
+                .iter()
+                .zip(&w.bulges)
+                .any(|(a, b)| (a - b).abs() > 1e-12)
+        {
+            return Err(format!("kabarıklıklar {:?} ≠ {:?}", g.bulges, w.bulges));
+        }
+        Ok(())
+    };
+    for key in ["taken", "given", "locked"] {
+        if got[key] != want[key] {
+            return Some(format!("{key}: {} ≠ {}", got[key], want[key]));
+        }
+    }
+    let (ours, theirs) = (got["areas"].as_array()?, want["areas"].as_array()?);
+    if ours.len() != theirs.len() {
+        return Some(format!("{} alan ≠ {}", ours.len(), theirs.len()));
+    }
+    for (i, (a, b)) in ours.iter().zip(theirs).enumerate() {
+        let rings = |v: &Value| -> Vec<Ring> {
+            std::iter::once(ring(&v["outer"]))
+                .chain(v["holes"].as_array().unwrap().iter().map(ring))
+                .collect()
+        };
+        let (g, w) = (rings(a), rings(b));
+        if g.len() != w.len() {
+            return Some(format!("alan {i}: {} halka ≠ {}", g.len(), w.len()));
+        }
+        for (k, (g, w)) in g.iter().zip(&w).enumerate() {
+            if let Err(e) = same(g, w) {
+                return Some(format!("alan {i}, halka {k}: {e}"));
+            }
+        }
+    }
+    let (ours, theirs) = (got["edited"].as_array()?, want["edited"].as_array()?);
+    if ours.len() != theirs.len() {
+        return Some(format!(
+            "{} komşu değişti ≠ {}: {ours:?}",
+            ours.len(),
+            theirs.len()
+        ));
+    }
+    for (e, w) in ours.iter().zip(theirs) {
+        if e["index"] != w["index"] || e["shape"]["kind"] != w["kind"] {
+            return Some(format!(
+                "komşu {} {} ≠ {} {}",
+                e["index"], e["shape"]["kind"], w["index"], w["kind"]
+            ));
+        }
+        let g = shape_paths(&e["shape"]);
+        let want: Vec<Ring> = w["paths"].as_array().unwrap().iter().map(ring).collect();
+        if g.len() != want.len() {
+            return Some(format!(
+                "komşu {}: {} yol ≠ {}",
+                e["index"],
+                g.len(),
+                want.len()
+            ));
+        }
+        for (k, (g, w)) in g.iter().zip(&want).enumerate() {
+            if let Err(err) = same(g, w) {
+                return Some(format!("komşu {}, yol {k}: {err}", e["index"]));
+            }
+        }
+    }
+    None
+}
+
+#[test]
+fn every_new_area_joins_its_neighbours_as_the_reference_does() {
+    let file = fixture();
+    let cases = file["junctions"].as_array().expect("junctions");
+    assert!(cases.len() >= 40, "{} cases", cases.len());
+    let mut failures = Vec::new();
+    for c in cases {
+        let name = c["name"].as_str().unwrap();
+        let args = json!([c["areas"], c["neighbours"], c["points"]]).to_string();
+        let got: Value = match run_named("adjoinJunctions", &args) {
+            Ok(text) => serde_json::from_str(&text).expect("answer JSON"),
+            Err(e) => {
+                failures.push(format!("{name}: {e}"));
+                continue;
+            }
+        };
+        if let Some(e) = joined_differ(&got, &c["expect"]) {
             failures.push(format!("{name}: {e}"));
         }
     }
