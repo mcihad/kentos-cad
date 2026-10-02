@@ -19,7 +19,9 @@ import { writableLayer } from './targetLayer';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
 import { fixed } from '../core/displayNumber';
 import { bulgeRingArea } from '../model/geom/bulge';
+import type { Area } from '../model/geom/overlay';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
+import { joinCorners, sayJoined, withJoined, type Joining } from './junctions';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -184,6 +186,18 @@ export abstract class PointInputTool implements Tool {
   }
 
   /**
+   * `withJoined` for the tool (docs/adr/0162 §4): the new area and its neighbours' corners in one step. An object
+   * noted inside the step is noted again once the step has ended, at the drawing's revision then, so Ctrl+Z inside
+   * the tool still takes it back.
+   */
+  protected writeJoined<T>(joining: Joining | null, label: string, write: () => T | null): T | null {
+    const noted = this.made.length;
+    const out = withJoined(this.ctx, joining, label, write);
+    if (out !== null && this.made.length > noted) this.madeAt = this.ctx.doc.revision;
+    return out;
+  }
+
+  /**
    * What was written so far can no longer be taken back as an undo: a step
    * that is not the tool's (a deletion) now sits above it in the history.
    */
@@ -220,14 +234,23 @@ export abstract class PointInputTool implements Tool {
   /**
    * A new area the tool built by its outline (a rectangle, a regular polygon, a sector) written as `writeRing` writes
    * it, the overlap control first (docs/adr/0162 §2): what overlaps the neighbours is cut away and what is left
-   * written as one object through `cad.entities.create`. Its area as written, or null when nothing was written.
+   * written as one object through `cad.entities.create`. With Topoloji on, it is joined with its neighbours corner by
+   * corner in the same step (§4). Its area as written, or null when nothing was written.
    */
   protected writeArea(pts: Vec2[], bulges?: number[]): number | null {
-    const clipped = clipNewArea(this.ctx, { outer: { pts, ...(bulges && { bulges }) }, holes: [] }, this.ctx.doc.layers.active.value);
-    if (!clipped) return this.writeRing(pts, bulges) ? Math.abs(bulgeRingArea(pts, bulges)) : null;
-    sayClipped(this.ctx, clipped);
-    if (!clipped.areas.length) return null;
-    return this.writeObjects([clippedGeometry(clipped.areas)]) ? writtenArea(clipped.areas) : null;
+    const drawn: Area = { outer: { pts, ...(bulges && { bulges }) }, holes: [] };
+    const clipped = clipNewArea(this.ctx, drawn, this.ctx.doc.layers.active.value);
+    if (clipped) sayClipped(this.ctx, clipped);
+    const areas = clipped ? clipped.areas : [drawn];
+    if (!areas.length) return null;
+    const joining = joinCorners(this.ctx, areas);
+    const joined = joining?.areas ?? areas;
+    const written = this.writeJoined(joining, 'Ekle', () =>
+      clipped ? this.writeObjects([clippedGeometry(joined)]) : this.writeRing(joined[0].outer.pts, joined[0].outer.bulges) || null,
+    );
+    if (!written) return null;
+    sayJoined(this.ctx, joining);
+    return clipped ? writtenArea(clipped.areas) : Math.abs(bulgeRingArea(pts, bulges));
   }
 
   /**

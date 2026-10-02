@@ -6,6 +6,7 @@ import { netArea } from '../model/geom/region';
 import type { Vec2 } from '../model/geometry';
 import { adjoinWork, type AdjoinWork } from '../model/ops/adjoin';
 import type { ViewTransform } from '../viewport/Camera';
+import { joinCorners, sayJoined } from './junctions';
 import { clippedGeometry, clipNewAreas, overlapLayers, sayClipped, writtenArea } from './overlap';
 import { PathTool } from './pathTool';
 import { drawArea, tint } from './preview';
@@ -140,8 +141,8 @@ export class AdjoinTool extends PathTool {
 
   /**
    * Writes the region as one area (its parts and holes as they are) on the active layer, in the current colour and
-   * weight; the overlap control (§2) cuts what overlaps areas the view does not show. Whether it was written: when
-   * not, the reason is said.
+   * weight; the overlap control (§2) cuts what overlaps areas the view does not show, Topoloji joins it with its
+   * neighbours corner by corner (§4), in the same step. Whether it was written: when not, the reason is said.
    */
   private write(region: Area[]): boolean {
     if (!region.length) {
@@ -155,9 +156,14 @@ export class AdjoinTool extends PathTool {
       if (!clipped.areas.length) return false;
       areas = clipped.areas;
     }
-    if (!this.writeObjects([clippedGeometry(areas)], 'adjoin')) return false;
-    const area = this.ctx.format.area(writtenArea(areas));
-    this.ctx.log.success(areas.length > 1 ? `Bitişik alan eklendi: ${area} (${areas.length} parça)` : `Bitişik alan eklendi: ${area}`);
+    const [total, parts] = [writtenArea(areas), areas.length];
+    // Topoloji (§4): the area joined with its neighbours corner by corner, in its step.
+    const joining = joinCorners(this.ctx, areas);
+    const joined = joining?.areas ?? areas;
+    if (!this.writeJoined(joining, 'Bitişik alan', () => this.writeObjects([clippedGeometry(joined)], 'adjoin'))) return false;
+    sayJoined(this.ctx, joining);
+    const area = this.ctx.format.area(total);
+    this.ctx.log.success(parts > 1 ? `Bitişik alan eklendi: ${area} (${parts} parça)` : `Bitişik alan eklendi: ${area}`);
     return true;
   }
 

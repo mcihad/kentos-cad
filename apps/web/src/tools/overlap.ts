@@ -27,7 +27,7 @@ export function overlapLayers(ctx: AppContext, layerId: string): string[] {
 }
 
 /** A ring's box, generous on arcs: an arc stays within twice its radius of its ends. */
-function ringBox(r: Ring): Bounds {
+export function ringBox(r: Ring): Bounds {
   const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
   r.pts.forEach((p, i) => {
     const q = r.pts[(i + 1) % r.pts.length];

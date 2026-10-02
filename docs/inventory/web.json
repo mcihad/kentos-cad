@@ -1145,6 +1145,7 @@
       },
       "tests": [
         "fixtures/interaction/v1/adjoin.json",
+        "fixtures/interaction/v1/junctions.json",
         "fixtures/interaction/v1/overlap.json",
         "fixtures/interaction/v1/usage-adjoin.json",
         "fixtures/interaction/v1/usage-overlap.json"
@@ -2969,6 +2970,7 @@
       },
       "tests": [
         "fixtures/interaction/v1/adjoin.json",
+        "fixtures/interaction/v1/junctions.json",
         "fixtures/interaction/v1/usage-adjoin.json"
       ]
     },
@@ -4893,6 +4895,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/junctions.json",
         "fixtures/interaction/v1/overlap.json",
         "fixtures/interaction/v1/polygon-accept.json",
         "fixtures/interaction/v1/polygon-close.json",
@@ -4900,6 +4903,7 @@
         "fixtures/interaction/v1/polygon-signs.json",
         "fixtures/interaction/v1/snap-polygon.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-junctions.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ]
     },
@@ -7026,6 +7030,7 @@
       },
       "tests": [
         "fixtures/interaction/v1/adjoin.json",
+        "fixtures/interaction/v1/junctions.json",
         "fixtures/interaction/v1/usage-adjoin.json"
       ]
     },
@@ -8541,6 +8546,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/junctions.json",
         "fixtures/interaction/v1/overlap.json",
         "fixtures/interaction/v1/polygon-accept.json",
         "fixtures/interaction/v1/polygon-close.json",
@@ -8548,6 +8554,7 @@
         "fixtures/interaction/v1/polygon-signs.json",
         "fixtures/interaction/v1/snap-polygon.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-junctions.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
       ],
       "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Otomatik: `fixtures/interaction/v1/polygon-accept.json`, web `pnpm e2e:interaction`, masaüstü `cargo test -p kentos-desktop traces` (ADR 0018, 0021)."

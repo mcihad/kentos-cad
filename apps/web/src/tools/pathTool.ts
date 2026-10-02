@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import type { EntityGeometry as NewGeometry } from '../contracts/generated/EntityGeometry';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
+import type { Area } from '../model/geom/overlay';
 import type { Traced } from '../model/ops/trace';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
@@ -10,6 +11,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { fixedLayerLocked, PointInputTool } from './drawTools';
+import { joinCorners, sayJoined } from './junctions';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
@@ -428,23 +430,33 @@ export class PathTool extends PointInputTool {
   private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const color = this.ctx.settings.color.value;
     const lineWeight = this.ctx.settings.lineWeight.value;
+    const layerId = this.ctx.doc.layers.active.value;
     // The overlap control (docs/adr/0162 §2): what overlaps the neighbours is cut away, the rest written as one object.
-    const clipped = clipNewArea(this.ctx, { outer: { pts, ...(bulges && { bulges }) }, holes: [] }, this.ctx.doc.layers.active.value);
-    if (clipped) {
-      sayClipped(this.ctx, clipped);
-      if (clipped.areas.length && this.writeObjects([clippedGeometry(clipped.areas)])) this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(writtenArea(clipped.areas))}`);
-      return;
-    }
-    const result = polygonCreate.execute(
-      { doc: this.ctx.doc },
-      { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
-    );
-    if (result.status !== 'completed') {
-      if ('error' in result) this.ctx.log.warn(result.error.message);
-      return;
-    }
-    for (const w of result.warnings) this.ctx.log.warn(w.message);
-    this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(area())}`);
+    const drawn: Area = { outer: { pts, ...(bulges && { bulges }) }, holes: [] };
+    const clipped = clipNewArea(this.ctx, drawn, layerId);
+    if (clipped) sayClipped(this.ctx, clipped);
+    const areas = clipped ? clipped.areas : [drawn];
+    if (!areas.length) return;
+    // Topoloji (§4): the new area joined with its neighbours corner by corner, in its step.
+    const joining = joinCorners(this.ctx, areas);
+    const joined = joining?.areas ?? areas;
+    const written = this.writeJoined(joining, 'Ekle', () => {
+      if (clipped) return this.writeObjects([clippedGeometry(joined)]);
+      const ring = joined[0].outer;
+      const result = polygonCreate.execute(
+        { doc: this.ctx.doc },
+        { layerId, pts: ring.pts, ...(ring.bulges && { bulges: ring.bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
+      );
+      if (result.status !== 'completed') {
+        if ('error' in result) this.ctx.log.warn(result.error.message);
+        return null;
+      }
+      for (const w of result.warnings) this.ctx.log.warn(w.message);
+      return result.output;
+    });
+    if (!written) return;
+    sayJoined(this.ctx, joining);
+    this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(clipped ? writtenArea(clipped.areas) : area())}`);
   }
 
   /**
@@ -463,13 +475,17 @@ export class PathTool extends PointInputTool {
     const next = parcels.reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1;
     let area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
     // The overlap control (docs/adr/0162 §2) on the parcel layer: the parcel is what is left.
-    const clipped = clipNewArea(this.ctx, { outer: { pts: geom.pts, ...(geom.bulges && { bulges: geom.bulges }) }, holes: [] }, layerId);
+    const outline: Area = { outer: { pts: geom.pts, ...(geom.bulges && { bulges: geom.bulges }) }, holes: [] };
+    const clipped = clipNewArea(this.ctx, outline, layerId);
     if (clipped) {
       sayClipped(this.ctx, clipped);
       if (!clipped.areas.length) return;
-      geom = clippedGeometry(clipped.areas) as unknown as typeof geom;
       area = writtenArea(clipped.areas);
     }
+    // Topoloji (§4): the parcel joined with its neighbours corner by corner, in its step.
+    const areas = clipped ? clipped.areas : [outline];
+    const joining = joinCorners(this.ctx, areas);
+    if (clipped || joining) geom = clippedGeometry(joining?.areas ?? areas) as unknown as typeof geom;
     const color = this.ctx.settings.color.value;
     const lineWeight = this.ctx.settings.lineWeight.value;
     const parcel = {
@@ -479,14 +495,19 @@ export class PathTool extends PointInputTool {
       attrs: { Ada: '', Parsel: String(next), Mahalle: '', Nitelik: 'Arsa', 'Tapu alanı (m²)': '', Pafta: '' },
       label: String(next),
     };
-    // A drawing without the parcel layer gets it, in the parcel's own undo step (tools/standardLayer.ts).
-    const result = writeOnStandardLayer(this.ctx, layerId, 'parsel', () => entitiesCreate.execute({ doc: this.ctx.doc }, { layerId, objects: [parcel] }));
-    if (result.status !== 'completed') {
-      if ('error' in result) this.ctx.log.warn(result.error.message);
-      return;
-    }
-    for (const w of result.warnings) this.ctx.log.warn(w.message);
-    const [id] = result.output.ids;
+    const output = this.writeJoined(joining, 'Ekle', () => {
+      // A drawing without the parcel layer gets it, in the parcel's own undo step (tools/standardLayer.ts).
+      const result = writeOnStandardLayer(this.ctx, layerId, 'parsel', () => entitiesCreate.execute({ doc: this.ctx.doc }, { layerId, objects: [parcel] }));
+      if (result.status !== 'completed') {
+        if ('error' in result) this.ctx.log.warn(result.error.message);
+        return null;
+      }
+      for (const w of result.warnings) this.ctx.log.warn(w.message);
+      return result.output;
+    });
+    if (!output) return;
+    sayJoined(this.ctx, joining);
+    const [id] = output.ids;
     this.noteMade(id);
     this.ctx.selection.set([id]);
     this.ctx.log.success(`Parsel ${next} oluşturuldu; geometrik alanı ${this.ctx.format.area(area)}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.`);

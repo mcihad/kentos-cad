@@ -1,0 +1,32 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-junctions",
+  "title": "Kullanım: Topoloji açıkken komşulara köşe; 101 ile 103 arasındaki boşluğa çizilen alanın köşeleri iki parselin kenarına eklenir, seçilen parsellerin tutamaçları yeni köşeleri gösterir",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0162 §4",
+  "covers": ["UX-01", "UX-06"],
+  "document": "adjoin.kcad",
+  "view": { "center": [487000, 4420010], "metresPerPixel": 0.12 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false, "topology": true },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.12,
+  "steps": [
+    { "run": "tool.polygon", "note": "Topoloji açık (durum çubuğunda): alanın sol köşeleri 101'in, sağ köşeleri 103'ün kenarında; köşeler yazılarak verilir (kenetsiz tıklama kenara µm'lerle oturmaz)." },
+    { "text": "486990,4420005" },
+    { "key": "Enter" },
+    { "text": "487010,4420005" },
+    { "key": "Enter" },
+    { "text": "487010,4420020" },
+    { "key": "Enter" },
+    { "move": [-10, 10] },
+    { "shot": "kose-onizleme" },
+    { "text": "486990,4420020" },
+    { "key": "Enter" },
+    { "key": "Enter", "note": "Komut geçmişi: iki komşu nesneye dört köşe eklendi.", "expect": { "entities": 5, "logged": ["Topolojik düzenleme: 2 komşu nesneye yeni alanın 4 köşesi eklendi.", "Kapalı alan eklendi: 300.00 m²"] } },
+    { "key": "Esc" },
+    { "click": [-30, 2], "note": "101'in sol kenarına tıklanır: tutamaçları sağ kenardaki iki yeni köşeyi gösterir." },
+    { "click": [30, 2], "shift": true, "expect": { "selected": [1, 2] } },
+    { "shot": "kose-komsular" },
+    { "key": "Esc" }
+  ]
+}

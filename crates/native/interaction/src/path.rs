@@ -56,10 +56,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
-    EntitiesCreate, EntityGeometry, NewObject, PolygonCreate, PolylineCreate, RingGeometry,
-};
-use kentos_domain::Slot;
+use kentos_contracts::{EntitiesCreate, NewObject, PolygonCreate, PolylineCreate, RingGeometry};
+use kentos_domain::{Slot, labels};
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::arrangement::{Area as Region, Ring};
@@ -82,6 +80,7 @@ use crate::Vec2;
 use crate::adjoin;
 use crate::faces;
 use crate::format::Format;
+use crate::junctions;
 use crate::log::Level;
 use crate::overlap;
 use crate::points::{self, SAME, wire, wire_all};
@@ -637,65 +636,66 @@ impl Path {
     }
 
     /// Alan olarak çiz: the area last measured, holes and all, written to the
-    /// active layer through `cad.polygon.create` as one undo step. A refusal
-    /// (a locked layer) is the command's own message, and nothing is written.
-    /// With the overlap control on (docs/adr/0162 §2), what overlaps the
-    /// neighbours is cut away first and the rest written through
-    /// `cad.entities.create`, in the same step.
+    /// active layer through `cad.polygon.create` as one undo step named “Alan
+    /// olarak çiz”. A refusal (a locked layer) is the command's own message,
+    /// and nothing is written. With the overlap control on (docs/adr/0162 §2),
+    /// what overlaps the neighbours is cut away first and the rest written
+    /// through `cad.entities.create`; with Topoloji on, the area is joined
+    /// with its neighbours corner by corner (§4); all in the same step.
     fn draw_measured(&mut self, cx: &mut Context<'_>) {
         let Some(region) = self.measured.clone() else {
             return;
         };
         let layer = cx.doc.layers().active().to_owned();
-        if let Some(clipped) = overlap::clip_new_area(cx, &region, &layer) {
-            overlap::say_clipped(cx, &clipped);
-            let Some(geometry) = overlap::clipped_geometry(&clipped.areas) else {
-                return;
-            };
-            let group = cx.doc.begin_group(DRAW_AREA_LABEL);
-            if points::write_objects(vec![geometry], None, cx).is_none() {
-                cx.doc.cancel_group(group);
-                return;
-            }
-            cx.doc.end_group(group);
-            let text = format!(
-                "Alan olarak çizildi: {}.",
-                cx.format().area(overlap::written_area(&clipped.areas))
-            );
-            cx.say(Level::Success, text);
+        let clipped = overlap::clip_new_area(cx, &region, &layer);
+        if let Some(c) = &clipped {
+            overlap::say_clipped(cx, c);
+        }
+        let (areas, area) = match &clipped {
+            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
+            None => (vec![region.clone()], net_area(&region)),
+        };
+        if areas.is_empty() {
             return;
         }
+        let joining = junctions::join(cx, &areas);
+        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
         let group = cx.doc.begin_group(DRAW_AREA_LABEL);
-        let input = PolygonCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
-            pts: wire_all(&region.outer.pts),
-            bulges: region.outer.bulges.clone(),
-            holes: (!region.holes.is_empty()).then(|| {
-                region
-                    .holes
-                    .iter()
-                    .map(|hole| RingGeometry {
-                        pts: wire_all(&hole.pts),
-                        bulges: hole.bulges.clone(),
-                        zs: None,
-                    })
-                    .collect()
-            }),
-            color: cx.draft.color.map(str::to_owned),
-            line_weight: cx.draft.line_weight,
-            attrs: None,
-            expected_revision: None,
+        let wrote = if clipped.is_some() {
+            overlap::clipped_geometry(&areas)
+                .and_then(|g| points::write_objects(vec![g], None, cx))
+                .is_some()
+        } else {
+            let ring = |r: &Ring| RingGeometry {
+                pts: wire_all(&r.pts),
+                bulges: r.bulges.clone(),
+                zs: None,
+            };
+            let area = &areas[0];
+            let input = PolygonCreate {
+                layer_id: layer,
+                pts: wire_all(&area.outer.pts),
+                bulges: area.outer.bulges.clone(),
+                holes: (!area.holes.is_empty()).then(|| area.holes.iter().map(ring).collect()),
+                color: cx.draft.color.map(str::to_owned),
+                line_weight: cx.draft.line_weight,
+                attrs: None,
+                expected_revision: None,
+            };
+            let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
         };
-        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        if !wrote
+            || !joining
+                .as_ref()
+                .is_none_or(|j| junctions::write_neighbours(j, cx))
+        {
             cx.doc.cancel_group(group);
             return;
         }
         cx.doc.end_group(group);
-        let text = format!(
-            "Alan olarak çizildi: {}.",
-            cx.format().area(net_area(&region))
-        );
+        junctions::say(joining.as_ref(), cx);
+        let text = format!("Alan olarak çizildi: {}.", cx.format().area(area));
         cx.say(Level::Success, text);
     }
 
@@ -831,18 +831,19 @@ impl Path {
     /// Writes the area through the product command `cad.polygon.create`
     /// (docs/adr/0022), as one undo step. What the web's tool knows
     /// implicitly is explicit in its input (CMD-07): the active layer and
-    /// the current colour. The area written; `None`, with the command's
-    /// message, when it refused (a locked layer), or when the neighbours
-    /// covered it; a hidden layer is written with its warning.
+    /// the current colour. The overlap control (docs/adr/0162 §2) cuts what
+    /// overlaps the neighbours and writes the rest as one object; Topoloji
+    /// joins it with its neighbours corner by corner (§4), in the same step.
+    /// The area written; `None`, with the command's message, when it refused
+    /// (a locked layer), or when the neighbours covered it; a hidden layer is
+    /// written with its warning.
     fn create_polygon(
         &self,
         pts: &[Vec2],
         bulges: Option<Vec<f64>>,
         cx: &mut Context<'_>,
     ) -> Option<f64> {
-        // The overlap control (docs/adr/0162 §2): what overlaps the neighbours
-        // is cut away, the rest written as one object.
-        let area = Region {
+        let drawn = Region {
             outer: Ring {
                 pts: pts.to_vec(),
                 bulges: bulges.clone(),
@@ -850,25 +851,40 @@ impl Path {
             holes: Vec::new(),
         };
         let layer = cx.doc.layers().active().to_owned();
-        if let Some(clipped) = overlap::clip_new_area(cx, &area, &layer) {
-            overlap::say_clipped(cx, &clipped);
-            let geometry = overlap::clipped_geometry(&clipped.areas)?;
-            points::write_objects(vec![geometry], None, cx)?;
-            return Some(overlap::written_area(&clipped.areas));
+        let clipped = overlap::clip_new_area(cx, &drawn, &layer);
+        if let Some(c) = &clipped {
+            overlap::say_clipped(cx, c);
         }
-        let drawn = bulge_ring_area(pts, bulges.as_deref()).abs();
-        let input = PolygonCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
-            pts: pts.iter().copied().map(wire).collect(),
-            bulges,
-            holes: None,
-            color: cx.draft.color.map(str::to_owned),
-            line_weight: cx.draft.line_weight,
-            attrs: None,
-            expected_revision: None,
+        let (areas, area) = match &clipped {
+            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
+            None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
         };
-        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
-        points::written(result, cx).map(|_| drawn)
+        if areas.is_empty() {
+            return None;
+        }
+        let joining = junctions::join(cx, &areas);
+        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
+        junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
+            if clipped.is_some() {
+                let geometry = overlap::clipped_geometry(&areas)?;
+                return points::write_objects(vec![geometry], None, cx).map(|_| ());
+            }
+            let ring = &areas[0].outer;
+            let input = PolygonCreate {
+                layer_id: layer,
+                pts: ring.pts.iter().copied().map(wire).collect(),
+                bulges: ring.bulges.clone(),
+                holes: None,
+                color: cx.draft.color.map(str::to_owned),
+                line_weight: cx.draft.line_weight,
+                attrs: None,
+                expected_revision: None,
+            };
+            let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).map(|_| ())
+        })?;
+        junctions::say(joining.as_ref(), cx);
+        Some(area)
     }
 
     /// Writes the polyline through the product command `cad.polyline.create`
@@ -919,27 +935,17 @@ impl Path {
             holes: Vec::new(),
         };
         let clipped = overlap::clip_new_area(cx, &drawn, PARCEL_LAYER);
-        let (geometry, area) = match &clipped {
-            Some(c) => {
-                overlap::say_clipped(cx, c);
-                let Some(g) = overlap::clipped_geometry(&c.areas) else {
-                    return;
-                };
-                (g, overlap::written_area(&c.areas))
-            }
-            None => (
-                EntityGeometry::Polygon {
-                    pts: wire_all(pts),
-                    bulges: bulges.clone(),
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                },
-                bulge_ring_area(pts, bulges.as_deref()).abs(),
-            ),
+        if let Some(c) = &clipped {
+            overlap::say_clipped(cx, c);
+        }
+        let (areas, area) = match &clipped {
+            Some(c) => (c.areas.clone(), overlap::written_area(&c.areas)),
+            None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
         };
-        // A drawing without the parcel layer gets it, in the parcel's own undo step.
-        let Ok(opened) = crate::standard_layer::open_if_missing(PARCEL_LAYER, "parsel", cx) else {
+        // Topoloji (§4): the parcel joined with its neighbours corner by corner, in its step.
+        let joining = junctions::join(cx, &areas);
+        let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
+        let Some(geometry) = overlap::clipped_geometry(&areas) else {
             return;
         };
         let number = next_parcel(cx).to_string();
@@ -963,16 +969,22 @@ impl Path {
             operation: None,
             expected_revision: None,
         };
-        let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
-        let Some(out) = points::written(result, cx) else {
-            if let Some(opened) = opened {
-                opened.drop(cx);
+        let written = junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
+            // A drawing without the parcel layer gets it, in the parcel's own undo step.
+            let opened = crate::standard_layer::open_if_missing(PARCEL_LAYER, "parsel", cx).ok()?;
+            let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+            let out = points::written(result, cx);
+            match (&out, opened) {
+                (Some(_), Some(opened)) => opened.keep(cx),
+                (None, Some(opened)) => opened.drop(cx),
+                (_, None) => {}
             }
+            out
+        });
+        let Some(out) = written else {
             return;
         };
-        if let Some(opened) = opened {
-            opened.keep(cx);
-        }
+        junctions::say(joining.as_ref(), cx);
         cx.selection.set(out.ids.iter().map(|&id| Slot(id)).collect::<Vec<_>>());
         let text = format!(
             "Parsel {number} oluşturuldu; geometrik alanı {}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.",

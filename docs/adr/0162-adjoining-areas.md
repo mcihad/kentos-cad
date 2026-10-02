@@ -1,6 +1,6 @@
 # ADR 0162: Bitişik alan ve çakışma denetimi
 
-- **Durum:** kabul edildi (2026-10-02). `HYB-08`. Ayrıntılar bu ADR'nin varsayılanlarıdır.
+- **Durum:** kabul edildi ve dört adımı tamam (2026-10-02). `HYB-08`. Ayrıntılar bu ADR'nin varsayılanlarıdır.
 - **Tarih:** 2026-10-02
 - **Bağlam belgesi:** TODOS.md `HYB-08` (ilgili: `HYB-06`, `GIS-04`), ADR 0065 (alan işlemleri), ADR 0143 (çok parçalı alan), ADR 0151 (Toplu alan), ADR 0160 (Topolojik düzenleme), ADR 0161 (İzle), [araştırma kaydı](../research/2026-10-01-netcad-arcgis-qgis.md); ArcGIS Pro Create adjoining polygons (Autocomplete Polygon), QGIS Overlapping control (Avoid overlap).
 
@@ -159,6 +159,14 @@ Uygulandığı araçlar §2'ninkilerdir, kip Serbest olsa da.
    - Eklenen köşe verildiği gibidir, bit bit; yay kendi çemberinde bölünür (Köşe ekle'nin kuralı: payın tan(θ·Δt/4)'ü). Çizgi köşe alınca çoklu çizgi olur. Delikler ve parçalar da kenardır.
    - Kilitli komşu köşe almaz, sayılır. Komşunun eklenen köşesinin kotu çekirdeğin işi değildir: `cad.entities.edit` kenar boyunca taşır (ADR 0142).
    - **Başvuru:** `adjoin_cases.py`'nin `junctions`'ı: elle 14 durum iki yerde (başlangıçta ve TM koordinatlarında; 1 µm içi ve dışı, deliğin ve parçanın kenarı, kenarda birden çok köşe, kilitli komşu, çizgi ve çoklu çizgi, Noktalar da, yeni alanın deliği; yaylar 50 basamaklı mpmath ile) ve 20 rastgele durum (tam ve yarım metrelerde parsel blokları, kilitli parseller, çizgi ve nokta): 48 durum. Çekirdek (yerli) ve web (WASM) aynı; köşeler bit bit, kabarıklıklar 1e-12 içinde. Kilitliyi saymayan ve yakın köşeleri birleştirmeyen iki deneme 6 ve 17 durumu düşürür.
+
+   *(2 Ekim: iki platformda tamam.)*
+   - **Araçlar:** §2'nin araçları (Kapalı alan, Parsel oluştur, Dikdörtgen, Döndürülmüş dikdörtgen, Düzgün çokgen, Daire dilimi, Alan olarak çiz, Bitişik alan) Topoloji açıkken yazacakları alanı (çakışma denetiminden sonra kalanı) komşularıyla bağlar: web `tools/junctions.ts` (`joinCorners`, `withJoined`, `sayJoined`), masaüstü `kentos_interaction::junctions` (`join`, `with_joined`, `write_neighbours`, `say`).
+   - **Komşular:** yazılacak alanın kutusuna 1 µm içinde değen görünen çizgi, çoklu çizgi ve alanlar; Noktalar da açıkken noktalar. Kilitli katmandakiler sayılır.
+   - **Yazma:** yeni alan kendi komutuyla (`cad.polygon.create` ya da `cad.entities.create`), komşular `cad.entities.edit`'in `vertexAdd`'iyle (kot kenar boyunca taşınır), ikisi tek geri alma adımında; adın yeni alanınkidir (“Ekle”, “Alan olarak çiz”, “Bitişik alan”). Biri reddedilirse ikisi de yazılmaz.
+   - **Köşenin kenarda olması:** 1 µm, kenetle ya da yazılarak verilen köşe içindir. Kenetsiz tıklama kenara oturmaz: bir piksel santimetrelerdir, masaüstünde imlecin konumu f32 taşınır (0,12 m/pikselde 1–2 µm sapar). Kullanım senaryosunda bu yüzden köşeler yazılır; çizimde en yakın ya da dik kenet, ya da İzle kullanılır.
+   - **İletiler:** “Topolojik düzenleme: 2 komşu nesneye yeni alanın 4 köşesi eklendi.”, “Topolojik düzenleme: yeni alana komşulardan 2 köşe eklendi.”, uyarı “Kilitli katmandaki 1 komşu nesneye köşe eklenmedi.”; alanın kendi iletisinden önce.
+   - **Sınama:** iki platformda elle hesaplanmış aynı 8 birim testi (web `tools/junctions.test.ts`, masaüstü `tests/junctions.rs`): Topoloji kapalı, boşluğa çizilen alan ve tek geri alma adımı, kenarına komşu köşesi alan alan, kilitli komşu, Bitişik alan'ın parsellere ve yola köşeleri, Dikdörtgen ve Parsel oluştur, Noktalar da, komşunun yeni köşesinin kotu (kenar boyunca 114 ve 118). Kilitliyi yok sayan (web) ve komşuları ayrı adımda yazan (masaüstü) iki deneme testleri düşürür. Ortak iz `junctions.json` komşuların köşelerini `objects` ile denetler; iki platformda bütün değişkelerde geçer. Kullanım senaryosu `usage-junctions.json`.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

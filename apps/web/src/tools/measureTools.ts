@@ -6,6 +6,7 @@ import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { indexMark, ringMark } from './constructPreview';
+import { joinCorners, sayJoined } from './junctions';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { PathTool } from './pathTool';
 import { drawArea, drawTag, strokePath, tint } from './preview';
@@ -242,32 +243,43 @@ export class AreaMeasureTool extends PathTool {
   private drawMeasured(m: Measured): void {
     const { doc, format, log } = this.ctx;
     const { ring, holes } = m;
-    const clipped = clipNewArea(this.ctx, { outer: ring, holes }, doc.layers.active.value);
-    if (clipped) {
-      sayClipped(this.ctx, clipped);
-      if (!clipped.areas.length) return;
-      const objects = [{ geometry: clippedGeometry(clipped.areas), ...this.colour(), ...this.weight() }];
-      const result = doc.transact('Alan olarak çiz', () => entitiesCreate.execute({ doc }, { layerId: doc.layers.active.value, objects }));
-      if (result.status !== 'completed') {
-        if ('error' in result) log.warn(result.error.message);
-        return;
-      }
-      for (const w of result.warnings) log.warn(w.message);
-      this.noteMade(result.output.ids[0]);
-      log.success(`Alan olarak çizildi: ${format.area(writtenArea(clipped.areas))}.`);
-      this.ctx.view.requestOverlay();
-      return;
+    const layerId = doc.layers.active.value;
+    const clipped = clipNewArea(this.ctx, { outer: ring, holes }, layerId);
+    if (clipped) sayClipped(this.ctx, clipped);
+    const areas = clipped ? clipped.areas : [{ outer: ring, holes }];
+    if (!areas.length) return;
+    // Topoloji (§4): the area joined with its neighbours corner by corner, in its step.
+    const joining = joinCorners(this.ctx, areas);
+    const joined = joining?.areas ?? areas;
+    const written = this.writeJoined(joining, 'Alan olarak çiz', () =>
+      doc.transact('Alan olarak çiz', () => {
+        if (clipped) {
+          const objects = [{ geometry: clippedGeometry(joined), ...this.colour(), ...this.weight() }];
+          const result = entitiesCreate.execute({ doc }, { layerId, objects });
+          if (result.status !== 'completed') {
+            if ('error' in result) log.warn(result.error.message);
+            return null;
+          }
+          for (const w of result.warnings) log.warn(w.message);
+          this.noteMade(result.output.ids[0]);
+          return result.output.ids[0];
+        }
+        const area = joined[0];
+        const input = {
+          layerId,
+          pts: area.outer.pts,
+          ...(area.outer.bulges && { bulges: area.outer.bulges }),
+          ...(area.holes.length > 0 && { holes: area.holes }),
+          ...this.colour(),
+          ...this.weight(),
+        };
+        return this.written(polygonCreate.execute({ doc }, input))?.id ?? null;
+      }),
+    );
+    if (written !== null) {
+      sayJoined(this.ctx, joining);
+      log.success(`Alan olarak çizildi: ${format.area(clipped ? writtenArea(clipped.areas) : m.area)}.`);
     }
-    const input = {
-      layerId: doc.layers.active.value,
-      pts: ring.pts,
-      ...(ring.bulges && { bulges: ring.bulges }),
-      ...(holes.length > 0 && { holes }),
-      ...this.colour(),
-      ...this.weight(),
-    };
-    const out = this.written(doc.transact('Alan olarak çiz', () => polygonCreate.execute({ doc }, input)));
-    if (out) log.success(`Alan olarak çizildi: ${format.area(m.area)}.`);
     this.ctx.view.requestOverlay();
   }
 

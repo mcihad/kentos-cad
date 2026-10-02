@@ -15,6 +15,7 @@ use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
+use crate::junctions;
 use crate::log::Level;
 use crate::overlap;
 use crate::points;
@@ -113,8 +114,9 @@ pub(crate) fn fill(neighbours: &Neighbours, pts: &[Vec2], bulges: &[f64]) -> Vec
 /// Writes the region as one area (its parts and holes as they are) on the
 /// active layer through `cad.entities.create` (`adjoin`, one undo step
 /// “Bitişik alan”), in the current colour and weight. The overlap control
-/// (§2) cuts what overlaps areas the view does not show. Whether it was
-/// written: when not, the reason is said and the path stays.
+/// (§2) cuts what overlaps areas the view does not show; Topoloji joins it
+/// with its neighbours corner by corner (§4), in the same step. Whether it
+/// was written: when not, the reason is said and the path stays.
 pub(crate) fn write(region: Vec<Area>, cx: &mut Context<'_>) -> bool {
     if region.is_empty() {
         cx.say(Level::Warn, NO_REGION);
@@ -129,15 +131,22 @@ pub(crate) fn write(region: Vec<Area>, cx: &mut Context<'_>) -> bool {
         }
         areas = clipped.areas;
     }
+    let (total, parts) = (overlap::written_area(&areas), areas.len());
+    let joining = junctions::join(cx, &areas);
+    let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
     let Some(geometry) = overlap::clipped_geometry(&areas) else {
         return false;
     };
-    if points::write_objects(vec![geometry], Some(CreateOperation::Adjoin), cx).is_none() {
+    let written = junctions::with_joined(cx, joining.as_ref(), LABEL, |cx| {
+        points::write_objects(vec![geometry], Some(CreateOperation::Adjoin), cx)
+    });
+    if written.is_none() {
         return false;
     }
-    let area = cx.format().area(overlap::written_area(&areas));
-    let text = if areas.len() > 1 {
-        format!("{LABEL} eklendi: {area} ({} parça)", areas.len())
+    junctions::say(joining.as_ref(), cx);
+    let area = cx.format().area(total);
+    let text = if parts > 1 {
+        format!("{LABEL} eklendi: {area} ({parts} parça)")
     } else {
         format!("{LABEL} eklendi: {area}")
     };

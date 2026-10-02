@@ -114,17 +114,21 @@ pub(crate) fn write_ring(
 /// a sector), written as [`write_ring`] writes it, the overlap control
 /// first (docs/adr/0162 §2; the web's `writeArea`): what overlaps the
 /// neighbours is cut away and what is left written as one object through
-/// `cad.entities.create`. Its area as written; `None` when nothing was.
+/// `cad.entities.create`. With Topoloji on, it is joined with its
+/// neighbours corner by corner in the same step (§4). Its area as written;
+/// `None` when nothing was.
 pub(crate) fn write_area(
     d: &mut Taken,
     pts: &[Vec2],
     bulges: Option<Vec<f64>>,
     cx: &mut Context<'_>,
 ) -> Option<f64> {
+    use crate::junctions;
     use crate::overlap::{clip_new_area, clipped_geometry, say_clipped, written_area};
+    use kentos_domain::labels;
     use kentos_geometry_core::geom::arrangement::{Area, Ring};
     use kentos_geometry_core::geom::bulge::bulge_ring_area;
-    let area = Area {
+    let drawn = Area {
         outer: Ring {
             pts: pts.to_vec(),
             bulges: bulges.clone(),
@@ -132,17 +136,38 @@ pub(crate) fn write_area(
         holes: Vec::new(),
     };
     let layer = cx.doc.layers().active().to_owned();
-    let Some(clipped) = clip_new_area(cx, &area, &layer) else {
-        let drawn = bulge_ring_area(pts, bulges.as_deref()).abs();
-        return write_ring(d, pts, bulges, cx).then_some(drawn);
-    };
-    say_clipped(cx, &clipped);
-    let geometry = clipped_geometry(&clipped.areas)?;
-    let out = write_objects(vec![geometry], None, cx)?;
-    if let Some(&id) = out.ids.first() {
-        d.note(id, cx);
+    let clipped = clip_new_area(cx, &drawn, &layer);
+    if let Some(c) = &clipped {
+        say_clipped(cx, c);
     }
-    Some(written_area(&clipped.areas))
+    let (areas, area) = match &clipped {
+        Some(c) => (c.areas.clone(), written_area(&c.areas)),
+        None => (vec![drawn], bulge_ring_area(pts, bulges.as_deref()).abs()),
+    };
+    if areas.is_empty() {
+        return None;
+    }
+    let joining = junctions::join(cx, &areas);
+    let areas = joining.as_ref().map_or(areas, |j| j.areas.clone());
+    let noted = d.made.len();
+    junctions::with_joined(cx, joining.as_ref(), labels::ADD, |cx| {
+        if clipped.is_none() {
+            let ring = &areas[0].outer;
+            return write_ring(d, &ring.pts, ring.bulges.clone(), cx).then_some(());
+        }
+        let out = write_objects(vec![clipped_geometry(&areas)?], None, cx)?;
+        if let Some(&id) = out.ids.first() {
+            d.note(id, cx);
+        }
+        Some(())
+    })?;
+    // An object noted inside the step is noted again at the step's end, when
+    // the drawing's revision is final: Ctrl+Z inside the tool takes it back.
+    if d.made.len() > noted {
+        d.made_at = Some(cx.doc.revision());
+    }
+    junctions::say(joining.as_ref(), cx);
+    Some(area)
 }
 
 /// Objects a tool built (an ellipse, a spline, a perpendicular …) written

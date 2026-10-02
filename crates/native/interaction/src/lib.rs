@@ -128,6 +128,7 @@ pub mod find_replace;
 mod format;
 pub mod grip_menu;
 pub mod hatch;
+mod junctions;
 pub mod leader;
 pub mod lengthen;
 pub mod line;
