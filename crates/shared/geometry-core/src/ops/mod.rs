@@ -18,6 +18,7 @@ pub mod path;
 pub mod point_editor;
 pub mod polygonize;
 pub mod reshape;
+pub mod rubber;
 pub mod split;
 pub mod stretch;
 pub mod topology;
