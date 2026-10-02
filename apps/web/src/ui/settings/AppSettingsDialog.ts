@@ -44,7 +44,28 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'snap',
       title: 'Kenetleme ve seçim',
       lead: 'İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı.',
-      keys: ['snapEndpoint', 'snapMidpoint', 'snapCenter', 'snapNode', 'snapIntersection', 'snapPerpendicular', 'snapTangent', 'snapNearest', 'snapAperture', 'pickAperture', 'polarIncrement'],
+      keys: [
+        'snapEndpoint',
+        'snapMidpoint',
+        'snapCenter',
+        'snapNode',
+        'snapIntersection',
+        'snapPerpendicular',
+        'snapTangent',
+        'snapNearest',
+        'snapCentroid',
+        'snapExtension',
+        'snapParallel',
+        'snapGrid',
+        'snapGridEast',
+        'snapGridNorth',
+        'snapSelf',
+        'snapScaleMin',
+        'snapScaleMax',
+        'snapAperture',
+        'pickAperture',
+        'polarIncrement',
+      ],
       render: (api) => snap(api),
     },
     {
@@ -256,7 +277,19 @@ function appearance(api: DraftApi<AppDraft>) {
 
 function snap(api: DraftApi<AppDraft>) {
   const d = api.draft;
-  type SnapKey = 'snapEndpoint' | 'snapMidpoint' | 'snapCenter' | 'snapNode' | 'snapIntersection' | 'snapPerpendicular' | 'snapTangent' | 'snapNearest';
+  type SnapKey =
+    | 'snapEndpoint'
+    | 'snapMidpoint'
+    | 'snapCenter'
+    | 'snapNode'
+    | 'snapIntersection'
+    | 'snapPerpendicular'
+    | 'snapTangent'
+    | 'snapNearest'
+    | 'snapCentroid'
+    | 'snapExtension'
+    | 'snapParallel'
+    | 'snapGrid';
   const kind = (key: SnapKey, label: string, desc: string, glyph: string) =>
     settingRow(
       label,
@@ -274,7 +307,31 @@ function snap(api: DraftApi<AppDraft>) {
       kind('snapPerpendicular', 'Dik', 'Son noktadan kenara inen dikmenin ayağı.', 'perp'),
       kind('snapTangent', 'Teğet', 'Son noktadan daire ya da yaya çizilen teğetin değme noktası.', 'circle'),
       kind('snapNearest', 'En yakın', 'Kenar üzerindeki en yakın nokta; başka kenet yoksa devreye girer.', 'nearest'),
-      note('info', 'Durum çubuğundaki Kenet düğmesi (F3) seçili türlerin tümünü birlikte açıp kapatır.'),
+      // The additions (docs/adr/0163 §1), their texts the schema's.
+      ...(['snapCentroid', 'snapExtension', 'snapParallel', 'snapGrid'] as const).map((key) => {
+        const s = settingDescriptor(PREF_KEYS[key])!;
+        return kind(key, s.title, s.description, key.slice(4).toLowerCase());
+      }),
+      note('info', 'Durum çubuğundaki Kenet düğmesi (F3) seçili türlerin tümünü birlikte açıp kapatır; sağ tık menüsünde türler tek tek.'),
+    ),
+    group(
+      'Karelaj',
+      ...(['snapGridEast', 'snapGridNorth'] as const).map((key) => {
+        const s = settingDescriptor(PREF_KEYS[key])!;
+        return settingRow(s.title, s.description, stepper({ label: s.title, value: d[key], ...range(PREF_KEYS[key]), step: 1, decimals: 3, unit: 'm', onChange: (v) => api.set(key, v) }));
+      }),
+    ),
+    group(
+      'Kenedin kapsamı',
+      settingRow(
+        settingDescriptor('snap.self')!.title,
+        settingDescriptor('snap.self')!.description,
+        toggleSwitch({ label: settingDescriptor('snap.self')!.title, checked: d.snapSelf, onChange: (v) => api.set('snapSelf', v) }),
+      ),
+      ...(['snapScaleMin', 'snapScaleMax'] as const).map((key) => {
+        const s = settingDescriptor(PREF_KEYS[key])!;
+        return settingRow(s.title, s.description, stepper({ label: s.title, value: d[key], ...range(PREF_KEYS[key]), step: 500, unit: '1:N', onChange: (v) => api.set(key, v) }));
+      }),
     ),
     group(
       'Kutupsal izleme',

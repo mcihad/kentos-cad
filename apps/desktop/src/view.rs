@@ -891,7 +891,13 @@ impl App {
 
     /// The status bar with `fit` of its narrow-window steps taken.
     fn status_bar_at(&self, fit: u8) -> Element<'_, Message> {
-        let coordinates = match (&self.document, self.viewport.cursor) {
+        // Where the tools take the cursor to be (a snap, Karelaj's node), as
+        // the web shows it; the plain world point when the cursor moved since.
+        let cursor = self.viewport.cursor.map(|raw| match self.cursor_point {
+            Some((at, point)) if at == raw => point,
+            _ => raw,
+        });
+        let coordinates = match (&self.document, cursor) {
             (Some(doc), Some(p)) => {
                 // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
                 // first, rounded as the web's toFixed rounds.
@@ -984,7 +990,14 @@ impl App {
             if let Some(keys) = command.shortcuts.first() {
                 toggle = toggle.shortcut(*keys);
             }
-            toggle = toggle.description(command.note());
+            let note = (id == "draft.snap").then(|| self.snap_note()).flatten();
+            let idle = note.is_some();
+            toggle = toggle
+                .description(match note {
+                    Some(first) => format!("{first} {}", command.note()),
+                    None => command.note(),
+                })
+                .idle(idle);
         }
         if runs {
             toggle = toggle.on_press(Message::Run(id));
@@ -1007,6 +1020,11 @@ impl App {
         // Çakışma denetimi's modes and Seçili katmanlarda önle's layers on the cell's right-click menu (docs/adr/0162 §1).
         if id == "draft.overlap" {
             return ContextMenu::new(toggle, move |_| self.overlap_menu()).into();
+        }
+        // The snap kinds one by one, Çizilmekte olan nesneye and Karelaj aralığı on the
+        // cell's right-click menu; out of the scale range it is idle (snap_menu.rs, docs/adr/0163 §5–§6).
+        if id == "draft.snap" {
+            return ContextMenu::new(toggle, move |_| self.snap_cell_menu()).into();
         }
         toggle.into()
     }
@@ -1386,7 +1404,7 @@ fn crs_label(srid: u32) -> String {
 }
 
 /// A whole number with Turkish digit grouping (12.345), as the web's `toLocaleString('tr-TR')`.
-fn thousands(value: f64) -> String {
+pub(crate) fn thousands(value: f64) -> String {
     if !value.is_finite() {
         return "—".to_owned();
     }

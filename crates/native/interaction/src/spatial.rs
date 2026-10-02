@@ -40,7 +40,7 @@ use kentos_geometry_core::store::labels::{
     LABEL_DIMENSION, LABEL_LEADER, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT,
     LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
 };
-use kentos_geometry_core::store::snap::SnapHit;
+use kentos_geometry_core::store::snap::{SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::blocks::{core_blocks, piece_entities};
 use kentos_native_application::geometry::{drawing_font, shape};
@@ -258,6 +258,20 @@ impl Spatial {
     /// perpendicular and tangent snaps (`PickIndex.snap`).
     pub fn snap(&self, at: Vec2, tol: f64, kinds: u32, from: Option<Vec2>) -> Option<SnapHit> {
         self.store.snap(at, tol, kinds, from)
+    }
+
+    /// The object snap with what the running command adds (docs/adr/0163):
+    /// acquired extensions and parallels, the object being drawn, Karelaj's
+    /// spacings (`PickIndex.snapEx`).
+    pub fn snap_ex(
+        &self,
+        at: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+    ) -> Option<SnapHit> {
+        self.store.snap_ex(at, tol, kinds, from, extras)
     }
 
     /// The grips of these objects, unknown ones left out, in the given order

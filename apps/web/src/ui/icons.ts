@@ -181,6 +181,11 @@ export const ICONS = {
   snapPerpendicular: '<path d="M3 16.5h14" stroke-dasharray="2 1.6"/><path d="M6.5 16.5V5.5M6.5 11.5h5v5"/>',
   snapTangent: '<circle cx="10" cy="12" r="5"/><path d="M3 6.5h14"/>',
   snapNearest: '<path d="M3 16.5 17 3.5" stroke-dasharray="2 1.6"/><path d="M6 6h8l-8 8h8z"/>',
+  // The snap additions (docs/adr/0163 §1).
+  snapCentroid: '<path d="M3 6 13.5 3 17 12l-5.5 5L3 14z" stroke-dasharray="2 1.6"/><path d="m10 6.6 3.4 3.4-3.4 3.4-3.4-3.4z"/><circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"/>',
+  snapExtension: '<path d="M2.5 17 7.5 12"/><path d="m7.5 12 10-10" stroke-dasharray="2 1.6"/><path d="M13.6 3.9v5.4M10.9 6.6h5.4"/>',
+  snapParallel: '<path d="M2.5 13.5 10 3" stroke-dasharray="2 1.6"/><path d="m8 17.5 6-8.4M11.8 17.5l6-8.4"/>',
+  snapGrid: '<g fill="currentColor" stroke="none"><circle cx="3.5" cy="3.5" r=".95"/><circle cx="10" cy="3.5" r=".95"/><circle cx="16.5" cy="3.5" r=".95"/><circle cx="3.5" cy="10" r=".95"/><circle cx="16.5" cy="10" r=".95"/><circle cx="3.5" cy="16.5" r=".95"/><circle cx="10" cy="16.5" r=".95"/><circle cx="16.5" cy="16.5" r=".95"/></g><path d="M10 6.6v6.8M6.6 10h6.8"/>',
   calc: '<rect x="4" y="2.5" width="12" height="15" rx="1.5"/><path d="M6.5 5.5h7v3h-7z"/><path d="M7 11.5h.01M10 11.5h.01M13 11.5h.01M7 14.5h.01M10 14.5h.01M13 14.5h.01" stroke-width="2" stroke-linecap="round"/>',
   // Point calculator: clicked points are grips, the computed point is a ring.
   calcSide: `<path d="M3 14h14"/><path d="M9 14V7.6" stroke-dasharray="2 1.5"/><path d="M9 11.8h2.2V14"/><circle cx="9" cy="6" r="1.6"/>${grip(3, 14)}${grip(17, 14)}`,

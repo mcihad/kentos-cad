@@ -191,9 +191,18 @@ fn a_tool_snaps_to_ends_middles_and_crossings_exactly() {
     assert_eq!(p.snap.map(|s| s.kind), Some(SnapKind::Endpoint));
     b.click(-23.5, -11.6);
     b.click(-15.6, -11.5);
-    b.click(9.2, 8.4);
+    // Read before the click: once clicked, the point is also the path's own
+    // corner, an end that comes before the crossing (docs/adr/0163 §3).
     let p = b.snapped(9.2, 8.4);
     assert_eq!(p.snap.map(|s| s.kind), Some(SnapKind::Intersection));
+    b.click(9.2, 8.4);
+    assert_eq!(
+        b.snapped(9.2, 8.4).snap.map(|s| (s.kind, s.id)),
+        Some((
+            SnapKind::Endpoint,
+            kentos_geometry_core::store::snap::NO_OBJECT
+        ))
+    );
     b.confirm();
     let Entity::Polygon(area) = b.newest() else {
         panic!("a closed area");

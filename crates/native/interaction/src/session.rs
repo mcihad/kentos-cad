@@ -17,7 +17,7 @@
 //! is not remembered for repeat, nor is a tool that is not in the catalog
 //! ([`Session::run`]: Yapıştır), as on the web (docs/adr/0056).
 
-use kentos_geometry_core::store::snap::SnapHit;
+use kentos_geometry_core::store::snap::{SnapExtras, SnapHit};
 use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
@@ -52,7 +52,7 @@ use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
 use crate::stretch::{self, Stretch};
-use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
+use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View, screen_scale};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
@@ -515,16 +515,27 @@ impl Session {
         view: &dyn View,
         draft: &Draft,
     ) -> Option<SnapHit> {
-        let from = match &self.tool {
-            Some(tool) if tool.snaps() => tool.snap_from(),
-            None if self.select.grip_active() => self.select.snap_from(),
+        let (from, path) = match &self.tool {
+            Some(tool) if tool.snaps() => (tool.snap_from(), tool.draft_path()),
+            None if self.select.grip_active() => (self.select.snap_from(), None),
             _ => return None,
         };
-        if !draft.snap {
+        // Out of the snap's scale range no snap applies (docs/adr/0163 §5).
+        if !draft.snap || !draft.snap_in_range(screen_scale(view.world_length(1.0))) {
             return None;
         }
         let tol = view.world_length(draft.snap_aperture);
-        spatial.snap(at, tol, draft.snap_kinds, from)
+        let extras = SnapExtras {
+            // The object being drawn, with `snap.self` (§3).
+            draft: path.filter(|_| draft.snap_self).into_iter().collect(),
+            grid: draft
+                .snap_grid
+                .iter()
+                .all(|&g| g > 0.0)
+                .then_some(draft.snap_grid),
+            ..SnapExtras::default()
+        };
+        spatial.snap_ex(at, tol, draft.snap_kinds, from, &extras)
     }
 
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {

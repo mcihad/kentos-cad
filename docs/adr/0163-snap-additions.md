@@ -31,12 +31,12 @@ Türler bit sırasıyla eklenir (`SnapKind::ALL` dokuzdan on üçe). Var olanlar
 | `centroid` | Ağırlık merkezi | 1,08 (merkezinki) | içinde nokta olan küçük karo |
 | `extension` | Uzantı | 2 (kesişimleri 1,02) | kesikli çizgi üstünde artı |
 | `parallel` | Paralel | 2 | iki eğik paralel çizgi |
-| `grid` | Karelaj | yalnız başka tür yokken | küçük artı |
+| `grid` | Karelaj | yalnız başka tür yokken | küçük ızgara (#) |
 
 - **Ağırlık merkezi:** kapalı alanın (deliklerden ve parçalardan arınmış, yaylarıyla) ve kapalı çoklu çizginin alan ağırlık merkezi. Kutusu imlecin kenet kutusuna değen alanlar adaydır; merkez kenet yarıçapındaysa kenetlenir. Daire ve elipsin merkezi Merkez türündedir.
 - **Uzantı:** alınmış bir uç noktanın (§2) kenarının devamı: düz kenarda uçtan dışarı giden ışın, yayda yayın çemberi (uçtan dışarı, yayın yönünde). İmleç bir uzantının kenet yarıçapındaysa uzantıdaki en yakın noktaya; iki uzantı kesişiyorsa kesişimine (kesişimin ağırlığıyla) kenetlenir.
 - **Paralel:** komut bir son nokta veriyorsa (dik ve teğetin kaynağı), son noktadan alınmış bir kenara (§2) paralel doğru. İmleç bu doğrunun kenet yarıçapındaysa doğru üstündeki izdüşümüne kenetlenir.
-- **Karelaj:** düğümler projenin koordinatlarında `snap.gridX` ve `snap.gridY` metrenin katlarıdır (yuvarlak koordinatlar; yerel sıfır yoktur). Başka bir tür kenet yarıçapında değilse (en yakın dahil) imleç en yakın düğüme gider; nerede olursa olsun, Netcad'in Karelaj'ı ve AutoCAD'in SNAP'i gibi. Varsayılan aralıklar 1 m.
+- **Karelaj:** düğümler projenin koordinatlarında `snap.gridEast` (Y) ve `snap.gridNorth` (X) metrenin katlarıdır (yuvarlak koordinatlar; yerel sıfır yoktur). Başka bir tür kenet yarıçapında değilse (en yakın dahil) imleç en yakın düğüme gider; nerede olursa olsun, Netcad'in Karelaj'ı ve AutoCAD'in SNAP'i gibi. Varsayılan aralıklar 1 m.
 
 Uzantı ve Paralel'in ağırlığı yüksektir: imleç bir uzantının ya da paralelin üstündeyken yakındaki nesnenin kendi noktası (uç, orta, kesişim) ve iki uzantının ya da uzantıyla bir kenarın kesişimi önce gelir. 1,3 ile iki dik uzantının kesişimi, imleç tam yanındayken bile izdüşümlerine yenilirdi.
 
@@ -93,9 +93,9 @@ Varsayılan 0–0, yani bugünkü gibi her ölçekte. Katman başına ölçek ar
 
 Durum çubuğundaki Kenet hücresinin sağ tık menüsü, iki platformda:
 
-- on üç tür, işaretleriyle;
-- Karelaj aralığı…;
+- türler, işaretleriyle (on iki komut; Uç nokta Çeyrek'i de açar, ayarındaki gibi);
 - Çizilmekte olan nesneye;
+- Karelaj aralığı ▸: bilinen aralıklar (0,1 – 100 m, doğu ve kuzey aynı; seçmek Karelaj'ı da açar) ve Farklı aralık… (ayarlar);
 - Kenet ayarları… (Uygulama ayarları › Kenetleme).
 
 Her türün komutu vardır (`draft.snap.<tür>`, komut satırında ve Araçlar › Çizim yardımcıları'nda). Tek seferlik kenet menüsü (ADR 0059) yeni dört türü de gösterir.
@@ -145,6 +145,19 @@ Web WASM'dan (`PickIndex.snap`), masaüstü yerli çağırır. İki platform ayn
    - **WASM:** `GeometryStore.snapEx` (uzantılar kayıt kayıt, doğrultular, yol ve aralıklar tipli dizilerle), `extensionsAt`, `directionAt`; web `PickIndex.snapEx`, `extensionsAt`, `directionAt`, `SnapKind`'in dört yeni adı.
    - **Başvuru:** `scripts/fixtures/snap_cases.py` (`fixtures/snap/v1/cases.json`): 40 kenet durumu (ağırlık merkezi başlangıçta ve TM koordinatlarında, delik, parça, yarım daire; karelaj aralıkları, yarımlar, öncelikler; uzantı, kesişimleri, yay; paralel; katman maskeleri; çizilmekte olan yol), 5 uzantı alma, 3 doğrultu alma. Çekirdek (yerli) ve web (WASM) aynı; karelaj düğümü bit bit. Kuralı bozan üç deneme (katman maskesi yok, uzantı ve paralel 1,3, karelaj hep çarpımla) durumları düşürür.
 2. Ayarlar ve Kenet hücresinin menüsü iki platformda: türlerin komutları, karelaj aralığı, `snap.self`, ölçek aralığı; araçların taslağı; işaretler; ortak iz; resimler.
+
+   *(2 Ekim: tamam.)*
+   - **Ayarlar:** `snap.centroid`, `snap.extension`, `snap.parallel`, `snap.grid` (kapalı), `snap.gridEast` ve `snap.gridNorth` (1 m, 0,001–100 000), `snap.self` (açık), `snap.scaleMin` ve `snap.scaleMax` (0). Uygulama ayarları › Kenetleme'de türlerin arasında, Karelaj ve Kenedin kapsamı bölümlerinde, iki platformda.
+   - **Komutlar:** her türün `draft.snap.<tür>`'ü (“Kenet: Karelaj”, kısa adı “Karelaj”; adı ve açıklaması ayar şemasından), `draft.snap.self`; Türkçe adlar AGIRLIKMERKEZI, UZANTI, PARALELKENET, KARELAJ. AutoCAD'in EXT, PAR, GCEN'i orada tek seferlik kenettir; bunlar sürekli türü açıp kapattığı için alınmadı.
+   - **Kenet hücresinin sağ tık menüsü** §6'daki gibi; masaüstünde `snap_menu.rs`, web'de `ui/statusbar/snapMenu.ts`. KentOS UI'da alt menü satırı da not alır (“1 m × 1 m”), işaretli komutun ikonu kendi sütunundadır (web'in `menu__check` ve `menu__icon`'u gibi; tek seferlik kenet menüsü de böyle görünür).
+   - **Ölçek aralığı:** görünümün ölçeği durum çubuğunun gösterdiği 1:N'dir (`screenScale`, `screen_scale`: 96 dpi, yuvarlanmış). Aralığın dışında kenet de tek seferlik kenet de yoktur; Kenet hücresi açık ama etkisizdir: lambası yalnız vurgu çerçeveli, adı sönük (web'de `data-out`, KentOS UI'da `Toggle::idle`), ipucu “Ölçek aralığının dışında (1:N): kenet bu ölçekte çalışmaz.” ile başlar.
+   - **Çizilmekte olan yol:** yol araçları (Kapalı alan, Çoklu çizgi, Alan hesapla, Mesafe ölç, Parsel oluştur, Bitişik alan) taslağını verir (`Tool::draft_path`, `draftPath`); Mesafe ölç'ün Sabit ilk noktası ve İçine tıkla'nın yolu yoktur. Çizgi zinciri her parçayı yazdığı için zaten çizimdedir. Eğri ile Revizyon bulutu tıklanan noktaların kenarlarını yazmaz (eğri noktalardan geçer, bulut yaylarla kapanır); onların taslağı bu adımın dışında kaldı.
+   - **İşaretler** iki platformda aynı: ağırlık merkezi içinde nokta olan karo, uzantı kesikli çizgi üstünde artı, paralel iki eğik çizgi, karelaj küçük ızgara; ayar sayfasındaki örnekler de.
+   - **Ortak iz** `snap-additions.json` (sahne `snap-additions.kcad`, L biçimli parsel): Ağırlık merkezi, Karelaj, çizilmekte olan yolun ortası ve ilk köşesi, Çizilmekte olan nesneye kapalıyken yalnız çizim. Oynatıcılar izin başında kenet tercihlerini ilk değerlerine döndürür.
+   - Adım 1'in masaüstündeki eksiği de kapandı: dört tür masaüstünün kenet adlarında ve tek seferlik kenet menüsünde yoktu, masaüstü derlenmiyordu.
+   - **Koordinat hücresi** masaüstünde de araçların aldığı noktayı gösterir (kenet, Karelaj düğümü, izleme kilidi), web'in `cursorWorld`'ü gibi; önceden imlecin ham yerini gösteriyordu.
+   - **Karelaj aralığı alanı** masaüstünde noktalı ondalıkla yazar (KentOS UI `NumberInput::point`: “1”, “0.25”; DESIGN.md §10.3); alan virgülle “1,000” yazıyordu.
+   - **Testler:** resim üretmeyen masaüstü testleri yazılım çiziciyle açar (`files_testing::offscreen`); aynı anda açılan wgpu örnekleri Vulkan yükleyicisini düşürüyordu (SIGSEGV, `vkEnumerateInstanceExtensionProperties`). Elle çalıştırılan resim testleri GPU'nun çizicisinde kalır.
 3. Uzantı ve Paralel'in alınması iki platformda (bekleme, işaretler, kilit); ortak iz; resimler.
 4. Katman başına kenet: `.kcad` şema 10 (spesifikasyon, bağımsız Python yazıcısı ve okuyucusu, kodek), Katmanlar panelinin mıknatısı ve menüsü iki platformda, bulutta katman ağacı; ortak iz; resimler.
 

@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-snap",
+  "title": "Kullanım: Kenet ekleri; Ağırlık merkezi ve Karelaj açılır, yeni alanın ilk köşesi L parselin ağırlık merkezine, öbürleri karelajın düğümlerine oturur; çizilmekte olan yolun kenarının ortası da kenetlenir",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0163",
+  "covers": ["HYB-09"],
+  "document": "snap-additions.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.1 },
+  "draft": { "snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.1,
+  "steps": [
+    { "run": "draft.snap.centroid", "note": "Kenet hücresinin sağ tık menüsünden Ağırlık merkezi ve Karelaj (1 m)." },
+    { "run": "draft.snap.grid" },
+    { "run": "tool.polygon", "note": "Kapalı alan." },
+    { "move": [-13.25, -3.25] },
+    { "shot": "kenet-agirlik-merkezi", "note": "7 numaralı L parselin ağırlık merkezi: içinde nokta olan karo." },
+    { "click": [-13.25, -3.25] },
+    { "move": [5.3, 7.8] },
+    { "shot": "kenet-karelaj", "note": "Yakında başka kenet yok: imleç karelajın en yakın düğümüne (5; 8) gider." },
+    { "click": [5.3, 7.8] },
+    { "click": [12.2, -7.9] },
+    { "move": [-4, 2.4] },
+    { "shot": "kenet-cizilen-yol", "note": "Çizilmekte olan yolun ilk kenarının ortası." },
+    { "move": [-13.25, -3.25] },
+    { "click": [-13.25, -3.25], "note": "İlk köşe: alan kapanır.", "expect": { "entities": 2 } },
+    { "shot": "kenet-alan" },
+    { "run": "draft.snap.grid", "note": "Bellek başladığı gibi bırakılır." },
+    { "run": "draft.snap.centroid" },
+    { "key": "Esc" }
+  ]
+}

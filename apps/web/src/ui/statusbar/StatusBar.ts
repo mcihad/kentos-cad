@@ -1,6 +1,8 @@
 import type { AppContext } from '../../app/context';
 import { commandItem } from '../../app/menus';
 import { overlapMenu } from './overlapMenu';
+import { snapMenu } from './snapMenu';
+import { screenScale, snapInRange } from '../../viewport/snapRange';
 import { effectiveWorkspace, WORKSPACES, workspaceById } from '../../app/workspaces';
 import type { LogEntry } from '../../app/state';
 import { listen } from '../../core/disposable';
@@ -16,8 +18,6 @@ import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
 
-/** Screen metres per CSS pixel → map-like scale at 96 dpi. */
-const screenScale = (pxPerMetre: number) => Math.round(1 / pxPerMetre / 0.00026458);
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
 
 export class StatusBar extends Component {
@@ -46,7 +46,8 @@ export class StatusBar extends Component {
     const toggles = h(
       'div',
       { class: 'status__toggles', role: 'group', 'aria-label': 'Çizim yardımcıları' },
-      this.toggle('draft.snap', 'Kenet'),
+      // The snap kinds, Çizilmekte olan nesneye and the Karelaj spacing are on the cell's right-click menu (docs/adr/0163 §6).
+      this.snapCell(this.toggle('draft.snap', 'Kenet', () => snapMenu(ctx), () => this.snapNote())),
       this.toggle('draft.grid', 'Izgara'),
       this.toggle('draft.ortho', 'Orto'),
       this.toggle('draft.polar', 'Kutupsal'),
@@ -188,8 +189,30 @@ export class StatusBar extends Component {
     );
   }
 
-  /** A drafting aid's cell; `options`, its right-click menu. */
-  private toggle(id: string, label: string, options?: () => MenuItem[]): HTMLElement {
+  /** The view's screen scale when it lies out of the snap's range (docs/adr/0163 §5), else null. */
+  private snapOut(): number | null {
+    const { ctx } = this;
+    const n = screenScale(ctx.view.camera.scale);
+    return snapInRange(n, ctx.prefs.snapScaleMin.value, ctx.prefs.snapScaleMax.value) ? null : n;
+  }
+
+  /** What Kenet's tooltip says first while the view is out of the snap's scale range. */
+  private snapNote(): string | null {
+    const n = this.snapOut();
+    return n === null ? null : `Ölçek aralığının dışında (1:${fmtScale(n)}): kenet bu ölçekte çalışmaz.`;
+  }
+
+  /** Kenet out of its scale range (docs/adr/0163 §5): still on, its lamp only outlined and its name dim. */
+  private snapCell(b: HTMLElement): HTMLElement {
+    const { ctx } = this;
+    const sync = () => b.toggleAttribute('data-out', this.snapOut() !== null);
+    this.d.add(ctx.view.camera.changed.subscribe(sync, true));
+    this.d.add(watchAll([ctx.prefs.snapScaleMin, ctx.prefs.snapScaleMax], sync));
+    return b;
+  }
+
+  /** A drafting aid's cell; `options`, its right-click menu; `note`, what its tooltip says first when there is something. */
+  private toggle(id: string, label: string, options?: () => MenuItem[], note?: () => string | null): HTMLElement {
     const cmd = this.ctx.commands.get(id)!;
     const b = h('button', { class: 'status__toggle', type: 'button', 'aria-pressed': 'false', 'data-command': id }, label);
     b.addEventListener('click', () => this.ctx.commands.execute(id));
@@ -201,7 +224,16 @@ export class StatusBar extends Component {
     const sync = () => b.setAttribute('aria-pressed', String(!!cmd.isChecked?.()));
     sync();
     if (cmd.watch) this.d.add(watchAll(cmd.watch, sync));
-    this.d.add(tooltip(b, () => ({ title: cmd.title, shortcut: this.ctx.keymap.chordFor(id), description: cmd.description }), 'top'));
+    this.d.add(
+      tooltip(
+        b,
+        () => {
+          const first = note?.();
+          return { title: cmd.title, shortcut: this.ctx.keymap.chordFor(id), description: first ? [first, cmd.description].filter(Boolean).join(' ') : cmd.description };
+        },
+        'top',
+      ),
+    );
     return b;
   }
 

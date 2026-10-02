@@ -214,5 +214,5 @@ pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
     Memory, Name, OptionChoice, Overlap, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool,
-    View, ViewChange, snap_kinds,
+    View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
 };

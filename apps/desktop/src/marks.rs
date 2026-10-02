@@ -44,6 +44,10 @@ pub fn snap_label(kind: SnapKind) -> &'static str {
         SnapKind::Perpendicular => "Dik",
         SnapKind::Tangent => "Teğet",
         SnapKind::Nearest => "En yakın",
+        SnapKind::Centroid => "Ağırlık merkezi",
+        SnapKind::Extension => "Uzantı",
+        SnapKind::Parallel => "Paralel",
+        SnapKind::Grid => "Karelaj",
     }
 }
 
@@ -59,6 +63,10 @@ pub fn snap_name(kind: SnapKind) -> &'static str {
         SnapKind::Perpendicular => "perpendicular",
         SnapKind::Tangent => "tangent",
         SnapKind::Nearest => "nearest",
+        SnapKind::Centroid => "centroid",
+        SnapKind::Extension => "extension",
+        SnapKind::Parallel => "parallel",
+        SnapKind::Grid => "grid",
     }
 }
 
@@ -418,12 +426,53 @@ fn snap_marker(frame: &mut canvas::Frame, kind: SnapKind, at: Point, colors: &Ma
             b.line_to(p(5.0, 5.0));
             b.close();
         }
+        // docs/adr/0163 §1: a diamond with a dot; a plus on a dashed line
+        // (the line below); two slanted strokes; a small grid.
+        SnapKind::Centroid => {
+            b.move_to(p(0.0, -6.0));
+            b.line_to(p(6.0, 0.0));
+            b.line_to(p(0.0, 6.0));
+            b.line_to(p(-6.0, 0.0));
+            b.close();
+            b.circle(at, 1.6);
+        }
+        SnapKind::Extension => {
+            b.move_to(p(0.0, -5.0));
+            b.line_to(p(0.0, 5.0));
+            b.move_to(p(-5.0, 0.0));
+            b.line_to(p(5.0, 0.0));
+        }
+        SnapKind::Parallel => {
+            b.move_to(p(-7.0, 6.0));
+            b.line_to(p(-1.0, -6.0));
+            b.move_to(p(-1.0, 6.0));
+            b.line_to(p(5.0, -6.0));
+        }
+        SnapKind::Grid => {
+            for d in [-3.0, 3.0] {
+                b.move_to(p(d, -5.0));
+                b.line_to(p(d, 5.0));
+                b.move_to(p(-5.0, d));
+                b.line_to(p(5.0, d));
+            }
+        }
         SnapKind::Endpoint => b.rectangle(p(-5.0, -5.0), Size::new(10.0, 10.0)),
     });
-    frame.stroke(
-        &glyph,
-        Stroke::default().with_color(colors.snap).with_width(1.5),
-    );
+    let stroke = Stroke::default().with_color(colors.snap).with_width(1.5);
+    frame.stroke(&glyph, stroke);
+    if kind == SnapKind::Extension {
+        let line = Path::line(p(-9.0, 0.0), p(9.0, 0.0));
+        frame.stroke(
+            &line,
+            Stroke {
+                line_dash: LineDash {
+                    segments: &[3.0, 2.5],
+                    offset: 0,
+                },
+                ..stroke
+            },
+        );
+    }
     // Above-right; bottom of the text at y − 7, with the area's colour as a halo.
     let label = Text {
         content: snap_label(kind).to_owned(),

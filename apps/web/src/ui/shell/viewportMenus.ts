@@ -9,7 +9,7 @@ import { choiceItems, parsePrompt, runPromptOption } from '../promptOptions';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 
 /** Snap kinds offered as one-shot overrides, in the order surveyors reach for them. */
-const SNAP_ORDER: SnapKind[] = ['endpoint', 'midpoint', 'intersection', 'center', 'perpendicular', 'tangent', 'quadrant', 'node', 'nearest'];
+const SNAP_ORDER: SnapKind[] = ['endpoint', 'midpoint', 'intersection', 'center', 'perpendicular', 'tangent', 'quadrant', 'node', 'nearest', 'centroid', 'extension', 'parallel', 'grid'];
 
 /** Menu icons drawn like the snap markers on the canvas. */
 const SNAP_ICON: Record<SnapKind, string> = {
@@ -22,7 +22,7 @@ const SNAP_ICON: Record<SnapKind, string> = {
   perpendicular: 'snapPerpendicular',
   tangent: 'snapTangent',
   nearest: 'snapNearest',
-  // docs/adr/0163 §1: offered once their markers and icons are drawn (step 2).
+  // The snap additions (docs/adr/0163 §1).
   centroid: 'snapCentroid',
   extension: 'snapExtension',
   parallel: 'snapParallel',

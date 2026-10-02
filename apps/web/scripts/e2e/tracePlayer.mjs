@@ -72,9 +72,31 @@ export function attach(browser) {
   b = browser;
 }
 
+/** The snap preferences as the settings schema starts them (docs/adr/0163), set before every trace. */
+const SNAP_DEFAULTS = {
+  snapEndpoint: true,
+  snapMidpoint: true,
+  snapCenter: true,
+  snapNode: true,
+  snapIntersection: true,
+  snapPerpendicular: true,
+  snapTangent: true,
+  snapNearest: false,
+  snapCentroid: false,
+  snapExtension: false,
+  snapParallel: false,
+  snapGrid: false,
+  snapGridEast: 1,
+  snapGridNorth: 1,
+  snapSelf: true,
+  snapScaleMin: 0,
+  snapScaleMax: 0,
+};
+
 // ── Keyboard ────────────────────────────────────────────────────────────
 // A trace names characters (what the keyboard produces), not key positions;
 // each layout says which key events produce them.
+
 const NAMED = {
   Enter: { key: 'Enter', code: 'Enter', vk: 13, text: '\r' },
   Esc: { key: 'Escape', code: 'Escape', vk: 27 },
@@ -280,6 +302,9 @@ async function setUp(t) {
     k.settings.overlap.set('allow');
     k.settings.overlapLast.set('layer');
     k.settings.overlapLayers.set(new Set());
+    // The snap kinds and the snap's other preferences are the settings' first values unless the trace's prefs say
+    // otherwise (docs/adr/0163): a kind an earlier trace turned on with its command never carries over.
+    for (const [key, v] of Object.entries(${JSON.stringify(SNAP_DEFAULTS)})) k.prefs[key].set(v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.draft ?? {})})) k.settings[key].set(key === 'overlapLayers' ? new Set(v) : v);
     for (const [key, v] of Object.entries(${JSON.stringify(t.prefs ?? {})})) k.prefs[key].set(v);
     const c = k.view.camera;

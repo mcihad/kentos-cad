@@ -101,6 +101,16 @@ pub fn last_said(app: &App) -> String {
     app.log.last().map(|l| l.text.clone()).unwrap_or_default()
 }
 
+/// An offscreen window for a test that runs beside the others: the software
+/// renderer. Many tests open one at once, and wgpu instances opened together
+/// crash the Vulkan loader (SIGSEGV in `vkEnumerateInstanceExtensionProperties`,
+/// 2026-10-02), as GPU drivers crashed under KentOS UI's own tests
+/// (docs/baseline/2026-09-25.md). The pictures for the owner, run by hand,
+/// keep `Snapshot::new` (the GPU's renderer, the drawing area too).
+pub fn offscreen(size: iced::Size) -> kentos_ui::snapshot::Snapshot {
+    kentos_ui::snapshot::Snapshot::software(size).expect("a software renderer")
+}
+
 /// Where a text is drawn: the first widget showing exactly `caption`.
 pub fn find_text(
     snapshot: &mut kentos_ui::snapshot::Snapshot,

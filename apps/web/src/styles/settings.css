@@ -623,6 +623,52 @@
   background: var(--canvas-snap);
   clip-path: polygon(0 0, 100% 0, 0 100%, 100% 100%, 84% 100%, 0 14%, 0 86%, 84% 0);
 }
+/* The additions (docs/adr/0163 §1), as the canvas draws them: a diamond with a dot, a plus on a dashed line, two
+ * slanted strokes, a small grid. */
+.snap-glyph--centroid,
+.snap-glyph--extension,
+.snap-glyph--parallel,
+.snap-glyph--grid {
+  position: relative;
+  border: 0;
+  width: 12px;
+  height: 12px;
+}
+.snap-glyph--centroid {
+  width: 10px;
+  height: 10px;
+  margin: 1px;
+  border: 1.5px solid var(--canvas-snap);
+  transform: rotate(45deg);
+}
+.snap-glyph--centroid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--canvas-snap);
+}
+.snap-glyph--extension {
+  background:
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) center / 1.5px 8px no-repeat,
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) center / 8px 1.5px no-repeat,
+    repeating-linear-gradient(90deg, var(--canvas-snap) 0 2px, transparent 2px 3.5px) center / 12px 1.5px no-repeat;
+}
+.snap-glyph--parallel {
+  background:
+    linear-gradient(60deg, transparent 38%, var(--canvas-snap) 38% 50%, transparent 50%) left / 7px 12px no-repeat,
+    linear-gradient(60deg, transparent 38%, var(--canvas-snap) 38% 50%, transparent 50%) right / 7px 12px no-repeat;
+}
+.snap-glyph--grid {
+  background:
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) 2px 0 / 1.5px 100% no-repeat,
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) 8px 0 / 1.5px 100% no-repeat,
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) 0 2px / 100% 1.5px no-repeat,
+    linear-gradient(var(--canvas-snap), var(--canvas-snap)) 0 8px / 100% 1.5px no-repeat;
+}
 
 /* ── New project (Dosya → Yeni proje) ───────────────────────────────
  * The settings rows and the CRS picker in a plain dialog: the first group

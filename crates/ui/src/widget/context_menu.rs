@@ -190,6 +190,8 @@ enum Item<Message> {
         icon: Option<Icon>,
         label: String,
         menu: Menu<Message>,
+        /// Quiet beside the label, before the arrow: what is chosen inside.
+        hint: Option<String>,
     },
     Separator,
     Header(String),
@@ -320,6 +322,7 @@ impl<Message> Menu<Message> {
             icon: None,
             label: label.into(),
             menu,
+            hint: None,
         });
         self
     }
@@ -367,10 +370,13 @@ impl<Message> Menu<Message> {
     }
 
     /// Son eklenen komutun sağında, kısayolundan önce soluk not (ör.
-    /// “sabit”, bir yöntemin ne yaptığı; web'in `hint`'i).
+    /// “sabit”, bir yöntemin ne yaptığı; web'in `hint`'i). Alt menüde okun
+    /// önünde durur: içinde seçili olan (ör. “1 m × 1 m”).
     pub fn hint(mut self, hint: impl Into<String>) -> Self {
-        if let Some(Item::Command(command)) = self.items.last_mut() {
-            command.hint = Some(hint.into());
+        match self.items.last_mut() {
+            Some(Item::Command(command)) => command.hint = Some(hint.into()),
+            Some(Item::Submenu { hint: slot, .. }) => *slot = Some(hint.into()),
+            _ => {}
         }
 
         self
@@ -402,13 +408,14 @@ impl<Message> Menu<Message> {
             .any(|item| matches!(item, Item::Command(command) if command.swatch.is_some()))
     }
 
-    /// İkonlu bir seçenek (radio) komutu var mı: varsa ikonlar kendi
-    /// sütununda, seçilinin noktası önünde gösterilir (web'in `menu__check`
-    /// ve `menu__icon` sütunları; yazının hizası, ADR 0145).
+    /// İkonlu bir seçenek (radio) ya da işaretlenebilir komut var mı: varsa
+    /// ikonlar kendi sütununda, seçilinin noktası ya da ✓'si önünde
+    /// gösterilir (web'in `menu__check` ve `menu__icon` sütunları; yazının
+    /// hizası, ADR 0145; kenet türleri, ADR 0163).
     fn has_radio_icons(&self) -> bool {
-        self.items.iter().any(
-            |item| matches!(item, Item::Command(command) if command.radio && command.icon.is_some()),
-        )
+        self.items.iter().any(|item| {
+            matches!(item, Item::Command(command) if command.checked.is_some() && command.icon.is_some())
+        })
     }
 
     /// Menüde gösterilecek bir şey var mı. Sondaki bölücü sayılmaz.
@@ -536,7 +543,14 @@ impl<Message> Menu<Message> {
                                 + 24.0
                         })
                 }
-                Item::Submenu { label, .. } => typography::text_width(label, body) + 24.0,
+                Item::Submenu { label, hint, .. } => {
+                    typography::text_width(label, body)
+                        + 24.0
+                        + hint.as_deref().map_or(0.0, |hint| {
+                            typography::text_width(hint, caption).min(typography::scaled(HINT_MAX))
+                                + 24.0
+                        })
+                }
                 Item::Header(title) => typography::text_width(title, caption),
                 Item::Separator => 0.0,
             })
@@ -1645,6 +1659,7 @@ fn item_row<'a, Message: 'a>(
     };
     let hint = match item {
         Item::Command(command) => command.hint.clone(),
+        Item::Submenu { hint, .. } => hint.clone(),
         _ => None,
     };
     let (mark, text, shortcut, submenu, enabled, danger, sample) = match item {
@@ -1665,7 +1680,9 @@ fn item_row<'a, Message: 'a>(
             command.danger,
             command.swatch,
         ),
-        Item::Submenu { icon, label, menu } => (
+        Item::Submenu {
+            icon, label, menu, ..
+        } => (
             icon.map_or(Mark::None, Mark::Icon),
             label.clone(),
             None,
@@ -1888,6 +1905,10 @@ mod tests {
         assert!(pictured.has_radio_icons());
         assert!(bare.width() > typography::scaled(MIN_WIDTH));
         assert!(pictured.width() > bare.width());
+        // A check with an icon too: its ✓ beside the icon, not over it (the snap kinds).
+        let ticks = Menu::new().check(LONG, true, 1_u8).icon(Icon::Check);
+        assert!(ticks.has_radio_icons());
+        assert!(!Menu::new().item(LONG, 1_u8).icon(Icon::Check).has_radio_icons());
     }
 
     #[test]

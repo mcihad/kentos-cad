@@ -242,6 +242,67 @@ fn settings() -> Vec<SettingDescriptor> {
             "En yakın",
             "Kenar üzerindeki en yakın nokta; başka kenet yoksa devreye girer.",
         ),
+        // The snap additions (docs/adr/0163 §1): off at first.
+        snap_kind(
+            "snap.centroid",
+            false,
+            "Ağırlık merkezi",
+            "Kapalı alanın ve kapalı çoklu çizginin ağırlık merkezi; delikler çıkarılır, parçalar alanlarıyla sayılır.",
+        ),
+        snap_kind(
+            "snap.extension",
+            false,
+            "Uzantı",
+            "Bir uçta durunca o kenarın devamı: düz kenarın doğrultusu, yayın çemberi; başka kenarlarla kesişimleri de.",
+        ),
+        snap_kind(
+            "snap.parallel",
+            false,
+            "Paralel",
+            "Bir kenarda durunca son noktadan o kenara paralel doğru.",
+        ),
+        snap_kind(
+            "snap.grid",
+            false,
+            "Karelaj",
+            "İmleç karelaj aralığındaki ızgaranın en yakın düğümüne gider; yakında başka kenet yoksa.",
+        ),
+        number("snap.gridEast", 1)
+            .range(0.001, 100_000.0)
+            .unit("m")
+            .hosts(&[Web, Desktop])
+            .text(
+                "Karelaj aralığı Y",
+                "Karelaj düğümleri arasındaki doğu (Y) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+            ),
+        number("snap.gridNorth", 1)
+            .range(0.001, 100_000.0)
+            .unit("m")
+            .hosts(&[Web, Desktop])
+            .text(
+                "Karelaj aralığı X",
+                "Karelaj düğümleri arasındaki kuzey (X) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+            ),
+        boolean("snap.self", true)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Çizilmekte olan nesneye",
+                "Çizilen yolun önceki köşelerine ve kenarlarına da kenetlenir.",
+            ),
+        integer("snap.scaleMin", 0)
+            .range(0.0, 100_000_000.0)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Kenedin en yakın ölçeği",
+                "Görünüm 1:N'den yakınken kenet kapalı (N bu değer); 0: sınır yok.",
+            ),
+        integer("snap.scaleMax", 0)
+            .range(0.0, 100_000_000.0)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Kenedin en uzak ölçeği",
+                "Görünüm 1:N'den uzakken kenet kapalı (N bu değer); 0: sınır yok.",
+            ),
         // ── Appearance ──────────────────────────────────────────────────
         // The same keys on both platforms (docs/adr/0126): the settings file
         // carries the look from one to the other. Older keys are read into

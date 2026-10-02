@@ -357,13 +357,15 @@ impl App {
             self.draft.polar,
             view.world_length(kentos_interaction::object_tracking::TRACK_PX),
         );
-        Pointer::new(
+        let pointer = Pointer::new(
             raw,
             [f64::from(at.x), f64::from(at.y)],
             self.modifiers.shift(),
             self.snap,
         )
-        .tracked(self.tracking.track().map(|t| t.point))
+        .tracked(self.tracking.track().map(|t| t.point));
+        self.cursor_point = Some((raw, pointer.world));
+        pointer
     }
 
     /// A key no text box captured, by ADR 0018's order (see the module).

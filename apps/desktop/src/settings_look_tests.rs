@@ -39,12 +39,21 @@ fn ids(key: &str) -> Vec<String> {
     })
 }
 
-/// The window open on Görünüm with these settings saved, settled.
+/// The window open on Görünüm with these settings saved, settled on the
+/// software renderer (`files_testing::offscreen`).
 fn opened(size: Size, saved: &[(&str, Value)]) -> (App, Snapshot) {
+    open_on(crate::files_testing::offscreen(size), saved)
+}
+
+/// The same on the GPU's renderer, for the pictures.
+fn pictured(size: Size, saved: &[(&str, Value)]) -> (App, Snapshot) {
+    open_on(Snapshot::new(size).expect("a renderer"), saved)
+}
+
+fn open_on(mut snapshot: Snapshot, saved: &[(&str, Value)]) -> (App, Snapshot) {
     let mut app = app_with_drawing();
     let _ = app.settings.choose(saved);
     app.apply_settings();
-    let mut snapshot = Snapshot::new(size).expect("a renderer");
     snapshot.settle(&mut app, App::view, &mut update);
     let _ = app.run("tools.options");
     snapshot.settle(&mut app, App::view, &mut update);
@@ -138,7 +147,7 @@ fn screens() {
             let size = format!("{width}x{height}");
             let middle = Point::new(width * 0.6, height * 0.5);
             let (mut app, mut snapshot) =
-                opened(Size::new(width, height), std::slice::from_ref(&theme));
+                pictured(Size::new(width, height), std::slice::from_ref(&theme));
             save(
                 &mut snapshot,
                 &app,
@@ -174,7 +183,7 @@ fn screens() {
             // A colour of one's own, and one that does not read yet.
             for (accent, name) in [("#8b5a2b", "ozel-renk"), ("#8b5a", "okunamadi")] {
                 let (mut app, mut snapshot) =
-                    opened(Size::new(width, height), std::slice::from_ref(&theme));
+                    pictured(Size::new(width, height), std::slice::from_ref(&theme));
                 let _ = app.update(Message::Settings(crate::settings_view::Edit::Value(
                     "appearance.accent",
                     Value::from(accent),
@@ -197,7 +206,7 @@ fn screens() {
         // The largest text in the smaller window: nothing cut, nothing over.
         let size = Size::new(1100.0, 650.0);
         let (mut app, mut snapshot) =
-            opened(size, &[theme, ("appearance.textSize", Value::from(16))]);
+            pictured(size, &[theme, ("appearance.textSize", Value::from(16))]);
         save(
             &mut snapshot,
             &app,

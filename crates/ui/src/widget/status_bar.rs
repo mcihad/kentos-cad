@@ -216,10 +216,13 @@ impl<'a, Message: Clone + 'a> From<Readout<'a, Message>> for Element<'a, Message
 /// ikonu vurgu renginde, adı tam renkte yazılır; kapalıyken ikisi de
 /// sönüktür. İkonu verilmeyen anahtarın adının önünde küçük bir lamba durur:
 /// kapalıyken çerçeveli, açıkken vurgu renginde (web'in `.status__toggle`'ı).
-/// İpucu anahtarın durumunu, kısayolunu ve açıklamasını gösterir.
+/// İpucu anahtarın durumunu, kısayolunu ve açıklamasını gösterir. Açık ama
+/// o an etkisiz anahtarın (ölçek aralığının dışındaki Kenet) lambası yalnız
+/// vurgu çerçevelidir, adı sönüktür.
 pub struct Toggle<'a, Message> {
     label: Fragment<'a>,
     active: bool,
+    idle: bool,
     icon: Option<Icon>,
     shortcut: Option<Fragment<'a>>,
     description: Option<String>,
@@ -232,6 +235,7 @@ impl<'a, Message: Clone + 'a> Toggle<'a, Message> {
         Self {
             label: label.into_fragment(),
             active,
+            idle: false,
             icon: None,
             shortcut: None,
             description: None,
@@ -243,6 +247,13 @@ impl<'a, Message: Clone + 'a> Toggle<'a, Message> {
     /// İpucunun gövdesi: anahtarın ne yaptığı.
     pub fn description(mut self, text: impl Into<String>) -> Self {
         self.description = Some(text.into());
+        self
+    }
+
+    /// Açık ama şu an etkisiz (web'in `data-out`'u): ör. görünüm kenedin
+    /// ölçek aralığının dışındayken Kenet.
+    pub fn idle(mut self, idle: bool) -> Self {
+        self.idle = idle;
         self
     }
 
@@ -280,26 +291,37 @@ impl<'a, Message: Clone + 'a> From<Toggle<'a, Message>> for Element<'a, Message>
             description = description.body(body);
         }
 
+        // On and in effect: the lamp lit, the icon in the accent, the name in full.
+        let lit = toggle.active && !toggle.idle;
         let gap = if toggle.compact { 4 } else { 6 };
         let mut content = row![].spacing(gap).height(Fill).align_y(Center);
 
         match toggle.icon {
             Some(glyph) => {
-                content = content.push(icon(glyph).size(14.0).tone(if toggle.active {
+                content = content.push(icon(glyph).size(14.0).tone(if lit {
                     Tone::Accent
                 } else {
                     Tone::Inherit
                 }));
             }
             None => {
-                let active = toggle.active;
+                let (active, idle) = (toggle.active, toggle.idle);
                 content = content.push(
                     container(space::horizontal().width(0))
                         .width(6)
                         .height(6)
                         .style(move |theme: &iced::Theme| {
                             let t = crate::theme::Tokens::of(theme);
-                            if active {
+                            if active && idle {
+                                container::Style {
+                                    border: iced::Border {
+                                        color: t.accent,
+                                        width: 1.5,
+                                        radius: 1.0.into(),
+                                    },
+                                    ..container::Style::default()
+                                }
+                            } else if active {
                                 container::Style {
                                     background: Some(t.accent.into()),
                                     border: iced::border::rounded(1),
@@ -331,7 +353,7 @@ impl<'a, Message: Clone + 'a> From<Toggle<'a, Message>> for Element<'a, Message>
                 .on_press_maybe(toggle.on_press)
                 .padding([0, padding])
                 .height(item_height())
-                .style(style::button::status_toggle(toggle.active)),
+                .style(style::button::status_toggle(lit)),
             description,
             tooltip::Position::Top,
         )

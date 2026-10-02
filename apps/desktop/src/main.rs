@@ -87,6 +87,9 @@ mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
 mod shortcuts;
+mod snap_menu;
+#[cfg(test)]
+mod snap_tests;
 mod snapshot;
 mod start;
 mod style;

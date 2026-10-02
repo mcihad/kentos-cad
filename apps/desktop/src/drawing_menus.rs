@@ -29,7 +29,7 @@ use crate::catalog::{Standing, catalog};
 
 /// The kinds a one-shot snap offers, in the order surveyors reach for them
 /// (the web's `SNAP_ORDER`).
-const SNAP_ORDER: [SnapKind; 9] = [
+const SNAP_ORDER: [SnapKind; 13] = [
     SnapKind::Endpoint,
     SnapKind::Midpoint,
     SnapKind::Intersection,
@@ -39,6 +39,10 @@ const SNAP_ORDER: [SnapKind; 9] = [
     SnapKind::Quadrant,
     SnapKind::Node,
     SnapKind::Nearest,
+    SnapKind::Centroid,
+    SnapKind::Extension,
+    SnapKind::Parallel,
+    SnapKind::Grid,
 ];
 
 /// A snap kind's name (the web's `SNAP_LABEL`).
@@ -53,6 +57,10 @@ pub fn snap_label(kind: SnapKind) -> &'static str {
         SnapKind::Perpendicular => "Dik",
         SnapKind::Tangent => "Teğet",
         SnapKind::Nearest => "En yakın",
+        SnapKind::Centroid => "Ağırlık merkezi",
+        SnapKind::Extension => "Uzantı",
+        SnapKind::Parallel => "Paralel",
+        SnapKind::Grid => "Karelaj",
     }
 }
 
@@ -68,6 +76,10 @@ fn snap_icon(kind: SnapKind) -> Icon {
         SnapKind::Perpendicular => "snapPerpendicular",
         SnapKind::Tangent => "snapTangent",
         SnapKind::Nearest => "snapNearest",
+        SnapKind::Centroid => "snapCentroid",
+        SnapKind::Extension => "snapExtension",
+        SnapKind::Parallel => "snapParallel",
+        SnapKind::Grid => "snapGrid",
     }))
 }
 

@@ -280,6 +280,20 @@ pub const PORTED: &[&str] = &[
     "draft.overlap.allow",
     "draft.overlap.layer",
     "draft.overlap.layers",
+    // The snap kinds one by one and Çizilmekte olan nesneye (docs/adr/0163 §6).
+    "draft.snap.endpoint",
+    "draft.snap.midpoint",
+    "draft.snap.intersection",
+    "draft.snap.center",
+    "draft.snap.perpendicular",
+    "draft.snap.tangent",
+    "draft.snap.node",
+    "draft.snap.nearest",
+    "draft.snap.centroid",
+    "draft.snap.extension",
+    "draft.snap.parallel",
+    "draft.snap.grid",
+    "draft.snap.self",
     // The styled drawing's view choices (docs/adr/0090): layer line weights on or off
     // (Kalınlık), symbols at the plot scale or at a fixed size on the screen.
     "view.lineWeights",

@@ -353,6 +353,8 @@ pub enum Message {
     ServerChecked(Result<kentos_contracts::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
+    /// The Kenet cell's menu: a Karelaj spacing, the settings (snap_menu.rs, docs/adr/0163 §6).
+    Snap(crate::snap_menu::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -477,6 +479,11 @@ pub struct App {
     pub clipboard: Clipboard,
     /// The object snap under the pointer while a tool snaps: its marker.
     pub snap: Option<SnapHit>,
+    /// The point the tools got for the cursor, beside the world point under
+    /// it then: the snap's or the tracking lock's when there is one. The
+    /// status bar shows it while the cursor is still there (the web's
+    /// `cursorWorld`, which is the pointer's `world`).
+    pub(crate) cursor_point: Option<(kentos_interaction::Vec2, kentos_interaction::Vec2)>,
     /// The drawing (its session) and generation the store and the selection last followed.
     followed: Option<(u64, u64)>,
     /// The value field beside the cursor, while it is open (ADR 0018).
@@ -682,6 +689,7 @@ impl App {
             selection: Selection::new(),
             clipboard: Clipboard::new(),
             snap: None,
+            cursor_point: None,
             followed: None,
             field: None,
             draft: Draft::default(),
@@ -1159,6 +1167,7 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
+            Message::Snap(event) => self.snap_event(event),
         }
         Task::none()
     }
@@ -1176,6 +1185,9 @@ impl App {
             snap_aperture: s.number("drafting.snapAperture"),
             snap: s.bool("drafting.snap"),
             snap_kinds: snap_kinds(|key| s.bool(key)),
+            snap_grid: [s.number("snap.gridEast"), s.number("snap.gridNorth")],
+            snap_self: s.bool("snap.self"),
+            snap_scale: [s.number("snap.scaleMin"), s.number("snap.scaleMax")],
             pick_aperture: s.number("drafting.pickAperture"),
             tracking: s.bool("drafting.tracking"),
             topology: s.bool("drafting.topology"),
@@ -1301,7 +1313,7 @@ impl App {
         self.choose_overlap(kentos_interaction::Overlap::Layers);
     }
 
-    fn toggle_session(&mut self, key: &'static str, name: &str) {
+    pub(crate) fn toggle_session(&mut self, key: &'static str, name: &str) {
         let on = !self.settings.bool(key);
         let _ = self.settings.choose(&[(key, Value::Bool(on))]);
         self.apply_settings();
@@ -1380,6 +1392,10 @@ impl App {
         }
         if crate::view_commands::COMMANDS.contains(&id) {
             return self.view_command(id);
+        }
+        // The snap kinds one by one and Çizilmekte olan nesneye (snap_menu.rs, docs/adr/0163 §6).
+        if self.toggle_snap_setting(id) {
+            return Task::none();
         }
         // Önceki and Sonraki görünüm, Kapsam denetimi (navigation.rs, docs/adr/0141).
         if crate::navigation::COMMANDS.contains(&id) {
@@ -1523,6 +1539,9 @@ impl App {
             "draft.ortho" => self.draft.ortho,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
+            id if crate::snap_menu::setting(id).is_some() => {
+                crate::snap_menu::setting(id).is_some_and(|key| self.settings.bool(key))
+            }
             "draft.tracking" => self.draft.tracking,
             "draft.topology" => self.draft.topology,
             "draft.topologyPoints" => self.draft.topology_points,

@@ -80,6 +80,13 @@ const ITEMS = [
     open: async (ui) => (await ui.rightClick('.status__toggle[data-command="draft.overlap"]'), await ui.clickText('.menu__item', 'Katmanlar')),
     close: (ui) => ui.escapeAll(2),
   },
+  // Kenet's right-click menu: the kinds one by one, and Karelaj aralığı opened (docs/adr/0163 §6).
+  { id: 'status-snap', open: (ui) => ui.rightClick('.status__toggle[data-command="draft.snap"]') },
+  {
+    id: 'status-snap-grid',
+    open: async (ui) => (await ui.rightClick('.status__toggle[data-command="draft.snap"]'), await ui.clickText('.menu__item', 'Karelaj aralığı')),
+    close: (ui) => ui.escapeAll(2),
+  },
   { id: 'status-account', open: (ui) => ui.click('.status__server') },
   { id: 'layer-row', open: (ui) => ui.rightClick('.panel--layers .tree__row[data-id="taslak"] .tree__name') },
   { id: 'layer-color', open: (ui) => ui.click('.panel--layers .tree__row[data-id="taslak"] .swatch--btn') },
@@ -91,6 +98,19 @@ const ITEMS = [
   { id: 'shortcuts', open: (ui) => ui.run('help.shortcuts') },
   { id: 'about', open: (ui) => ui.run('help.about') },
   ...['appearance', 'snap', 'newProjects', 'engine', 'file'].map((s) => ({ id: `app-settings-${s}`, open: (ui) => ui.run('tools.options', s) })),
+  // Kenetleme's new kinds with their glyphs, and its lower half: Karelaj and Kenedin kapsamı (docs/adr/0163).
+  {
+    id: 'app-settings-snap-kinds',
+    open: async (ui) => (
+      await ui.run('tools.options', 'snap'),
+      await ui.eval(`(() => { const row = [...document.querySelectorAll('.settings__content .srow')].find((r) => r.textContent.includes('En yakın')); if (row) row.scrollIntoView({ block: 'start' }); })()`),
+      await sleep(150)
+    ),
+  },
+  {
+    id: 'app-settings-snap-lower',
+    open: async (ui) => (await ui.run('tools.options', 'snap'), await ui.eval(`(() => { const c = document.querySelector('.settings__content'); if (c) c.scrollTop = c.scrollHeight; })()`), await sleep(150)),
+  },
   { id: 'project-settings-general', open: (ui) => ui.run('file.settings') },
   { id: 'project-settings-crs', open: (ui) => ui.run('crs.set') },
   { id: 'project-settings-units', open: async (ui) => (await ui.run('file.settings'), await ui.clickText('.settings__navitem', 'Birimler')) },

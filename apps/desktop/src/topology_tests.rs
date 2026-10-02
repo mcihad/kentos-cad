@@ -52,8 +52,17 @@ fn key(snapshot: &mut Snapshot, app: &mut App, named: Named) {
     snapshot.input(app, App::view, &mut update, Input::Key(named));
 }
 
+/// The app laid out on the software renderer (`files_testing::offscreen`).
 fn settled(app: &mut App, size: Size) -> Snapshot {
-    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    settle(app, crate::files_testing::offscreen(size))
+}
+
+/// The app laid out on the GPU's renderer, for the pictures.
+fn pictured(app: &mut App, size: Size) -> Snapshot {
+    settle(app, Snapshot::new(size).expect("a renderer"))
+}
+
+fn settle(app: &mut App, mut snapshot: Snapshot) -> Snapshot {
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
@@ -100,7 +109,7 @@ fn screens() {
             let size = Size::new(width, height);
             let mut app = opened(size, mode);
             let _ = app.run("draft.topology");
-            let mut snapshot = settled(&mut app, size);
+            let mut snapshot = pictured(&mut app, size);
             let cell = find_text(&mut snapshot, &app, "Topoloji").expect("the Topoloji cell");
             press(&mut snapshot, &mut app, cell.center(), mouse::Button::Right);
             let file = out.join(format!("durum-topoloji-{width}x{height}{suffix}.png"));

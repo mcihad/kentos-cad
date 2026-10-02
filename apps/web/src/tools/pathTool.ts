@@ -162,6 +162,11 @@ export class PathTool extends PointInputTool {
     }
   }
 
+  /** The path so far, for snapping to it (docs/adr/0163 §3); Sabit ilk nokta's rays and İçine tıkla have none of their own. */
+  draftPath(): { pts: readonly Vec2[]; bulges?: readonly number[] } | null {
+    return this.pts.length ? { pts: this.pts, ...(hasBulges(this.bulges) && { bulges: this.bulges }) } : null;
+  }
+
   /** Travel direction at the last vertex (end tangent of the last segment). */
   private tangent(): Vec2 | null {
     const n = this.pts.length;

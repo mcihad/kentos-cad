@@ -77,6 +77,11 @@ export interface Tool {
   cancel?(): boolean;
   /** Reference point for perpendicular snaps (usually the last picked point). */
   snapFrom?(): Vec2 | null;
+  /**
+   * The object being drawn, its points so far (not the segment to the cursor) as an open path, one bulge per segment:
+   * snapped to as one more object while `snap.self` is on (docs/adr/0163 §3).
+   */
+  draftPath?(): { pts: readonly Vec2[]; bulges?: readonly number[] } | null;
   /** Grip currently being edited, drawn as the hot grip. */
   activeGrip?(): { id: number; index: number } | null;
   /**

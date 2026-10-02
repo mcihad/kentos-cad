@@ -11,7 +11,7 @@ use kentos_contracts::{
     DocumentSnapshotV1, Entity, EntityBase, LineEntity, PathEntity, Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot};
-use kentos_interaction::{Spatial, Vec2, snap_kinds};
+use kentos_interaction::{Spatial, Vec2, default_snap_kinds};
 
 const E: f64 = 487000.0;
 const N: f64 = 4420000.0;
@@ -171,7 +171,7 @@ fn store_sync_and_queries_on_a_large_drawing() {
 
         // Queries as the pointer makes them: snap and pick where the pointer is.
         let width = side as f64 * 20.0;
-        let kinds = snap_kinds(|key| key != "snap.nearest");
+        let kinds = default_snap_kinds();
         let point = |i: usize| {
             let f = (i as f64 * 0.618_033_988_75).fract();
             let g = (i as f64 * 0.414_213_562_37).fract();

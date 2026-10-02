@@ -1202,6 +1202,19 @@ impl Tool for Path {
         self.base()
     }
 
+    /// The path so far, for snapping to it (the web's `draftPath`,
+    /// docs/adr/0163 §3); Sabit ilk nokta's rays are no path, and İçine
+    /// tıkla has no points.
+    fn draft_path(&self) -> Option<kentos_geometry_core::entity::Shape> {
+        (!self.pts.is_empty() && !self.fixed()).then(|| {
+            kentos_geometry_core::entity::Shape::Polyline {
+                pts: self.pts.clone(),
+                bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
+                holes: None,
+            }
+        })
+    }
+
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
         Flow::Stay

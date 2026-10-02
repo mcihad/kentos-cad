@@ -4,7 +4,9 @@
 //! the document and says what to draw as [`Preview`] data.
 
 use kentos_domain::Document;
+use kentos_geometry_core::entity::Shape as GeomShape;
 use kentos_geometry_core::geometry::Bounds;
+use kentos_geometry_core::jsmath::js_round;
 use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_input::Tracking;
 
@@ -165,6 +167,14 @@ pub struct Draft {
     pub snap: bool,
     /// The snap kinds that apply, as `SnapKind::bit`s (`snap.*`, see [`snap_kinds`]).
     pub snap_kinds: u32,
+    /// Karelaj's spacings, east (Y) and north (X), metres (`snap.gridEast`,
+    /// `snap.gridNorth`, docs/adr/0163 §1).
+    pub snap_grid: [f64; 2],
+    /// The object being drawn is snapped to too (`snap.self`, §3).
+    pub snap_self: bool,
+    /// The screen scales snapping works between, as 1:N denominators
+    /// (`snap.scaleMin`, `snap.scaleMax`; 0 no limit, §5).
+    pub snap_scale: [f64; 2],
     /// How near a click must be to an object to pick it (`drafting.pickAperture`), logical pixels.
     pub pick_aperture: f64,
     /// Object tracking is on (Shift+F3, `drafting.tracking`, docs/adr/0085).
@@ -191,7 +201,9 @@ pub struct Draft {
 
 impl Default for Draft {
     /// The web's defaults: ortho and polar off, an 11 px snap aperture,
-    /// snapping on with its default kinds (all but nearest), a 5 px pick
+    /// snapping on with its default kinds (all but nearest and the
+    /// additions of docs/adr/0163), a 1 m Karelaj, the object being drawn
+    /// snapped to, every scale, a 5 px pick
     /// aperture, topological editing off, the layer's colour and weight
     /// (app/state.ts, the settings schema).
     fn default() -> Self {
@@ -200,7 +212,10 @@ impl Default for Draft {
             polar: None,
             snap_aperture: 11.0,
             snap: true,
-            snap_kinds: snap_kinds(|key| key != "snap.nearest"),
+            snap_kinds: default_snap_kinds(),
+            snap_grid: [1.0, 1.0],
+            snap_self: true,
+            snap_scale: [0.0, 0.0],
             pick_aperture: 5.0,
             tracking: true,
             topology: false,
@@ -259,12 +274,47 @@ pub fn snap_kinds(on: impl Fn(&str) -> bool) -> u32 {
         ("snap.perpendicular", SnapKind::Perpendicular),
         ("snap.nearest", SnapKind::Nearest),
         ("snap.tangent", SnapKind::Tangent),
+        ("snap.centroid", SnapKind::Centroid),
+        ("snap.extension", SnapKind::Extension),
+        ("snap.parallel", SnapKind::Parallel),
+        ("snap.grid", SnapKind::Grid),
     ] {
         if on(key) {
             kinds |= kind.bit();
         }
     }
     kinds
+}
+
+/// The snap kinds on at first, as the settings schema has them: all but
+/// nearest and the additions of docs/adr/0163.
+pub fn default_snap_kinds() -> u32 {
+    snap_kinds(|key| {
+        !matches!(
+            key,
+            "snap.nearest" | "snap.centroid" | "snap.extension" | "snap.parallel" | "snap.grid"
+        )
+    })
+}
+
+/// Metres of paper per logical pixel at 96 dpi (0.26458 mm), the web's
+/// `METRES_PER_PX`: the status bar's “Ekran 1:N”.
+const METRES_PER_PX: f64 = 0.00026458;
+
+/// The view's screen scale as the status bar shows it, the N of 1:N, from
+/// the metres one logical pixel spans (the web's `screenScale`).
+pub fn screen_scale(metres_per_px: f64) -> f64 {
+    js_round(metres_per_px / METRES_PER_PX)
+}
+
+impl Draft {
+    /// Whether snapping works at screen scale 1:`n` (docs/adr/0163 §5):
+    /// not nearer than `snap.scaleMin`, not farther than `snap.scaleMax`, 0
+    /// no limit. Out of it no snap shows, a one-shot snap neither.
+    pub fn snap_in_range(&self, n: f64) -> bool {
+        let [min, max] = self.snap_scale;
+        (min <= 0.0 || n >= min) && (max <= 0.0 || n <= max)
+    }
 }
 
 /// The rectangle tool's corners (the web's `CornerStyle`): sharp, rounded
@@ -879,6 +929,12 @@ pub trait Tool {
     /// The point perpendicular and tangent snaps are taken from: the last
     /// point given (the web's `snapFrom`).
     fn snap_from(&self) -> Option<Vec2> {
+        None
+    }
+    /// The object being drawn, its points so far (not the segment to the
+    /// cursor) as an open path: snapped to as one more object while
+    /// `snap.self` is on (the web's `draftPath`, docs/adr/0163 §3).
+    fn draft_path(&self) -> Option<GeomShape> {
         None
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>);

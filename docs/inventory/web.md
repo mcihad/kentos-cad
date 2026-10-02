@@ -4,12 +4,12 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 211 | 198 | 0 | 13 |
+| Komutlar | 224 | 211 | 0 | 13 |
 | Araçlar | 89 | 87 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
-| Ayarlar | 65 | 65 | 0 | 0 |
+| Ayarlar | 74 | 74 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 262 | 0 | 0 |
 | Pencereler ve paneller | 71 | 71 | 0 | 0 |
@@ -50,12 +50,12 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 196 | 0 | 0 | 13 | 2 | 211 |
+| Komutlar | 209 | 0 | 0 | 13 | 2 | 224 |
 | Araçlar | 87 | 0 | 0 | 2 | 0 | 89 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 62 | 0 | 2 | 0 | 1 | 65 |
+| Ayarlar | 71 | 0 | 2 | 0 | 1 | 74 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 262 | 0 | 0 | 0 | 0 | 262 |
 | Pencereler ve paneller | 68 | 2 | 0 | 0 | 1 | 71 |
@@ -77,7 +77,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 211; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (0 / 224; ayrıca 13 iki platformda da bekliyor)
 
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -111,7 +111,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (2 / 65)
+#### Ayarlar (2 / 74)
 
 - `session.overlapLast`
 - `session.overlapLayers`
@@ -131,4 +131,4 @@ Yok.
 
 ## Test başvurusu
 
-61 / 211 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+68 / 224 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

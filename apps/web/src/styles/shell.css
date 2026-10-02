@@ -735,6 +735,14 @@
   background: var(--c-accent);
   box-shadow: none;
 }
+/* On but not in effect (Kenet out of its scale range, docs/adr/0163 §5): the lamp only outlined, the name dim. */
+.status__toggle[aria-pressed='true'][data-out] {
+  color: var(--c-text-3);
+}
+.status__toggle[aria-pressed='true'][data-out]::before {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--c-accent);
+}
 
 /*
  * A narrow window (DESIGN.md §7.7): the status bar's cells give way in order until the message has room,

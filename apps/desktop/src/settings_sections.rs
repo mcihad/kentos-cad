@@ -17,7 +17,8 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 use crate::settings_look as look;
 use crate::settings_view::{
-    Edit, PX, SNAP_KINDS, SettingsDraft, action, choices, crs_choice, listed, presets, range,
+    Edit, METRES, PX, SCALE, SNAP_KINDS, SettingsDraft, action, choices, crs_choice, listed,
+    presets, range,
 };
 
 /// A section of the window.
@@ -120,6 +121,15 @@ impl Section {
                 "snap.perpendicular",
                 "snap.tangent",
                 "snap.nearest",
+                "snap.centroid",
+                "snap.extension",
+                "snap.parallel",
+                "snap.grid",
+                "snap.gridEast",
+                "snap.gridNorth",
+                "snap.self",
+                "snap.scaleMin",
+                "snap.scaleMax",
                 "drafting.snapAperture",
                 "drafting.pickAperture",
                 "drafting.polarIncrement",
@@ -181,6 +191,31 @@ impl<'a> Fields<'a> {
     }
 
     /// A whole number of pixels.
+    /// Metres to a millimetre, written with a point (Karelaj's spacings; DESIGN.md §10.3).
+    fn metres(&self, key: &'static str, fallback: f64) -> NumberInput<'a, Message> {
+        NumberInput::new(self.value(key).as_f64().unwrap_or(fallback), move |v| {
+            Message::Settings(Edit::Value(key, Value::from(v)))
+        })
+        .units(METRES)
+        .range(range(key))
+        .step(1.0)
+        .decimals(3)
+        .point()
+        .width(120)
+    }
+
+    /// A screen scale's denominator, 0 no limit (the snap's scale range).
+    fn scale(&self, key: &'static str) -> NumberInput<'a, Message> {
+        NumberInput::new(self.value(key).as_f64().unwrap_or(0.0), move |v| {
+            Message::Settings(Edit::Value(key, Value::from(v.round() as i64)))
+        })
+        .units(SCALE)
+        .range(range(key))
+        .step(500.0)
+        .decimals(0)
+        .width(120)
+    }
+
     fn pixels(&self, key: &'static str, fallback: f64) -> NumberInput<'a, Message> {
         NumberInput::new(self.value(key).as_f64().unwrap_or(fallback), move |v| {
             Message::Settings(Edit::Value(key, Value::from(v.round() as i64)))
@@ -480,6 +515,25 @@ fn snap_section<'a>(f: &Fields<'a>) -> Element<'a, Message> {
     let form = SNAP_KINDS
         .iter()
         .fold(form, |form, key| f.switch_field(form, key, None))
+        // Karelaj's spacings and where snapping works (docs/adr/0163 §1, §3, §5).
+        .section("Karelaj")
+        .field(
+            Fields::title("snap.gridEast"),
+            f.metres("snap.gridEast", 1.0),
+        )
+        .help(Fields::help("snap.gridEast"))
+        .field(
+            Fields::title("snap.gridNorth"),
+            f.metres("snap.gridNorth", 1.0),
+        )
+        .help(Fields::help("snap.gridNorth"))
+        .section("Kenedin kapsamı");
+    let form = f
+        .switch_field(form, "snap.self", None)
+        .field(Fields::title("snap.scaleMin"), f.scale("snap.scaleMin"))
+        .help(Fields::help("snap.scaleMin"))
+        .field(Fields::title("snap.scaleMax"), f.scale("snap.scaleMax"))
+        .help(Fields::help("snap.scaleMax"))
         .section("Yakalama")
         .field(
             Fields::title("drafting.snapAperture"),

@@ -10,7 +10,8 @@ import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL, type ConfirmMods } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { ThemeId } from './appearance';
-import type { OverlapMode } from './state';
+import { PREF_KEYS, type OverlapMode } from './state';
+import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
 import { WORKSPACES, type WorkspaceSpec } from './workspaces';
 
@@ -28,6 +29,41 @@ function pending(ctx: AppContext, id: string, title: string, category: string, i
 
 function toggle(id: string, title: string, s: Signal<boolean>, opts: Partial<Command> = {}): Command {
   return { id, title, run: () => s.set(!s.value), isChecked: () => s.value, watch: [s], ...opts };
+}
+
+/**
+ * The snap kinds' toggles (docs/adr/0163 §6), each its preference, named and described as the settings are; the
+ * menu's icon is named after the preference. Uç nokta takes Çeyrek with it, as the settings do.
+ */
+const SNAP_KIND_COMMANDS: readonly [kind: string, pref: SnapPref, aliases: string[]][] = [
+  ['endpoint', 'snapEndpoint', []],
+  ['midpoint', 'snapMidpoint', []],
+  ['center', 'snapCenter', []],
+  ['node', 'snapNode', []],
+  ['intersection', 'snapIntersection', []],
+  ['perpendicular', 'snapPerpendicular', []],
+  ['tangent', 'snapTangent', []],
+  ['nearest', 'snapNearest', []],
+  ['centroid', 'snapCentroid', ['AGIRLIKMERKEZI']],
+  ['extension', 'snapExtension', ['UZANTI']],
+  ['parallel', 'snapParallel', ['PARALELKENET']],
+  ['grid', 'snapGrid', ['KARELAJ']],
+];
+
+type SnapPref = 'snapEndpoint' | 'snapMidpoint' | 'snapCenter' | 'snapNode' | 'snapIntersection' | 'snapPerpendicular' | 'snapTangent' | 'snapNearest' | 'snapCentroid' | 'snapExtension' | 'snapParallel' | 'snapGrid';
+
+function snapKindCommands(ctx: AppContext): Command[] {
+  return SNAP_KIND_COMMANDS.map(([kind, pref, aliases]) => {
+    const setting = settingDescriptor(PREF_KEYS[pref]);
+    const title = setting?.title ?? kind;
+    return toggle(`draft.snap.${kind}`, `Kenet: ${title}`, ctx.prefs[pref], {
+      short: title,
+      category: 'Çizim yardımcıları',
+      icon: pref,
+      description: setting?.description,
+      ...(aliases.length ? { aliases } : {}),
+    });
+  });
 }
 
 /** One of the overlap control's modes as a radio command (docs/adr/0162 §1); a mode that avoids is the cell's next. */
@@ -526,6 +562,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: 'Çizim yardımcıları',
       icon: 'snap',
       description: 'İmleç uç, orta, merkez, kesişim gibi noktalara yapışır. Tek seferlik kenet için Shift + sağ tık.',
+    }),
+    // The snap kinds one by one (docs/adr/0163 §6): the Kenet cell's right-click menu and the command line.
+    ...snapKindCommands(ctx),
+    toggle('draft.snap.self', 'Çizilmekte olan nesneye kenet', ctx.prefs.snapSelf, {
+      short: 'Çizilmekte olan nesneye',
+      category: 'Çizim yardımcıları',
+      icon: 'snap',
+      description: 'Çizilen yolun önceki köşelerine ve kenarlarına da kenetlenir; kapalıyken yalnız çizimdeki nesnelere.',
     }),
     toggle('draft.grid', 'Izgara', settings.grid, { category: 'Çizim yardımcıları', icon: 'grid' }),
     toggle('draft.ortho', 'Orto', settings.ortho, { category: 'Çizim yardımcıları', icon: 'ortho', description: 'Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner.' }),

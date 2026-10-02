@@ -25,6 +25,7 @@ import { ViewNavigation } from './viewHistory';
 import { symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
 import { PickIndex, type SnapHit, type SnapKind } from './picking';
+import { screenScale, snapInRange } from './snapRange';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
 export type ViewportMenuKind = 'select' | 'command' | 'snap';
@@ -723,16 +724,31 @@ export class ViewportController {
     if (p.snapPerpendicular.value) kinds.add('perpendicular');
     if (p.snapNearest.value) kinds.add('nearest');
     if (p.snapTangent.value) kinds.add('tangent');
+    if (p.snapCentroid.value) kinds.add('centroid');
+    if (p.snapExtension.value) kinds.add('extension');
+    if (p.snapParallel.value) kinds.add('parallel');
+    if (p.snapGrid.value) kinds.add('grid');
     return kinds;
+  }
+
+  /** Whether the view's screen scale lies in the snap's range (docs/adr/0163 §5). */
+  private snapScaleOk(): boolean {
+    const { snapScaleMin: min, snapScaleMax: max } = this.ctx.prefs;
+    return snapInRange(screenScale(this.camera.scale), min.value, max.value);
   }
 
   private updateSnap(screen: Vec2): void {
     const tool = this.ctx.tools.active;
     const override = this.snapOverride.value;
-    // A one-shot snap works even with running snaps off (F3), and only for its own kind.
-    const on = tool.snaps && (this.ctx.settings.snap.value || !!override);
+    const prefs = this.ctx.prefs;
+    // A one-shot snap works even with running snaps off (F3), and only for its own kind; neither out of the scale range.
+    const on = tool.snaps && (this.ctx.settings.snap.value || !!override) && this.snapScaleOk();
     const kinds = override ? new Set<SnapKind>([override]) : this.snapKinds();
-    this.snap = on ? this.picker.snap(this.camera.screenToWorld(screen), this.ctx.prefs.snapAperture.value / this.camera.scale, kinds, tool.snapFrom?.() ?? null) : null;
+    const extras = {
+      draft: prefs.snapSelf.value ? (tool.draftPath?.() ?? null) : null,
+      grid: [prefs.snapGridEast.value, prefs.snapGridNorth.value] as const,
+    };
+    this.snap = on ? this.picker.snapEx(this.camera.screenToWorld(screen), prefs.snapAperture.value / this.camera.scale, kinds, tool.snapFrom?.() ?? null, extras) : null;
     this.updateTracking(screen);
   }
 

@@ -89,6 +89,11 @@ export class DistanceTool extends PathTool {
     return `${f.length(dist(from, to))}, semt ${f.bearing(bearingGrad(from, to))}`;
   }
 
+  /** Sabit ilk nokta's rays are no path to snap to (docs/adr/0163 §3). */
+  override draftPath(): ReturnType<PathTool['draftPath']> {
+    return this.fixed ? null : super.draftPath();
+  }
+
   protected override finish(): void {
     // Rays have no total: each was written as it was measured.
     if (this.fixed && this.pts.length >= 2) return this.reset();

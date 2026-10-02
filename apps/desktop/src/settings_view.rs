@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 34] = [
+pub const KEYS: [&str; 43] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -42,6 +42,15 @@ pub const KEYS: [&str; 34] = [
     "snap.perpendicular",
     "snap.tangent",
     "snap.nearest",
+    "snap.centroid",
+    "snap.extension",
+    "snap.parallel",
+    "snap.grid",
+    "snap.gridEast",
+    "snap.gridNorth",
+    "snap.self",
+    "snap.scaleMin",
+    "snap.scaleMax",
     "graphics.msaa",
     "graphics.hiDpi",
     "graphics.symbolSize",
@@ -61,8 +70,8 @@ pub const KEYS: [&str; 34] = [
     "newProjects.drawingFont",
 ];
 
-/// The snap kinds, in the web's order (docs/adr/0029).
-pub(crate) const SNAP_KINDS: [&str; 8] = [
+/// The snap kinds, in the web's order (docs/adr/0029, 0163).
+pub(crate) const SNAP_KINDS: [&str; 12] = [
     "snap.endpoint",
     "snap.midpoint",
     "snap.center",
@@ -71,9 +80,16 @@ pub(crate) const SNAP_KINDS: [&str; 8] = [
     "snap.perpendicular",
     "snap.tangent",
     "snap.nearest",
+    "snap.centroid",
+    "snap.extension",
+    "snap.parallel",
+    "snap.grid",
 ];
 
 pub(crate) const PX: &[Unit] = &[Unit::new("px", 1.0)];
+pub(crate) const METRES: &[Unit] = &[Unit::new("m", 1.0)];
+/// A screen scale's denominator, the N of 1:N.
+pub(crate) const SCALE: &[Unit] = &[Unit::new("1:N", 1.0)];
 
 /// The window's draft: the values asked for, and a pending import or reset.
 #[derive(Debug, Clone, PartialEq)]

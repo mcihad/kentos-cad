@@ -651,7 +651,7 @@ fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
         &mut app,
         Event::File(files::Event::Cmd(FileCmd::ToggleSource)),
     );
-    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut snapshot = crate::files_testing::offscreen(Size::new(1440.0, 900.0));
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };

@@ -159,6 +159,19 @@ export interface PreferencesData {
   snapPerpendicular: boolean;
   snapNearest: boolean;
   snapTangent: boolean;
+  /** The snap additions (docs/adr/0163 §1): a closed area's centroid, an acquired end's extension, the parallel to an acquired edge, Karelaj. */
+  snapCentroid: boolean;
+  snapExtension: boolean;
+  snapParallel: boolean;
+  snapGrid: boolean;
+  /** Karelaj's spacings, east (Y) and north (X), metres. */
+  snapGridEast: number;
+  snapGridNorth: number;
+  /** Snap to the object being drawn too (§3). */
+  snapSelf: boolean;
+  /** Snap only between these screen scales, 1:N (0: no limit; §5). */
+  snapScaleMin: number;
+  snapScaleMax: number;
   /** Polar tracking step in degrees (F10 toggles tracking). */
   polarIncrement: number;
   crosshair: CrosshairSize;
@@ -220,6 +233,15 @@ export const PREF_KEYS = {
   snapPerpendicular: 'snap.perpendicular',
   snapNearest: 'snap.nearest',
   snapTangent: 'snap.tangent',
+  snapCentroid: 'snap.centroid',
+  snapExtension: 'snap.extension',
+  snapParallel: 'snap.parallel',
+  snapGrid: 'snap.grid',
+  snapGridEast: 'snap.gridEast',
+  snapGridNorth: 'snap.gridNorth',
+  snapSelf: 'snap.self',
+  snapScaleMin: 'snap.scaleMin',
+  snapScaleMax: 'snap.scaleMax',
   polarIncrement: 'drafting.polarIncrement',
   crosshair: 'appearance.crosshair',
   theme: 'appearance.theme',

@@ -58,16 +58,23 @@ export function toggleSwitch(opts: { label: string; checked: boolean; onChange: 
 }
 
 /** Integer stepper with − / + buttons and direct entry. */
-export function stepper(opts: { label: string; value: number; min: number; max: number; unit?: string; onChange: (v: number) => void }): HTMLElement {
-  const clamp = (v: number) => Math.min(opts.max, Math.max(opts.min, Math.round(v)));
-  const input = h('input', { class: 'stepper__input num', value: String(opts.value), inputmode: 'numeric', 'aria-label': opts.label, spellcheck: 'false' });
+/**
+ * A number with − and + buttons. Whole numbers by default; with `decimals` a typed value keeps that many places (a
+ * comma reads as the point) and the buttons move by `step`.
+ */
+export function stepper(opts: { label: string; value: number; min: number; max: number; unit?: string; step?: number; decimals?: number; onChange: (v: number) => void }): HTMLElement {
+  const places = 10 ** (opts.decimals ?? 0);
+  const step = opts.step ?? 1;
+  const clamp = (v: number) => Math.min(opts.max, Math.max(opts.min, Math.round(v * places) / places));
+  const parse = (s: string) => (opts.decimals ? Number(s.trim().replace(',', '.')) : parseInt(s, 10));
+  const input = h('input', { class: 'stepper__input num', value: String(opts.value), inputmode: opts.decimals ? 'decimal' : 'numeric', 'aria-label': opts.label, spellcheck: 'false' });
   const dec = h('button', { class: 'stepper__btn', type: 'button', 'aria-label': `${opts.label} azalt`, disabled: opts.value <= opts.min }, '−');
   const inc = h('button', { class: 'stepper__btn', type: 'button', 'aria-label': `${opts.label} artır`, disabled: opts.value >= opts.max }, '+');
-  dec.addEventListener('click', () => opts.onChange(clamp(opts.value - 1)));
-  inc.addEventListener('click', () => opts.onChange(clamp(opts.value + 1)));
+  dec.addEventListener('click', () => opts.onChange(clamp(opts.value - step)));
+  inc.addEventListener('click', () => opts.onChange(clamp(opts.value + step)));
   const commit = () => {
-    const v = parseInt(input.value, 10);
-    if (Number.isFinite(v) && clamp(v) !== opts.value) opts.onChange(clamp(v));
+    const v = parse(input.value);
+    if (input.value.trim() && Number.isFinite(v) && clamp(v) !== opts.value) opts.onChange(clamp(v));
     else input.value = String(opts.value);
   };
   input.addEventListener('blur', commit);
@@ -75,7 +82,7 @@ export function stepper(opts: { label: string; value: number; min: number; max: 
     if (e.key === 'Enter') commit();
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-      opts.onChange(clamp(opts.value + (e.key === 'ArrowUp' ? 1 : -1)));
+      opts.onChange(clamp(opts.value + (e.key === 'ArrowUp' ? step : -step)));
     }
   });
   return h('div', { class: 'stepper' }, dec, input, inc, opts.unit ? h('span', { class: 'stepper__unit' }, opts.unit) : null);

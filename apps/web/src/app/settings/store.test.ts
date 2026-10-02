@@ -79,6 +79,16 @@ const MIGRATED: PreferencesData = {
   snapPerpendicular: false,
   snapNearest: true,
   snapTangent: true,
+  // Newer than the old store (docs/adr/0163): the schema's defaults.
+  snapCentroid: false,
+  snapExtension: false,
+  snapParallel: false,
+  snapGrid: false,
+  snapGridEast: 1,
+  snapGridNorth: 1,
+  snapSelf: true,
+  snapScaleMin: 0,
+  snapScaleMax: 0,
   polarIncrement: 30,
   crosshair: 'full',
   // The older five sizes are pixels now (docs/adr/0126); the theme was never here.

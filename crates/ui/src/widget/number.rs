@@ -338,9 +338,9 @@ impl Parser<'_> {
     }
 }
 
-/// Değerin düzenlenirken görünen yazımı: binlik ayraçsız, ondalık virgüllü,
-/// sondaki sıfırlar atılmış.
-fn plain(value: f64, decimals: usize) -> String {
+/// Değerin düzenlenirken görünen yazımı: binlik ayraçsız, ondalık virgüllü
+/// (`point` ile noktalı), sondaki sıfırlar atılmış.
+fn plain(value: f64, decimals: usize, point: bool) -> String {
     let fixed = format!("{:.*}", decimals, value);
     let trimmed = if fixed.contains('.') {
         fixed.trim_end_matches('0').trim_end_matches('.')
@@ -350,6 +350,7 @@ fn plain(value: f64, decimals: usize) -> String {
 
     match trimmed {
         "-0" => "0".to_owned(),
+        other if point => other.to_owned(),
         other => other.replace('.', ","),
     }
 }
@@ -375,6 +376,8 @@ pub struct NumberInput<'a, Message> {
     range: RangeInclusive<f64>,
     step: f64,
     decimals: Option<usize>,
+    /// Noktalı ondalık, binlik ayraçsız ([`NumberInput::point`]).
+    point: bool,
     width: Length,
     /// Satır içi yükseklik (tablo ve özellik hücresi).
     inline: bool,
@@ -395,6 +398,7 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
             range: f64::NEG_INFINITY..=f64::INFINITY,
             step: 1.0,
             decimals: None,
+            point: false,
             width: Length::Fill,
             inline: false,
             parts: [text("").into(), field("").into(), text("").into()],
@@ -436,6 +440,14 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
     /// Gösterilen ondalık basamak; verilmezse adımdan çıkarılır.
     pub fn decimals(mut self, decimals: usize) -> Self {
         self.decimals = Some(decimals);
+        self
+    }
+
+    /// Noktalı ondalıkla yazar, çizimin ve komut satırının yazımı gibi:
+    /// binlik ayraçsız, sondaki sıfırlar atılmış (“1”, “0.25”). Yazılanda
+    /// nokta da virgül de ondalıktır.
+    pub fn point(mut self) -> Self {
+        self.point = true;
         self
     }
 
@@ -497,6 +509,8 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
         let label = self.label.clone().unwrap_or_default();
         let content = if state.editing {
             state.buffer.clone()
+        } else if self.point {
+            plain(self.shown(), self.places(), true)
         } else {
             number::real(self.shown(), self.places())
         };
@@ -696,7 +710,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                         }
                     } else {
                         // Sürüklenmeden bırakıldı: alan düzenlenir.
-                        begin(state, &mut children[1], self.shown(), self.places());
+                        begin(
+                            state,
+                            &mut children[1],
+                            self.shown(),
+                            self.places(),
+                            self.point,
+                        );
                         self.build(state);
                         shell.invalidate_layout();
                     }
@@ -728,7 +748,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
 
         // Sekmeyle odaklanan alan düzenlemeye geçer.
         if focused && !state.editing {
-            begin(state, &mut children[1], self.shown(), self.places());
+            begin(
+                state,
+                &mut children[1],
+                self.shown(),
+                self.places(),
+                self.point,
+            );
             self.build(state);
             shell.invalidate_layout();
         }
@@ -771,7 +797,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                     let times = if modifiers.shift() { 10.0 } else { 1.0 };
                     let value = self.settle(current + sign * self.step * times);
 
-                    state.buffer = plain(value / self.factor(), self.places());
+                    state.buffer = plain(value / self.factor(), self.places(), self.point);
                     state.error = None;
                     input_state_mut(&mut children[1]).select_all();
                     shell.publish((self.on_change)(value));
@@ -1008,9 +1034,9 @@ fn input_state_mut(tree: &mut Tree) -> &mut text_input::State<Paragraph> {
 }
 
 /// Düzenlemeye geçer: değer seçili olarak yazılır.
-fn begin(state: &mut State, field: &mut Tree, shown: f64, decimals: usize) {
+fn begin(state: &mut State, field: &mut Tree, shown: f64, decimals: usize, point: bool) {
     state.editing = true;
-    state.buffer = plain(shown, decimals);
+    state.buffer = plain(shown, decimals, point);
     state.error = None;
 
     let input = input_state_mut(field);
@@ -1375,10 +1401,14 @@ mod tests {
 
     #[test]
     fn edited_values_drop_trailing_zeros() {
-        assert_eq!(plain(12.5, 2), "12,5");
-        assert_eq!(plain(12.0, 2), "12");
-        assert_eq!(plain(-0.001, 2), "0");
-        assert_eq!(plain(1234.25, 1), "1234,2");
+        assert_eq!(plain(12.5, 2, false), "12,5");
+        assert_eq!(plain(12.0, 2, false), "12");
+        assert_eq!(plain(-0.001, 2, false), "0");
+        assert_eq!(plain(1234.25, 1, false), "1234,2");
+        // With a point, as the drawing writes numbers (no grouping either).
+        assert_eq!(plain(0.25, 3, true), "0.25");
+        assert_eq!(plain(1.0, 3, true), "1");
+        assert_eq!(plain(12345.5, 3, true), "12345.5");
     }
 
     #[test]

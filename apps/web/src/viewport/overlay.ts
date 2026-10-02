@@ -362,10 +362,48 @@ export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera,
       g.lineTo(x + 5, y + 5);
       g.closePath();
       break;
+    // docs/adr/0163 §1: a diamond with a dot; a plus on a dashed line; two slanted strokes; a small grid.
+    case 'centroid':
+      g.moveTo(x, y - 6);
+      g.lineTo(x + 6, y);
+      g.lineTo(x, y + 6);
+      g.lineTo(x - 6, y);
+      g.closePath();
+      g.moveTo(x + 1.6, y);
+      g.arc(x, y, 1.6, 0, Math.PI * 2);
+      break;
+    case 'extension':
+      g.moveTo(x, y - 5);
+      g.lineTo(x, y + 5);
+      g.moveTo(x - 5, y);
+      g.lineTo(x + 5, y);
+      g.stroke();
+      g.beginPath();
+      g.setLineDash([3, 2.5]);
+      g.moveTo(x - 9, y);
+      g.lineTo(x + 9, y);
+      break;
+    case 'parallel':
+      g.moveTo(x - 7, y + 6);
+      g.lineTo(x - 1, y - 6);
+      g.moveTo(x - 1, y + 6);
+      g.lineTo(x + 5, y - 6);
+      break;
+    case 'grid':
+      g.moveTo(x - 3, y - 5);
+      g.lineTo(x - 3, y + 5);
+      g.moveTo(x + 3, y - 5);
+      g.lineTo(x + 3, y + 5);
+      g.moveTo(x - 5, y - 3);
+      g.lineTo(x + 5, y - 3);
+      g.moveTo(x - 5, y + 3);
+      g.lineTo(x + 5, y + 3);
+      break;
     default:
       g.rect(x - 5, y - 5, 10, 10);
   }
   g.stroke();
+  g.setLineDash([]);
   g.font = `500 10.5px ${pal.font}`;
   g.textBaseline = 'bottom';
   // Above-right, so it never collides with the tool's measurement tag (below-right).
