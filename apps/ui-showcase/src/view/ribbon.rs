@@ -104,7 +104,10 @@ impl Showcase {
                         Page::Feedback,
                     ],
                 ))
-                .group(self.gallery_group("CBS ve CAD", &[Page::Attributes, Page::Spatial]))
+                .group(self.gallery_group(
+                    "CBS ve CAD",
+                    &[Page::Attributes, Page::Spatial, Page::Library],
+                ))
                 .group(self.interface_group())
                 .into();
         }

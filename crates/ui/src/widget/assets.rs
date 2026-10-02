@@ -345,9 +345,9 @@ impl<'a, Message: Clone + 'a> From<AssetBrowser<'a, Message>> for Element<'a, Me
 
 /// Çift tıklanınca mesaj gönderen sarmalayıcı; tek tıklama içeriğe
 /// ulaşır (ör. düğme öğeyi seçer).
-struct DoubleClick<'a, Message> {
-    content: Element<'a, Message>,
-    message: Message,
+pub(crate) struct DoubleClick<'a, Message> {
+    pub(crate) content: Element<'a, Message>,
+    pub(crate) message: Message,
 }
 
 #[derive(Default)]

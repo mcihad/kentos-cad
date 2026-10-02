@@ -595,6 +595,64 @@ pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
     }
 }
 
+/// Süzgeç hapı (ör. kitaplığın kategorileri): seçili değilken ince kenarlı
+/// ve ikincil yazılı, seçiliyken yumuşak vurgu zemininde ve vurgu yazılı.
+/// Hap köşeleri biçim ayarından etkilenmez (DESIGN.md §5.3).
+pub fn chip(active: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, edge, text) = match (active, hovered) {
+            (true, _) => (
+                t.accent.scale_alpha(if hovered { 0.26 } else { 0.16 }),
+                t.accent_line(),
+                t.accent_hover,
+            ),
+            (false, true) => (t.surface_hover, t.border_strong(), t.text),
+            (false, false) => (Color::TRANSPARENT, t.border, t.muted),
+        };
+
+        Style {
+            background: Some(Background::Color(background)),
+            text_color: text,
+            border: Border {
+                color: edge,
+                width: 1.0,
+                radius: 999.0.into(),
+            },
+            ..Style::default()
+        }
+    }
+}
+
+/// Kitaplık karosu (malzeme, 3B nesne): dinlenirken zeminsiz; üzerine
+/// gelince hafif zemin ve belirgin kenar; seçiliyken yumuşak vurgu zemini ve
+/// vurgu kenarı.
+pub fn library_tile(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, edge) = match (selected, hovered) {
+            (true, _) => (t.selection(), t.accent_line()),
+            (false, true) => (t.layer(0.05), t.border_strong()),
+            (false, false) => (Color::TRANSPARENT, Color::TRANSPARENT),
+        };
+
+        Style {
+            background: Some(Background::Color(background)),
+            text_color: t.text,
+            border: Border {
+                color: edge,
+                width: 1.0,
+                radius: crate::theme::shape::md().into(),
+            },
+            ..Style::default()
+        }
+    }
+}
+
 /// Uygulama menüsünü açan marka düğmesi (web'in `.brand`'ı): zemini yok;
 /// üzerine gelince ya da menü açıkken hafif bir katman. Yazısı kendi rengini
 /// taşır; ok üçüncül tondadır.

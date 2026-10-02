@@ -19,6 +19,8 @@ use kentos_ui::widget::command_line::Entry;
 use kentos_ui::widget::docking::{self, Docks, Side};
 use kentos_ui::widget::floating::{self, Placement, Windows};
 use kentos_ui::widget::inspector;
+use kentos_ui::widget::material::{self, Look, Material, Pattern, Source};
+use kentos_ui::widget::object_browser::{self, Object3d};
 use kentos_ui::widget::rulers::{self, Guide, Guides};
 use kentos_ui::widget::table::SortOrder;
 use kentos_ui::widget::timeline::{self, Playback};
@@ -45,6 +47,7 @@ pub enum Page {
     Feedback,
     Attributes,
     Spatial,
+    Library,
 }
 
 impl Page {
@@ -63,6 +66,7 @@ impl Page {
             Page::Feedback => "Geri bildirim",
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
+            Page::Library => "Kitaplık",
         }
     }
 
@@ -81,6 +85,7 @@ impl Page {
             Page::Feedback => Icon::Info,
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
+            Page::Library => Icon::Layers,
         }
     }
 
@@ -120,6 +125,10 @@ impl Page {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
             }
             Page::Spatial => "ViewCube, pusula, araçlar, nesne yakalama ve Türkçe biçimlendirme.",
+            Page::Library => {
+                "Malzeme ve 3B nesne tarayıcıları: kitaplığın, projenin ve bulutun öğeleri, \
+                 görüntü dosyası gerekmeden önizlenir."
+            }
         }
     }
 }
@@ -156,6 +165,19 @@ pub enum Demo {
     Segment(usize, usize),
     /// Metin alanı örnekleri: alanın sırası ve yazılan.
     FieldText(usize, String),
+    /// Malzeme tarayıcısı örneği.
+    MaterialSelected(usize),
+    MaterialActivated(usize),
+    MaterialSearch(String),
+    MaterialCategory(Option<String>),
+    MaterialShape(material::Shape),
+    MaterialApplied(usize),
+    /// 3B nesne tarayıcısı örneği.
+    ObjectSelected(usize),
+    ObjectPlaced(usize),
+    ObjectSearch(String),
+    ObjectCategory(Option<String>),
+    ObjectLod(object_browser::LodFilter),
     /// Tablo sütununa göre sırala ya da yönü çevir.
     Sorted(usize),
     SearchChanged(String),
@@ -453,6 +475,20 @@ pub struct Gallery {
     pub segments: [Option<usize>; 4],
     /// Metin alanı örneklerinin metinleri: arama, Y, X, ada/parsel, iki hücre.
     pub fields: [String; 6],
+    /// Malzeme tarayıcısı örneği: kitaplık, seçili malzeme, arama, kategori
+    /// ve önizleme biçimi.
+    pub materials: Vec<Material>,
+    pub material: Option<usize>,
+    pub material_query: String,
+    pub material_category: Option<String>,
+    pub material_shape: material::Shape,
+    /// 3B nesne tarayıcısı örneği: kitaplık, seçili nesne, arama, kategori
+    /// ve ayrıntı düzeyi süzgeci.
+    pub objects: Vec<Object3d>,
+    pub object: Option<usize>,
+    pub object_query: String,
+    pub object_category: Option<String>,
+    pub object_lod: object_browser::LodFilter,
     pub sort: Option<(usize, SortOrder)>,
     pub search: String,
 
@@ -869,6 +905,16 @@ impl Default for Gallery {
                 "Kuleli İş Merkezi".to_owned(),
                 "96.5".to_owned(),
             ],
+            materials: sample_materials(),
+            material: Some(0),
+            material_query: String::new(),
+            material_category: None,
+            material_shape: material::Shape::Sphere,
+            objects: crate::models::sample_objects(),
+            object: Some(4),
+            object_query: String::new(),
+            object_category: None,
+            object_lod: object_browser::LodFilter::All,
             sort: None,
             search: String::new(),
             picked_date: Date::new(2026, 10, 29),
@@ -1052,6 +1098,34 @@ impl Gallery {
             }
             Demo::QueryEdited(edit) => self.query.apply(edit, &self.schema),
             Demo::ModeSelected(mode) => self.mode = mode,
+            Demo::MaterialSelected(index) => self.material = Some(index),
+            Demo::MaterialActivated(index) | Demo::MaterialApplied(index) => {
+                self.material = Some(index);
+
+                if let Some(material) = self.materials.get(index) {
+                    return Some(format!(
+                        "Galeri: “{}” seçili nesnelere uygulanırdı (görüntüleyici örneği).",
+                        material.name
+                    ));
+                }
+            }
+            Demo::ObjectSelected(index) => self.object = Some(index),
+            Demo::ObjectPlaced(index) => {
+                self.object = Some(index);
+
+                if let Some(object) = self.objects.get(index) {
+                    return Some(format!(
+                        "Galeri: “{}” çizime yerleştirilirdi (görüntüleyici örneği).",
+                        object.name
+                    ));
+                }
+            }
+            Demo::ObjectSearch(query) => self.object_query = query,
+            Demo::ObjectCategory(category) => self.object_category = category,
+            Demo::ObjectLod(lod) => self.object_lod = lod,
+            Demo::MaterialSearch(query) => self.material_query = query,
+            Demo::MaterialCategory(category) => self.material_category = category,
+            Demo::MaterialShape(shape) => self.material_shape = shape,
             Demo::FieldText(slot, text) => {
                 if let Some(field) = self.fields.get_mut(slot) {
                     *field = text;
@@ -1551,6 +1625,320 @@ fn model_values() -> Vec<Value> {
         Value::Real(35.0),
         Value::Bool(true),
         Date::new(2026, 6, 14).map_or(Value::Null, Value::Date),
+    ]
+}
+
+/// Malzeme tarayıcısı örneğinin kitaplığı: kentin yapı ve peyzaj
+/// malzemeleri; boyut desenin bir tekrarının gerçek ölçüsüdür.
+fn sample_materials() -> Vec<Material> {
+    let rgb = iced::Color::from_rgb8;
+    let item =
+        |id: &str, name: &str, category: &str, look: Look| Material::new(id, name, category, look);
+
+    vec![
+        item(
+            "tugla-kirmizi",
+            "Kırmızı tuğla",
+            "Tuğla",
+            Look::new(rgb(0xa4, 0x55, 0x3f))
+                .roughness(0.85)
+                .pattern(Pattern::Brick)
+                .accent(rgb(0xcf, 0xc6, 0xb6)),
+        )
+        .size(0.25, 0.075)
+        .source(Source::Library)
+        .tags(["cephe", "dış duvar", "örgü"]),
+        item(
+            "tugla-sari",
+            "Sarı tuğla",
+            "Tuğla",
+            Look::new(rgb(0xc9, 0xa4, 0x6a))
+                .roughness(0.8)
+                .pattern(Pattern::Brick)
+                .accent(rgb(0xe6, 0xdf, 0xd0)),
+        )
+        .size(0.25, 0.075)
+        .source(Source::Cloud)
+        .tags(["cephe", "restorasyon"]),
+        item(
+            "klinker",
+            "Klinker",
+            "Tuğla",
+            Look::new(rgb(0x6e, 0x3b, 0x2e))
+                .roughness(0.55)
+                .pattern(Pattern::Brick)
+                .accent(rgb(0x3a, 0x34, 0x30)),
+        )
+        .size(0.24, 0.071)
+        .source(Source::Cloud)
+        .tags(["cephe", "kaplama"]),
+        item(
+            "brut-beton",
+            "Brüt beton",
+            "Beton",
+            Look::new(rgb(0x9a, 0x9a, 0x94))
+                .roughness(0.9)
+                .pattern(Pattern::Speckle),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Library)
+        .tags(["taşıyıcı", "perde"]),
+        item(
+            "cilali-beton",
+            "Cilalı beton",
+            "Beton",
+            Look::new(rgb(0xb9, 0xb8, 0xb2))
+                .roughness(0.3)
+                .pattern(Pattern::Speckle),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Project)
+        .tags(["zemin", "iç mekân"]),
+        item(
+            "prekast",
+            "Prekast panel",
+            "Beton",
+            Look::new(rgb(0xc8, 0xc5, 0xbd))
+                .roughness(0.75)
+                .pattern(Pattern::Tile)
+                .accent(rgb(0x8e, 0x8b, 0x84)),
+        )
+        .size(2.4, 1.2)
+        .source(Source::Cloud)
+        .tags(["cephe", "endüstriyel"]),
+        item(
+            "ankara-tasi",
+            "Ankara taşı",
+            "Taş",
+            Look::new(rgb(0xc2, 0x8f, 0x6a))
+                .roughness(0.9)
+                .pattern(Pattern::Stone)
+                .accent(rgb(0x8a, 0x6a, 0x52)),
+        )
+        .size(0.6, 0.6)
+        .source(Source::Library)
+        .tags(["andezit", "cephe", "tarihî"]),
+        item(
+            "bazalt",
+            "Bazalt",
+            "Taş",
+            Look::new(rgb(0x4a, 0x4b, 0x4d))
+                .roughness(0.7)
+                .pattern(Pattern::Stone)
+                .accent(rgb(0x2b, 0x2c, 0x2e)),
+        )
+        .size(0.5, 0.5)
+        .source(Source::Library)
+        .tags(["kaldırım", "bordür"]),
+        item(
+            "mermer",
+            "Beyaz mermer",
+            "Taş",
+            Look::new(rgb(0xe8, 0xe4, 0xdc)).roughness(0.15),
+        )
+        .size(0.6, 0.6)
+        .source(Source::Cloud)
+        .tags(["zemin", "Marmara"]),
+        item(
+            "granit",
+            "Gri granit",
+            "Taş",
+            Look::new(rgb(0x8f, 0x8f, 0x8f))
+                .roughness(0.35)
+                .pattern(Pattern::Speckle)
+                .accent(rgb(0x2f, 0x2f, 0x30)),
+        )
+        .size(0.6, 0.3)
+        .source(Source::Library)
+        .tags(["basamak", "kaplama"]),
+        item(
+            "mese-parke",
+            "Meşe parke",
+            "Ahşap",
+            Look::new(rgb(0xa8, 0x7a, 0x4f))
+                .roughness(0.55)
+                .pattern(Pattern::Planks)
+                .accent(rgb(0x7a, 0x52, 0x31)),
+        )
+        .size(0.12, 1.2)
+        .source(Source::Library)
+        .tags(["zemin", "iç mekân"]),
+        item(
+            "ceviz",
+            "Ceviz kaplama",
+            "Ahşap",
+            Look::new(rgb(0x6b, 0x4a, 0x32))
+                .roughness(0.45)
+                .pattern(Pattern::Planks)
+                .accent(rgb(0x45, 0x2e, 0x1e)),
+        )
+        .size(0.2, 2.4)
+        .source(Source::Cloud)
+        .tags(["mobilya", "kapı"]),
+        item(
+            "cam-lambri",
+            "Çam lambri",
+            "Ahşap",
+            Look::new(rgb(0xd2, 0xa7, 0x6e))
+                .roughness(0.7)
+                .pattern(Pattern::Planks)
+                .accent(rgb(0xa9, 0x7b, 0x48)),
+        )
+        .size(0.09, 2.0)
+        .source(Source::Project)
+        .tags(["tavan", "duvar"]),
+        item(
+            "paslanmaz",
+            "Paslanmaz çelik",
+            "Metal",
+            Look::new(rgb(0xb8, 0xbc, 0xc0))
+                .roughness(0.3)
+                .metallic(1.0)
+                .pattern(Pattern::Brushed),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Library)
+        .tags(["korkuluk", "kaplama"]),
+        item(
+            "aluminyum",
+            "Eloksal alüminyum",
+            "Metal",
+            Look::new(rgb(0xcf, 0xd3, 0xd6))
+                .roughness(0.22)
+                .metallic(0.9),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Cloud)
+        .tags(["doğrama", "giydirme cephe"]),
+        item(
+            "bakir",
+            "Bakır",
+            "Metal",
+            Look::new(rgb(0xb8, 0x73, 0x33))
+                .roughness(0.28)
+                .metallic(1.0),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Cloud)
+        .tags(["çatı", "kubbe"]),
+        item(
+            "kortenel",
+            "Kortenel çelik",
+            "Metal",
+            Look::new(rgb(0x8a, 0x4b, 0x2a))
+                .roughness(0.85)
+                .metallic(0.55)
+                .pattern(Pattern::Speckle)
+                .accent(rgb(0x5a, 0x2c, 0x18)),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Project)
+        .tags(["peyzaj", "heykel"]),
+        item(
+            "seffaf-cam",
+            "Şeffaf cam",
+            "Cam",
+            Look::new(rgb(0xcf, 0xe6, 0xee))
+                .roughness(0.04)
+                .pattern(Pattern::Glass),
+        )
+        .size(1.2, 2.4)
+        .source(Source::Library)
+        .tags(["pencere", "cephe"]),
+        item(
+            "fume-cam",
+            "Füme cam",
+            "Cam",
+            Look::new(rgb(0x5f, 0x6b, 0x70))
+                .roughness(0.05)
+                .pattern(Pattern::Glass),
+        )
+        .size(1.2, 2.4)
+        .source(Source::Cloud)
+        .tags(["giydirme cephe", "güneş kontrol"]),
+        item(
+            "kiremit",
+            "Marsilya kiremidi",
+            "Çatı",
+            Look::new(rgb(0xb5, 0x53, 0x2f))
+                .roughness(0.75)
+                .pattern(Pattern::Shingle)
+                .accent(rgb(0x7d, 0x35, 0x1c)),
+        )
+        .size(0.34, 0.24)
+        .source(Source::Library)
+        .tags(["kırma çatı", "beşik çatı"]),
+        item(
+            "arduaz",
+            "Arduaz",
+            "Çatı",
+            Look::new(rgb(0x4b, 0x55, 0x60))
+                .roughness(0.6)
+                .pattern(Pattern::Shingle)
+                .accent(rgb(0x2d, 0x33, 0x3a)),
+        )
+        .size(0.3, 0.2)
+        .source(Source::Cloud)
+        .tags(["kayrak", "çatı"]),
+        item(
+            "asfalt",
+            "Asfalt",
+            "Zemin",
+            Look::new(rgb(0x3b, 0x3d, 0x40))
+                .roughness(0.95)
+                .pattern(Pattern::Speckle)
+                .accent(rgb(0x6c, 0x6d, 0x70)),
+        )
+        .size(2.0, 2.0)
+        .source(Source::Library)
+        .tags(["yol", "otopark"]),
+        item(
+            "parke-tasi",
+            "Kilitli parke taşı",
+            "Zemin",
+            Look::new(rgb(0x8d, 0x8a, 0x85))
+                .roughness(0.85)
+                .pattern(Pattern::Brick)
+                .accent(rgb(0x5d, 0x5a, 0x55)),
+        )
+        .size(0.2, 0.1)
+        .source(Source::Library)
+        .tags(["kaldırım", "meydan"]),
+        item(
+            "cim",
+            "Çim",
+            "Peyzaj",
+            Look::new(rgb(0x5d, 0x8f, 0x3a))
+                .roughness(0.9)
+                .pattern(Pattern::Grass)
+                .accent(rgb(0x8f, 0xb9, 0x4f)),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Library)
+        .tags(["park", "bahçe"]),
+        item(
+            "cakil",
+            "Çakıl",
+            "Peyzaj",
+            Look::new(rgb(0xa5, 0x9f, 0x92))
+                .roughness(0.85)
+                .pattern(Pattern::Gravel)
+                .accent(rgb(0x6f, 0x69, 0x5d)),
+        )
+        .size(1.0, 1.0)
+        .source(Source::Project)
+        .tags(["yürüyüş yolu"]),
+        item(
+            "su",
+            "Su yüzeyi",
+            "Peyzaj",
+            Look::new(rgb(0x2f, 0x6f, 0x8f))
+                .roughness(0.06)
+                .pattern(Pattern::Water),
+        )
+        .size(2.0, 2.0)
+        .source(Source::Library)
+        .tags(["havuz", "dere", "taşkın"]),
     ]
 }
 

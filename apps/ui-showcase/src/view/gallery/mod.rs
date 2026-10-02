@@ -18,6 +18,7 @@ mod foundations;
 mod frame;
 mod inputs;
 mod layout;
+mod library;
 mod python;
 pub(crate) mod scene;
 mod spatial;
@@ -55,6 +56,7 @@ impl Showcase {
             Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),
+            Page::Library => self.library_page(),
         };
 
         let header = column![

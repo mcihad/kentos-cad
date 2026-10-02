@@ -124,7 +124,7 @@ const SCENARIOS: [(&str, &str); 25] = [
 ];
 
 /// Galeri sayfalarının komut satırı adları.
-const PAGES: [(&str, Page); 13] = [
+const PAGES: [(&str, Page); 14] = [
     ("renkler", Page::Colors),
     ("yazi", Page::Typography),
     ("ikonlar", Page::Icons),
@@ -138,6 +138,7 @@ const PAGES: [(&str, Page); 13] = [
     ("geri-bildirim", Page::Feedback),
     ("oznitelikler", Page::Attributes),
     ("mekansal", Page::Spatial),
+    ("kitaplik", Page::Library),
 ];
 
 const USAGE: &str = "\
