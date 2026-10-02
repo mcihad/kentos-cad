@@ -1148,6 +1148,7 @@ impl App {
             Asking::BlockAttributes => self.block_attributes_view(),
             Asking::AttributeValues => self.attribute_values_view(),
             Asking::FindReplace => self.find_replace_view(),
+            Asking::PointBatch => self.point_batch_view(),
         }
     }
 }

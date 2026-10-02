@@ -53,7 +53,7 @@ export function cellText(e: PointEntity, col: EditColumn): string {
 }
 
 /** Whether another point has the name (trimmed). */
-function named(doc: CadDocument, name: string, except: number | null): boolean {
+export function named(doc: CadDocument, name: string, except: number | null): boolean {
   for (const e of doc.all()) if (e.kind === 'point' && e.id !== except && e.label?.trim() === name) return true;
   return false;
 }
@@ -78,11 +78,11 @@ export function withPaths(e: Entity, ps: readonly Elevated[]): EditGeometry | nu
   return { kind: 'polygon', pts: ps[0].pts, ...(e.bulges && { bulges: e.bulges }), zs: ps[0].zs, ...(holes.length && { holes }), ...(parts.length && { parts }) };
 }
 
-/** Runs `write` as one undo step; a refusal it throws is rolled back and returned. */
-function step(doc: CadDocument, write: () => string | null): string | null {
+/** Runs `write` as one undo step named `label`; a refusal it returns is rolled back and returned. */
+export function inStep(doc: CadDocument, label: string, write: () => string | null): string | null {
   let refused: string | null = null;
   try {
-    doc.transact(STEP, () => {
+    doc.transact(label, () => {
       refused = write();
       if (refused) throw new Error(refused);
     });
@@ -104,7 +104,7 @@ export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, tex
     const v = text.trim() || null;
     const old = col === 'name' ? e.label?.trim() || null : (e.attrs.Kod ?? null);
     if (v === old) return nothing;
-    const refused = step(doc, () => {
+    const refused = inStep(doc, STEP, () => {
       const r = entitiesSet.execute({ doc }, col === 'name' ? { uids: [uid], label: v, operation: 'label' } : { uids: [uid], attrs: { Kod: v }, operation: 'attributes' });
       return r.status !== 'completed' && 'error' in r ? r.error.message : null;
     });
@@ -128,7 +128,7 @@ export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, tex
       if (geometry) changes.push({ kind: 'update', uid: doc.uidOf(other.id) ?? '', geometry });
     }
   }
-  const refused = step(doc, () => {
+  const refused = inStep(doc, STEP, () => {
     const r = entitiesEdit.execute({ doc }, { operation: col === 'z' ? 'elevation' : 'properties', changes });
     if (r.status === 'completed' || !('error' in r)) return null;
     // The point is the first change: a refusal of another is a line work's lock.

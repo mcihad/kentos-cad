@@ -7,9 +7,10 @@ import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { Dropdown } from '../widgets/Dropdown';
-import type { MenuItem } from '../widgets/PopupMenu';
+import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
+import { batchTargets, type BatchOp } from './pointBatch';
 import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn, type Outcome } from './pointEdit';
 
 /**
@@ -21,8 +22,12 @@ import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, ty
  *
  * A double click on Ad, Y, X, Z or Kod edits it in place (./pointEdit.ts writes it): Enter writes and goes down the
  * column, Tab right, Shift+Tab left, a click elsewhere writes and stops, Esc gives up. Satır ekle opens a draft row at
- * the bottom; Enter writes it and opens the next, its name one more. Sil deletes the selected points. The desktop's is
- * `apps/desktop/src/points/`.
+ * the bottom; Enter writes it and opens the next, its name one more. Sil deletes the selected points.
+ *
+ * İşlemler ▾ and a row's right-click menu hold the batch operations (§5; ./pointBatch.ts, their windows
+ * ./PointBatchDialog.ts, loaded on first use) over the selected rows, or every row when none is selected. A right
+ * click leaves the selection as it is; on a row not selected its menu is that row's (its header names it), and a
+ * command chosen there selects it alone first. The desktop's is `apps/desktop/src/points/`.
  */
 
 /** The columns: their header, the core's sort key (none: Sıra, the drawing's order), whether they hold numbers, the cell edited. */
@@ -49,6 +54,14 @@ export const POINT_TEXTS = {
   removeHint: 'Seçili noktaları siler',
   show: 'Göster',
   showHint: 'Seçili noktalara yakınlaştırır',
+  actions: 'İşlemler',
+  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı.',
+  rename: 'Yeniden adlandır…',
+  renameHint: 'Adların başına önek ekler ya da baştaki öneki kaldırır',
+  number: 'Sıralı numara ver…',
+  numberHint: 'Tablodaki sırayla birer artan adlar verir',
+  layer: 'Katmana taşı…',
+  layerHint: 'Noktaları seçilen katmana taşır',
   draft: 'Yeni',
   none: 'Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.',
   noMatch: 'Süzgece uyan nokta yok.',
@@ -85,6 +98,12 @@ export function clickPick(selected: ReadonlySet<number>, shown: readonly number[
 /** A point as the table reads it (the core's `TableRow`): its label, place, elevation, `Kod`, layer name, selection. */
 export function rowOf(e: PointEntity, layerName: string, selected: boolean): TableRow {
   return { name: e.label ?? null, east: e.p.x, north: e.p.y, z: e.z ?? null, code: e.attrs.Kod ?? null, layer: layerName, selected };
+}
+
+/** A row's menu's header when the row is not selected: the point by its name. */
+export function rowHeader(e: PointEntity): string {
+  const name = e.label?.trim();
+  return name ? `Nokta ${name}` : 'Adsız nokta';
 }
 
 /** The cell edited: a point's (by id) or the draft's. */
@@ -151,6 +170,11 @@ export class PointTable extends Component {
       return b;
     };
     const add = button('plus', POINT_TEXTS.add, POINT_TEXTS.addHint, () => this.addRow());
+    const actions = button('processing', POINT_TEXTS.actions, POINT_TEXTS.actionsHint, () => {
+      const r = actions.getBoundingClientRect();
+      PopupMenu.open([{ kind: 'header', label: this.targets().header }, ...this.batchItems()], r, { owner: actions });
+    });
+    actions.append(icon('chevronDown', 12));
     this.removeBtn = button('erase', POINT_TEXTS.remove, POINT_TEXTS.removeHint, () => ctx.commands.execute('tool.erase'));
     this.showBtn = button('zoomSelection', POINT_TEXTS.show, POINT_TEXTS.showHint, () => ctx.commands.execute('view.zoomSelection'));
 
@@ -179,7 +203,7 @@ export class PointTable extends Component {
         'div',
         { class: 'ptable__bar' },
         h('div', { class: 'ptable__group' }, search, this.layerPick.el, h('label', { class: 'io-check ptable__only' }, this.onlyBox, POINT_TEXTS.onlySelected), follow),
-        h('div', { class: 'ptable__group ptable__group--end' }, this.count, add, this.removeBtn, this.showBtn),
+        h('div', { class: 'ptable__group ptable__group--end' }, this.count, actions, add, this.removeBtn, this.showBtn),
       ),
       this.scroller,
     );
@@ -213,6 +237,15 @@ export class PointTable extends Component {
         } else if (col) this.edit({ id: this.ids[at], col });
       }),
     );
+    // A right click: the row's menu (the desktop's table opens it the same way, the selection as it is).
+    this.d.add(
+      listen<MouseEvent>(this.body, 'contextmenu', (e) => {
+        const at = this.rowAt(e);
+        if (at === null || at >= this.ids.length || (e.target as HTMLElement).closest('input')) return;
+        e.preventDefault();
+        PopupMenu.open(this.rowItems(at), { x: e.clientX, y: e.clientY }, { placement: 'point' });
+      }),
+    );
     this.d.add(watchAll([ctx.selection.ids, ctx.format.changed], () => this.schedule()));
     this.d.add(ctx.doc.events.on('changed', () => this.schedule()));
     this.d.add(ctx.doc.layers.version.subscribe(() => this.schedule()));
@@ -224,6 +257,61 @@ export class PointTable extends Component {
   private rowAt(e: MouseEvent): number | null {
     const tr = (e.target as HTMLElement).closest<HTMLElement>('tr[data-at]');
     return tr ? Number(tr.dataset.at) : null;
+  }
+
+  /** The rows the batch operations take now, and the header naming them. */
+  private targets(): { ids: number[]; header: string } {
+    return batchTargets(this.ids, (id) => this.ctx.selection.has(id));
+  }
+
+  /** The batch operations as a menu lists them, each run after `first` (a row's menu selects its row). */
+  private batchItems(first: () => void = () => {}): MenuItem[] {
+    const item = (kind: BatchOp['kind'], label: string, glyph: string, detail: string): MenuItem => ({
+      label,
+      icon: glyph,
+      detail,
+      disabled: this.ids.length === 0,
+      run: () => (first(), this.openBatch(kind)),
+    });
+    return [
+      item('rename', POINT_TEXTS.rename, 'edit', POINT_TEXTS.renameHint),
+      item('number', POINT_TEXTS.number, 'numberVertices', POINT_TEXTS.numberHint),
+      item('layer', POINT_TEXTS.layer, 'layers', POINT_TEXTS.layerHint),
+    ];
+  }
+
+  /**
+   * A row's menu (docs/adr/0153 §5): Göster, the batch operations, Sil, over the selected rows when the row is one of
+   * them; else over that row, its header naming it, a command selecting it alone first.
+   */
+  private rowItems(at: number): MenuItem[] {
+    const { ctx } = this;
+    const id = this.ids[at];
+    const own = !ctx.selection.has(id);
+    const first = () => {
+      if (!ctx.selection.has(id)) {
+        ctx.selection.set([id]);
+        this.anchor = at;
+      }
+    };
+    const header = own ? rowHeader(this.points[this.shown[at]]) : this.targets().header;
+    return [
+      { kind: 'header', label: header },
+      { label: POINT_TEXTS.show, icon: 'zoomSelection', run: () => (first(), ctx.commands.execute('view.zoomSelection')) },
+      { kind: 'separator' },
+      ...this.batchItems(first),
+      { kind: 'separator' },
+      { label: POINT_TEXTS.remove, icon: 'erase', run: () => (first(), ctx.commands.execute('tool.erase')) },
+    ];
+  }
+
+  /** The operation's window over the target rows (loaded on first use; a failed load says so). */
+  private openBatch(kind: BatchOp['kind']): void {
+    const { ids, header } = this.targets();
+    import('./PointBatchDialog').then(
+      (m) => m.openPointBatchDialog(this.ctx, kind, ids, header),
+      (e: Error) => this.ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`),
+    );
   }
 
   /** Changes come in bursts (an undo changes many objects): one refresh after them. */
@@ -241,7 +329,10 @@ export class PointTable extends Component {
     const counts = new Map<string, number>();
     for (const e of this.points) counts.set(e.layerId, (counts.get(e.layerId) ?? 0) + 1);
     const { layers } = this.ctx.doc;
-    const named = [...counts.keys()].map((id) => ({ id, name: layers.get(id)?.name ?? id }));
+    // In the layer list's order.
+    const order = layers.leaves().map((l) => l.id);
+    const rank = (id: string) => (order.indexOf(id) + 1 || Infinity);
+    const named = [...counts.keys()].sort((a, b) => rank(a) - rank(b)).map((id) => ({ id, name: layers.get(id)?.name ?? id }));
     const pick = (name: string | null) => () => {
       kept.layer = name;
       this.schedule();

@@ -2057,6 +2057,15 @@ const openPointEditor = async (ui) => {
   })()`);
   await ui.sleep(700);
 };
+/** The centre of row `i`'s cell `j` (in the order shown). */
+const rowCell = (ui, i, j) =>
+  ui.eval(`(() => { const td = document.querySelectorAll('.ptable tbody tr[data-at="${i}"] td')[${j}]; const r = td.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+/** Rows `a` to `b` selected: a click on the first, Shift and a click on the last. */
+const pickRows = async (ui, a, b) => {
+  await ui.clickAt(...(await rowCell(ui, a, 1)));
+  await ui.clickAt(...(await rowCell(ui, b, 1)), { modifiers: 8 });
+  await ui.sleep(200);
+};
 SCENES.pointeditor = [
   { id: 'noktalar', open: openPointEditor },
   {
@@ -2143,6 +2152,85 @@ SCENES.pointeditor = [
       const undone = await ui.eval(`[window.kentos.doc.undo(), window.kentos.doc.size]`);
       if (undone[1] !== before) throw new Error(`Sil tek adımda geri alınmadı: ${JSON.stringify(undone)}`);
       await ui.eval(`window.kentos.doc.redo()`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // İşlemler ▾ over the three points selected in the drawing.
+  {
+    id: 'noktalar-islemler',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.clickText('.ptable__btn', 'İşlemler');
+      await ui.waitFor(`document.querySelector('.menu__header')?.textContent === '3 seçili nokta'`, 3000);
+      await ui.sleep(300);
+    },
+  },
+  // Yeniden adlandır over the first six rows (a click, Shift and a click), P. typed: what would change.
+  {
+    id: 'noktalar-yeniden-adlandir',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await pickRows(ui, 0, 5);
+      await ui.clickText('.ptable__btn', 'İşlemler');
+      await ui.clickText('.menu__title', 'Yeniden adlandır…');
+      await ui.waitFor(`document.activeElement?.getAttribute('aria-label') === 'Önek'`, 3000);
+      await ui.type('P.');
+      await ui.sleep(200);
+      const said = await ui.eval(`document.querySelector('.dialog--point-batch .io-summary').textContent`);
+      if (said !== '6 noktanın adı değişecek; ilki “101” → “P.101”.') throw new Error(`Yeniden adlandır: ${said}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // Sıralı numara ver over the first six rows from 201, written with Enter: one step, the table's new names.
+  {
+    id: 'noktalar-sirali-numara',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await pickRows(ui, 0, 5);
+      await ui.clickText('.ptable__btn', 'İşlemler');
+      await ui.clickText('.menu__title', 'Sıralı numara ver…');
+      await ui.waitFor(`document.activeElement?.getAttribute('aria-label') === 'Başlangıç adı'`, 3000);
+      const start = await ui.eval(`document.activeElement.value`);
+      if (start !== '101') throw new Error(`Başlangıç adı: ${start}`);
+      await ui.type('201');
+      await ui.key('Enter');
+      await ui.sleep(300);
+      const names = await ui.eval(`[...document.querySelectorAll('.ptable tbody tr[data-at] td:nth-child(2)')].slice(0, 7).map((td) => td.textContent)`);
+      if (JSON.stringify(names) !== JSON.stringify(['201', '202', '203', '204', '205', '206', '101/1'])) throw new Error(`Sıralı numara: ${JSON.stringify(names)}`);
+      const step = await ui.eval(`(() => { const d = window.kentos.doc; const s = d.undo(); d.redo(); return s; })()`);
+      if (step !== 'Sıralı numara ver') throw new Error(`Adım: ${step}`);
+      await ui.move(2, 2);
+      await ui.sleep(300);
+    },
+  },
+  // A right click on a row not selected: its menu at the pointer, named after it; the selection stays.
+  {
+    id: 'noktalar-sag-tik',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await ui.contextClick(...(await rowCell(ui, 4, 1)));
+      await ui.waitFor(`document.querySelector('.menu__header')?.textContent === 'Nokta 105'`, 3000);
+      const selected = await ui.eval(`window.kentos.selection.size`);
+      if (selected !== 3) throw new Error(`Sağ tık seçimi değiştirdi: ${selected}`);
+      await ui.sleep(300);
+    },
+  },
+  // Katmana taşı from that menu: Kot chosen and written; the rows show their new layer.
+  {
+    id: 'noktalar-katmana-tasi',
+    open: async (ui) => {
+      await openPointEditor(ui);
+      await pickRows(ui, 0, 1);
+      await ui.contextClick(...(await rowCell(ui, 1, 1)));
+      await ui.clickText('.menu__title', 'Katmana taşı…');
+      await ui.clickSel('.dialog--point-batch .dropdown');
+      await ui.clickText('.menu__label', 'Kot');
+      await ui.clickText('.dialog--point-batch .btn--primary', 'Uygula');
+      await ui.sleep(300);
+      const layers = await ui.eval(`[...document.querySelectorAll('.ptable tbody tr[data-at] td:nth-child(7)')].slice(0, 3).map((td) => td.textContent)`);
+      if (JSON.stringify(layers) !== JSON.stringify(['Kot', 'Kot', 'Nokta'])) throw new Error(`Katmana taşı: ${JSON.stringify(layers)}`);
       await ui.move(2, 2);
       await ui.sleep(300);
     },

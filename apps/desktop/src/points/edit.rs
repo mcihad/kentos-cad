@@ -167,7 +167,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
 }
 
 /// A command's refusal: its error, when it wrote nothing.
-fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError> {
+pub(super) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError> {
     match result {
         CommandResult::Failed { error }
         | CommandResult::Conflict { error }
@@ -176,9 +176,13 @@ fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError
     }
 }
 
-/// Runs `write` as one undo step “Nokta düzenle”; a refusal is rolled back and returned.
-fn step(doc: &mut Document, write: impl FnOnce(&mut Document) -> Option<String>) -> Option<String> {
-    doc.transact(STEP, |doc| match write(doc) {
+/// Runs `write` as one undo step named `label`; a refusal is rolled back and returned.
+pub(super) fn in_step(
+    doc: &mut Document,
+    label: &str,
+    write: impl FnOnce(&mut Document) -> Option<String>,
+) -> Option<String> {
+    doc.transact(label, |doc| match write(doc) {
         Some(refused) => Err(refused),
         None => Ok(()),
     })
@@ -212,7 +216,7 @@ pub fn write_cell(
         if v == old {
             return Outcome::default();
         }
-        let refused = step(doc, |doc| {
+        let refused = in_step(doc, STEP, |doc| {
             let input = EntitiesSetProperties {
                 uids: vec![uid.clone()],
                 layer_id: None,
@@ -315,7 +319,7 @@ pub fn write_cell(
     } else {
         EditOperation::Properties
     };
-    let refused = step(doc, |doc| {
+    let refused = in_step(doc, STEP, |doc| {
         let input = EntitiesEdit {
             operation,
             changes,

@@ -79,11 +79,21 @@ Ad, Y, X, Z ve Kod düzenlenir; Sıra ve Katman düzenlenmez (katmanı Katmana t
 
 ### 5. Toplu işlemler
 
-İşlemler ▾ menüsünde. Seçili satırlara uygulanır; seçim yoksa süzülen bütün satırlara. Her biri tek geri alma adımıdır ve adımı işlemin adını taşır.
+İşlemler ▾ menüsünde. Her biri tek geri alma adımıdır ve adımı işlemin adını taşır.
 
-- **Yeniden adlandır:** Önek ekle (ör. `P.`) ya da Önek kaldır. Öneki olmayan ad değişmez.
+- **Hedef satırlar:** tablodaki seçili satırlar, tablonun sırasıyla; tabloda seçili satır yoksa tablodaki bütün satırlar. Süzgeçle gizlenen seçili noktalar işleme girmez. Menünün başlığı hedefi söyler: “3 seçili nokta”, “Tablodaki 36 nokta”.
+- **Yer:** İşlemler ▾ araç çubuğunun sağ grubunda, Satır ekle'den öncedir. Aynı işlemler satırın sağ tık menüsündedir; orada Göster ve Sil de vardır (§2, §4). Sağ tık seçimi değiştirmez: seçili satırın menüsü seçili satırlarındır; seçili olmayan satırın menüsü o satırındır, başlığı onu adıyla söyler (“Nokta 105”, “Adsız nokta”) ve komutu önce yalnız onu seçer.
+- **Pencere:** her işlem küçük bir pencere açar: değerleri, ilk değişikliğin örneği ve değişecek nokta sayısı. Uygula yazar, Vazgeç ve Esc kapatır.
+- **Yeniden adlandır:** Önek ekle (ör. `P.`) ya da Önek kaldır. Önek baştaki ve sondaki boşluklar atılarak alınır; boş önek söylenir: “Önek yazılmalı.”
+  - Önek ekle adlı her noktanın adının başına öneki koyar; adsız nokta adsız kalır.
+  - Önek kaldır öneki taşıyan adlardan (büyük küçük harf ayrı) onu atar, kalanın boşluklarını da. Öneki olmayan ad ve kalanı boş olacak ad değişmez.
 - **Sıralı numara ver:** başlangıç adı yazılır (1, P100, 101/1). Satırlar tablodaki sırayla adı alır; her biri Yazı'nın Artır kuralıyla bir sonrakini verir (ADR 0152 §6). Sayıyla bitmeyen başlangıç reddedilir: “Başlangıç adı sayıyla bitmeli.”
-- **Katmana taşı:** seçilen katmana (`cad.entities.set`).
+- **Adların ortak kuralları:**
+  - Adlar boşlukları atılarak karşılaştırılır ve yazılır; yalnız adı değişen noktalar yazılır (`cad.entities.set`, nokta nokta, tek adımda). Hiçbiri değişmiyorsa söylenir: “Adı değişen nokta yok.”
+  - Adı değişecek bir nokta kilitli katmandaysa komutun reddi söylenir ve hiçbir şey yazılmaz.
+  - Sonra kaç adın değiştiği ve yeni adlardan kaçının başka noktalarda da olduğu söylenir: “12 noktanın adı değişti; 2 ad başka noktalarda da var.”
+- **Katmana taşı:** katman listesindeki bir katmana (`cad.entities.set`, tek çağrı). Zaten oradaki noktalar değişmez; hiçbiri taşınmıyorsa söylenir: “Taşınacak nokta yok.” Komutun sırasıyla: taşınacak nokta kilitli katmandaysa, sonra hedef katman kilitliyse komutun reddi söylenir. Taşınınca “5 nokta “Kot” katmanına taşındı.”, katman gizliyse komutun uyarısı da söylenir.
+- **Ortak durumlar:** işlemler ve hedef satırlar `fixtures/point-editor/v1/batch.json`'dadır (`scripts/fixtures/point_batch_cases.py`, kurallardan).
 - **Çift noktaları ayıkla:**
   - **Ölçüt:** Aynı ad, ya da Aynı yer (tolerans metre, varsayılan 0,001 m).
     - Aynı adda adlar baştaki ve sondaki boşluklar atılarak tam karşılaştırılır; adsız noktalar çift sayılmaz.
@@ -154,7 +164,16 @@ Python ve MCP aynısını betiğin tek adımlık grubuyla yapar.
    - **Alan:** web'de hücrenin içinde `input`; masaüstünde `points/cell.rs`'in alanı (Esc ve başka yere basma onda yakalanır, Tab uygulamanın tuşudur). Açılınca değer seçilidir.
    - **Araç çubuğu:** iki grup: solda arama, katman, Yalnız seçililer ve Bağlı çizgiler izler; sağda sayaç, Satır ekle, Sil ve Göster. Dar panelde sağ grup ikinci satıra geçer, düğme kesilmez.
    - **Sınama ve resimler:** tarayıcıda `shots.mjs pointeditor`'ın sahneleri klavye ve fareyle sınar: çift tıkla açma ve değerin tamamı, Enter'la yazma ve alttaki satıra geçme, iki satır ekleme ve sonraki ad, iki satır silme ve tek adımda geri alma. Masaüstünde `points::tests` aynı akışları sınar. Etkileşim izi yoktur: izler çizim alanının araçları içindir, tablo alt paneldedir.
-4. **Toplu işlemler:** Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, İçe aktar; ortak durumlar ve iz.
+4. **Toplu işlemler:** Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, İçe aktar; ortak durumlar ve iz. Üç parçada:
+   1. İşlemler ▾ ve satırın menüsü; Yeniden adlandır, Sıralı numara ver, Katmana taşı; ortak durumlar `batch.json`.
+
+      *(2 Ekim: tamam.)*
+      - **Kurallar:** web'de `ui/bottom/pointBatch.ts`, masaüstünde `points/batch.rs`. İki platform `batch.json`'un 22 işlemini ve 5 hedef durumunu geçer: belge, iletiler, adımın adı. Durumları `scripts/fixtures/point_batch_cases.py` kurallardan yazar; bozulan kuralları (kalanın boşlukları, adsız noktaya önek, aynı ad sayımı, yalnız 0–9 rakamları) yakalar.
+      - **Pencereler:** web'de `PointBatchDialog.ts` (ilk açılışta yüklenir), masaüstünde `points/batch_view.rs`: hedefin kartı (sayı ve ilk adlar), değerler, ne değişeceği; Uygula kapalıyken yazmaz. Katman listesi araç çubuğununki gibidir: gruplar başlık, katmanlar rengi ve sayısıyla, kilitli katman seçilemez.
+      - **Çubuk:** masaüstünde iki kutu da web'inki gibi onay kutusudur; 1440×900'de çubuk iki platformda tek satırdır.
+      - **Sınama ve resimler:** tarayıcıda `shots.mjs pointeditor`'ın beş yeni sahnesi (İşlemler ▾, Yeniden adlandır'ın penceresi, Sıralı numara ver'in yazılması ve adımı, satırın sağ tık menüsü ve seçimin değişmemesi, Katmana taşı); masaüstünde `points::tests` aynı akışları ve resimleri.
+   2. Çift noktaları ayıkla: pencere, sayılar, Çiftleri göster, Ayıkla; ortak durumlar.
+   3. Dışa aktar (tablodaki noktalar) ve İçe aktar.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

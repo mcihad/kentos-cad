@@ -150,6 +150,9 @@ pub enum Dialog {
     AttributeValues,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
     FindReplace,
+    /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
+    /// `App::points.batch`.
+    PointBatch,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).

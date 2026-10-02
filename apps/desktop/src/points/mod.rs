@@ -13,6 +13,10 @@
 //!   press elsewhere writes and stops, Esc gives up. Satır ekle opens a draft
 //!   row at the bottom; Enter writes it and opens the next, its name one more.
 //!   Sil deletes the selected points.
+//! - İşlemler ▾ and a row's menu hold the batch operations (§5; `batch.rs`,
+//!   their windows `batch_view.rs`) over the selected rows, or every row when
+//!   none is selected. A right click leaves the selection; on a row not
+//!   selected the menu is that row's, and its command selects it alone first.
 //! - The query (search, layer, only the selected, sort) and Bağlı çizgiler
 //!   izler are kept for as long as the app lives.
 //!
@@ -29,6 +33,10 @@ use kentos_geometry_core::ops::point_editor::{TableQuery, TableRow, point_table}
 use crate::app::{App, Message};
 use crate::document::Document;
 
+pub mod batch;
+#[cfg(test)]
+mod batch_tests;
+mod batch_view;
 mod cell;
 pub mod edit;
 #[cfg(test)]
@@ -67,6 +75,14 @@ pub mod texts {
     pub const ADD: &str = "Satır ekle";
     pub const REMOVE: &str = "Sil";
     pub const SHOW: &str = "Göster";
+    pub const ACTIONS: &str = "İşlemler";
+    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı.";
+    pub const RENAME: &str = "Yeniden adlandır…";
+    pub const RENAME_HINT: &str = "Adların başına önek ekler ya da baştaki öneki kaldırır";
+    pub const NUMBER: &str = "Sıralı numara ver…";
+    pub const NUMBER_HINT: &str = "Tablodaki sırayla birer artan adlar verir";
+    pub const LAYER: &str = "Katmana taşı…";
+    pub const LAYER_HINT: &str = "Noktaları seçilen katmana taşır";
     pub const DRAFT: &str = "Yeni";
     pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da Nokta listesi içe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
@@ -161,6 +177,14 @@ pub enum Walk {
     Left,
 }
 
+/// A row's menu's command, for the selected rows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RowAction {
+    Show,
+    Remove,
+    Batch(batch::Kind),
+}
+
 /// The cell edited: a point's, or the draft's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Target {
@@ -197,6 +221,12 @@ pub enum Event {
     AddRow,
     /// Sil: the selected points deleted.
     Remove,
+    /// İşlemler ▾: an operation's window over the target rows.
+    Batch(batch::Kind),
+    /// A row's menu, by the row's place: a row not selected is selected alone first.
+    Row(usize, RowAction),
+    /// The operation's window.
+    Window(batch_view::WindowEvent),
 }
 
 /// The rows as worked out for a drawing, a selection and a query.
@@ -230,6 +260,8 @@ pub(crate) struct PointsPanel {
     editing: Option<(Target, EditColumn)>,
     text: String,
     draft: Option<Draft>,
+    /// An operation's window, while it is open.
+    batch: Option<batch_view::Window>,
     /// Bumped at every change of the query.
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
@@ -248,6 +280,7 @@ impl Default for PointsPanel {
             editing: None,
             text: String::new(),
             draft: None,
+            batch: None,
             version: 0,
             cache: RefCell::default(),
         }
@@ -272,6 +305,11 @@ impl PointsPanel {
     /// Whether a cell is being edited: Tab is its key then.
     pub(crate) fn editing(&self) -> bool {
         self.editing.is_some()
+    }
+
+    /// The operation's window given up (Esc, a press beside it).
+    pub(crate) fn close_batch(&mut self) {
+        self.batch = None;
     }
 }
 
@@ -440,6 +478,25 @@ impl App {
                 return self.edit_cell(Some((Target::Draft, EditColumn::Name)));
             }
             Event::Remove => return self.update(Message::Run("tool.erase")),
+            Event::Batch(kind) => return self.open_point_batch(kind),
+            Event::Row(at, action) => {
+                let Some(&slot) = self.shown_points().get(at) else {
+                    return Task::none();
+                };
+                if !self.selection.contains(slot) {
+                    self.selection.set([slot]);
+                    self.points.anchor = Some(at);
+                }
+                return match action {
+                    RowAction::Show => {
+                        self.navigating(Self::zoom_selection);
+                        Task::none()
+                    }
+                    RowAction::Remove => self.update(Message::Run("tool.erase")),
+                    RowAction::Batch(kind) => self.open_point_batch(kind),
+                };
+            }
+            Event::Window(event) => return self.point_batch_event(event),
         }
         Task::none()
     }

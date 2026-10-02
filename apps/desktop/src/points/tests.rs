@@ -495,6 +495,31 @@ fn sil_removes_the_selected_rows_in_one_step() {
     assert_eq!(names(&app)[..2], ["101", "102"]);
 }
 
+/// A press (or a right one) on the lowest `caption` on screen: the bottom
+/// panel's, below the ribbon's tab of the same name.
+fn press_lowest(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &mut App,
+    caption: &str,
+    right: bool,
+) {
+    use kentos_ui::snapshot::Input;
+    let at = crate::files_testing::find_texts(snapshot, app, caption)
+        .into_iter()
+        .max_by(|a, b| a.y.total_cmp(&b.y))
+        .unwrap_or_else(|| panic!("{caption} is on screen"))
+        .center();
+    let mut update = |app: &mut App, message: Message| {
+        let _ = app.update(message);
+    };
+    let input = if right {
+        Input::RightClick(at)
+    } else {
+        Input::Click(at)
+    };
+    snapshot.input(app, App::view, &mut update, input);
+}
+
 /// The task's widget operations run in the picture, as iced's runtime runs
 /// them.
 fn operate(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, task: Task<Message>) {
@@ -506,6 +531,83 @@ fn operate(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, task: Task<M
             }
         }
     }
+}
+
+/// The rows the first `n` rows of the table show: a press, then Shift and a press.
+fn pick_rows(app: &mut App, last: usize) {
+    ev(app, Event::Press(0));
+    app.modifiers = iced::keyboard::Modifiers::SHIFT;
+    ev(app, Event::Press(last));
+    app.modifiers = iced::keyboard::Modifiers::default();
+}
+
+/// İşlemler ▾ → Sıralı numara ver over six selected rows: the window opens
+/// with the first row's name, writes 201… in one step and closes (the web's
+/// `noktalar-sirali-numara` scene).
+#[test]
+fn the_actions_window_numbers_the_selected_rows_in_one_step() {
+    use super::batch::Kind;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    pick_rows(&mut app, 5);
+    ev(&mut app, Event::Batch(Kind::Number));
+    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    ev(
+        &mut app,
+        Event::Window(super::batch_view::WindowEvent::Text("201".into())),
+    );
+    ev(
+        &mut app,
+        Event::Window(super::batch_view::WindowEvent::Apply),
+    );
+    assert!(app.dialog.is_none());
+    assert_eq!(
+        names(&app)[..7],
+        ["201", "202", "203", "204", "205", "206", "101/1"]
+    );
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Nokta editörü: 6 noktanın adı değişti."
+    );
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Sıralı numara ver"));
+}
+
+/// A row's menu on a row not selected: it alone is selected, and its
+/// Katmana taşı moves it (the web's `noktalar-katmana-tasi` scene); a prefix
+/// left empty keeps Uygula off.
+#[test]
+fn a_rows_menu_takes_that_row_alone_when_it_is_not_selected() {
+    use super::RowAction;
+    use super::batch::Kind;
+    use super::batch_view::WindowEvent;
+    let mut app = app_with_points();
+    let _ = app.update(Message::Run("point.editor"));
+    let shown = {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.point_rows(doc).shown
+    };
+    ev(&mut app, Event::Row(4, RowAction::Batch(Kind::Layer)));
+    assert_eq!(app.selection.ids(), [shown[4]]);
+    ev(&mut app, Event::Window(WindowEvent::Layer("kot".into())));
+    ev(&mut app, Event::Window(WindowEvent::Apply));
+    let layer = match app.document.as_ref().and_then(|d| d.model.get(shown[4])) {
+        Some(kentos_contracts::Entity::Point(p)) => p.base.layer_id.clone(),
+        _ => String::new(),
+    };
+    assert_eq!(layer, "kot");
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Nokta editörü: 1 nokta “Kot” katmanına taşındı."
+    );
+    // Yeniden adlandır with no prefix writes nothing.
+    ev(&mut app, Event::Row(0, RowAction::Batch(Kind::Rename)));
+    let before = app.document.as_ref().map(|d| d.model.generation());
+    ev(&mut app, Event::Window(WindowEvent::Apply));
+    assert_eq!(app.document.as_ref().map(|d| d.model.generation()), before);
+    assert!(matches!(app.dialog, Some(crate::app::Dialog::PointBatch)));
+    ev(&mut app, Event::Window(WindowEvent::Close));
+    assert!(app.dialog.is_none());
 }
 
 /// Pictures of Noktalar for the owner, the scenes the web's
@@ -535,6 +637,11 @@ fn screens() {
                 "noktalar-duzenle",
                 "noktalar-satir-ekle",
                 "noktalar-sil",
+                "noktalar-islemler",
+                "noktalar-yeniden-adlandir",
+                "noktalar-sirali-numara",
+                "noktalar-sag-tik",
+                "noktalar-katmana-tasi",
             ] {
                 let mut app = app_with_points();
                 let _ = app
@@ -588,9 +695,68 @@ fn screens() {
                         app.modifiers = iced::keyboard::Modifiers::default();
                         ev(&mut app, Event::Remove);
                     }
+                    "noktalar-yeniden-adlandir" => {
+                        pick_rows(&mut app, 5);
+                        ev(&mut app, Event::Batch(super::batch::Kind::Rename));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Text("P.".into())),
+                        );
+                    }
+                    "noktalar-sirali-numara" => {
+                        pick_rows(&mut app, 5);
+                        ev(&mut app, Event::Batch(super::batch::Kind::Number));
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Text("201".into())),
+                        );
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Apply),
+                        );
+                    }
+                    "noktalar-katmana-tasi" => {
+                        pick_rows(&mut app, 1);
+                        ev(
+                            &mut app,
+                            Event::Row(1, super::RowAction::Batch(super::batch::Kind::Layer)),
+                        );
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Layer("kot".into())),
+                        );
+                        ev(
+                            &mut app,
+                            Event::Window(super::batch_view::WindowEvent::Apply),
+                        );
+                    }
                     _ => {}
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
+                match name {
+                    // İşlemler ▾ opened, as its click opens it.
+                    "noktalar-islemler" => {
+                        press_lowest(&mut snapshot, &mut app, "İşlemler", false);
+                        snapshot.settle(&mut app, App::view, &mut update);
+                    }
+                    // A right click on the fifth row (not selected).
+                    "noktalar-sag-tik" => {
+                        press_lowest(&mut snapshot, &mut app, "105", true);
+                        snapshot.settle(&mut app, App::view, &mut update);
+                    }
+                    // The window's field has the keyboard, as its opening gives it.
+                    "noktalar-yeniden-adlandir" => {
+                        operate(
+                            &mut snapshot,
+                            &app,
+                            iced::widget::operation::focus(iced::widget::Id::new(
+                                super::batch_view::FIELD,
+                            )),
+                        );
+                        snapshot.settle(&mut app, App::view, &mut update);
+                    }
+                    _ => {}
+                }
                 if app.points.editing() {
                     // The field takes the keyboard with its text selected, as the app's task
                     // gives it when the edit opens.

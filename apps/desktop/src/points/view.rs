@@ -1,25 +1,28 @@
-//! Noktalar's view (docs/adr/0153 §1–§4; the web's `PointTable`): the bar
-//! (search, layer, only the selected, Bağlı çizgiler izler, the count, Satır
-//! ekle, Sil, Göster) over the table; a value cell double-clicked holds the
-//! editor's field (`cell.rs`), the draft row after the points.
+//! Noktalar's view (docs/adr/0153 §1–§5; the web's `PointTable`): the bar
+//! (search, layer, only the selected, Bağlı çizgiler izler, the count,
+//! İşlemler ▾, Satır ekle, Sil, Göster) over the table; a value cell
+//! double-clicked holds the editor's field (`cell.rs`), the draft row after
+//! the points, a row's right click its menu.
 
 use iced::widget::{button, container, mouse_area, row, space};
 use iced::{Center, Element, Fill, Length};
 use kentos_contracts::Entity;
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_interaction::Format;
-use kentos_ui::icon::icon;
+use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::search_box::SearchBox;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::switch::Switch;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
-use kentos_ui::widget::{Tip, tip};
+use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
+use super::batch::{self, Kind};
 use super::edit::{EditColumn, cell_text};
-use super::{COLUMNS, Event, Rows, Target, Walk, cell, layer_name, texts};
+use super::{COLUMNS, Event, RowAction, Rows, Target, Walk, cell, layer_name, texts};
 use crate::app::{App, Message};
+use crate::exchange::words;
 use crate::icons::from_web;
 
 fn msg(e: Event) -> Message {
@@ -47,16 +50,69 @@ fn bar_button<'a>(
     )
 }
 
+/// The batch operations as a menu lists them (İşlemler ▾, a row's menu):
+/// each sends `on(kind)`; none without rows.
+fn batch_items(menu: Menu<Message>, on: impl Fn(Kind) -> Message, any: bool) -> Menu<Message> {
+    [
+        (Kind::Rename, texts::RENAME, "edit", texts::RENAME_HINT),
+        (
+            Kind::Number,
+            texts::NUMBER,
+            "numberVertices",
+            texts::NUMBER_HINT,
+        ),
+        (Kind::Layer, texts::LAYER, "layers", texts::LAYER_HINT),
+    ]
+    .into_iter()
+    .fold(menu, |menu, (kind, words, glyph, detail)| {
+        menu.item(words, any.then(|| on(kind)))
+            .icon(from_web(Some(glyph)))
+            .detail(detail)
+    })
+}
+
+/// A row's menu's header when the row is not selected: the point by its
+/// name (the web's `rowHeader`).
+pub fn row_header(p: &kentos_contracts::PointEntity) -> String {
+    match p
+        .base
+        .label
+        .as_deref()
+        .map(js_trim)
+        .filter(|n| !n.is_empty())
+    {
+        Some(name) => format!("Nokta {name}"),
+        None => "Adsız nokta".to_owned(),
+    }
+}
+
+/// A row's menu (the web's `rowItems`): Göster, the batch operations, Sil;
+/// over the selected rows when the row is one of them, else over that row (a
+/// command selects it alone first). The right click leaves the selection.
+fn row_menu(at: usize, header: String) -> Menu<Message> {
+    let on = move |a| msg(Event::Row(at, a));
+    let menu = Menu::new()
+        .header(header)
+        .item(texts::SHOW, Some(on(RowAction::Show)))
+        .icon(from_web(Some("zoomSelection")))
+        .separator();
+    batch_items(menu, |k| on(RowAction::Batch(k)), true)
+        .separator()
+        .item(texts::REMOVE, Some(on(RowAction::Remove)))
+        .icon(from_web(Some("erase")))
+}
+
 /// What the bar needs in one row, logical pixels at the default type size
-/// (measured 1 037): the filters (search 200, layer 170, the two switches)
-/// and the count with the three buttons, their gaps and margins.
-const BAR_ONE_ROW: f32 = 1060.0;
+/// (measured 1 087): the filters (search 200, layer 170, the two boxes) and
+/// the count with the four buttons, their gaps and margins.
+const BAR_ONE_ROW: f32 = 1110.0;
 
 impl App {
     /// The bar: the filters on the left, the count and the buttons on the
     /// right; a narrow panel takes the right group to a second line, to the
     /// right, rather than cut it (the web's bar wraps the same way). The
     /// panel is as wide as the drawing area above it.
+    #[allow(clippy::too_many_arguments)]
     fn points_bar<'a>(
         search: String,
         rows: &Rows,
@@ -64,6 +120,7 @@ impl App {
         only_selected: bool,
         follow: bool,
         some: bool,
+        header: String,
         width: f32,
     ) -> Element<'a, Message> {
         let names: Vec<String> = rows.layers.iter().map(|(name, _)| name.clone()).collect();
@@ -90,10 +147,13 @@ impl App {
                     names.get(i - 1).cloned()
                 }))
             });
-            let only = Switch::new(only_selected, |on| msg(Event::OnlySelected(on)))
-                .label(texts::ONLY_SELECTED);
+            let only = words::check(
+                only_selected,
+                texts::ONLY_SELECTED,
+                Some(msg(Event::OnlySelected(!only_selected))),
+            );
             let follow = tip(
-                Switch::new(follow, |on| msg(Event::Follow(on))).label(texts::FOLLOW),
+                words::check(follow, texts::FOLLOW, Some(msg(Event::Follow(!follow)))),
                 Tip::new(texts::FOLLOW).body(
                     "Nokta taşınınca ya da kotu değişince, o yerde köşesi olan çizgi, çoklu çizgi ve alanların köşeleri de izler.",
                 ),
@@ -107,8 +167,33 @@ impl App {
             ]
             .spacing(10)
             .align_y(Center);
+            // İşlemler ▾: its menu headed by the rows it takes.
+            let any = !rows.shown.is_empty();
+            let face = container(
+                row![
+                    icon(from_web(Some("processing"))).size(14.0),
+                    label::body(texts::ACTIONS),
+                    icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            )
+            .padding([4, 10])
+            .style(style::container::field_box);
+            let actions_menu = tip(
+                MenuButton::new(face, move || {
+                    batch_items(
+                        Menu::new().header(header.clone()),
+                        |k| msg(Event::Batch(k)),
+                        any,
+                    )
+                }),
+                Tip::new(texts::ACTIONS).body(texts::ACTIONS_HINT),
+                iced::widget::tooltip::Position::Top,
+            );
             let actions = row![
                 label::muted(count.clone()),
+                actions_menu,
                 bar_button(
                     "plus",
                     texts::ADD,
@@ -161,8 +246,11 @@ impl App {
             panel.only_selected,
             panel.follow,
             !self.selection.is_empty(),
+            batch::targets(&rows.shown, |s| self.selection.contains(s)).1,
             self.viewport.bounds.width,
         );
+        // A row's menu names the selected rows; a row not selected, itself alone.
+        let selected_header = batch::targets(&rows.shown, |s| self.selection.contains(s)).1;
 
         let columns = COLUMNS
             .iter()
@@ -287,6 +375,14 @@ impl App {
                 // Every selected row alike, as the web shows them: no primary one.
                 .current(false)
                 .on_press(msg(Event::Press(i)))
+                .menu({
+                    let header = if selection.contains(slot) {
+                        selected_header.clone()
+                    } else {
+                        row_header(p)
+                    };
+                    move |_| row_menu(i, header.clone())
+                })
             })
             .reveal(match editing {
                 Some((Target::Draft, _)) => Some(rows.shown.len()),

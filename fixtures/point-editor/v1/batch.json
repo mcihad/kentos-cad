@@ -1,0 +1,3773 @@
+{
+ "format": "kentos.point-editor-batch",
+ "version": 1,
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "locked": false,
+   "visible": true
+  },
+  {
+   "id": "kot",
+   "name": "Kot",
+   "locked": false,
+   "visible": true
+  },
+  {
+   "id": "gizli",
+   "name": "Gizli",
+   "locked": false,
+   "visible": false
+  },
+  {
+   "id": "kilitli",
+   "name": "Kilitli",
+   "locked": true,
+   "visible": true
+  }
+ ],
+ "objects": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "cizim",
+   "attrs": {
+    "Kod": "ST"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "label": "101",
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 10.0,
+    "y": 0.0
+   },
+   "label": "102"
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 20.0,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 30.0,
+    "y": 0.0
+   },
+   "label": "P.103"
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 40.0,
+    "y": 0.0
+   },
+   "label": "P."
+  },
+  {
+   "kind": "point",
+   "id": 6,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 50.0,
+    "y": 0.0
+   },
+   "label": " 104 "
+  },
+  {
+   "kind": "point",
+   "id": 7,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 60.0,
+    "y": 0.0
+   },
+   "label": "105"
+  },
+  {
+   "kind": "point",
+   "id": 8,
+   "layerId": "kilitli",
+   "attrs": {},
+   "p": {
+    "x": 70.0,
+    "y": 0.0
+   },
+   "label": "106"
+  },
+  {
+   "kind": "point",
+   "id": 9,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 80.0,
+    "y": 0.0
+   },
+   "label": "A1"
+  },
+  {
+   "kind": "line",
+   "id": 10,
+   "layerId": "cizim",
+   "attrs": {},
+   "a": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 10.0,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 11,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 90.0,
+    "y": 0.0
+   },
+   "label": "P.101"
+  },
+  {
+   "kind": "point",
+   "id": 12,
+   "layerId": "kot",
+   "attrs": {},
+   "p": {
+    "x": 100.0,
+    "y": 0.0
+   },
+   "label": "1"
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 110.0,
+    "y": 0.0
+   },
+   "label": "P. 107"
+  }
+ ],
+ "cases": [
+  {
+   "name": "Önek ekle: adlılara; adsız değişmez, başka noktadaki ad söylenir",
+   "targets": [
+    1,
+    2,
+    3,
+    6
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "add",
+    "prefix": "P."
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 3 noktanın adı değişti; 1 ad başka noktalarda da var."
+    ],
+    "step": "Yeniden adlandır",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.104",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek ekle: önekin boşlukları atılır",
+   "targets": [
+    2
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "add",
+    "prefix": " X- "
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 1 noktanın adı değişti."
+    ],
+    "step": "Yeniden adlandır",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "X-102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek kaldır: taşıyanlardan atılır, kalanın boşlukları da; kalan boşsa ve önek yoksa değişmez",
+   "targets": [
+    4,
+    5,
+    1,
+    13
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "remove",
+    "prefix": "P."
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 2 noktanın adı değişti."
+    ],
+    "step": "Yeniden adlandır",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek kaldır: büyük küçük harf ayrı",
+   "targets": [
+    4
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "remove",
+    "prefix": "p."
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Adı değişen nokta yok."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek boş",
+   "targets": [
+    1
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "add",
+    "prefix": "  "
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Önek yazılmalı."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek ekle: kilitli katmandaki nokta hepsini durdurur",
+   "targets": [
+    1,
+    8
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "add",
+    "prefix": "K"
+   },
+   "expected": {
+    "said": [
+     "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Önek kaldır: kilitli nokta değişmiyorsa durdurmaz",
+   "targets": [
+    4,
+    8
+   ],
+   "op": {
+    "kind": "rename",
+    "mode": "remove",
+    "prefix": "P."
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 1 noktanın adı değişti."
+    ],
+    "step": "Yeniden adlandır",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: tablonun sırasıyla",
+   "targets": [
+    3,
+    1,
+    2
+   ],
+   "op": {
+    "kind": "number",
+    "start": "201"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 3 noktanın adı değişti."
+    ],
+    "step": "Sıralı numara ver",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "202",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "203",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "201",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: öndeki sıfırlar korunur, basamak artar",
+   "targets": [
+    1,
+    2,
+    3
+   ],
+   "op": {
+    "kind": "number",
+    "start": "P-098"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 3 noktanın adı değişti."
+    ],
+    "step": "Sıralı numara ver",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P-098",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P-099",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P-100",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: 101/1 biçimi",
+   "targets": [
+    7,
+    9
+   ],
+   "op": {
+    "kind": "number",
+    "start": " 101/1 "
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 2 noktanın adı değişti."
+    ],
+    "step": "Sıralı numara ver",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "101/1",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101/2",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: başlangıç sayıyla bitmiyor",
+   "targets": [
+    1,
+    2
+   ],
+   "op": {
+    "kind": "number",
+    "start": "A"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Başlangıç adı sayıyla bitmeli."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: boş başlangıç",
+   "targets": [
+    1
+   ],
+   "op": {
+    "kind": "number",
+    "start": " "
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Başlangıç adı sayıyla bitmeli."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: yalnız 0–9 rakamları sayılır",
+   "targets": [
+    1
+   ],
+   "op": {
+    "kind": "number",
+    "start": "A٣"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Başlangıç adı sayıyla bitmeli."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: adlar zaten öyle",
+   "targets": [
+    1,
+    2
+   ],
+   "op": {
+    "kind": "number",
+    "start": "101"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Adı değişen nokta yok."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: boşluklu ad da yazılır",
+   "targets": [
+    6
+   ],
+   "op": {
+    "kind": "number",
+    "start": "104"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 1 noktanın adı değişti."
+    ],
+    "step": "Sıralı numara ver",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "104",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: başka noktadaki ad söylenir",
+   "targets": [
+    9,
+    3
+   ],
+   "op": {
+    "kind": "number",
+    "start": "1"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 2 noktanın adı değişti; 1 ad başka noktalarda da var."
+    ],
+    "step": "Sıralı numara ver",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "2",
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sıralı numara: kilitli nokta değişirse durdurur",
+   "targets": [
+    1,
+    8
+   ],
+   "op": {
+    "kind": "number",
+    "start": "301"
+   },
+   "expected": {
+    "said": [
+     "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Katmana taşı: zaten oradakiler değişmez",
+   "targets": [
+    1,
+    7,
+    2
+   ],
+   "op": {
+    "kind": "layer",
+    "layer": "kot"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 2 nokta “Kot” katmanına taşındı."
+    ],
+    "step": "Katmana taşı",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Katmana taşı: hepsi orada",
+   "targets": [
+    7,
+    11
+   ],
+   "op": {
+    "kind": "layer",
+    "layer": "kot"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: Taşınacak nokta yok."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Katmana taşı: gizli katmana, söylenir",
+   "targets": [
+    1
+   ],
+   "op": {
+    "kind": "layer",
+    "layer": "gizli"
+   },
+   "expected": {
+    "said": [
+     "Nokta editörü: 1 nokta “Gizli” katmanına taşındı.",
+     "“Gizli” katmanı gizli; taşınan nesneler görünmeyecek."
+    ],
+    "step": "Katmana taşı",
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "gizli",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Katmana taşı: kilitli katmana",
+   "targets": [
+    1
+   ],
+   "op": {
+    "kind": "layer",
+    "layer": "kilitli"
+   },
+   "expected": {
+    "said": [
+     "“Kilitli” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  },
+  {
+   "name": "Katmana taşı: kilitli katmandaki nokta",
+   "targets": [
+    2,
+    8,
+    1
+   ],
+   "op": {
+    "kind": "layer",
+    "layer": "kot"
+   },
+   "expected": {
+    "said": [
+     "“Kilitli” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+    ],
+    "step": null,
+    "objects": [
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "101",
+      "attrs": {
+       "Kod": "ST"
+      },
+      "at": [
+       0.0,
+       0.0
+      ],
+      "z": 100.0
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "102",
+      "attrs": {},
+      "at": [
+       10.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {},
+      "at": [
+       20.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.103",
+      "attrs": {},
+      "at": [
+       30.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P.",
+      "attrs": {},
+      "at": [
+       40.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": " 104 ",
+      "attrs": {},
+      "at": [
+       50.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "105",
+      "attrs": {},
+      "at": [
+       60.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kilitli",
+      "label": "106",
+      "attrs": {},
+      "at": [
+       70.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "A1",
+      "attrs": {},
+      "at": [
+       80.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "label": null,
+      "attrs": {}
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "P.101",
+      "attrs": {},
+      "at": [
+       90.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "kot",
+      "label": "1",
+      "attrs": {},
+      "at": [
+       100.0,
+       0.0
+      ],
+      "z": null
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "label": "P. 107",
+      "attrs": {},
+      "at": [
+       110.0,
+       0.0
+      ],
+      "z": null
+     }
+    ]
+   }
+  }
+ ],
+ "targets": [
+  {
+   "name": "seçim yok: tablodaki bütün satırlar",
+   "shown": [
+    1,
+    2,
+    3
+   ],
+   "selected": [],
+   "expected": {
+    "targets": [
+     1,
+     2,
+     3
+    ],
+    "header": "Tablodaki 3 nokta"
+   }
+  },
+  {
+   "name": "seçili satırlar tablonun sırasıyla",
+   "shown": [
+    3,
+    1,
+    2,
+    9
+   ],
+   "selected": [
+    2,
+    3
+   ],
+   "expected": {
+    "targets": [
+     3,
+     2
+    ],
+    "header": "2 seçili nokta"
+   }
+  },
+  {
+   "name": "tabloda olmayan seçili nokta sayılmaz",
+   "shown": [
+    3,
+    1,
+    2
+   ],
+   "selected": [
+    2,
+    7
+   ],
+   "expected": {
+    "targets": [
+     2
+    ],
+    "header": "1 seçili nokta"
+   }
+  },
+  {
+   "name": "seçili nokta tabloda değil: bütün satırlar",
+   "shown": [
+    1,
+    2
+   ],
+   "selected": [
+    7
+   ],
+   "expected": {
+    "targets": [
+     1,
+     2
+    ],
+    "header": "Tablodaki 2 nokta"
+   }
+  },
+  {
+   "name": "boş tablo",
+   "shown": [],
+   "selected": [
+    1
+   ],
+   "expected": {
+    "targets": [],
+    "header": "Tablodaki 0 nokta"
+   }
+  }
+ ]
+}
