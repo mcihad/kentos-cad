@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "usage-topology-edit",
-  "title": "Kullanım: Topolojik düzenleme; ortak köşenin tutamacı taşınırken komşu parsel ve yol da önizlenir, kilitli pafta yerinde kalır; yaylı ortak kenar iki parselde birlikte biçimlenir",
+  "title": "Kullanım: Topolojik düzenleme; ortak köşenin tutamacı taşınırken komşu parsel ve yol da önizlenir, kilitli pafta yerinde kalır; yaylı ortak kenar iki parselde birlikte biçimlenir; tutamacın kartı ortak köşeyi kaç nesnenin paylaştığını söyler; Esnet seçili olmayan komşuları da taşır",
   "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0160",
   "covers": ["UX-01", "UX-09"],
   "document": "topology-edit.kcad",
@@ -28,6 +28,18 @@
     { "move": [31, -1] },
     { "shot": "yay-onizleme" },
     { "click": [31, -1], "expect": { "logged": ["Topolojik düzenleme: 1 komşu nesne de değişti."] } },
-    { "shot": "yay" }
+    { "shot": "yay" },
+    { "click": [-40, -6], "note": "21 numaralı parsel yeniden seçilir.", "expect": { "selected": [1] } },
+    { "move": [-16, 13], "note": "Taşınan ortak köşenin tutamacında: kotu ve kaç nesnenin köşesi olduğu." },
+    { "shot": "kart" },
+    { "run": "tool.stretch", "note": "Esnet: seçili 21'in köşesi, seçili olmayan komşularıyla." },
+    { "click": [-18, 11] },
+    { "click": [-14, 15] },
+    { "click": [-16, 13] },
+    { "move": [-13, 13] },
+    { "shot": "esnet-onizleme" },
+    { "text": "@3,0" },
+    { "key": "Enter", "expect": { "logged": ["1 nesne esnetildi: ΔY 3.000  ΔX 0.000", "Topolojik düzenleme: 2 komşu nesne de değişti."] } },
+    { "shot": "esnet" }
   ]
 }

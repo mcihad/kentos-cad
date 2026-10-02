@@ -17,20 +17,27 @@
 //! the window dashed in the snap colour, the objects as they would be
 //! (dashed, the geometry store's `stretch_outlines`), the line from the base
 //! with its length.
+//!
+//! With Topolojik düzenleme on, the objects sharing a moved vertex go with
+//! the stretched ones in the same step, selected or not, and are previewed
+//! with them (docs/adr/0160 §3, `neighbours`).
 
 use kentos_contracts::{EditOperation, EntityEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
 use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
 use kentos_geometry_core::ops::stretch::stretch_entity;
+use kentos_geometry_core::ops::topology_edit::{self, Change};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::point_from_text;
+use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
-use crate::edge;
+use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
-use crate::modify::{MAX_GHOSTS, ghosts};
+use crate::modify::{GHOST_DASH, MAX_GHOSTS, ghosts};
+use crate::neighbours::{self, Found};
 use crate::points;
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
@@ -72,6 +79,9 @@ pub struct Stretch {
     /// The objects as they would be: outlines and point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
+    /// The vertices the window moves and the objects sharing them
+    /// (Topolojik düzenleme), found once per window for the preview.
+    follow: Option<(Vec<Vec2>, Found)>,
     done: bool,
 }
 
@@ -142,7 +152,44 @@ impl Stretch {
         }
         self.targets = targets;
         self.window = Some(r);
+        self.follow = None;
         self.stage = Stage::Base;
+    }
+
+    /// The vertices the window moves and the neighbours that follow them
+    /// (docs/adr/0160 §3): the vertices as the core's moves of a stretch one
+    /// metre east, the objects sharing them that are not stretched
+    /// themselves. Found when first asked, since the mode can be turned on
+    /// while the tool waits (the web's `followers`).
+    fn followers(&mut self, cx: &Context<'_>) -> Option<&(Vec<Vec2>, Found)> {
+        let window = self.window?;
+        if !cx.draft.topology {
+            return None;
+        }
+        if self.follow.is_none() {
+            let points = cx.draft.topology_points;
+            let mut at = Vec::new();
+            for slot in &self.targets {
+                let Some(e) = cx.doc.get(*slot) else {
+                    continue;
+                };
+                let before = shape(e);
+                if matches!(before, kentos_geometry_core::entity::Shape::Point { .. }) && !points {
+                    continue;
+                }
+                let Some(g) = stretch_entity(&edge::core(e), &window, 1.0, 0.0) else {
+                    continue;
+                };
+                for c in topology_edit::changes(&before, &g.shape) {
+                    if let Change::Move { at: v, .. } = c {
+                        at.push(v);
+                    }
+                }
+            }
+            let found = neighbours::around(cx, &at, &self.targets);
+            self.follow = Some((at, found));
+        }
+        self.follow.as_ref()
     }
 
     /// A point clicked or typed: the base, then the target, which writes.
@@ -158,22 +205,45 @@ impl Stretch {
         let (dx, dy) = (p.x - base.x, p.y - base.y);
         // Each object's new geometry from the core, written as one edit: slot,
         // persistent id and every other field kept.
-        let changes: Vec<EntityEdit> = self
-            .targets
+        let mut changes = Vec::new();
+        let mut edits = Vec::new();
+        for slot in &self.targets {
+            let Some(e) = cx.doc.get(*slot) else {
+                continue;
+            };
+            let Some(g) = stretch_entity(&edge::core(e), &window, dx, dy) else {
+                continue;
+            };
+            let Some(geometry) = edge::geometry(&g.shape) else {
+                continue;
+            };
+            changes.push(EntityEdit::Update {
+                uid: edge::uid(cx.doc, *slot),
+                geometry,
+            });
+            edits.push((*slot, shape(e), g.shape));
+        }
+        // The neighbours sharing a moved vertex go in the same step, found
+        // again on the drawing as it is now (docs/adr/0160 §3).
+        let follow = neighbours::neighbours_of(cx, &edits);
+        // The stretched objects are counted; the neighbours are said after them.
+        let stretched: Vec<String> = changes
             .iter()
-            .filter_map(|slot| {
-                let e = cx.doc.get(*slot)?;
-                let g = stretch_entity(&edge::core(e), &window, dx, dy)?;
-                Some(EntityEdit::Update {
-                    uid: edge::uid(cx.doc, *slot),
-                    geometry: edge::geometry(&g.shape)?,
-                })
+            .filter_map(|c| match c {
+                EntityEdit::Update { uid, .. } => Some(uid.clone()),
+                _ => None,
             })
             .collect();
         let written = if changes.is_empty() {
             Some(0)
         } else {
-            edge::write(EditOperation::Stretch, changes, cx).map(|out| out.changed.len())
+            changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
+            edge::write(EditOperation::Stretch, changes, cx).map(|out| {
+                out.changed
+                    .iter()
+                    .filter(|uid| stretched.contains(uid))
+                    .count()
+            })
         };
         if let Some(n) = written {
             let f = cx.format();
@@ -183,6 +253,9 @@ impl Stretch {
                 f.length_bare(dy)
             );
             cx.say(Level::Success, line);
+            if n > 0 {
+                neighbours::say(follow.as_ref(), cx);
+            }
         }
         self.done = true;
     }
@@ -206,6 +279,28 @@ impl Stretch {
             .collect();
         let paths = cx.spatial.store().stretch_outlines(&ids, &window, dx, dy);
         (self.ghosts, self.marks) = ghosts(&paths);
+        // The neighbours that follow (docs/adr/0160 §5), as the stretched objects.
+        if dx == 0.0 && dy == 0.0 {
+            return;
+        }
+        let Some((at, found)) = self.followers(cx) else {
+            return;
+        };
+        if found.is_empty() {
+            return;
+        }
+        let moves: Vec<Change> = at
+            .iter()
+            .map(|&v| Change::Move {
+                at: v,
+                to: Vec2::new(v.x + dx, v.y + dy),
+            })
+            .collect();
+        let shapes = neighbours::put_right(cx, found, &moves).shapes;
+        for shape in &shapes {
+            let outline = Outline::of(shape, Some(GHOST_DASH), 1.0, Tone::Accent);
+            self.ghosts.extend(outline.strokes);
+        }
     }
 }
 

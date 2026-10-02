@@ -10,6 +10,7 @@ import { dimensionLabel } from '../model/geom/dimension';
 import { explodeEntity } from '../model/ops/explode';
 import { joinEntities } from '../model/ops/join';
 import { stretchEntity } from '../model/ops/stretch';
+import { topologyChanges } from '../model/ops/topologyEdit';
 import { transformedFrom } from '../model/ops/transform';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { geometryOf } from '../product/entitiesEdit';
@@ -20,7 +21,8 @@ import { packEntities } from '../wasm/pack';
 import { parseNumber } from './coordinateInput';
 import { createdIds, editGeometry, uidOf, writeEdit } from './editCommand';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
-import { drawTag, strokePath, strokePaths } from './preview';
+import { neighboursAt, neighboursOf, putRight, sayNeighbours, topologyOn } from './neighbours';
+import { drawTag, strokeGeometry, strokePath, strokePaths } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
 
@@ -149,6 +151,8 @@ export class ExplodeTool extends SelectionActionTool {
  * or drag), then base and target points. With a selection, only selected
  * objects are affected. The core stretches each object; the tool writes
  * them through the product command `cad.entities.edit` (docs/adr/0047).
+ * With Topolojik düzenleme on, the objects sharing a moved vertex go with
+ * them, selected or not (docs/adr/0160 §3).
  */
 export class StretchTool implements Tool {
   readonly id = 'stretch';
@@ -162,6 +166,8 @@ export class StretchTool implements Tool {
   private hover: Vec2 | null = null;
   private hoverScreen: Vec2 | null = null;
   private tracking: Tracking | null = null;
+  /** The vertices the window moves and the objects sharing them (Topolojik düzenleme), found once per window for the preview. */
+  private follow: { at: Vec2[]; found: Entity[] } | null = null;
   private readonly ctx: AppContext;
 
   constructor(ctx: AppContext) {
@@ -170,6 +176,25 @@ export class StretchTool implements Tool {
 
   get snaps(): boolean {
     return this.stage === 'base' || this.stage === 'target';
+  }
+
+  /**
+   * The neighbours that follow the window's vertices (docs/adr/0160 §3): the vertices the stretch moves, found as the
+   * core's moves of a stretch one metre east, and the objects sharing them that are not stretched themselves. Null
+   * while the mode is off; found when first asked, since the mode can be turned on while the tool waits.
+   */
+  private followers(): { at: Vec2[]; found: Entity[] } | null {
+    if (!topologyOn(this.ctx) || !this.window) return null;
+    if (!this.follow) {
+      const points = this.ctx.settings.topologyPoints.value;
+      const at: Vec2[] = [];
+      for (const e of this.targets) {
+        const g = e.kind === 'point' && !points ? null : stretchEntity(e, this.window, 1, 0);
+        if (g) for (const c of topologyChanges(e, { ...e, ...g } as Entity)) if (c.kind === 'move') at.push(c.at);
+      }
+      this.follow = { at, found: neighboursAt(this.ctx, at, new Set(this.targets.map((e) => e.id))) };
+    }
+    return this.follow;
   }
 
   activate(): void {
@@ -235,6 +260,7 @@ export class StretchTool implements Tool {
       return this.refresh();
     }
     this.window = r;
+    this.follow = null;
     this.stage = 'base';
     this.refresh();
   }
@@ -252,12 +278,22 @@ export class StretchTool implements Tool {
     // Each object's new geometry from the core, written through cad.entities.edit as one
     // undo step, “Esnet” (docs/adr/0047): slot, persistent id and every other field kept.
     const changes: EntityEdit[] = [];
+    const edits: [Entity, Entity][] = [];
     for (const e of this.targets) {
       const g = stretchEntity(e, this.window!, dx, dy);
-      if (g) changes.push({ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(g) });
+      if (!g) continue;
+      changes.push({ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(g) });
+      edits.push([e, { ...e, ...g } as Entity]);
     }
-    const out = changes.length ? writeEdit(this.ctx, 'stretch', changes) : { changed: [] };
-    if (out) log.success(`${out.changed.length} nesne esnetildi: ΔY ${format.length(dx, false)}  ΔX ${format.length(dy, false)}`);
+    // The neighbours sharing a moved vertex go in the same step, found again on the drawing as it is now.
+    const follow = neighboursOf(this.ctx, edits);
+    const out = changes.length ? writeEdit(this.ctx, 'stretch', [...changes, ...(follow?.changes ?? [])]) : { changed: [] };
+    if (out) {
+      // The stretched objects are counted; the neighbours are said after them.
+      const stretched = new Set(changes.map((c) => (c.kind === 'update' ? c.uid : '')));
+      log.success(`${out.changed.filter((uid) => stretched.has(uid)).length} nesne esnetildi: ΔY ${format.length(dx, false)}  ΔX ${format.length(dy, false)}`);
+      if (changes.length) sayNeighbours(this.ctx, follow);
+    }
     this.ctx.tools.exit();
   }
 
@@ -302,6 +338,12 @@ export class StretchTool implements Tool {
     const dy = this.base && this.hover ? this.hover.y - this.base.y : 0;
     const ids = this.targets.slice(0, MAX_GHOSTS).map((e) => e.id);
     strokePaths(g, view, this.ctx.view.stretchGhosts(ids, w, dx, dy), { color: pal.accent, dash: [4, 3] });
+    // The neighbours that follow (docs/adr/0160 §5), as the stretched objects.
+    const follow = (dx || dy) && this.followers();
+    if (follow && follow.found.length) {
+      const moves = follow.at.map((at) => ({ kind: 'move' as const, at, to: { x: at.x + dx, y: at.y + dy } }));
+      for (const shape of putRight(this.ctx, follow.found, moves).shapes) strokeGeometry(g, view, shape, { color: pal.accent, dash: [4, 3] });
+    }
     if (this.base && this.hover) {
       strokePath(g, view, [this.base, this.hover], { color: pal.accent });
       drawTag(g, view.worldToScreen(this.hover), [this.ctx.format.length(dist(this.base, this.hover))], pal.accent, pal.labelHalo);

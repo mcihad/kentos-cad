@@ -2,8 +2,8 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "topology-edit",
-  "title": "Topolojik düzenleme: kip kapalıyken tutamaç yalnız nesnesini değiştirir; açıkken ortak köşe komşu parselde ve yolda da taşınır, kilitli pafta yerinde kalır ve söylenir, gizli katman katılmaz; Noktalar da açıkken nokta da gelir; ortak kenarın ortasından eklenen köşe komşuya da eklenir (kenarın üstündeyse kotu kenardan, değilse kotsuz); yaylı ortak kenar komşuda ters işaretle biçimlenir; her düzenleme tek adımda geri alınır",
-  "source": "Web'in SelectTool'u ve neighbours.ts'i, masaüstünün kentos_interaction::select'i ve neighbours'ı; çekirdeğin topology_edit'i; cad.entities.edit grip, ADR 0160",
+  "title": "Topolojik düzenleme: kip kapalıyken tutamaç yalnız nesnesini değiştirir; açıkken ortak köşe komşu parselde ve yolda da taşınır, kilitli pafta yerinde kalır ve söylenir, gizli katman katılmaz; Noktalar da açıkken nokta da gelir; ortak kenarın ortasından eklenen köşe komşuya da eklenir (kenarın üstündeyse kotu kenardan, değilse kotsuz); yaylı ortak kenar komşuda ters işaretle biçimlenir; Esnet seçili olmayan komşuları da taşır; her düzenleme tek adımda geri alınır",
+  "source": "Web'in SelectTool'u, StretchTool'u ve neighbours.ts'i, masaüstünün kentos_interaction::select'i, stretch'i ve neighbours'ı; çekirdeğin topology_edit'i; cad.entities.edit grip ve stretch, ADR 0160",
   "covers": ["UX-01", "UX-09", "CMD-04"],
   "document": "topology-edit.kcad",
   "view": { "center": [487000, 4420000], "metresPerPixel": 0.2 },
@@ -124,6 +124,37 @@
         "objects": [
           { "id": 7, "kind": "polygon", "points": [[10, -10], [25, -10], [25, 10], [10, 10]], "bulges": [0, 0.25, 0, 0] },
           { "id": 8, "kind": "polygon", "points": [[25, -10], [40, -10], [40, 10], [25, 10]], "bulges": [0, 0, 0, -0.25] }
+        ]
+      }
+    },
+    { "click": [-40, -5], "note": "21 numaralı parsel seçilir.", "expect": { "selected": [1] } },
+    { "run": "tool.stretch", "note": "Esnet: seçim varken yalnız seçili 21 esnetilir." },
+    { "click": [-22, 8] },
+    { "click": [-18, 12] },
+    { "click": [-20, 10], "note": "Temel nokta ortak köşe." },
+    { "text": "@1,1" },
+    {
+      "key": "Enter",
+      "note": "Seçili olmayan komşu parsel, yolun ucu ve P1 (Noktalar da açık) köşeyle gelir; kilitli paftanın üçgeni söylenir.",
+      "expect": {
+        "tool": "select",
+        "logged": ["1 nesne esnetildi: ΔY 1.000  ΔX 1.000", "Topolojik düzenleme: 3 komşu nesne de değişti.", "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."],
+        "objects": [
+          { "id": 1, "kind": "polygon", "points": [[-40, -20], [-20, -20], [-20, -8], [-19, 11], [-40, 10]] },
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-19, 11], [-20, -8]] },
+          { "id": 3, "kind": "polygon", "points": [[-40, 10], [-20, 10], [-30, 22]] },
+          { "id": 4, "kind": "line", "points": [[-19, 11], [-5, 22]] },
+          { "id": 5, "kind": "point", "points": [[-19, 11]], "z": 103 }
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adım: “Esnet”.",
+      "expect": {
+        "objects": [
+          { "id": 2, "kind": "polygon", "points": [[-20, -20], [0, -20], [0, 10], [-20, 10], [-20, -8]] },
+          { "id": 5, "kind": "point", "points": [[-20, 10]] }
         ]
       }
     },

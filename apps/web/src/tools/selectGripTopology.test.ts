@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { Signal } from '../core/signal';
 import type { LineEntity, PointEntity, PolylineEntity as PolygonEntity } from '../model/entities';
 import { entityGrips } from '../model/ops/grips';
+import type { MenuItem } from '../ui/widgets/PopupMenu';
+import { gripItems } from '../ui/shell/gripMenu';
+import { StretchTool } from './editTools';
 import { SelectTool } from './SelectTool';
 import { at, canvasLog, pt, toolHarness } from './toolHarness';
 
@@ -106,5 +109,81 @@ describe('Topolojik düzenleme through grips', () => {
     const off = canvasLog();
     tool.draw(off.g, off.view);
     expect(off.paths.some((p) => p.points.some(([x, y]) => x === 40 && y === 30))).toBe(false);
+  });
+
+  it('the grip menu: Yaya dönüştür bows the shared edge in both, Ortasına köşe ekle and Köşeyi sil act in both', () => {
+    const { h, a, b, grip, settings } = scene();
+    settings.topology.set(true);
+    const run = (label: string) => {
+      const item = gripItems(h.ctx, pt(20, 15)).find((i: MenuItem) => i.label === label);
+      expect(item, label).toBeTruthy();
+      item!.run!();
+    };
+    // The shared edge's middle: after the four vertices, the second edge's.
+    grip.index = 5;
+    run('Yaya dönüştür');
+    expect((h.doc.get(a.id) as PolygonEntity).bulges).toEqual([0, 0.5, 0, 0]);
+    // The same arc runs the other way in the neighbour.
+    expect((h.doc.get(b.id) as PolygonEntity).bulges).toEqual([0, 0, 0, -0.5]);
+    expect(h.said().slice(-2)).toEqual(['Yaya dönüştür: tamam.', 'Topolojik düzenleme: 1 komşu nesne de değişti.']);
+    expect(h.doc.undo()).toBe('Yaya dönüştür');
+    run('Ortasına köşe ekle');
+    const [na, nb] = [h.doc.get(a.id) as PolygonEntity, h.doc.get(b.id) as PolygonEntity];
+    expect(na.pts).toEqual([pt(0, 0), pt(20, 0), pt(20, 15), pt(20, 30), pt(0, 30)]);
+    expect(nb.pts).toEqual([pt(20, 0), pt(40, 0), pt(40, 30), pt(20, 30), pt(20, 15)]);
+    expect([na.zs![2], nb.zs![4]]).toEqual([101.5, 101.5]);
+    // The new corner, the third of the parcel's vertices.
+    grip.index = 2;
+    run('Köşeyi sil');
+    expect((h.doc.get(a.id) as PolygonEntity).pts).toEqual(a.pts);
+    expect((h.doc.get(b.id) as PolygonEntity).pts).toEqual(b.pts);
+    expect(h.said().slice(-2)).toEqual(['Köşe sil: tamam.', 'Topolojik düzenleme: 1 komşu nesne de değişti.']);
+  });
+
+  it('Esnet stretches the selected parcel; the unselected neighbour and the road follow in the same step', () => {
+    const { h, a, b, road, settings } = scene();
+    settings.topology.set(true);
+    h.ctx.selection.set([a.id]);
+    Object.assign(h.ctx.view, { stretchGhosts: () => new Float64Array() });
+    const tool = h.use(new StretchTool(h.ctx));
+    tool.pointerDown(at(18, 28));
+    tool.pointerDown(at(22, 32));
+    tool.pointerDown(at(20, 30));
+    tool.pointerMove(at(21, 31));
+    const { g, view, paths } = canvasLog();
+    tool.draw(g, view);
+    const drawn = (pts: [number, number][]) => paths.some((p) => p.dashed && pts.every(([x, y]) => p.points.some(([px, py]) => px === x && py === y)));
+    expect(drawn([[40, 30], [21, 31]])).toBe(true);
+    expect(drawn([[21, 31], [35, 42]])).toBe(true);
+    const before = h.said().length;
+    expect(tool.input('@1,1')).toBe(true);
+    expect((h.doc.get(a.id) as PolygonEntity).pts[2]).toEqual(pt(21, 31));
+    expect((h.doc.get(b.id) as PolygonEntity).pts[3]).toEqual(pt(21, 31));
+    expect(h.doc.get(road.id)).toMatchObject({ a: pt(21, 31) });
+    expect(h.said().slice(before)).toEqual([
+      '1 nesne esnetildi: ΔY 1.000  ΔX 1.000',
+      'Topolojik düzenleme: 2 komşu nesne de değişti.',
+      'Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı.',
+    ]);
+    expect(h.doc.undo()).toBe('Esnet');
+    expect(h.doc.get(b.id)).toEqual(b);
+  });
+
+  it('resting on the shared corner, the tag counts the objects having a corner there', () => {
+    const { h, a, tool, settings } = scene();
+    h.ctx.selection.set([a.id]);
+    const tag = () => {
+      tool.pointerMove(at(20, 30));
+      const { g, view, texts } = canvasLog();
+      tool.draw(g, view);
+      return texts;
+    };
+    settings.topology.set(true);
+    // The two parcels, the road and the locked triangle; P1 with Noktalar da.
+    expect(tag()).toEqual(['Kot 103.000 m', '4 nesnenin köşesi']);
+    settings.topologyPoints.set(true);
+    expect(tag()).toEqual(['Kot 103.000 m', '5 nesnenin köşesi']);
+    settings.topology.set(false);
+    expect(tag()).toEqual(['Kot 103.000 m']);
   });
 });

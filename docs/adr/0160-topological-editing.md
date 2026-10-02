@@ -121,6 +121,16 @@ Düzenleme `cad.entities.edit`'in var olan işlemleriyle (`grip`, `vertexRemove`
    - **İz:** `topology-edit.json` (`topology-edit.kcad`) iki platformda. İz biçimine `bulges` ve `zs` beklentileri (1e-9 içinde) eklendi; yaylı ortak kenar ve kenar üstüne eklenen köşenin kotu böyle denetlenir.
 3. Tutamaç menüsü ve Esnet iki platformda; resimler.
 
+   *(2 Ekim: tamam.)*
+   - **Tutamaç menüsü:** Köşeyi sil, Ortasına köşe ekle, Düz kenar yap ve Yaya dönüştür komşuları aynı adımda yazar; ortak yay ters işaretle, eklenen köşenin kotu kenardan.
+   - **Esnet:** pencerenin taşıdığı köşelerin komşuları, seçili olmasalar da gelir.
+     - Önizleme komşuları bir kez bulur (pencereyi bir metre doğuya esneten çekirdek taşımalarıyla); her imleç hareketinde yalnız çekirdeği çağırır.
+     - Yazarken her şey çizimin o anki hâlinden yeniden hesaplanır.
+     - İleti esnetilen nesneleri sayar; komşular ayrı iletide söylenir.
+   - **Kart:** kip açıkken tutamacın kartı ortak köşeyi kaç nesnenin paylaştığını söyler (“4 nesnenin köşesi”; kilitli ve, Noktalar da açıkken, noktalar dahil). Sayıyı çekirdek, yerinde kalan bir taşımayla bulur.
+   - **Yardımcılar:** platformların yardımcıları birden çok düzenlenen nesneyi alır (web `neighboursOf`, `neighboursAt`, `putRight`, `cornerCount`; masaüstü `neighbours_of`, `around`, `put_right`, `corner_count`).
+   - **Sınama:** web `selectGripTopology.test.ts` ve masaüstü `crates/native/interaction/tests/topology_edit.rs` aynı elle hesaplanmış beklentilerle. Ortak ize Esnet adımları eklendi; kullanım senaryosuna kart ve Esnet resimleri.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ### 9. Kapsam dışı

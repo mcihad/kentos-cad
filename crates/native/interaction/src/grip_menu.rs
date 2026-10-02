@@ -16,7 +16,8 @@
 //! step (Köşe sil, Köşe ekle, Düz kenar yap, Yaya dönüştür); the object's
 //! geometry stays but for what the action gives, so a hole stays. The
 //! core's refusal (a triangle's corner) or the command's (a lock) is said;
-//! else “<step>: tamam.”.
+//! else “<step>: tamam.”. With Topolojik düzenleme on, the shared corners
+//! and edges of the objects around go with it (docs/adr/0160, `neighbours`).
 
 use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::Slot;
@@ -30,6 +31,7 @@ use kentos_native_application::geometry::{edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit};
 
 use crate::log::Level;
+use crate::neighbours;
 use crate::points;
 use crate::select::grip_at;
 use crate::tool::Context;
@@ -220,15 +222,19 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
     } else {
         edited
     };
+    // The neighbours sharing what changed go in the same step (docs/adr/0160 §3).
+    let follow = neighbours::neighbours(cx, menu.slot, &whole, &edited);
     let Some(geometry) = edit_geometry(edited) else {
         return;
     };
+    let mut changes = vec![EntityEdit::Update {
+        uid: uid.to_string(),
+        geometry,
+    }];
+    changes.extend(follow.iter().flat_map(|n| n.changes.iter().cloned()));
     let input = EntitiesEdit {
         operation,
-        changes: vec![EntityEdit::Update {
-            uid: uid.to_string(),
-            geometry,
-        }],
+        changes,
         expected_revision: None,
     };
     let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
@@ -237,6 +243,7 @@ pub fn apply(menu: GripMenu, action: GripAction, cx: &mut Context<'_>) {
             Level::Success,
             format!("{}: tamam.", edit::label(operation)),
         );
+        neighbours::say(follow.as_ref(), cx);
     }
 }
 

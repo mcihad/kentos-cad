@@ -31,7 +31,7 @@ use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
-use kentos_geometry_core::ops::grips::move_grip;
+use kentos_geometry_core::ops::grips::{mid_grip_segment, move_grip};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::point_from_text;
 use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
@@ -119,9 +119,20 @@ pub struct Select {
     /// The neighbours as the grip would leave them (Topolojik düzenleme,
     /// docs/adr/0160), for the preview.
     follow: Vec<Shape>,
-    /// The pointer rests on the grip of a vertex that has an elevation: where
-    /// the pointer is, and the elevation, for the tag beside it (docs/adr/0142).
-    hover_grip: Option<(Vec2, f64)>,
+    /// The pointer rests on the grip of a vertex with something to say: its
+    /// tag beside the pointer (docs/adr/0142, 0160).
+    hover_grip: Option<GripTag>,
+}
+
+/// What the tag of the grip the pointer rests on says: the vertex's
+/// elevation (docs/adr/0142) and, with Topolojik düzenleme on, how many
+/// objects share that corner (docs/adr/0160 §5).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct GripTag {
+    /// Where the pointer is.
+    at: Vec2,
+    z: Option<f64>,
+    shared: Option<usize>,
 }
 
 impl Select {
@@ -185,7 +196,7 @@ impl Select {
             let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
             self.hover_grip = grip_tag_at(p, cx);
             // On a tagged grip the pointer is on the vertex, not on the object: it is not
-            // hovered, and no rollover card opens over the tag (docs/adr/0142).
+            // hovered, and no rollover card opens over the tag (docs/adr/0142, 0160).
             cx.selection
                 .set_hover(hit.filter(|_| self.hover_grip.is_none()));
             return;
@@ -389,13 +400,16 @@ impl Select {
     /// from where the grip was; its distance beside the pointer (the web's `draw`).
     pub fn preview(&self, format: &Format) -> Option<Preview> {
         let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
-            // Resting on the grip of a vertex that has an elevation: its tag (docs/adr/0142).
-            let (at, z) = self.hover_grip?;
+            // Resting on the grip of a vertex: its elevation and its shared corner (docs/adr/0142, 0160).
+            let tag = self.hover_grip?;
+            let mut lines: Vec<String> = tag
+                .z
+                .map(|z| elevation_line(z, format))
+                .into_iter()
+                .collect();
+            lines.extend(tag.shared.map(|n| format!("{n} nesnenin köşesi")));
             return Some(Preview {
-                tag: Some(Tag {
-                    at,
-                    lines: vec![elevation_line(z, format)],
-                }),
+                tag: Some(Tag { at: tag.at, lines }),
                 ..Preview::default()
             });
         };
@@ -451,23 +465,36 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize
     found
 }
 
-/// Where the pointer rests on the grip of a vertex that has an elevation, and
-/// the elevation: the tag beside the pointer says it (docs/adr/0142). Grips
-/// are looked for only while a selected object has an elevation anywhere: a
-/// drawing without any pays nothing for the tag on every pointer move.
-fn grip_tag_at(p: &Pointer, cx: &Context<'_>) -> Option<(Vec2, f64)> {
+/// The tag of the grip of a vertex the pointer rests on: the vertex's
+/// elevation (docs/adr/0142) and, with Topolojik düzenleme on, how many
+/// objects share that corner (docs/adr/0160 §5); none when it says neither.
+/// An edge's middle has none. Grips are looked for only while a selected
+/// object has an elevation anywhere or the mode is on: a drawing without
+/// either pays nothing for the tag on every pointer move.
+fn grip_tag_at(p: &Pointer, cx: &Context<'_>) -> Option<GripTag> {
     let doc = &*cx.doc;
     let ids = cx.selection.ids();
     // A selection past the grips' limit has none to rest on, and is not looked through.
     if ids.len() > GRIP_LIMIT
-        || !ids
-            .iter()
-            .any(|slot| doc.get(*slot).is_some_and(elevation::has_any))
+        || (!cx.draft.topology
+            && !ids
+                .iter()
+                .any(|slot| doc.get(*slot).is_some_and(elevation::has_any)))
     {
         return None;
     }
-    let (slot, index, _) = grip_at(p.screen, cx)?;
-    Some((p.world, grip_z(slot, index, cx)?))
+    let (slot, index, at) = grip_at(p.screen, cx)?;
+    let e = doc.get(slot)?;
+    if mid_grip_segment(&shape(e), index).is_some() {
+        return None;
+    }
+    let z = grip_z(slot, index, cx);
+    let shared = neighbours::corner_count(cx, slot, at);
+    (z.is_some() || shared.is_some()).then_some(GripTag {
+        at: p.world,
+        z,
+        shared,
+    })
 }
 
 /// The elevation of the vertex the grip `index` of the object at `slot`

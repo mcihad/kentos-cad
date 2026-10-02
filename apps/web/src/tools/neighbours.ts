@@ -27,29 +27,34 @@ export interface Neighbours {
   invalid: number;
 }
 
-/** The neighbours `edited` becoming `after` puts right; null while the mode is off or nothing is shared. */
-export function neighbours(ctx: AppContext, edited: Entity, after: Entity): Neighbours | null {
-  const { settings, doc, view } = ctx;
-  if (!settings.topology.value) return null;
+/** Whether the mode is on. */
+export const topologyOn = (ctx: AppContext): boolean => ctx.settings.topology.value;
+
+/**
+ * The visible objects sharing a corner with the places `at` might be (lines, paths, areas; points with Noktalar da),
+ * the edited ones (`edited`, by slot) left out, in the order the index finds them.
+ */
+export function neighboursAt(ctx: AppContext, at: readonly Vec2[], edited: ReadonlySet<number>): Entity[] {
+  const { doc, view, settings } = ctx;
   const points = settings.topologyPoints.value;
-  // A point is a corner only with Noktalar da.
-  if (edited.kind === 'point' && !points) return null;
-  const changes = topologyChanges(edited, after);
-  if (!changes.length) return null;
   const found: Entity[] = [];
-  const seen = new Set([edited.id]);
-  for (const at of anchors(changes))
-    for (const id of view.pickRect({ minX: at.x - SAME, minY: at.y - SAME, maxX: at.x + SAME, maxY: at.y + SAME }, true)) {
+  const seen = new Set(edited);
+  for (const p of at)
+    for (const id of view.pickRect({ minX: p.x - SAME, minY: p.y - SAME, maxX: p.x + SAME, maxY: p.y + SAME }, true)) {
       if (seen.has(id)) continue;
       seen.add(id);
       const e = doc.get(id);
       if (e && SHARING.has(e.kind) && (points || e.kind !== 'point')) found.push(e);
     }
-  if (!found.length) return null;
+  return found;
+}
+
+/** `found` put right by `changes` (the core's `topologyEdit`): their writes and shapes, the locked and invalid counts. */
+export function putRight(ctx: AppContext, found: readonly Entity[], changes: readonly TopologyChange[]): Neighbours {
   const answer = topologyEdit<Entity>(
-    found.map((e) => ({ shape: e, locked: doc.layers.isLocked(e.layerId) })),
+    found.map((e) => ({ shape: e, locked: ctx.doc.layers.isLocked(e.layerId) })),
     changes,
-    points,
+    ctx.settings.topologyPoints.value,
   );
   return {
     changes: answer.edited.map(({ index, shape }) => ({ kind: 'update', uid: uidOf(ctx, found[index]), geometry: editGeometry(shape) })),
@@ -59,6 +64,22 @@ export function neighbours(ctx: AppContext, edited: Entity, after: Entity): Neig
   };
 }
 
+/**
+ * The neighbours the edited objects (each before and after its edit) put right together; null while the mode is off
+ * or nothing is shared. A point is a corner only with Noktalar da.
+ */
+export function neighboursOf(ctx: AppContext, edits: readonly (readonly [Entity, Entity])[]): Neighbours | null {
+  if (!topologyOn(ctx)) return null;
+  const points = ctx.settings.topologyPoints.value;
+  const changes = edits.flatMap(([before, after]) => (before.kind === 'point' && !points ? [] : topologyChanges(before, after)));
+  if (!changes.length) return null;
+  const found = neighboursAt(ctx, anchors(changes), new Set(edits.map(([before]) => before.id)));
+  return found.length ? putRight(ctx, found, changes) : null;
+}
+
+/** The neighbours `edited` becoming `after` puts right (a grip, the grip menu). */
+export const neighbours = (ctx: AppContext, edited: Entity, after: Entity): Neighbours | null => neighboursOf(ctx, [[edited, after]]);
+
 /** Says what the neighbours did, once the edit is written: how many changed with it, how many could not. */
 export function sayNeighbours(ctx: AppContext, n: Neighbours | null): void {
   if (!n) return;
@@ -67,5 +88,20 @@ export function sayNeighbours(ctx: AppContext, n: Neighbours | null): void {
   if (n.invalid) ctx.log.warn(`${n.invalid} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe).`);
 }
 
+/**
+ * How many objects have a corner at `at`, the selected `own` among them, while the mode is on (the grip's tag,
+ * docs/adr/0160 §5): the core finds the corners as a move that stays in place would. Null when only `own` has one,
+ * for an object of a kind without corners, and for a point without Noktalar da.
+ */
+export function cornerCount(ctx: AppContext, own: Entity, at: Vec2): number | null {
+  const corners = own.kind === 'line' || own.kind === 'polyline' || own.kind === 'polygon' || (own.kind === 'point' && ctx.settings.topologyPoints.value);
+  if (!topologyOn(ctx) || !corners) return null;
+  const found = neighboursAt(ctx, [at], new Set([own.id]));
+  if (!found.length) return null;
+  const n = putRight(ctx, found, [{ kind: 'move', at, to: at }]);
+  const count = 1 + n.shapes.length + n.locked;
+  return count > 1 ? count : null;
+}
+
 /** Where each change's neighbours have a corner: a move's and a removal's vertex, an edge's first end. */
-const anchors = (changes: readonly TopologyChange[]): Vec2[] => changes.map((c) => (c.kind === 'move' || c.kind === 'remove' ? c.at : c.a));
+export const anchors = (changes: readonly TopologyChange[]): Vec2[] => changes.map((c) => (c.kind === 'move' || c.kind === 'remove' ? c.at : c.a));

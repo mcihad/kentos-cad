@@ -10,12 +10,14 @@ import { insertVertex, removeVertex } from '../../model/ops/vertex';
 import { withoutElevations } from '../../product/elevation';
 import { EDIT_LABEL, geometryOf } from '../../product/entitiesEdit';
 import { uidOf, writeEdit } from '../../tools/editCommand';
+import { neighbours, sayNeighbours } from '../../tools/neighbours';
 import type { MenuItem } from '../widgets/PopupMenu';
 
 /**
  * The grip actions of the right-button menu over the drawing: the grip under the cursor of a selected polyline or
  * area (docs/adr/0074). A multi-part area's grip acts on its own part, the other parts kept (docs/adr/0143); the
- * heading counts in that part, as the desktop's does (`crates/native/interaction/src/grip_menu.rs`).
+ * heading counts in that part, as the desktop's does (`crates/native/interaction/src/grip_menu.rs`). With
+ * Topolojik düzenleme on, the shared corners and edges of the objects around go with it (docs/adr/0160).
  */
 
 /** Actions for the grip under the cursor of a selected polyline or polygon. */
@@ -46,7 +48,12 @@ export function gripItems(ctx: AppContext, screen: Vec2): MenuItem[] {
       if (!whole) return ctx.log.warn('Parça kapalı alan olarak kalmalı.');
       geometry = geometryOf(whole as unknown as EditGeometry) as unknown as EditGeometry;
     }
-    if (writeEdit(ctx, operation, [{ kind: 'update', uid: uidOf(ctx, e), geometry: withoutElevations(geometry) }])) ctx.log.success(`${EDIT_LABEL[operation]}: tamam.`);
+    // The neighbours sharing what changed go in the same step (docs/adr/0160 §3).
+    const follow = neighbours(ctx, e, { ...e, ...(geometry as unknown as EntityGeometry) } as typeof e);
+    if (writeEdit(ctx, operation, [{ kind: 'update', uid: uidOf(ctx, e), geometry: withoutElevations(geometry) }, ...(follow?.changes ?? [])])) {
+      ctx.log.success(`${EDIT_LABEL[operation]}: tamam.`);
+      sayNeighbours(ctx, follow);
+    }
   };
   if (seg === null) {
     return [

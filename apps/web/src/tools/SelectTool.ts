@@ -8,7 +8,7 @@ import { withoutElevations } from '../product/elevation';
 import { geometryOf } from '../product/entitiesEdit';
 import { gripElevation, hasVertexElevation, nearestVertex } from '../product/elevationValues';
 import { writeEdit } from './editCommand';
-import { neighbours, sayNeighbours } from './neighbours';
+import { cornerCount, neighbours, sayNeighbours, topologyOn } from './neighbours';
 import type { ViewTransform } from '../viewport/Camera';
 import { GRIP_HIT_PX } from '../viewport/overlay';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
@@ -143,13 +143,14 @@ export class SelectTool implements Tool {
   }
 
   /**
-   * The tag of the grip under `at` when the vertex it stands on has an elevation (docs/adr/0142): `Kot 105.250 m`
-   * beside the pointer. A vertex without one has none, and neither has a mid grip or a grip of another kind. The
-   * nearest vertex of the selected objects within the grips' aperture is the one (as `gripAt` finds a grip), looked
-   * for among the vertices themselves: `gripAt` builds every grip of the selection, which the pointer must not
-   * cost on each move over a selection of contours.
+   * The tag of the grip under `at`: the elevation of the vertex it stands on (docs/adr/0142), `Kot 105.250 m`, and
+   * with Topolojik düzenleme on how many objects share that corner (docs/adr/0160 §5), `3 nesnenin köşesi`; null
+   * when it says neither. A mid grip or a grip of another kind has none. The nearest vertex of the selected objects
+   * within the grips' aperture is the one (as `gripAt` finds a grip), looked for among the vertices themselves:
+   * `gripAt` builds every grip of the selection, which the pointer must not cost on each move over a selection of
+   * contours.
    */
-  private gripTagAt(at: Vec2): string | null {
+  private gripTagAt(at: Vec2): string[] | null {
     const { doc, selection, view, format } = this.ctx;
     // A selection too big to have grips (`gripAt`'s limit) has no tags.
     if (selection.size === 0 || selection.size > 150) return null;
@@ -158,21 +159,25 @@ export class SelectTool implements Tool {
       const e = doc.get(id);
       if (e && !doc.layers.isLocked(e.layerId)) editable.push(e);
     }
-    // A selection with no elevation costs nothing more.
-    if (!editable.some(hasVertexElevation)) return null;
+    // A selection with no elevation costs nothing more, unless the mode counts the corners.
+    const topology = topologyOn(this.ctx);
+    if (!topology && !editable.some(hasVertexElevation)) return null;
     // In metres, at the pointer: no vertex of the selection is brought to the screen.
     const camera = view.camera;
     const where = camera.screenToWorld(at);
     let reach = GRIP_HIT_PX / camera.scale;
-    let z: number | null = null;
+    let best: { e: Entity; at: Vec2; z: number | null } | null = null;
     for (const e of editable) {
       const v = nearestVertex(e, where, reach);
       if (v) {
         reach = v.d;
-        z = v.z;
+        best = { e, at: v.at, z: v.z };
       }
     }
-    return z === null ? null : `Kot ${format.length(z)}`;
+    if (!best) return null;
+    const shared = topology ? cornerCount(this.ctx, best.e, best.at) : null;
+    const lines = [...(best.z === null ? [] : [`Kot ${format.length(best.z)}`]), ...(shared ? [`${shared} nesnenin köşesi`] : [])];
+    return lines.length ? lines : null;
   }
 
   pointerMove(p: ToolPointer): void {
@@ -271,7 +276,7 @@ export class SelectTool implements Tool {
     const tag = at && this.gripTagAt(at);
     if (at && tag) {
       const pal = this.ctx.view.palette;
-      drawTag(g, at, [tag], pal.accent, pal.labelHalo);
+      drawTag(g, at, tag, pal.accent, pal.labelHalo);
     }
   }
 }

@@ -5583,7 +5583,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/stretch-align.json"
+        "fixtures/interaction/v1/stretch-align.json",
+        "fixtures/interaction/v1/topology-edit.json",
+        "fixtures/interaction/v1/usage-topology-edit.json"
       ]
     },
     {
@@ -9010,7 +9012,9 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/stretch-align.json"
+        "fixtures/interaction/v1/stretch-align.json",
+        "fixtures/interaction/v1/topology-edit.json",
+        "fixtures/interaction/v1/usage-topology-edit.json"
       ]
     },
     {
