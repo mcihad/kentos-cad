@@ -1,0 +1,34 @@
+[package]
+name = "kentos-sheet-ui"
+description = "KentOS sheet layouts on the desktop (docs/sheet/design.md §11): the paper with its rulers and guides, the tools, the inspector with the constraint editor, the item tree, the template gallery, the preflight and the export, built with the KentOS UI components over the shared sheet core; the host paints the maps' content (MapPainter)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Pictures drawn as textures, smoothed when magnified, and SVG pictures (design, open question 6;
+# the owner's approval, 2026-10-03): Iced's image support without its codecs (the pictures are
+# decoded here) and its SVG support (resvg), on screen (wgpu) and in a PNG export (tiny-skia) alike.
+iced = { workspace = true, features = ["canvas", "advanced", "image-without-codecs", "svg"] }
+# The components (rulers, inspector, property_grid, tree_view, tabs, segmented, number,
+# dropdown, dialog) and the headless renderer a PNG export draws with (`snapshot`).
+kentos-ui = { path = "../ui", default-features = false, features = ["fonts", "snapshot"] }
+# Everything about a sheet that is computed: the model, operations, display list, snapping,
+# hit tests, templates, profiles, preflight and SVG. This crate only paints and asks.
+kentos-sheet = { path = "../shared/sheet", default-features = false }
+# The project's work mode and type, as the profiles read them.
+kentos-contracts = { path = "../shared/contracts", default-features = false }
+# The display rule of numbers (docs/adr/0149): the decimal separator is a point, everywhere.
+kentos-geometry-core = { path = "../shared/geometry-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# A template made on this device gets a UUIDv7, as the web's do (its cloud id comes later).
+uuid = { workspace = true }
+# A PNG export written in strips, and the PNG pictures of a sheet.
+png = { workspace = true }
+# The JPEG pictures of a sheet (the desktop's style library decodes them with it too).
+zune-jpeg = { workspace = true }
+# An SVG picture's size when one is added, and its PNG for a PDF (the core draws no SVG),
+# drawn as Iced's SVG support draws it on the screen: its text in the system's fonts.
+resvg = { workspace = true, features = ["text", "system-fonts"] }
