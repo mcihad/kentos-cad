@@ -466,6 +466,8 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
             plot_scale: 1000.0,
             workspace: kentos_contracts::Workspace::Cad,
             drawing_font: kentos_contracts::DrawingFont::Barlow,
+            province: None,
+            drawing_unit: None,
         })
         .expect("a drawing");
         let (stream, _) = listener.accept().expect("a connection");

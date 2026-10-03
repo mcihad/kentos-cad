@@ -540,6 +540,8 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                         )
                     },
                 )?,
+                province: None,
+                drawing_unit: None,
             };
             let session = Session::new(&choices).map_err(host)?;
             opened(server, session)

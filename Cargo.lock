@@ -2763,6 +2763,8 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-domain",
+ "kentos-geometry-core",
+ "libm",
  "serde",
  "serde_json",
 ]

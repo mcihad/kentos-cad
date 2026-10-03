@@ -202,6 +202,7 @@ python3 scripts/fixtures/adjoin_cases.py --check   # Çakışma denetiminin kır
 python3 scripts/fixtures/snap_cases.py --check   # Kenet eklerinin kurallarını (ağırlık merkezi, karelaj, uzantı, paralel, öncelikler, katmanın türleri, çizilmekte olan yol) kesin kesirlerle bağımsız başvurudan denetle (ADR 0163)
 cargo test --release -p kentos-geometry-core --test adjoin -- --ignored --nocapture   # Bitişik alan'ın bir görünüm parselindeki süresi, önizleme bütçesi için (ADR 0162 §5)
 python3 scripts/fixtures/trace_cases.py --check   # İzle'nin yollarını (kesişimden dönme, düz geçme, iki yoldan kısası, eşit yollar, yaylar, delik ve parça, ortak kenar, daire) ve Zincir'i 50 basamaklı bağımsız başvurudan denetle (ADR 0161)
+python3 scripts/fixtures/tm_cases.py --check   # ileri TM izdüşümünün durumlarını (TUREF ve ED50 TM3, UTM; dilim kenarları) PROJ'un tmerc'iyle denetle; durumlar fixtures/geodesy/v1 (ADR 0165 §3)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
 KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop calc::edgematch::tests::screens -- --ignored --nocapture   # Kenar eşleme penceresinin resimleri, .run/shots/kenar-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs edgematch; ADR 0159)

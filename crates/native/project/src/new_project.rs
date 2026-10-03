@@ -3,7 +3,8 @@
 //! of a cadastral sheet, the chosen coordinate system, plot scale, mode and
 //! typeface, and the default units. Its anchor is the zone's work-area
 //! centre (the web's `workAreaCentre`), since no object exists yet to anchor
-//! it; it has no start view, so a saved file opens on its objects.
+//! it. It opens on its start view, which stays its home view (`start_view`,
+//! docs/adr/0165 §3).
 //!
 //! The web records the drawings its code builds for a few choices
 //! (fixtures/project/v1/new-project.json); the test below builds the same
@@ -13,12 +14,13 @@ use std::f64::consts::PI;
 
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DocumentSnapshotV1,
-    DrawingFont, LabelInk, LabelPlacement, LabelStyle, LayerNode, LayerNodeType, LayerStyle,
-    LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles, Vec2, Workspace,
+    DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode, LayerNodeType,
+    LayerStyle, LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles, Vec2, Workspace,
 };
 use kentos_domain::default_style;
 
-use crate::crs::{System, system};
+use crate::crs::{System, project_lat_lon, system};
+use crate::provinces::{Province, province};
 
 /// The name a new project is offered with.
 pub const NEW_PROJECT_NAME: &str = "Yeni proje";
@@ -41,6 +43,10 @@ pub struct NewProject {
     pub plot_scale: f64,
     pub workspace: Workspace,
     pub drawing_font: DrawingFont,
+    /// The province (plate code) whose centre it opens on (docs/adr/0165 §3); none: the zone's work area.
+    pub province: Option<u32>,
+    /// A local project's drawing unit (docs/adr/0165 §2); none: metres.
+    pub drawing_unit: Option<DrawingUnit>,
 }
 
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
@@ -80,10 +86,14 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
             plot_scale: o.plot_scale,
             workspace: Some(o.workspace),
             drawing_font: Some(o.drawing_font),
+            // Only a local project has a unit of its own; metres are not written.
+            drawing_unit: o
+                .drawing_unit
+                .filter(|u| crs.is_local() && *u != DrawingUnit::M),
             ..default_settings(crs.srid)
         },
         origin: work_area_centre(crs),
-        home_view: None,
+        home_view: Some(start_view(crs, o.plot_scale, o.province.and_then(province))),
         layers: standard_layers(o.plot_scale),
         active_layer: STANDARD_ACTIVE_LAYER.to_owned(),
         entities: Vec::new(),
@@ -133,6 +143,29 @@ pub fn work_area_centre(crs: &System) -> Vec2 {
         x: crs.false_easting.unwrap_or(500_000.0),
         y: crs.false_northing.unwrap_or(0.0) + WORK_NORTHING,
     }
+}
+
+/// An A3 sheet across (landscape), metres on paper.
+const A3: (f64, f64) = (0.42, 0.297);
+
+/// Where a new project opens and comes back to, its home view (docs/adr/0165
+/// §3): a local project on an A3 landscape sheet at its scale with 0,0 at the
+/// bottom left, as AutoCAD's new drawing; any other on one sheet at its scale
+/// around its province's centre, or around its zone's work area without one
+/// (the web's `startView`).
+pub fn start_view(crs: &System, plot_scale: f64, province: Option<&Province>) -> Bounds {
+    if crs.is_local() {
+        return Bounds {
+            min_x: 0.0,
+            min_y: 0.0,
+            max_x: A3.0 * plot_scale,
+            max_y: A3.1 * plot_scale,
+        };
+    }
+    let centre = province
+        .and_then(|p| project_lat_lon(crs, p.lat, p.lon))
+        .unwrap_or_else(|| work_area_centre(crs));
+    sheet_around(centre, plot_scale, crs.unit == "degree")
 }
 
 /// One paper sheet (50 × 37.5 cm) at the plot scale around `p`: what a new,
@@ -383,6 +416,10 @@ mod tests {
                 plot_scale: o["plotScale"].as_f64().expect("a scale"),
                 workspace,
                 drawing_font,
+                province: o.get("province").and_then(Value::as_u64).map(|c| c as u32),
+                drawing_unit: o
+                    .get("drawingUnit")
+                    .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
             };
             let want: DocumentSnapshotV1 =
                 serde_json::from_value(case["snapshot"].clone()).expect("the web's drawing reads");
@@ -399,6 +436,8 @@ mod tests {
             plot_scale: 1000.0,
             workspace: Workspace::Gis,
             drawing_font: DrawingFont::Barlow,
+            province: None,
+            drawing_unit: None,
         });
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));
         let b = sheet_around(Vec2 { x: 0.0, y: 0.0 }, 1000.0, false);

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import text from '../../../../fixtures/project/v1/new-project.json?raw';
 import { CadDocument } from './document';
 import { LayerStore } from './layers';
-import { NEW_PROJECT_NAME, newProjectContent, sheetAround } from './newProject';
+import { crsBySrid } from '../geo/crs';
+import { provinceByCode } from '../geo/provinces';
+import { NEW_PROJECT_NAME, newProjectContent, projectLatLon, sheetAround, startView } from './newProject';
 import { newProjectFixture } from './newProjectFixture';
 import { PROJECT_SETTINGS_DEFAULTS } from './projectSettings';
 import { readSnapshot, toSnapshot } from './snapshot';
@@ -19,7 +21,8 @@ describe('new project', () => {
     expect(c.name).toBe('Ada 200');
     expect(c.settings).toEqual({ ...PROJECT_SETTINGS_DEFAULTS, srid: 5254, plotScale: 500 });
     expect(c.origin).toEqual({ x: 500_000, y: 4_320_000 });
-    expect([c.entities.length, c.homeView, c.activeLayer]).toEqual([0, null, 'taslak']);
+    // It opens on one sheet around its zone's work area, its home view (docs/adr/0165 §3).
+    expect([c.entities.length, c.homeView, c.activeLayer]).toEqual([0, { minX: 499_875, minY: 4_319_906.25, maxX: 500_125, maxY: 4_320_093.75 }, 'taslak']);
     const ids = new LayerStore([...c.layers], c.activeLayer).leaves().map((l) => l.id);
     // The map tools write to these by id (tools/catalog.ts, LAYERS).
     expect(ids).toEqual(expect.arrayContaining(['taslak', 'ada', 'parsel', 'yapi', 'kot', 'poligon', 'pafta']));
@@ -65,5 +68,31 @@ describe('new project', () => {
     expect(sheetAround({ x: 500_000, y: 4_320_000 }, 1000)).toEqual({ minX: 499_750, minY: 4_319_812.5, maxX: 500_250, maxY: 4_320_187.5 });
     const deg = sheetAround({ x: 35, y: 39 }, 1000, 'degree');
     expect(deg.maxX - deg.minX).toBeCloseTo(500 / 111_320, 12);
+  });
+});
+
+describe('a new project’s start view (docs/adr/0165 §3)', () => {
+  const sys = (srid: number) => crsBySrid(srid)!;
+  it('is an A3 landscape sheet from 0,0 at the scale for a local project', () => {
+    expect(startView(sys(0), 1, null)).toEqual({ minX: 0, minY: 0, maxX: 0.42, maxY: 0.297 });
+    expect(startView(sys(0), 50, provinceByCode(35)!)).toEqual({ minX: 0, minY: 0, maxX: 21, maxY: 14.85 });
+  });
+
+  it('is one sheet around the province’s centre, or the zone’s work area without one', () => {
+    const izmir = provinceByCode(35)!;
+    const at = projectLatLon(sys(5253), izmir.lat, izmir.lon)!;
+    // İzmir lies 11 km east of TM27's central meridian, 4 254 km north of the equator.
+    expect([Math.round(at.x), Math.round(at.y)]).toEqual([511_239, 4_254_037]);
+    expect(startView(sys(5253), 1000, izmir)).toEqual(sheetAround(at, 1000));
+    expect(startView(sys(5256), 1000, null)).toEqual(sheetAround({ x: 500_000, y: 4_320_000 }, 1000));
+    // A geographic system keeps the degrees; the sheet is in degrees too.
+    expect(projectLatLon(sys(4326), izmir.lat, izmir.lon)).toEqual({ x: izmir.lon, y: izmir.lat });
+    expect(projectLatLon(sys(0), izmir.lat, izmir.lon)).toBeNull();
+  });
+
+  it('takes a local project’s unit, and no other’s', () => {
+    expect(newProjectContent({ name: 'x', srid: 0, plotScale: 1, workspace: 'cad', drawingUnit: 'mm' }).settings.drawingUnit).toBe('mm');
+    expect('drawingUnit' in newProjectContent({ name: 'x', srid: 0, plotScale: 1, drawingUnit: 'm' }).settings).toBe(false);
+    expect('drawingUnit' in newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, drawingUnit: 'mm' }).settings).toBe(false);
   });
 });

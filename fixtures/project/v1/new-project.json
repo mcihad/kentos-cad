@@ -341,6 +341,12 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 499750,
+          "minY": 4319812.5,
+          "maxX": 500250,
+          "maxY": 4320187.5
         }
       }
     },
@@ -684,6 +690,12 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 499875,
+          "minY": 4319906.25,
+          "maxX": 500125,
+          "maxY": 4320093.75
         }
       }
     },
@@ -1026,6 +1038,12 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 34.94385555156306,
+          "minY": 38.9578916636723,
+          "maxX": 35.05614444843694,
+          "maxY": 39.0421083363277
         }
       }
     },
@@ -1369,6 +1387,12 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 3895500,
+          "minY": 4721625,
+          "maxX": 3896500,
+          "maxY": 4722375
         }
       }
     },
@@ -1710,6 +1734,12 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 498750,
+          "minY": 4319062.5,
+          "maxX": 501250,
+          "maxY": 4320937.5
         }
       }
     },
@@ -2052,6 +2082,2103 @@
         "styles": {
           "items": [],
           "categories": []
+        },
+        "homeView": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 21,
+          "maxY": 14.85
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "İzmir",
+        "srid": 5253,
+        "plotScale": 1000,
+        "workspace": "gis",
+        "province": 35
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İzmir",
+        "settings": {
+          "srid": 5253,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4320000
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:1000",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 510989.3898701374,
+          "minY": 4253849.750966085,
+          "maxX": 511489.3898701374,
+          "maxY": 4254224.750966085
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "Trabzon",
+        "srid": 2323,
+        "plotScale": 2000,
+        "province": 61
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Trabzon",
+        "settings": {
+          "srid": 2323,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 2000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4320000
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:2000",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 559893.8352776945,
+          "minY": 4540692.211750832,
+          "maxX": 560893.8352776945,
+          "maxY": 4541442.211750832
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "Adana",
+        "srid": 32636,
+        "plotScale": 5000,
+        "province": 1
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Adana",
+        "settings": {
+          "srid": 32636,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 5000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4320000
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:5000",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 705305.8642772224,
+          "minY": 4096453.7972702757,
+          "maxX": 707805.8642772224,
+          "maxY": 4098328.7972702757
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "Ankara",
+        "srid": 5252,
+        "plotScale": 25000,
+        "province": 6
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ankara",
+        "settings": {
+          "srid": 5252,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 25000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 35,
+          "y": 39
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:25000",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 32.80355555156306,
+          "minY": 39.8912916636723,
+          "maxX": 32.915844448436935,
+          "maxY": 39.9755083363277
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "İstanbul",
+        "srid": 3857,
+        "plotScale": 2000,
+        "province": 34
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İstanbul",
+        "settings": {
+          "srid": 3857,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 2000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 3896000,
+          "y": 4722000
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:2000",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 3225360.7320037987,
+          "minY": 5013176.237222596,
+          "maxX": 3226360.7320037987,
+          "maxY": 5013926.237222596
+        }
+      }
+    },
+    {
+      "options": {
+        "name": "Mil plakası",
+        "srid": 0,
+        "plotScale": 1,
+        "workspace": "cad",
+        "drawingUnit": "mm"
+      },
+      "snapshot": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Mil plakası",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "g-kadastro",
+            "name": "Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "ada",
+                "name": "Ada sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35,
+                  "label": {
+                    "placement": "center",
+                    "size": 12,
+                    "grow": 3,
+                    "maxSize": 22,
+                    "weight": 600,
+                    "template": "{label} ada",
+                    "minFeaturePx": 90,
+                    "maxScale": 5,
+                    "ink": "fg"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel sınırı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "label": {
+                    "placement": "center",
+                    "size": 9,
+                    "grow": 1.2,
+                    "maxSize": 14,
+                    "minFeaturePx": 26
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "yapi",
+                "name": "Yapı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#7FB2E5",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "fill": "#7FB2E52E"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-ulasim",
+            "name": "Ulaşım",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "yol-ekseni",
+                "name": "Yol ekseni",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E06C75",
+                  "lineType": "dashdot",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "kaldirim",
+                "name": "Kaldırım",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#8C9AAA",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-topo",
+            "name": "Topografya",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "esyukselti",
+                "name": "Eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#A87C54",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "ana-esyukselti",
+                "name": "Ana eşyükselti",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#C9955F",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "label": {
+                    "placement": "along",
+                    "size": 10,
+                    "minScale": 1.6
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "kot",
+                "name": "Kot noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#9CCB7E",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "cross",
+                    "size": 7
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 2.2
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-jeodezi",
+            "name": "Jeodezi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "poligon",
+                "name": "Poligon noktaları",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#56B6C2",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "point": {
+                    "symbol": "triangle",
+                    "size": 11
+                  },
+                  "label": {
+                    "placement": "beside",
+                    "size": 10.5,
+                    "minScale": 0.9
+                  }
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "g-pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": false,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": [
+              {
+                "id": "pafta",
+                "name": "Pafta çerçevesi",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.5,
+                  "pickInterior": false,
+                  "label": {
+                    "placement": "corner",
+                    "size": 12,
+                    "template": "Pafta {label}   1:1",
+                    "minFeaturePx": 200,
+                    "ink": "fg-dim"
+                  }
+                },
+                "children": []
+              },
+              {
+                "id": "karelaj",
+                "name": "Karelaj",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#6B7785",
+                  "lineType": "continuous",
+                  "lineWeight": 0.13
+                },
+                "children": []
+              },
+              {
+                "id": "yazi",
+                "name": "Yazılar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg-dim",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "taslak",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "homeView": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 0.42,
+          "maxY": 0.297
         }
       }
     }

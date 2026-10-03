@@ -206,6 +206,8 @@ impl App {
                     plot_scale: s.plot_scale,
                     workspace: s.workspace,
                     drawing_font: s.drawing_font,
+                    province: None,
+                    drawing_unit: None,
                 };
                 match new_document(&options) {
                     Err(e) => s.status = Some(e),
@@ -219,8 +221,8 @@ impl App {
         Task::none()
     }
 
-    /// The drawing on screen is left: the new project goes on screen, showing
-    /// one sheet around its anchor (the web's `newProject`).
+    /// The drawing on screen is left: the new project goes on screen, on its
+    /// home view, its start view (docs/adr/0165 §3; the web's `newProject`).
     pub(crate) fn new_project_ready(&mut self) -> Task<Message> {
         let Some(Window::New(s)) = &mut self.project else {
             return Task::none();
@@ -230,18 +232,9 @@ impl App {
         };
         self.close_project_window();
         let settings = doc.settings().clone();
-        let origin = doc.model.origin();
         let name = doc.name().to_owned();
+        // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
-        let system = crs::system(settings.srid);
-        let degrees = system.is_some_and(|s| s.unit == "degree");
-        let b = content::sheet_around(origin, settings.plot_scale, degrees);
-        self.viewport.show(&kentos_render_wgpu::Bounds {
-            min_x: b.min_x,
-            min_y: b.min_y,
-            max_x: b.max_x,
-            max_y: b.max_y,
-        });
         let system = crs::title_of(settings.srid);
         self.say(
             Level::Success,

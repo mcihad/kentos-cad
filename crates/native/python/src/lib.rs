@@ -81,6 +81,8 @@ impl PySession {
             plot_scale,
             workspace: named(workspace, "proje türü (cad ya da gis)")?,
             drawing_font: named(drawing_font, "çizim yazı tipi (barlow, arimo …)")?,
+            province: None,
+            drawing_unit: None,
         };
         py.detach(|| Session::new(&choices))
             .map(|inner| Self { inner })

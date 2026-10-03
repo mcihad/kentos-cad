@@ -19,6 +19,14 @@ export const NEW_PROJECT_CASES: readonly NewProjectOptions[] = [
   { name: '', srid: 32636, plotScale: 5000 },
   // A local CAD project: no coordinate system, its origin 0,0 (docs/adr/0165 §2).
   { name: 'Plan', srid: 0, plotScale: 50, workspace: 'cad' },
+  // Opened on a province's centre (docs/adr/0165 §3): TUREF and ED50 TM zones, UTM, geographic and web Mercator.
+  { name: 'İzmir', srid: 5253, plotScale: 1000, workspace: 'gis', province: 35 },
+  { name: 'Trabzon', srid: 2323, plotScale: 2000, province: 61 },
+  { name: 'Adana', srid: 32636, plotScale: 5000, province: 1 },
+  { name: 'Ankara', srid: 5252, plotScale: 25000, province: 6 },
+  { name: 'İstanbul', srid: 3857, plotScale: 2000, province: 34 },
+  // A local project in millimetres at full size, on an A3 sheet from 0,0 (docs/adr/0165 §2, §3).
+  { name: 'Mil plakası', srid: 0, plotScale: 1, workspace: 'cad', drawingUnit: 'mm' },
 ];
 
 export function newProjectFixture() {

@@ -25,6 +25,7 @@ pub mod block;
 pub mod display;
 pub mod entity;
 pub mod ewkb;
+pub mod geodesy;
 pub mod geom;
 pub mod geometry;
 pub mod jsmath;

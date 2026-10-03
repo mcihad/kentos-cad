@@ -1,7 +1,6 @@
 import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid, crsTitle } from '../geo/crs';
-import { sheetAround } from '../model/newProject';
 import { DOCUMENT_EXTENSION, DOCUMENT_MIME } from '../model/snapshot';
 import type { OpeningView } from '../ui/io/OpeningDialog';
 import { h } from '../ui/dom';
@@ -418,9 +417,8 @@ export class DocumentFiles {
       await this.leaveCloud();
       replaceDrawing(ctx, content);
       this.handle = null;
+      // It opens on its home view, its start view (replaceDrawing; docs/adr/0165 §3).
       const crs = crsBySrid(content.settings.srid);
-      // An empty drawing has no extent: it opens on one sheet around its origin.
-      if (!content.entities.length) ctx.view.camera.fit(sheetAround(content.origin, content.settings.plotScale, crs?.unit));
       const system = crs ? crsTitle(crs) : `EPSG:${content.settings.srid}`;
       ctx.log.success(`“${ctx.doc.name.value}” yeni projesi açıldı: ${system}, 1:${content.settings.plotScale}. İlk kayıtta dosyanın yeri sorulur.`);
       return true;

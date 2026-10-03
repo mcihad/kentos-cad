@@ -23,6 +23,8 @@ fn new_drawing() -> Session {
         plot_scale: 1000.0,
         workspace: Workspace::Gis,
         drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: None,
     })
     .expect("a new project")
 }
@@ -260,6 +262,8 @@ fn a_drawing_another_host_owns_answers_the_same_requests_by_name() {
         plot_scale: 1000.0,
         workspace: Workspace::Cad,
         drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: None,
     })
     .expect("a new project");
     let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("a document");

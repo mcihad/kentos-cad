@@ -117,6 +117,13 @@ export const CRS_REGISTRY: readonly CrsDef[] = [
 
 const BY_SRID = new Map(CRS_REGISTRY.map((c) => [c.srid, c]));
 
+/** The registry's ellipsoids: semi-major axis (m) and inverse flattening (the desktop's `crs::ellipsoid`). */
+export const ELLIPSOIDS: Record<NonNullable<CrsDef['ellipsoid']>, { readonly semiMajor: number; readonly inverseFlattening: number }> = {
+  GRS80: { semiMajor: 6_378_137, inverseFlattening: 298.257_222_101 },
+  WGS84: { semiMajor: 6_378_137, inverseFlattening: 298.257_223_563 },
+  'International 1924': { semiMajor: 6_378_388, inverseFlattening: 297 },
+};
+
 export const DEFAULT_SRID = 5256;
 
 export function crsBySrid(srid: number): CrsDef | undefined {

@@ -1,0 +1,1207 @@
+{
+ "format": "kentos.tm-forward-cases",
+ "version": 1,
+ "note": "PROJ 9's tmerc (pyproj); within 1e-6 m of it is the same point. Written by scripts/fixtures/tm_cases.py.",
+ "cases": [
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 27.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 25.5,
+   "east": 366916.7897951531,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 28.5,
+   "east": 628280.067877255,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 26.25,
+   "east": 437377.6518046914,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 30.0,
+   "east": 748174.3999481896,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 27.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 25.0,
+   "east": 388411.3225508079,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM27",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 28.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 30.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 28.5,
+   "east": 366916.7897951533,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 31.5,
+   "east": 628280.067877255,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 29.25,
+   "east": 437377.6518046914,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 33.0,
+   "east": 748174.3999481901,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 30.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 28.0,
+   "east": 388411.3225508081,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 31.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 33.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 31.5,
+   "east": 366916.7897951528,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 34.5,
+   "east": 628280.0678772546,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 32.25,
+   "east": 437377.6518046909,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 36.0,
+   "east": 748174.3999481896,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 33.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 31.0,
+   "east": 388411.32255080773,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM33",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 34.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 36.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 34.5,
+   "east": 366916.7897951528,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 37.5,
+   "east": 628280.067877255,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 35.25,
+   "east": 437377.6518046914,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 39.0,
+   "east": 748174.3999481896,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 36.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 34.0,
+   "east": 388411.3225508081,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM36",
+   "tm": {
+    "centralMeridian": 36,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 37.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 39.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 37.5,
+   "east": 366916.7897951533,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 40.5,
+   "east": 628280.067877255,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 38.25,
+   "east": 437377.6518046914,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 42.0,
+   "east": 748174.3999481901,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 39.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 37.0,
+   "east": 388411.3225508081,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM39",
+   "tm": {
+    "centralMeridian": 39,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 40.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 42.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 40.5,
+   "east": 366916.7897951528,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 43.5,
+   "east": 628280.0678772546,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 41.25,
+   "east": 437377.6518046909,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 45.0,
+   "east": 748174.3999481896,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 42.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 40.0,
+   "east": 388411.32255080773,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM42",
+   "tm": {
+    "centralMeridian": 42,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 43.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 36.0,
+   "lon": 45.0,
+   "east": 500000.0,
+   "north": 3985542.6702962522
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 37.25,
+   "lon": 43.5,
+   "east": 366916.7897951528,
+   "north": 4125310.564688813
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 39.9,
+   "lon": 46.5,
+   "east": 628280.067877255,
+   "north": 4419502.9087836305
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 41.5,
+   "lon": 44.25,
+   "east": 437377.6518046914,
+   "north": 4596374.254528808
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 42.1,
+   "lon": 48.0,
+   "east": 748174.3999481901,
+   "north": 4667102.300640257
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 0.0,
+   "lon": 45.5,
+   "east": 555660.4566268305,
+   "north": 0.0
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": 60.0,
+   "lon": 43.0,
+   "east": 388411.3225508081,
+   "north": 6655759.739067591
+  },
+  {
+   "grid": "TUREF / TM45",
+   "tm": {
+    "centralMeridian": 45,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257222101
+   },
+   "lat": -12.5,
+   "lon": 46.0,
+   "east": 608702.8554435852,
+   "north": -1382601.945928857
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 36.0,
+   "lon": 30.0,
+   "east": 500000.0,
+   "north": 3985606.6107305135
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 37.25,
+   "lon": 28.5,
+   "east": 366910.86094582424,
+   "north": 4125378.1601867913
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 39.9,
+   "lon": 31.5,
+   "east": 628285.864948749,
+   "north": 4419578.570765897
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 41.5,
+   "lon": 29.25,
+   "east": 437374.7973132109,
+   "north": 4596455.027255906
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 42.1,
+   "lon": 33.0,
+   "east": 748185.7500614171,
+   "north": 4667185.244986624
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 0.0,
+   "lon": 30.5,
+   "east": 555662.6470632893,
+   "north": 0.0
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 60.0,
+   "lon": 28.0,
+   "east": 388405.74128462566,
+   "north": 6655915.400388597
+  },
+  {
+   "grid": "ED50 / TM30",
+   "tm": {
+    "centralMeridian": 30,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": -12.5,
+   "lon": 31.0,
+   "east": 608707.2054470254,
+   "north": -1382617.9049203997
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 36.0,
+   "lon": 27.0,
+   "east": 500000.0,
+   "north": 3984012.368086221
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 37.25,
+   "lon": 25.5,
+   "east": 366964.0966014457,
+   "north": 4123728.0089227166
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 39.9,
+   "lon": 28.5,
+   "east": 628234.5506027695,
+   "north": 4417810.7393375905
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 41.5,
+   "lon": 26.25,
+   "east": 437399.8473942856,
+   "north": 4594616.445245004
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 42.1,
+   "lon": 30.0,
+   "east": 748086.475761392,
+   "north": 4665318.37088863
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 0.0,
+   "lon": 27.5,
+   "east": 555640.3820044639,
+   "north": 0.0
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": 60.0,
+   "lon": 25.0,
+   "east": 388450.3789881116,
+   "north": 6653253.034228441
+  },
+  {
+   "grid": "ED50 / UTM 35N",
+   "tm": {
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378388.0,
+    "inverseFlattening": 297.0
+   },
+   "lat": -12.5,
+   "lon": 28.0,
+   "east": 608663.7225648465,
+   "north": -1382064.8577584317
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 36.0,
+   "lon": 33.0,
+   "east": 499999.9999999994,
+   "north": 3983948.4533356656
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 37.25,
+   "lon": 31.5,
+   "east": 366970.02308003465,
+   "north": 4123660.4405726064
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 39.9,
+   "lon": 34.5,
+   "east": 628228.7558492363,
+   "north": 4417735.107733849
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 41.5,
+   "lon": 32.25,
+   "east": 437402.70074442006,
+   "north": 4594535.704942871
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 42.1,
+   "lon": 36.0,
+   "east": 748075.1301863769,
+   "north": 4665235.459836584
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 0.0,
+   "lon": 33.5,
+   "east": 555638.192444179,
+   "north": 0.0
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": 60.0,
+   "lon": 31.0,
+   "east": 388455.9580231643,
+   "north": 6653097.435294963
+  },
+  {
+   "grid": "WGS 84 / UTM 36N",
+   "tm": {
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0,
+    "semiMajor": 6378137.0,
+    "inverseFlattening": 298.257223563
+   },
+   "lat": -12.5,
+   "lon": 34.0,
+   "east": 608659.3743013234,
+   "north": -1382048.9051949913
+  }
+ ]
+}
