@@ -142,7 +142,7 @@ fn clip_stale(view: &Bounds, clip: &Bounds) -> bool {
 }
 
 /// The shown layers, bottom first (the top of the tree draws last), as the plain scene orders them.
-fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
+pub(crate) fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
     fn walk<'a>(nodes: &'a [LayerNode], visible: bool, out: &mut Vec<&'a LayerNode>) {
         for node in nodes {
             match node.kind {
@@ -162,11 +162,46 @@ fn shown_layers(nodes: &[LayerNode]) -> Vec<&LayerNode> {
 }
 
 /// Every layer's name by id (`$katman`).
-fn names(nodes: &[LayerNode], out: &mut HashMap<String, String>) {
+pub(crate) fn names(nodes: &[LayerNode], out: &mut HashMap<String, String>) {
     for n in nodes {
         out.insert(n.id.clone(), n.name.clone());
         names(&n.children, out);
     }
+}
+
+/// One layer through the style engine whole, as a sheet's map frame draws it (the web's
+/// app/sheet/mapFrames.ts `styleAt` and `buildStyledLayer`): its objects' symbols at `look`'s
+/// scale and palette, its construction lines clipped to `clip`; empty where the engine refuses it.
+pub(crate) fn build_whole(
+    store: &Store,
+    library: &StyleLibrary,
+    node: &LayerNode,
+    entities: &[&Entity],
+    look: &Look,
+    clip: Bounds,
+    names: &HashMap<String, String>,
+) -> StyledLayer {
+    let opts = BuildOptions {
+        origin: look.origin,
+        plot_scale: look.symbol_scale,
+        screen: look.screen,
+        hairlines: look.hairlines,
+        clip: Some(clip),
+        library,
+        layer_name: &|id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned()),
+    };
+    build_layer(store, &node.style, entities, &opts)
+        .and_then(|(_, batches)| {
+            decode(
+                batches,
+                &DecodeOptions {
+                    palette: &look.palette,
+                    plot_scale: look.symbol_scale,
+                    library,
+                },
+            )
+        })
+        .unwrap_or_default()
 }
 
 impl StyledCache {

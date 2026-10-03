@@ -526,6 +526,32 @@ impl Cloud {
         })
     }
 
+    /// `GET` of a path of this server with a query, read as JSON (the sheet
+    /// template library's routes, `sheet_templates.rs`); `timeout` when a long
+    /// poll may hold the answer.
+    pub(crate) fn get_at<T: DeserializeOwned + Send + 'static>(
+        &self,
+        path: &str,
+        query: Vec<(&'static str, String)>,
+        timeout: Option<Duration>,
+    ) -> impl Future<Output = Result<T, ApiFailure>> + Send + 'static + use<T> {
+        let url = self.inner.url(path).map(|mut url| {
+            if !query.is_empty() {
+                let mut q = url.query_pairs_mut();
+                for (k, v) in &query {
+                    q.append_pair(k, v);
+                }
+            }
+            url
+        });
+        let timeout = timeout.unwrap_or(TIMEOUT);
+        let inner = self.inner.clone();
+        run(async move {
+            let b = inner.request(Method::GET, url?, timeout);
+            inner.json(b, timeout).await
+        })
+    }
+
     /// The signed-in account and its workspaces (`GET /v1/me`).
     pub fn me(&self) -> impl Future<Output = Result<Me, ApiFailure>> + Send + 'static {
         self.get(self.inner.url("/v1/me"))

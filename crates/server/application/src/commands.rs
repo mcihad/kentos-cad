@@ -70,6 +70,8 @@ pub enum CommandOutcome {
     Invitation(InvitationChange),
     /// A file's drawing brought into a new database project (docs/adr/0036).
     Imported(ProjectImported),
+    /// A sheet template saved, deleted or shared (docs/sheet/design.md §13).
+    SheetTemplate(kentos_sheet::cloud::SheetTemplateChanged),
 }
 
 impl CommandOutcome {
@@ -89,6 +91,8 @@ impl CommandOutcome {
             // Nobody's access changes until an invitation is accepted.
             Self::Invitation(_) => false,
             Self::Imported(r) => !r.replayed,
+            // No project hears it: the people of the template read their own events.
+            Self::SheetTemplate(_) => false,
         }
     }
 
@@ -105,6 +109,7 @@ impl CommandOutcome {
             Self::Checkpoint(r) => serde_json::to_value(r),
             Self::Invitation(r) => serde_json::to_value(r),
             Self::Imported(r) => serde_json::to_value(r),
+            Self::SheetTemplate(r) => serde_json::to_value(r),
         }
         .expect("command results serialize")
     }
@@ -199,6 +204,12 @@ pub async fn run_in_tenant(
     access: &Access,
     envelope: CommandEnvelope,
 ) -> AppResult<CommandOutcome> {
+    // The sheet template commands go to the caller's personal space (docs/sheet/design.md §13).
+    if crate::sheet_templates::handles(&envelope.command_name) {
+        return crate::sheet_templates::run(db, access, envelope)
+            .await
+            .map(CommandOutcome::SheetTemplate);
+    }
     if envelope.command_name != PROJECT_CREATE {
         return Err(
             if crate::SERVER_COMMANDS

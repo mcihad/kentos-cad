@@ -206,7 +206,8 @@ export interface RibbonPanel {
 export interface RibbonTab {
   readonly id: string;
   readonly label: string;
-  readonly contextual?: 'selection';
+  /** Shown only while its subject exists: a selection, or a sheet in front (the sheet layouts' Pafta tab, ui/ribbon/Ribbon.ts `extend`). */
+  readonly contextual?: 'selection' | 'sheet';
   readonly panels: readonly RibbonPanel[];
 }
 

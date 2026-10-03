@@ -76,11 +76,24 @@ fn ribbon_shade<'a>() -> Element<'a, Message> {
 
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
+        // A sheet in front: the sheet mode in place of the drawing and its docks,
+        // the tabs under it (sheets.rs, docs/sheet/design.md §11).
+        if self.sheets.is_active() {
+            return self.sheet_view();
+        }
         // The side panels run the body's whole height; the bottom panel and the
         // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
         let docked = DockSpace::new(
-            // The ribbon's shade falls on the drawing only, not on the docks.
-            stack![column![self.drawing_area(), self.bottom()], ribbon_shade()],
+            // The ribbon's shade falls on the drawing only, not on the docks;
+            // “Model | Pafta 1 | +” under the drawing (sheets.rs).
+            stack![
+                column![
+                    self.drawing_area(),
+                    self.sheets.tabs().map(Message::Sheet),
+                    self.bottom()
+                ],
+                ribbon_shade()
+            ],
             &self.docks,
             Message::Dock,
             move |panel| {
@@ -123,6 +136,13 @@ impl App {
         }
         // The application menu over the window, under any dialog (app_menu.rs).
         layers.extend(self.app_menu_view());
+        // The sheet mode's windows (the template gallery from the tabs' +, over the
+        // drawing too; sheets.rs).
+        layers.extend(
+            self.sheets
+                .window(std::rc::Rc::new(self.sheet_painter()))
+                .map(|w| w.map(Message::Sheet)),
+        );
         if let Some(dialog) = self.dialog {
             layers.push(self.dialog_view(dialog));
         }
@@ -141,7 +161,7 @@ impl App {
     }
 
     /// The ribbon; `peek`: the folded ribbon with its tab open (drawn over the drawing).
-    fn ribbon(&self, peek: bool) -> Element<'_, Message> {
+    pub(crate) fn ribbon(&self, peek: bool) -> Element<'_, Message> {
         use crate::ribbon_keys::TipKey;
         let catalog = catalog();
         let mut ribbon = Ribbon::new()
@@ -184,7 +204,13 @@ impl App {
             // Anywhere else on the ribbon: the fold (a tab, a panel's title, empty space).
             .context_menu(move || rows_menu(&ribbon_plan::ribbon_menu(), folded));
         // The drawing's work mode decides the tabs and their panels (modes.rs).
-        let shown = self.shown_tab();
+        // The contextual Pafta tab, open, shows the sheet mode's panels (sheets.rs).
+        let sheet_tab = self.sheets.is_active() && self.sheet_tab;
+        let shown = if sheet_tab {
+            crate::sheets::SHEET_TAB
+        } else {
+            self.shown_tab()
+        };
         let mut tab_tips = Vec::new();
         for tab in self.ribbon_tabs() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
@@ -202,9 +228,22 @@ impl App {
                 );
             }
         }
+        if self.sheets.is_active() {
+            tab_tips.push(None);
+            ribbon = ribbon.contextual_tab(
+                kentos_sheet_ui::ribbon::TAB,
+                self.sheets.book().sheets.len().to_string(),
+                sheet_tab,
+                Message::RibbonTab(crate::sheets::SHEET_TAB),
+            );
+        }
         // The key tips on the tabs and the bar while they show (ribbon_keys.rs).
         ribbon = ribbon.key_tips(tab_tips, quick_tips);
-        if let Some(tab) = self
+        if sheet_tab {
+            for group in self.sheets.ribbon_groups(Message::Sheet) {
+                ribbon = ribbon.group(group);
+            }
+        } else if let Some(tab) = self
             .ribbon_tabs()
             .chain(self.contextual_tabs())
             .find(|tab| tab.id == shown)
@@ -879,7 +918,20 @@ impl App {
     /// size): the engine's name, the coordinate system (also in the tab
     /// row), the screen scale, the cloud cells' words (their lamps stay),
     /// the mode's name, the drafting aids' padding. Every cell keeps its tip.
-    fn status_bar(&self) -> Element<'_, Message> {
+    pub(crate) fn status_bar(&self) -> Element<'_, Message> {
+        // A sheet in front: its cells (sheets.rs).
+        if self.sheets.is_active() {
+            let bar = self
+                .sheets
+                .status_cells()
+                .into_iter()
+                .fold(StatusBar::new(), |bar, cell| {
+                    bar.push(cell.map(Message::Sheet))
+                });
+            return container(bar)
+                .height(kentos_ui::widget::status_bar::height())
+                .into();
+        }
         container(iced::widget::responsive(move |size| {
             let least = 15.0 * kentos_ui::theme::typography::body();
             let fit = (0..=STATUS_STEPS)
@@ -1146,7 +1198,7 @@ impl App {
         tip.body(body)
     }
 
-    fn dialog_view(&self, dialog: Asking) -> Element<'_, Message> {
+    pub(crate) fn dialog_view(&self, dialog: Asking) -> Element<'_, Message> {
         let close = || {
             button(text("Kapat"))
                 .on_press(Message::DialogClosed)

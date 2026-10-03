@@ -1,13 +1,13 @@
 import type { AppContext } from '../../app/context';
 import { DOCK_WIDTH, dockWidthOn } from '../../app/layoutPlan';
 import type { ProcessingTab } from '../../app/state';
-import { listen } from '../../core/disposable';
+import { listen, type Disposable } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { BottomPanel } from '../bottom/BottomPanel';
 import { Component } from '../Component';
 import { RightDock } from '../dock/RightDock';
 import { h } from '../dom';
-import { Ribbon } from '../ribbon/Ribbon';
+import { Ribbon, type RibbonExtension } from '../ribbon/Ribbon';
 import { StatusBar } from '../statusbar/StatusBar';
 import { CommandBar } from './CommandBar';
 import { CursorInput } from './CursorInput';
@@ -23,13 +23,17 @@ import { splitter } from '../widgets/Splitter';
  *
  *   ribbon
  *   [viewport]                     | [right dock]
+ *   [sheet tabs: Model | Pafta …]  |
  *   [bottom: panel + command line] |
  *   status bar
  */
 export class AppShell extends Component {
   readonly el: HTMLElement;
   readonly viewportHost: HTMLElement;
+  /** The row under the drawing area the sheet layouts' Model | Pafta tabs go in (app/sheet/install.ts). */
+  readonly sheetTabs: HTMLElement;
   readonly bottom: BottomPanel;
+  readonly status: StatusBar;
   private readonly ctx: AppContext;
   private readonly dock: RightDock;
   private readonly parts: Component[] = [];
@@ -41,9 +45,10 @@ export class AppShell extends Component {
     const { ui } = ctx;
     const dock = (this.dock = this.own(new RightDock(ctx)));
     this.bottom = this.own(new BottomPanel(ctx));
-    const status = this.own(new StatusBar(ctx));
+    const status = (this.status = this.own(new StatusBar(ctx)));
 
     this.viewportHost = h('div', { class: 'viewport' });
+    this.sheetTabs = h('div', { class: 'shell__sheet-tabs' });
 
     // A drag starts from the width shown (the kept one may be wider than this window allows).
     let startW = 0;
@@ -62,7 +67,7 @@ export class AppShell extends Component {
       'div',
       { class: 'shell' },
       h('div', { class: 'shell__chrome' }, this.ribbon.el),
-      h('div', { class: 'shell__body' }, h('main', { class: 'shell__center' }, this.viewportHost, this.bottom.el), right),
+      h('div', { class: 'shell__body' }, h('main', { class: 'shell__center' }, this.viewportHost, this.sheetTabs, this.bottom.el), right),
       status.el,
     );
 
@@ -90,6 +95,11 @@ export class AppShell extends Component {
   /** Komut ara: the ribbon's search field. */
   searchCommands(): void {
     this.ribbon.focusSearch();
+  }
+
+  /** Adds a contextual tab to the ribbon (the sheet layouts' Pafta tab). */
+  extendRibbon(ext: RibbonExtension): Disposable {
+    return this.ribbon.extend(ext);
   }
 
   /** Brings the processing toolbox (or its history) forward in the right dock. */

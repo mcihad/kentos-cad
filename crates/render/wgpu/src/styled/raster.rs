@@ -234,6 +234,36 @@ fn painted(pixmap: Pixmap, width: u32, height: u32) -> Painted {
     }
 }
 
+/// An atlas image drawn at `step` pixels (`Atlas.make`): a text marker at that height, an SVG or
+/// raster picture and a pattern tile at that width. The GPU's atlas and the CPU's map pictures
+/// (`cpu.rs`) draw their images here.
+pub fn image(image: &AtlasImage, step: u32, source: &dyn ImageSource) -> Option<Painted> {
+    match image {
+        AtlasImage::Text {
+            text,
+            font,
+            weight,
+            italic,
+            color,
+            halo,
+            ..
+        } => {
+            let outline = source.text(text, font.as_deref(), *weight, *italic)?;
+            text_image(&outline, color, halo.as_ref(), step)
+        }
+        AtlasImage::Svg { width, height, .. } | AtlasImage::Raster { width, height, .. } => {
+            let picture = source.picture(image)?;
+            picture_image(&picture, *width, *height, step)
+        }
+        AtlasImage::Tile {
+            aspect,
+            stagger,
+            draw,
+            ..
+        } => tile_image(*aspect, *stagger, draw, step, source),
+    }
+}
+
 /// An SVG or raster image at `step` pixels wide (its height follows its proportions).
 pub fn picture_image(picture: &Picture, image_w: f64, image_h: f64, step: u32) -> Option<Painted> {
     let step = step as f32;
@@ -501,6 +531,94 @@ pub fn shape_path(shape: &str, hw: f32, hh: f32, params: [f32; 4]) -> Option<Pat
     b.finish()
 }
 
+/// A shape's outline as polylines, centre (0, 0), y up, half sizes `hw`, `hh`: [`shape_path`]
+/// with each curve cut into chords of at most π/32 of an arc (the web's `Outline` in
+/// app/sheet/mapVectors.ts), each part with whether it closes. A PDF writes a point symbol so.
+pub fn shape_outline(
+    shape: &str,
+    hw: f64,
+    hh: f64,
+    params: [f64; 4],
+) -> Vec<(Vec<[f64; 2]>, bool)> {
+    let p = [
+        params[0] as f32,
+        params[1] as f32,
+        params[2] as f32,
+        params[3] as f32,
+    ];
+    let Some(path) = shape_path(shape, hw as f32, hh as f32, p) else {
+        return Vec::new();
+    };
+    // The arcs are cubic quarter turns at most: 16 chords each is π/32.
+    const CHORDS: usize = 16;
+    // A ring's end is its start within the f32 arithmetic of the path.
+    let near = 1e-5 * hw.max(hh).max(1.0);
+    let mut out: Vec<(Vec<[f64; 2]>, bool)> = Vec::new();
+    let mut at = [0.0f64, 0.0];
+    let pt = |q: tiny_skia::Point| [f64::from(q.x), f64::from(q.y)];
+    for seg in path.segments() {
+        match seg {
+            tiny_skia::PathSegment::MoveTo(q) => {
+                at = pt(q);
+                out.push((vec![at], false));
+            }
+            tiny_skia::PathSegment::LineTo(q) => {
+                at = pt(q);
+                if let Some(last) = out.last_mut() {
+                    last.0.push(at);
+                }
+            }
+            tiny_skia::PathSegment::QuadTo(c, q) => {
+                let (c, q) = (pt(c), pt(q));
+                let from = at;
+                if let Some(last) = out.last_mut() {
+                    for i in 1..=CHORDS {
+                        let t = i as f64 / CHORDS as f64;
+                        let u = 1.0 - t;
+                        last.0.push([
+                            u * u * from[0] + 2.0 * u * t * c[0] + t * t * q[0],
+                            u * u * from[1] + 2.0 * u * t * c[1] + t * t * q[1],
+                        ]);
+                    }
+                }
+                at = q;
+            }
+            tiny_skia::PathSegment::CubicTo(c1, c2, q) => {
+                let (c1, c2, q) = (pt(c1), pt(c2), pt(q));
+                let from = at;
+                if let Some(last) = out.last_mut() {
+                    for i in 1..=CHORDS {
+                        let t = i as f64 / CHORDS as f64;
+                        let u = 1.0 - t;
+                        let (a, b, c, d) = (u * u * u, 3.0 * u * u * t, 3.0 * u * t * t, t * t * t);
+                        last.0.push([
+                            a * from[0] + b * c1[0] + c * c2[0] + d * q[0],
+                            a * from[1] + b * c1[1] + c * c2[1] + d * q[1],
+                        ]);
+                    }
+                }
+                at = q;
+            }
+            tiny_skia::PathSegment::Close => {
+                if let Some(last) = out.last_mut() {
+                    // A ring's last point is its first: written once.
+                    if let (Some(a), Some(z)) = (last.0.first(), last.0.last())
+                        && last.0.len() > 1
+                        && (a[0] - z[0]).abs() <= near
+                        && (a[1] - z[1]).abs() <= near
+                    {
+                        last.0.pop();
+                    }
+                    last.1 = true;
+                    at = last.0.first().copied().unwrap_or(at);
+                }
+            }
+        }
+    }
+    out.retain(|(pts, _)| pts.len() >= 2);
+    out
+}
+
 /// Draws a shape look centred at the transform's origin (y up) (`drawShape`).
 fn draw_shape(p: &mut Pixmap, look: &MarkerLook, w: f32, h: f32, stroke_width: f32, at: Transform) {
     let MarkerLook::Shape {
@@ -709,6 +827,37 @@ mod tests {
         };
         let p = picture_image(&masked, 10.0, 10.0, 20).expect("drawn");
         assert!((coverage(&p) - 200.0).abs() < 2.0, "{}", coverage(&p));
+    }
+
+    #[test]
+    fn every_shape_has_polylines_for_a_pdf() {
+        for s in kentos_native_style::batches::SHAPE_IDS {
+            let parts = shape_outline(s, 5.0, 5.0, [0.0, 12.0, std::f64::consts::PI, 0.2]);
+            assert!(!parts.is_empty(), "{s}");
+        }
+        // A circle: one closed ring of 64 chords (four quarter turns of 16), on its radius.
+        let circle = shape_outline("circle", 5.0, 5.0, [0.0; 4]);
+        assert_eq!(circle.len(), 1);
+        assert!(
+            circle[0].1 && circle[0].0.len() == 64,
+            "{}",
+            circle[0].0.len()
+        );
+        assert!(
+            circle[0]
+                .0
+                .iter()
+                .all(|p| ((p[0] * p[0] + p[1] * p[1]).sqrt() - 5.0).abs() < 0.01)
+        );
+        // A cross: two open lines.
+        let cross = shape_outline("cross", 5.0, 5.0, [0.0; 4]);
+        assert_eq!(
+            cross.iter().map(|p| (p.0.len(), p.1)).collect::<Vec<_>>(),
+            [(2, false), (2, false)]
+        );
+        // A triangle points up (y up), closed.
+        let t = shape_outline("triangle", 5.0, 5.0, [0.0; 4]);
+        assert!(t[0].1 && t[0].0.len() == 3 && t[0].0[0][1] > 0.0);
     }
 
     #[test]

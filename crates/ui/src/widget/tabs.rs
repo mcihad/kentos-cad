@@ -81,6 +81,7 @@ pub struct Tab<'a> {
     dirty: bool,
     closable: bool,
     badge: usize,
+    note: bool,
 }
 
 impl<'a> Tab<'a> {
@@ -91,7 +92,16 @@ impl<'a> Tab<'a> {
             dirty: false,
             closable: true,
             badge: 0,
+            note: false,
         }
+    }
+
+    /// Başlığın yanında bilgi mavisi küçük nokta: sekmenin söyleyecek bir
+    /// şeyi var (ör. paftanın şablonunun yeni sürümü; web'in
+    /// `.sheet-tab__newer`'ı, 6 piksel).
+    pub fn note(mut self, note: bool) -> Self {
+        self.note = note;
+        self
     }
 
     /// Başlığın yanında sayı rozeti (ör. görülmemiş uyarılar): amber zeminde
@@ -170,6 +180,20 @@ pub(crate) fn room(tab: Rectangle, trail: f32) -> Rectangle {
     }
 }
 
+/// Sekmenin bilgi noktası: 6 piksel, bilgi mavisi.
+fn note_dot<'a, Message: 'a>() -> Element<'a, Message> {
+    container(iced::widget::space().width(6).height(6))
+        .style(|theme: &iced::Theme| iced::widget::container::Style {
+            background: Some(Tokens::of(theme).info.into()),
+            border: iced::Border {
+                radius: 3.0.into(),
+                ..iced::Border::default()
+            },
+            ..iced::widget::container::Style::default()
+        })
+        .into()
+}
+
 /// Sekmenin sayı rozeti: 16 piksel yüksek, en az 16 piksel geniş hap.
 fn badge<'a, Message: 'a>(count: usize) -> Element<'a, Message> {
     let digits = count.to_string();
@@ -231,6 +255,10 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
 
                 if tab.badge > 0 {
                     heading = heading.push(badge(tab.badge));
+                }
+
+                if tab.note {
+                    heading = heading.push(note_dot());
                 }
 
                 Entry {

@@ -52,6 +52,9 @@ pub struct Field {
     pub description: Option<String>,
     /// Uzun metin: çok satırlı düzenlenir.
     pub multiline: bool,
+    /// Ondalık sayı noktayla ve binlik ayraçsız yazılır ([`number::point`],
+    /// ADR 0149'un gösterim kuralı: pafta kipi); yoksa Türkçe yazımla.
+    pub point: bool,
 }
 
 impl Field {
@@ -64,6 +67,22 @@ impl Field {
             required: false,
             description: None,
             multiline: false,
+            point: false,
+        }
+    }
+
+    /// Ondalık sayılar noktayla yazılır ([`Field::point`]).
+    pub fn point(mut self) -> Self {
+        self.point = true;
+        self
+    }
+
+    /// Bu alanın ondalık sayıyı yazışı: noktalı ya da Türkçe.
+    pub fn real_text(&self, value: f64, decimals: usize) -> String {
+        if self.point {
+            number::point(value, decimals)
+        } else {
+            number::real(value, decimals)
         }
     }
 
@@ -218,12 +237,12 @@ impl Field {
             (_, Value::Bool(value)) => if *value { "Evet" } else { "Hayır" }.to_owned(),
             (_, Value::Integer(value)) => number::integer(*value),
             (FieldKind::Real { decimals }, Value::Real(value)) => {
-                number::real(*value, usize::from(*decimals))
+                self.real_text(*value, usize::from(*decimals))
             }
             (FieldKind::Range { step, .. }, Value::Real(value)) => {
-                number::real(*value, number::decimals_of(*step))
+                self.real_text(*value, number::decimals_of(*step))
             }
-            (_, Value::Real(value)) => number::real(*value, 2),
+            (_, Value::Real(value)) => self.real_text(*value, 2),
             (_, Value::Text(value)) => value.clone(),
             (_, Value::Date(date)) => date.to_string(),
             (_, Value::Time(time)) => time.to_string(),

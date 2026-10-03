@@ -7,6 +7,9 @@ import type { MarkerLook, RGBA, ShapeId } from './types';
  * the same code. Coordinates: centre (0, 0), y up, half sizes hw/hh.
  */
 
+/** What an outline is drawn into: a Path2D, or anything taking its few commands (the sheet's PDF vectors, app/sheet/mapVectors.ts). */
+export type PathSink = Pick<Path2D, 'moveTo' | 'lineTo' | 'arc' | 'rect' | 'closePath'>;
+
 /** Shapes drawn as lines only (their "fill" colour, if any, strokes them). */
 export const OPEN_SHAPES: ReadonlySet<ShapeId> = new Set(['cross', 'x', 'line', 'arrow', 'chevron', 'arc']);
 
@@ -18,7 +21,7 @@ function polygon(n: number, r: number, rot = Math.PI / 2): [number, number][] {
  * Gear outline (as the shaders' field): a body circle with square teeth,
  * one centred on +x; each tooth is half a pitch wide at mid depth.
  */
-function gearPath(p: Path2D, r: number, teeth: number, depth: number): void {
+function gearPath(p: PathSink, r: number, teeth: number, depth: number): void {
   const n = Math.max(3, Math.round(teeth));
   const rb = r * (1 - depth);
   const a = (2 * Math.PI) / n;
@@ -36,8 +39,12 @@ function gearPath(p: Path2D, r: number, teeth: number, depth: number): void {
 
 /** Outline of a shape as a Path2D (y up: callers flip the context); `params` as the shaders read them. */
 export function shapePath(shape: ShapeId, hw: number, hh: number, params: ShapeParams = NO_SHAPE_PARAMS): Path2D {
+  return shapeOutline(new Path2D(), shape, hw, hh, params);
+}
+
+/** The same outline drawn into `p` (any sink of its commands), which it returns. */
+export function shapeOutline<P extends PathSink>(p: P, shape: ShapeId, hw: number, hh: number, params: ShapeParams = NO_SHAPE_PARAMS): P {
   const r = Math.min(hw, hh);
-  const p = new Path2D();
   const poly = (pts: [number, number][]) => {
     pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
     p.closePath();

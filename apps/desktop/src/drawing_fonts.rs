@@ -38,6 +38,62 @@ const FACES: [&[u8]; 22] = [
     include_bytes!("../assets/fonts/drawing/Quicksand-700.ttf"),
 ];
 
+/// Each of [`FACES`] as the sheet core names it (`TextPrim.font`, its weight, italic): what a
+/// sheet PDF embeds (docs/sheet/design.md §9a).
+const FACE_KEYS: [(&str, u16, bool); 22] = [
+    ("architects-daughter", 400, false),
+    ("arimo", 400, false),
+    ("arimo", 500, false),
+    ("arimo", 600, false),
+    ("arimo", 700, false),
+    ("barlow", 400, true),
+    ("barlow", 400, false),
+    ("barlow", 500, false),
+    ("barlow", 600, false),
+    ("courier-prime", 400, true),
+    ("courier-prime", 400, false),
+    ("courier-prime", 700, false),
+    ("plex-mono", 400, false),
+    ("plex-mono", 500, false),
+    ("overpass", 400, false),
+    ("overpass", 500, false),
+    ("overpass", 600, false),
+    ("overpass", 700, false),
+    ("quicksand", 400, false),
+    ("quicksand", 500, false),
+    ("quicksand", 600, false),
+    ("quicksand", 700, false),
+];
+
+/// The faces for a sheet PDF: their TrueType files, as the core names them.
+pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {
+    FACES
+        .iter()
+        .zip(FACE_KEYS)
+        .map(
+            |(data, (font, weight, italic))| kentos_sheet::pdf::PdfFont {
+                font: font.to_owned(),
+                weight,
+                italic,
+                data: data.to_vec(),
+            },
+        )
+        .collect()
+}
+
+/// The sheet core's id of a drawing typeface.
+pub fn sheet_font(font: DrawingFont) -> &'static str {
+    match font {
+        DrawingFont::Barlow => "barlow",
+        DrawingFont::Arimo => "arimo",
+        DrawingFont::Overpass => "overpass",
+        DrawingFont::Quicksand => "quicksand",
+        DrawingFont::ArchitectsDaughter => "architects-daughter",
+        DrawingFont::CourierPrime => "courier-prime",
+        DrawingFont::PlexMono => "plex-mono",
+    }
+}
+
 /// Puts the faces in Iced's text system before the first frame; later calls do nothing.
 pub fn load() {
     static LOADED: Once = Once::new();
@@ -83,6 +139,45 @@ pub fn font(drawing: DrawingFont, weight: u16, italic: bool) -> Font {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Each face as a sheet PDF names it (`FACE_KEYS`): its own file's family, weight and slant.
+    #[test]
+    fn every_face_is_named_as_the_sheet_core_names_it() {
+        use iced::advanced::graphics::text::cosmic_text::skrifa::{self, MetadataProvider};
+        let drawings = [
+            DrawingFont::Barlow,
+            DrawingFont::Arimo,
+            DrawingFont::Overpass,
+            DrawingFont::Quicksand,
+            DrawingFont::ArchitectsDaughter,
+            DrawingFont::CourierPrime,
+            DrawingFont::PlexMono,
+        ];
+        for (data, (font, weight, italic)) in FACES.iter().zip(FACE_KEYS) {
+            let f = skrifa::FontRef::new(data).expect("a face");
+            let a = f.attributes();
+            assert_eq!(
+                (
+                    a.weight.value().round() as u16,
+                    a.style != skrifa::attribute::Style::Normal
+                ),
+                (weight, italic),
+                "{font} {weight}"
+            );
+            let drawing = drawings
+                .iter()
+                .find(|d| sheet_font(**d) == font)
+                .expect("a drawing typeface");
+            let names: Vec<String> = f
+                .localized_strings(skrifa::string::StringId::FAMILY_NAME)
+                .map(|s| s.chars().collect())
+                .collect();
+            assert!(
+                names.iter().any(|n| n.starts_with(family(*drawing))),
+                "{font}: {names:?}"
+            );
+        }
+    }
 
     /// Every typeface is in the text system after `load`, with a face of
     /// each weight the web ships.

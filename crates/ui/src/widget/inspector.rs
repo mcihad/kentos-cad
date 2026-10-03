@@ -1867,6 +1867,10 @@ fn scrubbed(field: &Field, start: &Value, pixels: f32) -> Option<Value> {
 fn editable_text(field: &Field, value: &Value) -> String {
     match (&field.kind, value) {
         (_, Value::Integer(value)) => value.to_string(),
+        // Noktalı yazımda binlik ayraç zaten yok.
+        (FieldKind::Real { .. } | FieldKind::Range { .. }, Value::Real(_)) if field.point => {
+            field.format(value)
+        }
         (FieldKind::Real { decimals }, Value::Real(value)) => {
             number::real(*value, usize::from(*decimals)).replace('.', "")
         }

@@ -4,7 +4,8 @@ import { commandItem, menuById, resolveMenu } from '../../app/menus';
 import { panelCommands, quickAccessOf, ribbonTabs, startTab, type RibbonTab } from '../../app/ribbon';
 import { filterOf } from '../../app/workspaces';
 import { fullscreenButton } from '../shell/fullscreenButton';
-import { DisposableStore, listen } from '../../core/disposable';
+import { DisposableStore, listen, type Disposable } from '../../core/disposable';
+import type { ReadonlySignal } from '../../core/signal';
 import { Component } from '../Component';
 import { h, overlayRoot } from '../dom';
 import { icon } from '../icons';
@@ -16,6 +17,20 @@ import { KeyTips } from './keytips';
 import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { commandMenu, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, withQuickAccess, type RibbonRow } from './ribbonPlan';
 import { RibbonSearch } from './search';
+
+/**
+ * A contextual tab another part of the app owns (the sheet layouts' Pafta
+ * tab, docs/sheet/integration.md §3): its tabs are built by their owner and
+ * asked for again when `version` changes; they show while `shown` is true,
+ * open when they appear and give way to the last regular tab when they go.
+ */
+export interface RibbonExtension {
+  tabs(): readonly RibbonTab[];
+  readonly version: ReadonlySignal<unknown>;
+  readonly shown: ReadonlySignal<boolean>;
+  /** The tabs' tooltip. */
+  readonly tip: { readonly title: string; readonly description: string };
+}
 
 /** One tab's panels, built the first time the tab opens and kept until the ribbon closes. */
 class TabView {
@@ -75,6 +90,9 @@ export class Ribbon extends Component {
   private fitFrame = 0;
   /** Listeners of the tab buttons, rebuilt with the work mode. */
   private tabsD = new DisposableStore();
+  /** Contextual tabs other parts of the app add (`extend`), and which of them owns each tab. */
+  private readonly extensions: RibbonExtension[] = [];
+  private extensionOf = new Map<string, RibbonExtension>();
   private readonly keyTips: KeyTips;
 
   constructor(ctx: AppContext) {
@@ -218,17 +236,37 @@ export class Ribbon extends Component {
     this.search.focus();
   }
 
+  /** Adds a contextual tab another part of the app owns; the returned function takes it away. */
+  extend(ext: RibbonExtension): Disposable {
+    this.extensions.push(ext);
+    const subs = [
+      ext.version.subscribe(() => ext.tabs().forEach((t) => this.rebuild(t.id))),
+      ext.shown.subscribe(() => this.updateExtension(ext, true)),
+    ];
+    this.rebuildAll();
+    return () => {
+      subs.forEach((s) => s());
+      this.extensions.splice(this.extensions.indexOf(ext), 1);
+      this.rebuildAll();
+    };
+  }
+
   // ── Model ─────────────────────────────────────────────────────────────
 
   private derive(): void {
     const { ctx } = this;
-    this.tabs = ribbonTabs({
-      tools: ctx.tools.list(),
-      processing: ctx.processing.registry.tree(),
-      models: ctx.processing.models.value,
-      iconOf: (id) => ctx.commands.get(id)?.icon,
-      filter: filterOf(ctx),
-    });
+    const added = this.extensions.map((e) => ({ e, tabs: e.tabs() }));
+    this.extensionOf = new Map(added.flatMap(({ e, tabs }) => tabs.map((t) => [t.id, e] as const)));
+    this.tabs = [
+      ...ribbonTabs({
+        tools: ctx.tools.list(),
+        processing: ctx.processing.registry.tree(),
+        models: ctx.processing.models.value,
+        iconOf: (id) => ctx.commands.get(id)?.icon,
+        filter: filterOf(ctx),
+      }),
+      ...added.flatMap((a) => a.tabs),
+    ];
     this.tabCommands = new Map(this.tabs.map((t) => [t.id, new Set(t.panels.flatMap(panelCommands))]));
   }
 
@@ -253,6 +291,7 @@ export class Ribbon extends Component {
 
   /** A new work mode: tabs and their views are built again; the open tab stays when it still exists. */
   private rebuildAll(): void {
+    const was = this.current;
     this.closePeek();
     this.closePop();
     this.derive();
@@ -266,6 +305,9 @@ export class Ribbon extends Component {
     const keep = this.tabs.some((t) => t.id === this.lastRegular && !t.contextual) ? this.lastRegular : 'home';
     this.select(keep, { focus: false });
     this.updateContextual();
+    for (const ext of this.extensions) this.updateExtension(ext, false);
+    // An added tab that was open stays open (the work mode changed while a sheet was in front).
+    if (was !== this.current && this.extensionOf.get(was)?.shown.value) this.select(was, { focus: false });
     this.remeasure();
   }
 
@@ -277,8 +319,10 @@ export class Ribbon extends Component {
         'button',
         { class: `ribbon__tab${t.contextual ? ' ribbon__tab--context' : ''}`, type: 'button', role: 'tab', 'aria-selected': 'false', tabindex: '-1', 'aria-controls': `ribbon-tab-${t.id}`, dataset: { tab: t.id } },
         h('span', { class: 'ribbon__tab-label' }, t.label),
-        t.contextual ? h('span', { class: 'ribbon__count num' }) : null,
+        t.contextual === 'selection' ? h('span', { class: 'ribbon__count num' }) : null,
       );
+      // An added tab waits for its owner to show it.
+      if (this.extensionOf.has(t.id)) b.hidden = true;
       this.tabsD.add(
         listen<PointerEvent>(b, 'pointerdown', (e) => {
           if (e.button !== 0) return;
@@ -296,7 +340,9 @@ export class Ribbon extends Component {
       this.tabsD.add(listen(b, 'dblclick', () => this.ctx.commands.execute('view.ribbonCollapse')));
       this.tabsD.add(
         tooltip(b, () =>
-          t.contextual
+          this.extensionOf.has(t.id)
+            ? this.extensionOf.get(t.id)!.tip
+            : t.contextual
             ? { title: `${t.label} (bağlamsal)`, description: 'Seçili nesneler varken görünür: seçimin özeti ve seçime uygulanan komutlar.' }
             : b.hasAttribute('data-active-tool')
               ? { title: t.label, description: `Çalışan araç bu sekmede: ${this.ctx.tools.activeDescriptor?.label ?? ''}.` }
@@ -346,6 +392,20 @@ export class Ribbon extends Component {
     b.querySelector('.ribbon__count')!.textContent = n ? String(n) : '';
     if (!n && this.current === 'selection') this.select(this.lastRegular, { focus: false });
     else if (this.current === 'selection') this.views.get('selection')?.sync();
+    this.scheduleFit();
+  }
+
+  /** An added tab shows while its owner says so; it opens when it appears (`open`) and gives way when it goes. */
+  private updateExtension(ext: RibbonExtension, open: boolean): void {
+    const shown = ext.shown.value;
+    for (const t of this.tabs.filter((x) => this.extensionOf.get(x.id) === ext)) {
+      const b = this.tabButtons.get(t.id);
+      if (!b) continue;
+      const was = !b.hidden;
+      b.hidden = !shown;
+      if (shown && open && !was) this.select(t.id, { focus: false });
+      else if (!shown && this.current === t.id) this.select(this.lastRegular, { focus: false });
+    }
     this.scheduleFit();
   }
 

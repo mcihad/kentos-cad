@@ -74,6 +74,9 @@ const GROUPS = [
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
+  // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared
+  // sheet core. No drawing document, renderer or runtime of its own: the host paints the maps.
+  { name: 'sheet-ui', path: 'crates/sheet-ui/', targets: [HOST], uses: ['shared', 'ui'], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // The native renderer (docs/adr/0019): wgpu on the host's device, fed by the shared core.
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
   // It draws the style crate's batches (docs/adr/0090).
@@ -81,7 +84,7 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style'], forbid: ['axum*', ...BROWSER] },
 ];
 

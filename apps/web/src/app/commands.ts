@@ -6,7 +6,7 @@ import { entitiesDelete } from '../product/entitiesDelete';
 import { treeLocked } from '../ui/layers/treeRights';
 import { CoordinateReadTool } from '../tools/coordinateTool';
 import { pasteEntities, PasteTool } from '../tools/editTools';
-import { Signal } from '../core/signal';
+import { Signal, type ReadonlySignal } from '../core/signal';
 import { TOOL_GROUP_LABEL, type ConfirmMods } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { ThemeId } from './appearance';
@@ -190,12 +190,33 @@ export interface CommandHooks {
   keyTips: () => void;
   /** Başlangıç ekranı — new, open, cloud and the recent files. */
   openStart: () => void;
+  /**
+   * A history in front of the drawing's: a sheet's while it is in front (app/sheet/install.ts). Geri al and
+   * Yinele, from the quick access bar and their keys, go to it then (docs/sheet/integration.md §3, W-10);
+   * set again whenever what it can do changes.
+   */
+  frontHistory?: ReadonlySignal<FrontHistory | null>;
+  /**
+   * What prints while something is in front of the drawing: a sheet's Yazdır while it is in front
+   * (app/sheet/install.ts). Yazdır ve pafta (`file.print`, Ctrl+P) runs it then, and is not “Geliştirme
+   * aşamasında” meanwhile (docs/sheet/integration.md §3, W-17); null: the drawing's own print, not here yet.
+   */
+  frontPrint?: ReadonlySignal<(() => void) | null>;
+}
+
+/** What Geri al and Yinele ask of a history in front of the drawing's. */
+export interface FrontHistory {
+  undo(): void;
+  redo(): void;
+  canUndo(): boolean;
+  canRedo(): boolean;
 }
 
 export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void {
   const { commands, doc, selection, settings, ui, view, tools, log } = ctx;
   const selected = () => [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
   const F = 'Dosya';
+  const print = pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print');
   const E = 'Düzen';
   const V = 'Görünüm';
   const K = 'Koordinat';
@@ -284,7 +305,16 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       watch: [ctx.files.busy],
     },
     pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
-    { ...pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print'), short: 'Yazdır' },
+    {
+      ...print,
+      short: 'Yazdır',
+      // A sheet in front prints itself (W-17); the drawing's own print is not here yet.
+      get pending() {
+        return !hooks.frontPrint?.value;
+      },
+      run: (args?: unknown) => (hooks.frontPrint?.value ?? print.run)(args),
+      watch: hooks.frontPrint ? [hooks.frontPrint] : [],
+    },
     { id: 'file.settings', title: 'Proje ayarları…', category: F, icon: 'folder', aliases: ['PROJE'], run: () => hooks.openProjectSettings() },
 
     // Düzen
@@ -294,6 +324,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: E,
       icon: 'undo',
       run: () => {
+        const front = hooks.frontHistory?.value;
+        if (front) return front.undo();
         // While a command runs, its own newest step goes first (docs/adr/0018); so does the point calculator's,
         // over a waiting grip too.
         if ((tools.activeId.value !== 'select' || tools.nested) && tools.active.undoStep?.()) return;
@@ -301,9 +333,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         if (label) log.info(`Geri alındı: ${label}`);
         selection.retain((id) => !!doc.get(id));
       },
-      isEnabled: () => doc.canUndo.value || (tools.activeId.value !== 'select' && (tools.active.pointCount ?? 0) > 0),
+      isEnabled: () => hooks.frontHistory?.value?.canUndo() ?? (doc.canUndo.value || (tools.activeId.value !== 'select' && (tools.active.pointCount ?? 0) > 0)),
       // The prompt changes with every point a command takes.
-      watch: [doc.canUndo, tools.prompt],
+      watch: [doc.canUndo, tools.prompt, ...(hooks.frontHistory ? [hooks.frontHistory] : [])],
     },
     {
       id: 'edit.redo',
@@ -311,12 +343,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: E,
       icon: 'redo',
       run: () => {
+        const front = hooks.frontHistory?.value;
+        if (front) return front.redo();
         const label = doc.redo();
         if (label) log.info(`Yinelendi: ${label}`);
         selection.retain((id) => !!doc.get(id));
       },
-      isEnabled: () => doc.canRedo.value,
-      watch: [doc.canRedo],
+      isEnabled: () => hooks.frontHistory?.value?.canRedo() ?? doc.canRedo.value,
+      watch: [doc.canRedo, ...(hooks.frontHistory ? [hooks.frontHistory] : [])],
     },
     {
       id: 'edit.cut',

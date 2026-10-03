@@ -14,6 +14,8 @@ path = "src/main.rs"
 kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
 kentos-application = { path = "../../crates/server/application" }
 kentos-postgres = { path = "../../crates/server/postgres" }
+# The sheet template library's types (docs/sheet/design.md §13).
+kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
 axum = { workspace = true }
 http-body = { workspace = true }
 tokio = { workspace = true }

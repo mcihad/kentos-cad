@@ -16,6 +16,9 @@ kentos-postgres = { path = "../postgres" }
 # File projects (docs/adr/0031): uploads are verified as KCAD v2 with the shared codec,
 # hashed with SHA-256 and written to the object store with tokio's file system calls.
 kentos-kcad = { path = "../../shared/kcad" }
+# The sheet template library (docs/sheet/design.md §13): a template is read and checked as a
+# device reads it, and the commands' types are the ones the web and the desktop send.
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-util"] }
 serde = { workspace = true }
@@ -28,3 +31,5 @@ time = { workspace = true }
 tokio = { workspace = true }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature.
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+# The template commands' catalog entries (tests/sheet_templates.rs).
+kentos-sheet = { path = "../../shared/sheet", default-features = false, features = ["schema"] }

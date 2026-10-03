@@ -220,6 +220,12 @@ pub enum Message {
     /// A press outside the folded ribbon open over the drawing: it closes.
     RibbonPeekAway,
     RibbonTab(&'static str),
+    /// The sheet mode's own (sheets.rs).
+    Sheet(kentos_sheet_ui::Message),
+    /// The sheet templates' cloud library (sheet_library.rs).
+    SheetLibrary(crate::sheet_library::LibraryMsg),
+    /// Where the user chose to write a sheet's export; none: they did not.
+    SheetExportTo(kentos_sheet_ui::ExportKind, Option<PathBuf>),
     /// A choice in the ribbon's own panels: the current properties for new
     /// objects, the plot scale (ribbon_panels.rs).
     RibbonPanel(crate::ribbon_panels::Event),
@@ -596,6 +602,21 @@ pub struct App {
     /// The last server check's answer: its health, or why there was none
     /// (KentOS CAD hakkında names the server by it).
     pub(crate) server_health: Option<Result<kentos_contracts::Health, String>>,
+    // Sheet layouts (sheets.rs, docs/sheet/design.md §11).
+    pub sheets: kentos_sheet_ui::Designer,
+    pub(crate) sheet_maps: crate::sheets::SheetMaps,
+    /// The contextual Pafta tab is open (a sheet is in front).
+    pub(crate) sheet_tab: bool,
+    /// Where the books are kept; none in tests and snapshots.
+    pub sheet_store: Option<kentos_sheet_ui::Store>,
+    pub(crate) sheet_project: Option<kentos_sheet_ui::ProjectKey>,
+    pub(crate) sheet_session: Option<u64>,
+    pub(crate) sheet_generation: Option<(u64, u64)>,
+    pub(crate) sheet_attributes: std::cell::Cell<bool>,
+    /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
+    pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
+    /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
+    pub(crate) sheet_data_key: Option<u64>,
 }
 
 impl App {
@@ -682,6 +703,16 @@ impl App {
             dialog_under: None,
             shortcuts_query: String::new(),
             viewport: Viewport::new(),
+            sheets: kentos_sheet_ui::Designer::default(),
+            sheet_maps: crate::sheets::SheetMaps::default(),
+            sheet_tab: false,
+            sheet_store: None,
+            sheet_project: None,
+            sheet_session: None,
+            sheet_generation: None,
+            sheet_attributes: std::cell::Cell::new(false),
+            sheet_library: crate::sheet_library::SheetLibrary::default(),
+            sheet_data_key: None,
             session: Session::new(),
             spatial: Spatial::new(),
             styles: crate::style::Styles::new(),
@@ -827,6 +858,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The sheet templates' library: its long poll's next wait, a retry, a run after events.
+            if self.sheet_library.wants_ticks() {
+                Subscription::run(crate::sheet_library::ticks)
+            } else {
+                Subscription::none()
+            },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
@@ -855,6 +892,8 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let task = self.handle(message);
         self.follow_document();
+        // The sheets follow the project and the drawing (sheets.rs).
+        self.follow_sheets();
         self.follow_selection_layers();
         // The contextual Seçim tab goes with the selection (the web's `updateContextual`).
         if self.selection.is_empty() {
@@ -873,6 +912,8 @@ impl App {
             self.follow_hover(),
             self.follow_tracking(),
             self.follow_log(Instant::now()),
+            // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
+            self.follow_sheet_library(Instant::now()),
         ]);
         self.follow_layout(Instant::now());
         self.cloud_after(Instant::now());
@@ -952,7 +993,16 @@ impl App {
                 self.alt_armed = false;
             }
             Message::RibbonPeekAway => self.ribbon_peek = false,
-            Message::RibbonTab(id) => self.tab_clicked(id),
+            // The contextual Pafta tab is the sheet mode's; any other closes it (sheets.rs).
+            Message::RibbonTab(id) => {
+                self.sheet_tab = id == crate::sheets::SHEET_TAB;
+                if !self.sheet_tab {
+                    self.tab_clicked(id);
+                }
+            }
+            Message::Sheet(m) => return self.sheet_message(m),
+            Message::SheetLibrary(m) => return self.sheet_library_message(m),
+            Message::SheetExportTo(kind, path) => self.sheet_export_to(kind, path),
             Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {

@@ -45,6 +45,33 @@ pub fn real(value: f64, decimals: usize) -> String {
     }
 }
 
+/// Noktalı yazımın kuralı: ev sahibinin verdiği işlev (pafta kipi:
+/// `kentos_geometry_core::display::fixed`, ADR 0149'un gösterim kuralı).
+static POINT_RULE: std::sync::OnceLock<fn(f64, usize) -> String> = std::sync::OnceLock::new();
+
+/// Noktalı yazımın kuralını verir; ilk verilen kalır (kural her yerde aynı
+/// olmalı: ADR 0149 “tek yer”).
+pub fn set_point_rule(rule: fn(f64, usize) -> String) {
+    let _ = POINT_RULE.set(rule);
+}
+
+/// Ondalık sayıyı noktayla ve binlik ayraçsız yazar (ADR 0149 kural 5:
+/// ondalık ayırıcı noktadır): `point(1234.5, 1)` → "1234.5". Kural
+/// verilmişse onunla; verilmemişse yalın biçimle, eksi sıfırsız.
+pub fn point(value: f64, decimals: usize) -> String {
+    if let Some(rule) = POINT_RULE.get() {
+        return rule(value, decimals);
+    }
+    if !value.is_finite() {
+        return value.to_string();
+    }
+    let fixed = format!("{value:.decimals$}");
+    match fixed.strip_prefix('-') {
+        Some(rest) if rest.chars().all(|c| c == '0' || c == '.') => rest.to_owned(),
+        _ => fixed,
+    }
+}
+
 /// Tam sayıyı çözümler; binlik ayraç olarak nokta ve boşluk kabul edilir.
 pub fn parse_integer(text: &str) -> Option<i64> {
     let cleaned: String = text
@@ -98,6 +125,17 @@ pub fn decimals_of(step: f64) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_point_number_has_no_grouping_and_no_minus_zero() {
+        // Without a host's rule (the tests of this crate give none).
+        assert_eq!(point(1234.5, 1), "1234.5");
+        assert_eq!(point(24.0, 1), "24.0");
+        assert_eq!(point(-0.04, 1), "0.0");
+        assert_eq!(point(-2.5, 0), "-2");
+        // What it writes is read back the same.
+        assert_eq!(parse_real(&point(1234.5, 1)), Some(1234.5));
+    }
 
     #[test]
     fn integers_are_grouped() {

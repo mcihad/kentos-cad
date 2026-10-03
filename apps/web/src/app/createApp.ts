@@ -1,4 +1,5 @@
 import { CommandRegistry } from '../core/commands';
+import { Signal } from '../core/signal';
 import { Keymap } from '../core/keymap';
 import type { StartContent } from './startContent';
 import { Selection } from '../model/selection';
@@ -12,7 +13,7 @@ import { ViewportController } from '../viewport/ViewportController';
 import { createBlocks, registerBlockCommands } from './blocks';
 import { registerTextCommands } from './texts';
 import { Clipboard } from './clipboard';
-import { registerCoreCommands, showTheme } from './commands';
+import { registerCoreCommands, showTheme, type FrontHistory } from './commands';
 import type { AppContext } from './context';
 import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
@@ -30,6 +31,7 @@ import { applyAccent, applyDrawingFont, applyShape, applyTextSize, applyUiFont }
 import { createPreferences, createUiState, DraftingSettings, MessageLog } from './state';
 import { openBrowserSettings, reportSettingsOpen } from './settings/browser';
 import { onCoreFault } from '../wasm/core';
+import { installSheets } from './sheet/install';
 
 /** An OpenID sign-in that failed comes back as `?oidc=error&reason=…`: say why, then clean the address. */
 function reportSignInError(ctx: AppContext): void {
@@ -118,7 +120,13 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   TOOL_CATALOG.forEach((d) => ctx.tools.register(d));
 
   let shell: AppShell | null = null;
+  // A sheet's own undo while it is in front (docs/sheet/integration.md §3, W-10): Geri al and Yinele ask it first.
+  const frontHistory = new Signal<FrontHistory | null>(null, () => false);
+  // And its Yazdır (W-17): Yazdır ve pafta (Ctrl+P) prints the sheet in front.
+  const frontPrint = new Signal<(() => void) | null>(null, () => false);
   registerCoreCommands(ctx, {
+    frontHistory,
+    frontPrint,
     openShortcuts: () => openShortcutsDialog(ctx),
     openAbout: () => openAboutDialog(ctx),
     // Windows are loaded when first opened (CLAUDE.md §20): most sessions open few of them.
@@ -186,6 +194,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
 
   shell = new AppShell(ctx);
   root.replaceChildren(shell.el);
+  // Pafta düzeni (docs/sheet/integration.md §3): the Model | Pafta tabs, the Pafta tab, its commands and keys.
+  installSheets(ctx, shell, frontHistory, frontPrint);
   keymap.attach(window);
 
   ctx.tools.activate('select');

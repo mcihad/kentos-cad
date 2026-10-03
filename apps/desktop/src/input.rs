@@ -400,6 +400,21 @@ impl App {
             self.ribbon_peek = false;
             return Task::none();
         }
+        // A sheet in front: its keys (docs/sheet/design.md §11, sheets.rs); what would type
+        // into the hidden drawing's command line or reach its tools stays here.
+        if self.sheets.is_active() {
+            if let Some(m) = self.sheets.key(&press.key, press.modifiers) {
+                return self.sheet_message(m);
+            }
+            let typing = press.character().is_some()
+                || matches!(
+                    press.named(),
+                    Some(Named::Enter | Named::Space | Named::Tab | Named::Escape)
+                );
+            if typing && !press.modifiers.command() && !press.modifiers.alt() {
+                return Task::none();
+            }
+        }
         // 0. İfade oluşturucu takes the keys its editor leaves (expression/).
         if let Some(task) = self.builder_key(&press) {
             return task;

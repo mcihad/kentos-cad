@@ -3,8 +3,9 @@
 // start, the file formats (apps/web/src/io/pkg), which the formats worker loads
 // only when a file is imported or exported or a drawing opened or saved, DXF and
 // Netcad NCZ (apps/web/src/io/dxf/pkg, io/ncz/pkg), loaded only for such a file,
-// and the SVG editor's geometry
-// (apps/web/src/style/svg/pkg), loaded with the editor (CLAUDE.md §20). `pnpm dev`,
+// the SVG editor's geometry
+// (apps/web/src/style/svg/pkg), loaded with the editor, and the sheet core
+// (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
 // has its own digest (the crates it is built from and the toolchain pins)
 // and stamp, so an edit to the formats never rebuilds the core and nothing
@@ -27,6 +28,8 @@ const PACKAGES = [
   { label: 'Netcad NCZ', script: 'rust:wasm:ncz', out: 'apps/web/src/io/ncz/pkg', lib: 'kentos_ncz_wasm', sources: ['crates/shared/ncz', 'crates/shared/formats', 'crates/shared/kcad', 'crates/wasm/ncz-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
   // The SVG editor's geometry (loaded with the editor) runs on the core's overlay and writes numbers as the style core does.
   { label: 'SVG düzenleyicisi', script: 'rust:wasm:svg', out: 'apps/web/src/style/svg/pkg', lib: 'kentos_svg_wasm', sources: ['crates/shared/svg-core', 'crates/wasm/svg-wasm', 'crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/style-core', ...PINS] },
+  // Sheet layouts (docs/sheet/design.md), loaded when the sheet mode opens: the core with its templates, metrics and profiles (data it embeds).
+  { label: 'Pafta çekirdeği', script: 'rust:wasm:sheet', out: 'apps/web/src/product/sheet/pkg', lib: 'kentos_sheet_wasm', sources: ['crates/shared/sheet', 'crates/wasm/sheet-wasm', 'crates/shared/expression', 'crates/shared/geometry-core', 'crates/shared/contracts', ...PINS] },
 ];
 
 function files(path) {

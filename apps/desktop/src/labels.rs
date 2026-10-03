@@ -114,6 +114,8 @@ pub fn layer<'a>(
         font,
         format: *format,
         key: key.finish(),
+        fence: None,
+        current: Cell::new(None),
     })
     .width(Fill)
     .height(Fill)
@@ -134,6 +136,30 @@ pub struct Colors {
 
 fn color(c: Rgba8) -> Color {
     Color::from_rgba8(c.0[0], c.0[1], c.0[2], f32::from(c.0[3]) / 255.0)
+}
+
+/// The paper's colours for the drawing's text on a sheet's map, on the screen and in its PDF:
+/// the core's (`kentos_sheet::display::paper`, the web's `paperPalette`): #111111 letters on
+/// white, whatever the theme; a dimension in a colour of its own keeps it.
+pub fn paper_colors() -> Colors {
+    use kentos_sheet::display::paper;
+    let rgb = |hex: &str| {
+        let v = u32::from_str_radix(hex.trim_start_matches('#'), 16).unwrap_or(0);
+        Rgba8::rgb((v >> 16) as u8, (v >> 8) as u8, v as u8)
+    };
+    let palette = Palette {
+        background: rgb(paper::PAPER),
+        fg: rgb(paper::FG),
+        fg_dim: rgb(paper::FG_DIM),
+        ink: rgb(paper::INK),
+    };
+    Colors {
+        label: color(rgb(paper::LABEL)),
+        halo: color(rgb(paper::LABEL_HALO)),
+        fg: color(palette.fg),
+        fg_dim: color(palette.fg_dim),
+        palette,
+    }
 }
 
 pub fn colors(canvas: Canvas, palette: &Palette) -> Colors {
@@ -161,6 +187,227 @@ struct Labels<'a> {
     format: Format,
     /// What the picture depends on: while it holds, the cached picture stays.
     key: u64,
+    /// A sheet's map frame: only what is anchored inside it is drawn (sheets.rs).
+    fence: Option<Fence>,
+    /// The object whose label is being drawn (a sheet PDF puts it in its layer).
+    current: Cell<Option<Slot>>,
+}
+
+/// A sheet's map frame as the labels see it: the camera's picture turned by
+/// the map's own turn about the frame's middle; a text is drawn when its
+/// anchor is inside the frame, and cut at the frame's edge (design §9a, the
+/// PDF's rule; a turned frame's text is cut to its upright box on the screen).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Fence {
+    /// The camera's middle, in its own pixels.
+    pub from: Point,
+    /// The frame's size; its middle is where the camera's middle goes.
+    pub size: Size,
+    /// The map's turn, radians clockwise on the screen.
+    pub turn: f32,
+    /// The camera's pixels to the frame's (the labels laid out finer than the screen shows them).
+    pub scale: f32,
+}
+
+impl Fence {
+    /// Whether a point of the camera's picture falls inside the frame.
+    fn holds(&self, p: Point) -> bool {
+        let (s, c) = self.turn.sin_cos();
+        let (x, y) = (
+            (p.x - self.from.x) * self.scale,
+            (p.y - self.from.y) * self.scale,
+        );
+        let (u, v) = (
+            x * c - y * s + self.size.width / 2.0,
+            x * s + y * c + self.size.height / 2.0,
+        );
+        u >= -0.5 && v >= -0.5 && u <= self.size.width + 0.5 && v <= self.size.height + 0.5
+    }
+}
+
+/// The drawing's text in a sheet's map frame (sheets.rs; the web draws the
+/// drawing area's own labels into a map's picture): the same pieces the
+/// drawing area draws, with `camera` on the map's view (north up), the
+/// frame already turned by the map's turn about its middle, in the paper's
+/// colours; a text anchored outside the frame is left out. No north arrow or
+/// scale bar.
+#[allow(clippy::too_many_arguments)]
+pub fn paint_in_map(
+    frame: &mut Frame,
+    doc: &Document,
+    spots: Vec<LabelSpot>,
+    camera: Camera,
+    colors: Colors,
+    font: DrawingFont,
+    format: Format,
+    fence: Fence,
+) {
+    Labels {
+        doc,
+        spots: Rc::new(spots),
+        camera,
+        colors,
+        font,
+        format,
+        key: 0,
+        fence: Some(fence),
+        current: Cell::new(None),
+    }
+    .paint(frame);
+}
+
+/// A label of a sheet's map as the PDF writes it (sheet_pdf.rs; the web's mapLabels.ts
+/// `VecText`): its text anchored on the ground as the drawing area anchors it (the middle of a
+/// centred label, a text's baseline start, a dimension value's baseline middle), its turn
+/// (degrees, counter-clockwise on the paper), its size in paper mm (the screen's pixels at 100 %
+/// are the paper's CSS pixels), its face, its colour and its halo's; the paper-coloured box
+/// under a masked text (docs/adr/0145), on the ground.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MapLabel {
+    /// The layer of the object it is written for.
+    pub layer: String,
+    pub text: String,
+    pub at: kentos_render_wgpu::Vec2,
+    pub anchor: kentos_sheet::pdf::TextAnchor,
+    pub rotation: f64,
+    pub size: f64,
+    pub weight: u16,
+    pub italic: bool,
+    pub color: Color,
+    pub halo: Color,
+    pub mask: Option<Vec<[f64; 2]>>,
+}
+
+/// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
+/// same room between them, the same fence), as a list rather than a picture.
+#[allow(clippy::too_many_arguments)]
+pub fn texts_in_map(
+    doc: &Document,
+    spots: Vec<LabelSpot>,
+    camera: Camera,
+    colors: Colors,
+    font: DrawingFont,
+    format: Format,
+    fence: Fence,
+) -> Vec<MapLabel> {
+    let mut list = Collect {
+        doc,
+        camera,
+        labels: Vec::new(),
+    };
+    Labels {
+        doc,
+        spots: Rc::new(spots),
+        camera,
+        colors,
+        font,
+        format,
+        key: 0,
+        fence: Some(fence),
+        current: Cell::new(None),
+    }
+    .paint(&mut list);
+    list.labels
+}
+
+/// Where label pieces go: a canvas frame (drawn), or a list (a sheet PDF's map).
+trait Ink {
+    /// The picture's size (a frame's own; a fenced map's is the camera's).
+    fn size(&self) -> Size;
+    fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
+    /// Grid north and the scale bar.
+    fn marks(&mut self, camera: &Camera, colors: &Colors);
+}
+
+impl Ink for Frame {
+    fn size(&self) -> Size {
+        Frame::size(self)
+    }
+
+    fn piece(&mut self, piece: &Piece<'_>, halo: Color, _of: Option<Slot>) {
+        draw(self, piece, halo);
+    }
+
+    fn marks(&mut self, camera: &Camera, colors: &Colors) {
+        crate::map_marks::paint(self, camera, colors);
+    }
+}
+
+/// The pieces as the PDF takes them: each anchored on the ground as the drawing area anchors it.
+struct Collect<'a> {
+    doc: &'a Document,
+    camera: Camera,
+    labels: Vec<MapLabel>,
+}
+
+impl Ink for Collect<'_> {
+    fn size(&self) -> Size {
+        Size::ZERO
+    }
+
+    fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>) {
+        if piece.size < SMALLEST || piece.text.is_empty() {
+            return;
+        }
+        use kentos_sheet::pdf::TextAnchor;
+        let layer = of
+            .and_then(|slot| self.doc.get(slot))
+            .map(|e| e.base().layer_id.clone())
+            .unwrap_or_default();
+        let at = self
+            .camera
+            .screen_to_world(f64::from(piece.at.x), f64::from(piece.at.y));
+        // Clockwise on the screen (y down) is counter-clockwise on the paper.
+        let rotation = -f64::from(piece.angle).to_degrees();
+        let px = 1.0 / self.camera.scale.max(f64::MIN_POSITIVE);
+        // A masked text's box (the web's `mask`): from below the baseline to above the letters,
+        // a tenth of the height round it (a dimension's value along its line, no margin up and down).
+        let mask = (piece.mask > 0.0).then(|| {
+            let (w, h) = (f64::from(piece.mask) * px, f64::from(piece.size) * px);
+            let along = matches!(piece.anchor, Anchor::CenterBaseline);
+            let x0 = if along { -w / 2.0 } else { 0.0 };
+            let m = h * 0.1;
+            let v = if along { 0.0 } else { m };
+            let (s, c) = rotation.to_radians().sin_cos();
+            [
+                [x0 - m, -0.23 * h - v],
+                [x0 + w + m, -0.23 * h - v],
+                [x0 + w + m, 1.15 * h + v],
+                [x0 - m, 1.15 * h + v],
+            ]
+            .iter()
+            .map(|[u, t]| [at.x + u * c - t * s, at.y + u * s + t * c])
+            .collect()
+        });
+        self.labels.push(MapLabel {
+            layer,
+            text: piece.text.to_owned(),
+            at,
+            anchor: match piece.anchor {
+                Anchor::LeftBaseline => TextAnchor::LeftBaseline,
+                Anchor::CenterBaseline => TextAnchor::CenterBaseline,
+                Anchor::LeftMiddle => TextAnchor::LeftMiddle,
+                Anchor::CenterMiddle => TextAnchor::CenterMiddle,
+            },
+            rotation,
+            size: f64::from(piece.size) * crate::sheet_pdf::PX_MM,
+            weight: match piece.font.weight {
+                iced::font::Weight::Thin
+                | iced::font::Weight::ExtraLight
+                | iced::font::Weight::Light
+                | iced::font::Weight::Normal => 400,
+                iced::font::Weight::Medium => 500,
+                iced::font::Weight::Semibold => 600,
+                _ => 700,
+            },
+            italic: piece.font.style == iced::font::Style::Italic,
+            color: piece.color,
+            halo,
+            mask,
+        });
+    }
+
+    fn marks(&mut self, _camera: &Camera, _colors: &Colors) {}
 }
 
 #[derive(Default)]
@@ -241,8 +488,23 @@ impl Labels<'_> {
         }
     }
 
-    fn paint(&self, frame: &mut Frame) {
-        let size = frame.size();
+    /// Draws a piece, unless a map frame's text is anchored outside the frame (design §9a: one
+    /// anchored inside is drawn and cut at the frame's edge).
+    fn draw(&self, frame: &mut impl Ink, piece: &Piece<'_>, halo: Color) {
+        if let Some(fence) = &self.fence
+            && !fence.holds(piece.at)
+        {
+            return;
+        }
+        frame.piece(piece, halo, self.current.get());
+    }
+
+    fn paint(&self, frame: &mut impl Ink) {
+        // A map frame's labels keep apart on the camera's own picture.
+        let size = match self.fence {
+            Some(_) => Size::new(self.camera.width as f32, self.camera.height as f32),
+            None => frame.size(),
+        };
         let mut room = Room::new(size.width, size.height);
         let layers = self.doc.layers();
         for spot in self.spots.iter() {
@@ -256,6 +518,7 @@ impl Labels<'_> {
                 | LabelSpot::PieceText { slot, .. }
                 | LabelSpot::PieceDimension { slot, .. } => *slot,
             };
+            self.current.set(Some(slot));
             // A label whose place is taken is not drawn: known before its
             // object, style and text are looked at (an overview offers
             // hundreds of thousands, a few hundred fit).
@@ -291,7 +554,7 @@ impl Labels<'_> {
                     );
                     let size = (d.height * self.camera.scale) as f32;
                     let font = drawing_fonts::font(self.font, 500, false);
-                    draw(
+                    self.draw(
                         frame,
                         &Piece {
                             text: &text,
@@ -316,7 +579,7 @@ impl Labels<'_> {
                         ..
                     },
                     Entity::Text(t),
-                ) => draw(
+                ) => self.draw(
                     frame,
                     &Piece {
                         text: &t.text,
@@ -341,7 +604,7 @@ impl Labels<'_> {
                     let Some(note) = l.text.as_deref() else {
                         continue;
                     };
-                    draw(
+                    self.draw(
                         frame,
                         &Piece {
                             text: note,
@@ -380,7 +643,7 @@ impl Labels<'_> {
                     if shown.is_empty() {
                         continue;
                     }
-                    draw(
+                    self.draw(
                         frame,
                         &Piece {
                             text: shown,
@@ -421,7 +684,7 @@ impl Labels<'_> {
                     );
                     let size = (height * self.camera.scale) as f32;
                     let font = drawing_fonts::font(self.font, 500, false);
-                    draw(
+                    self.draw(
                         frame,
                         &Piece {
                             text: &text,
@@ -450,8 +713,11 @@ impl Labels<'_> {
                 }
             }
         }
-        // Grid north and the scale bar over the text, as the web's overlay (map_marks.rs).
-        crate::map_marks::paint(frame, &self.camera, &self.colors);
+        // Grid north and the scale bar over the text, as the web's overlay (map_marks.rs);
+        // a sheet's map has its own.
+        if self.fence.is_none() {
+            frame.marks(&self.camera, &self.colors);
+        }
     }
 
     /// Where an object's label is anchored on screen, inside the box it
@@ -481,7 +747,7 @@ impl Labels<'_> {
     /// An object's label where its style places it, unless one is already there.
     fn label(
         &self,
-        frame: &mut Frame,
+        frame: &mut impl Ink,
         room: &mut Room,
         spot: &LabelSpot,
         style: &LabelStyle,
@@ -527,17 +793,17 @@ impl Labels<'_> {
                     s.x + width / 2.0,
                     s.y + size / 2.0,
                 ) {
-                    draw(frame, &piece(s, 0.0, Anchor::CenterMiddle), halo);
+                    self.draw(frame, &piece(s, 0.0, Anchor::CenterMiddle), halo);
                 }
             }
             LabelSpot::Corner { .. } => {
                 if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
-                    draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
+                    self.draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
                 }
             }
             LabelSpot::Beside { .. } => {
                 if room.claim(s.x, s.y - size / 2.0, s.x + width, s.y + size / 2.0) {
-                    draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
+                    self.draw(frame, &piece(s, 0.0, Anchor::LeftMiddle), halo);
                 }
             }
             LabelSpot::Along { a, b, .. } => {
@@ -551,7 +817,7 @@ impl Labels<'_> {
                 let hx = (angle.cos().abs() * width + angle.sin().abs() * size) / 2.0;
                 let hy = (angle.sin().abs() * width + angle.cos().abs() * size) / 2.0;
                 if room.claim(mid.x - hx, mid.y - hy, mid.x + hx, mid.y + hy) {
-                    draw(frame, &piece(mid, angle, Anchor::CenterMiddle), halo);
+                    self.draw(frame, &piece(mid, angle, Anchor::CenterMiddle), halo);
                 }
             }
             LabelSpot::Dimension { .. }
@@ -838,22 +1104,24 @@ impl Room {
     }
 }
 
+/// The object a spot writes for.
+pub fn slot_of(spot: &LabelSpot) -> Slot {
+    match spot {
+        LabelSpot::Dimension { slot, .. }
+        | LabelSpot::Text { slot, .. }
+        | LabelSpot::Center { slot, .. }
+        | LabelSpot::Corner { slot, .. }
+        | LabelSpot::Beside { slot, .. }
+        | LabelSpot::Along { slot, .. }
+        | LabelSpot::PieceText { slot, .. }
+        | LabelSpot::PieceDimension { slot, .. } => *slot,
+    }
+}
+
 /// An object's slot in the spots (for tests).
 #[cfg(test)]
 fn slots(spots: &[LabelSpot]) -> Vec<kentos_domain::Slot> {
-    spots
-        .iter()
-        .map(|s| match s {
-            LabelSpot::Dimension { slot, .. }
-            | LabelSpot::Text { slot, .. }
-            | LabelSpot::Center { slot, .. }
-            | LabelSpot::Corner { slot, .. }
-            | LabelSpot::Beside { slot, .. }
-            | LabelSpot::Along { slot, .. }
-            | LabelSpot::PieceText { slot, .. }
-            | LabelSpot::PieceDimension { slot, .. } => *slot,
-        })
-        .collect()
+    spots.iter().map(slot_of).collect()
 }
 
 #[cfg(test)]
@@ -1275,6 +1543,8 @@ fn perf() {
         font: DrawingFont::Barlow,
         format: Format::of(doc.settings()),
         key: 0,
+        fence: None,
+        current: Cell::new(None),
     };
     let started = Instant::now();
     for _ in 0..frames {

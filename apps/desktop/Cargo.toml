@@ -19,6 +19,9 @@ kentos-kcad = { path = "../../crates/shared/kcad" }
 kentos-domain = { path = "../../crates/native/domain" }
 # The drawing area's wgpu pipeline (docs/adr/0019), fed through Iced's shader widget.
 kentos-render-wgpu = { path = "../../crates/render/wgpu" }
+# Sheet layouts (docs/sheet/design.md §11): the mode, and the core's types it is given (sheets.rs).
+kentos-sheet-ui = { path = "../../crates/sheet-ui" }
+kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
 # The tool session: tools, prompts and typed input over the document (docs/adr/0021).
 kentos-interaction = { path = "../../crates/native/interaction" }
 # Nokta editörü writes through the product commands themselves: it tells a refusal by its path (points/edit.rs, docs/adr/0153).

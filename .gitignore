@@ -35,6 +35,7 @@ apps/web/src/io/pkg/
 apps/web/src/io/dxf/pkg/
 apps/web/src/io/ncz/pkg/
 apps/web/src/style/svg/pkg/
+apps/web/src/product/sheet/pkg/
 
 # Local server credentials (kentosd db-setup writes them; never committed)
 .env.local

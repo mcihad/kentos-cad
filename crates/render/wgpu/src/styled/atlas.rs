@@ -179,30 +179,7 @@ impl Atlas {
         step: u32,
         source: &dyn ImageSource,
     ) -> Option<Painted> {
-        match image {
-            AtlasImage::Text {
-                text,
-                font,
-                weight,
-                italic,
-                color,
-                halo,
-                ..
-            } => {
-                let outline = source.text(text, font.as_deref(), *weight, *italic)?;
-                raster::text_image(&outline, color, halo.as_ref(), step)
-            }
-            AtlasImage::Svg { width, height, .. } | AtlasImage::Raster { width, height, .. } => {
-                let picture = source.picture(image)?;
-                raster::picture_image(&picture, *width, *height, step)
-            }
-            AtlasImage::Tile {
-                aspect,
-                stagger,
-                draw,
-                ..
-            } => raster::tile_image(*aspect, *stagger, draw, step, source),
-        }
+        raster::image(image, step, source)
     }
 
     /// Draws an image at a step and places it; None when it cannot be drawn or placed.

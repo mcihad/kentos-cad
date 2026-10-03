@@ -52,6 +52,7 @@ mod log_plan;
 #[cfg(test)]
 mod log_plan_tests;
 mod map_marks;
+mod map_vectors;
 mod marks;
 mod message_log;
 #[cfg(test)]
@@ -87,6 +88,10 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+mod sheet_inputs;
+mod sheet_library;
+mod sheet_pdf;
+mod sheets;
 mod shortcuts;
 mod snap_menu;
 #[cfg(test)]
@@ -174,6 +179,8 @@ fn main() -> iced::Result {
             app.cloud.drafts = cloud::default_drafts();
             // Local copies of cloud projects: they open without a connection (docs/adr/0043).
             app.cloud.replicas = cloud::default_replicas();
+            // The sheets' books, by the project's key, beside them (docs/sheet/design.md §10).
+            app.sheet_store = sheets::default_store();
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);

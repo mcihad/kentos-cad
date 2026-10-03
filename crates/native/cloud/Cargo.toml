@@ -17,6 +17,8 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-kcad = { path = "../../shared/kcad" }
 # The drawing document an opened project becomes, and whose changes a database project sends.
 kentos-domain = { path = "../domain" }
+# The sheet template library's types (docs/sheet/design.md §13): the same the web and the server use.
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
 reqwest = { workspace = true }
 bytes = { workspace = true }
 tokio = { workspace = true }

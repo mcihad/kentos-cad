@@ -32,6 +32,9 @@ pub mod open;
 pub mod replica;
 mod runtime;
 pub mod saving;
+// The sheet template library (docs/sheet/design.md §13): the device's sync with it, its endpoints.
+pub mod sheet_library;
+pub mod sheet_templates;
 pub mod sync;
 
 pub use api::{CatalogQuery, Cloud, Download, Progress};

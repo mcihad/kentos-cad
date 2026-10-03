@@ -48,6 +48,13 @@ pub fn disabled(theme: &Theme) -> Style {
     }
 }
 
+/// Bilgi metni (web'in `--c-info`'su): ör. “Yeni sürüm var”.
+pub fn info(theme: &Theme) -> Style {
+    Style {
+        color: Some(Tokens::of(theme).info),
+    }
+}
+
 /// Hata ve uyarı metni.
 pub fn danger(theme: &Theme) -> Style {
     Style {

@@ -381,6 +381,17 @@ export class HttpCloudApi implements CloudApi {
   lifecycle<T>(envelope: CommandEnvelope) {
     return this.call<T>('POST', `${this.base(envelope.tenantId, envelope.projectId)}/commands`, envelope);
   }
+  /**
+   * A command on a workspace itself, not on one of its projects (`POST /v1/tenants/{t}/commands`):
+   * the personal space's `sheet.template.*` (docs/sheet/integration.md §3, W-12).
+   */
+  tenantCommand<T>(envelope: CommandEnvelope) {
+    return this.call<T>('POST', `/v1/tenants/${encodeURIComponent(envelope.tenantId)}/commands`, envelope);
+  }
+  /** A read of the account's routes outside a project: the sheet template library (`/v1/me/sheet-templates…`, `/v1/sheet-templates/…`; W-12). */
+  read<T>(path: string, signal?: AbortSignal) {
+    return this.call<T>('GET', path, undefined, {}, signal);
+  }
   beginUpload(tenant: string, project: string, begin: FileUploadBegin) {
     return this.call<FileUpload>('POST', `${this.base(tenant, project)}/uploads`, begin);
   }

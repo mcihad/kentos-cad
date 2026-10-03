@@ -236,7 +236,11 @@ pub async fn tenant_command(
         commands::run_in_tenant(state.db()?, &a, envelope).await
     };
     run.await
-        .map(|o| (StatusCode::CREATED, Json(o.to_json())))
+        .map(|o| {
+            // A sheet template change wakes the template events waiting in this process.
+            super::sheet_templates::announce(&state.hub, &o);
+            (StatusCode::CREATED, Json(o.to_json()))
+        })
         .map_err(|e| Failure::with(e, &headers))
 }
 

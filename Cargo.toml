@@ -15,6 +15,8 @@ members = [
     "crates/shared/kcad",
     # The expression language (docs/adr/0100): processing tools, styles and filters.
     "crates/shared/expression",
+    # Sheet layouts, pafta düzeni (docs/sheet/design.md): one core for the web and the desktop.
+    "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",
     # Browser bindings (wasm-bindgen) of the shared libraries.
@@ -23,6 +25,8 @@ members = [
     # DXF and Netcad NCZ in modules of their own, loaded only when such a file is imported.
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
+    # The sheet core in a module of its own, loaded when the sheet mode opens.
+    "crates/wasm/sheet-wasm",
     "crates/wasm/svg-wasm",
     # Native libraries (desktop, later the server; never the browser): the drawing
     # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
@@ -56,6 +60,9 @@ members = [
     # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
     # pnpm rust:test:desktop and make test-desktop build them.
     "crates/ui",
+    # Sheet layouts on the desktop (docs/sheet/design.md §11): the KentOS UI components over
+    # the shared sheet core; desktop-only like the above.
+    "crates/sheet-ui",
     "apps/ui-showcase",
     "apps/desktop",
     # The desktop's own wgpu drawing pipeline (docs/adr/0019); desktop-only like the above.
@@ -68,12 +75,14 @@ default-members = [
     "crates/shared/ncz",
     "crates/shared/kcad",
     "crates/shared/expression",
+    "crates/shared/sheet",
     "crates/shared/style-core",
     "crates/shared/svg-core",
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
     "crates/wasm/dxf-wasm",
     "crates/wasm/ncz-wasm",
+    "crates/wasm/sheet-wasm",
     "crates/wasm/svg-wasm",
     "crates/native/domain",
     "crates/native/application",
@@ -165,6 +174,10 @@ pyo3 = { version = "=0.29.2", default-features = false, features = ["macros", "a
 # SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
 # approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
 roxmltree = { version = "=0.20.0" }
+# SVG pictures of a sheet on the desktop (docs/sheet/design.md, open question 6; the owner's
+# approval, 2026-10-03): their size read when one is added (usvg through resvg). The version
+# Iced's SVG support draws them with; its default features come with Iced anyway.
+resvg = { version = "=0.45.1", default-features = false }
 # JPEG images of the style library on the desktop (docs/adr/0092; the owner's approval,
 # 2026-09-27); the web lets the browser decode them. Pure Rust, the image crate's JPEG decoder;
 # without its SIMD paths (`x86`, `neon`): a picture is decoded once and kept.
@@ -173,6 +186,17 @@ zune-jpeg = { version = "=0.5.15", default-features = false, features = ["std"] 
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
 pollster = { version = "=0.4.0" }
+# The sheet layouts' PDF and GeoPDF writer (docs/sheet/design.md §9a; the owner's approval,
+# 2026-10-03): pure Rust, the same bytes in the browser and on the desktop. It writes the objects
+# only; compression is miniz_oxide's.
+pdf-writer = { version = "=0.15.0" }
+# The sheet PDF's fonts embedded as subsets (design §9a; the owner's approval, 2026-10-03).
+# Without its default `variable-fonts` feature, which would bring skrifa 0.42, write-fonts and
+# kurbo: the drawing's faces are static TrueType.
+subsetter = { version = "=0.2.6", default-features = false }
+# The drawing's TrueType faces read for the sheet PDF: glyphs of the characters, advances, names
+# (design §9a names it). Locked already through fontdb and cosmic-text: nothing new is downloaded.
+ttf-parser = { version = "=0.25.1", default-features = false, features = ["std"] }
 
 [profile.release]
 lto = "thin"

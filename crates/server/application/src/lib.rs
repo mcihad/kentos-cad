@@ -30,6 +30,8 @@ pub mod people;
 pub mod projects;
 pub mod restore;
 pub mod sharing;
+// The sheet template library (docs/sheet/design.md §13).
+pub mod sheet_templates;
 pub mod snapshot;
 pub mod tenancy;
 pub mod upload_parts;

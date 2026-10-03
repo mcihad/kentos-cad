@@ -370,6 +370,7 @@ pub struct NumberInput<'a, Message> {
     value: f64,
     on_change: Box<dyn Fn(f64) -> Message + 'a>,
     on_release: Option<Message>,
+    on_drag: Option<Message>,
     label: Option<Fragment<'a>>,
     tone: Option<Color>,
     units: &'a [Unit],
@@ -392,6 +393,7 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
             value,
             on_change: Box::new(on_change),
             on_release: None,
+            on_drag: None,
             label: None,
             tone: None,
             units: &[],
@@ -475,6 +477,14 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
     /// için).
     pub fn on_release(mut self, message: Message) -> Self {
         self.on_release = Some(message);
+        self
+    }
+
+    /// Sürükleme başlayınca, ilk değişiklikten önce gönderilen mesaj (ör.
+    /// sürüklemenin değişikliklerini tek geri alma adımında toplamak için;
+    /// [`NumberInput::on_release`] onu kapatır).
+    pub fn on_drag(mut self, message: Message) -> Self {
+        self.on_drag = Some(message);
         self
     }
 
@@ -679,6 +689,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                     let dx = position.x - press.origin.x;
 
                     if press.moved || dx.abs() > DRAG {
+                        if !press.moved
+                            && let Some(message) = &self.on_drag
+                        {
+                            shell.publish(message.clone());
+                        }
                         press.moved = true;
 
                         let scale = if state.modifiers.shift() {

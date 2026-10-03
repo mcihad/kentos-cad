@@ -20,6 +20,10 @@ mod native_tests;
 #[cfg(test)]
 mod people_tests;
 pub mod projects;
+// The sheet template library (docs/sheet/design.md §13).
+pub mod sheet_templates;
+#[cfg(test)]
+mod sheet_templates_tests;
 #[cfg(test)]
 mod tests;
 pub mod ws;
@@ -111,6 +115,20 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/me/projects", get(projects::mine))
         .route("/v1/me/catalog", get(projects::catalog))
         .route("/v1/invitations/accept", post(invitations::accept))
+        .route("/v1/me/sheet-templates", get(sheet_templates::mine))
+        .route(
+            "/v1/me/sheet-templates/events",
+            get(sheet_templates::events),
+        )
+        .route("/v1/sheet-templates/{id}", get(sheet_templates::detail))
+        .route(
+            "/v1/sheet-templates/{id}/access",
+            get(sheet_templates::access),
+        )
+        .route(
+            "/v1/sheet-templates/{id}/access/candidates",
+            get(sheet_templates::candidates),
+        )
         .route(
             "/v1/tenants/{tenant}/projects",
             get(projects::list).post(projects::create),

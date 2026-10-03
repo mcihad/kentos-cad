@@ -193,6 +193,14 @@ export class ViewportController {
     return this.host ?? null;
   }
 
+  /**
+   * The drawing's geometry store, to read: another picture of the same drawing (a sheet's map frames,
+   * app/sheet/mapFrames.ts) is built from it, not from a second copy (docs/sheet/integration.md §3).
+   */
+  get geometry(): PickIndex {
+    return this.picker;
+  }
+
   async mount(host: HTMLElement): Promise<void> {
     this.host = host;
     this.overlay = document.createElement('canvas');

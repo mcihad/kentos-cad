@@ -11,9 +11,13 @@
 //!   tiles), drawn on the CPU in power-of-two steps ([`raster`], tiny-skia);
 //! - [`picture`]: what the host hands the atlas (vector pictures, pixels,
 //!   glyph outlines) so this crate reads no files and knows no fonts;
-//! - [`uniform`]: the frame and style blocks as the contract lays them out.
+//! - [`uniform`]: the frame and style blocks as the contract lays them out;
+//! - [`cpu`]: the same shaders on the CPU, for a sheet's map drawn as a
+//!   picture (a PDF's, and the screen's where the map has something no
+//!   vector writes).
 
 pub mod atlas;
+pub mod cpu;
 pub mod gpu;
 pub mod picture;
 pub mod raster;
