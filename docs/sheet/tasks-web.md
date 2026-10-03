@@ -1,6 +1,6 @@
 # Web görevi: pafta kipi, tasarımcı ve şablon galerisi
 
-Bağlayıcı belge: [design.md](design.md). Bağlama kuralları: [integration.md](integration.md). Bu
+Bağlayıcı belge: [ADR 0164](../adr/0164-sheet-layouts.md) (dalda `design.md`). Bağlama kuralları: [integration.md](integration.md). Bu
 dosya, web ajanının işini sırasıyla ve kabul ölçütleriyle verir. Tasarımdan sapmak gerekirse
 §Sapmalar'a gerekçesiyle yazılır.
 
@@ -13,7 +13,7 @@ dosya, web ajanının işini sırasıyla ve kabul ölçütleriyle verir. Tasarı
   - `CLAUDE.md` (tamamı, bağlayıcı: katman sırası, TS kuralları, `h()` ve `signal`, React/Vue/Lit
     yasağı);
   - `DESIGN.md` (ölçüler, renkler, simgeler, şerit);
-  - `docs/sheet/design.md`, `docs/sheet/integration.md`.
+  - `docs/adr/0164-sheet-layouts.md`, `docs/sheet/integration.md`.
 - **Örnek alınacak mevcut kod:**
   - Kabuk: `app/createApp.ts`, `app/ribbon.ts`, `app/commands.ts`, `app/keybindings.ts`,
     `ui/ribbon/`, `ui/statusbar/`.

@@ -8,7 +8,7 @@
   2. Örnek bir A3 ifraz paftası kuruldu: 12 parsel, EPSG:5254, harita, karelaj, lejant, ölçek
      çubuğu, kuzey oku, öznitelik tablosu ve antet çerçevesi.
   3. Tasarımcı sanal ekranda açıldı ve ekran görüntüleri alındı.
-- **Neden:** hedefimiz QGIS'ten iyi bir pafta düzeni ([tasarım](design.md)). Neyi geçeceğimizi
+- **Neden:** hedefimiz QGIS'ten iyi bir pafta düzeni ([tasarım, ADR 0164](../adr/0164-sheet-layouts.md)). Neyi geçeceğimizi
   ölçebilmek için önce QGIS'in neyi iyi yaptığını, nerede kullanıcıyı yalnız bıraktığını kayda
   geçiriyoruz. PiriCAD incelemesi ayrı belgededir ([piricad-review.md](piricad-review.md)).
 

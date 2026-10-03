@@ -7,7 +7,7 @@ aynı Rust çekirdeğiyle çalışır.
 
 | Belge | İçerik |
 |---|---|
-| [design.md](design.md) | **Karar ve plan** (ADR taslağı; numara birleştirmede) |
+| [ADR 0164](../adr/0164-sheet-layouts.md) | **Karar ve plan** (kabul edildi, 3 Ekim 2026; dalda `design.md`) |
 | [integration.md](integration.md) | dalı `main`'e bağlama: bağlantı noktaları, adımlar, doğrulama |
 | [piricad-review.md](piricad-review.md) | PiriCAD'in çıktı yerleşimi incelemesi |
 | [qgis-review.md](qgis-review.md) | QGIS 4.2 yerleşim tasarımcısı incelemesi |

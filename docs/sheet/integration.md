@@ -194,11 +194,12 @@ git rebase origin/main            # ya da: git merge origin/main
    da değişir. Dalın 0013'ünü çalıştırmış bir geliştirme veritabanı, yeniden adlandırmadan sonra
    yeniden kurulur (`sqlx` uygulanmış sürümü numarasıyla tanır). Üretim veritabanında dal hiç
    çalışmadı.
-3. **ADR numarası:** `docs/sheet/design.md` → `docs/adr/NNNN-sheet-layouts.md` (ilk boş numara).
+3. **ADR numarası:** `docs/sheet/design.md` → `docs/adr/NNNN-sheet-layouts.md` (ilk boş numara; 3 Ekim'de
+   [ADR 0164](../adr/0164-sheet-layouts.md) oldu, eski yerinde bir yönlendirme kaldı).
    Başlığa numarayı yaz, `docs/sheet/README.md`'deki bağlantıyı güncelle. Diğer belgeler
    `docs/sheet/`'te kalabilir.
 4. **TODOS.md:** `CAD-07`, `CAD-08`, `OUT-01`, `OUT-02`, `OUT-03` satırlarına ADR numarasını ve
-   yapılanları yaz (design.md “Sonuçlar”).
+   yapılanları yaz (ADR 0164 “Sonuçlar”).
 5. **CLAUDE.md §2:** yerel depolar listesine IndexedDB `kentos.sheets.v1`'i ve masaüstünün
    `~/.local/share/kentos-cad/pafta/` klasörünü ekle (W-9, D-2).
 6. Doğrula (§5), sonra `main`'e al:
@@ -250,7 +251,7 @@ Dalda bilerek yapılmayanlar. `main`'in merkezi biçimlerine dokundukları için
 3. **Ürün komutu kataloğu:** pafta işlemleri `sheet.*` komutları olarak Python ve MCP'ye açılır
    (ADR 0013).
 4. **PDF ve GeoPDF, yazı tipi gömme, manyetik model, kurum şablonları, e-postayla şablon daveti:**
-   design.md “Açık sorular”.
+   ADR 0164 “Açık sorular”.
 5. **Masaüstünün web'den geri kalan üç yeri:** sekmede “Yeni sürüm var” işareti; “Kullan”da şablonun
    sorularını sormak; resimlerin büyütülünce yumuşatılması ve SVG resim (sahibin kararı: §7 Rust
    4b “Açık kararlar”, `image` paketi seçenekleri).
@@ -2489,3 +2490,27 @@ Tarayıcıda ayrıca denenenler (geçici yoklama betiğiyle; betik silindi):
 
 Bağlama commit'i (6) geri alınırsa (`git revert`) dalın bütün kodu yerinde durur ama derlemeye,
 uygulamaya ve web'e bağlı değildir. Özellik `main`'de görünmez, hiçbir şey kırılmaz.
+
+## 9. Birleştirme (3 Ekim 2026)
+
+Dal `fe3a8815`'e rebase edildi. `crates/ui/src/widget/number.rs`'te `main`'in sürümü alındı; U-4'ten yalnız
+`on_drag(msg)` yeniden uygulandı. 7. commit (D-7) atıldı. Birleştirmeden önce üç sorun bulundu ve düzeltildi.
+Bunlardan ilk ikisi sahibin kendi denemelerinde çıktı: harita görünmedi ve şablon seçiminde uygulama çöktü
+(çekirdek dökümleri 13:27 ve 13:29). Sorunlar sahibin imar planı DXF'iyle (3263 nesne) masaüstünde GPU çizicisiyle
+yeniden üretildi:
+
+| Sorun | Neden | Düzeltme |
+|---|---|---|
+| Galeri açılınca uygulama düşüyordu: wgpu “Queue::submit: … StagingBelt staging buffer … is still mapped”, ardından SIGABRT | Seçili kartın şablonu aynı karede hem kartta hem ayrıntılarda, aynı tuval önbellekleriyle çiziliyordu. Iced'in yazı çizicisi (iced_wgpu 0.14, cryoglyph 0.1) önbellekteki yazıyı bir karede iki kez hazırlıyor. cryoglyph'in ikinci `prepare`'i başında `recall` yapıp ilkinin henüz gönderilmemiş tamponunu yeniden eşliyor | Ayrıntıların resmi kendi önbelleklerinde çiziliyor (`Thumb::preview`), test `the_details_picture_has_caches_of_its_own` |
+| Masaüstünde pafta haritasında yalnız yazılar görünüyordu; iki platformda PDF'in vektör haritası uzak geometriyi düşürüyordu | Çapadan bir karo (65,536 km) ya da daha uzak çizimde `batch_reaches`/`batchReaches` partinin karosunu kutusuna ekliyordu. Oysa her partinin kutusu çapaya göredir (stil çekirdeği `batch.rs`, web'in `batchInView`) | Kutuya yalnız belgenin kökeni eklenir; masaüstünde `a_far_tile_s_batch_reaches_where_its_geometry_is`, web'de `pdfExport.test.ts` |
+| Envanter yenilenince masaüstünde Esc, F2, H, V ve Home çalışmaz oldu (298 iz oynatımı, iki işlem testi) | Masaüstü kısayolları envanterden okuyor; `sheet.*` komutlarının web'de yalnız pafta öndeyken geçen tuşları çizimin tuş tablosuna girdi | Katalog `sheet.*` kısayollarını çizimin tablosuna almaz; masaüstünün pafta kipi tuşlarını kendisi alır (D-5) |
+
+- **Takma ad (sahibin kararı):** `MODEL` `sheet.model`'indir (AutoCAD'deki gibi model alanına döner).
+  `processing.newModel` yalnız `YENIMODEL` ile açılır. Masaüstünde `sheet.model` taşındı: paftadan çizime döner,
+  pafta önde değilse “Model zaten önde.” der.
+- **Ders:** birim testleri yazılımsal çiziciyle çizer; StagingBelt gibi GPU yolları orada yoktur. Paftanın
+  masaüstü resimleri kabulde `KENTOS_SNAPSHOT_BACKEND=wgpu` ile ve büyük, gerçek bir çizimle de koşulmalı.
+- **Açık kalanlar** (§6'ya ek):
+  - pafta sekmesi `RIBBON_TABS`'ta olmadığından envanter 27 pafta komutunun arayüzdeki yerini görmüyor;
+  - masaüstünün pafta kipi `sheet.*` komut kimliklerine bağlı değil (`sheet.model` dışında);
+  - pafta şeridinin alt menülerinde ikon yok (sahibin bildirimi, birleştirmeden sonraki iş).

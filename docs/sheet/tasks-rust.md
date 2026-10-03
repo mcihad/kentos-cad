@@ -1,6 +1,6 @@
 # Rust görevi: pafta çekirdeği, WASM, sunucu ve masaüstü
 
-Bağlayıcı belge: [design.md](design.md). Bağlama kuralları: [integration.md](integration.md). Bu
+Bağlayıcı belge: [ADR 0164](../adr/0164-sheet-layouts.md) (dalda `design.md`). Bağlama kuralları: [integration.md](integration.md). Bu
 dosya, Rust ajanının işini sırasıyla ve kabul ölçütleriyle verir. Tasarımdan sapmak gerekirse
 §Sapmalar'a gerekçesiyle yazılır.
 
@@ -9,7 +9,7 @@ dosya, Rust ajanının işini sırasıyla ve kabul ölçütleriyle verir. Tasar�
 - **Depo ve dal:** `/home/cihad/Projects/kentos-cad`, dal `feat/sheet-layouts`. Dal değiştirilmez.
   `git commit`, `push`, `stash`, `reset`, `checkout -- …`, `clean` yapılmaz. Commit'leri
   koordinatör atar.
-- **Önce oku:** `CLAUDE.md` (tamamı, bağlayıcı), `DESIGN.md`, `docs/sheet/design.md`,
+- **Önce oku:** `CLAUDE.md` (tamamı, bağlayıcı), `DESIGN.md`, `docs/adr/0164-sheet-layouts.md`,
   `docs/sheet/integration.md`. `crates/shared/*` ve `crates/wasm/*` için ilgili ADR'ler: 0001, 0002,
   0008, 0010, 0013.
 - **Dokunulacak yerler:**

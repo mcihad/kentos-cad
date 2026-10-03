@@ -223,6 +223,11 @@ cargo test -p kentos-desktop python::tests::screens -- --ignored --nocapture   #
 cargo test -p kentos-mcp   # MCP sunucusu: yeni ve eski istemci, araçlar, redler, kaynaklar, stdio süreci (ADR 0133)
 claude mcp add kentos -- $PWD/target/debug/kentos-mcp   # MCP sunucusunu bir istemciye tanıtma örneği (önce cargo build -p kentos-mcp)
 python3 scripts/python/sdk.py   # katalog değişince kentos.cad'in tiplerini ve sarmalayıcılarını yeniden yaz; --check farkı arar
+node crates/wasm/sheet-wasm/tests/smoke.mjs   # pafta çekirdeğinin WASM sonuçları Rust testlerinin beklediğiyle aynı mı (ADR 0164)
+node apps/web/scripts/e2e/sheet-shots.mjs   # pafta kipinin web resimleri, apps/web/scripts/e2e/out/shots/sheet/
+node apps/web/scripts/e2e/sheet-pdf.mjs   # paftanın PDF ve GeoPDF'i poppler ve GDAL ile (pdfinfo, pdffonts, pdftotext, gdalinfo)
+node apps/web/scripts/e2e/sheet-cloud.mjs   # şablon kitaplığı gerçek kentosd ile, kendi geçici docker veritabanında (5432'ye dokunmaz)
+cargo test -p kentos-sheet-ui --test screens -- --ignored   # masaüstünün pafta tasarımcısı resimleri, .run/shots/sheet-desktop/
 .run/py/bin/python scripts/python/live.py   # SDK ve MCP sunucusu gerçek kentosd ile, geçici veritabanında (önce: cargo build -p kentos-api --bin kentosd --example e2e_database; cargo build -p kentos-mcp)
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer
@@ -266,8 +271,12 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   `kitaplik-okunamadi-<zaman>.kstil` olarak ayrılır, üzerine yazılmaz (ADR 0092).
   Yerel çizimin kaydedilmemiş işinin kurtarma kopyaları IndexedDB `kentos.recovery/copies`'tedir;
   masaüstünde `$XDG_DATA_HOME/kentos-cad/kurtarma` (yoksa `~/.local/share/kentos-cad/kurtarma`)
-  altında, her çalışan KentOS'un kilitli klasöründe (ADR 0030). Hata ayıklarken kullanıcı
-  verisini izinsiz silmeyin.
+  altında, her çalışan KentOS'un kilitli klasöründe (ADR 0030). Pafta kitapları, bu cihazdaki pafta
+  şablonları ve paftalardaki resimlerin baytları IndexedDB `kentos.sheets.v1`'dedir (sürüm 2: `books`,
+  anahtarı `bulut/…`, `proje/…`, `dosya/…`, `oturum/…`; `templates`, hesabın bulut kitaplığının kopyaları
+  da; `assets`, anahtarı SHA-256, yazılırken özeti denetlenir; sürüm 1'den yükseltme yalnız eksik depoyu
+  açar); masaüstünde `$XDG_DATA_HOME/kentos-cad/pafta/` (yoksa `~/.local/share/kentos-cad/pafta/`;
+  ADR 0164). Hata ayıklarken kullanıcı verisini izinsiz silmeyin.
 
 ## 3. Teknik kısıtlar
 
@@ -638,8 +647,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   kenet ekleri ([ADR 0163](docs/adr/0163-snap-additions.md)): 1. adım (çekirdek: dört tür, `snap_ex`, çizilmekte olan yol, katman
   maskesi; `snap_cases.py`) ve 2. adım (ayarlar, türlerin komutları, Kenet hücresinin menüsü, karelaj aralıkları, ölçek aralığı, yol
   araçlarının taslağı, işaretler; ortak iz `snap-additions.json`), 3. adım (Uzantı ve Paralel'in alınması, yazılan mesafe; ortak iz
-  `snap-acquire.json`) ve 4. adım (katman başına kenet, `.kcad` şema 10; ortak iz `layer-snap.json`) tamam; `HYB-09` bitti. Sahibin
-  isteğiyle burada ara verilir: başka bir dal sahibin sözüyle birleştirilecek, ondan önce yeni iş başlamaz. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
+  `snap-acquire.json`) ve 4. adım (katman başına kenet, `.kcad` şema 10; ortak iz `layer-snap.json`) tamam; `HYB-09` bitti. 3 Ekim:
+  pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
+  sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en
   sondadır, zamanını sahip söyleyecek. İşler ADR 0142–0148'deki gibi: önce ADR ve adımları, sonra adım adım iki platformda,
   ortak fixture'larla.

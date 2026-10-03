@@ -1,7 +1,7 @@
 # PiriCAD çıktı yerleşimi incelemesi
 
 - **Tarih:** 2026-10-02
-- **Amaç:** KentOS'un sayfa düzeni sistemini ([tasarım](design.md)) yazmadan önce, aynı işi yapan
+- **Amaç:** KentOS'un sayfa düzeni sistemini ([tasarım, ADR 0164](../adr/0164-sheet-layouts.md)) yazmadan önce, aynı işi yapan
   PiriCAD sisteminin neyi doğru yaptığını, nerede tıkandığını ve QGIS'in neresinde kaldığını kayda
   geçirmek. İncelenen kaynak: `/home/cihad/Projects/piricad`, `main` (`b5e51e8`).
 - **Sonuç bir cümlede:** PiriCAD'in veri modeli, komut yüzeyi ve “sessiz hata yok” denetimleri
