@@ -3465,6 +3465,33 @@ SCENES.drawingunit = [
   },
 ];
 
+/**
+ * The project types' scenes (docs/adr/0165 §4–§5): a local CAD project's plate on slate with its coordinate axes, the
+ * status bar's scale selector open over it, and its typed scale field. The desktop's are
+ * `project::wizard::tests::axes_screens` and `screen_scale::tests::screens`.
+ */
+const CAD_PLATE = `${LOCAL_MM}.then(() => {
+  const k = window.kentos;
+  const layerId = k.doc.layers.active.value;
+  const plate = k.doc.add({ kind: 'polygon', layerId, attrs: {}, pts: [{ x: 0.02, y: 0.02 }, { x: 0.14, y: 0.02 }, { x: 0.14, y: 0.1 }, { x: 0.05, y: 0.1 }] });
+  k.selection.set([plate.id]);
+  k.view.camera.fit({ minX: -0.02, minY: -0.02, maxX: 0.2, maxY: 0.14 }, 24);
+  k.view.requestRender();
+})`;
+SCENES.scene = [
+  { id: 'scene-cad', open: async (ui) => (await ui.eval(CAD_PLATE), await ui.sleep(600)) },
+  {
+    id: 'scale-menu',
+    open: async (ui) => (await ui.eval(CAD_PLATE), await ui.sleep(400), await ui.clickSel('.status__zoom'), await ui.sleep(300)),
+    close: async (ui) => await ui.escapeAll(1),
+  },
+  {
+    id: 'scale-field',
+    open: async (ui) => (await ui.eval(CAD_PLATE), await ui.sleep(400), await ui.clickSel('.status__zoom'), await ui.sleep(200), await ui.clickText('.menu__item', 'Ölçek yaz…'), await ui.sleep(300)),
+    close: async (ui) => await ui.escapeAll(1),
+  },
+];
+
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;
 SCENES.texts = [

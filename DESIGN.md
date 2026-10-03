@@ -355,7 +355,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 ### 7.7 Durum çubuğu
 
-- Hücreler: Y/X imleç koordinatı (tabular) │ son mesaj (5–9 sn görünür) │ seçim sayısı (amber) │ çizim yardımcıları │ ekran ölçeği │ koordinat sistemi │ sunucu │ çizim motoru (en sağda; çip simgesi ve "WebGL2" / "WebGPU"; WebGPU'da simge amber; tıklayınca motor seçme menüsü).
+- Hücreler: imleç koordinatı (tabular; CBS'de Y/X, CAD'de X/Y) │ son mesaj (5–9 sn görünür) │ seçim sayısı (amber) │ çizim yardımcıları │ ekran ölçeği (tıklanınca türün ölçekleri ve “Ölçek yaz…”; yazarken hücrenin yerinde “Ekran 1:” ve alan, Enter uygular, Esc bırakır) │ koordinat sistemi │ sunucu │ çizim motoru (en sağda; çip simgesi ve "WebGL2" / "WebGPU"; WebGPU'da simge amber; tıklayınca motor seçme menüsü).
 - **Çizim yardımcısı düğmeleri** bir gösterge lambası taşır: kapalıyken boş kare, açıkken dolu amber kare. Metin kapalıyken üçüncül renktedir.
 - **Pencere daralınca** hücreler, son mesaja kısa bir ileti sığacak yer (yazı boyunun 15 katı) kalana dek sırayla yer açar; her hücre ipucunu ve tıklamasını korur: çizim motorunun adı (çip simgesi kalır), koordinat sistemi hücresi (sekme satırında da vardır), ekran ölçeği, sunucu ve kayıt hücrelerinin yazısı (lambaları kalır), proje türünün adı (simgesi kalır), en sonda yardımcı düğmelerinin iç boşluğu. Koordinat, seçim sayısı ve yardımcıların adları her zaman görünür.
 - **Sunucu hücresi** yuvarlak bir lamba taşır (yardımcıların kare lambasından ayrılsın diye): bağlıyken dolu yeşil (`--c-ok`), sunucu yokken boş halka ve üçüncül metin (Faz A'da olağan durumdur, hata rengi kullanılmaz), sözleşme sürümü uyuşmazken dolu amber (`--c-warn`). Tıklamak yeniden denetler; ipucu sürümü ya da nedeni yazar.

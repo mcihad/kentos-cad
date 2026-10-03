@@ -254,6 +254,8 @@ impl App {
                 | viewport::Event::Panned { .. }
         ) {
             self.close_text_field(true);
+            // The status bar's scale field closes as a blurred field would (screen_scale.rs).
+            self.scale_field = None;
         }
         // The wheel, the middle button and its double click move the view: the
         // history keeps what they leave (navigation.rs, docs/adr/0141).
@@ -394,6 +396,11 @@ impl App {
                 crate::points::Walk::Right
             };
             return self.points_event(crate::points::Event::Finish(Some(walk)));
+        }
+        // Esc closes the status bar's scale field first (screen_scale.rs).
+        if self.scale_field.is_some() && press.named() == Some(Named::Escape) {
+            self.scale_field = None;
+            return Task::none();
         }
         // Esc closes the folded ribbon open over the drawing first (the web's).
         if self.ribbon_peek && press.named() == Some(Named::Escape) {

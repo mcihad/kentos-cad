@@ -361,6 +361,8 @@ pub enum Message {
     OverlapLayer(String),
     /// The Kenet cell's menu: a Karelaj spacing, the settings (snap_menu.rs, docs/adr/0163 §6).
     Snap(crate::snap_menu::Event),
+    /// The status bar's scale selector (screen_scale.rs, docs/adr/0165 §5).
+    ScreenScale(crate::screen_scale::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -517,6 +519,8 @@ pub struct App {
     pub(crate) view_history: kentos_interaction::ViewHistory,
     /// The Kaydır tool's drag has recorded the view it left (navigation.rs).
     pub(crate) pan_recorded: bool,
+    /// The scale typed in the status bar's scale selector, while it is open (screen_scale.rs).
+    pub(crate) scale_field: Option<String>,
     /// The time the wheel's passes are told by: the clock's, unless a test sets it (navigation.rs).
     pub(crate) view_clock: Option<std::time::Duration>,
     /// The object whose rollover card shows (hover_card.rs).
@@ -732,6 +736,7 @@ impl App {
             panning: false,
             view_history: kentos_interaction::ViewHistory::new(),
             pan_recorded: false,
+            scale_field: None,
             view_clock: None,
             hover_card: None,
             hover_seen: 0,
@@ -1230,6 +1235,7 @@ impl App {
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
             Message::Snap(event) => self.snap_event(event),
+            Message::ScreenScale(event) => return self.screen_scale_event(event),
         }
         Task::none()
     }

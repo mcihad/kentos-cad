@@ -18,6 +18,8 @@ import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
 import { crsTitle } from '../../geo/crs';
+import { scaleText } from '../../model/newProjectWizard';
+import { offeredScales, typedScale } from './scaleSelector';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
 
@@ -58,7 +60,47 @@ export class StatusBar extends Component {
 
     const crs = h('button', { class: 'status__cell status__btn status__crs', type: 'button' }, icon('crs', 14), h('span'));
     crs.addEventListener('click', () => ctx.commands.execute('crs.set'));
-    const zoom = h('span', { class: 'status__cell status__zoom num' });
+    // The scale selector (docs/adr/0165 §5): the view's screen scale, chosen from the type's scales or typed.
+    const zoomText = h('span', { class: 'status__zoom-text num' });
+    const zoom = h('button', { class: 'status__cell status__btn status__zoom', type: 'button', 'aria-haspopup': 'menu' }, zoomText, icon('chevronUp', 12));
+    const scaleField = h('input', { class: 'field field--inline status__scale-field num', type: 'text', inputmode: 'numeric', 'aria-label': 'Ekran ölçeği (1:N)' });
+    // “Ekran 1:” and the number, as the cell reads.
+    const scaleEdit = h('span', { class: 'status__cell status__scale-edit', hidden: true }, h('span', null, 'Ekran 1:'), scaleField);
+    const closeField = () => {
+      scaleEdit.hidden = true;
+      zoom.hidden = false;
+    };
+    const typeScale = () => {
+      zoom.hidden = true;
+      scaleEdit.hidden = false;
+      scaleField.value = String(screenScale(ctx.view.camera.scale));
+      scaleField.focus();
+      scaleField.select();
+    };
+    scaleField.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') return void (e.preventDefault(), closeField(), ctx.view.focus());
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const n = typedScale(scaleField.value);
+      if (n === null) ctx.log.warn(`“${scaleField.value}” bir ölçek değil. 1:N biçiminde bir tam sayı yazın, ör. 1:500.`);
+      else ctx.view.zoomToScale(n);
+      closeField();
+      ctx.view.focus();
+    });
+    scaleField.addEventListener('blur', closeField);
+    zoom.addEventListener('click', () =>
+      PopupMenu.open(
+        [
+          { kind: 'header', label: 'Ekran ölçeği' },
+          ...offeredScales(ctx.format.axes).map((n): MenuItem => ({ label: scaleText(n), run: () => ctx.view.zoomToScale(n) })),
+          { kind: 'separator' },
+          { label: 'Ölçek yaz…', run: typeScale },
+        ],
+        zoom.getBoundingClientRect(),
+        { placement: 'below', owner: zoom },
+      ),
+    );
     const rendererName = h('span', { class: 'status__renderer-name' });
     const renderer = h('button', { class: 'status__cell status__btn status__renderer', type: 'button', 'aria-haspopup': 'menu' }, icon('chip', 14), rendererName);
     renderer.addEventListener('click', () =>
@@ -119,7 +161,7 @@ export class StatusBar extends Component {
     server.addEventListener('click', () => accountMenu(ctx, server));
     const save = saveCell(ctx, this.d);
 
-    this.el = h('footer', { class: 'status' }, coords, flash, selCount, toggles, zoom, mode, crs, save, server, renderer);
+    this.el = h('footer', { class: 'status' }, coords, flash, selCount, toggles, zoom, scaleEdit, mode, crs, save, server, renderer);
 
     // Narrower windows (DESIGN.md §7.7): the least needed cell gives way first, until the message has
     // room. Every name stays in the cell's tooltip; the CRS is also in the title bar.
@@ -152,15 +194,15 @@ export class StatusBar extends Component {
         north.textContent = ctx.format.northLabel;
       }, true),
     );
-    this.d.add(ctx.view.camera.changed.subscribe(() => (zoom.textContent = `Ekran 1:${fmtScale(screenScale(ctx.view.camera.scale))}`), true));
-    this.d.add(tooltip(zoom, () => ({ title: 'Ekran ölçeği', description: 'Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Çizim ölçeği şeritten seçilir.' }), 'top'));
+    this.d.add(ctx.view.camera.changed.subscribe(() => (zoomText.textContent = `Ekran 1:${fmtScale(screenScale(ctx.view.camera.scale))}`), true));
+    this.d.add(tooltip(zoom, () => ({ title: 'Ekran ölçeği', description: 'Görünümün 96 dpi ekrandaki yaklaşık ölçeği; tıklayın, listeden seçin ya da yazın. Çizim ölçeği şeritten seçilir.' }), 'top'));
     this.d.add(
       ctx.doc.crs.subscribe((c) => {
         crs.querySelector('span')!.textContent = c.name;
         this.refit();
       }, true),
     );
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.` }), 'top'));
+    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. ${ctx.format.eastLabel} sağa, ${ctx.format.northLabel} yukarı değerdir. Değiştirmek için tıklayın.` }), 'top'));
     const syncRenderer = () => {
       const k = ctx.view.backendKind.value;
       rendererName.textContent = k === 'webgpu' ? 'WebGPU' : k === 'webgl2' ? 'WebGL2' : ctx.view.backendLabel.value;

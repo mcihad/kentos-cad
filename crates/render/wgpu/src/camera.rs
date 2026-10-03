@@ -89,6 +89,17 @@ impl Camera {
         );
     }
 
+    /// Zooms about the area's middle to a screen scale of 1:`n`, a 96 dpi
+    /// screen's ([`Camera::screen_scale`]): the status bar's scale selector
+    /// (docs/adr/0165 §5).
+    pub fn zoom_to_screen_scale(&mut self, n: f64) {
+        if !(n.is_finite() && n > 0.0) {
+            return;
+        }
+        let target = 1.0 / (n * METRES_PER_PX);
+        self.zoom_at(target / self.scale, self.width / 2.0, self.height / 2.0);
+    }
+
     /// Puts `b` in the middle of the area, as large as fits within `padding` pixels of margin.
     pub fn fit(&mut self, b: &Bounds, padding: f64) {
         let finite = [b.min_x, b.min_y, b.max_x, b.max_y]

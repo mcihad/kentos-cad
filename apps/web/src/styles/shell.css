@@ -659,6 +659,20 @@
 .status__sel {
   color: var(--c-accent-text);
 }
+/* The scale selector (docs/adr/0165 §5): the screen scale with a chevron, a menu on a click, a field to type 1:N. */
+.status__zoom {
+  color: var(--c-text-2);
+}
+.status__zoom .icon {
+  color: var(--c-text-3);
+}
+.status__scale-edit {
+  gap: 4px;
+  color: var(--c-text-2);
+}
+.status__scale-field {
+  width: calc(84px * var(--ui-scale));
+}
 .status__renderer {
   color: var(--c-text-2);
 }

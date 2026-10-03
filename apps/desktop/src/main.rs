@@ -81,6 +81,7 @@ mod ribbon_search;
 #[cfg(test)]
 mod ribbon_tests;
 mod saving;
+mod screen_scale;
 #[cfg(test)]
 mod screens;
 mod selecting;

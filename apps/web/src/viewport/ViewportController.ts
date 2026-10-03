@@ -22,7 +22,7 @@ import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
-import { symbolScaleOf } from './symbolScale';
+import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
 import { extensionAlong, extensionAt, PickIndex, type Extension, type SnapHit, type SnapKind } from './picking';
 import { screenScale, snapInRange } from './snapRange';
@@ -590,6 +590,12 @@ export class ViewportController {
 
   zoomBy(factor: number): void {
     this.navigation.navigate(() => this.camera.zoomAt(factor, { x: this.camera.width / 2, y: this.camera.height / 2 }));
+  }
+
+  /** Zooms about the view's middle to a screen scale of 1:`n` (the status bar's scale selector, docs/adr/0165 §5). */
+  zoomToScale(n: number): void {
+    if (!(Number.isFinite(n) && n > 0)) return;
+    this.zoomBy(1 / (n * METRES_PER_PX) / this.camera.scale);
   }
 
   focus(): void {

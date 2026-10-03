@@ -107,6 +107,8 @@ Başlangıç görünümü:
    - 4c. Doğrultu okumaları: CAD'de doğrultu açısı (doğudan, saat yönünün tersine) “Açı”, CBS'de “Semt”; Öznitelikler, Mesafe ölç ve koordinat listesi.
    - Hesap pencereleri ölçme işidir: metrede kaldıkları gibi (§2) Y,X ve semtle de kalırlar.
 5. **Sahne:** koordinat ekseni simgesi, türe göre zemin, ölçek seçici.
+   - Web'de çizim zemini ayarı yoktur: CAD projesinin çizimi her temada arduvazdır (`data-canvas='slate'`); masaüstünde “Türe göre” varsayılandır, kullanıcı başka zemin seçebilir.
+   - Ölçek seçicinin listesi türün ölçekleridir (yeni proje sihirbazınınki; CBS'de 1:100.000 da); yakınlaşma bir gezinme adımıdır.
 6. **Her türün kendi şeridi.**
 
 ## Bu ADR'de olmayanlar

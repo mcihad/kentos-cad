@@ -977,11 +977,16 @@ impl App {
             }
             _ => "Y —   X —".to_owned(),
         };
+        let f = self.format();
         let mut bar = StatusBar::new()
             .push(
                 Readout::new(label::mono(coordinates))
                     .icon(Icon::Crosshair)
-                    .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
+                    .tip(format!(
+                        "İmleç koordinatı: {} sağa (doğu), {} yukarı (kuzey)",
+                        f.east_label(),
+                        f.north_label()
+                    )),
             )
             .separator()
             .push(self.flash_cell());
@@ -1005,15 +1010,20 @@ impl App {
         if let Some(doc) = &self.document {
             let srid = doc.settings().srid;
             if fit < 3 {
-                bar = bar.separator().push(
-                    Readout::new(label::muted(format!(
-                        "Ekran 1:{}",
-                        thousands(self.viewport.camera.screen_scale())
-                    )))
-                    .tip(Tip::new("Ekran ölçeği").body(
-                        "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Çizim ölçeği şeritten seçilir.",
-                    )),
-                );
+                // The scale selector (screen_scale.rs, docs/adr/0165 §5): chosen from its menu or typed.
+                let cell: Element<'_, Message> = match self.scale_field_view() {
+                    Some(field) => field,
+                    None => {
+                        let scales = self.offered_scales();
+                        Readout::new(label::muted(format!(
+                            "Ekran 1:{}",
+                            thousands(self.viewport.camera.screen_scale())
+                        )))
+                        .menu(move || crate::screen_scale::scale_menu(&scales))
+                        .into()
+                    }
+                };
+                bar = bar.separator().push(cell);
             }
             bar = bar.separator().push(self.mode_cell(fit < 5));
             if fit < 2 {
@@ -1023,8 +1033,10 @@ impl App {
                         .icon(crate::icons::from_web(Some("crs")))
                         .on_press(Message::Run("crs.set"))
                         .tip(Tip::new("Koordinat sistemi").body(format!(
-                            "{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
-                            crate::crs::title_of(srid)
+                            "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın.",
+                            crate::crs::title_of(srid),
+                            f.east_label(),
+                            f.north_label()
                         ))),
                 );
             }
