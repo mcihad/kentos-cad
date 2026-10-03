@@ -19,7 +19,7 @@ use kentos_ui::{label, style};
 
 use super::{Event as ProjectEvent, Window, group, message, modes, scales, setting};
 use crate::app::{App, Message};
-use crate::crs::{self, PickFor};
+use crate::crs;
 use crate::document::Document;
 use crate::exchange::words;
 
@@ -395,7 +395,6 @@ impl App {
                 s.settings.srid,
                 s.initial.srid,
                 default_srid,
-                PickFor::Assign,
                 &s.query,
                 |srid| event(Event::Crs(srid)),
                 |q| event(Event::Search(q)),
@@ -522,7 +521,11 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
             area,
         ));
     }
-    let areas = areas.push(setting("Ondalık basamak", None, decimals(d.area_decimals, Event::AreaDecimals)));
+    let areas = areas.push(setting(
+        "Ondalık basamak",
+        None,
+        decimals(d.area_decimals, Event::AreaDecimals),
+    ));
     Column::new()
         .spacing(16)
         .push(group("Uzunluk ve koordinat", lengths))

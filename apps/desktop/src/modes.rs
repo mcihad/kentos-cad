@@ -17,7 +17,7 @@ use crate::app::{App, Message};
 use crate::catalog::{Tab, catalog, effective_mode, mode_command};
 
 /// A mode's mark in the status bar and its menu (the web's `workspace.*` commands' icons).
-fn mode_icon(mode: Workspace) -> Icon {
+pub(crate) fn mode_icon(mode: Workspace) -> Icon {
     crate::icons::from_web(Some(match mode {
         Workspace::Cad => "modeCad",
         Workspace::Gis | Workspace::LegacyHybrid => "modeGis",

@@ -16,6 +16,27 @@
 //! not neyin eksik olduğunu söyler. Son adımda İleri'nin yerini işin adını
 //! taşıyan bitirme düğmesi alır.
 //!
+//! [`rail`](Wizard::rail) adımları solda bir rayda, her birinin altında o
+//! adımda seçilenle gösterir (DESIGN.md §7.10.1, web'in Yeni proje
+//! sihirbazı): kutu verilen yükseklikte durur, pencere alçaksa pencerede;
+//! yalnız sayfa kayar. Geri alt çubuğun solunda sessiz düğmedir; ilerlemeyi
+//! durduran neden ([`problem`](Wizard::problem)) düğmelerin yanında kırmızı
+//! yazılır. Raydaki adıma tıklamak ([`on_step`](Wizard::on_step)) oraya
+//! gider.
+//!
+//! ```text
+//! ┌ Yeni proje ───────────────────────────────────────────────────┐
+//! ├───────────────────┬───────────────────────────────────────────┤
+//! │ (✓) Proje türü     │ Koordinatlar ve birim                     │
+//! │     CAD · teknik   │ sayfa (kayar)                             │
+//! │▌(2) Koordinatlar   │                                           │
+//! │     Yerel · mm     │                                           │
+//! │ (3) Ölçek ve …     │                                           │
+//! ├───────────────────┴───────────────────────────────────────────┤
+//! │ Geri                                     [Vazgeç]  [İleri]    │
+//! └────────────────────────────────────────────────────────────────┘
+//! ```
+//!
 //! Sihirbaz yalnızca kutunun kendisidir;
 //! [`overlay::blocking`](crate::widget::overlay::blocking) ile gösterilir:
 //! arkasına tıklamak ilerlemeyi kaybettirmez.
@@ -32,14 +53,16 @@
 //! ```
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Row, button, column, container, row, rule, space};
-use iced::{Background, Center, Element, Fill, Length, Theme};
+use iced::widget::{Column, Row, button, column, container, row, rule, scrollable, space};
+use iced::{Background, Center, Element, Fill, Length, Padding, Theme};
 
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
-use crate::widget::horizontal_divider;
+use crate::widget::elided::Elided;
+use crate::widget::fit::Fit;
+use crate::widget::{horizontal_divider, vertical_divider};
 
 /// Adımlı sihirbaz.
 pub struct Wizard<'a, Message> {
@@ -55,6 +78,10 @@ pub struct Wizard<'a, Message> {
     on_cancel: Option<Message>,
     width: f32,
     height: f32,
+    /// Raylı biçimde her adımın notu: o adımda seçilen.
+    notes: Option<Vec<Fragment<'a>>>,
+    on_step: Option<Box<dyn Fn(usize) -> Message + 'a>>,
+    problem: Option<Fragment<'a>>,
 }
 
 impl<'a, Message: Clone + 'a> Wizard<'a, Message> {
@@ -75,7 +102,30 @@ impl<'a, Message: Clone + 'a> Wizard<'a, Message> {
             on_cancel: None,
             width: 640.0,
             height: 300.0,
+            notes: None,
+            on_step: None,
+            problem: None,
         }
+    }
+
+    /// Adımları solda bir rayda gösterir; her adımın altında notu (o adımda
+    /// seçilen), adımların sırasıyla. Raylı kutunun yüksekliği
+    /// [`size`](Wizard::size)'ın yüksekliğidir, içeriğinki değil.
+    pub fn rail<S: IntoFragment<'a>>(mut self, notes: impl IntoIterator<Item = S>) -> Self {
+        self.notes = Some(notes.into_iter().map(IntoFragment::into_fragment).collect());
+        self
+    }
+
+    /// Raydaki adıma tıklama: o adıma gitmek.
+    pub fn on_step(mut self, on_step: impl Fn(usize) -> Message + 'a) -> Self {
+        self.on_step = Some(Box::new(on_step));
+        self
+    }
+
+    /// İlerlemeyi durduran neden: alt çubukta, düğmelerin yanında kırmızı.
+    pub fn problem(mut self, problem: impl IntoFragment<'a>) -> Self {
+        self.problem = Some(problem.into_fragment());
+        self
     }
 
     /// Süren adım (0'dan).
@@ -131,7 +181,10 @@ impl<'a, Message: Clone + 'a> Wizard<'a, Message> {
 }
 
 impl<'a, Message: Clone + 'a> From<Wizard<'a, Message>> for Element<'a, Message> {
-    fn from(wizard: Wizard<'a, Message>) -> Self {
+    fn from(mut wizard: Wizard<'a, Message>) -> Self {
+        if let Some(notes) = wizard.notes.take() {
+            return railed(wizard, notes);
+        }
         let count = wizard.steps.len();
         let current = wizard.current.min(count.saturating_sub(1));
         let last = current + 1 == count;
@@ -185,6 +238,212 @@ impl<'a, Message: Clone + 'a> From<Wizard<'a, Message>> for Element<'a, Message>
         .style(style::container::popover)
         .into()
     }
+}
+
+/// Raylı sihirbaz: başlık, solda adımlar ve notları, sağda kayan sayfa,
+/// altta Geri, neden, Vazgeç ve İleri (web'in `.wiz`'i).
+fn railed<'a, Message: Clone + 'a>(
+    wizard: Wizard<'a, Message>,
+    mut notes: Vec<Fragment<'a>>,
+) -> Element<'a, Message> {
+    let count = wizard.steps.len();
+    let current = wizard.current.min(count.saturating_sub(1));
+    let last = current + 1 == count;
+    notes.resize_with(count, || "".into_fragment());
+
+    let header = container(label::title(wizard.title)).padding(Padding {
+        top: 14.0,
+        right: 12.0,
+        bottom: 12.0,
+        left: 20.0,
+    });
+
+    let on_step = wizard.on_step;
+    let steps = wizard
+        .steps
+        .into_iter()
+        .zip(notes)
+        .enumerate()
+        .map(|(index, (name, note))| {
+            let state = match index.cmp(&current) {
+                std::cmp::Ordering::Less => Step::Done,
+                std::cmp::Ordering::Equal => Step::Current,
+                std::cmp::Ordering::Greater => Step::Upcoming,
+            };
+            rail_step(index, name, note, state, on_step.as_ref().map(|f| f(index)))
+        });
+    let rail = container(Column::with_children(steps).spacing(4).padding(Padding {
+        top: 16.0,
+        right: 12.0,
+        bottom: 16.0,
+        left: 0.0,
+    }))
+    .width(typography::from_default(236.0))
+    .height(Fill)
+    .style(style::container::header);
+
+    let page = scrollable(
+        container(wizard.body.unwrap_or_else(|| space::vertical().into()))
+            .width(Fill)
+            .padding(Padding {
+                top: 20.0,
+                right: 26.0,
+                bottom: 24.0,
+                left: 26.0,
+            }),
+    )
+    .direction(style::field::body_scrollbar())
+    .width(Fill)
+    .height(Fill);
+
+    let mut footer = Row::new().spacing(6).align_y(Center);
+    if current > 0 {
+        footer = footer.push(
+            button(label::body("Geri"))
+                .on_press_maybe(wizard.on_back)
+                .padding([5, 12])
+                .style(style::button::ghost),
+        );
+    }
+    footer = footer.push(space::horizontal());
+    match (wizard.problem, wizard.hint) {
+        (Some(problem), _) => {
+            footer = footer.push(
+                container(label::body(problem).style(style::text::danger)).padding(Padding {
+                    right: 8.0,
+                    ..Padding::ZERO
+                }),
+            );
+        }
+        (None, Some(hint)) => {
+            footer = footer.push(container(label::muted(hint)).padding(Padding {
+                right: 8.0,
+                ..Padding::ZERO
+            }));
+        }
+        (None, None) => {}
+    }
+    if let Some(message) = wizard.on_cancel {
+        footer = footer.push(action(label::body("Vazgeç"), Some(message), false));
+    }
+    footer = if last {
+        footer.push(action(label::body(wizard.finish), wizard.on_finish, true))
+    } else {
+        footer.push(action(label::body("İleri"), wizard.on_next, true))
+    };
+
+    // The page takes what the header and the footer leave: the box stays at
+    // its height, or the window's, whichever step is shown.
+    container(
+        Fit::new()
+            .push(header)
+            .push(horizontal_divider())
+            .push(row![rail, vertical_divider(), page].height(Fill))
+            .push(horizontal_divider())
+            .push(container(footer).padding([12, 18])),
+    )
+    .width(typography::scaled(wizard.width))
+    .max_height(typography::scaled(wizard.height))
+    .style(style::container::dialog)
+    .into()
+}
+
+/// A step on the rail: the accent's bar while it is the current one, its
+/// number in a circle (a check once passed), its name and its note.
+fn rail_step<'a, Message: Clone + 'a>(
+    index: usize,
+    name: Fragment<'a>,
+    note: Fragment<'a>,
+    state: Step,
+    on_press: Option<Message>,
+) -> Element<'a, Message> {
+    let size = typography::from_default(26.0);
+    let marker: Element<'a, Message> = match state {
+        Step::Done => icon(Icon::Check).size(12.0).tone(Tone::Accent).into(),
+        Step::Current => label::strong((index + 1).to_string())
+            .style(style::text::on_accent)
+            .into(),
+        Step::Upcoming => label::strong((index + 1).to_string())
+            .style(style::text::muted)
+            .into(),
+    };
+    let circle = container(marker)
+        .center_x(size)
+        .center_y(size)
+        .style(move |theme: &Theme| {
+            let t = Tokens::of(theme);
+            let (background, edge) = match state {
+                Step::Done => (iced::Color::TRANSPARENT, t.accent),
+                Step::Current => (t.accent, t.accent),
+                Step::Upcoming => (iced::Color::TRANSPARENT, t.border_strong()),
+            };
+            container::Style {
+                background: Some(Background::Color(background)),
+                border: iced::Border {
+                    color: edge,
+                    width: 1.0,
+                    radius: (size / 2.0).into(),
+                },
+                ..container::Style::default()
+            }
+        });
+    let name = iced::widget::text(name)
+        .font(typography::ui_strong())
+        .size(typography::heading())
+        .style(move |theme: &Theme| {
+            let t = Tokens::of(theme);
+            iced::widget::text::Style {
+                color: Some(if state == Step::Current {
+                    t.text
+                } else {
+                    t.muted
+                }),
+            }
+        });
+    let note = Elided::new(note)
+        .size(typography::caption())
+        .width(Fill)
+        .style(style::text::faint);
+    let face = row![circle, column![name, note].spacing(1).width(Fill)]
+        .spacing(10)
+        .align_y(Center);
+    let current = state == Step::Current;
+    let bar = container(space::horizontal())
+        .width(3)
+        .height(typography::from_default(30.0))
+        .style(move |theme: &Theme| container::Style {
+            background: current.then(|| Background::Color(Tokens::of(theme).accent)),
+            border: iced::Border {
+                radius: iced::border::right(2.0),
+                ..iced::Border::default()
+            },
+            ..container::Style::default()
+        });
+    row![
+        bar,
+        space::horizontal().width(9),
+        button(face)
+            .on_press_maybe(on_press)
+            .padding([9, 10])
+            .width(Fill)
+            .style(move |theme: &Theme, status| {
+                let t = Tokens::of(theme);
+                let background = match (current, status) {
+                    (true, _) => t.layer(0.08),
+                    (false, button::Status::Hovered) => t.layer(0.05),
+                    (false, button::Status::Pressed) => t.layer(0.09),
+                    _ => iced::Color::TRANSPARENT,
+                };
+                button::Style {
+                    background: Some(Background::Color(background)),
+                    text_color: t.text,
+                    border: iced::border::rounded(crate::theme::shape::md()),
+                    ..button::Style::default()
+                }
+            }),
+    ]
+    .align_y(Center)
+    .into()
 }
 
 /// Adım göstergesi: numaralı daireler ve aralarındaki çizgiler.

@@ -55,7 +55,9 @@ kentos-svg-core = { path = "../../crates/shared/svg-core" }
 roxmltree = { workspace = true }
 png = { workspace = true }
 zune-jpeg = { workspace = true }
-iced = { workspace = true, features = ["canvas"] }
+# SVG for the new project wizard's pictures (docs/adr/0165 §3): Iced's SVG support,
+# already built for the sheet designer (crates/sheet-ui); nothing new in the lockfile.
+iced = { workspace = true, features = ["canvas", "svg"] }
 # The trace player (traces.rs) runs the app's own tasks (save, open) without a
 # window: Iced's runtime crate, already in the binary through Iced and KentOS UI's
 # snapshot feature; no new package (docs/adr/0021).

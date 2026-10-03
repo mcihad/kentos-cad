@@ -48,7 +48,7 @@ impl App {
         let state = State {
             session: doc.session,
             name: doc.name().to_string(),
-            choice: super::new::default_type(self),
+            choice: super::wizard::default_type(self),
         };
         self.open_project_window(Window::Type(Box::new(state)));
     }

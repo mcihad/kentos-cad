@@ -170,8 +170,8 @@
       },
       "screens": {
         "total": 86,
-        "implemented": 67,
-        "partial": 3,
+        "implemented": 68,
+        "partial": 2,
         "pending": 0,
         "none": 15,
         "n/a": 1
@@ -17158,9 +17158,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/project/new.rs (ADR 0049): the single window, its wizard is ADR 0165 §3 step 3c"
+      "desktopWhere": "apps/desktop/src/project/wizard/ (ADR 0165 §3; rules kentos_project::wizard)"
     },
     {
       "id": "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings",

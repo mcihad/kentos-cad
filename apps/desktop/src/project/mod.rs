@@ -1,7 +1,7 @@
-//! The project's windows (the web's `ui/settings/NewProjectDialog.ts`,
-//! `ProjectSettingsDialog.ts` and `ProjectTypeDialog.ts`): Yeni proje, Proje
-//! ayarları and the type question of a project opened without one. Nothing
-//! changes until the window's button. A new project replaces the drawing;
+//! The project's windows (the web's `ui/settings/NewProjectWizard.ts`,
+//! `ProjectSettingsDialog.ts` and `ProjectTypeDialog.ts`): Yeni proje's
+//! wizard, Proje ayarları and the type question of a project opened without
+//! one. Nothing changes until the window's button. A new project replaces the drawing;
 //! unsaved work is asked about first, over the window, and Vazgeç there
 //! comes back to it. Project settings are assigned to the drawing: an edit,
 //! not an undo step, and a new coordinate system is assigned, never a
@@ -9,8 +9,8 @@
 
 mod ask_type;
 mod content;
-mod new;
 pub(crate) mod settings;
+mod wizard;
 
 use std::fmt;
 
@@ -31,14 +31,14 @@ use crate::crs::grouped;
 /// The open project window.
 #[derive(Debug)]
 pub enum Window {
-    New(Box<new::State>),
+    New(Box<wizard::State>),
     Settings(Box<settings::State>),
     Type(Box<ask_type::State>),
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    New(new::Event),
+    New(wizard::Event),
     Settings(settings::Event),
     Type(ask_type::Event),
     Close,
@@ -56,7 +56,7 @@ impl App {
     pub(crate) fn project_command(&mut self, id: &'static str) -> Task<Message> {
         match id {
             "file.new" => {
-                let state = new::State::new(self);
+                let state = wizard::State::new(self);
                 self.open_project_window(Window::New(Box::new(state)));
             }
             "file.settings" | "crs.set" => match &self.document {
@@ -241,11 +241,11 @@ fn setting<'a, M: 'a>(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{AreaUnit, DrawingFont, DrawingUnit, Workspace};
+    use kentos_contracts::{AreaUnit, DrawingUnit, Workspace};
 
     use super::Event;
-    use super::new::Event as New;
     use super::settings::Event as Settings;
+    use super::wizard::Event as New;
     use crate::app::{App, Dialog, Message};
     use crate::files_testing::{app_with_drawing, last_said};
 
@@ -257,7 +257,7 @@ mod tests {
     /// (newProjectNote.test.ts; docs/inventory/parity-audit.md N1).
     #[test]
     fn yeni_proje_says_what_becomes_of_the_drawing_on_screen() {
-        use super::new::{Note, note};
+        use super::wizard::{Note, note};
         let cloud = |database: bool, autosaves: bool| Some(("Ada 101", autosaves, database));
         // A database project that saves by itself is closed, what waits sent.
         assert_eq!(
@@ -297,35 +297,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn a_new_project_replaces_a_clean_drawing_with_its_types_layers() {
-        let mut app = app_with_drawing();
-        let _ = app.update(Message::Run("file.new"));
-        assert_eq!(app.dialog, Some(Dialog::Project));
-        send(&mut app, Event::New(New::Name("  Ada 7  ".into())));
-        send(&mut app, Event::New(New::Scale(500.0)));
-        send(&mut app, Event::New(New::Mode(Workspace::Cad)));
-        send(&mut app, Event::New(New::Crs(5254)));
-        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
-        assert_eq!(app.dialog, None);
-        let doc = app.document.as_ref().expect("a drawing");
-        assert_eq!(doc.name(), "Ada 7");
-        assert_eq!(doc.settings().srid, 5254);
-        assert_eq!(doc.settings().plot_scale, 500.0);
-        assert_eq!(doc.settings().workspace, Some(Workspace::Cad));
-        assert_eq!(doc.settings().drawing_font, Some(DrawingFont::Barlow));
-        assert_eq!(doc.entity_count(), 0);
-        // A CAD project starts with technical drawing layers, Çizim active (docs/adr/0165 §3).
-        assert_eq!(doc.model.layers().active(), "cizim");
-        assert!(doc.path.is_none() && !doc.dirty());
-        assert!(
-            last_said(&app)
-                .starts_with("“Ada 7” yeni projesi açıldı: TUREF / TM30 (EPSG:5254), 1:500."),
-            "{}",
-            last_said(&app)
-        );
-    }
-
     /// Made on the start screen, before the drawing area has its size, a new
     /// project opens on its sheet at its scale once the area has it (it
     /// opened at about 1:500 000, docs/adr/0165 §3).
@@ -335,7 +306,8 @@ mod tests {
 
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Run("file.new"));
-        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
+        send(&mut app, Event::New(New::Go(2)));
+        send(&mut app, Event::New(New::Next));
         assert!(app.document.is_some());
         let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
             Rectangle::new(Point::ORIGIN, Size::new(1000.0, 750.0)),
@@ -352,7 +324,8 @@ mod tests {
         let _ = app.update(Message::LayerLocked(layer));
         assert!(app.document.as_ref().expect("open").dirty());
         let _ = app.update(Message::Run("file.new"));
-        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
+        send(&mut app, Event::New(New::Go(2)));
+        send(&mut app, Event::New(New::Next));
         assert!(matches!(app.dialog, Some(Dialog::Unsaved(_))));
         let _ = app.update(Message::DialogClosed);
         assert_eq!(app.dialog, Some(Dialog::Project), "Vazgeç comes back here");
@@ -361,19 +334,9 @@ mod tests {
             "Örnek pafta.kcad"
         );
         // Asked again, and this time the work is left.
-        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
+        send(&mut app, Event::New(New::Next));
         let _ = app.update(Message::DialogConfirmed);
         assert_eq!(app.document.as_ref().expect("open").name(), "Yeni proje");
-    }
-
-    #[test]
-    fn an_empty_name_is_refused() {
-        let mut app = app_with_drawing();
-        let _ = app.update(Message::Run("file.new"));
-        send(&mut app, Event::New(New::Name("   ".into())));
-        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
-        assert_eq!(app.dialog, Some(Dialog::Project));
-        assert_ne!(app.document.as_ref().expect("open").name(), "   ");
     }
 
     /// Pictures of the windows for the owner, dark and light, written to
@@ -412,9 +375,6 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
             app.apply_settings();
-            let _ = app.update(Message::Run("file.new"));
-            picture(&mut app, &format!("proje-{mode}-1-yeni"));
-            send(&mut app, Event::Close);
             let _ = app.update(Message::Run("file.settings"));
             picture(&mut app, &format!("proje-{mode}-2-ayarlar-genel"));
             send(&mut app, Event::Settings(Settings::Section(Section::Crs)));
@@ -432,14 +392,15 @@ mod tests {
             picture(&mut app, &format!("proje-{mode}-5-tur-sorusu"));
             send(&mut app, Event::Close);
             // A local project in millimetres (docs/adr/0165 §2): a new one without a coordinate
-            // system, its unit in Proje ayarları, then a plate 120 × 80 mm with a hole, selected.
+            // system, at 1:1 (at 1:1000 a 0.25 mm pen would be 25 cm wide on a part), its unit in
+            // Proje ayarları, then a plate 120 × 80 mm with a hole, selected.
             let _ = app.update(Message::Run("file.new"));
+            send(&mut app, Event::New(New::Type(Workspace::Cad)));
+            send(&mut app, Event::New(New::Next));
+            send(&mut app, Event::New(New::Unit(DrawingUnit::Mm)));
+            send(&mut app, Event::New(New::Next));
             send(&mut app, Event::New(New::Name("Mil plakası".into())));
-            send(&mut app, Event::New(New::Mode(Workspace::Cad)));
-            send(&mut app, Event::New(New::Crs(0)));
-            // A part drawn at full size: at 1:1000 a 0.25 mm pen would be 25 cm wide on it.
-            send(&mut app, Event::New(New::Scale(1.0)));
-            send(&mut app, Event::New(New::Create));
+            send(&mut app, Event::New(New::Next));
             if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
                 let _ = app.update(Message::DialogConfirmed);
             }

@@ -861,6 +861,21 @@ overlay::blocking(
         .finish("İçe aktar", ready.then_some(Message::Finish))
         .on_cancel(Message::Cancel),
 )
+// Raylı sihirbaz: adımlar solda, her birinin altında o adımda seçilen
+// (masaüstünün Yeni projesi); yalnız sayfa kayar, neden alt çubukta kırmızı
+overlay::blocking(
+    Wizard::new("Yeni proje", ["Proje türü", "Koordinatlar", "Ölçek ve ayrıntılar"])
+        .rail(notes)
+        .current(step)
+        .body(page)
+        .on_step(Message::Go)
+        .back(Message::Back)
+        .next(Some(Message::Next))
+        .finish("Oluştur", Some(Message::Next))
+        .problem(why)
+        .on_cancel(Message::Cancel)
+        .size(960.0, 650.0),
+)
 overlay::blocking(
     PropertiesDialog::new("Katman özellikleri")
         .section(Icon::Info, "Genel", selected, Message::Section(Section::General))

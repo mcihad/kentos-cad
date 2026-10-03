@@ -445,6 +445,13 @@ impl App {
             {
                 return task;
             }
+            // Yeni proje's wizard: Enter goes on, ← → choose the type (project/wizard/).
+            if self.dialog == Some(crate::app::Dialog::Project)
+                && let Some(key) = press.named()
+                && let Some(task) = self.new_project_key(key)
+            {
+                return task;
+            }
             match press.named() {
                 // Projeyi paylaş: its question first, then the window; over
                 // the catalog, the catalog stays and reads its list again.

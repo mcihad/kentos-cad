@@ -327,15 +327,6 @@ impl CrsQuestion {
     }
 }
 
-/// What the picker is for (the web's `CrsPickerOptions.mode`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PickFor {
-    /// A new, empty project: nothing to reproject.
-    New,
-    /// The open project's system: assigned, never a transformation.
-    Assign,
-}
-
 /// The systems a search finds (the web's `searchCrs`): the start of the
 /// SRID (`epsg:` left out), or a part of the name or the area.
 pub fn search(query: &str) -> Vec<&'static System> {
@@ -359,12 +350,13 @@ pub fn search(query: &str) -> Vec<&'static System> {
 }
 
 /// The searchable list of systems grouped by datum, the chosen one's card
-/// and its parameters, and the notes (the web's `crsPicker`).
+/// and its parameters, and the notes (the web's `crsPicker`): the open
+/// project's system, assigned on save, never a transformation. A new
+/// project chooses its system in the wizard (project/wizard/).
 pub fn picker<'a, Message: Clone + 'a>(
     value: u32,
     initial: u32,
     default_srid: u32,
-    mode: PickFor,
     query: &str,
     on_pick: impl Fn(u32) -> Message + 'a,
     on_search: impl Fn(String) -> Message + 'a,
@@ -372,11 +364,11 @@ pub fn picker<'a, Message: Clone + 'a>(
     let Some(chosen) = system(value) else {
         return label::caption(format!("EPSG:{value} bu sürümde tanımlı değil.")).into();
     };
-    let changed = value != initial && mode == PickFor::Assign;
-    let heading = match (mode, changed) {
-        (PickFor::New, _) => "Yeni projenin koordinat sistemi",
-        (PickFor::Assign, true) => "Kaydedince projeye atanacak sistem",
-        (PickFor::Assign, false) => "Projenin koordinat sistemi",
+    let changed = value != initial;
+    let heading = if changed {
+        "Kaydedince projeye atanacak sistem"
+    } else {
+        "Projenin koordinat sistemi"
     };
     let current = container(
         column![
@@ -543,7 +535,7 @@ pub fn picker<'a, Message: Clone + 'a>(
         .style(style::container::bordered);
 
     let mut notes = Column::new().spacing(6);
-    if mode == PickFor::Assign && value != initial {
+    if changed {
         let before = system(initial);
         let datum_note = match before {
             Some(b) if b.datum != chosen.datum => format!(

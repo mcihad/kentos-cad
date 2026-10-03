@@ -35,7 +35,7 @@ pub fn province(code: u32) -> Option<&'static Province> {
 }
 
 /// `s.toLocaleLowerCase('tr-TR')`: I → ı, İ → i, then the default mapping.
-fn lower_tr(s: &str) -> String {
+pub(crate) fn lower_tr(s: &str) -> String {
     s.chars()
         .map(|c| match c {
             'I' => 'ı',
