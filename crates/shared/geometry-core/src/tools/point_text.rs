@@ -107,6 +107,13 @@ pub fn parse_number(text: &str) -> Option<f64> {
     whole(&js_trim(text).replacen(',', ".", 1))
 }
 
+/// A single number as the point grammar writes it (`[-+]?\d+(\.\d+)?`,
+/// no decimal comma), white space round it; the angle of lock text `<45`
+/// (docs/adr/0166 §6) is read with it.
+pub fn parse_plain_number(text: &str) -> Option<f64> {
+    whole(js_trim(text))
+}
+
 /// Whether text starts like a number or a coordinate: a digit, `.`, `@`,
 /// `+`, `-`, or `#` (a point's name, docs/adr/0152 §4; the web's
 /// `looksLikeCoordinate`).

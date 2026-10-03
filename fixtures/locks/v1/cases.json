@@ -1,0 +1,1108 @@
+{
+ "format": "kentos.locks",
+ "version": 1,
+ "lockPoint": [
+  {
+   "name": "nothing locked: the cursor",
+   "o": [
+    1.0,
+    2.0
+   ],
+   "c": [
+    5.0,
+    7.0
+   ],
+   "length": null,
+   "u": null,
+   "both": false,
+   "expect": [
+    5.0,
+    7.0
+   ]
+  },
+  {
+   "name": "a length alone: that far towards the cursor (3, 4, 5)",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    3.0,
+    4.0
+   ],
+   "length": 10,
+   "u": null,
+   "both": false,
+   "expect": [
+    6.0,
+    8.0
+   ]
+  },
+  {
+   "name": "a length alone in TM coordinates",
+   "o": [
+    487000.5,
+    4420000.25
+   ],
+   "c": [
+    487030.5,
+    4420040.25
+   ],
+   "length": 12.5,
+   "u": null,
+   "both": false,
+   "expect": [
+    487008.0,
+    4420010.25
+   ]
+  },
+  {
+   "name": "a length alone, the cursor on the reference: none",
+   "o": [
+    1.0,
+    1.0
+   ],
+   "c": [
+    1.0,
+    1.0
+   ],
+   "length": 5,
+   "u": null,
+   "both": false,
+   "expect": null
+  },
+  {
+   "name": "a length alone, a short way still gives the way",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    1e-06,
+    0.0
+   ],
+   "length": 3,
+   "u": null,
+   "both": false,
+   "expect": [
+    3.0,
+    0.0
+   ]
+  },
+  {
+   "name": "a length alone, the cursor nearer than the length",
+   "o": [
+    2.0,
+    -1.0
+   ],
+   "c": [
+    2.5,
+    -1.5
+   ],
+   "length": 7.25,
+   "u": null,
+   "both": false,
+   "expect": [
+    7.126524163602469,
+    -6.126524163602469
+   ]
+  },
+  {
+   "name": "one way, no length: the cursor projected",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    10.0,
+    0.0
+   ],
+   "length": null,
+   "u": [
+    0.6,
+    0.8
+   ],
+   "both": false,
+   "expect": [
+    3.5999999999999996,
+    4.8
+   ]
+  },
+  {
+   "name": "one way, behind the reference: the reference",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    -10.0,
+    0.0
+   ],
+   "length": null,
+   "u": [
+    0.6,
+    0.8
+   ],
+   "both": false,
+   "expect": [
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "name": "both ways, behind the reference: the other side",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    -10.0,
+    0.0
+   ],
+   "length": null,
+   "u": [
+    0.6,
+    0.8
+   ],
+   "both": true,
+   "expect": [
+    -3.5999999999999996,
+    -4.8
+   ]
+  },
+  {
+   "name": "one way with a length: the cursor does not matter",
+   "o": [
+    2.0,
+    3.0
+   ],
+   "c": [
+    -50.0,
+    -50.0
+   ],
+   "length": 5,
+   "u": [
+    0.6,
+    0.8
+   ],
+   "both": false,
+   "expect": [
+    5.0,
+    7.0
+   ]
+  },
+  {
+   "name": "both ways with a length: the cursor's side",
+   "o": [
+    2.0,
+    3.0
+   ],
+   "c": [
+    -50.0,
+    -50.0
+   ],
+   "length": 5,
+   "u": [
+    0.6,
+    0.8
+   ],
+   "both": true,
+   "expect": [
+    -0.9999999999999999,
+    -1.0000000000000002
+   ]
+  },
+  {
+   "name": "both ways, the cursor square to the line: this way",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    0.0,
+    5.0
+   ],
+   "length": 2,
+   "u": [
+    1.0,
+    0.0
+   ],
+   "both": true,
+   "expect": [
+    2.0,
+    0.0
+   ]
+  },
+  {
+   "name": "a snapped corner projected: as far as its level",
+   "o": [
+    0.0,
+    0.0
+   ],
+   "c": [
+    7.0,
+    3.0
+   ],
+   "length": null,
+   "u": [
+    0.0,
+    1.0
+   ],
+   "both": false,
+   "expect": [
+    0.0,
+    3.0
+   ]
+  },
+  {
+   "name": "TM, one way along a 50 grad semt",
+   "o": [
+    487000.0,
+    4420000.0
+   ],
+   "c": [
+    487020.0,
+    4419995.0
+   ],
+   "length": null,
+   "u": [
+    0.7071067811865476,
+    0.7071067811865476
+   ],
+   "both": false,
+   "expect": [
+    487007.5,
+    4420007.5
+   ]
+  },
+  {
+   "name": "TM, both ways along a 50 grad semt with a length",
+   "o": [
+    487000.0,
+    4420000.0
+   ],
+   "c": [
+    486980.0,
+    4419995.0
+   ],
+   "length": 14.125,
+   "u": [
+    0.7071067811865476,
+    0.7071067811865476
+   ],
+   "both": true,
+   "expect": [
+    486990.0121167157,
+    4419990.012116715
+   ]
+  }
+ ],
+ "constrainLocked": [
+  {
+   "name": "no reference: the cursor, nothing locked",
+   "from": null,
+   "world": [
+    3.0,
+    4.0
+   ],
+   "exact": false,
+   "ortho": true,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 5,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     3.0,
+     4.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "ortho first, then the length",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    10.0,
+    2.0
+   ],
+   "exact": false,
+   "ortho": true,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 4,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     4.0,
+     0.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "ortho, the larger move north",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    1.0,
+    -9.0
+   ],
+   "exact": false,
+   "ortho": true,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 4,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     0.0,
+     -4.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "polar tracking captures, then the length along its ray",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    7.0,
+    7.4
+   ],
+   "exact": false,
+   "ortho": false,
+   "polarStep": 45,
+   "tol": 1.0,
+   "length": 10,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     7.0710678118654755,
+     7.0710678118654755
+    ],
+    "tracking": {
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "angle": 45
+    }
+   }
+  },
+  {
+   "name": "polar tracking does not capture: the length towards the cursor",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    7.0,
+    9.0
+   ],
+   "exact": false,
+   "ortho": false,
+   "polarStep": 45,
+   "tol": 1.0,
+   "length": 10,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     6.139406135149205,
+     7.893522173763263
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "a snapped point: no ortho, the length towards it",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    3.0,
+    4.0
+   ],
+   "exact": true,
+   "ortho": true,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 10,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     6.0,
+     8.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "a locked direction leaves ortho and polar out",
+   "from": [
+    0.0,
+    0.0
+   ],
+   "world": [
+    10.0,
+    2.0
+   ],
+   "exact": false,
+   "ortho": true,
+   "polarStep": 45,
+   "tol": 1.0,
+   "length": null,
+   "u": [
+    0.0,
+    1.0
+   ],
+   "both": false,
+   "expect": {
+    "point": [
+     0.0,
+     2.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "a direction and a length: exactly there",
+   "from": [
+    1.0,
+    1.0
+   ],
+   "world": [
+    100.0,
+    -100.0
+   ],
+   "exact": false,
+   "ortho": false,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 2.5,
+   "u": [
+    1.0,
+    0.0
+   ],
+   "both": false,
+   "expect": {
+    "point": [
+     3.5,
+     1.0
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "a length alone, the cursor on the reference: none",
+   "from": [
+    1.0,
+    1.0
+   ],
+   "world": [
+    1.0,
+    1.0
+   ],
+   "exact": false,
+   "ortho": false,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 3,
+   "u": null,
+   "both": false,
+   "expect": null
+  },
+  {
+   "name": "TM: ortho and a length",
+   "from": [
+    487000.0,
+    4420000.0
+   ],
+   "world": [
+    486992.0,
+    4420030.0
+   ],
+   "exact": false,
+   "ortho": true,
+   "polarStep": null,
+   "tol": 1.0,
+   "length": 12.25,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     487000.0,
+     4420012.25
+    ],
+    "tracking": null
+   }
+  },
+  {
+   "name": "TM: polar tracking alone, no lock",
+   "from": [
+    487000.0,
+    4420000.0
+   ],
+   "world": [
+    487010.0,
+    4420000.3
+   ],
+   "exact": false,
+   "ortho": false,
+   "polarStep": 15,
+   "tol": 1.0,
+   "length": null,
+   "u": null,
+   "both": false,
+   "expect": {
+    "point": [
+     487010.0,
+     4420000.0
+    ],
+    "tracking": {
+     "origin": [
+      487000.0,
+      4420000.0
+     ],
+     "angle": 0
+    }
+   }
+  }
+ ],
+ "direction": [
+  {
+   "name": "CAD 0°: east",
+   "angle": 0,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "name": "CAD 30°",
+   "angle": 30,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.8660254037844386,
+    0.5
+   ]
+  },
+  {
+   "name": "CAD 90°: north",
+   "angle": 90,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "name": "CAD 225°",
+   "angle": 225,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    -0.7071067811865476,
+    -0.7071067811865476
+   ]
+  },
+  {
+   "name": "CAD −90°: south",
+   "angle": -90,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.0,
+    -1.0
+   ]
+  },
+  {
+   "name": "CAD in grads, 100: north",
+   "angle": 100,
+   "fromNorth": false,
+   "grads": true,
+   "expect": [
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "name": "CBS 50 grads: north-east",
+   "angle": 50,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    0.7071067811865476,
+    0.7071067811865476
+   ]
+  },
+  {
+   "name": "CBS 100 grads: east",
+   "angle": 100,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "name": "CBS 300 grads: west",
+   "angle": 300,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    -1.0,
+    0.0
+   ]
+  },
+  {
+   "name": "CBS in degrees, 30°",
+   "angle": 30,
+   "fromNorth": true,
+   "grads": false,
+   "expect": [
+    0.5,
+    0.8660254037844386
+   ]
+  }
+ ],
+ "deflected": [
+  {
+   "name": "CAD: 90° turns left of an edge east",
+   "prev": [
+    0.0,
+    0.0
+   ],
+   "from": [
+    10.0,
+    0.0
+   ],
+   "angle": 90,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "name": "CBS: 100 grads turns right of an edge east",
+   "prev": [
+    0.0,
+    0.0
+   ],
+   "from": [
+    10.0,
+    0.0
+   ],
+   "angle": 100,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    0.0,
+    -1.0
+   ]
+  },
+  {
+   "name": "CAD: −45° turns right",
+   "prev": [
+    0.0,
+    0.0
+   ],
+   "from": [
+    10.0,
+    0.0
+   ],
+   "angle": -45,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.7071067811865476,
+    -0.7071067811865476
+   ]
+  },
+  {
+   "name": "CBS: 0, straight on",
+   "prev": [
+    0.0,
+    0.0
+   ],
+   "from": [
+    3.0,
+    4.0
+   ],
+   "angle": 0,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    0.6,
+    0.8
+   ]
+  },
+  {
+   "name": "CAD: 30° left of an edge (3, 4)",
+   "prev": [
+    1.0,
+    1.0
+   ],
+   "from": [
+    4.0,
+    5.0
+   ],
+   "angle": 30,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    0.11961524227066318,
+    0.992820323027551
+   ]
+  },
+  {
+   "name": "CBS in degrees: 90° right of an edge north",
+   "prev": [
+    0.0,
+    0.0
+   ],
+   "from": [
+    0.0,
+    7.0
+   ],
+   "angle": 90,
+   "fromNorth": true,
+   "grads": false,
+   "expect": [
+    1.0,
+    0.0
+   ]
+  },
+  {
+   "name": "CBS, TM coordinates: 50 grads right of an edge (3, 4)",
+   "prev": [
+    487000.0,
+    4420000.0
+   ],
+   "from": [
+    487030.0,
+    4420040.0
+   ],
+   "angle": 50,
+   "fromNorth": true,
+   "grads": true,
+   "expect": [
+    0.9899494936611666,
+    0.1414213562373095
+   ]
+  },
+  {
+   "name": "CAD: 180° back the way it came",
+   "prev": [
+    2.0,
+    2.0
+   ],
+   "from": [
+    5.0,
+    6.0
+   ],
+   "angle": 180,
+   "fromNorth": false,
+   "grads": false,
+   "expect": [
+    -0.6,
+    -0.8
+   ]
+  },
+  {
+   "name": "no previous edge: none",
+   "prev": [
+    4.0,
+    4.0
+   ],
+   "from": [
+    4.0,
+    4.0
+   ],
+   "angle": 30,
+   "fromNorth": false,
+   "grads": false,
+   "expect": null
+  }
+ ],
+ "squareCorner": [
+  {
+   "name": "a rectangle closes square on the first corner",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    10.0,
+    0.0
+   ],
+   "prev": [
+    10.0,
+    0.0
+   ],
+   "last": [
+    10.0,
+    5.0
+   ],
+   "expect": [
+    0.0,
+    5.0
+   ]
+  },
+  {
+   "name": "a skewed rectangle (8, 6)",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    8.0,
+    6.0
+   ],
+   "prev": [
+    8.0,
+    6.0
+   ],
+   "last": [
+    5.0,
+    10.0
+   ],
+   "expect": [
+    -3.0,
+    4.0
+   ]
+  },
+  {
+   "name": "an L shape's last corner",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    20.0,
+    0.0
+   ],
+   "prev": [
+    12.0,
+    10.0
+   ],
+   "last": [
+    12.0,
+    18.0
+   ],
+   "expect": [
+    0.0,
+    18.0
+   ]
+  },
+  {
+   "name": "a skewed rectangle in TM coordinates",
+   "first": [
+    487000.0,
+    4420000.0
+   ],
+   "second": [
+    487008.0,
+    4420006.0
+   ],
+   "prev": [
+    487008.0,
+    4420006.0
+   ],
+   "last": [
+    487005.0,
+    4420010.0
+   ],
+   "expect": [
+    486997.0,
+    4420004.0
+   ]
+  },
+  {
+   "name": "edges not square still meet",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    10.0,
+    0.0
+   ],
+   "prev": [
+    10.0,
+    0.0
+   ],
+   "last": [
+    13.0,
+    7.0
+   ],
+   "expect": [
+    0.0,
+    12.571428571428571
+   ]
+  },
+  {
+   "name": "the first and the last edge parallel: none",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    10.0,
+    0.0
+   ],
+   "prev": [
+    20.0,
+    5.0
+   ],
+   "last": [
+    30.0,
+    5.0
+   ],
+   "expect": null
+  },
+  {
+   "name": "no last edge: none",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    10.0,
+    0.0
+   ],
+   "prev": [
+    10.0,
+    5.0
+   ],
+   "last": [
+    10.0,
+    5.0
+   ],
+   "expect": null
+  },
+  {
+   "name": "no first edge: none",
+   "first": [
+    0.0,
+    0.0
+   ],
+   "second": [
+    0.0,
+    0.0
+   ],
+   "prev": [
+    10.0,
+    0.0
+   ],
+   "last": [
+    10.0,
+    5.0
+   ],
+   "expect": null
+  }
+ ],
+ "lockText": [
+  {
+   "text": "<45",
+   "expect": 45.0
+  },
+  {
+   "text": " < 12.5 ",
+   "expect": 12.5
+  },
+  {
+   "text": "<-30",
+   "expect": -30.0
+  },
+  {
+   "text": "<+30",
+   "expect": 30.0
+  },
+  {
+   "text": "<0",
+   "expect": 0.0
+  },
+  {
+   "text": "<400",
+   "expect": 400.0
+  },
+  {
+   "text": "<\t7",
+   "expect": 7.0
+  },
+  {
+   "text": "　<8　",
+   "expect": 8.0
+  },
+  {
+   "text": "<",
+   "expect": null
+  },
+  {
+   "text": "45",
+   "expect": null
+  },
+  {
+   "text": "@10<45",
+   "expect": null
+  },
+  {
+   "text": "10<45",
+   "expect": null
+  },
+  {
+   "text": "<4,5",
+   "expect": null
+  },
+  {
+   "text": "<<45",
+   "expect": null
+  },
+  {
+   "text": "<45x",
+   "expect": null
+  },
+  {
+   "text": "<.5",
+   "expect": null
+  },
+  {
+   "text": "<45.",
+   "expect": null
+  },
+  {
+   "text": "<1e3",
+   "expect": null
+  },
+  {
+   "text": "< 4 5",
+   "expect": null
+  },
+  {
+   "text": "<١٢",
+   "expect": null
+  }
+ ]
+}
