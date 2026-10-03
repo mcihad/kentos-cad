@@ -1333,15 +1333,37 @@ fn with_family(
         )))
 }
 
-/// A drop-down's commands; one with an on or off state shows it checked.
+/// Whether a command is a choice among several (work mode, symbol size,
+/// Çakışma's modes): its row is a radio that keeps its icon (the web's
+/// `menuRowLook`, DESIGN.md §7.2).
+fn is_choice(id: &str) -> bool {
+    (id.starts_with("view.theme.") && id != "view.theme.toggle")
+        || [
+            "view.renderer.",
+            "view.symbols.",
+            "workspace.",
+            "draft.overlap.",
+        ]
+        .iter()
+        .any(|p| id.starts_with(p))
+}
+
+/// A drop-down's commands (the web's `commandItem`): a toggle shows its
+/// check instead of its icon, a choice its dot beside its icon, a tool and a
+/// plain command their icon.
 fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
     ids.iter()
         .zip(checked.iter().copied().chain(std::iter::repeat(None)))
         .filter_map(|(id, checked)| Some((catalog().get(id)?, checked)))
         .fold(Menu::new(), |menu, (command, checked)| {
             let menu = match checked {
-                Some(on) => menu.check(command.title, on, enabled(command)),
-                None => menu
+                Some(on) if is_choice(command.id) => menu
+                    .radio(command.title, on, enabled(command))
+                    .icon(command.icon),
+                Some(on) if !command.id.starts_with("tool.") => {
+                    menu.check(command.title, on, enabled(command))
+                }
+                _ => menu
                     .item(command.title, enabled(command))
                     .icon(command.icon),
             };

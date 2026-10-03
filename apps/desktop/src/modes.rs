@@ -140,7 +140,8 @@ impl App {
             let ready = modes.iter().filter(|m| m.ready).fold(
                 Menu::new().header("Çalışma modu"),
                 |menu, m| {
-                    menu.check(
+                    // A choice among several: its dot beside its icon (the web's `menuRowLook`).
+                    menu.radio(
                         if m.id == Workspace::Hybrid {
                             format!("{} ({})", m.label, m.title)
                         } else {
