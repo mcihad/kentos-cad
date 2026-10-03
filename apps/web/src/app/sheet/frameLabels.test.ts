@@ -1,0 +1,74 @@
+import { describe, expect, it } from 'vitest';
+import type { Entity } from '../../model/entities';
+import { LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
+import { framedSpots, insideFrame, labelAnchor } from './frameLabels';
+
+/**
+ * A map frame writes a label whose anchor is inside its content and cuts it
+ * at the frame; a label whose anchor is outside is not written (both
+ * platforms, 3 Ekim). The frame: 100 × 50 mm of paper at 1/1000 round
+ * (1000, 2000), so 100 × 50 m of ground, turned with the view.
+ */
+
+const frame = (rotation = 0) => ({ clip: { left: 0, top: 0, width: 100_000, height: 50_000 }, view: { center: { x: 1000, y: 2000 }, scale: 1000, rotation } }) as Parameters<typeof insideFrame>[0];
+
+/** A label record: id, what, x, y and the rest. */
+const record = (id: number, what: number, x: number, y: number, a = 0, b = 0): number[] => [id, what, x, y, a, b, 0, 0, 0];
+
+describe('the labels a map frame writes', () => {
+  it('knows its content on the ground, turned with the view', () => {
+    const flat = insideFrame(frame());
+    expect(flat(1049, 2024)).toBe(true);
+    expect(flat(951, 1976)).toBe(true);
+    expect(flat(1051, 2000)).toBe(false);
+    expect(flat(1000, 2026)).toBe(false);
+    // A quarter turn: the paper's width runs north–south on the ground.
+    const turned = insideFrame(frame(90_000));
+    expect(turned(1000, 2049)).toBe(true);
+    expect(turned(1049, 2000)).toBe(false);
+    expect(turned(1024, 2000)).toBe(true);
+    // Turned 30° clockwise on the paper: a point just in and one just out along the frame's own axes
+    // (u to the paper's right, v down it; north on the ground is up the paper turned 30° to the right).
+    const t = (30 * Math.PI) / 180;
+    const thirty = insideFrame(frame(30_000));
+    const at = (u: number, v: number): [number, number] => [1000 + u * Math.cos(t) + v * Math.sin(t), 2000 + u * Math.sin(t) - v * Math.cos(t)];
+    // The paper's top edge, 25 m up it, is north turned 30° to the left on the ground: 26 m that way is out,
+    // 26 m due north is in (it is only 22.5 m up the paper).
+    expect(thirty(1000 - 26 * Math.sin(t), 2000 + 26 * Math.cos(t))).toBe(false);
+    expect(thirty(1000, 2026)).toBe(true);
+    expect(thirty(...at(49.9, 24.9))).toBe(true);
+    expect(thirty(...at(50.1, 0))).toBe(false);
+    expect(thirty(...at(0, 25.1))).toBe(false);
+  });
+
+  it('writes a label by its anchor: a text by its own point, a line’s name by the middle of its stretch', () => {
+    const objects = new Map<number, Entity>([
+      [1, { id: 1, kind: 'polygon', layerId: 'parsel', pts: [], label: '7' } as unknown as Entity],
+      [2, { id: 2, kind: 'polygon', layerId: 'parsel', pts: [], label: '1244 ada' } as unknown as Entity],
+      // Right-aligned at the frame's east edge: its baseline starts outside, its point is inside.
+      [3, { id: 3, kind: 'text', layerId: 'yazi', p: { x: 1049, y: 2000 }, text: 'Kızılırmak Caddesi', height: 3, rotation: 0, align: 'right' } as unknown as Entity],
+      [4, { id: 4, kind: 'polyline', layerId: 'yol', pts: [], label: '1428. Sokak' } as unknown as Entity],
+      [5, { id: 5, kind: 'polyline', layerId: 'yol', pts: [], label: '1434. Sokak' } as unknown as Entity],
+      [6, { id: 6, kind: 'point', layerId: 'nokta', p: { x: 1000, y: 2030 }, label: '898.97' } as unknown as Entity],
+    ]);
+    const spots = Float64Array.from([
+      ...record(1, LABEL.center, 1010, 2010),
+      // Its letters would reach in; its anchor is 3 m outside.
+      ...record(2, LABEL.center, 947, 2000),
+      ...record(3, LABEL.text, 1060, 2000),
+      // Along from (930, 1990) to (980, 1990): it starts outside, its middle (955) is inside.
+      ...record(4, LABEL.along, 930, 1990, 980, 1990),
+      ...record(5, LABEL.along, 1040, 2010, 1080, 2010),
+      ...record(6, LABEL.beside, 1000, 2030),
+    ]);
+    const out = framedSpots(spots, (id) => objects.get(id), insideFrame(frame()));
+    const ids = Array.from({ length: out.length / LABEL_STRIDE }, (_, i) => out[i * LABEL_STRIDE]);
+    expect(ids).toEqual([1, 3, 4]);
+    expect(labelAnchor(spots, 2 * LABEL_STRIDE, objects.get(3))).toEqual([1049, 2000]);
+    expect(labelAnchor(spots, 3 * LABEL_STRIDE, objects.get(4))).toEqual([955, 1990]);
+    // A record is kept whole; the frame's layer list still decides first.
+    expect(Array.from(out.subarray(0, LABEL_STRIDE))).toEqual(record(1, LABEL.center, 1010, 2010));
+    const parcelsOnly = framedSpots(spots, (id) => objects.get(id), insideFrame(frame()), (e) => e.layerId === 'parsel');
+    expect(parcelsOnly.length / LABEL_STRIDE).toBe(1);
+  });
+});

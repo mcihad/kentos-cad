@@ -1,0 +1,17 @@
+[package]
+name = "kentos-sheet-wasm"
+description = "KentOS sheet layouts for the browser: the sheet core's wasm-bindgen boundary, loaded only when the sheet mode opens"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-sheet = { path = "../../shared/sheet", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }

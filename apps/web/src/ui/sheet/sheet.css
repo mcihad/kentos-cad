@@ -1,0 +1,1582 @@
+/*
+ * The sheet layouts (docs/sheet/design.md §11): the Model | Pafta tabs under
+ * the drawing area, the sheet workspace over it (sheets and items on the
+ * left, the desk with its rulers in the middle, the inspector on the right),
+ * the constraint editor, the template gallery and its share window. Loaded
+ * with the sheets (ui/sheet/), never at start-up on its own. Every colour is
+ * a token; the paper is white in both themes (design §11), the desk is the
+ * theme's deepest chrome grey so the paper stands out on it.
+ */
+
+/* ── Workspace tokens ─────────────────────────────────────────────── */
+.sheet-ws,
+.sheet-thumb,
+.tgal {
+  --sheet-desk: var(--c-menubar);
+  --sheet-paper: #ffffff;
+  --sheet-paper-edge: rgba(15, 22, 30, 0.18);
+  --sheet-shadow: rgba(3, 6, 10, 0.55);
+  --sheet-margin: rgba(31, 111, 196, 0.42);
+  --sheet-frame: #8d97a1;
+  --sheet-map-fill: #edf1f4;
+  --sheet-ink: #4d5966;
+  --sheet-master: #b9c1c9;
+  --sheet-grid: rgba(31, 111, 196, 0.24);
+  --sheet-badge: var(--canvas-accent);
+  --sheet-badge-text: var(--c-accent-ink);
+}
+:root[data-theme='light'] .sheet-ws,
+:root[data-theme='light'] .sheet-thumb,
+:root[data-theme='light'] .tgal {
+  --sheet-shadow: rgba(20, 30, 42, 0.28);
+}
+
+/* ── The shell while a sheet is open: the sheet's panels take the right dock's place ── */
+.shell[data-sheet-mode] .shell__right {
+  display: none;
+}
+/* The status bar's drawing cells give way to the sheet's (statusCells.ts). Its content box changes by a
+   pixel with the mode, so the bar fits its cells again (StatusBar.ts fits on a resize only). */
+.shell[data-sheet-mode] .status {
+  padding-right: 1px;
+}
+.shell[data-sheet-mode] .status > .status__coords,
+.shell[data-sheet-mode] .status > .status__sel,
+.shell[data-sheet-mode] .status > .status__toggles,
+.shell[data-sheet-mode] .status > .status__zoom {
+  display: none;
+}
+.shell:not([data-sheet-mode]) .status > .sheet-status {
+  display: none;
+}
+
+/* ── Model | Pafta tabs ───────────────────────────────────────────── */
+.shell__sheet-tabs {
+  flex: none;
+  min-width: 0;
+}
+.sheet-tabs {
+  display: flex;
+  align-items: stretch;
+  height: calc(30px * var(--ui-scale));
+  flex: none;
+  padding: 0 4px 0 2px;
+  background: var(--c-panel-head);
+  border-top: 1px solid var(--c-line);
+  font-size: var(--fs-sm);
+}
+.sheet-tabs__list {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sheet-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(220px * var(--ui-scale));
+  padding: 0 12px;
+  color: var(--c-text-2);
+  white-space: nowrap;
+  box-shadow: inset 0 -2px 0 transparent;
+  flex: none;
+}
+.sheet-tab:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+.sheet-tab[aria-selected='true'] {
+  color: var(--c-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--c-accent);
+}
+.sheet-tab .icon {
+  flex: none;
+  color: var(--c-text-3);
+}
+.sheet-tab[aria-selected='true'] .icon {
+  color: var(--c-accent-text);
+}
+.sheet-tab__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A template with a newer revision: a dot, said in the tooltip (design §12). */
+.sheet-tab__newer {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-info);
+  flex: none;
+}
+.sheet-tab[data-dragging] {
+  opacity: 0.5;
+}
+.sheet-tab[data-drop='before']::before,
+.sheet-tab[data-drop='after']::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--c-accent);
+}
+.sheet-tab[data-drop='before']::before {
+  left: -1px;
+}
+.sheet-tab[data-drop='after']::after {
+  right: -1px;
+}
+.sheet-tab__rename {
+  width: calc(140px * var(--ui-scale));
+  height: calc(22px * var(--ui-scale));
+}
+.sheet-tabs__sep {
+  width: 1px;
+  margin: 6px 4px;
+  background: var(--c-line-strong);
+  flex: none;
+}
+.sheet-tabs__add {
+  align-self: center;
+  margin-left: 2px;
+}
+.sheet-tabs__spacer {
+  flex: 1;
+}
+.sheet-tabs__note {
+  align-self: center;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* ── Workspace: over the drawing area while a sheet is open ───────── */
+.sheet-ws {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  /* Narrower side columns in a narrow window, so the desk keeps its room; a drag sets them (SheetWorkspace.ts). */
+  grid-template-columns: var(--sheet-left-w, clamp(184px, 16vw, 232px)) minmax(0, 1fr) var(--sheet-right-w, clamp(264px, 21vw, 300px));
+  min-width: 0;
+  background: var(--c-panel);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.sheet-ws[hidden] {
+  display: none;
+}
+.sheet-ws__left,
+.sheet-ws__right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--c-panel);
+}
+.sheet-ws__left {
+  border-right: 1px solid var(--c-line);
+}
+.sheet-ws__right {
+  border-left: 1px solid var(--c-line);
+}
+.sheet-ws__left > .splitter--vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -3px;
+  z-index: 3;
+}
+.sheet-ws__right > .splitter--vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  z-index: 3;
+}
+.sheet-ws__left > .panel {
+  flex: 1 1 0;
+}
+.sheet-ws__left > .panel.sheet-pages {
+  flex: 0 0 auto;
+  max-height: 46%;
+}
+.sheet-ws__left > .panel + .panel {
+  border-top: 1px solid var(--c-line);
+}
+.sheet-ws__left > .panel[data-collapsed] {
+  flex: none;
+}
+.sheet-ws__right > .panel {
+  flex: 1 1 0;
+}
+
+/* The desk: rulers above and beside the paper area. */
+.sheet-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ruler) minmax(0, 1fr);
+  grid-template-rows: var(--ruler) minmax(0, 1fr);
+  --ruler: calc(20px * var(--ui-scale));
+  min-width: 0;
+  min-height: 0;
+  background: var(--sheet-desk);
+}
+.sheet-stage__corner {
+  display: grid;
+  place-items: center;
+  background: var(--c-panel-head);
+  border-right: 1px solid var(--c-line);
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+.sheet-stage__ruler,
+.sheet-stage__paper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.sheet-stage__ruler {
+  cursor: default;
+}
+.sheet-stage__paper {
+  touch-action: none;
+  outline: none;
+}
+.sheet-stage__paper[data-cursor='grab'] {
+  cursor: grab;
+}
+.sheet-stage__paper[data-cursor='grabbing'] {
+  cursor: grabbing;
+}
+.sheet-stage__paper[data-cursor='move'] {
+  cursor: move;
+}
+/* What the empty desk says: no sheet yet, or the engine away. */
+.sheet-stage__empty {
+  position: absolute;
+  inset: var(--ruler) 0 0 var(--ruler);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.sheet-stage__empty[hidden] {
+  display: none;
+}
+.sheet-stage__empty > div {
+  max-width: 46ch;
+  padding: 18px 20px;
+  text-align: center;
+  color: var(--c-text-2);
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  pointer-events: auto;
+}
+.sheet-stage__empty b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--c-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+/* The zoom box at the desk's bottom right corner: −, the zoom, +. */
+.sheet-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-float);
+}
+.sheet-zoom__value {
+  min-width: calc(54px * var(--ui-scale));
+  height: 24px;
+  padding: 0 6px;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-zoom__value:hover {
+  background: var(--c-hover);
+}
+
+/* ── Sheets panel: small papers in a list ─────────────────────────── */
+.sheet-pages__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px;
+}
+.sheet-page {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px 5px 6px;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  text-align: left;
+}
+.sheet-page:hover {
+  background: var(--c-hover);
+}
+.sheet-page[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.sheet-page__thumb {
+  display: grid;
+  place-items: center;
+  width: calc(44px * var(--ui-scale));
+  height: calc(44px * var(--ui-scale));
+}
+.sheet-page__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.sheet-page[aria-selected='true'] .sheet-page__name {
+  font-weight: 600;
+}
+.sheet-page__paper {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-thumb {
+  display: block;
+  border-radius: 1px;
+  box-shadow: 0 1px 3px var(--sheet-shadow);
+}
+
+/* ── Items: the tree's rows ───────────────────────────────────────── */
+/* A narrow column keeps the names: the rows' second words (“1/1000”, “7 hücre”) go to their tooltips. */
+.sheet-items .panel__body {
+  container-type: inline-size;
+}
+@container (max-width: 230px) {
+  .sheet-items .tree__detail {
+    display: none;
+  }
+}
+.sheet-items .tree__row .icon {
+  flex: none;
+  color: var(--c-text-3);
+}
+.sheet-items .tree__detail {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.sheet-items .tree__row[data-master] .tree__name {
+  color: var(--c-text-3);
+  font-style: normal;
+}
+.sheet-items .tree__row[data-drop='before']::after,
+.sheet-items .tree__row[data-drop='after']::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--c-accent);
+}
+.sheet-items .tree__row[data-drop='before']::after {
+  top: -1px;
+}
+.sheet-items .tree__row[data-drop='after']::after {
+  bottom: -1px;
+}
+.sheet-items .tree__row[data-drop='into'] {
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+}
+.sheet-items .tree__row[draggable='true'] {
+  cursor: grab;
+}
+.sheet-items__note {
+  padding: 6px 12px 8px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* ── Inspector ────────────────────────────────────────────────────── */
+.sheet-insp__tabs {
+  display: flex;
+  align-self: stretch;
+}
+.sheet-insp .panel__body {
+  overflow-y: auto;
+}
+.sheet-insp__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px 10px;
+  border-bottom: 1px solid var(--c-line);
+}
+.sheet-insp__summary .icon {
+  flex: none;
+  color: var(--c-accent-text);
+}
+.sheet-insp__kind {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.sheet-insp__sub {
+  display: block;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.sheet-insp__note {
+  margin: 8px 12px 0;
+}
+.sheet-insp__section {
+  border-top: 1px solid var(--c-line);
+}
+.sheet-insp__section:first-of-type {
+  border-top: 0;
+}
+.sheet-insp__head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: calc(30px * var(--ui-scale));
+  padding: 0 8px 0 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: left;
+}
+.sheet-insp__head .icon {
+  color: var(--c-text-3);
+}
+.sheet-insp__head:hover {
+  color: var(--c-text);
+}
+.sheet-insp__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 12px 12px 14px;
+}
+/* Two short fields side by side (Sol and Üst, Genişlik and Yükseklik): label over field. */
+.sheet-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 10px;
+}
+.sheet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.sheet-field--wide {
+  grid-column: 1 / -1;
+}
+.sheet-field__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+.sheet-field__box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: calc(28px * var(--ui-scale));
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.sheet-field__box:hover {
+  border-color: var(--c-line-strong);
+}
+.sheet-field__box:focus-within {
+  border-color: var(--c-accent-line);
+}
+/* Bound to data (ƒ): the value comes from an expression. */
+.sheet-field__box[data-bound] {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+}
+.sheet-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 0 0 8px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.sheet-field__input.num {
+  text-align: right;
+}
+.sheet-field__input::placeholder {
+  color: var(--c-text-3);
+}
+.sheet-field__input:disabled,
+.sheet-field__input:read-only {
+  color: var(--c-text-2);
+}
+.sheet-field__unit {
+  flex: none;
+  padding: 0 4px 0 4px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+/* ƒ: binds the value to data (design §7). */
+.sheet-fx {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 2px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-3);
+  font: italic 600 var(--fs-sm) / 1 Georgia, 'Times New Roman', serif;
+  flex: none;
+}
+.sheet-fx:hover:not(:disabled) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.sheet-fx[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.sheet-fx:disabled {
+  opacity: 0.45;
+}
+.sheet-insp__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: calc(28px * var(--ui-scale));
+}
+.sheet-insp__label {
+  color: var(--c-text-2);
+}
+.sheet-insp__hint {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.sheet-binds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sheet-bind {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  padding: 7px 8px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.sheet-bind__prop {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.sheet-bind__expr {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+/* ── Constraint editor ────────────────────────────────────────────── */
+.cedit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.cedit__square {
+  position: relative;
+  width: calc(92px * var(--ui-scale));
+  height: calc(92px * var(--ui-scale));
+  background: var(--c-field);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-sm);
+}
+.cedit__item {
+  position: absolute;
+  left: 32%;
+  top: 32%;
+  width: 36%;
+  height: 36%;
+  border: 1px solid var(--c-text-3);
+  border-radius: 2px;
+  background: var(--c-panel);
+  pointer-events: none;
+}
+/* A pin: a button over its line, the line drawn inside it. */
+.cedit__pin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 2px;
+  color: var(--c-text-3);
+}
+.cedit__pin::after {
+  content: '';
+  display: block;
+  background: currentColor;
+  border-radius: 1px;
+  opacity: 0.32;
+}
+.cedit__pin:hover:not(:disabled) {
+  color: var(--c-text);
+}
+.cedit__pin:hover:not(:disabled)::after {
+  opacity: 0.8;
+}
+/* A side that is kept: the accent, solid and a little thicker. */
+.cedit__pin[aria-pressed='true'] {
+  color: var(--c-accent-text);
+}
+.cedit__pin[aria-pressed='true']::after {
+  opacity: 1;
+}
+.cedit__pin--h[aria-pressed='true']::after,
+.cedit__pin--cy[aria-pressed='true']::after {
+  height: 2.5px;
+}
+.cedit__pin--v[aria-pressed='true']::after,
+.cedit__pin--cx[aria-pressed='true']::after {
+  width: 2.5px;
+}
+/* Kept by some of the chosen items only: dashed. */
+.cedit__pin[aria-pressed='mixed'] {
+  color: var(--c-accent-text);
+}
+.cedit__pin[aria-pressed='mixed']::after {
+  opacity: 0.9;
+  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 4px);
+}
+.cedit__pin[aria-pressed='mixed'].cedit__pin--v::after,
+.cedit__pin[aria-pressed='mixed'].cedit__pin--cx::after {
+  background: repeating-linear-gradient(180deg, currentColor 0 2px, transparent 2px 4px);
+}
+/* Read-only: the pins keep their meaning, only the hand cannot change them. */
+.cedit__pin:disabled {
+  cursor: default;
+}
+/* Horizontal pins (left, right, the vertical middle line is cx) and vertical ones (top, bottom, cy). */
+.cedit__pin--h {
+  top: calc(50% - 7px);
+  height: 14px;
+  width: 26%;
+}
+.cedit__pin--h::after {
+  width: 100%;
+  height: 2px;
+}
+.cedit__pin--left {
+  left: 4%;
+}
+.cedit__pin--right {
+  right: 4%;
+}
+.cedit__pin--v {
+  left: calc(50% - 7px);
+  width: 14px;
+  height: 26%;
+}
+.cedit__pin--v::after {
+  width: 2px;
+  height: 100%;
+}
+.cedit__pin--top {
+  top: 4%;
+}
+.cedit__pin--bottom {
+  bottom: 4%;
+}
+.cedit__pin--cx {
+  left: calc(50% - 6px);
+  top: 34%;
+  width: 12px;
+  height: 32%;
+  z-index: 1;
+}
+.cedit__pin--cx::after {
+  width: 1.5px;
+  height: 100%;
+}
+.cedit__pin--cy {
+  top: calc(50% - 6px);
+  left: 34%;
+  height: 12px;
+  width: 32%;
+  z-index: 1;
+}
+.cedit__pin--cy::after {
+  height: 1.5px;
+  width: 100%;
+}
+.cedit__pin:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: 0;
+}
+.cedit__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.cedit__fields .dropdown {
+  width: 100%;
+}
+.cedit__fields .dropdown:disabled {
+  color: var(--c-text-2);
+  cursor: default;
+}
+.cedit__fields .sheet-field__label {
+  margin-bottom: -1px;
+}
+
+/* ── Status bar cells ─────────────────────────────────────────────── */
+.sheet-status {
+  display: flex;
+  align-items: stretch;
+  flex: none;
+}
+.sheet-status > * + * {
+  border-left: 1px solid var(--c-line);
+}
+.sheet-status__cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-status__axis {
+  color: var(--c-text-3);
+  font-weight: 600;
+}
+.sheet-status__value {
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.sheet-status__cursor .sheet-status__value {
+  display: inline-block;
+  min-width: calc(48px * var(--ui-scale));
+  text-align: right;
+}
+.sheet-status__sel {
+  color: var(--c-accent-text);
+}
+.sheet-status__unit {
+  color: var(--c-text-3);
+}
+.sheet-status__btn:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.sheet-status__preflight .icon {
+  color: var(--c-text-3);
+}
+.sheet-status__library[data-level='warning'] .icon {
+  color: var(--c-warn);
+}
+.sheet-status__library[data-level='info'] .icon {
+  color: var(--c-info);
+}
+.sheet-status__preflight[data-level='warning'] .icon {
+  color: var(--c-warn);
+}
+.sheet-status__preflight[data-level='error'] .icon {
+  color: var(--c-danger);
+}
+
+/* ── Template gallery ─────────────────────────────────────────────── */
+.dialog--tgal {
+  height: min(820px, 92vh);
+  max-height: none;
+}
+.dialog--tgal .dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.tgal__bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-line);
+}
+.tgal__bar .smgr__searchbox {
+  width: calc(260px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+}
+.tgal__bar .dropdown {
+  width: calc(150px * var(--ui-scale));
+}
+.tgal__all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--c-text-2);
+  white-space: nowrap;
+}
+.tgal__cols {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: calc(232px * var(--ui-scale)) minmax(0, 1fr) calc(330px * var(--ui-scale));
+}
+.tgal__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 8px;
+  background: var(--c-panel-head);
+  border-right: 1px solid var(--c-line);
+}
+.tgal__src {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--row-h);
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  text-align: left;
+}
+.tgal__src .icon {
+  color: var(--c-text-3);
+}
+.tgal__src:hover {
+  background: var(--c-hover);
+}
+.tgal__src[aria-selected='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-text);
+  font-weight: 600;
+}
+.tgal__src[aria-selected='true'] .icon {
+  color: var(--c-accent-text);
+}
+.tgal__src-count {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.tgal__src-note {
+  grid-column: 2 / -1;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.35;
+}
+.tgal__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tgal__navnote {
+  margin-top: auto;
+  padding: 10px 8px 2px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.tgal__list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--c-field);
+}
+.tgal__listhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  border-bottom: 1px solid var(--c-line-soft);
+}
+.tgal__grid {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(176px * var(--ui-scale)), 1fr));
+  align-content: start;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.tcard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 9px;
+  color: var(--c-text);
+  text-align: left;
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.tcard:hover {
+  border-color: var(--c-line-strong);
+}
+.tcard[aria-selected='true'] {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 1px var(--c-accent);
+}
+.tcard__pic {
+  display: grid;
+  place-items: center;
+  height: calc(118px * var(--ui-scale));
+  background: var(--sheet-desk);
+  border-radius: var(--r-sm);
+}
+.tcard__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.tcard__meta {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.tcard__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tbadge {
+  padding: 1px 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+  background: var(--c-press);
+  border-radius: 999px;
+}
+.tbadge--system {
+  color: var(--c-text-2);
+}
+.tbadge--unsynced {
+  color: var(--c-warn);
+}
+.tbadge--synced {
+  color: var(--c-ok);
+}
+.tbadge--shared,
+.tbadge--newer,
+.tbadge--syncing {
+  color: var(--c-info);
+}
+.sheet-page__newer {
+  display: inline-block;
+  margin-top: 3px;
+}
+.tbadge--conflict {
+  color: var(--c-danger);
+}
+.tbadge--viewer,
+.tbadge--editor {
+  color: var(--c-text);
+}
+.tbadge--mode {
+  color: var(--c-text-2);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--c-line-strong);
+}
+.tgal__empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 56px 24px;
+  color: var(--c-text-3);
+  text-align: center;
+}
+.tgal__empty b {
+  color: var(--c-text-2);
+  font-weight: 600;
+}
+.tgal__empty .icon {
+  color: var(--c-text-3);
+}
+.tgal__details {
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 16px;
+  background: var(--c-panel-head);
+  border-left: 1px solid var(--c-line);
+}
+.tgal__preview {
+  display: grid;
+  place-items: center;
+  height: calc(196px * var(--ui-scale));
+  margin-bottom: 12px;
+  background: var(--sheet-desk);
+  border-radius: var(--r-md);
+}
+.tgal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 14px;
+}
+.tgal__fit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.tgal__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.tgal__status[data-kind='warn'] {
+  color: var(--c-warn);
+}
+.tgal__status[data-kind='cloud'] {
+  color: var(--c-text-3);
+}
+.tgal__layouts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tgal__layouts li + li {
+  margin-top: 2px;
+}
+.tgal__paperpick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.tgal__paperpick .dropdown {
+  width: calc(196px * var(--ui-scale));
+}
+
+/* ── Share a template ─────────────────────────────────────────────── */
+.share-template__sync {
+  margin: 4px 0 12px;
+}
+.share-template__sync:empty {
+  display: none;
+}
+.share-template__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ── A template's questions before it is used ─────────────────────── */
+.sheet-ask-q__intro {
+  margin: 0 0 12px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.sheet-ask-q__list {
+  max-height: min(60vh, calc(520px * var(--ui-scale)));
+  overflow: auto;
+  padding-right: 4px;
+}
+.sheet-ask-q__bool {
+  display: flex;
+  align-items: center;
+  min-height: calc(30px * var(--ui-scale));
+}
+
+/* ── Part B: the inspector's kind sections ────────────────────────── */
+.sheet-insp__tabs .tab {
+  gap: 6px;
+}
+/* The count stays on its tab in a narrow dock too (panels.css hides a background tab's spans there: its label). */
+.panel__tabs.sheet-insp__tabs .tab > span.sheet-insp__count {
+  display: inline-block;
+}
+.panel__tabs.sheet-insp__tabs .tab > span.sheet-insp__count:empty {
+  display: none;
+}
+.sheet-insp__count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--c-hover);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  text-align: center;
+}
+.sheet-insp__count[data-level='error'] {
+  background: color-mix(in srgb, var(--c-danger) 18%, transparent);
+  color: var(--c-danger);
+}
+.sheet-insp__count[data-level='warning'] {
+  background: color-mix(in srgb, var(--c-warn) 18%, transparent);
+  color: var(--c-warn);
+}
+.sheet-insp__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sheet-insp__sub-head {
+  margin-top: 4px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.sheet-insp__hint--warn {
+  color: var(--c-warn);
+}
+.sheet-choice .dropdown {
+  width: 100%;
+}
+.sheet-field__box--area {
+  height: auto;
+  align-items: stretch;
+}
+.sheet-field__area {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  color: var(--c-text);
+  font: var(--fs-sm) / 1.4 var(--font-mono);
+}
+.sheet-color__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: calc(28px * var(--ui-scale));
+}
+.sheet-color {
+  width: 34px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: none;
+}
+.sheet-color__text {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.sheet-segs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sheet-toggles,
+.sheet-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sheet-layers {
+  max-height: calc(180px * var(--ui-scale));
+  overflow-y: auto;
+  padding: 4px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.sheet-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.sheet-grid,
+.sheet-col,
+.sheet-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.sheet-grid__tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sheet-cols,
+.sheet-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sheet-col__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sheet-col__n {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.sheet-cell__value {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.sheet-cell__value > .sheet-field {
+  flex: 1;
+}
+
+/* ── The preflight's findings (the inspector's Ön denetim tab, the export window) ── */
+.sheet-pf__sum {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px 4px;
+}
+.sheet-pf__count {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--c-hover);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.sheet-pf__count--error {
+  color: var(--c-danger);
+}
+.sheet-pf__count--warning {
+  color: var(--c-warn);
+}
+.sheet-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 12px 12px;
+  list-style: none;
+}
+.sheet-findings--short {
+  padding: 0;
+}
+.sheet-finding {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+}
+.sheet-findings--short .sheet-finding {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: var(--fs-sm);
+}
+.sheet-finding--error {
+  border-left-color: var(--c-danger);
+}
+.sheet-finding--warning {
+  border-left-color: var(--c-warn);
+}
+.sheet-finding--info {
+  border-left-color: var(--c-info);
+}
+.sheet-finding--error > .icon,
+.sheet-finding--error .sheet-finding__head .icon {
+  color: var(--c-danger);
+}
+.sheet-finding--warning > .icon,
+.sheet-finding--warning .sheet-finding__head .icon {
+  color: var(--c-warn);
+}
+.sheet-finding--info > .icon,
+.sheet-finding--info .sheet-finding__head .icon {
+  color: var(--c-info);
+}
+.sheet-finding__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.sheet-finding__item {
+  overflow: hidden;
+  color: var(--c-text-2);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-finding__msg {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.sheet-finding__fix {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.sheet-finding__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.sheet-status__preflight[data-level='ok'] .icon {
+  color: var(--c-ok);
+}
+
+/* ── The sheet's windows: page setup, values, save as template, export, ƒ, a name ── */
+.sheet-dialog .dialog__body {
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+}
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sheet-form__head {
+  margin: 6px 0 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.sheet-vars__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 10px;
+}
+.sheet-export__findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sheet-ask__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sheet-ask__error {
+  margin: 6px 0 0;
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+}
+.sheet-expr__input {
+  min-height: calc(84px * var(--ui-scale));
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+}
+.sheet-expr__input:focus {
+  border-color: var(--c-accent-line);
+}
+.sheet-expr__status {
+  min-height: 20px;
+  font-size: var(--fs-xs);
+}
+.sheet-expr__ok,
+.sheet-expr__bad {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sheet-expr__ok {
+  color: var(--c-ok);
+}
+.sheet-expr__bad {
+  color: var(--c-danger);
+}
+.sheet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.sheet-chip {
+  padding: 2px 8px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-field);
+  color: var(--c-text-2);
+  font: var(--fs-xs) / 1.6 var(--font-mono);
+}
+.sheet-chip:hover {
+  border-color: var(--c-accent-line);
+  color: var(--c-text);
+}
+.tcard__nopic {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* Layout variants (the Sayfa tab): each with its condition, the one in force marked. */
+.sheet-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sheet-variant {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.sheet-variant[data-active] {
+  border-color: var(--c-accent-line);
+}
+.sheet-variant__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sheet-variant__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.sheet-variant__tools {
+  display: flex;
+  flex: none;
+}
+
+/* ── The export window's PDF part ─────────────────────────────────── */
+.sheet-export__file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sheet-export__way {
+  display: block;
+}
+.sheet-export__way + .sheet-export__way {
+  margin-top: 4px;
+}
+.sheet-export__sheets {
+  margin: -4px 0 4px;
+}
+
+/* ── A north arrow's declination (inspector, Part E) ─────────────── */
+.sheet-north__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--c-text);
+  padding: 2px 0;
+}
+.sheet-north__value--unknown {
+  color: var(--c-danger, var(--c-text-2));
+  font-weight: 500;
+}
+.sheet-north__date {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── Kurumum: the cards under their organisation's name (Part F) ─── */
+.tgal__group {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  gap: 10px;
+}
+.tgal__group + .tgal__group {
+  margin-top: 6px;
+}
+.tgal__group-name {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  padding: 2px 2px 0;
+}
+.sheet-publish__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
