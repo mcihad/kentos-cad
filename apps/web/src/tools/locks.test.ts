@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Vec2 } from '../model/geometry';
-import { constrainLocked, lockDeflected, lockDirection, lockPoint, parseLockText, squareCorner } from './locks';
+import type { Edge } from '../model/geom/intersect';
+import { constrainLocked, lockDeflected, lockDirection, lockEdgeDirection, lockPoint, parseLockText, squareCorner } from './locks';
 
 /**
  * The digitizing locks (docs/adr/0166) through the WASM core and the web's lock text reader, against the independent
@@ -31,6 +32,7 @@ interface File {
   deflected: { name: string; prev: Pt; from: Pt; angle: number; fromNorth: boolean; grads: boolean; expect: Pt }[];
   squareCorner: { name: string; first: Pt; second: Pt; prev: Pt; last: Pt; expect: Pt }[];
   lockText: { text: string; expect: number | null }[];
+  edgeDirection: { name: string; edge: Edge; p: Pt; expect: Pt }[];
 }
 
 const v = (p: Pt): Vec2 | null => (p ? { x: p[0], y: p[1] } : null);
@@ -75,5 +77,9 @@ describe('Sayısallaştırma kilitleri (docs/adr/0166)', () => {
 
   it('reads lock text as the core does', () => {
     for (const c of file.lockText) expect(parseLockText(c.text), JSON.stringify(c.text)).toBe(c.expect);
+  });
+
+  it('takes a picked edge’s direction', () => {
+    for (const c of file.edgeDirection) same(c.name, lockEdgeDirection(c.edge, P(c.p)), c.expect, 1e-14);
   });
 });

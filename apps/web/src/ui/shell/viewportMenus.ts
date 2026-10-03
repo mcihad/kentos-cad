@@ -95,6 +95,8 @@ function lockItems(ctx: AppContext): MenuItem[] {
     commandItem(ctx, 'draft.lock.length'),
     commandItem(ctx, 'draft.lock.angle', { label: `${ctx.format.directionName} kilidi…` }),
     commandItem(ctx, 'draft.lock.deflection'),
+    commandItem(ctx, 'draft.lock.parallel'),
+    commandItem(ctx, 'draft.lock.perpendicular'),
     { kind: 'separator' },
     commandItem(ctx, 'draft.lock.keep'),
     commandItem(ctx, 'draft.lock.clear'),

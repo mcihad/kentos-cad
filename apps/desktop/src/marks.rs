@@ -98,6 +98,8 @@ pub struct LockMarks {
     pub direction: Option<(Vec2, bool)>,
     /// The locked length, metres.
     pub length: Option<f64>,
+    /// The edge a Paralel or Dik lock was picked on (docs/adr/0166 §3).
+    pub edge: Option<kentos_geometry_core::geom::intersect::Edge>,
 }
 
 /// How long the crosshair's arms are (`appearance.crosshair`, the web's `CROSSHAIR_ARM`).
@@ -353,6 +355,35 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
     };
     let [ox, oy] = camera.world_to_screen(l.reference);
     let o = Point::new(ox as f32, oy as f32);
+    // The picked edge, solid (the web's `drawLocks`).
+    if let Some(edge) = l.edge {
+        let at = |p: Vec2| {
+            let [x, y] = camera.world_to_screen(p);
+            Point::new(x as f32, y as f32)
+        };
+        let path = Path::new(|b| match edge {
+            kentos_geometry_core::geom::intersect::Edge::Seg { a, b: end } => {
+                b.move_to(at(a));
+                b.line_to(at(end));
+            }
+            kentos_geometry_core::geom::intersect::Edge::Arc { c, r, a0, sweep } => {
+                let n = ((sweep.abs() / (std::f64::consts::PI / 48.0)).ceil() as usize).max(8);
+                for i in 0..=n {
+                    let t = a0 + sweep * i as f64 / n as f64;
+                    let q = at(Vec2::new(c.x + r * t.cos(), c.y + r * t.sin()));
+                    if i == 0 {
+                        b.move_to(q);
+                    } else {
+                        b.line_to(q);
+                    }
+                }
+            }
+        });
+        frame.stroke(
+            &path,
+            Stroke::default().with_color(colors.snap).with_width(2.0),
+        );
+    }
     if let Some((u, both)) = l.direction {
         let (dx, dy) = (u.x as f32 * 1e4, -u.y as f32 * 1e4);
         let back = if both { 1.0 } else { 0.0 };

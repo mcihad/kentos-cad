@@ -284,6 +284,9 @@ export const ICONS = {
   lockLength: `<path d="M2.5 8h11M2.5 5.5v5M13.5 5.5v5"/><path d="m5 6.5-1.5 1.5L5 9.5M11 6.5l1.5 1.5L11 9.5" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
   lockAngle: `<path d="M2.5 15.5h8.5M2.5 15.5 10.5 5"/><path d="M7.5 15.5a5 5 0 0 0-1.9-3.9"/>${padlock(12.4, 13.3)}`,
   lockDeflection: `<path d="M2.5 15 8.5 9h6.5"/><path d="M8.5 9 12 5.5" stroke-dasharray="1.5 1.4" stroke-width="1.1"/><path d="M10.6 6.9a3 3 0 0 1 .9 2.1" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
+  // Nesneye paralel and dik: the picked edge, solid, and the locked direction through the reference, dashed.
+  lockParallel: `<path d="M2.5 11.5 10 4"/><path d="M5 16.5 13 8.5" stroke-dasharray="1.8 1.5"/>${padlock(12.4, 13.3)}`,
+  lockPerpendicular: `<path d="M2.5 15.5h9"/><path d="M6 15.5V3.5" stroke-dasharray="1.8 1.5"/><path d="M6 12.5h3v3" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
   // Kalıcı: the padlock and a turning arrow, it stays for the next points.
   lockKeep:
     '<rect x="3" y="9.5" width="8.5" height="7" rx="1.1"/><path d="M5 9.5V7.6a2.25 2.25 0 0 1 4.5 0v1.9"/><path d="M14.2 7.2a3.8 3.8 0 1 1-.6 6.4"/><path d="m14.6 4.6-.4 2.7 2.7.3" stroke-width="1.2"/>',

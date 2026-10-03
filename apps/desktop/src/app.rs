@@ -1526,6 +1526,16 @@ impl App {
             "draft.lock.length" => self.ask_lock(kentos_interaction::LockAsk::Length),
             "draft.lock.angle" => self.ask_lock(kentos_interaction::LockAsk::Angle),
             "draft.lock.deflection" => self.ask_lock(kentos_interaction::LockAsk::Deflection),
+            "draft.lock.parallel" => {
+                self.with_tool(|s, cx| {
+                    s.pick_lock_edge(kentos_interaction::LockPick::Parallel, cx)
+                });
+            }
+            "draft.lock.perpendicular" => {
+                self.with_tool(|s, cx| {
+                    s.pick_lock_edge(kentos_interaction::LockPick::Perpendicular, cx)
+                });
+            }
             "draft.lock.keep" => {
                 let keep = !self.locks.keep;
                 self.with_tool(|s, cx| s.keep_locks(keep, cx));
@@ -1679,9 +1689,11 @@ impl App {
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             // The locks work while a point is expected after another (docs/adr/0166 §6).
-            "draft.lock.length" | "draft.lock.angle" | "draft.lock.keep" => {
-                self.session.lock_reference().is_some()
-            }
+            "draft.lock.length"
+            | "draft.lock.angle"
+            | "draft.lock.parallel"
+            | "draft.lock.perpendicular"
+            | "draft.lock.keep" => self.session.lock_reference().is_some(),
             "draft.lock.deflection" => {
                 self.session.lock_reference().is_some() && self.session.travel().is_some()
             }

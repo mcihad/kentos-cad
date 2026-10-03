@@ -122,6 +122,13 @@ Bağımsız başvuru `scripts/fixtures/lock_cases.py` (`fixtures/locks/v1/cases.
    - **Komutlar ve menü:** `draft.lock.length`, `draft.lock.angle`, `draft.lock.deflection`, `draft.lock.keep`, `draft.lock.clear`, ikonlarıyla; sağ tık komut menüsünde Kilit ▸: Uzunluk…, Açı… (CBS'de Semt…), Sapma…, Kalıcı (işaretli), Kilitleri kaldır. Başvuru yokken (ilk nokta verilmeden) kilitler, önceki kenar yokken Sapma devre dışıdır; yazılan `<açı` nedenini söyler.
    - **Ortak iz** `fixtures/interaction/v1/locks.json`: Tab'la uzunluk, `<100` (CBS semti), kilitli doğrultuda yazılan mesafe, Sapma, Kalıcı, Esc; iki platform ve izlerin gözlemi kilitlerin sözleriyle (`locks`).
 3. Nesneye paralel ve dik; Dik açılı çizim (durum çubuğu, şerit, ayar) ve Dik kapat; ortak izler; resimler.
+
+   *(4 Ekim: 3a, Nesneye paralel ve dik, tamam.)*
+   - **Çekirdek:** `tools::locks::edge_direction` (düz kenarın kendi yönü; yayın, tıklananın yaydaki en yakın noktasındaki teğeti, süpürüşünün yönünde; teğet açıdan hesaplanır, en yakın noktadan merkez çıkarılarak değil: TM koordinatlarında yarıçapın basamakları yitmesin), çağrı `lockEdgeDirection`; bağımsız başvuruda 12 durum (`edgeDirection`: kesin kesirle düz kenarlar, mpmath ile yaylar ve daireler, yayın ucundan öte tıklama, iki yönlü yarım daire, boyu ve yarıçapı olmayanlar).
+   - **Seçilen kenar:** Teğet çemberin seçtikleri: çizgi, çoklu çizgi, alan (parçaları ve delikleri), yay, daire, yardımcı çizgi, ışın; blok yerleştirmesi, ölçü, tarama, eğri, elips ve yazı değil. En yakın nesnenin tıklanana en yakın kenarı (`pick_edge` ve `nearest_edge`, web'de `pickEdge` ve `nearestEdge`).
+   - **Oturum:** komut tıklamayı bekler (masaüstü `Session::pick_lock_edge`, `LockPick`; web `ToolManager.pickLockEdge`, `lockPick`): istem aracın adıyla “paralel kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]”, imleç seçme biçiminde; basış araca gitmez, bırakışı da; boş yerde “Tıklanan yerde düz kenar ya da yay yok.” denir, bekleme sürer; Esc önce beklemeyi, sonra kilitleri bırakır. Seçilen kenar kilit durdukça kenet renginde, 2 px düz çizilir (`LockState::edge`).
+   - **Komutlar ve menü:** `draft.lock.parallel`, `draft.lock.perpendicular` (ikonları `lockParallel`, `lockPerpendicular`); Kilit ▸'te Sapma…'nın altında.
+   - **Ortak iz** `lock-edges.json` (sahne `lock-edges.kcad`: eğik çizgi ve yarım daire yay), resim senaryosu `usage-lock-edges.json`.
 4. Referans noktası ve yapım kipi; ortak iz; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

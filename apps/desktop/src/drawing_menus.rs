@@ -347,7 +347,11 @@ impl App {
         if let Some(command) = catalog().get("draft.lock.angle") {
             menu = menu.item(angle, on_press).icon(command.icon);
         }
-        let menu = self.command_item(menu, "draft.lock.deflection").separator();
+        let menu = self.command_item(menu, "draft.lock.deflection");
+        let menu = self.command_item(menu, "draft.lock.parallel");
+        let menu = self
+            .command_item(menu, "draft.lock.perpendicular")
+            .separator();
         let menu = self.command_item(menu, "draft.lock.keep");
         self.command_item(menu, "draft.lock.clear")
     }

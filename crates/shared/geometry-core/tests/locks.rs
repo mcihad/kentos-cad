@@ -2,7 +2,8 @@
 //! `fixtures/locks/v1/cases.json` (`scripts/fixtures/lock_cases.py`: exact
 //! fractions, the angles with 50-digit mpmath, no KentOS code): the locked
 //! point, the cursor rules with the locks, the directions of a typed angle
-//! and of a deflection, Dik kapat's corner and lock text; points within
+//! and of a deflection, Dik kapat's corner, lock text and a picked edge's
+//! direction; points within
 //! 1e-8 m (a TM northing's double steps 0.93 nm), unit directions within
 //! 1e-14, none where the reference has none, lock text exactly. The ops the
 //! web calls are run on the same cases through the call table.
@@ -12,9 +13,10 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::run_named;
+use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::tools::locks::{
-    Direction, LockText, Locks, constrain_locked, deflected, direction_of, lock_point,
-    parse_lock_text, square_corner,
+    Direction, LockText, Locks, constrain_locked, deflected, direction_of, edge_direction,
+    lock_point, parse_lock_text, square_corner,
 };
 use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
 use serde_json::{Value, json};
@@ -215,6 +217,35 @@ fn the_square_corner() {
             "squareCorner",
             json!([wire(first), wire(second), wire(prev), wire(last)]),
         );
+        assert_eq!(op, got, "{name}: the op");
+    }
+}
+
+/// An edge as the cases write it (the web's `Edge`).
+fn edge(v: &Value) -> Edge {
+    match v["kind"].as_str().expect("kind") {
+        "seg" => Edge::Seg {
+            a: Vec2::new(num(&v["a"]["x"]), num(&v["a"]["y"])),
+            b: Vec2::new(num(&v["b"]["x"]), num(&v["b"]["y"])),
+        },
+        _ => Edge::Arc {
+            c: Vec2::new(num(&v["c"]["x"]), num(&v["c"]["y"])),
+            r: num(&v["r"]),
+            a0: num(&v["a0"]),
+            sweep: num(&v["sweep"]),
+        },
+    }
+}
+
+#[test]
+fn the_direction_of_a_picked_edge() {
+    let file = fixture();
+    for case in file["edgeDirection"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("name");
+        let p = pt(&case["p"]);
+        let got = edge_direction(&edge(&case["edge"]), p);
+        same(name, got, &case["expect"], UNIT);
+        let op = called("lockEdgeDirection", json!([case["edge"], wire(p)]));
         assert_eq!(op, got, "{name}: the op");
     }
 }

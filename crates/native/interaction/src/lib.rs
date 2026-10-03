@@ -202,7 +202,7 @@ pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 pub use kentos_geometry_core::tools::point_input::Tracking;
 /// JavaScript's `trim()`, as typed input is read (the shared grammar).
 pub use kentos_geometry_core::tools::point_text::{is_js_space, js_trim};
-pub use locks::{LockAsk, LockState, Toward};
+pub use locks::{LockAsk, LockPick, LockState, NO_LOCK_EDGE, Toward};
 pub use log::{Level, Line};
 pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;

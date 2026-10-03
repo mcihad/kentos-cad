@@ -1104,5 +1104,257 @@
    "text": "<١٢",
    "expect": null
   }
+ ],
+ "edgeDirection": [
+  {
+   "name": "a straight edge, its own way (3, 4)",
+   "edge": {
+    "kind": "seg",
+    "a": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 3.0,
+     "y": 4.0
+    }
+   },
+   "p": [
+    1.0,
+    1.0
+   ],
+   "expect": [
+    0.6,
+    0.8
+   ]
+  },
+  {
+   "name": "the same edge drawn the other way",
+   "edge": {
+    "kind": "seg",
+    "a": {
+     "x": 3.0,
+     "y": 4.0
+    },
+    "b": {
+     "x": 0.0,
+     "y": 0.0
+    }
+   },
+   "p": [
+    1.0,
+    1.0
+   ],
+   "expect": [
+    -0.6,
+    -0.8
+   ]
+  },
+  {
+   "name": "a straight edge in TM coordinates",
+   "edge": {
+    "kind": "seg",
+    "a": {
+     "x": 487001.5,
+     "y": 4420002.0
+    },
+    "b": {
+     "x": 487031.5,
+     "y": 4420042.0
+    }
+   },
+   "p": [
+    487010.0,
+    4420015.0
+   ],
+   "expect": [
+    0.6,
+    0.8
+   ]
+  },
+  {
+   "name": "a straight edge of no length: none",
+   "edge": {
+    "kind": "seg",
+    "a": {
+     "x": 2.0,
+     "y": 2.0
+    },
+    "b": {
+     "x": 2.0,
+     "y": 2.0
+    }
+   },
+   "p": [
+    2.0,
+    2.0
+   ],
+   "expect": null
+  },
+  {
+   "name": "a counter-clockwise arc: the tangent at the click's angle",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "r": 5,
+    "a0": 0.0,
+    "sweep": 1.5707963267948966
+   },
+   "p": [
+    3.3,
+    4.4
+   ],
+   "expect": [
+    -0.8,
+    0.6
+   ]
+  },
+  {
+   "name": "a clockwise arc: the tangent its own way",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "r": 5,
+    "a0": 1.5707963267948966,
+    "sweep": -1.5707963267948966
+   },
+   "p": [
+    3.0,
+    4.0
+   ],
+   "expect": [
+    0.8,
+    -0.6
+   ]
+  },
+  {
+   "name": "a click beyond the arc's end: the end's tangent",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "r": 5,
+    "a0": 0.0,
+    "sweep": 1.5707963267948966
+   },
+   "p": [
+    -1.0,
+    6.0
+   ],
+   "expect": [
+    -1.0,
+    6.123233995736766e-17
+   ]
+  },
+  {
+   "name": "a click beyond the arc's start: the start's tangent",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "r": 5,
+    "a0": 0.0,
+    "sweep": 1.5707963267948966
+   },
+   "p": [
+    6.0,
+    -1.5
+   ],
+   "expect": [
+    0.0,
+    1.0
+   ]
+  },
+  {
+   "name": "a full circle at 30°",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 487016.0,
+     "y": 4419992.0
+    },
+    "r": 4,
+    "a0": 0.0,
+    "sweep": 6.283185307179586
+   },
+   "p": [
+    487019.4641016151,
+    4419994.0
+   ],
+   "expect": [
+    -0.5000000000009436,
+    0.8660254037838939
+   ]
+  },
+  {
+   "name": "a full circle, the click inside it",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 487016.0,
+     "y": 4419992.0
+    },
+    "r": 4,
+    "a0": 0.0,
+    "sweep": 6.283185307179586
+   },
+   "p": [
+    487015.0,
+    4419991.0
+   ],
+   "expect": [
+    0.7071067811865476,
+    -0.7071067811865476
+   ]
+  },
+  {
+   "name": "a half circle in TM coordinates, clockwise",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 487020.5,
+     "y": 4420007.25
+    },
+    "r": 12.5,
+    "a0": 3.141592653589793,
+    "sweep": -3.141592653589793
+   },
+   "p": [
+    487026.0,
+    4420018.0
+   ],
+   "expect": [
+    0.8902481629773388,
+    -0.45547580431398726
+   ]
+  },
+  {
+   "name": "an arc of no radius: none",
+   "edge": {
+    "kind": "arc",
+    "c": {
+     "x": 1.0,
+     "y": 1.0
+    },
+    "r": 0,
+    "a0": 0.0,
+    "sweep": 1.5707963267948966
+   },
+   "p": [
+    1.0,
+    2.0
+   ],
+   "expect": null
+  }
  ]
 }

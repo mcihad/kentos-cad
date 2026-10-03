@@ -1,0 +1,32 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-lock-edges",
+  "title": "Kullanım: Nesneye paralel ve dik; Çoklu çizgi'de eğik çizgiye tıklamak doğrultusunu kilitler, nokta paralel doğruya iner; yayın tepesine dik kilit, yazılan 6 m güneye",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0166 §3",
+  "covers": ["HYB-10"],
+  "document": "lock-edges.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.1 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.1,
+  "steps": [
+    { "run": "tool.polyline", "note": "Çoklu çizgi." },
+    { "click": [-10, -15], "expect": { "points": 1 } },
+    { "run": "draft.lock.parallel", "note": "Sağ tık Kilit ▸ Nesneye paralel: istem kenarı sorar." },
+    { "move": [-12, -4] },
+    { "shot": "paralel-sec", "note": "İmleç eğik çizginin üstünde; istem “paralel kilidi için kenarı ya da yayı seçin”." },
+    { "click": [-12, -4], "expect": { "locks": ["Paralel"] } },
+    { "move": [5, -3] },
+    { "shot": "paralel", "note": "Seçilen kenar kenet renginde, ilk noktadan geçen paralel kesikli; imleç onun üstüne iner." },
+    { "click": [5, -3], "expect": { "points": 2 } },
+    { "run": "draft.lock.perpendicular" },
+    { "click": [10, -4], "note": "Yayın tepesi: dik kilit kuzey–güney.", "expect": { "locks": ["Dik"] } },
+    { "move": [8, -12] },
+    { "shot": "dik", "note": "Yay vurgulu; son noktadan geçen dik doğru kesikli, iki yönlü." },
+    { "text": "6" },
+    { "key": "Enter", "expect": { "points": 3 } },
+    { "key": "Enter", "note": "Çoklu çizgi yazılır.", "expect": { "entities": 3 } },
+    { "shot": "cizgi" }
+  ]
+}

@@ -6,8 +6,8 @@ import { hasLocks, lockedDirection, lockReference, lockTravel, lockWords } from 
 
 /**
  * The digitizing locks over the drawing (docs/adr/0166 §6), in the snap colour as the other guides: the locked
- * direction a dashed line from the reference (a ray when it runs one way), the locked length a dashed circle round it,
- * and above-left of the cursor “Kilit: …” (the value card sits above-right, the tool's tag below-right) while the value
+ * direction a dashed line from the reference (a ray when it runs one way), the edge a Paralel or Dik lock was picked on
+ * solid, the locked length a dashed circle round it, and above-left of the cursor “Kilit: …” (the value card sits above-right, the tool's tag below-right) while the value
  * card is closed: open, its chips say the locks.
  */
 export function drawLocks(ctx: AppContext, g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette, cursor: Vec2 | null): void {
@@ -21,6 +21,31 @@ export function drawLocks(ctx: AppContext, g: CanvasRenderingContext2D, cam: Cam
   g.lineWidth = 1;
   g.globalAlpha = 0.85;
   g.setLineDash([3, 4]);
+  // The edge a Paralel or Dik lock was picked on, solid (docs/adr/0166 §3).
+  const edge = s.edge;
+  if (edge) {
+    g.save();
+    g.setLineDash([]);
+    g.globalAlpha = 1;
+    g.lineWidth = 2;
+    g.beginPath();
+    if (edge.kind === 'seg') {
+      const a = cam.worldToScreen(edge.a);
+      const b = cam.worldToScreen(edge.b);
+      g.moveTo(a.x, a.y);
+      g.lineTo(b.x, b.y);
+    } else {
+      const n = Math.max(8, Math.ceil(Math.abs(edge.sweep) / (Math.PI / 48)));
+      for (let i = 0; i <= n; i++) {
+        const t = edge.a0 + (edge.sweep * i) / n;
+        const q = cam.worldToScreen({ x: edge.c.x + edge.r * Math.cos(t), y: edge.c.y + edge.r * Math.sin(t) });
+        if (i) g.lineTo(q.x, q.y);
+        else g.moveTo(q.x, q.y);
+      }
+    }
+    g.stroke();
+    g.restore();
+  }
   const dir = lockedDirection(s, lockTravel(ctx), ctx.format.angles);
   if (dir) {
     const back = dir.both ? 1e4 : 0;

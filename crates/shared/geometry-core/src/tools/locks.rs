@@ -6,7 +6,8 @@
 //! `scripts/fixtures/lock_cases.py` (`fixtures/locks/v1/cases.json`).
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, js_hypot, sin};
+use crate::geom::intersect::{Edge, on_edge_arc, point_at};
+use crate::jsmath::{PI, atan2, cos, js_hypot, sin};
 use crate::op;
 use crate::tools::point_input::{AngleFrom, Angles, Constrained, constrain_cursor};
 use crate::tools::point_text::{is_js_space, js_trim};
@@ -181,6 +182,38 @@ pub fn square_corner(first: Vec2, second: Vec2, prev: Vec2, last: Vec2) -> Optio
     Some(Vec2::new(last.x + s * pa.x, last.y + s * pa.y))
 }
 
+/// The direction a lock takes from a picked edge (§3, Nesneye paralel ve
+/// dik): a straight edge's own way, `a` to `b`; an arc's tangent at its
+/// point nearest `p` (`p`'s own angle from the centre when that lies on the
+/// arc, else the nearer end's), the way it sweeps: a full circle's counter-
+/// clockwise. Unit; none for an edge of no length or an arc of no radius.
+/// The tangent comes from the angle, not from the nearest point less the
+/// centre, which would lose the radius's digits to TM coordinates.
+pub fn edge_direction(edge: &Edge, p: Vec2) -> Option<Vec2> {
+    match *edge {
+        Edge::Seg { a, b } => unit(a, b),
+        Edge::Arc { c, r, a0, sweep } => {
+            if r <= 0.0 {
+                return None;
+            }
+            let ang = atan2(p.y - c.y, p.x - c.x);
+            let theta = if on_edge_arc(a0, sweep, ang) {
+                ang
+            } else {
+                let start = point_at(edge, 0.0);
+                let end = point_at(edge, 1.0);
+                if js_hypot(p.x - start.x, p.y - start.y) <= js_hypot(p.x - end.x, p.y - end.y) {
+                    a0
+                } else {
+                    a0 + sweep
+                }
+            };
+            let k = if sweep < 0.0 { -1.0 } else { 1.0 };
+            Some(Vec2::new(-k * sin(theta), k * cos(theta)))
+        }
+    }
+}
+
 /// What typed lock text says (§6): `<45` locks the direction at that angle,
 /// in the project's way and unit.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -243,6 +276,9 @@ pub(crate) static OPS: &[Op] = &[
                          prev: Vec2,
                          last: Vec2| {
         square_corner(first, second, prev, last)
+    }),
+    op!("lockEdgeDirection", |e: Edge, p: Vec2| {
+        edge_direction(&e, p)
     }),
 ];
 

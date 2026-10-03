@@ -279,6 +279,8 @@ pub const PORTED: &[&str] = &[
     "draft.lock.length",
     "draft.lock.angle",
     "draft.lock.deflection",
+    "draft.lock.parallel",
+    "draft.lock.perpendicular",
     "draft.lock.keep",
     "draft.lock.clear",
     // Çakışma denetimi and its modes (docs/adr/0162).

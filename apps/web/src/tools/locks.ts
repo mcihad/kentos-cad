@@ -1,8 +1,10 @@
 import type { AppContext } from '../app/context';
 import type { PolarAngles } from '../app/format';
 import type { Vec2 } from '../model/geometry';
+import type { Edge } from '../model/geom/intersect';
+import { nearestEdge } from '../model/ops/edges';
 import { op } from '../wasm/core';
-import { takesTypedInput } from './Tool';
+import { takesTypedInput, type ToolPointer } from './Tool';
 import type { Tracking } from './tracking';
 
 /**
@@ -46,6 +48,9 @@ export const lockDeflected = op<(prev: Vec2, from: Vec2, angle: number, fromNort
 /** Dik kapat: the corner that closes a right-angled shape square; null when the first and last edge are parallel. */
 export const squareCorner = op<(first: Vec2, second: Vec2, prev: Vec2, last: Vec2) => Vec2 | null>('squareCorner');
 
+/** Nesneye paralel ve dik: a picked edge's direction at `p` (a straight edge's own way, an arc's tangent); null without one. */
+export const lockEdgeDirection = op<(edge: Edge, p: Vec2) => Vec2 | null>('lockEdgeDirection');
+
 const LOCK_TEXT = /^<\s*([-+]?\d+(?:\.\d+)?)$/;
 
 /** `<45`: the angle a typed direction lock names (in the project's way and unit); null for any other text. */
@@ -75,9 +80,31 @@ export interface LockState {
   readonly keep: boolean;
   /** The reference the locks were made at: when it moves (a point was placed), one-shot locks go and kept ones follow. */
   readonly at: Vec2 | null;
+  /** The edge a Paralel or Dik lock was picked on: drawn while it holds. */
+  readonly edge: Edge | null;
 }
 
-export const NO_LOCKS: LockState = { length: null, toward: null, keep: false, at: null };
+export const NO_LOCKS: LockState = { length: null, toward: null, keep: false, at: null, edge: null };
+
+/** Nesneye paralel or dik waiting for its edge (§3): the next press on the drawing picks it instead of reaching the tool. */
+export type LockPick = 'parallel' | 'perpendicular';
+
+/** The step the prompt shows while the edge is awaited (the desktop's `LockPick::step`). */
+export const lockPickStep = (pick: LockPick): string => `${pick === 'parallel' ? 'paralel' : 'dik'} kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]`;
+
+/** What a press finds no edge under. */
+export const NO_LOCK_EDGE = 'Tıklanan yerde düz kenar ya da yay yok.';
+
+/** The kinds whose edges lend a lock their direction: those a tangent circle touches (curveTools.ts). */
+const LOCK_EDGE_KINDS = ['line', 'polyline', 'polygon', 'arc', 'circle', 'xline', 'ray'];
+
+/** The edge under a press and its direction there: the nearest edge of the nearest line, polyline, area, arc, circle, construction line or ray. */
+export function pickedEdge(ctx: AppContext, p: ToolPointer): { edge: Edge; u: Vec2 } | null {
+  const e = ctx.view.pickEdge(p.screen, (x) => LOCK_EDGE_KINDS.includes(x.kind));
+  const edge = e && nearestEdge(e, p.raw);
+  const u = edge && lockEdgeDirection(edge, p.raw);
+  return edge && u ? { edge, u } : null;
+}
 
 /** A lock asked for with no point to measure it from (the desktop's words). */
 export const NO_LOCK_REFERENCE = 'Kilit için önce bir nokta verin: uzunluk ve doğrultu son noktadan ölçülür.';
@@ -94,7 +121,7 @@ const samePoint = (a: Vec2 | null, b: Vec2 | null): boolean => (a === null || b 
 export function followed(s: LockState, from: Vec2 | null): LockState {
   if (!hasLocks(s) || samePoint(from, s.at)) return s;
   if (from && s.keep) return { ...s, at: from };
-  return { ...s, length: null, toward: null, at: null };
+  return { ...s, length: null, toward: null, at: null, edge: null };
 }
 
 /** The direction locked for the next point, as the core takes it (none for a deflection with no edge to turn from). */
@@ -167,7 +194,7 @@ export function lockToward(ctx: AppContext, toward: Toward): boolean {
   const at = lockReference(ctx);
   if (!at) return void ctx.log.warn(NO_LOCK_REFERENCE), false;
   if (toward.kind === 'deflection' && !lockTravel(ctx)) return void ctx.log.warn(NO_TRAVEL), false;
-  ctx.settings.locks.set({ ...followed(ctx.settings.locks.value, at), toward, at });
+  ctx.settings.locks.set({ ...followed(ctx.settings.locks.value, at), toward, at, edge: null });
   sayLocks(ctx);
   ctx.view.requestOverlay();
   return true;
@@ -183,7 +210,7 @@ export function keepLocks(ctx: AppContext, keep: boolean): void {
 export function clearLocks(ctx: AppContext): boolean {
   const s = ctx.settings.locks.value;
   if (!hasLocks(s)) return false;
-  ctx.settings.locks.set({ ...s, length: null, toward: null, at: null });
+  ctx.settings.locks.set({ ...s, length: null, toward: null, at: null, edge: null });
   ctx.log.info(LOCKS_GONE);
   ctx.view.requestOverlay();
   return true;

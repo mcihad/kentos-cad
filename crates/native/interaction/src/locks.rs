@@ -3,13 +3,17 @@
 //! geometry core's (`tools::locks`); the web keeps the same state in
 //! `apps/web/src/tools/locks.ts`.
 
+use kentos_geometry_core::geom::intersect::Edge;
+use kentos_geometry_core::ops::edges::nearest_edge;
 use kentos_geometry_core::tools::locks::{
-    Direction, Locks, deflected, direction_of, perpendicular,
+    Direction, Locks, deflected, direction_of, edge_direction, perpendicular,
 };
 use kentos_geometry_core::tools::point_input::Angles;
 
 use crate::Vec2;
 use crate::format::Format;
+use crate::spatial::record;
+use crate::tool::Context;
 
 /// Where a locked direction comes from.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -22,6 +26,55 @@ pub enum Toward {
     Parallel(Vec2),
     /// Square to a picked edge, either way: Nesneye dik.
     Perpendicular(Vec2),
+}
+
+/// Nesneye paralel or dik waiting for its edge (docs/adr/0166 §3): the next
+/// press on the drawing picks it instead of reaching the tool.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LockPick {
+    Parallel,
+    Perpendicular,
+}
+
+impl LockPick {
+    /// The step the prompt shows while the edge is awaited.
+    pub fn step(self) -> &'static str {
+        match self {
+            LockPick::Parallel => "paralel kilidi için kenarı ya da yayı seçin",
+            LockPick::Perpendicular => "dik kilidi için kenarı ya da yayı seçin",
+        }
+    }
+
+    /// The direction lock the picked edge's direction `u` gives.
+    pub fn toward(self, u: Vec2) -> Toward {
+        match self {
+            LockPick::Parallel => Toward::Parallel(u),
+            LockPick::Perpendicular => Toward::Perpendicular(u),
+        }
+    }
+}
+
+/// What a press finds no edge under (§3).
+pub const NO_LOCK_EDGE: &str = "Tıklanan yerde düz kenar ya da yay yok.";
+
+/// The kinds whose edges lend a lock their direction: those a tangent circle
+/// touches (the web's `LOCK_EDGE_KINDS`).
+const EDGE_KINDS: [&str; 7] = [
+    "line", "polyline", "polygon", "arc", "circle", "xline", "ray",
+];
+
+/// The edge under a press at `p` and its direction there (§3): the nearest
+/// edge of the nearest visible line, polyline, area, arc, circle,
+/// construction line or ray within the pick reach; none elsewhere.
+pub fn picked_edge(p: Vec2, cx: &Context<'_>) -> Option<(Edge, Vec2)> {
+    let slot = cx.spatial.pick_edge(p, cx.pick_tolerance(), |s| {
+        cx.doc
+            .get(s)
+            .is_some_and(|e| EDGE_KINDS.contains(&e.kind()))
+    })?;
+    let edge = nearest_edge(&record(cx.doc.get(slot)?).3, p)?;
+    let u = edge_direction(&edge, p)?;
+    Some((edge, u))
 }
 
 /// What the value card asks for when a lock is chosen from the menu
@@ -49,6 +102,8 @@ pub struct LockState {
     /// edge's, a path's tangent): Sapma turns from it. The session fills it
     /// from the tool before each event.
     pub travel: Option<Vec2>,
+    /// The edge a Paralel or Dik lock was picked on: drawn while it holds.
+    pub edge: Option<Edge>,
 }
 
 impl LockState {
@@ -62,6 +117,7 @@ impl LockState {
         self.length = None;
         self.toward = None;
         self.at = None;
+        self.edge = None;
     }
 
     /// A new command: nothing locked, nothing kept.
@@ -75,10 +131,18 @@ impl LockState {
         self.at = Some(at);
     }
 
-    /// Locks the direction at the reference `at`; it takes the place of the one before.
+    /// Locks the direction at the reference `at`; it takes the place of the
+    /// one before, and of its picked edge.
     pub fn lock_toward(&mut self, toward: Toward, at: Vec2) {
         self.toward = Some(toward);
         self.at = Some(at);
+        self.edge = None;
+    }
+
+    /// The direction lock alone goes (its chip's ×), its picked edge with it.
+    pub fn drop_toward(&mut self) {
+        self.toward = None;
+        self.edge = None;
     }
 
     /// The reference is now `from` (after a point was placed, a step taken

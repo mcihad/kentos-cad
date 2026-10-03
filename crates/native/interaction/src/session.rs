@@ -33,7 +33,7 @@ use crate::erase::{self, Erase};
 use crate::format::Format;
 use crate::lengthen::{self, Lengthen};
 use crate::line::{self, Line};
-use crate::locks::Toward;
+use crate::locks::{LockPick, NO_LOCK_EDGE, Toward, picked_edge};
 use crate::log::Level;
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
@@ -188,6 +188,10 @@ pub struct Session {
     parent: Option<Suspended>,
     last: Option<&'static str>,
     select: Select,
+    /// Nesneye paralel or dik waiting for its edge (docs/adr/0166 §3).
+    lock_pick: Option<LockPick>,
+    /// The press that picked the edge: its release does not reach the tool.
+    pick_pressed: bool,
 }
 
 /// What the web says when the command takes no point at its step.
@@ -405,6 +409,7 @@ impl Session {
     pub fn activate(&mut self, cx: &mut Context<'_>) {
         // A new command starts with nothing locked (docs/adr/0166 §1).
         cx.locks.reset();
+        self.lock_pick = None;
         cx.selection.set_hover(None);
         if let Some(tool) = &mut self.tool
             && tool.activate(cx) == Flow::Exit
@@ -418,12 +423,17 @@ impl Session {
     pub fn exit(&mut self) {
         self.tool = None;
         self.parent = None;
+        self.lock_pick = None;
     }
 
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
     /// edge tool drops the object it picked); otherwise it is left. Whether it stays.
     pub fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
-        // Esc lets the locks go first (docs/adr/0166 §1): one step back.
+        // Esc leaves an edge being picked for a lock, then lets the locks go
+        // (docs/adr/0166 §1, §3): one step back each.
+        if self.lock_pick.take().is_some() {
+            return true;
+        }
         if cx.locks.any() && self.lock_reference().is_some() {
             cx.locks.clear();
             cx.say(Level::Info, LOCKS_GONE.to_owned());
@@ -502,13 +512,57 @@ impl Session {
     /// The pointer's look over the drawing: the running tool's, else the
     /// select tool's pick (the web's `SelectTool.cursor`).
     pub fn cursor(&self) -> Cursor {
+        // An edge awaited for a lock is picked, whatever the tool's look (docs/adr/0166 §3).
+        if self.lock_pick.is_some() {
+            return Cursor::Pick;
+        }
         self.tool.as_ref().map_or(Cursor::Pick, |t| t.cursor())
     }
 
     pub fn prompt(&self) -> Prompt {
-        self.tool
+        let prompt = self
+            .tool
             .as_ref()
-            .map_or_else(|| self.select.prompt(), |t| t.prompt())
+            .map_or_else(|| self.select.prompt(), |t| t.prompt());
+        // An edge awaited for a lock speaks for the step (docs/adr/0166 §3).
+        match self.lock_pick {
+            Some(pick) => match prompt.tool {
+                Some(tool) => Prompt::new(tool, pick.step()),
+                None => Prompt::untitled(pick.step()),
+            }
+            .option("Vazgeç", "Esc"),
+            None => prompt,
+        }
+    }
+
+    /// Nesneye paralel or dik waiting for its edge, if one is.
+    pub fn lock_pick(&self) -> Option<LockPick> {
+        self.lock_pick
+    }
+
+    /// Nesneye paralel or dik (docs/adr/0166 §3): the next press on the
+    /// drawing picks the edge the direction is taken from; false (and why)
+    /// with no point to measure the lock from.
+    pub fn pick_lock_edge(&mut self, pick: LockPick, cx: &mut Context<'_>) -> bool {
+        if self.lock_reference().is_none() {
+            cx.say(Level::Warn, NO_LOCK_REFERENCE.to_owned());
+            return false;
+        }
+        self.lock_pick = Some(pick);
+        true
+    }
+
+    /// The press while an edge is awaited: the edge under it gives the
+    /// direction lock, or the wait goes on and says why.
+    fn pick_edge_now(&mut self, pick: LockPick, p: &Pointer, cx: &mut Context<'_>) {
+        let Some((edge, u)) = picked_edge(p.raw, cx) else {
+            cx.say(Level::Warn, NO_LOCK_EDGE.to_owned());
+            return;
+        };
+        self.lock_pick = None;
+        if self.lock_toward(pick.toward(u), cx) {
+            cx.locks.edge = Some(edge);
+        }
     }
 
     /// The object snap for the pointer at `at` (the web's `updateSnap`):
@@ -609,6 +663,11 @@ impl Session {
     /// The left button went down on the drawing.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         cx.locks.travel = self.travel();
+        if let Some(pick) = self.lock_pick {
+            self.pick_pressed = true;
+            self.pick_edge_now(pick, p, cx);
+            return;
+        }
         match &mut self.tool {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p, cx),
@@ -619,6 +678,10 @@ impl Session {
     /// The left button came up (on the drawing, or wherever a press on it ended).
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         cx.locks.travel = self.travel();
+        // The release of the press that picked a lock's edge is the pick's.
+        if std::mem::take(&mut self.pick_pressed) {
+            return;
+        }
         match &mut self.tool {
             Some(tool) => tool.pointer_up(p, cx),
             None => self.select.pointer_up(p, cx),

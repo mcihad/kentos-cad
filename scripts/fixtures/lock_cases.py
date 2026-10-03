@@ -37,10 +37,17 @@ when an edge has no length or the lines are parallel.
 
 Lock text (§6): `<` and a number of the point grammar ([-+]?\\d+(\\.\\d+)?), white
 space round them (ECMAScript's); nothing else.
+
+An edge's direction (§3, Nesneye paralel ve dik): a straight edge's own way,
+a → b; an arc's tangent at its point nearest the click, the way it sweeps (a
+full circle's counter-clockwise): the click's own angle from the centre when
+that lies on the arc, else the nearer end's. Unit; none for an edge of no
+length or an arc of no radius.
 """
 
 import argparse
 import json
+import math
 import re
 import sys
 from fractions import Fraction as F
@@ -248,6 +255,55 @@ def text_case(text):
     return {"text": text, "expect": lock_text(text)}
 
 
+# ── An edge's direction (Nesneye paralel ve dik, §3) ──────────────────────────
+
+
+def mpq(q):
+    return mp.mpf(q.numerator) / q.denominator
+
+
+def edge_direction(edge, p):
+    """edge: ("seg", a, b) or ("arc", c, r, a0, sweep), points and numbers as doubles; p the click."""
+    if edge[0] == "seg":
+        a, b = ex(edge[1]), ex(edge[2])
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        n2 = dx * dx + dy * dy
+        if n2 == 0:
+            return None
+        n = sqrt_q(n2)
+        return (mpq(dx) / n, mpq(dy) / n)
+    _, c, r, a0, sweep = edge
+    if r == 0:
+        return None
+    c, q = ex(c), ex(p)
+    a0, sw = mp.mpf(a0), mp.mpf(sweep)
+    tau = 2 * mp.pi
+    ang = mp.atan2(mpq(q[1] - c[1]), mpq(q[0] - c[0]))
+    lo, span = (a0, sw) if sw >= 0 else (a0 + sw, -sw)
+    on = span >= tau or mp.fmod(mp.fmod(ang - lo, tau) + tau, tau) <= span
+    if on:
+        theta = ang
+    else:
+        rr = mp.mpf(r)
+        ends = [a0, a0 + sw]
+        far = [mp.hypot(mpq(c[0]) + rr * mp.cos(e) - mpq(q[0]), mpq(c[1]) + rr * mp.sin(e) - mpq(q[1])) for e in ends]
+        theta = ends[0] if far[0] <= far[1] else ends[1]
+    k = 1 if sw >= 0 else -1
+    return (-k * mp.sin(theta), k * mp.cos(theta))
+
+
+def edge_wire(edge):
+    if edge[0] == "seg":
+        return {"kind": "seg", "a": {"x": fl(edge[1][0]), "y": fl(edge[1][1])},
+                "b": {"x": fl(edge[2][0]), "y": fl(edge[2][1])}}
+    _, c, r, a0, sweep = edge
+    return {"kind": "arc", "c": {"x": fl(c[0]), "y": fl(c[1])}, "r": r, "a0": a0, "sweep": sweep}
+
+
+def edge_case(name, edge, p):
+    return {"name": name, "edge": edge_wire(edge), "p": pt(p), "expect": pt(edge_direction(edge, p))}
+
+
 # ── The cases ─────────────────────────────────────────────────────────────────
 
 
@@ -324,11 +380,33 @@ def build():
         square_case("no last edge: none", (0, 0), (10, 0), (10, 5), (10, 5)),
         square_case("no first edge: none", (0, 0), (0, 0), (10, 0), (10, 5)),
     ]
+    quarter, half, full = math.pi / 2, math.pi, 2 * math.pi
+    edges = [
+        edge_case("a straight edge, its own way (3, 4)", ("seg", (0, 0), (3, 4)), (1, 1)),
+        edge_case("the same edge drawn the other way", ("seg", (3, 4), (0, 0)), (1, 1)),
+        edge_case("a straight edge in TM coordinates", ("seg", (E0 + 1.5, N0 + 2), (E0 + 31.5, N0 + 42)),
+                  (E0 + 10, N0 + 15)),
+        edge_case("a straight edge of no length: none", ("seg", (2, 2), (2, 2)), (2, 2)),
+        edge_case("a counter-clockwise arc: the tangent at the click's angle", ("arc", (0, 0), 5, 0.0, quarter),
+                  (3.3, 4.4)),
+        edge_case("a clockwise arc: the tangent its own way", ("arc", (0, 0), 5, quarter, -quarter), (3, 4)),
+        edge_case("a click beyond the arc's end: the end's tangent", ("arc", (0, 0), 5, 0.0, quarter), (-1, 6)),
+        edge_case("a click beyond the arc's start: the start's tangent", ("arc", (0, 0), 5, 0.0, quarter),
+                  (6, -1.5)),
+        edge_case("a full circle at 30°", ("arc", (E0 + 16, N0 - 8), 4, 0.0, full),
+                  (E0 + 16 + 3.4641016151377544, N0 - 8 + 2)),
+        edge_case("a full circle, the click inside it", ("arc", (E0 + 16, N0 - 8), 4, 0.0, full),
+                  (E0 + 15, N0 - 9)),
+        edge_case("a half circle in TM coordinates, clockwise", ("arc", (E0 + 20.5, N0 + 7.25), 12.5, half, -half),
+                  (E0 + 26, N0 + 18)),
+        edge_case("an arc of no radius: none", ("arc", (1, 1), 0, 0.0, quarter), (1, 2)),
+    ]
     texts = [text_case(t) for t in ["<45", " < 12.5 ", "<-30", "<+30", "<0", "<400", "<\t7", "　<8　",
                                     "<", "45", "@10<45", "10<45", "<4,5", "<<45", "<45x", "<.5", "<45.", "<1e3",
                                     "< 4 5", "<١٢"]]
     return {"format": "kentos.locks", "version": 1, "lockPoint": lock, "constrainLocked": constrained,
-            "direction": directions, "deflected": deflections, "squareCorner": squares, "lockText": texts}
+            "direction": directions, "deflected": deflections, "squareCorner": squares, "lockText": texts,
+            "edgeDirection": edges}
 
 
 def main():

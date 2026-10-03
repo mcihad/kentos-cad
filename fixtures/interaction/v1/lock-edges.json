@@ -1,0 +1,30 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "lock-edges",
+  "title": "Nesneye paralel ve dik (ADR 0166 §3): Çoklu çizgi'de Nesneye paralel tıklamayı bekler, boş yer uyarır, çizgiye tıklamak doğrultusunu kilitler; nokta paralel doğrunun üstüne iner; Nesneye dik yayın tepesinde teğete dik kilitler, yazılan 6 m o doğrultuda; Esc önce kenar seçimini bırakır",
+  "source": "docs/adr/0166-digitizing-locks.md §3, §6",
+  "covers": ["HYB-10"],
+  "document": "lock-edges.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.1 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.1,
+  "steps": [
+    { "run": "tool.polyline" },
+    { "click": [-10, -15], "expect": { "points": 1 } },
+    { "run": "draft.lock.parallel", "note": "Sonraki tıklama araca gitmez, kenar seçer.", "expect": { "prompt": "Çoklu çizgi: paralel kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]", "points": 1 } },
+    { "click": [-22, -6], "note": "Boş yerde kenar yok: söylenir, bekleme sürer.", "expect": { "logged": ["Tıklanan yerde düz kenar ya da yay yok."], "points": 1, "locks": [], "prompt": "Çoklu çizgi: paralel kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]" } },
+    { "click": [-12, -4], "note": "Eğik çizgiye tıklamak doğrultusunu kilitler; nokta konmaz.", "expect": { "locks": ["Paralel"], "points": 1, "logged": ["Kilit: Paralel."] } },
+    { "move": [5, -3] },
+    { "click": [5, -3], "note": "Nokta, ilk noktadan geçen ve çizgiye paralel doğrunun üstüne iner; tek seferlik kilit kalkar.", "expect": { "points": 2, "locks": [] } },
+    { "run": "draft.lock.perpendicular", "expect": { "prompt": "Çoklu çizgi: dik kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]" } },
+    { "click": [10, -4], "note": "Yayın tepesi: teğeti doğu–batı, dik kilit kuzey–güney, iki yönlü.", "expect": { "locks": ["Dik"], "points": 2 } },
+    { "move": [8, -12] },
+    { "text": "6" },
+    { "key": "Enter", "note": "Yazılan 6 m kilitli doğrultuda, imlecin tarafına (güneye).", "expect": { "points": 3, "locks": [] } },
+    { "run": "draft.lock.parallel" },
+    { "key": "Esc", "note": "Esc önce kenar seçimini bırakır; komut ve noktaları sürer.", "expect": { "tool": "polyline", "points": 3, "locks": [] } },
+    { "key": "Enter", "note": "Çoklu çizgi yazılır.", "expect": { "entities": 3, "newest": { "kind": "polyline", "points": [[-10, -15], [5.36, -3.48], [5.36, -9.48]] } } }
+  ]
+}

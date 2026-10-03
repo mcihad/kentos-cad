@@ -155,7 +155,7 @@ export class CursorInput extends Component {
       chip(w, () => {
         const now = this.ctx.settings.locks.value;
         // The length's chip comes first when there is one.
-        this.ctx.settings.locks.set(now.length !== null && i === 0 ? { ...now, length: null } : { ...now, toward: null });
+        this.ctx.settings.locks.set(now.length !== null && i === 0 ? { ...now, length: null } : { ...now, toward: null, edge: null });
       }),
     );
     replaceChildren(this.locks, ...chips);

@@ -23,6 +23,7 @@ impl App {
             reference,
             direction: locks.direction(format.angles()).map(|d| (d.u, d.both)),
             length: locks.length,
+            edge: locks.edge,
         })
     }
 
@@ -64,12 +65,12 @@ impl App {
         self.with_tool(|s, cx| s.pointer_move(&p, cx));
     }
 
-    /// A chip's ×: that lock goes (the length's, or the direction's).
+    /// A chip's ×: that lock goes (the length's, or the direction's with its picked edge).
     pub(crate) fn drop_lock(&mut self, length: bool) {
         if length {
             self.locks.length = None;
         } else {
-            self.locks.toward = None;
+            self.locks.drop_toward();
         }
     }
 }

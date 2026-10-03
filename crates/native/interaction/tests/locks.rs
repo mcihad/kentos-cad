@@ -8,7 +8,7 @@ mod common;
 
 use common::{Bench, rel};
 use kentos_contracts::Entity;
-use kentos_interaction::{Level, Toward};
+use kentos_interaction::{Level, LockPick, NO_LOCK_EDGE, Toward};
 
 /// The newest object's points, relative to (E, N).
 fn points(b: &Bench) -> Vec<[f64; 2]> {
@@ -146,4 +146,86 @@ fn a_new_command_starts_with_nothing_locked() {
     assert!(b.run(|s, cx| s.lock_length(12.0, cx)));
     b.start("line");
     assert!(!b.locks.any() && !b.locks.keep);
+}
+
+/// A locked direction's unit vector, within 1e-12.
+fn along(toward: Option<Toward>, u: [f64; 2]) -> bool {
+    match toward {
+        Some(Toward::Parallel(v) | Toward::Perpendicular(v)) => {
+            (v.x - u[0]).abs() < 1e-12 && (v.y - u[1]).abs() < 1e-12
+        }
+        _ => false,
+    }
+}
+
+#[test]
+fn nesneye_paralel_waits_for_an_edge_and_takes_its_direction() {
+    let mut b = Bench::new("polyline");
+    b.add_line("cizim", [-20.0, -10.0], [-4.0, 2.0]);
+    b.click(-10.0, -15.0);
+    assert!(b.run(|s, cx| s.pick_lock_edge(LockPick::Parallel, cx)));
+    let prompt = b.run(|s, _| s.prompt());
+    assert_eq!(prompt.step, "paralel kilidi için kenarı ya da yayı seçin");
+    // Nothing under the press: said, and the wait goes on; nothing reaches the tool.
+    let before = b.log.len();
+    b.click(-25.0, -2.0);
+    assert_eq!(b.said(before), [(Level::Warn, NO_LOCK_EDGE)]);
+    assert_eq!(b.points(), 1);
+    assert_eq!(b.run(|s, _| s.lock_pick()), Some(LockPick::Parallel));
+    // The slanted line's direction, (16, 12) / 20; its edge kept for the drawing.
+    b.click(-12.0, -4.0);
+    assert!(along(b.locks.toward, [0.8, 0.6]), "{:?}", b.locks.toward);
+    assert!(b.locks.edge.is_some());
+    assert_eq!(b.points(), 1, "the press picked, it placed nothing");
+    assert_eq!(b.run(|s, _| s.lock_pick()), None);
+    // Both ways: the next point on the parallel through the first one.
+    b.click(5.0, -3.0);
+    assert!(!b.locks.any() && b.locks.edge.is_none(), "one-shot");
+    b.confirm();
+    let pts = points(&b);
+    assert!(near(pts[1], [5.36, -3.48]), "{pts:?}");
+}
+
+#[test]
+fn nesneye_dik_on_an_arc_is_square_to_its_tangent() {
+    let mut b = Bench::new("polyline");
+    // The upper half of a circle round (10, −10), radius 6.
+    b.add_arc("cizim", [10.0, -10.0], 6.0, 0.0, std::f64::consts::PI);
+    b.click(-10.0, -15.0);
+    assert!(b.run(|s, cx| s.pick_lock_edge(LockPick::Perpendicular, cx)));
+    // Its top: the tangent runs west (counter-clockwise), square to it is north–south.
+    b.click(10.0, -4.0);
+    assert!(along(b.locks.toward, [-1.0, 0.0]), "{:?}", b.locks.toward);
+    let format = b.run(|_, cx| cx.format());
+    assert_eq!(b.locks.words(&format), ["Dik"]);
+    b.click(-10.0, -30.0);
+    b.confirm();
+    assert!(near(points(&b)[1], [-10.0, -30.0]), "{:?}", points(&b));
+}
+
+#[test]
+fn esc_leaves_an_awaited_edge_before_the_locks() {
+    let mut b = Bench::new("polyline");
+    b.add_line("cizim", [-20.0, -10.0], [-4.0, 2.0]);
+    b.click(-10.0, -15.0);
+    assert!(b.run(|s, cx| s.lock_length(5.0, cx)));
+    assert!(b.run(|s, cx| s.pick_lock_edge(LockPick::Parallel, cx)));
+    assert!(b.run(|s, cx| s.cancel(cx)));
+    assert_eq!(b.run(|s, _| s.lock_pick()), None);
+    assert_eq!(b.locks.length, Some(5.0), "the locks stay for the next Esc");
+    assert_eq!(b.run(|s, _| s.prompt()).step, "sonraki noktayı belirtin");
+}
+
+#[test]
+fn no_edge_pick_before_the_first_point() {
+    let mut b = Bench::new("polyline");
+    let before = b.log.len();
+    assert!(!b.run(|s, cx| s.pick_lock_edge(LockPick::Parallel, cx)));
+    assert_eq!(
+        b.said(before),
+        [(
+            Level::Warn,
+            "Kilit için önce bir nokta verin: uzunluk ve doğrultu son noktadan ölçülür."
+        )]
+    );
 }

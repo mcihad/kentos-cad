@@ -726,6 +726,12 @@ export class ViewportController {
     // A lock that changes with the pointer still shows at once (docs/adr/0166 §6).
     d.add(settings.locks.subscribe(() => this.repoint()));
     d.add(
+      tools.lockPick.subscribe((pick) => {
+        this.overlay.dataset.cursor = pick ? 'pick' : tools.active.cursor;
+        this.requestOverlay();
+      }),
+    );
+    d.add(
       tools.activeId.subscribe(() => {
         this.snap = null;
         this.snapOverride.set(null);
@@ -1007,6 +1013,8 @@ export class ViewportController {
         // Recompute the snap here: a click can arrive without a preceding move
         // (pen, touch, fast clicks), and a stale snap would place the point elsewhere.
         this.updateSnap(this.screenOf(e));
+        // An edge awaited for a lock takes the press (docs/adr/0166 §3).
+        if (e.button === 0 && this.ctx.tools.pickPress(this.pointer(e))) return;
         this.ctx.tools.active.pointerDown?.(this.pointer(e));
         if (e.button === 0 && this.snapOverride.value) this.snapOverride.set(null);
       }),
@@ -1047,6 +1055,7 @@ export class ViewportController {
         }
         if (e.button === 2) return this.onRightUp(e);
         if (e.button !== 0) return;
+        if (this.ctx.tools.pickRelease()) return;
         this.updateSnap(this.screenOf(e));
         this.ctx.tools.active.pointerUp?.(this.pointer(e));
       }),
@@ -1376,7 +1385,9 @@ export class ViewportController {
       drawNorthArrow(g, cam, pal);
       drawScaleBar(g, cam, pal);
     }
-    if (this.screenCursor && !this.panFrom) drawCrosshair(g, this.screenCursor, this.ctx.tools.active.cursor, pal, this.ctx.prefs.crosshair.value);
+    // An edge awaited for a lock is picked, whatever the tool's look (docs/adr/0166 §3).
+    const look = this.ctx.tools.lockPick.value ? 'pick' : this.ctx.tools.active.cursor;
+    if (this.screenCursor && !this.panFrom) drawCrosshair(g, this.screenCursor, look, pal, this.ctx.prefs.crosshair.value);
   }
 }
 
