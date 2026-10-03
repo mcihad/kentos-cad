@@ -624,12 +624,14 @@ pub(crate) fn unsupported_in(
     out
 }
 
-/// Whether a batch's geometry (its box from the origin and its tile) reaches the ground box.
+/// Whether a batch's geometry reaches the ground box. Its box is from the document's origin, as
+/// every batch's (the style core's `batch.rs`), not from its tile: the tile moves only its numbers
+/// (docs/adr/0157). With the tile added, a drawing a tile or more from the anchor lost its map.
 fn batch_reaches(b: &StyledBatch, o: &VectorScale, within: Option<[f64; 4]>) -> bool {
     let Some(w) = within else {
         return true;
     };
-    let [bx, by] = base(o, b);
+    let [bx, by] = o.origin;
     let r = b.bounds;
     r[2] + bx >= w[0] && r[0] + bx <= w[2] && r[3] + by >= w[1] && r[1] + by <= w[3]
 }
@@ -739,6 +741,44 @@ mod tests {
         assert_eq!(paths.len(), 1, "{paths:?}");
         assert_eq!((paths[0].points.len(), paths[0].holes.len()), (4, 1));
         assert_eq!(paths[0].fill.as_deref(), Some("#ff0000"));
+    }
+
+    /// A batch a tile east of the anchor (its numbers from its tile, its box from the anchor)
+    /// reaches the ground box where its geometry is, and not one a tile further.
+    #[test]
+    fn a_far_tile_s_batch_reaches_where_its_geometry_is() {
+        let o = VectorScale {
+            scale: 1000.0,
+            origin: [500_000.0, 4_400_000.0],
+        };
+        let batch = StyledBatch {
+            range: 0..0,
+            kind: BatchKind::Stroke {
+                color: [0.0, 0.0, 0.0, 1.0],
+                width: 0.35,
+                unit: Unit::World,
+                dash: None,
+                dash_offset: 0.0,
+                cap: Cap::Butt,
+                blur: 0.0,
+            },
+            level: 0.0,
+            key: 0,
+            // The geometry 83.67 km east of the anchor; the tile is one 65.536 km step.
+            bounds: [83_660.0, 10.0, 83_680.0, 30.0],
+            origin: [65_536.0, 0.0],
+            reach: 0.0,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+        };
+        let around = |x: f64, y: f64| Some([x - 50.0, y - 50.0, x + 50.0, y + 50.0]);
+        assert!(batch_reaches(&batch, &o, around(583_670.0, 4_400_020.0)));
+        assert!(!batch_reaches(
+            &batch,
+            &o,
+            around(583_670.0 + 65_536.0, 4_400_020.0)
+        ));
     }
 
     #[test]

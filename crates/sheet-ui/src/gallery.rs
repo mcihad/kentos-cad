@@ -152,6 +152,12 @@ pub(crate) struct Thumb {
     plan: paint::Plan,
     /// A cache a canvas: the layers and the maps and pictures between them, in order.
     caches: Vec<canvas::Cache>,
+    /// The same for the details' picture of the selected card. The card and the details draw
+    /// the template in one frame, and a canvas cache drawn twice in a frame has its text made
+    /// ready twice by iced's text renderer (iced_wgpu 0.14, cryoglyph 0.1): the second time
+    /// recalls the staging buffer the first wrote into the unsent frame, and wgpu stops the
+    /// program at the frame's submission (“still mapped”).
+    preview: Vec<canvas::Cache>,
     /// The painter's revision the cache holds.
     painted: Cell<u64>,
     pictures: BTreeMap<String, Option<Rc<Raster>>>,
@@ -421,6 +427,7 @@ impl Designer {
             list: None,
             plan: paint::Plan::default(),
             caches: Vec::new(),
+            preview: Vec::new(),
             painted: Cell::new(u64::MAX),
             pictures: BTreeMap::new(),
             needs: Vec::new(),
@@ -452,6 +459,7 @@ impl Designer {
             thumb.plan = paint::plan(list);
             let canvases = thumb.plan.layers.len() + thumb.plan.maps.len();
             thumb.caches = (0..canvases).map(|_| canvas::Cache::new()).collect();
+            thumb.preview = (0..canvases).map(|_| canvas::Cache::new()).collect();
         }
         for f in kentos_sheet::preflight::preflight(&book, "onizleme", &inputs).unwrap_or_default()
         {
@@ -1213,16 +1221,22 @@ struct ThumbProgram<'a> {
     thumb: Option<&'a Thumb>,
     painter: Painter<'a>,
     part: ThumbPart,
+    /// The details' picture: its own caches ([`Thumb::preview`]).
+    preview: bool,
 }
 
 impl ThumbProgram<'_> {
     /// The canvas's cache: the layers first, then the maps and pictures between them.
-    fn cache(thumb: &Thumb, part: ThumbPart) -> Option<&canvas::Cache> {
+    fn cache(thumb: &Thumb, part: ThumbPart, preview: bool) -> Option<&canvas::Cache> {
         let at = match part {
             ThumbPart::Layer(i) => i,
             ThumbPart::Between(i) => thumb.plan.layers.len() + i,
         };
-        thumb.caches.get(at)
+        if preview {
+            thumb.preview.get(at)
+        } else {
+            thumb.caches.get(at)
+        }
     }
 }
 
@@ -1257,12 +1271,12 @@ impl canvas::Program<Message> for ThumbProgram<'_> {
         };
         let revision = self.painter.revision();
         if thumb.painted.get() != revision {
-            for c in &thumb.caches {
+            for c in thumb.caches.iter().chain(&thumb.preview) {
                 c.clear();
             }
             thumb.painted.set(revision);
         }
-        let Some(cache) = Self::cache(thumb, self.part) else {
+        let Some(cache) = Self::cache(thumb, self.part, self.preview) else {
             return Vec::new();
         };
         let geometry = cache.draw(renderer, bounds.size(), |frame| {
@@ -1327,6 +1341,7 @@ fn thumb_stack<'a>(
     painter: &Painter<'a>,
     width: impl Into<iced::Length> + Copy,
     height: f32,
+    preview: bool,
 ) -> Element<'a, Message> {
     let made = g.thumbs.get(id);
     let parts: Vec<ThumbPart> = match made {
@@ -1349,6 +1364,7 @@ fn thumb_stack<'a>(
                 thumb: made,
                 painter: painter.clone(),
                 part,
+                preview,
             })
             .width(Fill)
             .height(Fill)
@@ -1361,6 +1377,7 @@ fn thumb_stack<'a>(
         .into()
 }
 
+/// The selected card's picture in the details, on caches of its own ([`Thumb::preview`]).
 fn thumb<'a>(
     g: &'a Gallery,
     id: &str,
@@ -1368,7 +1385,7 @@ fn thumb<'a>(
     width: f32,
     height: f32,
 ) -> Element<'a, Message> {
-    thumb_stack(g, id, painter, width, height)
+    thumb_stack(g, id, painter, width, height, true)
 }
 
 /// The gallery's size in the room the window gives it: the web's at its
@@ -1410,7 +1427,7 @@ fn thumb_fill<'a>(
     painter: &Painter<'a>,
     height: f32,
 ) -> Element<'a, Message> {
-    thumb_stack(g, id, painter, Fill, height)
+    thumb_stack(g, id, painter, Fill, height, false)
 }
 
 fn badge<'a>(b: Badge) -> Element<'a, Message> {
@@ -2255,6 +2272,27 @@ mod tests {
             image.rgba[i] > 180,
             "one canvas: the picture over the square"
         );
+    }
+
+    /// The details draw the selected card's template in the frame the card does, on caches of
+    /// their own: a canvas cache drawn twice in a frame stopped the program on a GPU (iced's text
+    /// renderer, [`Thumb::preview`]).
+    #[test]
+    fn the_details_picture_has_caches_of_its_own() {
+        let t = kentos_sheet::template::system_template("sys:genel-a4-dikey")
+            .expect("a system template");
+        let d = Designer::new(crate::designer::Context::default());
+        let thumb = d.thumb_of(t, "t".into());
+        assert!(!thumb.caches.is_empty());
+        assert_eq!(thumb.preview.len(), thumb.caches.len());
+        let parts = (0..thumb.plan.layers.len())
+            .map(ThumbPart::Layer)
+            .chain((0..thumb.plan.maps.len()).map(ThumbPart::Between));
+        for part in parts {
+            let card = ThumbProgram::cache(&thumb, part, false).expect("the card's");
+            let details = ThumbProgram::cache(&thumb, part, true).expect("the details'");
+            assert!(!std::ptr::eq(card, details), "{part:?}");
+        }
     }
 
     #[test]

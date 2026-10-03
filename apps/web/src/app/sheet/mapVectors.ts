@@ -364,10 +364,14 @@ export function markerPaths(b: MarkerBatch, o: VectorScale): { paths: VecPath[] 
   return { paths };
 }
 
-/** Whether a batch's geometry (its box, from the origin and its tile) reaches the ground box `b`. */
-function batchReaches(bounds: readonly [number, number, number, number], o: VectorScale, tile: readonly [number, number] | undefined, b: Bounds | undefined): boolean {
+/**
+ * Whether a batch's geometry reaches the ground box `b`. Its box is from the document's origin, as every batch's
+ * (the style core's `batch.rs`, `batchInView`), not from its tile: the tile moves only its numbers (docs/adr/0157).
+ * With the tile added, a drawing a tile or more from the anchor lost its map.
+ */
+function batchReaches(bounds: readonly [number, number, number, number], o: VectorScale, b: Bounds | undefined): boolean {
   if (!b) return true;
-  const [bx, by] = base(o, tile);
+  const { x: bx, y: by } = o.origin;
   return bounds[2] + bx >= b.minX && bounds[0] + bx <= b.maxX && bounds[3] + by >= b.minY && bounds[1] + by <= b.maxY;
 }
 
@@ -385,7 +389,7 @@ export function layerPaths(layer: SceneLayer, o: VectorScale, within?: Bounds): 
     if (parts.length) paths.push({ parts, fill: { color: hex(f.color), opacity: f.color[3], rule: 'nonzero' } });
   }
   for (const b of layer.styled ?? []) {
-    if (!batchReaches(b.bounds, o, b.origin, within)) continue;
+    if (!batchReaches(b.bounds, o, within)) continue;
     if (b.kind === 'stroke') {
       if (b.blur > 0) unsupported.add('yumuşak kenarlı çizgi');
       const p = strokePaths(b, o);

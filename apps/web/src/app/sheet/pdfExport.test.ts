@@ -4,8 +4,8 @@ import type { PdfOptions } from '../../contracts/generated/sheet/PdfOptions';
 import { testEngine } from '../../product/sheet/engineTesting';
 import { MemoryKeyValue, sha256Hex } from '../../product/sheet/store';
 import { NO_SHAPE_PARAMS } from '../../style/primitives';
-import type { MarkerBatch, PaintFillBatch, StrokeBatch } from '../../render/types';
-import { fillPaths, markerPaths, strokePaths, triangleRings } from './mapVectors';
+import { emptySceneLayer, type MarkerBatch, type PaintFillBatch, type StrokeBatch } from '../../render/types';
+import { fillPaths, layerPaths, markerPaths, strokePaths, triangleRings } from './mapVectors';
 import { coreLayers, corePaths, exportName, faceFile, makePdf, pdfNotes, tmCrsOf } from './pdfExport';
 import { FONT_FILES } from './pdfFonts';
 import { SheetService } from './service';
@@ -64,6 +64,18 @@ describe('map vectors', () => {
     ]);
     // 0.35 m at 1/1000 is 0.35 mm on the paper.
     expect(p.stroke).toMatchObject({ color: '#ff0000', width: 0.35, dash: [2, 1], cap: 'round' });
+  });
+
+  it('keeps a batch a tile from the anchor where its geometry is: its box from the origin, its numbers from the tile', () => {
+    // One segment 83.67 km east of the anchor; its tile is one 65.536 km step (docs/adr/0157).
+    const s = Float32Array.from([83_660 - 65_536, 10, 83_680 - 65_536, 10, 0, 3]);
+    const b: StrokeBatch = { kind: 'stroke', reach: 0, reachUnit: 'world', bounds: [83_660, 10, 83_680, 10], origin: [65_536, 0], segments: s, color: [0, 0, 0, 1], width: 0.35, unit: 'world', dash: null, dashOffset: 0, cap: 'butt', blur: 0 };
+    const layer = { ...emptySceneLayer('far'), styled: [b] };
+    const at = { scale: 1000, origin: { x: 500_000, y: 4_400_000 } };
+    const around = (x: number, y: number) => ({ minX: x - 50, minY: y - 50, maxX: x + 50, maxY: y + 50 });
+    const here = layerPaths(layer, at, around(583_670, 4_400_010));
+    expect(here.paths.map((p) => p.parts)).toEqual([[{ points: [583_660, 4_400_010, 583_680, 4_400_010], closed: false }]]);
+    expect(layerPaths(layer, at, around(583_670 + 65_536, 4_400_010)).paths).toEqual([]);
   });
 
   it('turns a fill’s triangles into the rings bounding them: an outer one counter-clockwise, a hole clockwise', () => {
