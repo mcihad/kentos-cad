@@ -1,0 +1,85 @@
+{
+  "description": "Şablon eşitleme planı (design §13): tablonun her satırı ve kenar durumları; beklenenler tablodan elle yazıldı.",
+  "cases": [
+    {
+      "description": "temiz + uzakta daha yeni → indir",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3 }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 4 }],
+      "expect": [{ "type": "download", "id": "t1", "revision": 4 }]
+    },
+    {
+      "description": "değişmiş + uzakta dayandığı revizyon → yükle (expectedRevision)",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3, "dirty": true }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 3 }],
+      "expect": [{ "type": "upload", "id": "t1", "expectedRevision": 3 }]
+    },
+    {
+      "description": "değişmiş + uzakta daha yeni → çakışma: yerel kopya yeni şablon olarak yüklenir, uzak indirilir",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3, "dirty": true }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 5 }],
+      "expect": [
+        { "type": "uploadCopy", "id": "t1", "name": "Ada paftası (bu cihazdaki kopya)" },
+        { "type": "download", "id": "t1", "revision": 5 }
+      ]
+    },
+    {
+      "description": "temiz + uzakta silinmiş → yerelden kalkar",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3 }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 3, "deleted": true }],
+      "expect": [{ "type": "removeLocal", "id": "t1" }]
+    },
+    {
+      "description": "değişmiş + uzakta silinmiş → bu cihazda kalır, söylenir",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3, "dirty": true }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 4, "deleted": true }],
+      "expect": [
+        { "type": "keepLocal", "id": "t1", "message": "“Ada paftası” bulutta silinmiş; bu cihazdaki değişiklikleriniz “bu cihazda” şablon olarak kaldı." }
+      ]
+    },
+    {
+      "description": "silinmiş + uzakta aynı revizyon → uzakta da silinir",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3, "deleted": true }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 3 }],
+      "expect": [{ "type": "deleteRemote", "id": "t1", "revision": 3 }]
+    },
+    {
+      "description": "silinmiş + uzakta daha yeni → uzak kalır, yeniden indirilir, söylenir",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3, "deleted": true }],
+      "remote": [{ "id": "t1", "name": "Ada paftası v2", "revision": 6 }],
+      "expect": [
+        { "type": "keepRemote", "id": "t1", "message": "“Ada paftası v2” siz sildikten sonra başka bir yerde değişti; bulutta kaldı ve yeniden indirildi." },
+        { "type": "download", "id": "t1", "revision": 6 }
+      ]
+    },
+    {
+      "description": "temiz + aynı revizyon → bir şey yapılmaz",
+      "local": [{ "id": "t1", "name": "Ada paftası", "baseRevision": 3 }],
+      "remote": [{ "id": "t1", "name": "Ada paftası", "revision": 3 }],
+      "expect": []
+    },
+    {
+      "description": "hiç yüklenmemiş → oluşturulur; yalnız bulutta olan → indirilir; sıralı",
+      "local": [{ "id": "b-yerel", "name": "Yeni şablon" }],
+      "remote": [{ "id": "a-paylasilan", "name": "Paylaşılan", "revision": 2 }, { "id": "c-silinmis", "name": "Eski", "revision": 1, "deleted": true }],
+      "expect": [{ "type": "download", "id": "a-paylasilan", "revision": 2 }, { "type": "create", "id": "b-yerel" }]
+    },
+    {
+      "description": "bulutun listesinden düşmüş: temizse kalkar, değişmişse bu cihazda kalır",
+      "local": [
+        { "id": "t1", "name": "Bir", "baseRevision": 2 },
+        { "id": "t2", "name": "İki", "baseRevision": 2, "dirty": true }
+      ],
+      "remote": [],
+      "expect": [
+        { "type": "removeLocal", "id": "t1" },
+        { "type": "keepLocal", "id": "t2", "message": "“İki” bulutta silinmiş; bu cihazdaki değişiklikleriniz “bu cihazda” şablon olarak kaldı." }
+      ]
+    },
+    {
+      "description": "hiç yüklenmemiş ve silinmiş → yalnız yerel iz kalkar",
+      "local": [{ "id": "t1", "name": "Taslak", "deleted": true }],
+      "remote": [],
+      "expect": [{ "type": "removeLocal", "id": "t1" }]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "description": "Atlas planı (design §7a): süzgeç, Türkçe sıralama, sayfa adı ve eşine ek, sığan en büyük standart ölçek, döndürülmüş haritada kutunun dönüşü, önceden tanımlı ölçekler. Ölçekler elle hesaplandı (README).",
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "id": "s1",
+        "name": "Atlas",
+        "page": {
+          "paper": "a4",
+          "orientation": "portrait",
+          "size": { "width": 210000, "height": 297000 },
+          "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 15000 }
+        },
+        "atlas": { "layer": "ada", "filter": "tur = 'parsel'", "sort": [{ "expression": "ad" }], "pageName": "'Pafta ' || ad" },
+        "items": [
+          {
+            "id": "harita",
+            "name": "Harita",
+            "frame": { "left": 19000, "top": 30000, "width": 177000, "height": 162000 },
+            "kind": { "type": "map", "view": { "type": "atlas", "policy": { "type": "fit", "marginPct": 10, "standardScales": true } }, "labelBand": 6000 }
+          },
+          {
+            "id": "donuk",
+            "name": "Dönük harita",
+            "frame": { "left": 19000, "top": 200000, "width": 80000, "height": 60000 },
+            "kind": { "type": "map", "view": { "type": "atlas", "rotation": 90000, "policy": { "type": "predefined", "scales": [1000, 500, 2000] } } }
+          }
+        ]
+      }
+    ]
+  },
+  "sheet": "s1",
+  "features": [
+    { "id": "1001", "bbox": [487000, 4417000, 487050, 4417040], "attributes": [{ "name": "ad", "value": "Ada 1001" }, { "name": "tur", "value": "parsel" }] },
+    { "id": "1002", "bbox": [487100, 4417000, 487400, 4417100], "attributes": [{ "name": "ad", "value": "Ada 1002" }, { "name": "tur", "value": "parsel" }] },
+    { "id": "1003", "bbox": [487500, 4417500, 487500, 4417500], "attributes": [{ "name": "ad", "value": "Ada 1001" }, { "name": "tur", "value": "parsel" }] },
+    { "id": "1004", "bbox": [480000, 4400000, 510000, 4430000], "attributes": [{ "name": "ad", "value": "Büyük" }, { "name": "tur", "value": "parsel" }] },
+    { "id": "9999", "bbox": [487000, 4417200, 487600, 4417220], "attributes": [{ "name": "ad", "value": "Cadde" }, { "name": "tur", "value": "yol" }] }
+  ],
+  "expect": {
+    "pages": [
+      {
+        "feature": "1001",
+        "index": 1,
+        "count": 4,
+        "name": "Pafta Ada 1001",
+        "maps": [
+          { "item": "harita", "center": { "x": 487025, "y": 4417020 }, "scale": 500, "rotation": 0 },
+          { "item": "donuk", "center": { "x": 487025, "y": 4417020 }, "scale": 1000, "rotation": 90000 }
+        ]
+      },
+      {
+        "feature": "1003",
+        "index": 2,
+        "count": 4,
+        "name": "Pafta Ada 1001 (2)",
+        "maps": [
+          { "item": "harita", "center": { "x": 487500, "y": 4417500 }, "scale": 100, "rotation": 0 },
+          { "item": "donuk", "center": { "x": 487500, "y": 4417500 }, "scale": 500, "rotation": 90000 }
+        ]
+      },
+      {
+        "feature": "1002",
+        "index": 3,
+        "count": 4,
+        "name": "Pafta Ada 1002",
+        "maps": [
+          { "item": "harita", "center": { "x": 487250, "y": 4417050 }, "scale": 2500, "rotation": 0 },
+          { "item": "donuk", "center": { "x": 487250, "y": 4417050 }, "scale": 2000, "rotation": 90000 }
+        ]
+      },
+      {
+        "feature": "1004",
+        "index": 4,
+        "count": 4,
+        "name": "Pafta Büyük",
+        "maps": [
+          { "item": "harita", "center": { "x": 495000, "y": 4415000 }, "scale": 240000, "rotation": 0 },
+          { "item": "donuk", "center": { "x": 495000, "y": 4415000 }, "scale": 2000, "rotation": 90000 }
+        ]
+      }
+    ],
+    "warnings": [
+      "“1002” nesnesi önceden tanımlı ölçeklere sığmıyor; 1/2000 kullanıldı.",
+      "“1004” nesnesi standart ölçeklerin hiçbirine sığmıyor; 1/240000 kullanıldı.",
+      "“1004” nesnesi önceden tanımlı ölçeklere sığmıyor; 1/2000 kullanıldı.",
+      "Süzgeç 1 nesneyi dışarıda bıraktı."
+    ]
+  }
+}

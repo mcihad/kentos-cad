@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210000 297000">
+<title>Aplikasyon krokisi</title>
+<rect width="210000" height="297000" fill="#ffffff"/>
+<rect x="20000" y="10000" width="180000" height="277000" fill="none" stroke="#000000" stroke-width="500"/>
+<text x="85967" y="17000" font-family="Barlow, sans-serif" font-size="5000" font-weight="600" fill="#000000" xml:space="preserve">APLİKASYON KROKİSİ</text>
+<text x="21000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">İL</text>
+<text x="21000" y="28979" font-family="Barlow, sans-serif" font-size="2700" font-weight="500" fill="#000000" xml:space="preserve">Ankara</text>
+<text x="51000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">İLÇE</text>
+<text x="51000" y="28979" font-family="Barlow, sans-serif" font-size="2700" font-weight="500" fill="#000000" xml:space="preserve">Çankaya</text>
+<text x="81000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">MAHALLE / KÖY</text>
+<text x="81000" y="28979" font-family="Barlow, sans-serif" font-size="2700" font-weight="500" fill="#000000" xml:space="preserve">Kızılay</text>
+<text x="121000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ADA</text>
+<text x="126970" y="29100" font-family="Barlow, sans-serif" font-size="3000" font-weight="600" fill="#000000" xml:space="preserve">1234</text>
+<text x="141000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">PARSEL</text>
+<text x="149268" y="29100" font-family="Barlow, sans-serif" font-size="3000" font-weight="600" fill="#000000" xml:space="preserve">7</text>
+<text x="161000" y="22350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">PAFTA</text>
+<text x="173256" y="28979" font-family="Barlow, sans-serif" font-size="2700" font-weight="500" fill="#000000" xml:space="preserve">J29-c-23-b</text>
+<path d="M20000 20000L200000 20000M50000 20000L50000 34000M80000 20000L80000 34000M120000 20000L120000 34000M140000 20000L140000 34000M160000 20000L160000 34000" fill="none" stroke="#000000" stroke-width="180"/>
+<rect x="20000" y="10000" width="180000" height="24000" fill="none" stroke="#000000" stroke-width="500"/>
+<rect x="31000" y="45000" width="158000" height="126000" fill="#ececec"/>
+<text x="110000" y="111500" font-family="Barlow, sans-serif" font-size="10500" fill="#a0a0a0" text-anchor="middle">harita</text>
+<clipPath id="k1"><rect x="31000" y="45000" width="158000" height="126000"/></clipPath><g clip-path="url(#k1)">
+<path d="M107500 148000L112500 148000M110000 150500L110000 145500M107500 48000L112500 48000M110000 50500L110000 45500" fill="none" stroke="#000000" stroke-width="180"/>
+</g>
+<text x="106311" y="43440" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">Y=487150</text>
+<text x="191460" y="152258" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" transform="rotate(270 191460 152258)" xml:space="preserve">X=4417800</text>
+<text x="106311" y="173460" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">Y=487150</text>
+<text x="29440" y="152258" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" transform="rotate(270 29440 152258)" xml:space="preserve">X=4417800</text>
+<rect x="31000" y="45000" width="158000" height="126000" fill="none" stroke="#000000" stroke-width="350"/>
+<rect x="161000" y="47000" width="26000" height="18000" fill="#ffffff"/>
+<path d="M174000 50446L177751 64200L174000 61074Z" fill="#000000" stroke="#000000" stroke-width="250"/>
+<path d="M174000 50446L170249 64200L174000 61074Z" fill="none" stroke="#000000" stroke-width="250"/>
+<text x="173132" y="49760" font-family="Barlow, sans-serif" font-size="2800" font-weight="600" fill="#000000" xml:space="preserve">K</text>
+<rect x="34000" y="157000" width="52000" height="10000" fill="#ffffff"/>
+<rect x="39294" y="162880" width="10000" height="1200" fill="#000000"/>
+<rect x="49294" y="162880" width="10000" height="1200" fill="#ffffff"/>
+<rect x="59294" y="162880" width="10000" height="1200" fill="#000000"/>
+<rect x="69294" y="162880" width="10000" height="1200" fill="#ffffff"/>
+<rect x="39294" y="162880" width="40000" height="1200" fill="none" stroke="#000000" stroke-width="250"/>
+<text x="38784" y="161720" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">0</text>
+<text x="48823" y="161720" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">5</text>
+<text x="58468" y="161720" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">10</text>
+<text x="68506" y="161720" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">15</text>
+<text x="77371" y="161720" font-family="Barlow, sans-serif" font-size="1800" font-weight="500" fill="#000000" xml:space="preserve">20 m</text>
+<text x="24000" y="184535" font-family="Barlow, sans-serif" font-size="2600" font-weight="600" fill="#000000" xml:space="preserve">KOORDİNATLAR</text>
+<rect x="24000" y="186190" width="84000" height="3900" fill="#ededed"/>
+<text x="30882" y="188940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Nokta</text>
+<text x="56166" y="188940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Y (m)</text>
+<text x="88624" y="188940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">X (m)</text>
+<text x="32489" y="193035" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P1</text>
+<text x="64099" y="193035" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487131.27</text>
+<text x="96915" y="193035" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417842.51</text>
+<text x="32284" y="197165" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P2</text>
+<text x="63597" y="197165" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487163.84</text>
+<text x="96440" y="197165" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417846.02</text>
+<text x="32308" y="201295" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P3</text>
+<text x="63487" y="201295" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487168.40</text>
+<text x="97177" y="201295" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417812.77</text>
+<text x="32268" y="205425" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P4</text>
+<text x="63898" y="205425" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487150.12</text>
+<text x="96851" y="205425" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417801.45</text>
+<text x="32309" y="209555" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P5</text>
+<text x="63692" y="209555" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487135.66</text>
+<text x="96539" y="209555" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417803.98</text>
+<text x="32308" y="213685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P6</text>
+<text x="63522" y="213685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487129.05</text>
+<text x="96882" y="213685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417821.30</text>
+<text x="32489" y="217815" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">P1</text>
+<text x="64099" y="217815" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">487131.27</text>
+<text x="96915" y="217815" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">4417842.51</text>
+<text x="24800" y="221945" font-family="Barlow, sans-serif" font-size="2200" font-weight="600" fill="#000000" xml:space="preserve">Alan = 1393.80 m²</text>
+<path d="M24000 194220L108000 194220M24000 198350L108000 198350M24000 202480L108000 202480M24000 206610L108000 206610M24000 210740L108000 210740M24000 214870L108000 214870M24000 219000L108000 219000" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M43051 186190L43051 219000M73802 186190L73802 219000" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M24000 190090L108000 190090" fill="none" stroke="#000000" stroke-width="350"/>
+<rect x="24000" y="186190" width="84000" height="36940" fill="none" stroke="#000000" stroke-width="350"/>
+<text x="21000" y="252350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">AÇIKLAMA</text>
+<text x="21000" y="255042" font-family="Barlow, sans-serif" font-size="2300" font-weight="400" fill="#000000" xml:space="preserve">Parselin köşe noktaları tescilli koordinatlarla zemine aplike edilmiş, işaretlenmiştir. Ölçüler metre cinsindendir.</text>
+<text x="21000" y="265350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ÖLÇÜYÜ YAPAN</text>
+<text x="40641" y="285655" font-family="Barlow, sans-serif" font-size="2300" font-weight="400" fill="#000000" xml:space="preserve">M. Demir</text>
+<path d="M26760 282870L63240 282870" fill="none" stroke="#000000" stroke-width="180" stroke-dasharray="600 400"/>
+<text x="71000" y="265350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">KONTROL EDEN</text>
+<text x="91344" y="285655" font-family="Barlow, sans-serif" font-size="2300" font-weight="400" fill="#000000" xml:space="preserve">A. Kaya</text>
+<path d="M76760 282870L113240 282870" fill="none" stroke="#000000" stroke-width="180" stroke-dasharray="600 400"/>
+<text x="121000" y="265350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">TARİH</text>
+<text x="134053" y="276860" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">2026-10-02</text>
+<text x="161000" y="265350" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ÖLÇEK</text>
+<text x="176547" y="277020" font-family="Barlow, sans-serif" font-size="2800" font-weight="600" fill="#000000" xml:space="preserve">1/500</text>
+<path d="M20000 263000L200000 263000M70000 263000L70000 287000M120000 263000L120000 287000M160000 263000L160000 287000" fill="none" stroke="#000000" stroke-width="180"/>
+<rect x="20000" y="250000" width="180000" height="37000" fill="none" stroke="#000000" stroke-width="500"/>
+</svg>

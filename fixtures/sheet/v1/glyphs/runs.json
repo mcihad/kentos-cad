@@ -1,0 +1,176 @@
+{
+  "description": "Eksik karakter kuralı (docs/sheet/design.md §6): yazının yüzünde olmayan karakter, ölçü tablosunun sırasıyla (barlow, arimo, overpass, quicksand, architects-daughter, courier-prime, plex-mono) onu içeren ilk yazı tipinin aynı kalınlık ve eğiklikteki (CSS eşlemesiyle) yüzüyle; hiçbir yüzde olmayan “?”; denetim karakteri boşluk. Beklenenler elle, tablonun -1 hücrelerinden (crates/shared/sheet/data/font-metrics.json).",
+  "cases": [
+    {
+      "why": "Barlow'da yukarı ok yok, Arimo'da var; ≤ hiçbir yüzde yok",
+      "font": "barlow",
+      "weight": 400,
+      "italic": false,
+      "text": "Ok ↑ ≤ 5",
+      "runs": [
+        {
+          "text": "Ok ",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        },
+        {
+          "text": "↑",
+          "font": "arimo",
+          "weight": 400,
+          "italic": false
+        },
+        {
+          "text": " ? 5",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Courier Prime 700'de ₺ yok: Barlow'un 700'e en yakın yüzü 600",
+      "font": "courier-prime",
+      "weight": 700,
+      "italic": false,
+      "text": "120 ₺",
+      "runs": [
+        {
+          "text": "120 ",
+          "font": "courier-prime",
+          "weight": 700,
+          "italic": false
+        },
+        {
+          "text": "₺",
+          "font": "barlow",
+          "weight": 600,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Quicksand'da dakika işareti yok: Barlow 600 (Quicksand 600 için)",
+      "font": "quicksand",
+      "weight": 600,
+      "italic": false,
+      "text": "5°10′",
+      "runs": [
+        {
+          "text": "5°10",
+          "font": "quicksand",
+          "weight": 600,
+          "italic": false
+        },
+        {
+          "text": "′",
+          "font": "barlow",
+          "weight": 600,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "İtalik Barlow'da aşağı ok yok; Arimo'nun italiği tabloda yok: dik Arimo",
+      "font": "barlow",
+      "weight": 400,
+      "italic": true,
+      "text": "x ↓",
+      "runs": [
+        {
+          "text": "x ",
+          "font": "barlow",
+          "weight": 400,
+          "italic": true
+        },
+        {
+          "text": "↓",
+          "font": "arimo",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Eksik değer işaretinin köşeli tırnakları her yüzde var",
+      "font": "architects-daughter",
+      "weight": 400,
+      "italic": false,
+      "text": "‹ada?›",
+      "runs": [
+        {
+          "text": "‹ada?›",
+          "font": "architects-daughter",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Architects Daughter'da ď yok: Barlow 400",
+      "font": "architects-daughter",
+      "weight": 400,
+      "italic": false,
+      "text": "ďa",
+      "runs": [
+        {
+          "text": "ď",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        },
+        {
+          "text": "a",
+          "font": "architects-daughter",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Sekme boşluk olur; ≈ ve ≠ hiçbir yüzde yok",
+      "font": "plex-mono",
+      "weight": 500,
+      "italic": false,
+      "text": "a\tb≈≠",
+      "runs": [
+        {
+          "text": "a b??",
+          "font": "plex-mono",
+          "weight": 500,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Tablonun ölçmediği karakter (Yunanca) hiçbir yüzde yok sayılır",
+      "font": "arimo",
+      "weight": 400,
+      "italic": false,
+      "text": "Δh",
+      "runs": [
+        {
+          "text": "?h",
+          "font": "arimo",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    },
+    {
+      "why": "Bilinmeyen yazı tipi Barlow'dur",
+      "font": "yok",
+      "weight": 400,
+      "italic": false,
+      "text": "İğ",
+      "runs": [
+        {
+          "text": "İğ",
+          "font": "barlow",
+          "weight": 400,
+          "italic": false
+        }
+      ]
+    }
+  ]
+}

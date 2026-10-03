@@ -1,0 +1,345 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:aplikasyon-krokisi",
+    "revision": 1,
+    "name": "Aplikasyon krokisi",
+    "description": "A4 dikey aplikasyon krokisi: üstte il, ilçe, mahalle, ada, parsel ve pafta hücreleri; karelajlı kroki, kuzey oku ve ölçek; iki sütuna akan koordinat listesi (kapanış ve alan satırıyla); açıklama ve imzalar.",
+    "category": "kadastro",
+    "tags": ["kadastro", "aplikasyon", "koordinat listesi"],
+    "papers": [{ "paper": "a4", "orientation": "portrait" }, { "paper": "a3", "orientation": "portrait" }],
+    "workspaces": ["cad"],
+    "projectTypes": ["subdivision", "landReadjustment"],
+    "created": "2026-10-02T00:00:00Z",
+    "updated": "2026-10-02T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Aplikasyon krokisi",
+    "page": {
+      "paper": "a4",
+      "orientation": "portrait",
+      "size": { "width": 210000, "height": 297000 },
+      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+    },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Pafta çerçevesi",
+        "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 277000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "locked": true,
+        "kind": { "type": "border", "style": "single", "stroke": { "width": 500 } }
+      },
+      {
+        "id": "ust",
+        "name": "Başlık ve yer",
+        "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 24000 },
+        "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1000,
+          "valueStyle": { "size": 2700, "weight": 500 },
+          "rows": [
+            {
+              "height": 10,
+              "cells": [
+                { "value": "APLİKASYON KROKİSİ", "align": "center", "style": { "size": 5000, "weight": 600 } }
+              ]
+            },
+            {
+              "height": 14,
+              "cells": [
+                { "width": 3, "label": "İL", "value": "[% @il %]" },
+                { "width": 3, "label": "İLÇE", "value": "[% @ilce %]" },
+                { "width": 4, "label": "MAHALLE / KÖY", "value": "[% @mahalle %]" },
+                {
+                  "width": 2,
+                  "label": "ADA",
+                  "value": "[% @ada %]",
+                  "align": "center",
+                  "style": { "size": 3000, "weight": 600 }
+                },
+                {
+                  "width": 2,
+                  "label": "PARSEL",
+                  "value": "[% @parsel %]",
+                  "align": "center",
+                  "style": { "size": 3000, "weight": 600 }
+                },
+                { "width": 4, "label": "PAFTA", "value": "[% @pafta_no %]", "align": "center" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "harita",
+        "name": "Kroki",
+        "frame": { "left": 24000, "top": 38000, "width": 172000, "height": 140000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "map",
+          "view": { "type": "fixed", "scale": 500 },
+          "labelBand": 7000,
+          "grids": [
+            {
+              "name": "Karelaj",
+              "kind": "cross",
+              "frame": "line",
+              "labels": { "style": { "size": 1800, "weight": 500 }, "gap": 1200 }
+            }
+          ]
+        }
+      },
+      {
+        "id": "kuzey",
+        "name": "Kuzey oku",
+        "frame": { "left": 161000, "top": 47000, "width": 26000, "height": 18000 },
+        "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "padding": 800,
+        "kind": { "type": "northArrow", "map": "harita", "text": { "size": 2800, "weight": 600 } }
+      },
+      {
+        "id": "olcek",
+        "name": "Ölçek çubuğu",
+        "frame": { "left": 34000, "top": 157000, "width": 52000, "height": 10000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "padding": 1000,
+        "kind": {
+          "type": "scaleBar",
+          "map": "harita",
+          "segments": 4,
+          "height": 1200,
+          "text": { "size": 1800, "weight": 500 }
+        }
+      },
+      {
+        "id": "koordinatlar",
+        "name": "Koordinat listesi",
+        "frame": { "left": 24000, "top": 182000, "width": 84000, "height": 64000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "coordinateList",
+          "title": "KOORDİNATLAR",
+          "titleStyle": { "size": 2600, "weight": 600 },
+          "decimals": 2,
+          "closingRow": true,
+          "areaRow": true,
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2200, "weight": 400 }, "padding": 800 },
+          "overflow": { "type": "continueIn", "items": ["koordinatlar-2"] }
+        }
+      },
+      {
+        "id": "koordinatlar-2",
+        "name": "Koordinat listesi (devam)",
+        "frame": { "left": 112000, "top": 186200, "width": 84000, "height": 59800 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "kind": { "type": "table", "source": { "type": "continued" } }
+      },
+      {
+        "id": "alt",
+        "name": "Açıklama ve imzalar",
+        "frame": { "left": 20000, "top": 250000, "width": 180000, "height": 37000 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1000,
+          "valueStyle": { "size": 2400, "weight": 400 },
+          "rows": [
+            {
+              "height": 13,
+              "cells": [
+                {
+                  "label": "AÇIKLAMA",
+                  "value": "[% @aciklama %]",
+                  "valign": "top",
+                  "style": { "size": 2300, "weight": 400 }
+                }
+              ]
+            },
+            {
+              "height": 24,
+              "cells": [
+                {
+                  "width": 5,
+                  "label": "ÖLÇÜYÜ YAPAN",
+                  "value": "[% @kullanici %]",
+                  "signature": true,
+                  "style": { "size": 2300, "weight": 400 }
+                },
+                {
+                  "width": 5,
+                  "label": "KONTROL EDEN",
+                  "value": "[% @kontrol_eden %]",
+                  "signature": true,
+                  "style": { "size": 2300, "weight": 400 }
+                },
+                { "width": 4, "label": "TARİH", "value": "[% @tarih %]", "align": "center" },
+                {
+                  "width": 4,
+                  "label": "ÖLÇEK",
+                  "value": "[% @olcek %]",
+                  "align": "center",
+                  "style": { "size": 2800, "weight": 600 }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "variants": [
+      {
+        "id": "dikey",
+        "name": "Dikey kâğıt",
+        "when": { "orientation": "portrait" },
+        "reference": { "width": 210000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "ust",
+            "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 24000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "harita",
+            "frame": { "left": 24000, "top": 38000, "width": 172000, "height": 140000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kuzey",
+            "frame": { "left": 161000, "top": 47000, "width": 26000, "height": 18000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "olcek",
+            "frame": { "left": 34000, "top": 157000, "width": 52000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "koordinatlar",
+            "frame": { "left": 24000, "top": 182000, "width": 84000, "height": 64000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "koordinatlar-2",
+            "frame": { "left": 112000, "top": 186200, "width": 84000, "height": 59800 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "alt",
+            "frame": { "left": 20000, "top": 250000, "width": 180000, "height": 37000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay",
+        "name": "Yatay kâğıt",
+        "when": { "orientation": "landscape" },
+        "reference": { "width": 297000, "height": 210000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 267000, "height": 190000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "ust",
+            "frame": { "left": 20000, "top": 10000, "width": 267000, "height": 24000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "harita",
+            "frame": { "left": 24000, "top": 38000, "width": 171000, "height": 158000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kuzey",
+            "frame": { "left": 164000, "top": 47000, "width": 26000, "height": 18000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "olcek",
+            "frame": { "left": 30000, "top": 180000, "width": 52000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "koordinatlar",
+            "frame": { "left": 200000, "top": 38000, "width": 83000, "height": 66000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "koordinatlar-2",
+            "frame": { "left": 200000, "top": 107000, "width": 83000, "height": 51000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "alt",
+            "frame": { "left": 199000, "top": 162000, "width": 88000, "height": 38000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "variables": [
+    { "name": "il", "label": "İl" },
+    { "name": "ilce", "label": "İlçe" },
+    { "name": "mahalle", "label": "Mahalle / köy" },
+    { "name": "ada", "label": "Ada" },
+    { "name": "parsel", "label": "Parsel" },
+    { "name": "pafta_no", "label": "Pafta" },
+    { "name": "kontrol_eden", "label": "Kontrol eden" },
+    {
+      "name": "aciklama",
+      "label": "Açıklama",
+      "value": "Parselin köşe noktaları tescilli koordinatlarla zemine aplike edilmiş ve işaretlenmiştir."
+    }
+  ]
+}

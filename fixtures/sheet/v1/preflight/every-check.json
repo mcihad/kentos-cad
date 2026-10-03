@@ -1,0 +1,104 @@
+{
+  "description": "Ön denetim (design §9, §11a): her denetimi bir kez tetikleyen pafta. Beklenen bulgular (önem, kod, öğe) elle yazıldı; ileti metinleri karşılaştırılmaz.",
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "id": "s1",
+        "name": "Sorunlu pafta",
+        "page": {
+          "paper": "a3",
+          "orientation": "landscape",
+          "size": { "width": 420000, "height": 297000 },
+          "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 10000 }
+        },
+        "atlas": { "layer": "" },
+        "export": { "dpi": 100 },
+        "items": [
+          {
+            "id": "harita",
+            "name": "Harita",
+            "frame": { "left": 20000, "top": 20000, "width": 150000, "height": 100000 },
+            "kind": {
+              "type": "map",
+              "view": { "type": "fixed", "center": { "x": 487150, "y": 4417820 }, "scale": 855 },
+              "labelBand": 1000,
+              "grids": [{ "name": "Karelaj" }]
+            }
+          },
+          { "id": "olcek", "name": "Ölçek", "frame": { "left": 180000, "top": 20000, "width": 60000, "height": 12000 }, "kind": { "type": "scaleBar", "map": "yok" } },
+          { "id": "kuzey", "name": "Kuzey", "frame": { "left": 250000, "top": 20000, "width": 15000, "height": 25000 }, "kind": { "type": "northArrow" } },
+          {
+            "id": "metin",
+            "name": "Metin",
+            "frame": { "left": 180000, "top": 50000, "width": 100000, "height": 10000 },
+            "kind": { "type": "text", "content": "[% @yok %] ve [% 1 + %]", "style": { "size": 2500 } }
+          },
+          {
+            "id": "resim",
+            "name": "Resim",
+            "frame": { "left": 300000, "top": 20000, "width": 20000, "height": 20000 },
+            "kind": { "type": "picture", "asset": "abababababababababababababababababababababababababababababababab" }
+          },
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "frame": { "left": 330000, "top": 20000, "width": 60000, "height": 10000 },
+            "kind": { "type": "text", "content": "Başka yazı tipi", "style": { "font": "comic", "size": 2500 } }
+          },
+          { "id": "lejant", "name": "Lejant", "frame": { "left": 180000, "top": 70000, "width": 60000, "height": 40000 }, "kind": { "type": "legend", "map": "harita" } },
+          { "id": "disarida", "name": "Taşan", "frame": { "left": -5000, "top": 150000, "width": 40000, "height": 10000 }, "kind": { "type": "text", "content": "Taşan" } },
+          { "id": "uzakta", "name": "Dışarıda", "frame": { "left": 500000, "top": 150000, "width": 40000, "height": 10000 }, "kind": { "type": "text", "content": "Dışarıda" } },
+          { "id": "kenarda", "name": "Kenarda", "frame": { "left": 2000, "top": 200000, "width": 40000, "height": 10000 }, "kind": { "type": "text", "content": "Kenarda" } },
+          { "id": "alttaki", "name": "Alttaki", "frame": { "left": 100000, "top": 150000, "width": 60000, "height": 10000 }, "kind": { "type": "text", "content": "Görünmez" } },
+          {
+            "id": "ustteki",
+            "name": "Üstteki",
+            "frame": { "left": 95000, "top": 145000, "width": 70000, "height": 20000 },
+            "kind": { "type": "shape", "shape": { "type": "rect" }, "fill": "#ffffff" }
+          },
+          { "id": "ust-uste-1", "name": "Bir", "frame": { "left": 200000, "top": 150000, "width": 60000, "height": 15000 }, "kind": { "type": "text", "content": "Bir" } },
+          { "id": "ust-uste-2", "name": "İki", "frame": { "left": 230000, "top": 155000, "width": 60000, "height": 15000 }, "kind": { "type": "text", "content": "İki" } },
+          {
+            "id": "tablo",
+            "name": "Tablo",
+            "frame": { "left": 300000, "top": 150000, "width": 80000, "height": 20000 },
+            "kind": {
+              "type": "table",
+              "columns": [{ "heading": "No" }],
+              "source": { "type": "fixed", "rows": [["1"], ["2"], ["3"], ["4"], ["5"], ["6"], ["7"], ["8"], ["9"], ["10"]] }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "sheet": "s1",
+  "inputs": {
+    "project": { "name": "Deneme", "user": "M. Demir", "date": "2026-10-02" },
+    "capabilities": { "georeferenced": false, "attributeLayers": false }
+  },
+  "expect": [
+    { "severity": "error", "code": "off_page", "item": "disarida" },
+    { "severity": "error", "code": "off_page", "item": "uzakta" },
+    { "severity": "error", "code": "broken_link", "item": "olcek" },
+    { "severity": "error", "code": "broken_link", "item": "kuzey" },
+    { "severity": "error", "code": "needs_crs", "item": "harita" },
+    { "severity": "error", "code": "needs_crs", "item": "kuzey" },
+    { "severity": "error", "code": "needs_crs" },
+    { "severity": "error", "code": "grid_label_band", "item": "harita" },
+    { "severity": "error", "code": "value_missing", "item": "metin" },
+    { "severity": "error", "code": "expression_error", "item": "metin" },
+    { "severity": "error", "code": "missing_asset", "item": "resim" },
+    { "severity": "error", "code": "missing_font", "item": "yazi" },
+    { "severity": "error", "code": "atlas_no_layer" },
+    { "severity": "warning", "code": "non_standard_scale", "item": "harita" },
+    { "severity": "warning", "code": "outside_margins", "item": "kenarda" },
+    { "severity": "warning", "code": "covered", "item": "alttaki" },
+    { "severity": "warning", "code": "overlap", "item": "ust-uste-2" },
+    { "severity": "warning", "code": "table_overflow", "item": "tablo" },
+    { "severity": "warning", "code": "dpi_low" },
+    { "severity": "info", "code": "legend_empty", "item": "lejant" },
+    { "severity": "info", "code": "no_kerning" }
+  ]
+}

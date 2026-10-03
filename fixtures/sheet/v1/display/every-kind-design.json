@@ -1,0 +1,2664 @@
+{
+  "book": "books/every-kind.json",
+  "description": "Tasarım görünüşü: her öğe türü, basılmayan not dahil. Kayıtlı çıktı (KENTOS_WRITE_SHEET=1); elle denetlenen değerler README'de.",
+  "expect": {
+    "masterItems": [],
+    "paper": "#ffffff",
+    "prims": [
+      {
+        "evenOdd": false,
+        "item": "cerceve",
+        "segments": [
+          {
+            "m": [
+              148500,
+              10000
+            ]
+          },
+          {
+            "l": [
+              148500,
+              20000
+            ]
+          },
+          {
+            "m": [
+              148500,
+              200000
+            ]
+          },
+          {
+            "l": [
+              148500,
+              190000
+            ]
+          },
+          {
+            "m": [
+              10000,
+              105000
+            ]
+          },
+          {
+            "l": [
+              20000,
+              105000
+            ]
+          },
+          {
+            "m": [
+              287000,
+              105000
+            ]
+          },
+          {
+            "l": [
+              277000,
+              105000
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 700
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "cerceve",
+        "segments": [
+          {
+            "m": [
+              59500,
+              10000
+            ]
+          },
+          {
+            "l": [
+              59500,
+              15000
+            ]
+          },
+          {
+            "m": [
+              59500,
+              195000
+            ]
+          },
+          {
+            "l": [
+              59500,
+              200000
+            ]
+          },
+          {
+            "m": [
+              104000,
+              10000
+            ]
+          },
+          {
+            "l": [
+              104000,
+              15000
+            ]
+          },
+          {
+            "m": [
+              104000,
+              195000
+            ]
+          },
+          {
+            "l": [
+              104000,
+              200000
+            ]
+          },
+          {
+            "m": [
+              148500,
+              10000
+            ]
+          },
+          {
+            "l": [
+              148500,
+              15000
+            ]
+          },
+          {
+            "m": [
+              148500,
+              195000
+            ]
+          },
+          {
+            "l": [
+              148500,
+              200000
+            ]
+          },
+          {
+            "m": [
+              193000,
+              10000
+            ]
+          },
+          {
+            "l": [
+              193000,
+              15000
+            ]
+          },
+          {
+            "m": [
+              193000,
+              195000
+            ]
+          },
+          {
+            "l": [
+              193000,
+              200000
+            ]
+          },
+          {
+            "m": [
+              237500,
+              10000
+            ]
+          },
+          {
+            "l": [
+              237500,
+              15000
+            ]
+          },
+          {
+            "m": [
+              237500,
+              195000
+            ]
+          },
+          {
+            "l": [
+              237500,
+              200000
+            ]
+          },
+          {
+            "m": [
+              10000,
+              60000
+            ]
+          },
+          {
+            "l": [
+              15000,
+              60000
+            ]
+          },
+          {
+            "m": [
+              282000,
+              60000
+            ]
+          },
+          {
+            "l": [
+              287000,
+              60000
+            ]
+          },
+          {
+            "m": [
+              10000,
+              105000
+            ]
+          },
+          {
+            "l": [
+              15000,
+              105000
+            ]
+          },
+          {
+            "m": [
+              282000,
+              105000
+            ]
+          },
+          {
+            "l": [
+              287000,
+              105000
+            ]
+          },
+          {
+            "m": [
+              10000,
+              150000
+            ]
+          },
+          {
+            "l": [
+              15000,
+              150000
+            ]
+          },
+          {
+            "m": [
+              282000,
+              150000
+            ]
+          },
+          {
+            "l": [
+              287000,
+              150000
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "path"
+      },
+      {
+        "at": [
+          36810,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "1",
+        "type": "text",
+        "weight": 500,
+        "width": 880
+      },
+      {
+        "at": [
+          36810,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "1",
+        "type": "text",
+        "weight": 500,
+        "width": 880
+      },
+      {
+        "at": [
+          81070,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "2",
+        "type": "text",
+        "weight": 500,
+        "width": 1360
+      },
+      {
+        "at": [
+          81070,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "2",
+        "type": "text",
+        "weight": 500,
+        "width": 1360
+      },
+      {
+        "at": [
+          125595,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "3",
+        "type": "text",
+        "weight": 500,
+        "width": 1310
+      },
+      {
+        "at": [
+          125595,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "3",
+        "type": "text",
+        "weight": 500,
+        "width": 1310
+      },
+      {
+        "at": [
+          170038,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "4",
+        "type": "text",
+        "weight": 500,
+        "width": 1425
+      },
+      {
+        "at": [
+          170038,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "4",
+        "type": "text",
+        "weight": 500,
+        "width": 1425
+      },
+      {
+        "at": [
+          214596,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "5",
+        "type": "text",
+        "weight": 500,
+        "width": 1308
+      },
+      {
+        "at": [
+          214596,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "5",
+        "type": "text",
+        "weight": 500,
+        "width": 1308
+      },
+      {
+        "at": [
+          259096,
+          13375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "6",
+        "type": "text",
+        "weight": 500,
+        "width": 1308
+      },
+      {
+        "at": [
+          259096,
+          198375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "6",
+        "type": "text",
+        "weight": 500,
+        "width": 1308
+      },
+      {
+        "at": [
+          11713,
+          38375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "A",
+        "type": "text",
+        "weight": 500,
+        "width": 1575
+      },
+      {
+        "at": [
+          283713,
+          38375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "A",
+        "type": "text",
+        "weight": 500,
+        "width": 1575
+      },
+      {
+        "at": [
+          11720,
+          83375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "B",
+        "type": "text",
+        "weight": 500,
+        "width": 1560
+      },
+      {
+        "at": [
+          283720,
+          83375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "B",
+        "type": "text",
+        "weight": 500,
+        "width": 1560
+      },
+      {
+        "at": [
+          11741,
+          128375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "C",
+        "type": "text",
+        "weight": 500,
+        "width": 1518
+      },
+      {
+        "at": [
+          283741,
+          128375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "C",
+        "type": "text",
+        "weight": 500,
+        "width": 1518
+      },
+      {
+        "at": [
+          11728,
+          173375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "D",
+        "type": "text",
+        "weight": 500,
+        "width": 1545
+      },
+      {
+        "at": [
+          283728,
+          173375
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "cerceve",
+        "rotation": 0,
+        "size": 2500,
+        "text": "D",
+        "type": "text",
+        "weight": 500,
+        "width": 1545
+      },
+      {
+        "item": "cerceve",
+        "radius": 0,
+        "rect": {
+          "height": 180000,
+          "left": 15000,
+          "top": 15000,
+          "width": 267000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "rect"
+      },
+      {
+        "item": "cerceve",
+        "radius": 0,
+        "rect": {
+          "height": 190000,
+          "left": 10000,
+          "top": 10000,
+          "width": 277000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 700
+        },
+        "type": "rect"
+      },
+      {
+        "clip": {
+          "height": 98000,
+          "left": 26000,
+          "top": 26000,
+          "width": 138000
+        },
+        "extent": [
+          487081.0,
+          4417771.0,
+          487219.0,
+          4417869.0
+        ],
+        "item": "harita",
+        "layers": {
+          "type": "all"
+        },
+        "rotation": 0,
+        "type": "map",
+        "view": {
+          "center": {
+            "x": 487150.0,
+            "y": 4417820.0
+          },
+          "rotation": 0,
+          "scale": 1000
+        }
+      },
+      {
+        "item": "harita",
+        "rect": {
+          "height": 98000,
+          "left": 26000,
+          "top": 26000,
+          "width": 138000
+        },
+        "rotation": 0,
+        "type": "pushClip"
+      },
+      {
+        "evenOdd": false,
+        "item": "harita",
+        "segments": [
+          {
+            "m": [
+              42500,
+              95000
+            ]
+          },
+          {
+            "l": [
+              47500,
+              95000
+            ]
+          },
+          {
+            "m": [
+              45000,
+              97500
+            ]
+          },
+          {
+            "l": [
+              45000,
+              92500
+            ]
+          },
+          {
+            "m": [
+              42500,
+              45000
+            ]
+          },
+          {
+            "l": [
+              47500,
+              45000
+            ]
+          },
+          {
+            "m": [
+              45000,
+              47500
+            ]
+          },
+          {
+            "l": [
+              45000,
+              42500
+            ]
+          },
+          {
+            "m": [
+              92500,
+              95000
+            ]
+          },
+          {
+            "l": [
+              97500,
+              95000
+            ]
+          },
+          {
+            "m": [
+              95000,
+              97500
+            ]
+          },
+          {
+            "l": [
+              95000,
+              92500
+            ]
+          },
+          {
+            "m": [
+              92500,
+              45000
+            ]
+          },
+          {
+            "l": [
+              97500,
+              45000
+            ]
+          },
+          {
+            "m": [
+              95000,
+              47500
+            ]
+          },
+          {
+            "l": [
+              95000,
+              42500
+            ]
+          },
+          {
+            "m": [
+              142500,
+              95000
+            ]
+          },
+          {
+            "l": [
+              147500,
+              95000
+            ]
+          },
+          {
+            "m": [
+              145000,
+              97500
+            ]
+          },
+          {
+            "l": [
+              145000,
+              92500
+            ]
+          },
+          {
+            "m": [
+              142500,
+              45000
+            ]
+          },
+          {
+            "l": [
+              147500,
+              45000
+            ]
+          },
+          {
+            "m": [
+              145000,
+              47500
+            ]
+          },
+          {
+            "l": [
+              145000,
+              42500
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "item": "harita",
+        "type": "popClip"
+      },
+      {
+        "at": [
+          41317,
+          24640
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487100",
+        "type": "text",
+        "weight": 400,
+        "width": 7366
+      },
+      {
+        "at": [
+          91363,
+          24640
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487150",
+        "type": "text",
+        "weight": 400,
+        "width": 7274
+      },
+      {
+        "at": [
+          141150,
+          24640
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487200",
+        "type": "text",
+        "weight": 400,
+        "width": 7700
+      },
+      {
+        "at": [
+          166260,
+          49153
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 270000,
+        "size": 1800,
+        "text": "X=4417850",
+        "type": "text",
+        "weight": 400,
+        "width": 8305
+      },
+      {
+        "at": [
+          166260,
+          99199
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 270000,
+        "size": 1800,
+        "text": "X=4417800",
+        "type": "text",
+        "weight": 400,
+        "width": 8397
+      },
+      {
+        "at": [
+          41317,
+          126260
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487100",
+        "type": "text",
+        "weight": 400,
+        "width": 7366
+      },
+      {
+        "at": [
+          91363,
+          126260
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487150",
+        "type": "text",
+        "weight": 400,
+        "width": 7274
+      },
+      {
+        "at": [
+          141150,
+          126260
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Y=487200",
+        "type": "text",
+        "weight": 400,
+        "width": 7700
+      },
+      {
+        "at": [
+          24640,
+          49153
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 270000,
+        "size": 1800,
+        "text": "X=4417850",
+        "type": "text",
+        "weight": 400,
+        "width": 8305
+      },
+      {
+        "at": [
+          24640,
+          99199
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "harita",
+        "rotation": 270000,
+        "size": 1800,
+        "text": "X=4417800",
+        "type": "text",
+        "weight": 400,
+        "width": 8397
+      },
+      {
+        "item": "harita",
+        "radius": 0,
+        "rect": {
+          "height": 98000,
+          "left": 26000,
+          "top": 26000,
+          "width": 138000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "rect"
+      },
+      {
+        "clip": {
+          "height": 40000,
+          "left": 180000,
+          "top": 20000,
+          "width": 60000
+        },
+        "extent": [
+          487000.0,
+          4417720.0,
+          487300.0,
+          4417920.0
+        ],
+        "item": "ozet",
+        "layers": {
+          "type": "all"
+        },
+        "rotation": 0,
+        "type": "map",
+        "view": {
+          "center": {
+            "x": 487150.0,
+            "y": 4417820.0
+          },
+          "rotation": 0,
+          "scale": 5000
+        }
+      },
+      {
+        "item": "ozet",
+        "rect": {
+          "height": 40000,
+          "left": 180000,
+          "top": 20000,
+          "width": 60000
+        },
+        "rotation": 0,
+        "type": "pushClip"
+      },
+      {
+        "evenOdd": false,
+        "item": "ozet",
+        "segments": [
+          {
+            "m": [
+              196200,
+              30200
+            ]
+          },
+          {
+            "l": [
+              223800,
+              30200
+            ]
+          },
+          {
+            "l": [
+              223800,
+              49800
+            ]
+          },
+          {
+            "l": [
+              196200,
+              49800
+            ]
+          },
+          "z"
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#d0021b",
+          "dash": [],
+          "join": "miter",
+          "width": 500
+        },
+        "type": "path"
+      },
+      {
+        "item": "ozet",
+        "type": "popClip"
+      },
+      {
+        "item": "ozet",
+        "radius": 0,
+        "rect": {
+          "height": 40000,
+          "left": 180000,
+          "top": 20000,
+          "width": 60000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 250
+        },
+        "type": "rect"
+      },
+      {
+        "fill": "#000000",
+        "item": "olcek",
+        "radius": 0,
+        "rect": {
+          "height": 1500,
+          "left": 184224,
+          "top": 71250,
+          "width": 20000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "fill": "#ffffff",
+        "item": "olcek",
+        "radius": 0,
+        "rect": {
+          "height": 1500,
+          "left": 204224,
+          "top": 71250,
+          "width": 20000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "fill": "#000000",
+        "item": "olcek",
+        "radius": 0,
+        "rect": {
+          "height": 1500,
+          "left": 224224,
+          "top": 71250,
+          "width": 20000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "fill": "#ffffff",
+        "item": "olcek",
+        "radius": 0,
+        "rect": {
+          "height": 1500,
+          "left": 244224,
+          "top": 71250,
+          "width": 20000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "item": "olcek",
+        "radius": 0,
+        "rect": {
+          "height": 1500,
+          "left": 184224,
+          "top": 71250,
+          "width": 80000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 250
+        },
+        "type": "rect"
+      },
+      {
+        "at": [
+          183658,
+          70050
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "0",
+        "type": "text",
+        "weight": 500,
+        "width": 1132
+      },
+      {
+        "at": [
+          203114,
+          70050
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "20",
+        "type": "text",
+        "weight": 500,
+        "width": 2220
+      },
+      {
+        "at": [
+          223088,
+          70050
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "40",
+        "type": "text",
+        "weight": 500,
+        "width": 2272
+      },
+      {
+        "at": [
+          243135,
+          70050
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "60",
+        "type": "text",
+        "weight": 500,
+        "width": 2178
+      },
+      {
+        "at": [
+          262105,
+          70050
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "80 m",
+        "type": "text",
+        "weight": 500,
+        "width": 4238
+      },
+      {
+        "at": [
+          218765,
+          75550
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "olcek",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Ölçek 1/1000",
+        "type": "text",
+        "weight": 500,
+        "width": 10918
+      },
+      {
+        "evenOdd": false,
+        "fill": "#000000",
+        "item": "kuzey",
+        "segments": [
+          {
+            "m": [
+              260000,
+              23308
+            ]
+          },
+          {
+            "l": [
+              266959,
+              48823
+            ]
+          },
+          {
+            "l": [
+              260000,
+              43024
+            ]
+          },
+          "z"
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 464
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "kuzey",
+        "segments": [
+          {
+            "m": [
+              260000,
+              23308
+            ]
+          },
+          {
+            "l": [
+              253041,
+              48823
+            ]
+          },
+          {
+            "l": [
+              260000,
+              43024
+            ]
+          },
+          "z"
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 464
+        },
+        "type": "path"
+      },
+      {
+        "at": [
+          258915,
+          22450
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "kuzey",
+        "rotation": 0,
+        "size": 3500,
+        "text": "K",
+        "type": "text",
+        "weight": 600,
+        "width": 2170
+      },
+      {
+        "at": [
+          255762,
+          51481
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "kuzey",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Grid kuzeyi",
+        "type": "text",
+        "weight": 400,
+        "width": 8476
+      },
+      {
+        "at": [
+          252076,
+          53641
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "kuzey",
+        "rotation": 0,
+        "size": 1800,
+        "text": "Yakınsama −0°05'47\"",
+        "type": "text",
+        "weight": 400,
+        "width": 15847
+      },
+      {
+        "at": [
+          180000,
+          87925
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "lejant",
+        "rotation": 0,
+        "size": 3000,
+        "text": "Lejant",
+        "type": "text",
+        "weight": 600,
+        "width": 8409
+      },
+      {
+        "fill": "#f5e6c8",
+        "item": "lejant",
+        "radius": 0,
+        "rect": {
+          "height": 4000,
+          "left": 180000,
+          "top": 90450,
+          "width": 8000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "item": "lejant",
+        "radius": 0,
+        "rect": {
+          "height": 4000,
+          "left": 180000,
+          "top": 90450,
+          "width": 8000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 250
+        },
+        "type": "rect"
+      },
+      {
+        "at": [
+          190000,
+          93330
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "lejant",
+        "rotation": 0,
+        "size": 2200,
+        "text": "Parsel",
+        "type": "text",
+        "weight": 400,
+        "width": 5964
+      },
+      {
+        "evenOdd": false,
+        "item": "lejant",
+        "segments": [
+          {
+            "m": [
+              180000,
+              97650
+            ]
+          },
+          {
+            "l": [
+              188000,
+              97650
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#888888",
+          "dash": [],
+          "join": "miter",
+          "width": 700
+        },
+        "type": "path"
+      },
+      {
+        "at": [
+          190000,
+          98530
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "lejant",
+        "rotation": 0,
+        "size": 2200,
+        "text": "Yol",
+        "type": "text",
+        "weight": 400,
+        "width": 2952
+      },
+      {
+        "evenOdd": false,
+        "fill": "#000000",
+        "item": "lejant",
+        "segments": [
+          {
+            "m": [
+              184000,
+              101850
+            ]
+          },
+          {
+            "l": [
+              185000,
+              103850
+            ]
+          },
+          {
+            "l": [
+              183000,
+              103850
+            ]
+          },
+          "z"
+        ],
+        "type": "path"
+      },
+      {
+        "at": [
+          190000,
+          103730
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "lejant",
+        "rotation": 0,
+        "size": 2200,
+        "text": "Poligon noktası",
+        "type": "text",
+        "weight": 400,
+        "width": 14507
+      },
+      {
+        "at": [
+          20000,
+          139000
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "baslik",
+        "rotation": 0,
+        "size": 4000,
+        "text": "Örnek proje — Her öğe türü, ölçek 1/1000",
+        "type": "text",
+        "weight": 600,
+        "width": 69940
+      },
+      {
+        "at": [
+          29540,
+          150347
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "donuk",
+        "rotation": 30000,
+        "size": 3000,
+        "text": "Döndürülmüş yazı",
+        "type": "text",
+        "weight": 400,
+        "width": 22770
+      },
+      {
+        "asset": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "item": "logo",
+        "opacity": 100,
+        "rect": {
+          "height": 20000,
+          "left": 65000,
+          "top": 150000,
+          "width": 20000
+        },
+        "rotation": 0,
+        "type": "image"
+      },
+      {
+        "item": "sekil",
+        "opacity": 60,
+        "type": "pushGroup"
+      },
+      {
+        "fill": "#e8f0ff",
+        "item": "sekil",
+        "radius": 2000,
+        "rect": {
+          "height": 20000,
+          "left": 90000,
+          "top": 150000,
+          "width": 30000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#336699",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "rect"
+      },
+      {
+        "item": "sekil",
+        "type": "popGroup"
+      },
+      {
+        "evenOdd": false,
+        "item": "elips",
+        "segments": [
+          {
+            "m": [
+              155000,
+              160000
+            ]
+          },
+          {
+            "a": {
+              "center": [
+                140000,
+                160000
+              ],
+              "radius": [
+                15000,
+                10000
+              ],
+              "rotation": 0,
+              "start": 0,
+              "sweep": 360000
+            }
+          },
+          "z"
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "ok",
+        "segments": [
+          {
+            "m": [
+              160000,
+              170000
+            ]
+          },
+          {
+            "l": [
+              190000,
+              150000
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 500
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "fill": "#000000",
+        "item": "ok",
+        "segments": [
+          {
+            "m": [
+              190000,
+              150000
+            ]
+          },
+          {
+            "l": [
+              188086,
+              152538
+            ]
+          },
+          {
+            "l": [
+              186921,
+              150790
+            ]
+          },
+          "z"
+        ],
+        "type": "path"
+      },
+      {
+        "at": [
+          20000,
+          177437
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2500,
+        "text": "TABLO",
+        "type": "text",
+        "weight": 600,
+        "width": 7603
+      },
+      {
+        "fill": "#eeeeee",
+        "item": "tablo",
+        "radius": 0,
+        "rect": {
+          "height": 3900,
+          "left": 20000,
+          "top": 179075,
+          "width": 80000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "at": [
+          24775,
+          181825
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "No",
+        "type": "text",
+        "weight": 600,
+        "width": 2450
+      },
+      {
+        "at": [
+          64793,
+          181825
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Ad",
+        "type": "text",
+        "weight": 600,
+        "width": 2414
+      },
+      {
+        "at": [
+          25650,
+          185725
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "1",
+        "type": "text",
+        "weight": 400,
+        "width": 700
+      },
+      {
+        "at": [
+          32800,
+          185725
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Birinci satır",
+        "type": "text",
+        "weight": 400,
+        "width": 9894
+      },
+      {
+        "at": [
+          25464,
+          189625
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "2",
+        "type": "text",
+        "weight": 400,
+        "width": 1072
+      },
+      {
+        "at": [
+          32800,
+          189625
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "tablo",
+        "rotation": 0,
+        "size": 2000,
+        "text": "İkinci satır",
+        "type": "text",
+        "weight": 400,
+        "width": 8922
+      },
+      {
+        "evenOdd": false,
+        "item": "tablo",
+        "segments": [
+          {
+            "m": [
+              20000,
+              186875
+            ]
+          },
+          {
+            "l": [
+              100000,
+              186875
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "tablo",
+        "segments": [
+          {
+            "m": [
+              32000,
+              179075
+            ]
+          },
+          {
+            "l": [
+              32000,
+              190775
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "tablo",
+        "segments": [
+          {
+            "m": [
+              20000,
+              182975
+            ]
+          },
+          {
+            "l": [
+              100000,
+              182975
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "path"
+      },
+      {
+        "item": "tablo",
+        "radius": 0,
+        "rect": {
+          "height": 11700,
+          "left": 20000,
+          "top": 179075,
+          "width": 80000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "rect"
+      },
+      {
+        "at": [
+          105000,
+          177437
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2500,
+        "text": "KOORDİNATLAR",
+        "type": "text",
+        "weight": 600,
+        "width": 17708
+      },
+      {
+        "fill": "#eeeeee",
+        "item": "koordinatlar",
+        "radius": 0,
+        "rect": {
+          "height": 3900,
+          "left": 105000,
+          "top": 179075,
+          "width": 80000
+        },
+        "rotation": 0,
+        "type": "rect"
+      },
+      {
+        "at": [
+          111957,
+          181825
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Nokta",
+        "type": "text",
+        "weight": 600,
+        "width": 5286
+      },
+      {
+        "at": [
+          136390,
+          181825
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Y (m)",
+        "type": "text",
+        "weight": 600,
+        "width": 4520
+      },
+      {
+        "at": [
+          166773,
+          181825
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "X (m)",
+        "type": "text",
+        "weight": 600,
+        "width": 4554
+      },
+      {
+        "at": [
+          113658,
+          185725
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "P1",
+        "type": "text",
+        "weight": 400,
+        "width": 1884
+      },
+      {
+        "at": [
+          143922,
+          185725
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "487100.12",
+        "type": "text",
+        "weight": 400,
+        "width": 8378
+      },
+      {
+        "at": [
+          174360,
+          185725
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "4417800.46",
+        "type": "text",
+        "weight": 400,
+        "width": 9840
+      },
+      {
+        "at": [
+          113472,
+          189625
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "P2",
+        "type": "text",
+        "weight": 400,
+        "width": 2256
+      },
+      {
+        "at": [
+          143624,
+          189625
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "487180.50",
+        "type": "text",
+        "weight": 400,
+        "width": 8676
+      },
+      {
+        "at": [
+          174494,
+          189625
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "4417805.25",
+        "type": "text",
+        "weight": 400,
+        "width": 9706
+      },
+      {
+        "at": [
+          113493,
+          193525
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "P3",
+        "type": "text",
+        "weight": 400,
+        "width": 2214
+      },
+      {
+        "at": [
+          143536,
+          193525
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "487150.00",
+        "type": "text",
+        "weight": 400,
+        "width": 8764
+      },
+      {
+        "at": [
+          174620,
+          193525
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "4417850.75",
+        "type": "text",
+        "weight": 400,
+        "width": 9580
+      },
+      {
+        "at": [
+          113658,
+          197425
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "P1",
+        "type": "text",
+        "weight": 400,
+        "width": 1884
+      },
+      {
+        "at": [
+          143922,
+          197425
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "487100.12",
+        "type": "text",
+        "weight": 400,
+        "width": 8378
+      },
+      {
+        "at": [
+          174360,
+          197425
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "koordinatlar",
+        "rotation": 0,
+        "size": 2000,
+        "text": "4417800.46",
+        "type": "text",
+        "weight": 400,
+        "width": 9840
+      },
+      {
+        "evenOdd": false,
+        "item": "koordinatlar",
+        "segments": [
+          {
+            "m": [
+              105000,
+              186875
+            ]
+          },
+          {
+            "l": [
+              185000,
+              186875
+            ]
+          },
+          {
+            "m": [
+              105000,
+              190775
+            ]
+          },
+          {
+            "l": [
+              185000,
+              190775
+            ]
+          },
+          {
+            "m": [
+              105000,
+              194675
+            ]
+          },
+          {
+            "l": [
+              185000,
+              194675
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "koordinatlar",
+        "segments": [
+          {
+            "m": [
+              124201,
+              179075
+            ]
+          },
+          {
+            "l": [
+              124201,
+              198575
+            ]
+          },
+          {
+            "m": [
+              153100,
+              179075
+            ]
+          },
+          {
+            "l": [
+              153100,
+              198575
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "koordinatlar",
+        "segments": [
+          {
+            "m": [
+              105000,
+              182975
+            ]
+          },
+          {
+            "l": [
+              185000,
+              182975
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "path"
+      },
+      {
+        "item": "koordinatlar",
+        "radius": 0,
+        "rect": {
+          "height": 19500,
+          "left": 105000,
+          "top": 179075,
+          "width": 80000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 350
+        },
+        "type": "rect"
+      },
+      {
+        "at": [
+          191000,
+          137350
+        ],
+        "color": "#3c3c3c",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 1500,
+        "text": "PROJE",
+        "type": "text",
+        "weight": 500,
+        "width": 4508
+      },
+      {
+        "at": [
+          191000,
+          144399
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 2500,
+        "text": "Örnek proje",
+        "type": "text",
+        "weight": 400,
+        "width": 12495
+      },
+      {
+        "at": [
+          191000,
+          152350
+        ],
+        "color": "#3c3c3c",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 1500,
+        "text": "TARİH",
+        "type": "text",
+        "weight": 500,
+        "width": 4083
+      },
+      {
+        "at": [
+          191000,
+          159399
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 2500,
+        "text": "02.10.2026",
+        "type": "text",
+        "weight": 400,
+        "width": 11810
+      },
+      {
+        "at": [
+          231000,
+          152350
+        ],
+        "color": "#3c3c3c",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 1500,
+        "text": "ÖLÇEK",
+        "type": "text",
+        "weight": 500,
+        "width": 4520
+      },
+      {
+        "at": [
+          246506,
+          159399
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": false,
+        "item": "antet",
+        "rotation": 0,
+        "size": 2500,
+        "text": "1/1000",
+        "type": "text",
+        "weight": 400,
+        "width": 6988
+      },
+      {
+        "evenOdd": false,
+        "item": "antet",
+        "segments": [
+          {
+            "m": [
+              190000,
+              150000
+            ]
+          },
+          {
+            "l": [
+              270000,
+              150000
+            ]
+          },
+          {
+            "m": [
+              230000,
+              150000
+            ]
+          },
+          {
+            "l": [
+              230000,
+              165000
+            ]
+          }
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 180
+        },
+        "type": "path"
+      },
+      {
+        "item": "antet",
+        "radius": 0,
+        "rect": {
+          "height": 30000,
+          "left": 190000,
+          "top": 135000,
+          "width": 80000
+        },
+        "rotation": 0,
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 500
+        },
+        "type": "rect"
+      },
+      {
+        "evenOdd": false,
+        "fill": "#000000",
+        "item": "ucgen",
+        "segments": [
+          {
+            "m": [
+              202500,
+              170000
+            ]
+          },
+          {
+            "l": [
+              210000,
+              185000
+            ]
+          },
+          {
+            "l": [
+              195000,
+              185000
+            ]
+          },
+          "z"
+        ],
+        "type": "path"
+      },
+      {
+        "evenOdd": false,
+        "item": "cokgen",
+        "segments": [
+          {
+            "m": [
+              215000,
+              170000
+            ]
+          },
+          {
+            "l": [
+              230000,
+              173750
+            ]
+          },
+          {
+            "l": [
+              222500,
+              185000
+            ]
+          },
+          "z"
+        ],
+        "stroke": {
+          "cap": "butt",
+          "color": "#000000",
+          "dash": [],
+          "join": "miter",
+          "width": 250
+        },
+        "type": "path"
+      },
+      {
+        "at": [
+          240000,
+          177000
+        ],
+        "color": "#000000",
+        "font": "barlow",
+        "italic": true,
+        "item": "not",
+        "rotation": 0,
+        "size": 2000,
+        "text": "Yalnız tasarımda görünür",
+        "type": "text",
+        "weight": 400,
+        "width": 20916
+      }
+    ],
+    "sheet": "s1",
+    "size": {
+      "height": 210000,
+      "width": 297000
+    }
+  },
+  "inputs": {
+    "assets": [
+      "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+    ],
+    "capabilities": {
+      "attributeLayers": true,
+      "georeferenced": true
+    },
+    "coordinates": [
+      {
+        "area": 1234.5,
+        "closed": true,
+        "item": "koordinatlar",
+        "points": [
+          {
+            "name": "P1",
+            "x": 487100.123,
+            "y": 4417800.456
+          },
+          {
+            "name": "P2",
+            "x": 487180.5,
+            "y": 4417805.25
+          },
+          {
+            "name": "P3",
+            "x": 487150,
+            "y": 4417850.75
+          }
+        ]
+      }
+    ],
+    "crs": {
+      "name": "TUREF / TM33",
+      "tm": {
+        "centralMeridian": 33,
+        "falseEasting": 500000,
+        "falseNorthing": 0,
+        "inverseFlattening": 298.257222101,
+        "scaleFactor": 1,
+        "semiMajor": 6378137
+      }
+    },
+    "legends": [
+      {
+        "entries": [
+          {
+            "label": "Parsel",
+            "layer": "parsel",
+            "symbol": {
+              "fill": "#f5e6c8",
+              "stroke": {
+                "width": 250
+              },
+              "type": "patch"
+            }
+          },
+          {
+            "label": "Yol",
+            "layer": "yol",
+            "symbol": {
+              "stroke": {
+                "color": "#888888",
+                "width": 700
+              },
+              "type": "line"
+            }
+          },
+          {
+            "label": "Poligon noktası",
+            "layer": "nokta",
+            "symbol": {
+              "fill": "#000000",
+              "shape": "triangle",
+              "size": 2000,
+              "type": "marker"
+            }
+          }
+        ],
+        "item": "lejant"
+      }
+    ],
+    "mode": "design",
+    "page": {
+      "count": 1,
+      "index": 1
+    },
+    "project": {
+      "crsName": "TUREF / TM33",
+      "date": "02.10.2026",
+      "name": "Örnek proje",
+      "user": "M. Demir"
+    }
+  },
+  "sheet": "s1"
+}

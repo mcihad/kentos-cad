@@ -1,0 +1,42 @@
+{
+  "description": "İsabet (design §5): döndürülmüş çerçeve kendi şekliyle, çizgi yoluyla; grup en dıştaki grubuyla; gizli öğe vurulmaz; tutamaçlar. Beklenenler elle hesaplandı (README).",
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "id": "s1",
+        "name": "İsabet",
+        "page": {
+          "paper": "a4",
+          "orientation": "portrait",
+          "size": { "width": 210000, "height": 297000 },
+          "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 10000 }
+        },
+        "items": [
+          { "id": "ln", "name": "Çizgi", "frame": { "left": 20000, "top": 20000, "width": 60000, "height": 30000 }, "kind": { "type": "line", "points": [[0, 0], [1000000, 1000000]], "stroke": { "width": 500 } } },
+          { "id": "r", "name": "Dönük", "frame": { "left": 100000, "top": 100000, "width": 40000, "height": 20000 }, "rotation": 45000, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "c1", "name": "Bir", "group": "g", "frame": { "left": 150000, "top": 20000, "width": 20000, "height": 20000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "c2", "name": "İki", "group": "g", "frame": { "left": 180000, "top": 20000, "width": 20000, "height": 20000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "g", "name": "Grup", "frame": { "left": 150000, "top": 20000, "width": 50000, "height": 20000 }, "kind": { "type": "group" } },
+          { "id": "h", "name": "Gizli", "hidden": true, "frame": { "left": 20000, "top": 100000, "width": 30000, "height": 30000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } }
+        ]
+      }
+    ]
+  },
+  "sheet": "s1",
+  "queries": [
+    { "description": "dönük kutunun ortası", "query": { "type": "point", "at": [120000, 110000], "tolerance": 0 }, "expect": { "hits": [{ "item": "r", "top": "r" }] } },
+    { "description": "dönmemiş çerçevenin köşesi, dönük kutunun dışı", "query": { "type": "point", "at": [137000, 102000], "tolerance": 0 }, "expect": { "hits": [] } },
+    { "description": "çizginin ortası", "query": { "type": "point", "at": [50000, 35000], "tolerance": 0 }, "expect": { "hits": [{ "item": "ln", "top": "ln" }] } },
+    { "description": "çizgiden 1,342 mm: 1 mm tolerans ve yarım kalınlık yetmez", "query": { "type": "point", "at": [50000, 36500], "tolerance": 1000 }, "expect": { "hits": [] } },
+    { "description": "çizgiden 1,342 mm: 1,2 mm tolerans ve yarım kalınlık yeter", "query": { "type": "point", "at": [50000, 36500], "tolerance": 1200 }, "expect": { "hits": [{ "item": "ln", "top": "ln" }] } },
+    { "description": "grubun öğesi grubuyla", "query": { "type": "point", "at": [160000, 30000], "tolerance": 0 }, "expect": { "hits": [{ "item": "c1", "top": "g" }] } },
+    { "description": "gizli öğe vurulmaz", "query": { "type": "point", "at": [35000, 115000], "tolerance": 0 }, "expect": { "hits": [] } },
+    { "description": "dönük kutunun bütün köşeleri seçimin içinde", "query": { "type": "rect", "rect": { "left": 90000, "top": 80000, "width": 60000, "height": 60000 }, "mode": "contain" }, "expect": { "hits": [{ "item": "r", "top": "r" }] } },
+    { "description": "değen seçim: çizginin çerçevesi", "query": { "type": "rect", "rect": { "left": 60000, "top": 38000, "width": 5000, "height": 5000 }, "mode": "intersect" }, "expect": { "hits": [{ "item": "ln", "top": "ln" }] } },
+    { "description": "içine alan seçim: çizginin çerçevesi sığmıyor", "query": { "type": "rect", "rect": { "left": 60000, "top": 38000, "width": 5000, "height": 5000 }, "mode": "contain" }, "expect": { "hits": [] } },
+    { "description": "grubun iki öğesi tek grup olarak", "query": { "type": "rect", "rect": { "left": 140000, "top": 10000, "width": 70000, "height": 40000 }, "mode": "contain" }, "expect": { "hits": [{ "item": "c2", "top": "g" }] } },
+    { "description": "dönük kutunun kuzeydoğu tutamacı (141,213; 117,071)", "query": { "type": "handle", "item": "r", "at": [141000, 117000], "tolerance": 1000 }, "expect": { "hits": [], "handle": "ne" } },
+    { "description": "döndürme tutamacı (132,728; 97,272)", "query": { "type": "handle", "item": "r", "at": [132700, 97300], "tolerance": 1500, "rotateOffset": 8000 }, "expect": { "hits": [], "handle": "rotate" } }
+  ]
+}

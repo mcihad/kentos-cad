@@ -1,0 +1,43 @@
+[package]
+name = "kentos-sheet"
+description = "KentOS sheet layouts (pafta düzeni, docs/sheet/design.md): the model, operations and their inverses, constraint relayout, master pages, snapping, text metrics, data-bound values, the display list, SVG, templates, workspace profiles, preflight, atlas and sync plans; shared by the browser (WASM), the desktop and the server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+# The project's work mode and type (`Workspace`, `ProjectType`): the profiles and the template
+# gallery read the project's own types, never a copy of them.
+kentos-contracts = { path = "../contracts", default-features = false }
+# Data-bound values and `[% … %]` text (design §7): the expression language, never a new one.
+kentos-expression = { path = "../expression" }
+# The display rule of numbers (docs/adr/0149) and polygon area.
+kentos-geometry-core = { path = "../geometry-core" }
+# Transcendental functions: the same code on every target, so native and WASM agree bit for bit.
+libm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# An asset is named by the SHA-256 of its bytes (design §3.4).
+sha2 = { workspace = true }
+# PDF and GeoPDF (design §9a): the writer, the fonts' subsets, the faces' tables, and Flate for
+# the content streams, fonts and pictures (the miniz_oxide the formats already use).
+pdf-writer = { workspace = true }
+subsetter = { workspace = true }
+ttf-parser = { workspace = true }
+miniz_oxide = { workspace = true }
+# Only for generating the TypeScript types (`cargo test` writes them to
+# apps/web/src/contracts/generated/sheet); the WASM binding and the desktop build without it.
+ts-rs = { workspace = true, optional = true }
+# Only for the JSON Schemas of the template commands (docs/adr/0013): the server's catalog
+# check builds with it; nothing that ships to the browser does.
+schemars = { workspace = true, optional = true }
+
+[dev-dependencies]
+# Tests only: the reference decoder the PDF writer's own PNG reader is held to (native only).
+png = { workspace = true }
+
+[features]
+default = ["ts"]
+ts = ["dep:ts-rs", "kentos-contracts/ts"]
+schema = ["dep:schemars", "kentos-contracts/schema"]

@@ -1,0 +1,148 @@
+{
+ "description": "Izgara (5 mm, paftanın ayarıyla açık): kenarlar en yakın ızgara çizgisine, ortası değil; ızgaraya yapışma çizgi göstermez. Beklenenler elle hesaplandı.",
+ "book": {
+  "schema": "kentos.sheet/1",
+  "sheets": [
+   {
+    "id": "s1",
+    "name": "Izgara",
+    "page": {
+     "paper": "a4",
+     "orientation": "portrait",
+     "size": {
+      "width": 210000,
+      "height": 297000
+     },
+     "margins": {
+      "top": 10000,
+      "right": 10000,
+      "bottom": 10000,
+      "left": 10000
+     }
+    },
+    "snapGrid": {
+     "spacing": 5000,
+     "enabled": true
+    },
+    "items": [
+     {
+      "id": "m",
+      "name": "Taşınan",
+      "frame": {
+       "left": 51300,
+       "top": 60700,
+       "width": 20000,
+       "height": 20000
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       }
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "sheet": "s1",
+ "moving": [
+  "m"
+ ],
+ "queries": [
+  {
+   "description": "Sol kenar 51,3 → 50 mm (1,3 mm), üst kenar 60,7 → 60 mm (0,7 mm); eşit uzaklıkta sol/üst kenar sağ/alt kenara üstün",
+   "delta": [
+    0,
+    0
+   ],
+   "tolerance": 2000,
+   "expect": {
+    "delta": [
+     -1300,
+     -700
+    ],
+    "lines": [],
+    "gaps": [
+     {
+      "axis": "x",
+      "from": [
+       10000,
+       70000
+      ],
+      "to": [
+       50000,
+       70000
+      ],
+      "distance": 40000,
+      "text": "40.0 mm",
+      "kind": "margin"
+     },
+     {
+      "axis": "x",
+      "from": [
+       70000,
+       70000
+      ],
+      "to": [
+       200000,
+       70000
+      ],
+      "distance": 130000,
+      "text": "130.0 mm",
+      "kind": "margin"
+     },
+     {
+      "axis": "y",
+      "from": [
+       60000,
+       10000
+      ],
+      "to": [
+       60000,
+       60000
+      ],
+      "distance": 50000,
+      "text": "50.0 mm",
+      "kind": "margin"
+     },
+     {
+      "axis": "y",
+      "from": [
+       60000,
+       80000
+      ],
+      "to": [
+       60000,
+       287000
+      ],
+      "distance": 207000,
+      "text": "207.0 mm",
+      "kind": "margin"
+     }
+    ],
+    "spacing": []
+   }
+  }
+ ],
+ "resize": [
+  {
+   "description": "Güneydoğu tutamacı (71,2; 81,1) → ızgaranın (70; 80) noktasına",
+   "handle": "se",
+   "to": [
+    71200,
+    81100
+   ],
+   "tolerance": 2000,
+   "expect": {
+    "to": [
+     70000,
+     80000
+    ],
+    "lines": [],
+    "sizes": []
+   }
+  }
+ ],
+ "rotation": []
+}

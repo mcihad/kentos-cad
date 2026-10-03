@@ -1,0 +1,280 @@
+{
+ "description": "Yerleşim düzenleri (design §3.2a): kâğıdın koşuluna uyan ilk düzen geçerli olur; düzenin anmadığı öğe temel düzenden gelir. Beklenenler elle hesaplandı (README).",
+ "book": {
+  "schema": "kentos.sheet/1",
+  "sheets": [
+   {
+    "id": "s1",
+    "name": "Yerleşim düzenleri",
+    "page": {
+     "paper": "custom",
+     "orientation": "landscape",
+     "size": {
+      "width": 400000,
+      "height": 280000
+     },
+     "margins": {
+      "top": 10000,
+      "right": 10000,
+      "bottom": 10000,
+      "left": 10000
+     }
+    },
+    "items": [
+     {
+      "id": "harita",
+      "name": "harita",
+      "frame": {
+       "left": 10000,
+       "top": 10000,
+       "width": 290000,
+       "height": 260000
+      },
+      "constraints": {
+       "h": "leftRight",
+       "v": "topBottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "map",
+       "view": {
+        "type": "fixed",
+        "scale": 1000
+       }
+      }
+     },
+     {
+      "id": "serit",
+      "name": "serit",
+      "frame": {
+       "left": 300000,
+       "top": 10000,
+       "width": 90000,
+       "height": 260000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "topBottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       }
+      }
+     },
+     {
+      "id": "logo",
+      "name": "logo",
+      "frame": {
+       "left": 320000,
+       "top": 20000,
+       "width": 30000,
+       "height": 30000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "top",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       }
+      }
+     }
+    ],
+    "variants": [
+     {
+      "id": "dikey",
+      "name": "Dikey kâğıt",
+      "when": {
+       "orientation": "portrait"
+      },
+      "reference": {
+       "width": 200000,
+       "height": 280000
+      },
+      "frames": [
+       {
+        "item": "harita",
+        "frame": {
+         "left": 10000,
+         "top": 10000,
+         "width": 180000,
+         "height": 180000
+        },
+        "constraints": {
+         "h": "leftRight",
+         "v": "topBottom",
+         "relativeTo": "margins"
+        }
+       },
+       {
+        "item": "serit",
+        "frame": {
+         "left": 10000,
+         "top": 190000,
+         "width": 180000,
+         "height": 80000
+        },
+        "constraints": {
+         "h": "leftRight",
+         "v": "bottom",
+         "relativeTo": "margins"
+        }
+       }
+      ]
+     },
+     {
+      "id": "kucuk",
+      "name": "Küçük yatay",
+      "when": {
+       "orientation": "landscape",
+       "maxWidth": 300000
+      },
+      "reference": {
+       "width": 297000,
+       "height": 210000
+      },
+      "frames": [
+       {
+        "item": "serit",
+        "frame": {
+         "left": 227000,
+         "top": 10000,
+         "width": 60000,
+         "height": 190000
+        },
+        "constraints": {
+         "h": "right",
+         "v": "topBottom",
+         "relativeTo": "margins"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "sheet": "s1",
+ "cases": [
+  {
+   "description": "Dikey kâğıt: dikey düzen geçerli; harita ve şerit düzenden, logo temel düzenden (sağ kenara 40 mm)",
+   "page": {
+    "paper": "custom",
+    "orientation": "portrait",
+    "size": {
+     "width": 210000,
+     "height": 297000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 10000
+    }
+   },
+   "expectVariant": "dikey",
+   "expect": {
+    "harita": {
+     "left": 10000,
+     "top": 10000,
+     "width": 190000,
+     "height": 197000
+    },
+    "serit": {
+     "left": 10000,
+     "top": 207000,
+     "width": 190000,
+     "height": 80000
+    },
+    "logo": {
+     "left": 130000,
+     "top": 20000,
+     "width": 30000,
+     "height": 30000
+    }
+   }
+  },
+  {
+   "description": "Büyük yatay kâğıt: hiçbir düzen uymuyor, temel düzen kısıtlarıyla",
+   "page": {
+    "paper": "custom",
+    "orientation": "landscape",
+    "size": {
+     "width": 500000,
+     "height": 300000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 10000
+    }
+   },
+   "expectVariant": null,
+   "expect": {
+    "harita": {
+     "left": 10000,
+     "top": 10000,
+     "width": 390000,
+     "height": 280000
+    },
+    "serit": {
+     "left": 400000,
+     "top": 10000,
+     "width": 90000,
+     "height": 280000
+    },
+    "logo": {
+     "left": 420000,
+     "top": 20000,
+     "width": 30000,
+     "height": 30000
+    }
+   }
+  },
+  {
+   "description": "Küçük yatay kâğıt (genişlik ≤ 300 mm): küçük düzen yalnız şeridi anıyor; harita ve logo temel düzenden",
+   "page": {
+    "paper": "custom",
+    "orientation": "landscape",
+    "size": {
+     "width": 290000,
+     "height": 200000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 10000
+    }
+   },
+   "expectVariant": "kucuk",
+   "expect": {
+    "harita": {
+     "left": 10000,
+     "top": 10000,
+     "width": 180000,
+     "height": 180000
+    },
+    "serit": {
+     "left": 220000,
+     "top": 10000,
+     "width": 60000,
+     "height": 180000
+    },
+    "logo": {
+     "left": 210000,
+     "top": 20000,
+     "width": 30000,
+     "height": 30000
+    }
+   }
+  }
+ ]
+}

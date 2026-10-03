@@ -1,0 +1,325 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:gis-atlas",
+    "revision": 1,
+    "name": "Atlas sayfası",
+    "description": "A4 dikey atlas sayfası: kapsam katmanının her nesnesi için bir sayfa; sayfa adı ve numarası, nesneye sığan en büyük standart ölçekte karelajlı harita, genel bakış, nesne bilgisi tablosu ve kaynak notu.",
+    "category": "atlas",
+    "tags": ["atlas", "genel bakış", "nesne bilgisi"],
+    "papers": [{ "paper": "a4", "orientation": "portrait" }, { "paper": "a3", "orientation": "portrait" }],
+    "workspaces": ["gis"],
+    "projectTypes": ["gis"],
+    "created": "2026-10-02T00:00:00Z",
+    "updated": "2026-10-02T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Atlas",
+    "page": {
+      "paper": "a4",
+      "orientation": "portrait",
+      "size": { "width": 210000, "height": 297000 },
+      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 15000 }
+    },
+    "atlas": { "layer": "", "pageName": "@atlas_kimlik" },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Sınır çizgisi",
+        "frame": { "left": 15000, "top": 10000, "width": 185000, "height": 277000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "locked": true,
+        "kind": { "type": "border", "style": "single", "stroke": { "width": 350 } }
+      },
+      {
+        "id": "baslik",
+        "name": "Sayfa adı",
+        "frame": { "left": 19000, "top": 14000, "width": 130000, "height": 10000 },
+        "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+        "kind": {
+          "type": "text",
+          "content": "[% @atlas_adi %]",
+          "style": { "size": 5500, "weight": 600 },
+          "wrap": false,
+          "fit": "shrinkToFit"
+        }
+      },
+      {
+        "id": "sayfa-no",
+        "name": "Sayfa numarası",
+        "frame": { "left": 152000, "top": 15500, "width": 44000, "height": 8000 },
+        "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+        "kind": {
+          "type": "text",
+          "content": "Sayfa [% @atlas_sayfa %] / [% @atlas_sayfa_sayisi %]",
+          "style": { "size": 3000, "weight": 500, "color": "#3c3c3c" },
+          "align": "right"
+        }
+      },
+      {
+        "id": "baslik-cizgisi",
+        "name": "Başlık çizgisi",
+        "frame": { "left": 19000, "top": 26000, "width": 177000, "height": 1000 },
+        "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+        "kind": { "type": "line", "points": [[0, 500000], [1000000, 500000]], "stroke": { "width": 350 } }
+      },
+      {
+        "id": "harita",
+        "name": "Harita",
+        "frame": { "left": 19000, "top": 30000, "width": 177000, "height": 162000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "map",
+          "view": { "type": "atlas", "policy": { "type": "fit", "marginPct": 10, "standardScales": true } },
+          "labelBand": 6000,
+          "grids": [
+            {
+              "name": "Karelaj",
+              "kind": "cross",
+              "frame": "line",
+              "crossSize": 2000,
+              "labels": { "style": { "size": 1700, "weight": 500 }, "gap": 1000 }
+            }
+          ]
+        }
+      },
+      {
+        "id": "kuzey",
+        "name": "Kuzey oku",
+        "frame": { "left": 161000, "top": 39000, "width": 28000, "height": 16000 },
+        "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "padding": 800,
+        "kind": { "type": "northArrow", "map": "harita", "text": { "size": 2600, "weight": 600 } }
+      },
+      {
+        "id": "olcek",
+        "name": "Ölçek çubuğu",
+        "frame": { "left": 27000, "top": 173000, "width": 52000, "height": 10000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "padding": 1000,
+        "kind": {
+          "type": "scaleBar",
+          "map": "harita",
+          "segments": 4,
+          "height": 1200,
+          "text": { "size": 1800, "weight": 500 }
+        }
+      },
+      {
+        "id": "genel-bakis",
+        "name": "Genel bakış haritası",
+        "frame": { "left": 19000, "top": 197000, "width": 72000, "height": 76000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "border": { "width": 350 },
+        "kind": {
+          "type": "map",
+          "view": { "type": "fixed", "scale": 25000 },
+          "overviewOf": "harita",
+          "overviewFrame": { "color": "#d0021b", "width": 600 }
+        }
+      },
+      {
+        "id": "bilgi",
+        "name": "Nesne bilgisi",
+        "frame": { "left": 96000, "top": 197000, "width": 100000, "height": 76000 },
+        "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "table",
+          "title": "NESNE BİLGİSİ",
+          "titleStyle": { "size": 2800, "weight": 600 },
+          "header": false,
+          "columns": [{ "heading": "Bilgi", "width": 30000 }, { "heading": "Değer" }],
+          "cellStyle": { "text": { "size": 2300, "weight": 400 }, "padding": 1000 },
+          "zebra": "#f3f3f3",
+          "source": {
+            "type": "fixed",
+            "rows": [
+              ["Kimlik", "[% @atlas_kimlik %]"],
+              ["Sayfa adı", "[% @atlas_adi %]"],
+              ["Ölçek", "[% @olcek %]"],
+              ["Koordinat sistemi", "[% @koordinat_sistemi %]"],
+              ["Hazırlayan", "[% @kullanici %]"],
+              ["Tarih", "[% @tarih %]"]
+            ]
+          }
+        }
+      },
+      {
+        "id": "kaynak",
+        "name": "Kaynak notu",
+        "frame": { "left": 19000, "top": 277000, "width": 177000, "height": 6000 },
+        "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "text",
+          "content": "Kaynak: [% @kaynak %]",
+          "style": { "size": 2000, "weight": 400, "color": "#5a5a5a" },
+          "wrap": false,
+          "fit": "shrinkToFit"
+        }
+      }
+    ],
+    "variants": [
+      {
+        "id": "dikey",
+        "name": "Dikey kâğıt",
+        "when": { "orientation": "portrait" },
+        "reference": { "width": 210000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 15000, "top": 10000, "width": 185000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "baslik",
+            "frame": { "left": 19000, "top": 14000, "width": 130000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "sayfa-no",
+            "frame": { "left": 152000, "top": 15500, "width": 44000, "height": 8000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "baslik-cizgisi",
+            "frame": { "left": 19000, "top": 26000, "width": 177000, "height": 1000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "harita",
+            "frame": { "left": 19000, "top": 30000, "width": 177000, "height": 162000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kuzey",
+            "frame": { "left": 161000, "top": 39000, "width": 28000, "height": 16000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "olcek",
+            "frame": { "left": 27000, "top": 173000, "width": 52000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "genel-bakis",
+            "frame": { "left": 19000, "top": 197000, "width": 72000, "height": 76000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "bilgi",
+            "frame": { "left": 96000, "top": 197000, "width": 100000, "height": 76000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kaynak",
+            "frame": { "left": 19000, "top": 277000, "width": 177000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay",
+        "name": "Yatay kâğıt",
+        "when": { "orientation": "landscape" },
+        "reference": { "width": 297000, "height": 210000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 15000, "top": 10000, "width": 272000, "height": 190000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "baslik",
+            "frame": { "left": 19000, "top": 14000, "width": 210000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "sayfa-no",
+            "frame": { "left": 239000, "top": 15500, "width": 44000, "height": 8000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "baslik-cizgisi",
+            "frame": { "left": 19000, "top": 26000, "width": 264000, "height": 1000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "harita",
+            "frame": { "left": 19000, "top": 30000, "width": 180000, "height": 156000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kuzey",
+            "frame": { "left": 167000, "top": 39000, "width": 28000, "height": 16000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "olcek",
+            "frame": { "left": 27000, "top": 167000, "width": 52000, "height": 10000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "genel-bakis",
+            "frame": { "left": 203000, "top": 30000, "width": 80000, "height": 64000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "bilgi",
+            "frame": { "left": 203000, "top": 98000, "width": 80000, "height": 88000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "kaynak",
+            "frame": { "left": 19000, "top": 190000, "width": 264000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "variables": [{ "name": "kaynak", "label": "Verinin kaynağı" }]
+}

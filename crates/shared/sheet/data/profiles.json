@@ -1,0 +1,190 @@
+{
+  "schema": "kentos.sheet.profiles/1",
+  "source": "docs/sheet/design.md §11a: the work mode only chooses what the sheet ribbon shows; every item works in every mode",
+  "tools": [
+    { "id": "select", "label": "Seç", "shortcut": "V" },
+    { "id": "pan", "label": "El", "shortcut": "H" },
+    { "id": "map", "label": "Harita", "item": "map", "shortcut": "M" },
+    { "id": "overviewMap", "label": "Genel bakış haritası", "item": "map" },
+    { "id": "text", "label": "Metin", "item": "text", "shortcut": "T" },
+    { "id": "legend", "label": "Lejant", "item": "legend", "shortcut": "L" },
+    { "id": "scaleBar", "label": "Ölçek çubuğu", "item": "scaleBar" },
+    { "id": "northArrow", "label": "Kuzey oku", "item": "northArrow", "requires": ["georeferenced"] },
+    { "id": "grid", "label": "Karelaj", "requires": ["georeferenced"] },
+    { "id": "table", "label": "Tablo", "item": "table" },
+    { "id": "attributeTable", "label": "Öznitelik tablosu", "item": "table", "requires": ["attributeLayers"] },
+    { "id": "coordinateList", "label": "Koordinatlar", "item": "coordinateList" },
+    { "id": "titleBlock", "label": "Antet", "item": "titleBlock" },
+    { "id": "border", "label": "Pafta çerçevesi", "item": "border" },
+    { "id": "picture", "label": "Resim", "item": "picture" },
+    { "id": "shape", "label": "Şekil", "item": "shape" },
+    { "id": "line", "label": "Çizgi", "item": "line" },
+    { "id": "group", "label": "Grupla" },
+    { "id": "atlas", "label": "Atlas", "requires": ["georeferenced"] }
+  ],
+  "profiles": [
+    {
+      "id": "common",
+      "label": "Ortak",
+      "workspaces": [],
+      "groups": [
+        { "id": "tools", "label": "Araçlar", "tools": ["select", "pan"] },
+        { "id": "insert", "label": "Ekle", "tools": ["map", "text", "legend", "scaleBar", "table", "coordinateList", "titleBlock", "border", "picture", "shape", "line"] },
+        { "id": "arrange", "label": "Düzen", "tools": ["group"] }
+      ],
+      "names": {},
+      "presets": {
+        "scaleBar": [
+          { "id": "bar", "label": "Çubuk", "item": { "kind": { "type": "scaleBar", "style": "singleBox", "segments": 4 } } },
+          { "id": "numeric", "label": "Sayısal ölçek", "item": { "kind": { "type": "scaleBar", "style": "numeric", "text": { "size": 3000, "weight": 600 } } } }
+        ],
+        "shape": [
+          { "id": "rect", "label": "Dikdörtgen", "item": { "kind": { "type": "shape", "shape": { "type": "rect", "radius": 0 } } } },
+          { "id": "rounded", "label": "Yuvarlak köşeli dikdörtgen", "item": { "kind": { "type": "shape", "shape": { "type": "rect", "radius": 3000 } } } },
+          { "id": "ellipse", "label": "Elips", "item": { "kind": { "type": "shape", "shape": { "type": "ellipse" } } } },
+          { "id": "triangle", "label": "Üçgen", "item": { "kind": { "type": "shape", "shape": { "type": "triangle" } } } }
+        ],
+        "line": [
+          { "id": "plain", "label": "Çizgi", "item": { "kind": { "type": "line" } } },
+          { "id": "arrow", "label": "Ok", "item": { "kind": { "type": "line", "end": "arrow" } } }
+        ],
+        "table": [
+          { "id": "fixed", "label": "Sabit tablo", "item": { "kind": { "type": "table", "source": { "type": "fixed", "rows": [["", ""], ["", ""]] }, "columns": [{ "heading": "Başlık 1" }, { "heading": "Başlık 2" }] } } }
+        ],
+        "border": [
+          { "id": "neat", "label": "Sınır çizgisi", "item": { "kind": { "type": "border", "style": "single", "stroke": { "width": 500 } } } }
+        ],
+        "titleBlock": [
+          {
+            "id": "simple",
+            "label": "Basit antet",
+            "item": {
+              "kind": {
+                "type": "titleBlock",
+                "rows": [
+                  { "height": 2, "cells": [{ "label": "PROJE", "value": "[% @proje_adi %]", "style": { "size": 3500, "weight": 600 } }] },
+                  { "height": 1, "cells": [{ "label": "PAFTA", "value": "[% @pafta_adi %]" }, { "label": "ÖLÇEK", "value": "[% @olcek %]", "width": 1 }] },
+                  { "height": 1, "cells": [{ "label": "TARİH", "value": "[% @tarih %]" }, { "label": "SAYFA", "value": "[% @sayfa %] / [% @sayfa_sayisi %]" }] }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "whenMissing": {},
+      "defaultTemplate": "sys:genel-a3-yatay",
+      "gallery": ["sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:rapor-sayfasi", "sys:imar-plani", "sys:cad-teknik", "sys:cad-mimari", "sys:aplikasyon-krokisi", "sys:ifraz-paftasi", "sys:gis-tematik", "sys:gis-atlas"]
+    },
+    {
+      "id": "cad",
+      "label": "CAD",
+      "workspaces": ["cad"],
+      "groups": [
+        { "id": "tools", "label": "Araçlar", "tools": ["select", "pan"] },
+        { "id": "insert", "label": "Ekle", "tools": ["map", "text", "legend", "scaleBar", "northArrow", "table", "coordinateList", "titleBlock", "border", "picture", "shape", "line"] },
+        { "id": "map", "label": "Harita", "tools": ["grid", "atlas"] },
+        { "id": "arrange", "label": "Düzen", "tools": ["group"] }
+      ],
+      "names": { "map": "Görünüm penceresi", "atlas": "Pafta bölümleme" },
+      "presets": {
+        "map": [
+          { "id": "viewport", "label": "Görünüm penceresi", "item": { "kind": { "type": "map", "view": { "type": "fixed", "scale": 100 } } } }
+        ],
+        "border": [
+          { "id": "zones", "label": "Bölge işaretli çerçeve", "item": { "kind": { "type": "border", "style": "double", "gap": 5000, "zones": { "size": 50000 }, "centringMarks": true } } },
+          { "id": "neat", "label": "Tek çizgi", "item": { "kind": { "type": "border", "style": "single", "stroke": { "width": 700 } } } }
+        ],
+        "legend": [
+          { "id": "layers", "label": "Katmanlar ve çizgi tipleri", "item": { "kind": { "type": "legend", "title": "Katmanlar", "symbol": { "width": 12000, "height": 3000 } } } }
+        ],
+        "table": [
+          {
+            "id": "revisions",
+            "label": "Revizyon tablosu",
+            "item": {
+              "kind": {
+                "type": "table",
+                "source": { "type": "fixed", "rows": [["A", "", "İlk yayın", ""]] },
+                "columns": [{ "heading": "Rev.", "width": 10000, "align": "center" }, { "heading": "Tarih", "width": 22000 }, { "heading": "Açıklama" }, { "heading": "Çizen", "width": 20000 }],
+                "title": "REVİZYONLAR"
+              }
+            }
+          },
+          {
+            "id": "drawings",
+            "label": "Çizim listesi",
+            "item": {
+              "kind": {
+                "type": "table",
+                "source": { "type": "fixed", "rows": [["1", "", ""]] },
+                "columns": [{ "heading": "No", "width": 10000, "align": "center" }, { "heading": "Çizim" }, { "heading": "Ölçek", "width": 18000, "align": "center" }],
+                "title": "ÇİZİM LİSTESİ"
+              }
+            }
+          }
+        ],
+        "northArrow": [
+          { "id": "k", "label": "K kuzey oku", "item": { "kind": { "type": "northArrow", "style": "kentosK" } } }
+        ]
+      },
+      "whenMissing": { "northArrow": "hide", "grid": "hide", "atlas": "hide" },
+      "defaultTemplate": "sys:cad-teknik",
+      "gallery": ["sys:cad-teknik", "sys:cad-mimari", "sys:aplikasyon-krokisi", "sys:ifraz-paftasi", "sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:imar-plani", "sys:rapor-sayfasi"]
+    },
+    {
+      "id": "gis",
+      "label": "CBS",
+      "workspaces": ["gis"],
+      "groups": [
+        { "id": "tools", "label": "Araçlar", "tools": ["select", "pan"] },
+        { "id": "insert", "label": "Ekle", "tools": ["map", "overviewMap", "text", "legend", "scaleBar", "northArrow", "table", "attributeTable", "coordinateList", "titleBlock", "border", "picture", "shape", "line"] },
+        { "id": "map", "label": "Harita", "tools": ["grid", "atlas"] },
+        { "id": "arrange", "label": "Düzen", "tools": ["group"] }
+      ],
+      "names": { "map": "Harita" },
+      "presets": {
+        "map": [
+          { "id": "map", "label": "Harita", "item": { "kind": { "type": "map", "view": { "type": "fixed", "scale": 5000 } } } }
+        ],
+        "overviewMap": [
+          { "id": "overview", "label": "Genel bakış haritası", "item": { "kind": { "type": "map", "view": { "type": "fixed", "scale": 100000 }, "overviewFrame": { "color": "#d0021b", "width": 500 } }, "border": { "color": "#000000", "width": 250 } } }
+        ],
+        "border": [
+          { "id": "neat", "label": "Sınır çizgisi", "item": { "kind": { "type": "border", "style": "single", "stroke": { "width": 350 } } } }
+        ],
+        "legend": [
+          { "id": "thematic", "label": "Tematik lejant", "item": { "kind": { "type": "legend", "title": "Lejant", "filter": "visibleInMap", "symbol": { "width": 7000, "height": 4500 } } } }
+        ],
+        "attributeTable": [
+          {
+            "id": "attributes",
+            "label": "Öznitelik tablosu",
+            "item": {
+              "kind": {
+                "type": "table",
+                "source": { "type": "layer", "layer": "" },
+                "columns": [{ "heading": "Ad", "value": "ad" }, { "heading": "Alan (m²)", "value": "$alan", "align": "right", "decimals": 2 }],
+                "zebra": "#f4f4f4"
+              }
+            }
+          }
+        ],
+        "northArrow": [
+          { "id": "k", "label": "K kuzey oku", "item": { "kind": { "type": "northArrow", "style": "kentosK" } } },
+          { "id": "compass", "label": "Pusula", "item": { "kind": { "type": "northArrow", "style": "compass", "north": "true", "note": true } } }
+        ]
+      },
+      "whenMissing": {},
+      "defaultTemplate": "sys:gis-tematik",
+      "gallery": ["sys:gis-tematik", "sys:gis-atlas", "sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:imar-plani", "sys:rapor-sayfasi"]
+    },
+    {
+      "id": "hybrid",
+      "label": "Hibrit",
+      "workspaces": ["hybrid"],
+      "union": ["cad", "gis"],
+      "names": { "map": "Harita" },
+      "defaultTemplate": "sys:genel-a3-yatay"
+    }
+  ]
+}

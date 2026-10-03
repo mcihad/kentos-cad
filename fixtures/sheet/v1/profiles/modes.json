@@ -1,0 +1,461 @@
+{
+  "description": "Kip profilleri (design §11a): araçların durumu, adları ve hazır biçimleri (kipin satırı bir aracın hazır biçimlerini söylemiyorsa ortak profilinkiler); şablon galerisinin sırası. Beklenenler tasarımın tablosundan elle yazıldı.",
+  "profiles": [
+    {
+      "description": "CAD, koordinat sistemi yok: kuzey oku, karelaj ve atlas görünmez; harita “Görünüm penceresi”",
+      "workspace": "cad",
+      "capabilities": {
+        "georeferenced": false,
+        "attributeLayers": false
+      },
+      "expect": {
+        "profile": "cad",
+        "defaultTemplate": "sys:cad-teknik",
+        "tools": {
+          "map": {
+            "state": "enabled",
+            "label": "Görünüm penceresi",
+            "presets": [
+              "viewport"
+            ]
+          },
+          "northArrow": {
+            "state": "hidden"
+          },
+          "grid": {
+            "state": "hidden"
+          },
+          "atlas": {
+            "state": "hidden",
+            "label": "Pafta bölümleme"
+          },
+          "border": {
+            "state": "enabled",
+            "presets": [
+              "zones",
+              "neat"
+            ]
+          },
+          "table": {
+            "state": "enabled",
+            "presets": [
+              "revisions",
+              "drawings"
+            ]
+          },
+          "titleBlock": {
+            "state": "enabled"
+          },
+          "shape": {
+            "state": "enabled",
+            "presets": [
+              "rect",
+              "rounded",
+              "ellipse",
+              "triangle"
+            ]
+          },
+          "scaleBar": {
+            "state": "enabled",
+            "presets": [
+              "bar",
+              "numeric"
+            ]
+          }
+        },
+        "absent": [
+          "attributeTable",
+          "overviewMap"
+        ]
+      }
+    },
+    {
+      "description": "CAD, koordinat sistemli (harita CAD'i): kuzey oku, karelaj ve atlas açık",
+      "workspace": "cad",
+      "capabilities": {
+        "georeferenced": true,
+        "attributeLayers": true,
+        "plotScale": 500
+      },
+      "expect": {
+        "profile": "cad",
+        "defaultTemplate": "sys:cad-teknik",
+        "tools": {
+          "northArrow": {
+            "state": "enabled"
+          },
+          "grid": {
+            "state": "enabled"
+          },
+          "atlas": {
+            "state": "enabled"
+          }
+        },
+        "absent": [
+          "attributeTable",
+          "overviewMap"
+        ]
+      }
+    },
+    {
+      "description": "CBS, koordinat sistemi ve öznitelikli katman yok: araçlar görünür ama nedeniyle kapalı",
+      "workspace": "gis",
+      "capabilities": {
+        "georeferenced": false,
+        "attributeLayers": false
+      },
+      "expect": {
+        "profile": "gis",
+        "defaultTemplate": "sys:gis-tematik",
+        "tools": {
+          "map": {
+            "state": "enabled",
+            "label": "Harita"
+          },
+          "northArrow": {
+            "state": "disabled",
+            "reason": "Koordinat sistemi gerekir: proje ayarlarından bir koordinat sistemi seçin.",
+            "presets": [
+              "k",
+              "compass"
+            ]
+          },
+          "attributeTable": {
+            "state": "disabled",
+            "reason": "Öznitelikli katman gerekir: projede öznitelik tablosu olan bir katman yok."
+          },
+          "overviewMap": {
+            "state": "enabled"
+          },
+          "border": {
+            "state": "enabled",
+            "presets": [
+              "neat"
+            ]
+          },
+          "table": {
+            "state": "enabled",
+            "presets": [
+              "fixed"
+            ]
+          }
+        },
+        "absent": []
+      }
+    },
+    {
+      "description": "Hibrit: CAD ve CBS'nin birleşimi; harita “Harita”; çerçevenin hazır biçimleri ikisinden",
+      "workspace": "hybrid",
+      "capabilities": {
+        "georeferenced": true,
+        "attributeLayers": true
+      },
+      "expect": {
+        "profile": "hybrid",
+        "defaultTemplate": "sys:genel-a3-yatay",
+        "tools": {
+          "map": {
+            "state": "enabled",
+            "label": "Harita"
+          },
+          "attributeTable": {
+            "state": "enabled"
+          },
+          "overviewMap": {
+            "state": "enabled"
+          },
+          "border": {
+            "state": "enabled",
+            "presets": [
+              "zones",
+              "neat"
+            ]
+          },
+          "northArrow": {
+            "state": "enabled",
+            "presets": [
+              "k",
+              "compass"
+            ]
+          },
+          "table": {
+            "state": "enabled",
+            "presets": [
+              "revisions",
+              "drawings",
+              "fixed"
+            ]
+          }
+        },
+        "absent": []
+      }
+    },
+    {
+      "description": "Profili olmayan kip (3B plan): ortak profil",
+      "workspace": "plan3d",
+      "capabilities": {
+        "georeferenced": true,
+        "attributeLayers": true
+      },
+      "expect": {
+        "profile": "common",
+        "defaultTemplate": "sys:genel-a3-yatay",
+        "tools": {
+          "map": {
+            "state": "enabled",
+            "label": "Harita"
+          },
+          "border": {
+            "state": "enabled",
+            "presets": [
+              "neat"
+            ]
+          }
+        },
+        "absent": [
+          "northArrow",
+          "grid",
+          "attributeTable",
+          "overviewMap",
+          "atlas"
+        ]
+      }
+    }
+  ],
+  "ranking": [
+    {
+      "description": "CAD, ifraz projesi: önce türüne uyanlar, sonra CAD'inkiler, sonra ortaklar; CBS şablonları rozetli ve gizli",
+      "workspace": "cad",
+      "projectType": "subdivision",
+      "expect": [
+        {
+          "id": "sys:aplikasyon-krokisi",
+          "fit": "projectType",
+          "matches": true
+        },
+        {
+          "id": "sys:ifraz-paftasi",
+          "fit": "projectType",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-teknik",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-mimari",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a3-yatay",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a4-dikey",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:imar-plani",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:rapor-sayfasi",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-tematik",
+          "fit": "other",
+          "matches": false,
+          "badge": "CBS şablonu"
+        },
+        {
+          "id": "sys:gis-atlas",
+          "fit": "other",
+          "matches": false,
+          "badge": "CBS şablonu"
+        }
+      ]
+    },
+    {
+      "description": "CBS projesi",
+      "workspace": "gis",
+      "projectType": "gis",
+      "expect": [
+        {
+          "id": "sys:gis-tematik",
+          "fit": "projectType",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-atlas",
+          "fit": "projectType",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a3-yatay",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a4-dikey",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:imar-plani",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:rapor-sayfasi",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-teknik",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
+        },
+        {
+          "id": "sys:cad-mimari",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
+        },
+        {
+          "id": "sys:aplikasyon-krokisi",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
+        },
+        {
+          "id": "sys:ifraz-paftasi",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
+        }
+      ]
+    },
+    {
+      "description": "Hibrit, imar planı projesi: hem CAD'in hem CBS'nin şablonları kipine uyar",
+      "workspace": "hybrid",
+      "projectType": "zoningPlan",
+      "expect": [
+        {
+          "id": "sys:imar-plani",
+          "fit": "projectType",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-teknik",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-mimari",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:aplikasyon-krokisi",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:ifraz-paftasi",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-tematik",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-atlas",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a3-yatay",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a4-dikey",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:rapor-sayfasi",
+          "fit": "common",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "description": "Profili olmayan kip, türü yok: bütün şablonlar ortak profilin sırasıyla",
+      "workspace": "disaster",
+      "projectType": null,
+      "expect": [
+        {
+          "id": "sys:genel-a3-yatay",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:genel-a4-dikey",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:rapor-sayfasi",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:imar-plani",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-teknik",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:cad-mimari",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:aplikasyon-krokisi",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:ifraz-paftasi",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-tematik",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:gis-atlas",
+          "fit": "common",
+          "matches": true
+        }
+      ]
+    }
+  ]
+}

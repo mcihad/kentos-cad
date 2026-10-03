@@ -1,0 +1,5920 @@
+{
+  "book": "book.json",
+  "cases": [
+    {
+      "expect": {
+        "bookSha256": "fea0ce0f43580cbfb0740ff71d4912c862db4f0ca6f5cade9d4a613774f978f8",
+        "inverse": [
+          {
+            "id": "s3",
+            "op": "removeSheet"
+          }
+        ],
+        "label": "Pafta ekle: Pafta 3"
+      },
+      "name": "sayfa ekle",
+      "op": {
+        "index": 1,
+        "op": "addSheet",
+        "sheet": {
+          "id": "s3",
+          "name": "Pafta 3",
+          "page": {
+            "margins": {
+              "bottom": 10000,
+              "left": 20000,
+              "right": 10000,
+              "top": 10000
+            },
+            "orientation": "portrait",
+            "paper": "a4",
+            "size": {
+              "height": 297000,
+              "width": 210000
+            }
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "56dfa8739d3c38026c5e504f5c429fcdfd692b8cedf5365839782af3491b7e23",
+        "inverse": [
+          {
+            "index": 1,
+            "op": "addSheet",
+            "sheet": {
+              "export": {
+                "dpi": 300,
+                "fileName": "[% @pafta_adi %]",
+                "format": "svg"
+              },
+              "guides": [],
+              "id": "s2",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 20000,
+                    "top": 20000,
+                    "width": 100000
+                  },
+                  "hidden": false,
+                  "id": "u1",
+                  "kind": {
+                    "align": "left",
+                    "content": "Not",
+                    "fit": "none",
+                    "lineHeight": 120,
+                    "style": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 400
+                    },
+                    "type": "text",
+                    "valign": "top",
+                    "wrap": true
+                  },
+                  "locked": false,
+                  "name": "Not",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "name": "Pafta 2",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 10000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "portrait",
+                "paper": "a4",
+                "size": {
+                  "height": 297000,
+                  "width": 210000
+                }
+              },
+              "snapGrid": {
+                "enabled": false,
+                "spacing": 5000,
+                "visible": false
+              },
+              "variables": [],
+              "variants": []
+            }
+          }
+        ],
+        "label": "Paftayı sil: Pafta 2"
+      },
+      "name": "sayfa sil",
+      "op": {
+        "id": "s2",
+        "op": "removeSheet"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "42184c9a11798fab54d24500f5ab4e2014d29e41366de4fc21b81f1b84a899ce",
+        "inverse": [
+          {
+            "id": "s1",
+            "name": "Pafta 1",
+            "op": "renameSheet"
+          }
+        ],
+        "label": "Paftaya ad ver: Ana pafta"
+      },
+      "name": "sayfaya ad",
+      "op": {
+        "id": "s1",
+        "name": "Ana pafta",
+        "op": "renameSheet"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "506acddd5006cc9cacb5ee37dce37b8ffe74c8925cb8f0ae5f39e0d62732ef2b",
+        "inverse": [
+          {
+            "id": "s2",
+            "op": "moveSheet",
+            "to": 1
+          }
+        ],
+        "label": "Paftayı taşı: Pafta 2"
+      },
+      "name": "sayfa taşı",
+      "op": {
+        "id": "s2",
+        "op": "moveSheet",
+        "to": 0
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "dd24625445a0794bc507217ecc208893bd133885d4548340fd5d9671f19e1419",
+        "inverse": [
+          {
+            "id": "s9",
+            "op": "removeSheet"
+          }
+        ],
+        "label": "Paftayı çoğalt: Pafta 1"
+      },
+      "name": "sayfa çoğalt",
+      "op": {
+        "id": "s1",
+        "itemIds": [
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7",
+          "x8",
+          "x9",
+          "x10",
+          "x11"
+        ],
+        "name": "Pafta 1 kopyası",
+        "newId": "s9",
+        "op": "duplicateSheet"
+      }
+    },
+    {
+      "expect": {
+        "error": "ids_missing"
+      },
+      "name": "sayfa çoğalt: kimlik eksik",
+      "op": {
+        "id": "s1",
+        "itemIds": [
+          "x1"
+        ],
+        "name": "K",
+        "newId": "s9",
+        "op": "duplicateSheet"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "a3649114a8a205e41d93a77cafcf78e17c3d98369db560f0c71c8487b938b805",
+        "inverse": [
+          {
+            "op": "replaceSheet",
+            "sheet": {
+              "export": {
+                "dpi": 300,
+                "fileName": "[% @pafta_adi %]",
+                "format": "svg"
+              },
+              "guides": [],
+              "id": "s2",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 20000,
+                    "top": 20000,
+                    "width": 100000
+                  },
+                  "hidden": false,
+                  "id": "u1",
+                  "kind": {
+                    "align": "left",
+                    "content": "Not",
+                    "fit": "none",
+                    "lineHeight": 120,
+                    "style": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 400
+                    },
+                    "type": "text",
+                    "valign": "top",
+                    "wrap": true
+                  },
+                  "locked": false,
+                  "name": "Not",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "name": "Pafta 2",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 10000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "portrait",
+                "paper": "a4",
+                "size": {
+                  "height": 297000,
+                  "width": 210000
+                }
+              },
+              "snapGrid": {
+                "enabled": false,
+                "spacing": 5000,
+                "visible": false
+              },
+              "variables": [],
+              "variants": []
+            }
+          }
+        ],
+        "label": "Paftayı değiştir: Yeni"
+      },
+      "name": "sayfayı değiştir",
+      "op": {
+        "op": "replaceSheet",
+        "sheet": {
+          "id": "s2",
+          "name": "Yeni",
+          "page": {
+            "margins": {
+              "bottom": 10000,
+              "left": 20000,
+              "right": 10000,
+              "top": 10000
+            },
+            "orientation": "landscape",
+            "paper": "a3",
+            "size": {
+              "height": 297000,
+              "width": 420000
+            }
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "f684a09520ff1a837b28c2fd34d6f28f8858aaf38291fb2a32da1bd6294b556a",
+        "inverse": [
+          {
+            "op": "setPage",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            },
+            "page": {
+              "margins": {
+                "bottom": 10000,
+                "left": 20000,
+                "right": 10000,
+                "top": 10000
+              },
+              "orientation": "landscape",
+              "paper": "a3",
+              "size": {
+                "height": 297000,
+                "width": 420000
+              }
+            },
+            "relayout": false
+          },
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 200000,
+                  "left": 30000,
+                  "top": 20000,
+                  "width": 260000
+                },
+                "id": "m1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 370000,
+                  "top": 30000,
+                  "width": 20000
+                },
+                "id": "na1",
+                "rotation": 15000
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Sayfa ayarları"
+      },
+      "name": "kâğıt A1 yatay",
+      "op": {
+        "op": "setPage",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a1",
+          "size": {
+            "height": 594000,
+            "width": 841000
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "49ba774310e21ce4b36d264910a8b73e2cc9bfcd728672dc9f4a90218424191b",
+        "inverse": [
+          {
+            "op": "setPage",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            },
+            "page": {
+              "margins": {
+                "bottom": 10000,
+                "left": 20000,
+                "right": 10000,
+                "top": 10000
+              },
+              "orientation": "landscape",
+              "paper": "a3",
+              "size": {
+                "height": 297000,
+                "width": 420000
+              }
+            },
+            "relayout": false
+          }
+        ],
+        "label": "Sayfa ayarları"
+      },
+      "name": "kâğıt yerleşimsiz",
+      "op": {
+        "op": "setPage",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "portrait",
+          "paper": "a4",
+          "size": {
+            "height": 297000,
+            "width": 210000
+          }
+        },
+        "relayout": false
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "caa07dac94f9da70c3c054357139c19afe84d026f6e540d8153f332b06c5f6dc",
+        "inverse": [
+          {
+            "op": "setPage",
+            "owner": {
+              "id": "M1",
+              "kind": "master"
+            },
+            "page": {
+              "margins": {
+                "bottom": 10000,
+                "left": 20000,
+                "right": 10000,
+                "top": 10000
+              },
+              "orientation": "landscape",
+              "paper": "a3",
+              "size": {
+                "height": 297000,
+                "width": 420000
+              }
+            },
+            "relayout": false
+          },
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 277000,
+                  "left": 20000,
+                  "top": 10000,
+                  "width": 390000
+                },
+                "id": "mb",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 40000,
+                  "left": 230000,
+                  "top": 247000,
+                  "width": 180000
+                },
+                "id": "mt",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Sayfa ayarları"
+      },
+      "name": "ana sayfanın kâğıdı",
+      "op": {
+        "op": "setPage",
+        "owner": {
+          "id": "M1",
+          "kind": "master"
+        },
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "portrait",
+          "paper": "a4",
+          "size": {
+            "height": 297000,
+            "width": 210000
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "page_size_mismatch"
+      },
+      "name": "kâğıt boyu uyuşmuyor",
+      "op": {
+        "op": "setPage",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "portrait",
+          "paper": "a4",
+          "size": {
+            "height": 297000,
+            "width": 200000
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "66cbb334473210b171cd485c0e76c531293c5c15eb4a0a685c09bb0827a83148",
+        "inverse": [
+          {
+            "id": "M2",
+            "op": "removeMaster"
+          }
+        ],
+        "label": "Ana sayfa ekle: İkinci"
+      },
+      "name": "ana sayfa ekle",
+      "op": {
+        "master": {
+          "id": "M2",
+          "name": "İkinci",
+          "page": {
+            "margins": {
+              "bottom": 10000,
+              "left": 20000,
+              "right": 10000,
+              "top": 10000
+            },
+            "orientation": "portrait",
+            "paper": "a4",
+            "size": {
+              "height": 297000,
+              "width": 210000
+            }
+          }
+        },
+        "op": "addMaster"
+      }
+    },
+    {
+      "expect": {
+        "error": "master_in_use"
+      },
+      "name": "kullanılan ana sayfa silinmez",
+      "op": {
+        "id": "M1",
+        "op": "removeMaster"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "40ee4e1e91fb9f3c6ea63c2de2c2ccac3ed2fbd16180e1b10ba510c4b56025cb",
+        "inverse": [
+          {
+            "master": {
+              "guides": [],
+              "id": "M1",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "leftRight",
+                    "relativeTo": "margins",
+                    "v": "topBottom"
+                  },
+                  "frame": {
+                    "height": 277000,
+                    "left": 20000,
+                    "top": 10000,
+                    "width": 390000
+                  },
+                  "hidden": false,
+                  "id": "mb",
+                  "kind": {
+                    "centringMarks": false,
+                    "gap": 5000,
+                    "innerStroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "inset": 0,
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 700
+                    },
+                    "style": "single",
+                    "type": "border"
+                  },
+                  "locked": false,
+                  "name": "Çerçeve",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "bottom"
+                  },
+                  "frame": {
+                    "height": 40000,
+                    "left": 230000,
+                    "top": 247000,
+                    "width": 180000
+                  },
+                  "hidden": false,
+                  "id": "mt",
+                  "kind": {
+                    "cellPadding": 1000,
+                    "inner": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    },
+                    "labelStyle": {
+                      "color": "#3c3c3c",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 1500,
+                      "weight": 500
+                    },
+                    "outer": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 500
+                    },
+                    "rows": [
+                      {
+                        "cells": [
+                          {
+                            "align": "left",
+                            "label": "PROJE",
+                            "rows": [],
+                            "signature": false,
+                            "valign": "middle",
+                            "value": "[% @proje_adi %]",
+                            "width": 1
+                          }
+                        ],
+                        "height": 1
+                      }
+                    ],
+                    "type": "titleBlock",
+                    "valueStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 400
+                    }
+                  },
+                  "locked": false,
+                  "name": "Antet",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "name": "Ana sayfa",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 20000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "landscape",
+                "paper": "a3",
+                "size": {
+                  "height": 297000,
+                  "width": 420000
+                }
+              },
+              "variants": []
+            },
+            "op": "replaceMaster"
+          }
+        ],
+        "label": "Ana sayfayı değiştir: Ana"
+      },
+      "name": "ana sayfayı değiştir",
+      "op": {
+        "master": {
+          "id": "M1",
+          "name": "Ana",
+          "page": {
+            "margins": {
+              "bottom": 10000,
+              "left": 20000,
+              "right": 10000,
+              "top": 10000
+            },
+            "orientation": "landscape",
+            "paper": "a3",
+            "size": {
+              "height": 297000,
+              "width": 420000
+            }
+          }
+        },
+        "op": "replaceMaster"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "ad8653a90aa1eeff51b0fbaf6501d36f6185ca1f5d753882e24d1938a1b4b810",
+        "inverse": [
+          {
+            "op": "setSheetMaster",
+            "sheet": "s2"
+          }
+        ],
+        "label": "Ana sayfa seç"
+      },
+      "name": "ana sayfa seç",
+      "op": {
+        "master": "M1",
+        "op": "setSheetMaster",
+        "sheet": "s2"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "31b46ef67df23bcd96bf1954a714df03419910d2b9f8a6b064e256fdfe17f57a",
+        "inverse": [
+          {
+            "ids": [
+              "d1",
+              "d2"
+            ],
+            "op": "removeItems"
+          },
+          {
+            "master": "M1",
+            "op": "setSheetMaster",
+            "sheet": "s1"
+          }
+        ],
+        "label": "Ana sayfadan ayır"
+      },
+      "name": "ana sayfadan ayır",
+      "op": {
+        "itemIds": [
+          "d1",
+          "d2"
+        ],
+        "op": "detachMaster",
+        "sheet": "s1"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "d487a4ad37ef01c56104f9063dd7c3a3c3e38e279f5eec171e67df3cb533c338",
+        "inverse": [
+          {
+            "ids": [
+              "a1"
+            ],
+            "op": "removeItems"
+          }
+        ],
+        "label": "Ekle: Eklenen"
+      },
+      "name": "öğe ekle",
+      "op": {
+        "index": 0,
+        "items": [
+          {
+            "frame": {
+              "height": 15000,
+              "left": 20000,
+              "top": 60000,
+              "width": 80000
+            },
+            "id": "a1",
+            "kind": {
+              "content": "Eklenen",
+              "type": "text"
+            },
+            "name": "Eklenen"
+          }
+        ],
+        "op": "addItems",
+        "to": {
+          "id": "s2",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "duplicate_name"
+      },
+      "name": "aynı ad eklenmez",
+      "op": {
+        "items": [
+          {
+            "frame": {
+              "height": 15000,
+              "left": 20000,
+              "top": 60000,
+              "width": 80000
+            },
+            "id": "a1",
+            "kind": {
+              "content": "Eklenen",
+              "type": "text"
+            },
+            "name": "Not"
+          }
+        ],
+        "op": "addItems",
+        "to": {
+          "id": "s2",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "duplicate_id"
+      },
+      "name": "aynı kimlik eklenmez",
+      "op": {
+        "items": [
+          {
+            "frame": {
+              "height": 15000,
+              "left": 20000,
+              "top": 60000,
+              "width": 80000
+            },
+            "id": "m1",
+            "kind": {
+              "content": "Eklenen",
+              "type": "text"
+            },
+            "name": "Başka"
+          }
+        ],
+        "op": "addItems",
+        "to": {
+          "id": "s2",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "bd652a504c4a3a3d853d021af28ff32ac213dd9acb797e23906c7f919fbeb32b",
+        "inverse": [
+          {
+            "ids": [
+              "a2"
+            ],
+            "op": "removeItems"
+          }
+        ],
+        "label": "Geri koy: 1 öğe"
+      },
+      "name": "öğe yerleştir",
+      "op": {
+        "entries": [
+          {
+            "index": 0,
+            "item": {
+              "frame": {
+                "height": 15000,
+                "left": 20000,
+                "top": 60000,
+                "width": 80000
+              },
+              "id": "a2",
+              "kind": {
+                "content": "Eklenen",
+                "type": "text"
+              },
+              "name": "İlk"
+            }
+          }
+        ],
+        "op": "insertItems",
+        "to": {
+          "id": "s2",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "a8af146e53b864aa1d4e491f47d34cab41742d64239b048e17207dd4e447944f",
+        "inverse": [
+          {
+            "entries": [
+              {
+                "index": 4,
+                "item": {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "scale",
+                    "relativeTo": "group",
+                    "v": "scale"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 30000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r1",
+                  "kind": {
+                    "fill": "#e0e0e0",
+                    "shape": {
+                      "radius": 2000,
+                      "type": "rect"
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 1",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              },
+              {
+                "index": 5,
+                "item": {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 340000,
+                    "top": 110000,
+                    "width": 40000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r2",
+                  "kind": {
+                    "shape": {
+                      "type": "ellipse"
+                    },
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 2",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              },
+              {
+                "index": 6,
+                "item": {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 40000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 80000
+                  },
+                  "hidden": false,
+                  "id": "g1",
+                  "kind": {
+                    "type": "group"
+                  },
+                  "locked": false,
+                  "name": "Grup",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              }
+            ],
+            "op": "insertItems",
+            "to": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Sil: Grup"
+      },
+      "name": "grubu sil",
+      "op": {
+        "ids": [
+          "g1"
+        ],
+        "op": "removeItems"
+      }
+    },
+    {
+      "expect": {
+        "error": "item_in_use"
+      },
+      "name": "devam çerçevesi silinmez",
+      "op": {
+        "ids": [
+          "tc1"
+        ],
+        "op": "removeItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "654b15d62084a268b73d5d020ac0060ccd6a38dba2a6a915861bff6c42726ccc",
+        "inverse": [
+          {
+            "entries": [
+              {
+                "index": 0,
+                "item": {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "leftRight",
+                    "relativeTo": "margins",
+                    "v": "topBottom"
+                  },
+                  "frame": {
+                    "height": 200000,
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 260000
+                  },
+                  "hidden": false,
+                  "id": "m1",
+                  "kind": {
+                    "clipToAtlasFeature": false,
+                    "grids": [
+                      {
+                        "crossSize": 2500,
+                        "enabled": true,
+                        "frame": "line",
+                        "frameWidth": 1500,
+                        "interval": [
+                          0.0,
+                          0.0
+                        ],
+                        "kind": "cross",
+                        "labels": {
+                          "axisPrefix": true,
+                          "direction": "alongEdge",
+                          "format": {
+                            "decimals": 0,
+                            "groupThousands": false,
+                            "type": "metres"
+                          },
+                          "gap": 1000,
+                          "position": "outside",
+                          "show": true,
+                          "sides": {
+                            "bottom": true,
+                            "left": true,
+                            "right": true,
+                            "top": true
+                          },
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 1800,
+                            "weight": 400
+                          }
+                        },
+                        "name": "Karelaj",
+                        "offset": [
+                          0.0,
+                          0.0
+                        ],
+                        "stroke": {
+                          "cap": "butt",
+                          "color": "#000000",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 180
+                        }
+                      }
+                    ],
+                    "labelBand": 6000,
+                    "layers": {
+                      "type": "all"
+                    },
+                    "overviewFrame": {
+                      "cap": "butt",
+                      "color": "#d0021b",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 500
+                    },
+                    "type": "map",
+                    "view": {
+                      "center": {
+                        "x": 487150.0,
+                        "y": 4417820.0
+                      },
+                      "rotation": 0,
+                      "scale": 1000,
+                      "type": "fixed"
+                    }
+                  },
+                  "locked": false,
+                  "name": "Harita",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              }
+            ],
+            "op": "insertItems",
+            "to": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Sil: Harita"
+      },
+      "name": "haritayı sil (bağlar kopuk kalır)",
+      "op": {
+        "ids": [
+          "m1"
+        ],
+        "op": "removeItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "fddf80525e4d98fa993d8f14a122b9378243c4ee636e8e5bd95c67a04532a76c",
+        "inverse": [
+          {
+            "delta": [
+              -5000,
+              2500
+            ],
+            "ids": [
+              "g1"
+            ],
+            "op": "moveItems"
+          }
+        ],
+        "label": "Taşı: Grup"
+      },
+      "name": "grubu taşı",
+      "op": {
+        "delta": [
+          5000,
+          -2500
+        ],
+        "ids": [
+          "g1"
+        ],
+        "op": "moveItems"
+      }
+    },
+    {
+      "expect": {
+        "error": "item_locked"
+      },
+      "name": "kilitli taşınmaz",
+      "op": {
+        "delta": [
+          1000,
+          0
+        ],
+        "ids": [
+          "p1"
+        ],
+        "op": "moveItems"
+      }
+    },
+    {
+      "expect": {
+        "error": "mixed_owners"
+      },
+      "name": "iki sayfadan taşınmaz",
+      "op": {
+        "delta": [
+          1000,
+          0
+        ],
+        "ids": [
+          "t1",
+          "u1"
+        ],
+        "op": "moveItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "37f14d2dd3eff4d54e3a29337a220ddfd6f864ef4273e1a745055236189449f7",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Boyutlandır: Başlık"
+      },
+      "name": "boyutlandır",
+      "op": {
+        "handle": "se",
+        "id": "t1",
+        "op": "resizeItem",
+        "to": [
+          400000,
+          85000
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "8d3f04d26ee7eec5a31cae957b84c967f5553074e77d258aeb499099cbd69947",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 370000,
+                  "top": 30000,
+                  "width": 20000
+                },
+                "id": "na1",
+                "rotation": 15000
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Boyutlandır: Kuzey"
+      },
+      "name": "dönük boyutlandır",
+      "op": {
+        "handle": "e",
+        "id": "na1",
+        "op": "resizeItem",
+        "to": [
+          400000,
+          50000
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "598fb69ed133a0971afa5c7df44b92e7f02df8ad4b02794152a651b502275b0f",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "id": "r2",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Boyutlandır: Grup"
+      },
+      "name": "grubu boyutlandır",
+      "op": {
+        "handle": "se",
+        "id": "g1",
+        "op": "resizeItem",
+        "to": [
+          400000,
+          160000
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "7f7eebef629cb383ccef2bbf77de2cad910edd248d235f365e1ebf0eafc93fee",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Boyutlandır: Başlık"
+      },
+      "name": "oranlı, ortadan",
+      "op": {
+        "fromCenter": true,
+        "handle": "ne",
+        "id": "t1",
+        "keepAspect": true,
+        "op": "resizeItem",
+        "to": [
+          395000,
+          55000
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "d4c66c73f35eb6e5798b974f3c3dbccec5a1405393956182d6d53d138d4d1dc7",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Döndür: Başlık"
+      },
+      "name": "döndür",
+      "op": {
+        "angle": 30000,
+        "ids": [
+          "t1"
+        ],
+        "op": "rotateItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "1f76597c2c4cd30cab952320c7d01271b4969e02ef3c0f6ae40813b8a94bd974",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Döndür: 2 öğe"
+      },
+      "name": "birlikte döndür",
+      "op": {
+        "angle": -90000,
+        "ids": [
+          "t1",
+          "sb1"
+        ],
+        "op": "rotateItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "6863b816afc66ffecc6039dca57831688204ebb08497cf6c8892ba350a5bd710",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "id": "r2",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Döndür: Grup"
+      },
+      "name": "bir nokta çevresinde döndür",
+      "op": {
+        "angle": 45000,
+        "around": [
+          300000,
+          100000
+        ],
+        "ids": [
+          "g1"
+        ],
+        "op": "rotateItems"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "70994257ff18a84716635b356ccf90c8f9c393a4c594bc6d21176657b2120a1c",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Yerleştir: Başlık"
+      },
+      "name": "çerçeveler",
+      "op": {
+        "frames": [
+          {
+            "frame": {
+              "height": 4000,
+              "left": 1000,
+              "top": 2000,
+              "width": 3000
+            },
+            "id": "t1",
+            "rotation": 5000
+          }
+        ],
+        "op": "setFrames"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "301e270481174b36ff480bb84ce1bd43bd00f13b7ca2dbf64e26de747bbf9bbc",
+        "inverse": [
+          {
+            "id": "t1",
+            "op": "setItemProps",
+            "patch": {
+              "border": null,
+              "kind": {
+                "align": "left",
+                "content": "[% @proje_adi %]",
+                "type": "text"
+              }
+            }
+          }
+        ],
+        "label": "Değiştir: Başlık"
+      },
+      "name": "özellik",
+      "op": {
+        "id": "t1",
+        "op": "setItemProps",
+        "patch": {
+          "border": {
+            "width": 350
+          },
+          "kind": {
+            "align": "center",
+            "content": "Yeni başlık",
+            "type": "text"
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "246ee7d8a29c224a19cc47be1202cb43141f4ac4e55f3803619519437cc65a51",
+        "inverse": [
+          {
+            "id": "m1",
+            "op": "setItemProps",
+            "patch": {
+              "kind": {
+                "type": "map",
+                "view": {
+                  "center": {
+                    "x": 487150.0,
+                    "y": 4417820.0
+                  },
+                  "rotation": 0,
+                  "scale": 1000,
+                  "type": "fixed"
+                }
+              }
+            }
+          }
+        ],
+        "label": "Değiştir: Harita"
+      },
+      "name": "haritanın görünüşü atlasa",
+      "op": {
+        "id": "m1",
+        "op": "setItemProps",
+        "patch": {
+          "kind": {
+            "type": "map",
+            "view": {
+              "policy": {
+                "marginPct": 10,
+                "type": "fit"
+              },
+              "type": "atlas"
+            }
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "ba7bbbe575116dcb63c279896c8052f6d46a37ca59e5944d7618b4d116117c91",
+        "inverse": [
+          {
+            "id": "r1",
+            "op": "setItemProps",
+            "patch": {
+              "kind": {
+                "fill": "#e0e0e0",
+                "type": "shape"
+              }
+            }
+          }
+        ],
+        "label": "Değiştir: Kutu 1"
+      },
+      "name": "isteğe bağlı alan silinir",
+      "op": {
+        "id": "r1",
+        "op": "setItemProps",
+        "patch": {
+          "kind": {
+            "fill": null,
+            "type": "shape"
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "bad_patch"
+      },
+      "name": "kimlik yamayla değişmez",
+      "op": {
+        "id": "t1",
+        "op": "setItemProps",
+        "patch": {
+          "id": "zz"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "kind_change"
+      },
+      "name": "tür yamayla değişmez",
+      "op": {
+        "id": "t1",
+        "op": "setItemProps",
+        "patch": {
+          "kind": {
+            "type": "line"
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "bad_patch"
+      },
+      "name": "bilinmeyen alan yamada",
+      "op": {
+        "id": "t1",
+        "op": "setItemProps",
+        "patch": {
+          "kind": {
+            "type": "text",
+            "zoom": 2
+          }
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "out_of_range"
+      },
+      "name": "aralık dışı yamada",
+      "op": {
+        "id": "t1",
+        "op": "setItemProps",
+        "patch": {
+          "opacity": 150
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "d1da936f6a66531125bdc7370c713112aef4a463731947948e9eeeae504e7e68",
+        "inverse": [
+          {
+            "id": "t1",
+            "name": "Başlık",
+            "op": "renameItem"
+          }
+        ],
+        "label": "Ad ver: Ana başlık"
+      },
+      "name": "ad ver",
+      "op": {
+        "id": "t1",
+        "name": "Ana başlık",
+        "op": "renameItem"
+      }
+    },
+    {
+      "expect": {
+        "error": "duplicate_name"
+      },
+      "name": "aynı ad verilmez",
+      "op": {
+        "id": "t1",
+        "name": "Harita",
+        "op": "renameItem"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "ff5cc63b54c61803afe911f97b9e0a03a24f6b082c62c326bfe7342389c1d3c2",
+        "inverse": [
+          {
+            "op": "setOrder",
+            "order": [
+              "m1",
+              "sb1",
+              "na1",
+              "t1",
+              "r1",
+              "r2",
+              "g1",
+              "ln1",
+              "tb1",
+              "tc1",
+              "p1"
+            ],
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Öne getir"
+      },
+      "name": "öne getir",
+      "op": {
+        "ids": [
+          "t1"
+        ],
+        "op": "reorder",
+        "to": "front"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "0b435820938e5a4587249279b9e66ae6b9bd34540e1038f708eac5e1482b546e",
+        "inverse": [
+          {
+            "op": "setOrder",
+            "order": [
+              "m1",
+              "sb1",
+              "na1",
+              "t1",
+              "r1",
+              "r2",
+              "g1",
+              "ln1",
+              "tb1",
+              "tc1",
+              "p1"
+            ],
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Arkaya gönder"
+      },
+      "name": "arkaya gönder",
+      "op": {
+        "ids": [
+          "g1"
+        ],
+        "op": "reorder",
+        "to": "back"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "4b9c4b4817052f73d3025200dedffa92bcdfef6654d81d11c19c1f949b9511f1",
+        "inverse": [
+          {
+            "op": "setOrder",
+            "order": [
+              "m1",
+              "sb1",
+              "na1",
+              "t1",
+              "r1",
+              "r2",
+              "g1",
+              "ln1",
+              "tb1",
+              "tc1",
+              "p1"
+            ],
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Bir öne"
+      },
+      "name": "bir öne",
+      "op": {
+        "ids": [
+          "sb1",
+          "na1"
+        ],
+        "op": "reorder",
+        "to": "forward"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "da77664c5b4f88b5b7ff21c0ab8192e0eb9fb8dab363b0cefd26aee067eb9ab0",
+        "inverse": [
+          {
+            "op": "setOrder",
+            "order": [
+              "m1",
+              "sb1",
+              "na1",
+              "t1",
+              "r1",
+              "r2",
+              "g1",
+              "ln1",
+              "tb1",
+              "tc1",
+              "p1"
+            ],
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Bir arkaya"
+      },
+      "name": "bir arkaya",
+      "op": {
+        "ids": [
+          "ln1"
+        ],
+        "op": "reorder",
+        "to": "backward"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "1746288d6acbc6d5670d99b92a911440aa13c644d8847127d824f66f7986cb07",
+        "inverse": [
+          {
+            "op": "setOrder",
+            "order": [
+              "m1",
+              "sb1",
+              "na1",
+              "t1",
+              "r1",
+              "r2",
+              "g1",
+              "ln1",
+              "tb1",
+              "tc1",
+              "p1"
+            ],
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Sırayı değiştir"
+      },
+      "name": "sıra",
+      "op": {
+        "op": "setOrder",
+        "order": [
+          "p1",
+          "tc1",
+          "tb1",
+          "ln1",
+          "g1",
+          "r2",
+          "r1",
+          "t1",
+          "na1",
+          "sb1",
+          "m1"
+        ],
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "bad_order"
+      },
+      "name": "eksik sıra",
+      "op": {
+        "op": "setOrder",
+        "order": [
+          "m1"
+        ],
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "58342750dba8608491b351f2c4b3be626ba579627f24b137dfc561a7d6e11868",
+        "inverse": [
+          {
+            "id": "g2",
+            "op": "ungroup"
+          }
+        ],
+        "label": "Grupla: İşaretler"
+      },
+      "name": "grupla",
+      "op": {
+        "group": {
+          "frame": {
+            "height": 1000,
+            "left": 0,
+            "top": 0,
+            "width": 1000
+          },
+          "id": "g2",
+          "kind": {
+            "type": "group"
+          },
+          "name": "İşaretler"
+        },
+        "ids": [
+          "sb1",
+          "na1"
+        ],
+        "op": "group"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "2bab57b7be48cd2a8d2ad490bc63a204816af6eec1f4bf370c4b788efdfc4fac",
+        "inverse": [
+          {
+            "items": [
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "leftRight",
+                  "relativeTo": "margins",
+                  "v": "topBottom"
+                },
+                "frame": {
+                  "height": 200000,
+                  "left": 30000,
+                  "top": 20000,
+                  "width": 260000
+                },
+                "hidden": false,
+                "id": "m1",
+                "kind": {
+                  "clipToAtlasFeature": false,
+                  "grids": [
+                    {
+                      "crossSize": 2500,
+                      "enabled": true,
+                      "frame": "line",
+                      "frameWidth": 1500,
+                      "interval": [
+                        0.0,
+                        0.0
+                      ],
+                      "kind": "cross",
+                      "labels": {
+                        "axisPrefix": true,
+                        "direction": "alongEdge",
+                        "format": {
+                          "decimals": 0,
+                          "groupThousands": false,
+                          "type": "metres"
+                        },
+                        "gap": 1000,
+                        "position": "outside",
+                        "show": true,
+                        "sides": {
+                          "bottom": true,
+                          "left": true,
+                          "right": true,
+                          "top": true
+                        },
+                        "style": {
+                          "color": "#000000",
+                          "font": "barlow",
+                          "italic": false,
+                          "size": 1800,
+                          "weight": 400
+                        }
+                      },
+                      "name": "Karelaj",
+                      "offset": [
+                        0.0,
+                        0.0
+                      ],
+                      "stroke": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    }
+                  ],
+                  "labelBand": 6000,
+                  "layers": {
+                    "type": "all"
+                  },
+                  "overviewFrame": {
+                    "cap": "butt",
+                    "color": "#d0021b",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 500
+                  },
+                  "type": "map",
+                  "view": {
+                    "center": {
+                      "x": 487150.0,
+                      "y": 4417820.0
+                    },
+                    "rotation": 0,
+                    "scale": 1000,
+                    "type": "fixed"
+                  }
+                },
+                "locked": false,
+                "name": "Harita",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "hidden": false,
+                "id": "sb1",
+                "kind": {
+                  "color": "#000000",
+                  "height": 1500,
+                  "leftSegments": 0,
+                  "length": {
+                    "type": "auto"
+                  },
+                  "lineWidth": 250,
+                  "map": "m1",
+                  "secondary": "#ffffff",
+                  "segments": 4,
+                  "showScale": false,
+                  "style": "singleBox",
+                  "subdivisions": 0,
+                  "text": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 2000,
+                    "weight": 500
+                  },
+                  "type": "scaleBar",
+                  "unit": "auto"
+                },
+                "locked": false,
+                "name": "Ölçek",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 30000,
+                  "left": 370000,
+                  "top": 30000,
+                  "width": 20000
+                },
+                "hidden": false,
+                "id": "na1",
+                "kind": {
+                  "color": "#000000",
+                  "declination": 0,
+                  "map": "m1",
+                  "north": "grid",
+                  "note": false,
+                  "style": "kentosK",
+                  "text": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 3500,
+                    "weight": 600
+                  },
+                  "type": "northArrow"
+                },
+                "locked": false,
+                "name": "Kuzey",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 15000
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "hidden": false,
+                "id": "t1",
+                "kind": {
+                  "align": "left",
+                  "content": "[% @proje_adi %]",
+                  "fit": "none",
+                  "lineHeight": 120,
+                  "style": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 5000,
+                    "weight": 600
+                  },
+                  "type": "text",
+                  "valign": "top",
+                  "wrap": true
+                },
+                "locked": false,
+                "name": "Başlık",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "scale",
+                  "relativeTo": "group",
+                  "v": "scale"
+                },
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "group": "g1",
+                "hidden": false,
+                "id": "r1",
+                "kind": {
+                  "fill": "#e0e0e0",
+                  "shape": {
+                    "radius": 2000,
+                    "type": "rect"
+                  },
+                  "type": "shape"
+                },
+                "locked": false,
+                "name": "Kutu 1",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "group": "g1",
+                "hidden": false,
+                "id": "r2",
+                "kind": {
+                  "shape": {
+                    "type": "ellipse"
+                  },
+                  "stroke": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 350
+                  },
+                  "type": "shape"
+                },
+                "locked": false,
+                "name": "Kutu 2",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 40000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 80000
+                },
+                "hidden": false,
+                "id": "g1",
+                "kind": {
+                  "type": "group"
+                },
+                "locked": false,
+                "name": "Grup",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 10000,
+                  "left": 300000,
+                  "top": 150000,
+                  "width": 50000
+                },
+                "hidden": false,
+                "id": "ln1",
+                "kind": {
+                  "end": "arrow",
+                  "points": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      1000000,
+                      1000000
+                    ]
+                  ],
+                  "start": "none",
+                  "stroke": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 250
+                  },
+                  "type": "line"
+                },
+                "locked": false,
+                "name": "Ok",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 170000,
+                  "width": 90000
+                },
+                "hidden": false,
+                "id": "tb1",
+                "kind": {
+                  "cellStyle": {
+                    "padding": 800,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 400
+                    }
+                  },
+                  "columns": [
+                    {
+                      "align": "left",
+                      "heading": "No",
+                      "value": "",
+                      "width": 10000
+                    },
+                    {
+                      "align": "left",
+                      "heading": "Ad",
+                      "value": "",
+                      "width": 0
+                    }
+                  ],
+                  "empty": {
+                    "type": "showHeader"
+                  },
+                  "header": true,
+                  "headerStyle": {
+                    "fill": "#eeeeee",
+                    "padding": 800,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 600
+                    }
+                  },
+                  "lines": {
+                    "columns": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    },
+                    "header": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "outer": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "rows": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    }
+                  },
+                  "overflow": {
+                    "items": [
+                      "tc1"
+                    ],
+                    "type": "continueIn"
+                  },
+                  "source": {
+                    "rows": [
+                      [
+                        "1",
+                        "Bir"
+                      ],
+                      [
+                        "2",
+                        "İki"
+                      ],
+                      [
+                        "3",
+                        "Üç"
+                      ],
+                      [
+                        "4",
+                        "Dört"
+                      ],
+                      [
+                        "5",
+                        "Beş"
+                      ]
+                    ],
+                    "type": "fixed"
+                  },
+                  "title": "",
+                  "titleStyle": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 2500,
+                    "weight": 600
+                  },
+                  "type": "table"
+                },
+                "locked": false,
+                "name": "Tablo",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 30000,
+                  "left": 300000,
+                  "top": 195000,
+                  "width": 90000
+                },
+                "hidden": false,
+                "id": "tc1",
+                "kind": {
+                  "cellStyle": {
+                    "padding": 800,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 400
+                    }
+                  },
+                  "columns": [],
+                  "empty": {
+                    "type": "showHeader"
+                  },
+                  "header": true,
+                  "headerStyle": {
+                    "fill": "#eeeeee",
+                    "padding": 800,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 600
+                    }
+                  },
+                  "lines": {
+                    "columns": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    },
+                    "header": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "outer": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "rows": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    }
+                  },
+                  "overflow": {
+                    "type": "clip"
+                  },
+                  "source": {
+                    "type": "continued"
+                  },
+                  "title": "",
+                  "titleStyle": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 2500,
+                    "weight": 600
+                  },
+                  "type": "table"
+                },
+                "locked": false,
+                "name": "Tablo devamı",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 230000,
+                  "width": 20000
+                },
+                "hidden": false,
+                "id": "p1",
+                "kind": {
+                  "asset": "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918",
+                  "clip": true,
+                  "fit": "contain",
+                  "type": "picture"
+                },
+                "locked": true,
+                "name": "Logo",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              }
+            ],
+            "op": "setItems",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Grubu çöz: Grup"
+      },
+      "name": "grubu çöz",
+      "op": {
+        "id": "g1",
+        "op": "ungroup"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "a1077da7fdd0027c4ab5837ec5e912b95fcdc4f1ccca90e66ea22ced3fbc78fb",
+        "inverse": [
+          {
+            "items": [
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "frame": {
+                  "height": 30000,
+                  "left": 20000,
+                  "top": 20000,
+                  "width": 100000
+                },
+                "hidden": false,
+                "id": "u1",
+                "kind": {
+                  "align": "left",
+                  "content": "Not",
+                  "fit": "none",
+                  "lineHeight": 120,
+                  "style": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 2000,
+                    "weight": 400
+                  },
+                  "type": "text",
+                  "valign": "top",
+                  "wrap": true
+                },
+                "locked": false,
+                "name": "Not",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              }
+            ],
+            "op": "setItems",
+            "owner": {
+              "id": "s2",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Öğeleri geri yükle"
+      },
+      "name": "öğeler",
+      "op": {
+        "items": [],
+        "op": "setItems",
+        "owner": {
+          "id": "s2",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "e2f34ae386be5cb506733a9d0b11ef9c451f0eae290e6adadf1c6974e45e77b6",
+        "inverse": [
+          {
+            "ids": [
+              "p1"
+            ],
+            "op": "lock",
+            "value": true
+          },
+          {
+            "ids": [
+              "t1"
+            ],
+            "op": "lock",
+            "value": false
+          }
+        ],
+        "label": "Kilitle: 2 öğe"
+      },
+      "name": "kilitle",
+      "op": {
+        "ids": [
+          "t1",
+          "p1"
+        ],
+        "op": "lock",
+        "value": true
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "266963398be3e2381d28e81420125c81df1d4ccce4e4b85fb3623d353abeaf8d",
+        "inverse": [
+          {
+            "ids": [
+              "t1"
+            ],
+            "op": "hide",
+            "value": false
+          }
+        ],
+        "label": "Gizle: Başlık"
+      },
+      "name": "gizle",
+      "op": {
+        "ids": [
+          "t1"
+        ],
+        "op": "hide",
+        "value": true
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "592b8c3bfe932604a54b4a17298ee99a46c02265d0df5a5d0772b8380a334364",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "id": "r2",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Hizala: 3 öğe"
+      },
+      "name": "sola hizala",
+      "op": {
+        "edge": "left",
+        "ids": [
+          "t1",
+          "sb1",
+          "g1"
+        ],
+        "op": "align",
+        "to": "selection"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "ff9dd2971c14c13ac00fd60f62c00168292653663449c8c880cc4c955b66f22e",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Hizala: Başlık"
+      },
+      "name": "sayfanın ortasına",
+      "op": {
+        "edge": "center",
+        "ids": [
+          "t1"
+        ],
+        "op": "align",
+        "to": "page"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "545a5a377da21b0a2ce3db58737d3558e60801dbf4e17191fdd126ebf8284cd1",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 370000,
+                  "top": 30000,
+                  "width": 20000
+                },
+                "id": "na1",
+                "rotation": 15000
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Hizala: 2 öğe"
+      },
+      "name": "kenar boşluğunun altına",
+      "op": {
+        "edge": "bottom",
+        "ids": [
+          "t1",
+          "na1"
+        ],
+        "op": "align",
+        "to": "margins"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "e396b74a154a1911d042ad47142a573cb0f8fb789bcb22235d1c83bdc8a94a23",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Hizala: 2 öğe"
+      },
+      "name": "anahtara göre ortala",
+      "op": {
+        "edge": "middle",
+        "ids": [
+          "t1",
+          "sb1"
+        ],
+        "key": "m1",
+        "op": "align",
+        "to": "keyItem"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "cd750e6a8f7c87130e0218c20964588584978f0cbab716fdbab0f876f9edee85",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "id": "r2",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Dağıt: 3 öğe"
+      },
+      "name": "aralıkları eşitle",
+      "op": {
+        "axis": "y",
+        "ids": [
+          "sb1",
+          "t1",
+          "g1"
+        ],
+        "mode": "gaps",
+        "op": "distribute"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "5aa75b9968c4345cd90a2a34fc4581c2386f2cbd747b19f2aff63ff29403b2a7",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 100000,
+                  "width": 30000
+                },
+                "id": "r1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 30000,
+                  "left": 340000,
+                  "top": 110000,
+                  "width": 40000
+                },
+                "id": "r2",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 10000,
+                  "left": 300000,
+                  "top": 150000,
+                  "width": 50000
+                },
+                "id": "ln1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Dağıt: 4 öğe"
+      },
+      "name": "merkezleri eşitle",
+      "op": {
+        "axis": "y",
+        "ids": [
+          "sb1",
+          "t1",
+          "g1",
+          "ln1"
+        ],
+        "mode": "centers",
+        "op": "distribute"
+      }
+    },
+    {
+      "expect": {
+        "error": "no_items"
+      },
+      "name": "iki öğe dağıtılmaz",
+      "op": {
+        "axis": "x",
+        "ids": [
+          "sb1",
+          "t1"
+        ],
+        "mode": "gaps",
+        "op": "distribute"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "41f746997dbb12d176ecd9d083c7ac180b4b6c0d9e0067689b24654c066eb591",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Aynı boy: 2 öğe"
+      },
+      "name": "aynı genişlik",
+      "op": {
+        "dimension": "width",
+        "ids": [
+          "t1",
+          "sb1"
+        ],
+        "op": "matchSize"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "65a5edef93d2f991241dbb6bc0f2d52058f6d83524430b244cf2628cddef0f87",
+        "inverse": [
+          {
+            "frames": [
+              {
+                "frame": {
+                  "height": 12000,
+                  "left": 300000,
+                  "top": 30000,
+                  "width": 60000
+                },
+                "id": "sb1",
+                "rotation": 0
+              },
+              {
+                "frame": {
+                  "height": 20000,
+                  "left": 300000,
+                  "top": 60000,
+                  "width": 90000
+                },
+                "id": "t1",
+                "rotation": 0
+              }
+            ],
+            "op": "setFrames"
+          }
+        ],
+        "label": "Aynı boy: 2 öğe"
+      },
+      "name": "aynı boy",
+      "op": {
+        "dimension": "both",
+        "ids": [
+          "sb1",
+          "t1"
+        ],
+        "key": "tb1",
+        "op": "matchSize"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "27fcf77cacb05a6a6453157329c849f7d4ca33edf6404e7f3dec609bb941faf7",
+        "inverse": [
+          {
+            "id": "k3",
+            "op": "removeGuide",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Kılavuz ekle"
+      },
+      "name": "kılavuz ekle",
+      "op": {
+        "guide": {
+          "at": 50000,
+          "axis": "y",
+          "id": "k3"
+        },
+        "op": "addGuide",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "966ecb9dc9d4cc255638ca7761b29b4992fedc1233d5c56394b98ddcd46bfd83",
+        "inverse": [
+          {
+            "at": 150000,
+            "id": "k1",
+            "op": "moveGuide",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Kılavuzu taşı"
+      },
+      "name": "kılavuz taşı",
+      "op": {
+        "at": 160000,
+        "id": "k1",
+        "op": "moveGuide",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "item_locked"
+      },
+      "name": "kilitli kılavuz taşınmaz",
+      "op": {
+        "at": 1,
+        "id": "k2",
+        "op": "moveGuide",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "fad0ad702815bee088ff21d1005f4af2b3e2f8095e84dc6f2ad3801840eda27d",
+        "inverse": [
+          {
+            "guide": {
+              "at": 150000,
+              "axis": "x",
+              "id": "k1",
+              "locked": false
+            },
+            "index": 0,
+            "op": "addGuide",
+            "owner": {
+              "id": "s1",
+              "kind": "sheet"
+            }
+          }
+        ],
+        "label": "Kılavuzu sil"
+      },
+      "name": "kılavuz sil",
+      "op": {
+        "id": "k1",
+        "op": "removeGuide",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "8b9793b20e95a87c4d081071c1225ca630ebf7763a0789fbac5b5241f5e65bfa",
+        "inverse": [
+          {
+            "grid": {
+              "enabled": false,
+              "spacing": 5000,
+              "visible": false
+            },
+            "op": "setSnapGrid",
+            "sheet": "s1"
+          }
+        ],
+        "label": "Izgara"
+      },
+      "name": "ızgara",
+      "op": {
+        "grid": {
+          "enabled": true,
+          "spacing": 2500,
+          "visible": true
+        },
+        "op": "setSnapGrid",
+        "sheet": "s1"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "f423751d3ae0f70e9e38628facc2747b4b1690d56659fff294b1c552924ee83b",
+        "inverse": [
+          {
+            "op": "setAtlas",
+            "sheet": "s1"
+          }
+        ],
+        "label": "Atlas"
+      },
+      "name": "atlas",
+      "op": {
+        "atlas": {
+          "layer": "parsel",
+          "sort": [
+            {
+              "expression": "parsel_no"
+            }
+          ]
+        },
+        "op": "setAtlas",
+        "sheet": "s1"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "7239aa7c832d53c6577bca066928c463ea14533b31a0a5fb7f98a069f6c68cbb",
+        "inverse": [
+          {
+            "export": {
+              "dpi": 300,
+              "fileName": "[% @pafta_adi %]",
+              "format": "svg"
+            },
+            "op": "setExport",
+            "sheet": "s1"
+          }
+        ],
+        "label": "Dışa aktarma ayarları"
+      },
+      "name": "dışa aktarma",
+      "op": {
+        "export": {
+          "dpi": 600,
+          "fileName": "[% @ada %]",
+          "format": "png"
+        },
+        "op": "setExport",
+        "sheet": "s1"
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "7f5393afc520a9f4414783080fa2527d70dbbb9c8f4eba6e0ce126ca3ab10121",
+        "inverse": [
+          {
+            "op": "replaceSheet",
+            "sheet": {
+              "export": {
+                "dpi": 300,
+                "fileName": "[% @pafta_adi %]",
+                "format": "svg"
+              },
+              "guides": [],
+              "id": "s2",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 20000,
+                    "top": 20000,
+                    "width": 100000
+                  },
+                  "hidden": false,
+                  "id": "u1",
+                  "kind": {
+                    "align": "left",
+                    "content": "Not",
+                    "fit": "none",
+                    "lineHeight": 120,
+                    "style": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 400
+                    },
+                    "type": "text",
+                    "valign": "top",
+                    "wrap": true
+                  },
+                  "locked": false,
+                  "name": "Not",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "name": "Pafta 2",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 10000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "portrait",
+                "paper": "a4",
+                "size": {
+                  "height": 297000,
+                  "width": 210000
+                }
+              },
+              "snapGrid": {
+                "enabled": false,
+                "spacing": 5000,
+                "visible": false
+              },
+              "variables": [],
+              "variants": []
+            }
+          }
+        ],
+        "label": "Şablon uygula: Genel pafta"
+      },
+      "name": "şablon uygula",
+      "op": {
+        "ids": {
+          "items": [
+            "y1",
+            "y2",
+            "y3",
+            "y4",
+            "y5"
+          ],
+          "sheet": "yok"
+        },
+        "op": "applyTemplate",
+        "options": {
+          "paper": {
+            "orientation": "landscape",
+            "paper": "a3"
+          },
+          "values": [
+            {
+              "name": "kurum",
+              "value": "Belediye"
+            }
+          ]
+        },
+        "sheet": "s2",
+        "template": {
+          "assets": [],
+          "meta": {
+            "author": "KentOS",
+            "category": "genel",
+            "created": "2026-10-02T00:00:00Z",
+            "description": "A4 dikey genel amaçlı pafta: karelajlı harita, kuzey oku, ölçek çubuğu ve alt kenarda hücreli antet. Her kâğıtta antet sağ alt köşede 180 mm genişliğinde kalır, harita büyür.",
+            "id": "sys:genel-a4-dikey",
+            "name": "Genel pafta",
+            "papers": [
+              {
+                "orientation": "portrait",
+                "paper": "a4"
+              },
+              {
+                "orientation": "portrait",
+                "paper": "a3"
+              },
+              {
+                "orientation": "landscape",
+                "paper": "a3"
+              }
+            ],
+            "projectTypes": [],
+            "revision": 1,
+            "tags": [
+              "genel",
+              "karelaj",
+              "antet"
+            ],
+            "updated": "2026-10-02T00:00:00Z",
+            "workspaces": [
+              "cad",
+              "gis"
+            ]
+          },
+          "schema": "kentos.sheet.template/1",
+          "sheet": {
+            "export": {
+              "dpi": 300,
+              "fileName": "[% @pafta_adi %]",
+              "format": "svg"
+            },
+            "guides": [],
+            "id": "t",
+            "items": [
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "leftRight",
+                  "relativeTo": "margins",
+                  "v": "topBottom"
+                },
+                "frame": {
+                  "height": 277000,
+                  "left": 20000,
+                  "top": 10000,
+                  "width": 180000
+                },
+                "hidden": false,
+                "id": "cerceve",
+                "kind": {
+                  "centringMarks": false,
+                  "gap": 5000,
+                  "innerStroke": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 350
+                  },
+                  "inset": 0,
+                  "stroke": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 500
+                  },
+                  "style": "single",
+                  "type": "border"
+                },
+                "locked": true,
+                "name": "Pafta çerçevesi",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "leftRight",
+                  "relativeTo": "margins",
+                  "v": "topBottom"
+                },
+                "frame": {
+                  "height": 225000,
+                  "left": 24000,
+                  "top": 14000,
+                  "width": 172000
+                },
+                "hidden": false,
+                "id": "harita",
+                "kind": {
+                  "clipToAtlasFeature": false,
+                  "grids": [
+                    {
+                      "crossSize": 2500,
+                      "enabled": true,
+                      "frame": "line",
+                      "frameWidth": 1500,
+                      "interval": [
+                        0.0,
+                        0.0
+                      ],
+                      "kind": "cross",
+                      "labels": {
+                        "axisPrefix": true,
+                        "direction": "alongEdge",
+                        "format": {
+                          "decimals": 0,
+                          "groupThousands": false,
+                          "type": "metres"
+                        },
+                        "gap": 1200,
+                        "position": "outside",
+                        "show": true,
+                        "sides": {
+                          "bottom": true,
+                          "left": true,
+                          "right": true,
+                          "top": true
+                        },
+                        "style": {
+                          "color": "#000000",
+                          "font": "barlow",
+                          "italic": false,
+                          "size": 1800,
+                          "weight": 500
+                        }
+                      },
+                      "name": "Karelaj",
+                      "offset": [
+                        0.0,
+                        0.0
+                      ],
+                      "stroke": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    }
+                  ],
+                  "labelBand": 7000,
+                  "layers": {
+                    "type": "all"
+                  },
+                  "overviewFrame": {
+                    "cap": "butt",
+                    "color": "#d0021b",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 500
+                  },
+                  "type": "map",
+                  "view": {
+                    "rotation": 0,
+                    "scale": 1000,
+                    "type": "fixed"
+                  }
+                },
+                "locked": false,
+                "name": "Harita",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "top"
+                },
+                "fill": "#ffffff",
+                "frame": {
+                  "height": 19000,
+                  "left": 161000,
+                  "top": 23000,
+                  "width": 27000
+                },
+                "hidden": false,
+                "id": "kuzey",
+                "kind": {
+                  "color": "#000000",
+                  "declination": 0,
+                  "map": "harita",
+                  "north": "grid",
+                  "note": false,
+                  "style": "kentosK",
+                  "text": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 3000,
+                    "weight": 600
+                  },
+                  "type": "northArrow"
+                },
+                "locked": false,
+                "name": "Kuzey oku",
+                "opacity": 100,
+                "padding": 1000,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "left",
+                  "relativeTo": "margins",
+                  "v": "bottom"
+                },
+                "fill": "#ffffff",
+                "frame": {
+                  "height": 10000,
+                  "left": 33000,
+                  "top": 220000,
+                  "width": 58000
+                },
+                "hidden": false,
+                "id": "olcek",
+                "kind": {
+                  "color": "#000000",
+                  "height": 1200,
+                  "leftSegments": 0,
+                  "length": {
+                    "type": "auto"
+                  },
+                  "lineWidth": 250,
+                  "map": "harita",
+                  "secondary": "#ffffff",
+                  "segments": 4,
+                  "showScale": false,
+                  "style": "singleBox",
+                  "subdivisions": 0,
+                  "text": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 1800,
+                    "weight": 500
+                  },
+                  "type": "scaleBar",
+                  "unit": "auto"
+                },
+                "locked": false,
+                "name": "Ölçek çubuğu",
+                "opacity": 100,
+                "padding": 1000,
+                "printable": true,
+                "rotation": 0
+              },
+              {
+                "bindings": [],
+                "constraints": {
+                  "h": "right",
+                  "relativeTo": "margins",
+                  "v": "bottom"
+                },
+                "frame": {
+                  "height": 44000,
+                  "left": 20000,
+                  "top": 243000,
+                  "width": 180000
+                },
+                "hidden": false,
+                "id": "antet",
+                "kind": {
+                  "cellPadding": 1200,
+                  "inner": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 180
+                  },
+                  "labelStyle": {
+                    "color": "#3c3c3c",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 1500,
+                    "weight": 500
+                  },
+                  "outer": {
+                    "cap": "butt",
+                    "color": "#000000",
+                    "dash": [],
+                    "join": "miter",
+                    "width": 500
+                  },
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "align": "left",
+                          "label": "KURUM / İDARE",
+                          "rows": [],
+                          "signature": false,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 2800,
+                            "weight": 600
+                          },
+                          "valign": "middle",
+                          "value": "[% @kurum %]",
+                          "width": 2
+                        },
+                        {
+                          "align": "left",
+                          "label": "PROJE",
+                          "rows": [],
+                          "signature": false,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 3500,
+                            "weight": 600
+                          },
+                          "valign": "middle",
+                          "value": "[% @proje_adi %]",
+                          "width": 4
+                        }
+                      ],
+                      "height": 12
+                    },
+                    {
+                      "cells": [
+                        {
+                          "align": "left",
+                          "label": "PAFTA ADI",
+                          "rows": [],
+                          "signature": false,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 3000,
+                            "weight": 500
+                          },
+                          "valign": "middle",
+                          "value": "[% @pafta_adi %]",
+                          "width": 4
+                        },
+                        {
+                          "align": "center",
+                          "label": "ÖLÇEK",
+                          "rows": [],
+                          "signature": false,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 3000,
+                            "weight": 600
+                          },
+                          "valign": "middle",
+                          "value": "[% @olcek %]",
+                          "width": 1
+                        },
+                        {
+                          "align": "center",
+                          "label": "PAFTA NO",
+                          "rows": [],
+                          "signature": false,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 2800,
+                            "weight": 600
+                          },
+                          "valign": "middle",
+                          "value": "[% @pafta_no %]",
+                          "width": 1
+                        }
+                      ],
+                      "height": 12
+                    },
+                    {
+                      "cells": [
+                        {
+                          "align": "left",
+                          "label": "HAZIRLAYAN",
+                          "rows": [],
+                          "signature": true,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 2400,
+                            "weight": 400
+                          },
+                          "valign": "middle",
+                          "value": "[% @kullanici %]",
+                          "width": 2
+                        },
+                        {
+                          "align": "left",
+                          "label": "KONTROL EDEN",
+                          "rows": [],
+                          "signature": true,
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 2400,
+                            "weight": 400
+                          },
+                          "valign": "middle",
+                          "value": "[% @kontrol_eden %]",
+                          "width": 2
+                        },
+                        {
+                          "align": "center",
+                          "label": "TARİH",
+                          "rows": [],
+                          "signature": false,
+                          "valign": "middle",
+                          "value": "[% @tarih %]",
+                          "width": 1
+                        },
+                        {
+                          "align": "center",
+                          "label": "SAYFA",
+                          "rows": [],
+                          "signature": false,
+                          "valign": "middle",
+                          "value": "[% @sayfa %] / [% @sayfa_sayisi %]",
+                          "width": 1
+                        }
+                      ],
+                      "height": 20
+                    }
+                  ],
+                  "type": "titleBlock",
+                  "valueStyle": {
+                    "color": "#000000",
+                    "font": "barlow",
+                    "italic": false,
+                    "size": 2600,
+                    "weight": 400
+                  }
+                },
+                "locked": false,
+                "name": "Antet",
+                "opacity": 100,
+                "padding": 0,
+                "printable": true,
+                "rotation": 0
+              }
+            ],
+            "name": "Genel pafta",
+            "page": {
+              "margins": {
+                "bottom": 10000,
+                "left": 20000,
+                "right": 10000,
+                "top": 10000
+              },
+              "orientation": "portrait",
+              "paper": "a4",
+              "size": {
+                "height": 297000,
+                "width": 210000
+              }
+            },
+            "snapGrid": {
+              "enabled": false,
+              "spacing": 5000,
+              "visible": false
+            },
+            "variables": [],
+            "variants": [
+              {
+                "frames": [
+                  {
+                    "constraints": {
+                      "h": "leftRight",
+                      "relativeTo": "margins",
+                      "v": "topBottom"
+                    },
+                    "frame": {
+                      "height": 277000,
+                      "left": 20000,
+                      "top": 10000,
+                      "width": 180000
+                    },
+                    "hidden": false,
+                    "item": "cerceve",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "leftRight",
+                      "relativeTo": "margins",
+                      "v": "topBottom"
+                    },
+                    "frame": {
+                      "height": 225000,
+                      "left": 24000,
+                      "top": 14000,
+                      "width": 172000
+                    },
+                    "hidden": false,
+                    "item": "harita",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "right",
+                      "relativeTo": "margins",
+                      "v": "top"
+                    },
+                    "frame": {
+                      "height": 19000,
+                      "left": 161000,
+                      "top": 23000,
+                      "width": 27000
+                    },
+                    "hidden": false,
+                    "item": "kuzey",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "left",
+                      "relativeTo": "margins",
+                      "v": "bottom"
+                    },
+                    "frame": {
+                      "height": 10000,
+                      "left": 33000,
+                      "top": 220000,
+                      "width": 58000
+                    },
+                    "hidden": false,
+                    "item": "olcek",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "right",
+                      "relativeTo": "margins",
+                      "v": "bottom"
+                    },
+                    "frame": {
+                      "height": 44000,
+                      "left": 20000,
+                      "top": 243000,
+                      "width": 180000
+                    },
+                    "hidden": false,
+                    "item": "antet",
+                    "rotation": 0
+                  }
+                ],
+                "id": "dikey",
+                "name": "Dikey kâğıt",
+                "reference": {
+                  "height": 297000,
+                  "width": 210000
+                },
+                "when": {
+                  "orientation": "portrait"
+                }
+              },
+              {
+                "frames": [
+                  {
+                    "constraints": {
+                      "h": "leftRight",
+                      "relativeTo": "margins",
+                      "v": "topBottom"
+                    },
+                    "frame": {
+                      "height": 190000,
+                      "left": 20000,
+                      "top": 10000,
+                      "width": 267000
+                    },
+                    "hidden": false,
+                    "item": "cerceve",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "leftRight",
+                      "relativeTo": "margins",
+                      "v": "topBottom"
+                    },
+                    "frame": {
+                      "height": 138000,
+                      "left": 24000,
+                      "top": 14000,
+                      "width": 259000
+                    },
+                    "hidden": false,
+                    "item": "harita",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "right",
+                      "relativeTo": "margins",
+                      "v": "top"
+                    },
+                    "frame": {
+                      "height": 19000,
+                      "left": 252000,
+                      "top": 18000,
+                      "width": 27000
+                    },
+                    "hidden": false,
+                    "item": "kuzey",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "left",
+                      "relativeTo": "margins",
+                      "v": "bottom"
+                    },
+                    "frame": {
+                      "height": 14000,
+                      "left": 28000,
+                      "top": 170000,
+                      "width": 72000
+                    },
+                    "hidden": false,
+                    "item": "olcek",
+                    "rotation": 0
+                  },
+                  {
+                    "constraints": {
+                      "h": "right",
+                      "relativeTo": "margins",
+                      "v": "bottom"
+                    },
+                    "frame": {
+                      "height": 44000,
+                      "left": 107000,
+                      "top": 156000,
+                      "width": 180000
+                    },
+                    "hidden": false,
+                    "item": "antet",
+                    "rotation": 0
+                  }
+                ],
+                "id": "yatay",
+                "name": "Yatay kâğıt",
+                "reference": {
+                  "height": 210000,
+                  "width": 297000
+                },
+                "when": {
+                  "orientation": "landscape"
+                }
+              }
+            ]
+          },
+          "variables": [
+            {
+              "kind": "text",
+              "label": "Kurum / idare",
+              "name": "kurum",
+              "value": null
+            },
+            {
+              "kind": "text",
+              "label": "Pafta no",
+              "name": "pafta_no",
+              "value": null
+            },
+            {
+              "kind": "text",
+              "label": "Kontrol eden",
+              "name": "kontrol_eden",
+              "value": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "a1d0011e27705694e2ff1c1b1dfa919b1b5a008a638ec16c1f3225f691cbc8b6",
+        "inverse": [
+          {
+            "op": "saveVariables",
+            "sheet": "s1",
+            "variables": [
+              {
+                "kind": "text",
+                "label": "Ada",
+                "name": "ada",
+                "value": "101"
+              }
+            ]
+          }
+        ],
+        "label": "Değişkenler"
+      },
+      "name": "pafta değişkenleri",
+      "op": {
+        "op": "saveVariables",
+        "sheet": "s1",
+        "variables": [
+          {
+            "name": "ada",
+            "value": "202"
+          },
+          {
+            "name": "parsel",
+            "value": "7"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "699d8aab690e7457704f0c5d17e8330745e371987738419ddeffdfead5bbcd5f",
+        "inverse": [
+          {
+            "op": "saveVariables",
+            "variables": [
+              {
+                "kind": "text",
+                "label": "Proje no",
+                "name": "proje_no",
+                "value": "2026/14"
+              }
+            ]
+          }
+        ],
+        "label": "Değişkenler"
+      },
+      "name": "proje değişkenleri",
+      "op": {
+        "op": "saveVariables",
+        "variables": []
+      }
+    },
+    {
+      "expect": {
+        "error": "bad_variable_value"
+      },
+      "name": "yanlış türde değer",
+      "op": {
+        "op": "saveVariables",
+        "variables": [
+          {
+            "kind": "number",
+            "name": "say",
+            "value": "on"
+          }
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "c39b9d652932b9f8c657f1fe712e50d9f70e19beb312681b523fea940852f0fa",
+        "inverse": [
+          {
+            "op": "removeAssets",
+            "sha256": [
+              "0000000000000000000000000000000000000000000000000000000000000001"
+            ]
+          }
+        ],
+        "label": "Resim ekle"
+      },
+      "name": "resim ekle",
+      "op": {
+        "assets": [
+          {
+            "bytes": 100,
+            "height": 10,
+            "kind": "jpeg",
+            "name": "a.jpg",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+            "width": 10
+          }
+        ],
+        "op": "addAssets"
+      }
+    },
+    {
+      "expect": {
+        "error": "asset_in_use"
+      },
+      "name": "kullanılan resim kaldırılmaz",
+      "op": {
+        "op": "removeAssets",
+        "sha256": [
+          "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918"
+        ]
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "5bc05a2a2012855ed4f1501bacca9c09f213536d97a749a84685f9b191ba5672",
+        "inverse": [
+          {
+            "op": "replaceSheet",
+            "sheet": {
+              "export": {
+                "dpi": 300,
+                "fileName": "[% @pafta_adi %]",
+                "format": "svg"
+              },
+              "guides": [
+                {
+                  "at": 150000,
+                  "axis": "x",
+                  "id": "k1",
+                  "locked": false
+                },
+                {
+                  "at": 100000,
+                  "axis": "y",
+                  "id": "k2",
+                  "locked": true
+                }
+              ],
+              "id": "s1",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "leftRight",
+                    "relativeTo": "margins",
+                    "v": "topBottom"
+                  },
+                  "frame": {
+                    "height": 200000,
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 260000
+                  },
+                  "hidden": false,
+                  "id": "m1",
+                  "kind": {
+                    "clipToAtlasFeature": false,
+                    "grids": [
+                      {
+                        "crossSize": 2500,
+                        "enabled": true,
+                        "frame": "line",
+                        "frameWidth": 1500,
+                        "interval": [
+                          0.0,
+                          0.0
+                        ],
+                        "kind": "cross",
+                        "labels": {
+                          "axisPrefix": true,
+                          "direction": "alongEdge",
+                          "format": {
+                            "decimals": 0,
+                            "groupThousands": false,
+                            "type": "metres"
+                          },
+                          "gap": 1000,
+                          "position": "outside",
+                          "show": true,
+                          "sides": {
+                            "bottom": true,
+                            "left": true,
+                            "right": true,
+                            "top": true
+                          },
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 1800,
+                            "weight": 400
+                          }
+                        },
+                        "name": "Karelaj",
+                        "offset": [
+                          0.0,
+                          0.0
+                        ],
+                        "stroke": {
+                          "cap": "butt",
+                          "color": "#000000",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 180
+                        }
+                      }
+                    ],
+                    "labelBand": 6000,
+                    "layers": {
+                      "type": "all"
+                    },
+                    "overviewFrame": {
+                      "cap": "butt",
+                      "color": "#d0021b",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 500
+                    },
+                    "type": "map",
+                    "view": {
+                      "center": {
+                        "x": 487150.0,
+                        "y": 4417820.0
+                      },
+                      "rotation": 0,
+                      "scale": 1000,
+                      "type": "fixed"
+                    }
+                  },
+                  "locked": false,
+                  "name": "Harita",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 12000,
+                    "left": 300000,
+                    "top": 30000,
+                    "width": 60000
+                  },
+                  "hidden": false,
+                  "id": "sb1",
+                  "kind": {
+                    "color": "#000000",
+                    "height": 1500,
+                    "leftSegments": 0,
+                    "length": {
+                      "type": "auto"
+                    },
+                    "lineWidth": 250,
+                    "map": "m1",
+                    "secondary": "#ffffff",
+                    "segments": 4,
+                    "showScale": false,
+                    "style": "singleBox",
+                    "subdivisions": 0,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 500
+                    },
+                    "type": "scaleBar",
+                    "unit": "auto"
+                  },
+                  "locked": false,
+                  "name": "Ölçek",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 370000,
+                    "top": 30000,
+                    "width": 20000
+                  },
+                  "hidden": false,
+                  "id": "na1",
+                  "kind": {
+                    "color": "#000000",
+                    "declination": 0,
+                    "map": "m1",
+                    "north": "grid",
+                    "note": false,
+                    "style": "kentosK",
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 3500,
+                      "weight": 600
+                    },
+                    "type": "northArrow"
+                  },
+                  "locked": false,
+                  "name": "Kuzey",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 15000
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 60000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "t1",
+                  "kind": {
+                    "align": "left",
+                    "content": "[% @proje_adi %]",
+                    "fit": "none",
+                    "lineHeight": 120,
+                    "style": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 5000,
+                      "weight": 600
+                    },
+                    "type": "text",
+                    "valign": "top",
+                    "wrap": true
+                  },
+                  "locked": false,
+                  "name": "Başlık",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "scale",
+                    "relativeTo": "group",
+                    "v": "scale"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 30000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r1",
+                  "kind": {
+                    "fill": "#e0e0e0",
+                    "shape": {
+                      "radius": 2000,
+                      "type": "rect"
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 1",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 340000,
+                    "top": 110000,
+                    "width": 40000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r2",
+                  "kind": {
+                    "shape": {
+                      "type": "ellipse"
+                    },
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 2",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 40000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 80000
+                  },
+                  "hidden": false,
+                  "id": "g1",
+                  "kind": {
+                    "type": "group"
+                  },
+                  "locked": false,
+                  "name": "Grup",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 10000,
+                    "left": 300000,
+                    "top": 150000,
+                    "width": 50000
+                  },
+                  "hidden": false,
+                  "id": "ln1",
+                  "kind": {
+                    "end": "arrow",
+                    "points": [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        1000000,
+                        1000000
+                      ]
+                    ],
+                    "start": "none",
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 250
+                    },
+                    "type": "line"
+                  },
+                  "locked": false,
+                  "name": "Ok",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 170000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "tb1",
+                  "kind": {
+                    "cellStyle": {
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 400
+                      }
+                    },
+                    "columns": [
+                      {
+                        "align": "left",
+                        "heading": "No",
+                        "value": "",
+                        "width": 10000
+                      },
+                      {
+                        "align": "left",
+                        "heading": "Ad",
+                        "value": "",
+                        "width": 0
+                      }
+                    ],
+                    "empty": {
+                      "type": "showHeader"
+                    },
+                    "header": true,
+                    "headerStyle": {
+                      "fill": "#eeeeee",
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 600
+                      }
+                    },
+                    "lines": {
+                      "columns": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      },
+                      "header": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "outer": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "rows": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    },
+                    "overflow": {
+                      "items": [
+                        "tc1"
+                      ],
+                      "type": "continueIn"
+                    },
+                    "source": {
+                      "rows": [
+                        [
+                          "1",
+                          "Bir"
+                        ],
+                        [
+                          "2",
+                          "İki"
+                        ],
+                        [
+                          "3",
+                          "Üç"
+                        ],
+                        [
+                          "4",
+                          "Dört"
+                        ],
+                        [
+                          "5",
+                          "Beş"
+                        ]
+                      ],
+                      "type": "fixed"
+                    },
+                    "title": "",
+                    "titleStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 600
+                    },
+                    "type": "table"
+                  },
+                  "locked": false,
+                  "name": "Tablo",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 300000,
+                    "top": 195000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "tc1",
+                  "kind": {
+                    "cellStyle": {
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 400
+                      }
+                    },
+                    "columns": [],
+                    "empty": {
+                      "type": "showHeader"
+                    },
+                    "header": true,
+                    "headerStyle": {
+                      "fill": "#eeeeee",
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 600
+                      }
+                    },
+                    "lines": {
+                      "columns": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      },
+                      "header": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "outer": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "rows": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    },
+                    "overflow": {
+                      "type": "clip"
+                    },
+                    "source": {
+                      "type": "continued"
+                    },
+                    "title": "",
+                    "titleStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 600
+                    },
+                    "type": "table"
+                  },
+                  "locked": false,
+                  "name": "Tablo devamı",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 230000,
+                    "width": 20000
+                  },
+                  "hidden": false,
+                  "id": "p1",
+                  "kind": {
+                    "asset": "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918",
+                    "clip": true,
+                    "fit": "contain",
+                    "type": "picture"
+                  },
+                  "locked": true,
+                  "name": "Logo",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "master": "M1",
+              "name": "Pafta 1",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 20000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "landscape",
+                "paper": "a3",
+                "size": {
+                  "height": 297000,
+                  "width": 420000
+                }
+              },
+              "snapGrid": {
+                "enabled": false,
+                "spacing": 5000,
+                "visible": false
+              },
+              "variables": [
+                {
+                  "kind": "text",
+                  "label": "Ada",
+                  "name": "ada",
+                  "value": "101"
+                }
+              ],
+              "variants": []
+            }
+          }
+        ],
+        "label": "Yerleşim düzeni ekle: Dikey kâğıt"
+      },
+      "name": "dikey yerleşim düzeni (bu kâğıtta geçerli değil)",
+      "op": {
+        "id": "dikey",
+        "name": "Dikey kâğıt",
+        "op": "addVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "when": {
+          "orientation": "portrait"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "bbef741701c827bddb1256b36e4e2107b9d54c5d6b0d8cd180f49547553a5241",
+        "inverse": [
+          {
+            "op": "replaceSheet",
+            "sheet": {
+              "export": {
+                "dpi": 300,
+                "fileName": "[% @pafta_adi %]",
+                "format": "svg"
+              },
+              "guides": [
+                {
+                  "at": 150000,
+                  "axis": "x",
+                  "id": "k1",
+                  "locked": false
+                },
+                {
+                  "at": 100000,
+                  "axis": "y",
+                  "id": "k2",
+                  "locked": true
+                }
+              ],
+              "id": "s1",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "leftRight",
+                    "relativeTo": "margins",
+                    "v": "topBottom"
+                  },
+                  "frame": {
+                    "height": 200000,
+                    "left": 30000,
+                    "top": 20000,
+                    "width": 260000
+                  },
+                  "hidden": false,
+                  "id": "m1",
+                  "kind": {
+                    "clipToAtlasFeature": false,
+                    "grids": [
+                      {
+                        "crossSize": 2500,
+                        "enabled": true,
+                        "frame": "line",
+                        "frameWidth": 1500,
+                        "interval": [
+                          0.0,
+                          0.0
+                        ],
+                        "kind": "cross",
+                        "labels": {
+                          "axisPrefix": true,
+                          "direction": "alongEdge",
+                          "format": {
+                            "decimals": 0,
+                            "groupThousands": false,
+                            "type": "metres"
+                          },
+                          "gap": 1000,
+                          "position": "outside",
+                          "show": true,
+                          "sides": {
+                            "bottom": true,
+                            "left": true,
+                            "right": true,
+                            "top": true
+                          },
+                          "style": {
+                            "color": "#000000",
+                            "font": "barlow",
+                            "italic": false,
+                            "size": 1800,
+                            "weight": 400
+                          }
+                        },
+                        "name": "Karelaj",
+                        "offset": [
+                          0.0,
+                          0.0
+                        ],
+                        "stroke": {
+                          "cap": "butt",
+                          "color": "#000000",
+                          "dash": [],
+                          "join": "miter",
+                          "width": 180
+                        }
+                      }
+                    ],
+                    "labelBand": 6000,
+                    "layers": {
+                      "type": "all"
+                    },
+                    "overviewFrame": {
+                      "cap": "butt",
+                      "color": "#d0021b",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 500
+                    },
+                    "type": "map",
+                    "view": {
+                      "center": {
+                        "x": 487150.0,
+                        "y": 4417820.0
+                      },
+                      "rotation": 0,
+                      "scale": 1000,
+                      "type": "fixed"
+                    }
+                  },
+                  "locked": false,
+                  "name": "Harita",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 12000,
+                    "left": 300000,
+                    "top": 30000,
+                    "width": 60000
+                  },
+                  "hidden": false,
+                  "id": "sb1",
+                  "kind": {
+                    "color": "#000000",
+                    "height": 1500,
+                    "leftSegments": 0,
+                    "length": {
+                      "type": "auto"
+                    },
+                    "lineWidth": 250,
+                    "map": "m1",
+                    "secondary": "#ffffff",
+                    "segments": 4,
+                    "showScale": false,
+                    "style": "singleBox",
+                    "subdivisions": 0,
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2000,
+                      "weight": 500
+                    },
+                    "type": "scaleBar",
+                    "unit": "auto"
+                  },
+                  "locked": false,
+                  "name": "Ölçek",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 370000,
+                    "top": 30000,
+                    "width": 20000
+                  },
+                  "hidden": false,
+                  "id": "na1",
+                  "kind": {
+                    "color": "#000000",
+                    "declination": 0,
+                    "map": "m1",
+                    "north": "grid",
+                    "note": false,
+                    "style": "kentosK",
+                    "text": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 3500,
+                      "weight": 600
+                    },
+                    "type": "northArrow"
+                  },
+                  "locked": false,
+                  "name": "Kuzey",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 15000
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 60000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "t1",
+                  "kind": {
+                    "align": "left",
+                    "content": "[% @proje_adi %]",
+                    "fit": "none",
+                    "lineHeight": 120,
+                    "style": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 5000,
+                      "weight": 600
+                    },
+                    "type": "text",
+                    "valign": "top",
+                    "wrap": true
+                  },
+                  "locked": false,
+                  "name": "Başlık",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "scale",
+                    "relativeTo": "group",
+                    "v": "scale"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 30000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r1",
+                  "kind": {
+                    "fill": "#e0e0e0",
+                    "shape": {
+                      "radius": 2000,
+                      "type": "rect"
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 1",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 340000,
+                    "top": 110000,
+                    "width": 40000
+                  },
+                  "group": "g1",
+                  "hidden": false,
+                  "id": "r2",
+                  "kind": {
+                    "shape": {
+                      "type": "ellipse"
+                    },
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "type": "shape"
+                  },
+                  "locked": false,
+                  "name": "Kutu 2",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 40000,
+                    "left": 300000,
+                    "top": 100000,
+                    "width": 80000
+                  },
+                  "hidden": false,
+                  "id": "g1",
+                  "kind": {
+                    "type": "group"
+                  },
+                  "locked": false,
+                  "name": "Grup",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 10000,
+                    "left": 300000,
+                    "top": 150000,
+                    "width": 50000
+                  },
+                  "hidden": false,
+                  "id": "ln1",
+                  "kind": {
+                    "end": "arrow",
+                    "points": [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        1000000,
+                        1000000
+                      ]
+                    ],
+                    "start": "none",
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 250
+                    },
+                    "type": "line"
+                  },
+                  "locked": false,
+                  "name": "Ok",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 170000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "tb1",
+                  "kind": {
+                    "cellStyle": {
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 400
+                      }
+                    },
+                    "columns": [
+                      {
+                        "align": "left",
+                        "heading": "No",
+                        "value": "",
+                        "width": 10000
+                      },
+                      {
+                        "align": "left",
+                        "heading": "Ad",
+                        "value": "",
+                        "width": 0
+                      }
+                    ],
+                    "empty": {
+                      "type": "showHeader"
+                    },
+                    "header": true,
+                    "headerStyle": {
+                      "fill": "#eeeeee",
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 600
+                      }
+                    },
+                    "lines": {
+                      "columns": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      },
+                      "header": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "outer": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "rows": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    },
+                    "overflow": {
+                      "items": [
+                        "tc1"
+                      ],
+                      "type": "continueIn"
+                    },
+                    "source": {
+                      "rows": [
+                        [
+                          "1",
+                          "Bir"
+                        ],
+                        [
+                          "2",
+                          "İki"
+                        ],
+                        [
+                          "3",
+                          "Üç"
+                        ],
+                        [
+                          "4",
+                          "Dört"
+                        ],
+                        [
+                          "5",
+                          "Beş"
+                        ]
+                      ],
+                      "type": "fixed"
+                    },
+                    "title": "",
+                    "titleStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 600
+                    },
+                    "type": "table"
+                  },
+                  "locked": false,
+                  "name": "Tablo",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 30000,
+                    "left": 300000,
+                    "top": 195000,
+                    "width": 90000
+                  },
+                  "hidden": false,
+                  "id": "tc1",
+                  "kind": {
+                    "cellStyle": {
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 400
+                      }
+                    },
+                    "columns": [],
+                    "empty": {
+                      "type": "showHeader"
+                    },
+                    "header": true,
+                    "headerStyle": {
+                      "fill": "#eeeeee",
+                      "padding": 800,
+                      "text": {
+                        "color": "#000000",
+                        "font": "barlow",
+                        "italic": false,
+                        "size": 2000,
+                        "weight": 600
+                      }
+                    },
+                    "lines": {
+                      "columns": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      },
+                      "header": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "outer": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 350
+                      },
+                      "rows": {
+                        "cap": "butt",
+                        "color": "#000000",
+                        "dash": [],
+                        "join": "miter",
+                        "width": 180
+                      }
+                    },
+                    "overflow": {
+                      "type": "clip"
+                    },
+                    "source": {
+                      "type": "continued"
+                    },
+                    "title": "",
+                    "titleStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 600
+                    },
+                    "type": "table"
+                  },
+                  "locked": false,
+                  "name": "Tablo devamı",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "left",
+                    "relativeTo": "margins",
+                    "v": "top"
+                  },
+                  "frame": {
+                    "height": 20000,
+                    "left": 300000,
+                    "top": 230000,
+                    "width": 20000
+                  },
+                  "hidden": false,
+                  "id": "p1",
+                  "kind": {
+                    "asset": "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918",
+                    "clip": true,
+                    "fit": "contain",
+                    "type": "picture"
+                  },
+                  "locked": true,
+                  "name": "Logo",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "master": "M1",
+              "name": "Pafta 1",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 20000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "landscape",
+                "paper": "a3",
+                "size": {
+                  "height": 297000,
+                  "width": 420000
+                }
+              },
+              "snapGrid": {
+                "enabled": false,
+                "spacing": 5000,
+                "visible": false
+              },
+              "variables": [
+                {
+                  "kind": "text",
+                  "label": "Ada",
+                  "name": "ada",
+                  "value": "101"
+                }
+              ],
+              "variants": []
+            }
+          }
+        ],
+        "label": "Yerleşim düzeni ekle: Yatay kâğıt"
+      },
+      "name": "yatay yerleşim düzeni (hemen geçerli)",
+      "op": {
+        "id": "yatay",
+        "name": "Yatay kâğıt",
+        "op": "addVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "when": {
+          "minWidth": 400000,
+          "orientation": "landscape"
+        }
+      }
+    },
+    {
+      "expect": {
+        "bookSha256": "8df0f18d471eca16514d45a9cd466192a4f045b92e2091294473a68ceb297be1",
+        "inverse": [
+          {
+            "master": {
+              "guides": [],
+              "id": "M1",
+              "items": [
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "leftRight",
+                    "relativeTo": "margins",
+                    "v": "topBottom"
+                  },
+                  "frame": {
+                    "height": 277000,
+                    "left": 20000,
+                    "top": 10000,
+                    "width": 390000
+                  },
+                  "hidden": false,
+                  "id": "mb",
+                  "kind": {
+                    "centringMarks": false,
+                    "gap": 5000,
+                    "innerStroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 350
+                    },
+                    "inset": 0,
+                    "stroke": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 700
+                    },
+                    "style": "single",
+                    "type": "border"
+                  },
+                  "locked": false,
+                  "name": "Çerçeve",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                },
+                {
+                  "bindings": [],
+                  "constraints": {
+                    "h": "right",
+                    "relativeTo": "margins",
+                    "v": "bottom"
+                  },
+                  "frame": {
+                    "height": 40000,
+                    "left": 230000,
+                    "top": 247000,
+                    "width": 180000
+                  },
+                  "hidden": false,
+                  "id": "mt",
+                  "kind": {
+                    "cellPadding": 1000,
+                    "inner": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 180
+                    },
+                    "labelStyle": {
+                      "color": "#3c3c3c",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 1500,
+                      "weight": 500
+                    },
+                    "outer": {
+                      "cap": "butt",
+                      "color": "#000000",
+                      "dash": [],
+                      "join": "miter",
+                      "width": 500
+                    },
+                    "rows": [
+                      {
+                        "cells": [
+                          {
+                            "align": "left",
+                            "label": "PROJE",
+                            "rows": [],
+                            "signature": false,
+                            "valign": "middle",
+                            "value": "[% @proje_adi %]",
+                            "width": 1
+                          }
+                        ],
+                        "height": 1
+                      }
+                    ],
+                    "type": "titleBlock",
+                    "valueStyle": {
+                      "color": "#000000",
+                      "font": "barlow",
+                      "italic": false,
+                      "size": 2500,
+                      "weight": 400
+                    }
+                  },
+                  "locked": false,
+                  "name": "Antet",
+                  "opacity": 100,
+                  "padding": 0,
+                  "printable": true,
+                  "rotation": 0
+                }
+              ],
+              "name": "Ana sayfa",
+              "page": {
+                "margins": {
+                  "bottom": 10000,
+                  "left": 20000,
+                  "right": 10000,
+                  "top": 10000
+                },
+                "orientation": "landscape",
+                "paper": "a3",
+                "size": {
+                  "height": 297000,
+                  "width": 420000
+                }
+              },
+              "variants": []
+            },
+            "op": "replaceMaster"
+          }
+        ],
+        "label": "Yerleşim düzeni ekle: Dikey"
+      },
+      "name": "ana sayfanın yerleşim düzeni",
+      "op": {
+        "id": "dikey",
+        "index": 0,
+        "name": "Dikey",
+        "op": "addVariant",
+        "owner": {
+          "id": "M1",
+          "kind": "master"
+        },
+        "when": {
+          "orientation": "portrait"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "duplicate_id"
+      },
+      "name": "düzen kimliği boş olamaz",
+      "op": {
+        "id": "",
+        "name": "Boş",
+        "op": "addVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "when": {
+          "orientation": "portrait"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "out_of_range"
+      },
+      "name": "düzenin koşulu ters olamaz",
+      "op": {
+        "id": "ters",
+        "name": "Ters",
+        "op": "addVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        },
+        "when": {
+          "maxWidth": 200000,
+          "minWidth": 300000,
+          "orientation": "portrait"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "unknown_variant"
+      },
+      "name": "olmayan düzen silinmez",
+      "op": {
+        "id": "yok",
+        "op": "removeVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    },
+    {
+      "expect": {
+        "error": "unknown_variant"
+      },
+      "name": "olmayan düzen değişmez",
+      "op": {
+        "id": "yok",
+        "name": "X",
+        "op": "setVariant",
+        "owner": {
+          "id": "s1",
+          "kind": "sheet"
+        }
+      }
+    }
+  ],
+  "schema": "kentos.sheet.fixture.ops/1"
+}

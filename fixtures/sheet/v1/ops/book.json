@@ -1,0 +1,163 @@
+{
+  "schema": "kentos.sheet/1",
+  "sheets": [
+    {
+      "id": "s1",
+      "name": "Pafta 1",
+      "page": {
+        "paper": "a3",
+        "orientation": "landscape",
+        "size": { "width": 420000, "height": 297000 },
+        "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+      },
+      "master": "M1",
+      "items": [
+        {
+          "id": "m1",
+          "name": "Harita",
+          "frame": { "left": 30000, "top": 20000, "width": 260000, "height": 200000 },
+          "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+          "kind": {
+            "type": "map",
+            "view": { "type": "fixed", "center": { "x": 487150, "y": 4417820 }, "scale": 1000 },
+            "labelBand": 6000,
+            "grids": [{ "name": "Karelaj" }]
+          }
+        },
+        {
+          "id": "sb1",
+          "name": "Ölçek",
+          "frame": { "left": 300000, "top": 30000, "width": 60000, "height": 12000 },
+          "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+          "kind": { "type": "scaleBar", "map": "m1" }
+        },
+        {
+          "id": "na1",
+          "name": "Kuzey",
+          "frame": { "left": 370000, "top": 30000, "width": 20000, "height": 30000 },
+          "rotation": 15000,
+          "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+          "kind": { "type": "northArrow", "map": "m1" }
+        },
+        {
+          "id": "t1",
+          "name": "Başlık",
+          "frame": { "left": 300000, "top": 60000, "width": 90000, "height": 20000 },
+          "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+          "kind": { "type": "text", "content": "[% @proje_adi %]", "style": { "size": 5000, "weight": 600 } }
+        },
+        {
+          "id": "r1",
+          "name": "Kutu 1",
+          "frame": { "left": 300000, "top": 100000, "width": 30000, "height": 20000 },
+          "group": "g1",
+          "constraints": { "h": "scale", "v": "scale", "relativeTo": "group" },
+          "kind": { "type": "shape", "shape": { "type": "rect", "radius": 2000 }, "fill": "#E0E0E0" }
+        },
+        {
+          "id": "r2",
+          "name": "Kutu 2",
+          "frame": { "left": 340000, "top": 110000, "width": 40000, "height": 30000 },
+          "group": "g1",
+          "kind": { "type": "shape", "shape": { "type": "ellipse" }, "stroke": { "width": 350 } }
+        },
+        {
+          "id": "g1",
+          "name": "Grup",
+          "frame": { "left": 0, "top": 0, "width": 1000, "height": 1000 },
+          "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+          "kind": { "type": "group" }
+        },
+        {
+          "id": "ln1",
+          "name": "Ok",
+          "frame": { "left": 300000, "top": 150000, "width": 50000, "height": 10000 },
+          "kind": { "type": "line", "points": [[0, 0], [1000000, 1000000]], "end": "arrow" }
+        },
+        {
+          "id": "tb1",
+          "name": "Tablo",
+          "frame": { "left": 300000, "top": 170000, "width": 90000, "height": 20000 },
+          "kind": {
+            "type": "table",
+            "columns": [{ "heading": "No", "width": 10000 }, { "heading": "Ad" }],
+            "source": { "type": "fixed", "rows": [["1", "Bir"], ["2", "İki"], ["3", "Üç"], ["4", "Dört"], ["5", "Beş"]] },
+            "overflow": { "type": "continueIn", "items": ["tc1"] }
+          }
+        },
+        {
+          "id": "tc1",
+          "name": "Tablo devamı",
+          "frame": { "left": 300000, "top": 195000, "width": 90000, "height": 30000 },
+          "kind": { "type": "table", "source": { "type": "continued" } }
+        },
+        {
+          "id": "p1",
+          "name": "Logo",
+          "frame": { "left": 300000, "top": 230000, "width": 20000, "height": 20000 },
+          "locked": true,
+          "kind": { "type": "picture", "asset": "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918" }
+        }
+      ],
+      "guides": [{ "id": "k1", "axis": "x", "at": 150000 }, { "id": "k2", "axis": "y", "at": 100000, "locked": true }],
+      "variables": [{ "name": "ada", "label": "Ada", "value": "101" }]
+    },
+    {
+      "id": "s2",
+      "name": "Pafta 2",
+      "page": {
+        "paper": "a4",
+        "orientation": "portrait",
+        "size": { "width": 210000, "height": 297000 },
+        "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 10000 }
+      },
+      "items": [
+        {
+          "id": "u1",
+          "name": "Not",
+          "frame": { "left": 20000, "top": 20000, "width": 100000, "height": 30000 },
+          "kind": { "type": "text", "content": "Not" }
+        }
+      ]
+    }
+  ],
+  "masters": [
+    {
+      "id": "M1",
+      "name": "Ana sayfa",
+      "page": {
+        "paper": "a3",
+        "orientation": "landscape",
+        "size": { "width": 420000, "height": 297000 },
+        "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+      },
+      "items": [
+        {
+          "id": "mb",
+          "name": "Çerçeve",
+          "frame": { "left": 20000, "top": 10000, "width": 390000, "height": 277000 },
+          "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+          "kind": { "type": "border" }
+        },
+        {
+          "id": "mt",
+          "name": "Antet",
+          "frame": { "left": 230000, "top": 247000, "width": 180000, "height": 40000 },
+          "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+          "kind": { "type": "titleBlock", "rows": [{ "cells": [{ "label": "PROJE", "value": "[% @proje_adi %]" }] }] }
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "sha256": "6c3e3d6d9c8f1c7a2b5e4d3c2b1a09f8e7d6c5b4a39281706f5e4d3c2b1a0918",
+      "kind": "png",
+      "name": "logo.png",
+      "width": 400,
+      "height": 400,
+      "bytes": 2048
+    }
+  ],
+  "variables": [{ "name": "proje_no", "label": "Proje no", "value": "2026/14" }]
+}

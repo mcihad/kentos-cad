@@ -1,0 +1,7 @@
+{
+ "description": "Dosya JSON değil",
+ "expect": {
+  "code": "bad_json"
+ },
+ "file": "{\"format\": \"kentos.sheet.file\","
+}

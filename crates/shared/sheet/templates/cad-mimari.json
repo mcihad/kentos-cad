@@ -1,0 +1,724 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:cad-mimari",
+    "revision": 1,
+    "name": "Mimari pafta",
+    "description": "A1 yatay mimari pafta: çift çerçeve, geniş görünüm penceresi, sağda 130 mm'lik şeritte büro ve proje bilgileri, çizim listesi, notlar, revizyonlar ve imzalı antet.",
+    "category": "mimari",
+    "tags": ["mimari", "çizim listesi", "antet şeridi"],
+    "papers": [
+      { "paper": "a1", "orientation": "landscape" },
+      { "paper": "a0", "orientation": "landscape" },
+      { "paper": "a2", "orientation": "landscape" }
+    ],
+    "workspaces": ["cad"],
+    "projectTypes": ["architecture"],
+    "created": "2026-10-02T00:00:00Z",
+    "updated": "2026-10-02T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Mimari pafta",
+    "page": {
+      "paper": "a1",
+      "orientation": "landscape",
+      "size": { "width": 841000, "height": 594000 },
+      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+    },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Pafta çerçevesi",
+        "frame": { "left": 20000, "top": 10000, "width": 811000, "height": 574000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "locked": true,
+        "kind": {
+          "type": "border",
+          "style": "double",
+          "stroke": { "width": 700 },
+          "innerStroke": { "width": 250 },
+          "gap": 5000,
+          "centringMarks": true
+        }
+      },
+      {
+        "id": "gorunum",
+        "name": "Görünüm penceresi",
+        "frame": { "left": 30000, "top": 20000, "width": 661000, "height": 554000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "kind": { "type": "map", "view": { "type": "fixed", "scale": 100 } }
+      },
+      {
+        "id": "serit",
+        "name": "Antet şeridi",
+        "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 564000 },
+        "constraints": { "h": "scale", "v": "scale", "relativeTo": "group" },
+        "locked": true,
+        "kind": { "type": "shape", "shape": { "type": "rect" }, "stroke": { "width": 350 } },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "buro",
+        "name": "Büro",
+        "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 34000 },
+        "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 350 },
+          "inner": { "width": 180 },
+          "cellPadding": 1500,
+          "rows": [
+            {
+              "height": 20,
+              "cells": [
+                {
+                  "label": "BÜRO / FİRMA",
+                  "value": "[% @buro %]",
+                  "align": "center",
+                  "style": { "size": 4200, "weight": 600 }
+                }
+              ]
+            },
+            {
+              "height": 14,
+              "cells": [
+                {
+                  "label": "ADRES / İLETİŞİM",
+                  "value": "[% @buro_adres %]",
+                  "style": { "size": 2300, "weight": 400 }
+                }
+              ]
+            }
+          ]
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "proje-bilgisi",
+        "name": "Proje bilgisi",
+        "frame": { "left": 696000, "top": 49000, "width": 130000, "height": 54000 },
+        "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 350 },
+          "inner": { "width": 180 },
+          "cellPadding": 1500,
+          "valueStyle": { "size": 2600, "weight": 400 },
+          "rows": [
+            {
+              "height": 16,
+              "cells": [{ "label": "PROJE", "value": "[% @proje_adi %]", "style": { "size": 3400, "weight": 600 } }]
+            },
+            { "height": 14, "cells": [{ "label": "YAPI SAHİBİ", "value": "[% @yapi_sahibi %]" }] },
+            {
+              "height": 12,
+              "cells": [{ "label": "İL", "value": "[% @il %]" }, { "label": "İLÇE", "value": "[% @ilce %]" }]
+            },
+            {
+              "height": 12,
+              "cells": [
+                { "width": 2, "label": "MAHALLE", "value": "[% @mahalle %]" },
+                { "width": 1, "label": "ADA", "value": "[% @ada %]", "align": "center" },
+                { "width": 1, "label": "PARSEL", "value": "[% @parsel %]", "align": "center" }
+              ]
+            }
+          ]
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "cizim-listesi",
+        "name": "Çizim listesi",
+        "frame": { "left": 700000, "top": 109000, "width": 122000, "height": 56000 },
+        "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+        "kind": {
+          "type": "table",
+          "title": "ÇİZİM LİSTESİ",
+          "titleStyle": { "size": 3000, "weight": 600 },
+          "columns": [
+            { "heading": "No", "width": 12000, "align": "center" },
+            { "heading": "Çizim" },
+            { "heading": "Ölçek", "width": 20000, "align": "center" }
+          ],
+          "headerStyle": { "text": { "size": 2200, "weight": 600 }, "fill": "#ededed", "padding": 900 },
+          "cellStyle": { "text": { "size": 2200, "weight": 400 }, "padding": 900 },
+          "source": {
+            "type": "fixed",
+            "rows": [
+              ["01", "Vaziyet planı", "1/500"],
+              ["02", "Bodrum kat planı", "1/100"],
+              ["03", "Zemin kat planı", "1/100"],
+              ["04", "Normal kat planı", "1/100"],
+              ["05", "Çatı planı", "1/100"],
+              ["06", "Kesitler", "1/50"],
+              ["07", "Görünüşler", "1/100"]
+            ]
+          }
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "notlar-baslik",
+        "name": "Notlar başlığı",
+        "frame": { "left": 700000, "top": 171000, "width": 122000, "height": 6000 },
+        "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+        "kind": { "type": "text", "content": "NOTLAR", "style": { "size": 3000, "weight": 600 } },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "notlar",
+        "name": "Notlar",
+        "frame": { "left": 700000, "top": 178000, "width": 122000, "height": 236000 },
+        "constraints": { "h": "scale", "v": "topBottom", "relativeTo": "group" },
+        "kind": {
+          "type": "text",
+          "content": "[% @notlar %]",
+          "style": { "size": 2400, "weight": 400 },
+          "lineHeight": 140,
+          "fit": "shrinkToFit"
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "revizyonlar",
+        "name": "Revizyon tablosu",
+        "frame": { "left": 696000, "top": 420400, "width": 130000, "height": 15600 },
+        "constraints": { "h": "scale", "v": "bottom", "relativeTo": "group" },
+        "fill": "#ffffff",
+        "kind": {
+          "type": "table",
+          "columns": [
+            { "heading": "Rev.", "width": 12000, "align": "center" },
+            { "heading": "Tarih", "width": 22000, "align": "center" },
+            { "heading": "Açıklama" },
+            { "heading": "Çizen", "width": 26000 }
+          ],
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2000, "weight": 400 }, "padding": 800 },
+          "lines": {
+            "outer": { "width": 350 },
+            "header": { "width": 250 },
+            "rows": { "width": 180 },
+            "columns": { "width": 180 }
+          },
+          "source": {
+            "type": "fixed",
+            "rows": [["A", "[% @tarih %]", "İlk yayın", "[% @kullanici %]"], ["", "", "", ""], ["", "", "", ""]]
+          }
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "antet",
+        "name": "Antet",
+        "frame": { "left": 696000, "top": 436000, "width": 130000, "height": 143000 },
+        "constraints": { "h": "scale", "v": "bottom", "relativeTo": "group" },
+        "fill": "#ffffff",
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1500,
+          "valueStyle": { "size": 2600, "weight": 400 },
+          "rows": [
+            {
+              "height": 26,
+              "cells": [
+                { "label": "ÇİZİM ADI", "value": "[% @pafta_adi %]", "style": { "size": 5000, "weight": 600 } }
+              ]
+            },
+            {
+              "height": 22,
+              "cells": [
+                {
+                  "label": "ÖLÇEK",
+                  "value": "[% @olcek %]",
+                  "align": "center",
+                  "style": { "size": 3600, "weight": 600 }
+                },
+                {
+                  "label": "ÇİZİM NO",
+                  "value": "[% @cizim_no %]",
+                  "align": "center",
+                  "style": { "size": 4200, "weight": 600 }
+                }
+              ]
+            },
+            {
+              "height": 13,
+              "cells": [
+                { "label": "TARİH", "value": "[% @tarih %]", "align": "center" },
+                { "label": "KÂĞIT", "value": "[% @kagit %]", "align": "center" },
+                { "label": "SAYFA", "value": "[% @sayfa %] / [% @sayfa_sayisi %]", "align": "center" }
+              ]
+            },
+            {
+              "height": 41,
+              "cells": [
+                { "label": "MİMAR", "value": "[% @mimar %]", "signature": true },
+                { "label": "KONTROL EDEN", "value": "[% @kontrol_eden %]", "signature": true }
+              ]
+            },
+            { "height": 41, "cells": [{ "label": "ONAYLAYAN", "value": "[% @onaylayan %]", "signature": true }] }
+          ]
+        },
+        "group": "serit-grubu"
+      },
+      {
+        "id": "serit-grubu",
+        "name": "Antet şeridi grubu",
+        "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 564000 },
+        "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+        "kind": { "type": "group" }
+      }
+    ],
+    "variants": [
+      {
+        "id": "yatay-a4",
+        "name": "A4 yatay",
+        "when": { "orientation": "landscape", "maxWidth": 300000 },
+        "reference": { "width": 297000, "height": 210000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 267000, "height": 190000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 170000, "height": 170000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit",
+            "frame": { "left": 205000, "top": 15000, "width": 77000, "height": 180000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "buro",
+            "frame": { "left": 205000, "top": 15000, "width": 77000, "height": 22000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "proje-bilgisi",
+            "frame": { "left": 205000, "top": 37000, "width": 77000, "height": 36000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "cizim-listesi",
+            "frame": { "left": 207000, "top": 76000, "width": 73000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": true
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 207000, "top": 76000, "width": 73000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": true
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 207000, "top": 76000, "width": 73000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": true
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 205000, "top": 84000, "width": 77000, "height": 15600 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 205000, "top": 101000, "width": 77000, "height": 94000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit-grubu",
+            "frame": { "left": 205000, "top": 15000, "width": 77000, "height": 180000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay-a3",
+        "name": "A3 yatay",
+        "when": { "orientation": "landscape", "maxWidth": 430000 },
+        "reference": { "width": 420000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 390000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 265000, "height": 257000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit",
+            "frame": { "left": 300000, "top": 15000, "width": 105000, "height": 267000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "buro",
+            "frame": { "left": 300000, "top": 15000, "width": 105000, "height": 26000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "proje-bilgisi",
+            "frame": { "left": 300000, "top": 41000, "width": 105000, "height": 40000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "cizim-listesi",
+            "frame": { "left": 303000, "top": 84000, "width": 99000, "height": 42000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 303000, "top": 129000, "width": 99000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "top", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 303000, "top": 136000, "width": 99000, "height": 34000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 300000, "top": 173000, "width": 105000, "height": 15600 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 300000, "top": 189000, "width": 105000, "height": 93000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit-grubu",
+            "frame": { "left": 300000, "top": 15000, "width": 105000, "height": 267000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay",
+        "name": "Yatay kâğıt",
+        "when": { "orientation": "landscape" },
+        "reference": { "width": 841000, "height": 594000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 811000, "height": 574000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 661000, "height": 554000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit",
+            "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 564000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "scale", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "buro",
+            "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 34000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "proje-bilgisi",
+            "frame": { "left": 696000, "top": 49000, "width": 130000, "height": 54000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "cizim-listesi",
+            "frame": { "left": 700000, "top": 109000, "width": 122000, "height": 56000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 700000, "top": 171000, "width": 122000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "top", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 700000, "top": 178000, "width": 122000, "height": 236000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "topBottom", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 696000, "top": 420400, "width": 130000, "height": 15600 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 696000, "top": 436000, "width": 130000, "height": 143000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "group" },
+            "hidden": false
+          },
+          {
+            "item": "serit-grubu",
+            "frame": { "left": 696000, "top": 15000, "width": 130000, "height": 564000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "dikey-a4",
+        "name": "A4 dikey",
+        "when": { "orientation": "portrait", "maxWidth": 230000 },
+        "reference": { "width": 210000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 160000, "height": 150000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit",
+            "frame": { "left": 25000, "top": 174000, "width": 170000, "height": 108000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "buro",
+            "frame": { "left": 25000, "top": 174000, "width": 80000, "height": 26000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "proje-bilgisi",
+            "frame": { "left": 25000, "top": 200000, "width": 80000, "height": 40000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "cizim-listesi",
+            "frame": { "left": 28000, "top": 243000, "width": 74000, "height": 5000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": true
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 28000, "top": 243000, "width": 74000, "height": 5000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 28000, "top": 249000, "width": 74000, "height": 31000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 105000, "top": 174000, "width": 90000, "height": 15600 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 105000, "top": 190000, "width": 90000, "height": 92000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit-grubu",
+            "frame": { "left": 25000, "top": 174000, "width": 170000, "height": 108000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "dikey",
+        "name": "Dikey kâğıt",
+        "when": { "orientation": "portrait" },
+        "reference": { "width": 297000, "height": 420000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 267000, "height": 400000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 247000, "height": 225000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit",
+            "frame": { "left": 25000, "top": 250000, "width": 257000, "height": 155000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "buro",
+            "frame": { "left": 25000, "top": 250000, "width": 86000, "height": 28000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "proje-bilgisi",
+            "frame": { "left": 25000, "top": 278000, "width": 86000, "height": 44000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "cizim-listesi",
+            "frame": { "left": 28000, "top": 325000, "width": 80000, "height": 78000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 114000, "top": 253000, "width": 79000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 114000, "top": 260000, "width": 79000, "height": 143000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 196000, "top": 250000, "width": 86000, "height": 15600 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 196000, "top": 266000, "width": 86000, "height": 139000 },
+            "rotation": 0,
+            "constraints": { "h": "scale", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "serit-grubu",
+            "frame": { "left": 25000, "top": 250000, "width": 257000, "height": 155000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "variables": [
+    { "name": "buro", "label": "Büro / firma" },
+    { "name": "buro_adres", "label": "Büronun adresi" },
+    { "name": "yapi_sahibi", "label": "Yapı sahibi" },
+    { "name": "il", "label": "İl" },
+    { "name": "ilce", "label": "İlçe" },
+    { "name": "mahalle", "label": "Mahalle" },
+    { "name": "ada", "label": "Ada" },
+    { "name": "parsel", "label": "Parsel" },
+    { "name": "cizim_no", "label": "Çizim no" },
+    { "name": "mimar", "label": "Mimar" },
+    { "name": "kontrol_eden", "label": "Kontrol eden" },
+    { "name": "onaylayan", "label": "Onaylayan" },
+    {
+      "name": "notlar",
+      "label": "Notlar",
+      "value": "1. Ölçüler santimetre, kotlar metre cinsindendir.\n2. Proje; statik, mekanik ve elektrik projeleriyle birlikte değerlendirilir.\n3. Uygulamada ölçüler yerinde doğrulanır; çizim üzerinden ölçü alınmaz."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "kentos.sheet.papers/1",
+  "source": "ISO 216 (A and B series), portrait width × height in micrometres; standard map scales of Turkish surveying and planning sheets (design §7a)",
+  "papers": [
+    { "id": "a0", "name": "A0", "width": 841000, "height": 1189000 },
+    { "id": "a1", "name": "A1", "width": 594000, "height": 841000 },
+    { "id": "a2", "name": "A2", "width": 420000, "height": 594000 },
+    { "id": "a3", "name": "A3", "width": 297000, "height": 420000 },
+    { "id": "a4", "name": "A4", "width": 210000, "height": 297000 },
+    { "id": "a5", "name": "A5", "width": 148000, "height": 210000 },
+    { "id": "b0", "name": "B0", "width": 1000000, "height": 1414000 },
+    { "id": "b1", "name": "B1", "width": 707000, "height": 1000000 },
+    { "id": "b2", "name": "B2", "width": 500000, "height": 707000 },
+    { "id": "b3", "name": "B3", "width": 353000, "height": 500000 },
+    { "id": "b4", "name": "B4", "width": 250000, "height": 353000 }
+  ],
+  "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 10000 },
+  "scales": [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 25000, 50000, 100000]
+}

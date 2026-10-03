@@ -1,0 +1,122 @@
+{
+  "description": "Akıllı kılavuzlar (design §5): beklenen sonuçlar elle hesaplandı; hesap README'de.",
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "id": "s1",
+        "name": "Yapışma",
+        "page": {
+          "paper": "a4",
+          "orientation": "portrait",
+          "size": { "width": 210000, "height": 297000 },
+          "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 10000 }
+        },
+        "items": [
+          { "id": "a", "name": "A", "frame": { "left": 20000, "top": 20000, "width": 50000, "height": 30000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "b", "name": "B", "frame": { "left": 100000, "top": 20000, "width": 40000, "height": 30000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "c", "name": "C", "frame": { "left": 20000, "top": 100000, "width": 30000, "height": 30000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } },
+          { "id": "m", "name": "Taşınan", "frame": { "left": 60000, "top": 60000, "width": 20000, "height": 20000 }, "kind": { "type": "shape", "shape": { "type": "rect" } } }
+        ],
+        "guides": [{ "id": "k1", "axis": "x", "at": 120000 }, { "id": "k2", "axis": "y", "at": 200000 }]
+      }
+    ]
+  },
+  "sheet": "s1",
+  "moving": ["m"],
+  "queries": [
+    {
+      "description": "Sol kenar A ile C'nin sol kenarına (1 mm): tek çizgi ikisinin boyunca; yukarıda A, aşağıda C, yanlarda kenar boşluğu",
+      "delta": [-39000, 0],
+      "tolerance": 2000,
+      "expect": {
+        "delta": [-40000, 0],
+        "lines": [{ "axis": "x", "at": 20000, "from": 20000, "to": 130000, "kind": "item" }],
+        "gaps": [
+          { "axis": "x", "from": [10000, 70000], "to": [20000, 70000], "distance": 10000, "text": "10.0 mm", "kind": "margin" },
+          { "axis": "x", "from": [40000, 70000], "to": [200000, 70000], "distance": 160000, "text": "160.0 mm", "kind": "margin" },
+          { "axis": "y", "from": [30000, 50000], "to": [30000, 60000], "distance": 10000, "text": "10.0 mm", "kind": "item" },
+          { "axis": "y", "from": [30000, 80000], "to": [30000, 100000], "distance": 20000, "text": "20.0 mm", "kind": "item" }
+        ],
+        "spacing": []
+      }
+    },
+    {
+      "description": "Sağ kenar kılavuza, sol kenar B'nin soluna (ikisi de 1 mm): eşitlikte kılavuz önce; B'nin ortası da 120'de",
+      "delta": [41000, 0],
+      "tolerance": 2000,
+      "expect": {
+        "delta": [40000, 0],
+        "lines": [
+          { "axis": "x", "at": 100000, "from": 20000, "to": 80000, "kind": "item" },
+          { "axis": "x", "at": 120000, "from": 0, "to": 297000, "kind": "guide" },
+          { "axis": "x", "at": 120000, "from": 20000, "to": 80000, "kind": "item" }
+        ],
+        "gaps": [
+          { "axis": "x", "from": [10000, 70000], "to": [100000, 70000], "distance": 90000, "text": "90.0 mm", "kind": "margin" },
+          { "axis": "x", "from": [120000, 70000], "to": [200000, 70000], "distance": 80000, "text": "80.0 mm", "kind": "margin" },
+          { "axis": "y", "from": [110000, 50000], "to": [110000, 60000], "distance": 10000, "text": "10.0 mm", "kind": "item" },
+          { "axis": "y", "from": [110000, 80000], "to": [110000, 287000], "distance": 207000, "text": "207.0 mm", "kind": "margin" }
+        ],
+        "spacing": []
+      }
+    },
+    {
+      "description": "Eşit aralık: A ile B arası 30 mm; B'nin sağına 31 mm'de bırakılan kutu 30 mm'ye yapışır, üst kenarı A ve B'ye",
+      "delta": [111000, -40000],
+      "tolerance": 2000,
+      "expect": {
+        "delta": [110000, -40000],
+        "lines": [{ "axis": "y", "at": 20000, "from": 20000, "to": 190000, "kind": "item" }],
+        "gaps": [
+          { "axis": "x", "from": [140000, 30000], "to": [170000, 30000], "distance": 30000, "text": "30.0 mm", "kind": "item" },
+          { "axis": "x", "from": [190000, 30000], "to": [200000, 30000], "distance": 10000, "text": "10.0 mm", "kind": "margin" },
+          { "axis": "y", "from": [180000, 10000], "to": [180000, 20000], "distance": 10000, "text": "10.0 mm", "kind": "margin" },
+          { "axis": "y", "from": [180000, 40000], "to": [180000, 287000], "distance": 247000, "text": "247.0 mm", "kind": "margin" }
+        ],
+        "spacing": [
+          { "axis": "x", "gap": 30000, "segments": [[[70000, 35000], [100000, 35000]], [[140000, 30000], [170000, 30000]]] }
+        ]
+      }
+    },
+    {
+      "description": "Hiçbir aday 2 mm içinde değil: konum değişmez, yalnız uzaklıklar",
+      "delta": [5000, 5000],
+      "tolerance": 2000,
+      "expect": {
+        "delta": [5000, 5000],
+        "lines": [],
+        "gaps": [
+          { "axis": "x", "from": [10000, 75000], "to": [65000, 75000], "distance": 55000, "text": "55.0 mm", "kind": "margin" },
+          { "axis": "x", "from": [85000, 75000], "to": [200000, 75000], "distance": 115000, "text": "115.0 mm", "kind": "margin" },
+          { "axis": "y", "from": [67500, 50000], "to": [67500, 65000], "distance": 15000, "text": "15.0 mm", "kind": "item" },
+          { "axis": "y", "from": [75000, 85000], "to": [75000, 287000], "distance": 202000, "text": "202.0 mm", "kind": "margin" }
+        ],
+        "spacing": []
+      }
+    }
+  ],
+  "resize": [
+    {
+      "description": "Doğu tutamacı B'nin sol kenarına (1 mm)",
+      "handle": "e",
+      "to": [101000, 70000],
+      "tolerance": 2000,
+      "expect": { "to": [100000, 70000], "lines": [{ "axis": "x", "at": 100000, "from": 20000, "to": 80000, "kind": "item" }], "sizes": [] }
+    },
+    {
+      "description": "Güney tutamacı A'nın yüksekliğine (30 mm, 1 mm uzakta)",
+      "handle": "s",
+      "to": [70000, 91000],
+      "tolerance": 2000,
+      "expect": { "to": [70000, 90000], "lines": [], "sizes": [{ "axis": "y", "item": "a", "size": 30000 }] }
+    }
+  ],
+  "rotation": [
+    { "angle": 16000, "step": true, "expect": 15000 },
+    { "angle": 22500, "step": true, "expect": 30000 },
+    { "angle": 88500, "step": false, "expect": 90000 },
+    { "angle": 358500, "step": false, "expect": 0 },
+    { "angle": 45000, "step": false, "expect": 45000 }
+  ]
+}

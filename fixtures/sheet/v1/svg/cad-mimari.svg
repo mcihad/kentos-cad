@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="841mm" height="594mm" viewBox="0 0 841000 594000">
+<title>Mimari pafta</title>
+<rect width="841000" height="594000" fill="#ffffff"/>
+<path d="M425500 10000L425500 20000M425500 584000L425500 574000M20000 297000L30000 297000M831000 297000L821000 297000" fill="none" stroke="#000000" stroke-width="700"/>
+<rect x="25000" y="15000" width="801000" height="564000" fill="none" stroke="#000000" stroke-width="250"/>
+<rect x="20000" y="10000" width="811000" height="574000" fill="none" stroke="#000000" stroke-width="700"/>
+<rect x="30000" y="20000" width="661000" height="554000" fill="#ececec"/>
+<text x="360500" y="301000" font-family="Barlow, sans-serif" font-size="12000" fill="#a0a0a0" text-anchor="middle">harita</text>
+<clipPath id="k1"><rect x="30000" y="20000" width="661000" height="554000"/></clipPath><g clip-path="url(#k1)">
+</g>
+<rect x="696000" y="15000" width="130000" height="564000" fill="none" stroke="#000000" stroke-width="350"/>
+<text x="697500" y="17850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">BÜRO / FİRMA</text>
+<text x="749208" y="27580" font-family="Barlow, sans-serif" font-size="4200" font-weight="600" fill="#000000" xml:space="preserve">Ada Mimarlık</text>
+<text x="697500" y="37850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ADRES / İLETİŞİM</text>
+<text x="697500" y="43819" font-family="Barlow, sans-serif" font-size="2300" font-weight="400" fill="#000000" xml:space="preserve">Atatürk Blv. 101/7 Çankaya · (0312) 000 00 00</text>
+<path d="M696000 35000L826000 35000" fill="none" stroke="#000000" stroke-width="180"/>
+<rect x="696000" y="15000" width="130000" height="34000" fill="none" stroke="#000000" stroke-width="350"/>
+<text x="697500" y="51850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">PROJE</text>
+<text x="697500" y="59260" font-family="Barlow, sans-serif" font-size="3400" font-weight="600" fill="#000000" xml:space="preserve">Kızılay 1234 ada düzenlemesi</text>
+<text x="697500" y="67850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">YAPI SAHİBİ</text>
+<text x="697500" y="73940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Örnek Yapı Kooperatifi</text>
+<text x="697500" y="81850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">İL</text>
+<text x="697500" y="86940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Ankara</text>
+<text x="762500" y="81850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">İLÇE</text>
+<text x="762500" y="86940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Çankaya</text>
+<text x="697500" y="93850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">MAHALLE</text>
+<text x="697500" y="98940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Kızılay</text>
+<text x="762500" y="93850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ADA</text>
+<text x="774712" y="98940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">1234</text>
+<text x="795000" y="93850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">PARSEL</text>
+<text x="809135" y="98940" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">7</text>
+<path d="M696000 65000L826000 65000M696000 79000L826000 79000M761000 79000L761000 91000M696000 91000L826000 91000M761000 91000L761000 103000M793500 91000L793500 103000" fill="none" stroke="#000000" stroke-width="180"/>
+<rect x="696000" y="49000" width="130000" height="54000" fill="none" stroke="#000000" stroke-width="350"/>
+<text x="700000" y="111925" font-family="Barlow, sans-serif" font-size="3000" font-weight="600" fill="#000000" xml:space="preserve">ÇİZİM LİSTESİ</text>
+<rect x="700000" y="113650" width="122000" height="4330" fill="#ededed"/>
+<text x="704652" y="116695" font-family="Barlow, sans-serif" font-size="2200" font-weight="600" fill="#000000" xml:space="preserve">No</text>
+<text x="754358" y="116695" font-family="Barlow, sans-serif" font-size="2200" font-weight="600" fill="#000000" xml:space="preserve">Çizim</text>
+<text x="809300" y="116695" font-family="Barlow, sans-serif" font-size="2200" font-weight="600" fill="#000000" xml:space="preserve">Ölçek</text>
+<text x="704993" y="121025" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">01</text>
+<text x="712900" y="121025" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Vaziyet planı</text>
+<text x="809366" y="121025" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/500</text>
+<text x="704789" y="125355" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">02</text>
+<text x="712900" y="125355" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Bodrum kat planı</text>
+<text x="809547" y="125355" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/100</text>
+<text x="704812" y="129685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">03</text>
+<text x="712900" y="129685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Zemin kat planı</text>
+<text x="809547" y="129685" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/100</text>
+<text x="704772" y="134015" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">04</text>
+<text x="712900" y="134015" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Normal kat planı</text>
+<text x="809547" y="134015" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/100</text>
+<text x="704813" y="138345" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">05</text>
+<text x="712900" y="138345" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Çatı planı</text>
+<text x="809547" y="138345" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/100</text>
+<text x="704812" y="142675" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">06</text>
+<text x="712900" y="142675" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Kesitler</text>
+<text x="809988" y="142675" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/50</text>
+<text x="704858" y="147005" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">07</text>
+<text x="712900" y="147005" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">Görünüşler</text>
+<text x="809547" y="147005" font-family="Barlow, sans-serif" font-size="2200" font-weight="400" fill="#000000" xml:space="preserve">1/100</text>
+<path d="M700000 122310L822000 122310M700000 126640L822000 126640M700000 130970L822000 130970M700000 135300L822000 135300M700000 139630L822000 139630M700000 143960L822000 143960" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M712000 113650L712000 148290M802000 113650L802000 148290" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M700000 117980L822000 117980" fill="none" stroke="#000000" stroke-width="350"/>
+<rect x="700000" y="113650" width="122000" height="34640" fill="none" stroke="#000000" stroke-width="350"/>
+<text x="700000" y="174000" font-family="Barlow, sans-serif" font-size="3000" font-weight="600" fill="#000000" xml:space="preserve">NOTLAR</text>
+<text x="700000" y="180640" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">1. Ölçüler santimetre, kotlar metre cinsindendir.</text>
+<text x="700000" y="184000" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">2. Proje; statik, mekanik ve elektrik projeleriyle birlikte değerlendirilir.</text>
+<text x="700000" y="187360" font-family="Barlow, sans-serif" font-size="2400" font-weight="400" fill="#000000" xml:space="preserve">3. Uygulamada ölçüler yerinde doğrulanır; çizim üzerinden ölçü alınmaz.</text>
+<rect x="696000" y="420400" width="130000" height="15600" fill="#ffffff"/>
+<rect x="696000" y="420400" width="130000" height="3900" fill="#ededed"/>
+<text x="700069" y="423150" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Rev.</text>
+<text x="716724" y="423150" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Tarih</text>
+<text x="760959" y="423150" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Açıklama</text>
+<text x="810597" y="423150" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Çizen</text>
+<text x="701393" y="427050" font-family="Barlow, sans-serif" font-size="2000" font-weight="400" fill="#000000" xml:space="preserve">A</text>
+<text x="714044" y="427050" font-family="Barlow, sans-serif" font-size="2000" font-weight="400" fill="#000000" xml:space="preserve">2026-10-02</text>
+<text x="730800" y="427050" font-family="Barlow, sans-serif" font-size="2000" font-weight="400" fill="#000000" xml:space="preserve">İlk yayın</text>
+<text x="800800" y="427050" font-family="Barlow, sans-serif" font-size="2000" font-weight="400" fill="#000000" xml:space="preserve">M. Demir</text>
+<path d="M696000 428200L826000 428200M696000 432100L826000 432100" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M708000 420400L708000 436000M730000 420400L730000 436000M800000 420400L800000 436000" fill="none" stroke="#000000" stroke-width="180"/>
+<path d="M696000 424300L826000 424300" fill="none" stroke="#000000" stroke-width="250"/>
+<rect x="696000" y="420400" width="130000" height="15600" fill="none" stroke="#000000" stroke-width="350"/>
+<rect x="696000" y="436000" width="130000" height="143000" fill="#ffffff"/>
+<text x="697500" y="438850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ÇİZİM ADI</text>
+<text x="697500" y="451900" font-family="Barlow, sans-serif" font-size="5000" font-weight="600" fill="#000000" xml:space="preserve">Mimari pafta</text>
+<text x="697500" y="464850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ÖLÇEK</text>
+<text x="724380" y="475340" font-family="Barlow, sans-serif" font-size="3600" font-weight="600" fill="#000000" xml:space="preserve">1/100</text>
+<text x="762500" y="464850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ÇİZİM NO</text>
+<text x="780039" y="475580" font-family="Barlow, sans-serif" font-size="4200" font-weight="600" fill="#000000" xml:space="preserve">ÇNK-2026-014</text>
+<text x="697500" y="486850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">TARİH</text>
+<text x="711223" y="492440" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">2026-10-02</text>
+<text x="740833" y="486850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">KÂĞIT</text>
+<text x="759755" y="492440" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">A1</text>
+<text x="784166" y="486850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">SAYFA</text>
+<text x="802383" y="492440" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">1 / 1</text>
+<text x="697500" y="499850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">MİMAR</text>
+<text x="720483" y="536110" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Mimar E. Yıldız</text>
+<path d="M704940 533040L752060 533040" fill="none" stroke="#000000" stroke-width="180" stroke-dasharray="600 400"/>
+<text x="762500" y="499850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">KONTROL EDEN</text>
+<text x="789367" y="536110" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">A. Kaya</text>
+<path d="M769940 533040L817060 533040" fill="none" stroke="#000000" stroke-width="180" stroke-dasharray="600 400"/>
+<text x="697500" y="540850" font-family="Barlow, sans-serif" font-size="1500" font-weight="500" fill="#3c3c3c" xml:space="preserve">ONAYLAYAN</text>
+<text x="754348" y="577110" font-family="Barlow, sans-serif" font-size="2600" font-weight="400" fill="#000000" xml:space="preserve">Dr. S. Aksoy</text>
+<path d="M712740 574040L809260 574040" fill="none" stroke="#000000" stroke-width="180" stroke-dasharray="600 400"/>
+<path d="M696000 462000L826000 462000M761000 462000L761000 484000M696000 484000L826000 484000M739333 484000L739333 497000M782666 484000L782666 497000M696000 497000L826000 497000M761000 497000L761000 538000M696000 538000L826000 538000" fill="none" stroke="#000000" stroke-width="180"/>
+<rect x="696000" y="436000" width="130000" height="143000" fill="none" stroke="#000000" stroke-width="500"/>
+</svg>

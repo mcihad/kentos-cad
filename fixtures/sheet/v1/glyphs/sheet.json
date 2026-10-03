@@ -1,0 +1,172 @@
+{
+  "description": "Eksik karakterli yazılar: çizim planı “?” yazar, ön denetim glyph_missing bulur (başka yüzle yazılan bilgi, “?” uyarı), PDF yazı tiplerini parça parça gömer, SVG başka yüzü <tspan> ile adlandırır. Beklenenler elle (§6 kuralı ve ölçü tablosu).",
+  "sheet": "p1",
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "id": "p1",
+        "name": "Yazılar",
+        "page": {
+          "paper": "a4",
+          "orientation": "portrait",
+          "size": {
+            "width": 210000,
+            "height": 297000
+          },
+          "margins": {
+            "top": 10000,
+            "right": 10000,
+            "bottom": 10000,
+            "left": 10000
+          }
+        },
+        "variables": [
+          {
+            "name": "ada",
+            "label": "Ada"
+          }
+        ],
+        "items": [
+          {
+            "id": "kot",
+            "name": "Kot",
+            "frame": {
+              "left": 20000,
+              "top": 20000,
+              "width": 150000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "Kot ↑ 12,50",
+              "style": {
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "taks",
+            "name": "TAKS",
+            "frame": {
+              "left": 20000,
+              "top": 40000,
+              "width": 150000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "TAKS ≤ 0,30",
+              "style": {
+                "size": 4000,
+                "weight": 600
+              }
+            }
+          },
+          {
+            "id": "bedel",
+            "name": "Bedel",
+            "frame": {
+              "left": 20000,
+              "top": 60000,
+              "width": 150000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "Bedel 120 ₺",
+              "style": {
+                "size": 4000,
+                "font": "courier-prime",
+                "weight": 700
+              }
+            }
+          },
+          {
+            "id": "isaret",
+            "name": "Ada",
+            "frame": {
+              "left": 20000,
+              "top": 80000,
+              "width": 150000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "Ada [% @ada %]",
+              "style": {
+                "size": 4000
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "inputs": {
+    "project": {
+      "name": "Deneme",
+      "user": "M. Demir",
+      "date": "2026-10-03"
+    }
+  },
+  "expect": [
+    {
+      "severity": "error",
+      "code": "value_missing",
+      "item": "isaret"
+    },
+    {
+      "severity": "warning",
+      "code": "glyph_missing",
+      "item": "taks"
+    },
+    {
+      "severity": "info",
+      "code": "glyph_missing",
+      "item": "kot"
+    },
+    {
+      "severity": "info",
+      "code": "glyph_missing",
+      "item": "bedel"
+    },
+    {
+      "severity": "info",
+      "code": "no_kerning"
+    }
+  ],
+  "expectTexts": {
+    "kot": "Kot ↑ 12,50",
+    "taks": "TAKS ? 0,30",
+    "bedel": "Bedel 120 ₺",
+    "isaret": "Ada ‹ada?›"
+  },
+  "expectFaces": [
+    {
+      "font": "barlow",
+      "weight": 400,
+      "italic": false
+    },
+    {
+      "font": "barlow",
+      "weight": 600,
+      "italic": false
+    },
+    {
+      "font": "arimo",
+      "weight": 400,
+      "italic": false
+    },
+    {
+      "font": "courier-prime",
+      "weight": 700,
+      "italic": false
+    }
+  ],
+  "expectSvg": [
+    "Kot <tspan font-family=\"Arimo, Arial, sans-serif\" font-weight=\"400\">↑</tspan> 12,50",
+    "TAKS ? 0,30",
+    "Bedel 120 <tspan font-family=\"Barlow, sans-serif\" font-weight=\"600\">₺</tspan>"
+  ]
+}

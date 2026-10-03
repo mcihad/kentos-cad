@@ -1,0 +1,344 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:cad-teknik",
+    "revision": 1,
+    "name": "Teknik çizim paftası",
+    "description": "A3 yatay teknik çizim paftası: bölge işaretli çift çerçeve (ISO 5457), görünüm penceresi, notlar, revizyon tablosu ve 180 mm'lik hücreli antet (ISO 7200 düzeninde).",
+    "category": "teknik",
+    "tags": ["teknik", "bölge işaretli", "revizyon", "ISO 7200"],
+    "papers": [
+      { "paper": "a3", "orientation": "landscape" },
+      { "paper": "a2", "orientation": "landscape" },
+      { "paper": "a1", "orientation": "landscape" },
+      { "paper": "a0", "orientation": "landscape" }
+    ],
+    "workspaces": ["cad"],
+    "projectTypes": ["cad", "road"],
+    "created": "2026-10-02T00:00:00Z",
+    "updated": "2026-10-02T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Teknik çizim",
+    "page": {
+      "paper": "a3",
+      "orientation": "landscape",
+      "size": { "width": 420000, "height": 297000 },
+      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+    },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Pafta çerçevesi",
+        "frame": { "left": 20000, "top": 10000, "width": 390000, "height": 277000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "locked": true,
+        "kind": {
+          "type": "border",
+          "style": "double",
+          "stroke": { "width": 700 },
+          "innerStroke": { "width": 350 },
+          "gap": 5000,
+          "zones": { "size": 50000, "text": { "size": 2500, "weight": 500 } },
+          "centringMarks": true
+        }
+      },
+      {
+        "id": "gorunum",
+        "name": "Görünüm penceresi",
+        "frame": { "left": 30000, "top": 20000, "width": 370000, "height": 208000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "kind": { "type": "map", "view": { "type": "fixed", "scale": 500 } }
+      },
+      {
+        "id": "notlar-baslik",
+        "name": "Notlar başlığı",
+        "frame": { "left": 30000, "top": 234000, "width": 70000, "height": 6000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "kind": { "type": "text", "content": "NOTLAR", "style": { "size": 3000, "weight": 600 } }
+      },
+      {
+        "id": "notlar",
+        "name": "Notlar",
+        "frame": { "left": 30000, "top": 241000, "width": 188000, "height": 38000 },
+        "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "text",
+          "content": "[% @notlar %]",
+          "style": { "size": 2400, "weight": 400 },
+          "lineHeight": 135,
+          "fit": "shrinkToFit"
+        }
+      },
+      {
+        "id": "revizyonlar",
+        "name": "Revizyon tablosu",
+        "frame": { "left": 225000, "top": 234300, "width": 180000, "height": 11700 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "kind": {
+          "type": "table",
+          "columns": [
+            { "heading": "Rev.", "width": 12000, "align": "center" },
+            { "heading": "Tarih", "width": 24000, "align": "center" },
+            { "heading": "Açıklama" },
+            { "heading": "Hazırlayan", "width": 34000 },
+            { "heading": "Onay", "width": 24000 }
+          ],
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2000, "weight": 400 }, "padding": 800 },
+          "lines": {
+            "outer": { "width": 350 },
+            "header": { "width": 250 },
+            "rows": { "width": 180 },
+            "columns": { "width": 180 }
+          },
+          "source": {
+            "type": "fixed",
+            "rows": [["[% @revizyon %]", "[% @tarih %]", "İlk yayın", "[% @kullanici %]", ""], ["", "", "", "", ""]]
+          }
+        }
+      },
+      {
+        "id": "antet",
+        "name": "Antet",
+        "frame": { "left": 225000, "top": 246000, "width": 180000, "height": 36000 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "fill": "#ffffff",
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1000,
+          "valueStyle": { "size": 2400, "weight": 400 },
+          "rows": [
+            {
+              "height": 9,
+              "cells": [
+                { "width": 3, "label": "SORUMLU BİRİM", "value": "[% @birim %]" },
+                { "width": 3, "label": "TEKNİK REFERANS", "value": "[% @referans %]" },
+                { "width": 3, "label": "HAZIRLAYAN", "value": "[% @kullanici %]" },
+                { "width": 3, "label": "ONAYLAYAN", "value": "[% @onaylayan %]" }
+              ]
+            },
+            {
+              "height": 18,
+              "cells": [
+                { "width": 3, "label": "KURUM", "value": "[% @kurum %]", "style": { "size": 2800, "weight": 600 } },
+                {
+                  "width": 6,
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "label": "ÇİZİM ADI",
+                          "value": "[% @pafta_adi %]",
+                          "style": { "size": 3600, "weight": 600 }
+                        }
+                      ]
+                    },
+                    {
+                      "cells": [
+                        { "label": "PROJE", "value": "[% @proje_adi %]", "style": { "size": 2600, "weight": 400 } }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "width": 3,
+                  "label": "ÇİZİM NO",
+                  "value": "[% @cizim_no %]",
+                  "align": "center",
+                  "style": { "size": 3600, "weight": 600 }
+                }
+              ]
+            },
+            {
+              "height": 9,
+              "cells": [
+                {
+                  "width": 3,
+                  "label": "ÖLÇEK",
+                  "value": "[% @olcek %]",
+                  "align": "center",
+                  "style": { "size": 2800, "weight": 600 }
+                },
+                { "width": 2, "label": "KÂĞIT", "value": "[% @kagit %]", "align": "center" },
+                { "width": 2, "label": "TARİH", "value": "[% @tarih %]", "align": "center" },
+                { "width": 2, "label": "REVİZYON", "value": "[% @revizyon %]", "align": "center" },
+                { "width": 3, "label": "SAYFA", "value": "[% @sayfa %] / [% @sayfa_sayisi %]", "align": "center" }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "variants": [
+      {
+        "id": "dikey-a4",
+        "name": "A4 dikey",
+        "when": { "orientation": "portrait", "maxWidth": 230000 },
+        "reference": { "width": 210000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 160000, "height": 176000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 30000, "top": 200000, "width": 70000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 30000, "top": 207000, "width": 160000, "height": 24000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 25000, "top": 234300, "width": 170000, "height": 11700 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 25000, "top": 246000, "width": 170000, "height": 36000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "dikey",
+        "name": "Dikey kâğıt",
+        "when": { "orientation": "portrait" },
+        "reference": { "width": 297000, "height": 420000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 267000, "height": 400000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 247000, "height": 327000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 30000, "top": 353000, "width": 66000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 30000, "top": 360000, "width": 66000, "height": 42000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 102000, "top": 357300, "width": 180000, "height": 11700 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 102000, "top": 369000, "width": 180000, "height": 36000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      },
+      {
+        "id": "yatay",
+        "name": "Yatay kâğıt",
+        "when": { "orientation": "landscape" },
+        "reference": { "width": 420000, "height": 297000 },
+        "frames": [
+          {
+            "item": "cerceve",
+            "frame": { "left": 20000, "top": 10000, "width": 390000, "height": 277000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "gorunum",
+            "frame": { "left": 30000, "top": 20000, "width": 370000, "height": 208000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar-baslik",
+            "frame": { "left": 30000, "top": 234000, "width": 70000, "height": 6000 },
+            "rotation": 0,
+            "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "notlar",
+            "frame": { "left": 30000, "top": 241000, "width": 188000, "height": 38000 },
+            "rotation": 0,
+            "constraints": { "h": "leftRight", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "revizyonlar",
+            "frame": { "left": 225000, "top": 234300, "width": 180000, "height": 11700 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          },
+          {
+            "item": "antet",
+            "frame": { "left": 225000, "top": 246000, "width": 180000, "height": 36000 },
+            "rotation": 0,
+            "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+            "hidden": false
+          }
+        ]
+      }
+    ]
+  },
+  "variables": [
+    { "name": "kurum", "label": "Kurum" },
+    { "name": "birim", "label": "Sorumlu birim" },
+    { "name": "referans", "label": "Teknik referans" },
+    { "name": "onaylayan", "label": "Onaylayan" },
+    { "name": "cizim_no", "label": "Çizim no" },
+    { "name": "revizyon", "label": "Revizyon", "value": "A" },
+    {
+      "name": "notlar",
+      "label": "Notlar",
+      "value": "1. Ölçüler aksi belirtilmedikçe metre cinsindendir.\n2. Çizim üzerinden ölçü alınmaz; yazılı ölçüler esastır.\n3. Bu pafta ilgili mevzuata göre denetlenmeden uygulamaya esas alınamaz."
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+ "description": "Resmin baytları base64 değil",
+ "expect": {
+  "code": "bad_asset"
+ },
+ "file": {
+  "format": "kentos.sheet.file",
+  "version": 1,
+  "book": {
+   "schema": "kentos.sheet/1",
+   "sheets": [
+    {
+     "id": "pafta-1",
+     "name": "Büro paftası",
+     "page": {
+      "paper": "a4",
+      "orientation": "portrait",
+      "size": {
+       "width": 210000,
+       "height": 297000
+      },
+      "margins": {
+       "top": 10000,
+       "right": 10000,
+       "bottom": 10000,
+       "left": 20000
+      }
+     },
+     "items": [
+      {
+       "id": "harita",
+       "name": "Harita",
+       "frame": {
+        "left": 25000,
+        "top": 15000,
+        "width": 170000,
+        "height": 220000
+       },
+       "constraints": {
+        "h": "leftRight",
+        "v": "topBottom"
+       },
+       "kind": {
+        "type": "map",
+        "view": {
+         "type": "fixed",
+         "scale": 500
+        }
+       }
+      },
+      {
+       "id": "logo",
+       "name": "Logo",
+       "frame": {
+        "left": 25000,
+        "top": 245000,
+        "width": 30000,
+        "height": 30000
+       },
+       "constraints": {
+        "h": "left",
+        "v": "bottom"
+       },
+       "kind": {
+        "type": "picture",
+        "asset": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+       }
+      },
+      {
+       "id": "antet",
+       "name": "Antet",
+       "frame": {
+        "left": 60000,
+        "top": 245000,
+        "width": 135000,
+        "height": 30000
+       },
+       "constraints": {
+        "h": "right",
+        "v": "bottom"
+       },
+       "kind": {
+        "type": "titleBlock",
+        "rows": [
+         {
+          "cells": [
+           {
+            "label": "ADA",
+            "value": "[% @ada %]"
+           },
+           {
+            "label": "ÖLÇEK",
+            "value": "[% @olcek %]"
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "masters": [],
+   "assets": [
+    {
+     "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+     "kind": "png",
+     "name": "logo.png",
+     "width": 4,
+     "height": 4,
+     "bytes": 73
+    }
+   ],
+   "variables": [
+    {
+     "name": "proje_no",
+     "label": "Proje no",
+     "kind": "text",
+     "value": "2026/41"
+    }
+   ]
+  },
+  "assets": [
+   {
+    "meta": {
+     "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+     "kind": "png",
+     "name": "logo.png",
+     "width": 4,
+     "height": 4,
+     "bytes": 73
+    },
+    "data": "***"
+   }
+  ]
+ }
+}

@@ -1,0 +1,533 @@
+{
+ "description": "Kısıtlarla yeniden yerleşim (design §3.2): beklenen çerçeveler scripts'siz, kuralların kesirli bağımsız hesabıyla yazıldı.",
+ "book": {
+  "schema": "kentos.sheet/1",
+  "sheets": [
+   {
+    "id": "s1",
+    "name": "A3 pafta",
+    "page": {
+     "paper": "a3",
+     "orientation": "landscape",
+     "size": {
+      "width": 420000,
+      "height": 297000
+     },
+     "margins": {
+      "top": 10000,
+      "right": 10000,
+      "bottom": 10000,
+      "left": 20000
+     }
+    },
+    "items": [
+     {
+      "id": "harita",
+      "name": "Harita",
+      "frame": {
+       "left": 24000,
+       "top": 14000,
+       "width": 292000,
+       "height": 269000
+      },
+      "constraints": {
+       "h": "leftRight",
+       "v": "topBottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "map",
+       "view": {
+        "type": "fixed",
+        "scale": 1000
+       }
+      }
+     },
+     {
+      "id": "antet",
+      "name": "Antet",
+      "frame": {
+       "left": 320000,
+       "top": 232000,
+       "width": 90000,
+       "height": 55000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "bottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      }
+     },
+     {
+      "id": "lejant",
+      "name": "Lejant",
+      "frame": {
+       "left": 324000,
+       "top": 96000,
+       "width": 82000,
+       "height": 132000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "topBottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      }
+     },
+     {
+      "id": "kuzey",
+      "name": "Kuzey oku",
+      "frame": {
+       "left": 330000,
+       "top": 53000,
+       "width": 30000,
+       "height": 34000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "top",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      }
+     },
+     {
+      "id": "orta",
+      "name": "Ortadaki",
+      "frame": {
+       "left": 150000,
+       "top": 120000,
+       "width": 40000,
+       "height": 30000
+      },
+      "constraints": {
+       "h": "center",
+       "v": "center",
+       "relativeTo": "page"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      }
+     },
+     {
+      "id": "olcekli",
+      "name": "Oranlı",
+      "frame": {
+       "left": 100000,
+       "top": 50000,
+       "width": 60000,
+       "height": 40000
+      },
+      "constraints": {
+       "h": "scale",
+       "v": "scale",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      }
+     },
+     {
+      "id": "c1",
+      "name": "Grubun oranlı öğesi",
+      "frame": {
+       "left": 250000,
+       "top": 240000,
+       "width": 20000,
+       "height": 20000
+      },
+      "constraints": {
+       "h": "scale",
+       "v": "scale",
+       "relativeTo": "group"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      },
+      "group": "g"
+     },
+     {
+      "id": "c2",
+      "name": "Grubun sol üst öğesi",
+      "frame": {
+       "left": 280000,
+       "top": 250000,
+       "width": 10000,
+       "height": 10000
+      },
+      "constraints": {
+       "h": "left",
+       "v": "top",
+       "relativeTo": "group"
+      },
+      "kind": {
+       "type": "shape",
+       "shape": {
+        "type": "rect"
+       },
+       "stroke": {
+        "width": 250
+       }
+      },
+      "group": "g"
+     },
+     {
+      "id": "g",
+      "name": "Grup",
+      "frame": {
+       "left": 250000,
+       "top": 240000,
+       "width": 40000,
+       "height": 20000
+      },
+      "constraints": {
+       "h": "right",
+       "v": "bottom",
+       "relativeTo": "margins"
+      },
+      "kind": {
+       "type": "group"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "sheet": "s1",
+ "cases": [
+  {
+   "description": "A3 → A1 yatay: antet sağ altta, harita ve lejant büyür",
+   "page": {
+    "paper": "a1",
+    "orientation": "landscape",
+    "size": {
+     "width": 841000,
+     "height": 594000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 20000
+    }
+   },
+   "expect": {
+    "harita": {
+     "left": 24000,
+     "top": 14000,
+     "width": 713000,
+     "height": 566000
+    },
+    "antet": {
+     "left": 741000,
+     "top": 529000,
+     "width": 90000,
+     "height": 55000
+    },
+    "lejant": {
+     "left": 745000,
+     "top": 96000,
+     "width": 82000,
+     "height": 429000
+    },
+    "kuzey": {
+     "left": 751000,
+     "top": 53000,
+     "width": 30000,
+     "height": 34000
+    },
+    "orta": {
+     "left": 360500,
+     "top": 268500,
+     "width": 40000,
+     "height": 30000
+    },
+    "olcekli": {
+     "left": 186359,
+     "top": 92888,
+     "width": 124769,
+     "height": 82888
+    },
+    "g": {
+     "left": 671000,
+     "top": 537000,
+     "width": 40000,
+     "height": 20000
+    },
+    "c1": {
+     "left": 671000,
+     "top": 537000,
+     "width": 20000,
+     "height": 20000
+    },
+    "c2": {
+     "left": 701000,
+     "top": 547000,
+     "width": 10000,
+     "height": 10000
+    }
+   }
+  },
+  {
+   "description": "A3 → A4 dikey: şerit sağda, harita daralır",
+   "page": {
+    "paper": "a4",
+    "orientation": "portrait",
+    "size": {
+     "width": 210000,
+     "height": 297000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 20000
+    }
+   },
+   "expect": {
+    "harita": {
+     "left": 24000,
+     "top": 14000,
+     "width": 82000,
+     "height": 269000
+    },
+    "antet": {
+     "left": 110000,
+     "top": 232000,
+     "width": 90000,
+     "height": 55000
+    },
+    "lejant": {
+     "left": 114000,
+     "top": 96000,
+     "width": 82000,
+     "height": 132000
+    },
+    "kuzey": {
+     "left": 120000,
+     "top": 53000,
+     "width": 30000,
+     "height": 34000
+    },
+    "orta": {
+     "left": 45000,
+     "top": 120000,
+     "width": 40000,
+     "height": 30000
+    },
+    "olcekli": {
+     "left": 56923,
+     "top": 50000,
+     "width": 27692,
+     "height": 40000
+    },
+    "g": {
+     "left": 40000,
+     "top": 240000,
+     "width": 40000,
+     "height": 20000
+    },
+    "c1": {
+     "left": 40000,
+     "top": 240000,
+     "width": 20000,
+     "height": 20000
+    },
+    "c2": {
+     "left": 70000,
+     "top": 250000,
+     "width": 10000,
+     "height": 10000
+    }
+   }
+  },
+  {
+   "description": "A3 → özel 500 × 300 mm, 15 mm kenar boşluğu",
+   "page": {
+    "paper": "custom",
+    "orientation": "landscape",
+    "size": {
+     "width": 500000,
+     "height": 300000
+    },
+    "margins": {
+     "top": 15000,
+     "right": 15000,
+     "bottom": 15000,
+     "left": 15000
+    }
+   },
+   "expect": {
+    "harita": {
+     "left": 19000,
+     "top": 19000,
+     "width": 372000,
+     "height": 262000
+    },
+    "antet": {
+     "left": 395000,
+     "top": 230000,
+     "width": 90000,
+     "height": 55000
+    },
+    "lejant": {
+     "left": 399000,
+     "top": 101000,
+     "width": 82000,
+     "height": 125000
+    },
+    "kuzey": {
+     "left": 405000,
+     "top": 58000,
+     "width": 30000,
+     "height": 34000
+    },
+    "orta": {
+     "left": 190000,
+     "top": 121500,
+     "width": 40000,
+     "height": 30000
+    },
+    "olcekli": {
+     "left": 111410,
+     "top": 53989,
+     "width": 72308,
+     "height": 38989
+    },
+    "g": {
+     "left": 325000,
+     "top": 238000,
+     "width": 40000,
+     "height": 20000
+    },
+    "c1": {
+     "left": 325000,
+     "top": 238000,
+     "width": 20000,
+     "height": 20000
+    },
+    "c2": {
+     "left": 355000,
+     "top": 248000,
+     "width": 10000,
+     "height": 10000
+    }
+   }
+  },
+  {
+   "description": "A3 → A3 dikey",
+   "page": {
+    "paper": "a3",
+    "orientation": "portrait",
+    "size": {
+     "width": 297000,
+     "height": 420000
+    },
+    "margins": {
+     "top": 10000,
+     "right": 10000,
+     "bottom": 10000,
+     "left": 20000
+    }
+   },
+   "expect": {
+    "harita": {
+     "left": 24000,
+     "top": 14000,
+     "width": 169000,
+     "height": 392000
+    },
+    "antet": {
+     "left": 197000,
+     "top": 355000,
+     "width": 90000,
+     "height": 55000
+    },
+    "lejant": {
+     "left": 201000,
+     "top": 96000,
+     "width": 82000,
+     "height": 255000
+    },
+    "kuzey": {
+     "left": 207000,
+     "top": 53000,
+     "width": 30000,
+     "height": 34000
+    },
+    "orta": {
+     "left": 88500,
+     "top": 181500,
+     "width": 40000,
+     "height": 30000
+    },
+    "olcekli": {
+     "left": 74769,
+     "top": 67762,
+     "width": 41077,
+     "height": 57761
+    },
+    "g": {
+     "left": 127000,
+     "top": 363000,
+     "width": 40000,
+     "height": 20000
+    },
+    "c1": {
+     "left": 127000,
+     "top": 363000,
+     "width": 20000,
+     "height": 20000
+    },
+    "c2": {
+     "left": 157000,
+     "top": 373000,
+     "width": 10000,
+     "height": 10000
+    }
+   }
+  }
+ ]
+}
