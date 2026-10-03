@@ -170,8 +170,8 @@
       },
       "screens": {
         "total": 86,
-        "implemented": 68,
-        "partial": 2,
+        "implemented": 67,
+        "partial": 3,
         "pending": 0,
         "none": 15,
         "n/a": 1
@@ -17151,16 +17151,16 @@
       "desktopWhere": "apps/desktop/src/settings_view.rs (ADR 0023)"
     },
     {
-      "id": "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog",
-      "name": "openNewProjectDialog",
+      "id": "apps/web/src/ui/settings/NewProjectWizard.ts#openNewProjectWizard",
+      "name": "openNewProjectWizard",
       "role": "window",
-      "source": "apps/web/src/ui/settings/NewProjectDialog.ts",
+      "source": "apps/web/src/ui/settings/NewProjectWizard.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "implemented"
+        "desktop": "partial"
       },
-      "desktopWhere": "apps/desktop/src/project/new.rs (ADR 0049)"
+      "desktopWhere": "apps/desktop/src/project/new.rs (ADR 0049): the single window, its wizard is ADR 0165 §3 step 3c"
     },
     {
       "id": "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings",

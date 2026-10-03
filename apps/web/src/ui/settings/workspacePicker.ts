@@ -9,10 +9,19 @@ import { icon } from '../icons';
  * it is for and three points. Types announced but not built are shown last,
  * dimmed, with “Yakında”, and cannot be chosen (`soon: false` leaves them
  * out). A radio group: ←/→ (and ↑/↓) move between the types that can be
- * chosen.
+ * chosen. `art` gives a type a picture across its card in place of its icon
+ * (the new project wizard, docs/adr/0165 §3); `onChoose` is a double click or
+ * Enter on a card, the wizard's next step.
  */
-export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspace) => void; compact?: boolean; soon?: boolean }): HTMLElement {
-  const group = h('div', { class: `wspick${opts.compact ? ' wspick--compact' : ''}`, role: 'radiogroup', 'aria-label': 'Proje türü' });
+export function workspacePicker(opts: {
+  value: Workspace;
+  onChange: (id: Workspace) => void;
+  compact?: boolean;
+  soon?: boolean;
+  art?: (id: Workspace) => Node | null;
+  onChoose?: (id: Workspace) => void;
+}): HTMLElement {
+  const group = h('div', { class: `wspick${opts.compact ? ' wspick--compact' : ''}${opts.art ? ' wspick--art' : ''}`, role: 'radiogroup', 'aria-label': 'Proje türü' });
   const ready = WORKSPACES.filter((w) => w.status === 'ready');
   const soon = WORKSPACES.filter((w) => w.status === 'soon');
   const cards = new Map<Workspace, HTMLButtonElement>();
@@ -39,7 +48,7 @@ export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspa
         tabindex: on ? '0' : '-1',
         dataset: { mode: w.id, status: w.status },
       },
-      h('span', { class: 'wspick__art', 'aria-hidden': 'true' }, icon(w.icon, 20)),
+      h('span', { class: 'wspick__art', 'aria-hidden': 'true' }, (!soonMode && opts.art?.(w.id)) || icon(w.icon, 20)),
       h(
         'span',
         { class: 'wspick__head' },
@@ -51,13 +60,24 @@ export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspa
       opts.compact ? null : h('ul', { class: 'wspick__points' }, ...w.highlights.map((p) => h('li', null, p))),
     );
     if (soonMode) c.title = `${w.label}: yakında. ${w.description}`;
-    else c.addEventListener('click', () => select(w.id, false));
+    else {
+      c.addEventListener('click', () => select(w.id, false));
+      if (opts.onChoose) c.addEventListener('dblclick', () => opts.onChoose?.(w.id));
+    }
     cards.set(w.id, c);
     return c;
   };
   group.append(h('div', { class: 'wspick__row' }, ...ready.map(card)));
   if (opts.soon !== false) group.append(h('div', { class: 'wspick__soon' }, h('span', { class: 'wspick__soonlabel' }, 'Yakında'), h('div', { class: 'wspick__row' }, ...soon.map(card))));
   group.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && opts.onChoose) {
+      const on = ready.find((w) => cards.get(w.id)?.getAttribute('aria-checked') === 'true');
+      if (on) {
+        e.preventDefault();
+        opts.onChoose(on.id);
+      }
+      return;
+    }
     const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
     if (!step) return;
     e.preventDefault();

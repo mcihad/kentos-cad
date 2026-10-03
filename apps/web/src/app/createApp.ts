@@ -132,7 +132,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     // Windows are loaded when first opened (CLAUDE.md §20): most sessions open few of them.
     openAppSettings: (section) => lazy(ctx, import('../ui/settings/AppSettingsDialog'), (m) => m.openAppSettings(ctx, section as AppSettingsSection | undefined)),
     openProjectSettings: (section) => lazy(ctx, import('../ui/settings/ProjectSettingsDialog'), (m) => m.openProjectSettings(ctx, section as ProjectSettingsSection | undefined)),
-    openNewProject: () => lazy(ctx, import('../ui/settings/NewProjectDialog'), (m) => m.openNewProjectDialog(ctx)),
+    openNewProject: () => lazy(ctx, import('../ui/settings/NewProjectWizard'), (m) => m.openNewProjectWizard(ctx)),
     focusCommandLine: () => shell?.bottom.commandLine.focus(),
     searchCommands: () => shell?.searchCommands(),
     keyTips: () => shell?.keyTips(),

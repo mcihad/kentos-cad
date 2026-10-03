@@ -9,9 +9,13 @@
 import { writeFileSync } from 'node:fs';
 import { it } from 'vitest';
 import { newProjectFixture } from '../../src/model/newProjectFixture';
+import { wizardFixture } from '../../src/model/newProjectWizardFixture';
 
 const FILE = new URL('../../../../fixtures/project/v1/new-project.json', import.meta.url);
+// The wizard's rules on a few drafts (docs/adr/0165 §3), read by the desktop's kentos_project::wizard.
+const WIZARD = new URL('../../../../fixtures/project/v1/wizard.json', import.meta.url);
 
 it.runIf(!!process.env.GOLDEN_WRITE)('records the new project drawings', () => {
   writeFileSync(FILE, `${JSON.stringify(newProjectFixture(), null, 2)}\n`);
+  writeFileSync(WIZARD, `${JSON.stringify(wizardFixture(), null, 2)}\n`);
 });

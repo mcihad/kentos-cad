@@ -58,7 +58,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 71 | 0 | 2 | 0 | 1 | 74 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 267 | 0 | 0 | 0 | 0 | 267 |
-| Pencereler ve paneller | 68 | 2 | 15 | 0 | 1 | 86 |
+| Pencereler ve paneller | 67 | 3 | 15 | 0 | 1 | 86 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -182,8 +182,9 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 86)
+#### Pencereler ve paneller (18 / 86)
 
+- `apps/web/src/ui/settings/NewProjectWizard.ts#openNewProjectWizard` openNewProjectWizard (kısmi) (masaüstünde: apps/desktop/src/project/new.rs (ADR 0049): the single window, its wizard is ADR 0165 §3 step 3c)
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
 - `apps/web/src/ui/sheet/ExpressionDialog.ts#openExpressionDialog` openExpressionDialog

@@ -1,0 +1,462 @@
+/* ── New project wizard (Dosya → Yeni proje, docs/adr/0165 §3, DESIGN.md §7.10.1) ──
+ * The steps on a rail at the left, one page at a time on the right; a fixed
+ * height, so that moving between the steps does not make the window jump.
+ */
+.dialog--wizard {
+  height: min(calc(704px * var(--ui-scale)), 90vh);
+  max-height: none;
+}
+.dialog--wizard .dialog__head {
+  padding: 14px 12px 12px 20px;
+  border-bottom: 1px solid var(--c-line);
+}
+.dialog--wizard .dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.wiz {
+  display: grid;
+  grid-template-columns: calc(236px * var(--ui-scale)) minmax(0, 1fr);
+  height: 100%;
+}
+
+/* The rail: a step's number (a check once passed), its name and what was chosen in it. */
+.wiz__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--c-line);
+  background: var(--c-panel-head);
+}
+.wiz__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(26px * var(--ui-scale)) minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 1px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  text-align: left;
+}
+.wiz__step:hover {
+  background: var(--c-hover);
+}
+.wiz__step[aria-current='step'] {
+  background: var(--c-press);
+  color: var(--c-text);
+}
+.wiz__step[aria-current='step']::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--c-accent);
+}
+.wiz__num {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: calc(26px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  border: 1px solid var(--c-line-strong);
+  border-radius: 50%;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.wiz__step[aria-current='step'] .wiz__num {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.wiz__step[data-done] .wiz__num {
+  border-color: var(--c-accent);
+  color: var(--c-accent-text);
+}
+.wiz__sname {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.wiz__snote {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiz__page {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 20px 26px 24px;
+}
+.wiz__head {
+  margin-bottom: 14px;
+}
+.wiz__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.wiz__lead {
+  margin: 4px 0 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.wiz__section {
+  margin-top: 16px;
+}
+.wiz__label {
+  margin: 0 0 8px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.wiz__hint {
+  margin: 8px 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  line-height: 1.45;
+}
+.wiz__page > .note {
+  margin-top: 16px;
+}
+.wiz__status {
+  margin: 0 8px 0 0;
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+}
+
+/* The types' cards with their pictures: the picture lights up in the accent when its card is chosen. */
+/* A block, not the icon's grid: the picture's height is the box's, not its own. */
+.wspick--art .wspick__art {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(118px * var(--ui-scale));
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  overflow: hidden;
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+}
+.wspick--art .wspick__card[aria-checked='true'] .wspick__art {
+  background: var(--c-field);
+  color: var(--c-text);
+}
+.wspick--art .wspick__card[data-status='soon'] .wspick__art {
+  display: grid;
+  width: calc(32px * var(--ui-scale));
+  height: calc(32px * var(--ui-scale));
+  padding: 0;
+}
+.wiz-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wiz-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wiz-art .hi {
+  color: var(--c-text-3);
+}
+.wspick__card[aria-checked='true'] .wiz-art .hi {
+  color: var(--c-accent-text);
+}
+.wiz-art .dim {
+  opacity: 0.5;
+}
+
+/* Cards to choose one of: the coordinates, the units. */
+.wiz__choices {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.wiz__choice {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 12px 34px 12px 12px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  color: var(--c-text);
+  text-align: left;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+.wiz__choice:hover {
+  border-color: var(--c-text-3);
+  background: var(--c-hover);
+}
+.wiz__choice[aria-checked='true'] {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--c-accent);
+}
+.wiz__choice:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: 2px;
+}
+.wiz__mark {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  min-width: calc(42px * var(--ui-scale));
+  height: calc(42px * var(--ui-scale));
+  padding: 0 6px;
+  border-radius: var(--r-md);
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+}
+.wiz__choice[aria-checked='true'] .wiz__mark {
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.wiz__unitmark {
+  font-size: calc(17px * var(--ui-scale));
+  font-weight: 700;
+}
+.wiz__cname {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.wiz__cnote {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.wiz__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 50%;
+  color: transparent;
+}
+.wiz__choice[aria-checked='true'] .wiz__check {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+/* The province and the system: two lists side by side, the zone strip under them. */
+.wiz__place {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+.wiz__place .wiz__section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-top: 0;
+}
+.wiz__search {
+  margin-bottom: 8px;
+}
+.wiz__list {
+  height: calc(206px * var(--ui-scale));
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+}
+/* As tall as the province's search and list beside it. */
+.wiz__list--systems {
+  height: calc(206px * var(--ui-scale) + 8px + var(--ctl-h));
+}
+.wiz__group {
+  padding: 8px 8px 4px;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+.wiz__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: var(--row-h);
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+.wiz__row:hover {
+  background: var(--c-hover);
+}
+.wiz__row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+.wiz__code {
+  min-width: 3.4em;
+  color: var(--c-text-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+.wiz__rowname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiz__area {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+.wiz__badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+.wiz__empty {
+  margin: 10px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.wiz__strip {
+  padding: 8px 10px 4px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel-head);
+}
+.zstrip {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-size: 11px;
+}
+.zstrip text {
+  fill: var(--c-text-2);
+  font-family: inherit;
+}
+.zstrip__zone rect {
+  fill: var(--c-field);
+  stroke: var(--c-line-strong);
+  stroke-width: 1;
+}
+.zstrip__zone:hover rect {
+  stroke: var(--c-text-3);
+}
+.zstrip__zone[data-chosen] rect {
+  fill: var(--c-accent-soft);
+  stroke: var(--c-accent);
+  stroke-width: 1.5;
+}
+.zstrip__zone[data-chosen] text {
+  fill: var(--c-accent-text);
+  font-weight: 600;
+}
+.zstrip text.zstrip__tick {
+  fill: var(--c-text-3);
+  font-size: 9.5px;
+}
+.zstrip__mark {
+  stroke: var(--c-text);
+  stroke-width: 1.5;
+}
+.zstrip__dot {
+  fill: var(--c-text);
+}
+.zstrip text.zstrip__name {
+  fill: var(--c-text);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* The scale's chips and a field for any other, the name, the typeface, the summary. */
+.wiz__scales {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.wiz__chip {
+  height: calc(28px * var(--ui-scale));
+  padding: 0 11px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 999px;
+  background: var(--c-field);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.wiz__chip:hover {
+  border-color: var(--c-text-3);
+}
+.wiz__chip[aria-checked='true'] {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+  font-weight: 600;
+}
+.wiz__ownfield {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.wiz__own {
+  width: calc(96px * var(--ui-scale));
+}
+.wiz__name {
+  width: min(100%, calc(420px * var(--ui-scale)));
+}
+.wiz__font {
+  width: min(100%, calc(260px * var(--ui-scale)));
+}
+.wiz__summary {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--c-line-strong);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+}
+.wiz__summary dt {
+  color: var(--c-text-3);
+}
+.wiz__summary dd {
+  margin: 0;
+  color: var(--c-text);
+}

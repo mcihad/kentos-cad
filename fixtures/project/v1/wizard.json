@@ -1,0 +1,423 @@
+{
+  "format": "kentos.new-project-wizard",
+  "version": 1,
+  "source": "src/model/newProjectWizard.ts",
+  "cases": [
+    {
+      "name": "CBS, il yok",
+      "draft": {
+        "type": "gis",
+        "coords": "local",
+        "unit": "m",
+        "province": null,
+        "srid": null,
+        "plotScale": null,
+        "name": "Yeni proje",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 5256,
+      "suggested": null,
+      "scale": 1000,
+      "unit": "m",
+      "notes": [
+        "CBS · harita",
+        "TUREF / TM36",
+        "1:1.000 · Yeni proje"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CBS, coğrafi bilgi sistemi"
+        ],
+        [
+          "Koordinatlar",
+          "TUREF / TM36 (EPSG:5256)"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "Ölçek",
+          "1:1.000"
+        ],
+        [
+          "Katmanlar",
+          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Açılış",
+          "Dilimin çalışma alanında bir pafta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Yeni proje",
+        "srid": 5256,
+        "plotScale": 1000,
+        "workspace": "gis",
+        "drawingFont": "barlow"
+      }
+    },
+    {
+      "name": "CBS, İzmir",
+      "draft": {
+        "type": "gis",
+        "coords": "local",
+        "unit": "m",
+        "province": 35,
+        "srid": null,
+        "plotScale": null,
+        "name": "Yeni proje",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 5253,
+      "suggested": 5253,
+      "scale": 1000,
+      "unit": "m",
+      "notes": [
+        "CBS · harita",
+        "İzmir · TUREF / TM27",
+        "1:1.000 · Yeni proje"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CBS, coğrafi bilgi sistemi"
+        ],
+        [
+          "Koordinatlar",
+          "TUREF / TM27 (EPSG:5253)"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "İl",
+          "İzmir"
+        ],
+        [
+          "Ölçek",
+          "1:1.000"
+        ],
+        [
+          "Katmanlar",
+          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Açılış",
+          "İzmir merkezinde bir pafta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Yeni proje",
+        "srid": 5253,
+        "plotScale": 1000,
+        "workspace": "gis",
+        "drawingFont": "barlow",
+        "province": 35
+      }
+    },
+    {
+      "name": "CBS, Van, ED50 seçilmiş, 1:5000",
+      "draft": {
+        "type": "gis",
+        "coords": "local",
+        "unit": "m",
+        "province": 65,
+        "srid": 2324,
+        "plotScale": 5000,
+        "name": "Van kadastro",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 2324,
+      "suggested": 5258,
+      "scale": 5000,
+      "unit": "m",
+      "notes": [
+        "CBS · harita",
+        "Van · ED50 / TM42",
+        "1:5.000 · Van kadastro"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CBS, coğrafi bilgi sistemi"
+        ],
+        [
+          "Koordinatlar",
+          "ED50 / TM42 (EPSG:2324)"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "İl",
+          "Van"
+        ],
+        [
+          "Ölçek",
+          "1:5.000"
+        ],
+        [
+          "Katmanlar",
+          "Kadastro paftası: Taslak, Kadastro, Ulaşım, Topografya, Jeodezi, Pafta"
+        ],
+        [
+          "Açılış",
+          "Van merkezinde bir pafta"
+        ]
+      ],
+      "firstSystem": 5258,
+      "options": {
+        "name": "Van kadastro",
+        "srid": 2324,
+        "plotScale": 5000,
+        "workspace": "gis",
+        "drawingFont": "barlow",
+        "province": 65
+      }
+    },
+    {
+      "name": "CAD, yerel, mm",
+      "draft": {
+        "type": "cad",
+        "coords": "local",
+        "unit": "mm",
+        "province": null,
+        "srid": null,
+        "plotScale": null,
+        "name": "Mil plakası",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 0,
+      "suggested": null,
+      "scale": 1,
+      "unit": "mm",
+      "notes": [
+        "CAD · teknik çizim",
+        "Yerel · mm",
+        "1:1 · Mil plakası"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CAD, teknik çizim"
+        ],
+        [
+          "Koordinatlar",
+          "Yerel: koordinat sistemi yok, çizim 0,0’dan başlar"
+        ],
+        [
+          "Birim",
+          "milimetre"
+        ],
+        [
+          "Ölçek",
+          "1:1"
+        ],
+        [
+          "Katmanlar",
+          "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
+        ],
+        [
+          "Açılış",
+          "A3 kâğıt, yatay; 0,0 sol altta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Mil plakası",
+        "srid": 0,
+        "plotScale": 1,
+        "workspace": "cad",
+        "drawingFont": "barlow",
+        "drawingUnit": "mm"
+      }
+    },
+    {
+      "name": "CAD, yerel, cm, 1:20",
+      "draft": {
+        "type": "cad",
+        "coords": "local",
+        "unit": "cm",
+        "province": null,
+        "srid": null,
+        "plotScale": 20,
+        "name": "Yeni proje",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 0,
+      "suggested": null,
+      "scale": 20,
+      "unit": "cm",
+      "notes": [
+        "CAD · teknik çizim",
+        "Yerel · cm",
+        "1:20 · Yeni proje"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CAD, teknik çizim"
+        ],
+        [
+          "Koordinatlar",
+          "Yerel: koordinat sistemi yok, çizim 0,0’dan başlar"
+        ],
+        [
+          "Birim",
+          "santimetre"
+        ],
+        [
+          "Ölçek",
+          "1:20"
+        ],
+        [
+          "Katmanlar",
+          "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
+        ],
+        [
+          "Açılış",
+          "A3 kâğıt, yatay; 0,0 sol altta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Yeni proje",
+        "srid": 0,
+        "plotScale": 20,
+        "workspace": "cad",
+        "drawingFont": "barlow",
+        "drawingUnit": "cm"
+      }
+    },
+    {
+      "name": "CAD, gerçek koordinatlı, Trabzon",
+      "draft": {
+        "type": "cad",
+        "coords": "real",
+        "unit": "m",
+        "province": 61,
+        "srid": null,
+        "plotScale": null,
+        "name": "  Aplikasyon  ",
+        "font": "barlow",
+        "fallbackSrid": 5256
+      },
+      "srid": 5257,
+      "suggested": 5257,
+      "scale": 1000,
+      "unit": "m",
+      "notes": [
+        "CAD · teknik çizim",
+        "Trabzon · TUREF / TM39",
+        "1:1.000 · Aplikasyon"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CAD, teknik çizim"
+        ],
+        [
+          "Koordinatlar",
+          "TUREF / TM39 (EPSG:5257)"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "İl",
+          "Trabzon"
+        ],
+        [
+          "Ölçek",
+          "1:1.000"
+        ],
+        [
+          "Katmanlar",
+          "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
+        ],
+        [
+          "Açılış",
+          "Trabzon merkezinde bir pafta"
+        ]
+      ],
+      "firstSystem": 5257,
+      "options": {
+        "name": "  Aplikasyon  ",
+        "srid": 5257,
+        "plotScale": 1000,
+        "workspace": "cad",
+        "drawingFont": "barlow",
+        "province": 61
+      }
+    },
+    {
+      "name": "CAD, gerçek koordinatlı, il yok, UTM",
+      "draft": {
+        "type": "cad",
+        "coords": "real",
+        "unit": "m",
+        "province": null,
+        "srid": 32636,
+        "plotScale": null,
+        "name": "Yeni proje",
+        "font": "plex-mono",
+        "fallbackSrid": 5256
+      },
+      "srid": 32636,
+      "suggested": null,
+      "scale": 1000,
+      "unit": "m",
+      "notes": [
+        "CAD · teknik çizim",
+        "WGS 84 / UTM 36N",
+        "1:1.000 · Yeni proje"
+      ],
+      "summary": [
+        [
+          "Tür",
+          "CAD, teknik çizim"
+        ],
+        [
+          "Koordinatlar",
+          "WGS 84 / UTM 36N (EPSG:32636)"
+        ],
+        [
+          "Birim",
+          "metre"
+        ],
+        [
+          "Ölçek",
+          "1:1.000"
+        ],
+        [
+          "Katmanlar",
+          "Teknik çizim: Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen"
+        ],
+        [
+          "Açılış",
+          "Dilimin çalışma alanında bir pafta"
+        ]
+      ],
+      "firstSystem": 5253,
+      "options": {
+        "name": "Yeni proje",
+        "srid": 32636,
+        "plotScale": 1000,
+        "workspace": "cad",
+        "drawingFont": "plex-mono"
+      }
+    }
+  ]
+}

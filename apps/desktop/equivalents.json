@@ -179,7 +179,7 @@
     "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
     "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs, ribbon_keys.rs (ADR 0017, 0051, 0089, 0117, 0118)" },
     "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings": { "desktop": "implemented", "where": "apps/desktop/src/settings_view.rs (ADR 0023)" },
-    "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog": { "desktop": "implemented", "where": "apps/desktop/src/project/new.rs (ADR 0049)" },
+    "apps/web/src/ui/settings/NewProjectWizard.ts#openNewProjectWizard": { "desktop": "partial", "where": "apps/desktop/src/project/new.rs (ADR 0049): the single window, its wizard is ADR 0165 §3 step 3c" },
     "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings": { "desktop": "implemented", "where": "apps/desktop/src/project/settings.rs (ADR 0049)" },
     "apps/web/src/ui/shell/AppShell.ts#AppShell": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (ADR 0017)" },
     "apps/web/src/ui/shell/CommandBar.ts#CommandBar": { "desktop": "implemented", "where": "apps/desktop/src/command_bar.rs" },

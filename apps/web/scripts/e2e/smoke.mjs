@@ -2471,32 +2471,35 @@ try {
     };
     check('the drawing has unsaved changes before Yeni proje', await b.eval('window.kentos.doc.dirty.value'));
     await key('n', { ctrl: true, alt: true });
-    await b.waitFor(`document.querySelector('.dialog--newproj')`, 3000).catch(() => {});
-    // The name field opens focused with its text selected: typing replaces it.
-    await b.type('Ada 200');
-    await press('.dialog--newproj .crs-search__input');
-    await b.type('5254');
-    await press('.dialog--newproj .seg__opt', '1:500');
-    // Work mode: an announced mode (Yakında) cannot be chosen; CAD can.
-    await press('.dialog--newproj .wspick__card[data-mode="plan3d"]');
+    await b.waitFor(`document.querySelector('.dialog--wizard')`, 3000).catch(() => {});
+    // The wizard (docs/adr/0165 §3). Its type: an announced one (Yakında) cannot be chosen; CAD can.
+    await press('.dialog--wizard .wspick__card[data-mode="plan3d"]');
     const soonChosen = await b.eval(`document.querySelector('.wspick__card[data-mode="plan3d"]').getAttribute('aria-checked')`);
-    await press('.dialog--newproj .wspick__card[data-mode="cad"]');
+    await press('.dialog--wizard .wspick__card[data-mode="cad"]');
+    await press('.dialog--wizard .dialog__foot .btn', 'İleri');
+    // Its coordinates: real ones, TUREF / TM30 from the list.
+    await press('.dialog--wizard .wiz__choice[data-id="real"]');
+    await press('.dialog--wizard .wiz__row[data-srid="5254"]');
+    await press('.dialog--wizard .dialog__foot .btn', 'İleri');
+    // Its name opens with its text selected: typing replaces it; then its scale.
+    await b.type('Ada 200');
+    await press('.dialog--wizard .wiz__chip', '1:500');
     await b.shot('newproject-dialog');
     await press('.dialog__foot .btn', 'Oluştur');
     await b.waitFor(`[...document.querySelectorAll('.dialog__foot .btn')].some((x) => x.textContent === 'Kaydetmeden devam et')`, 3000).catch(() => {});
-    // Vazgeç in the question goes back to the dialog, with nothing changed.
+    // Vazgeç in the question goes back to the wizard, with nothing changed.
     const question = '.dialog[aria-label="Kaydedilmemiş değişiklikler"] .dialog__foot .btn';
     await press(question, 'Vazgeç');
-    const stayed = await b.eval(`!!document.querySelector('.dialog--newproj') && window.kentos.doc.size > 0 && window.kentos.doc.dirty.value`);
-    await press('.dialog--newproj .dialog__foot .btn', 'Oluştur');
+    const stayed = await b.eval(`!!document.querySelector('.dialog--wizard') && window.kentos.doc.size > 0 && window.kentos.doc.dirty.value`);
+    await press('.dialog--wizard .dialog__foot .btn', 'Oluştur');
     await b.waitFor(`[...document.querySelectorAll('.dialog__foot .btn')].some((x) => x.textContent === 'Kaydetmeden devam et')`, 3000).catch(() => {});
-    check('Yeni proje asks about unsaved changes, and Vazgeç returns to its dialog', stayed && !!(await center(question, 'Kaydetmeden devam et')));
+    check('Yeni proje asks about unsaved changes, and Vazgeç returns to its wizard', stayed && !!(await center(question, 'Kaydetmeden devam et')));
     await press(question, 'Kaydetmeden devam et');
-    await b.waitFor(`!document.querySelector('.dialog--newproj') && window.kentos.doc.size === 0`, 5000).catch(() => {});
-    const np = await b.eval(`(() => { const k = window.kentos; const leaves = k.doc.layers.leaves().map((l) => l.id); return { size: k.doc.size, name: k.doc.name.value, srid: k.doc.crs.value.srid, scale: k.doc.settings.plotScale.value, dirty: k.doc.dirty.value, undo: k.doc.canUndo.value, file: k.files.handle, parcel: leaves.includes('parsel') && leaves.includes('kot'), active: k.doc.layers.active.value, origin: k.doc.origin, mode: k.doc.settings.workspace.value }; })()`);
+    await b.waitFor(`!document.querySelector('.dialog--wizard') && window.kentos.doc.size === 0`, 5000).catch(() => {});
+    const np = await b.eval(`(() => { const k = window.kentos; const leaves = k.doc.layers.leaves().map((l) => l.id); return { size: k.doc.size, name: k.doc.name.value, srid: k.doc.crs.value.srid, scale: k.doc.settings.plotScale.value, dirty: k.doc.dirty.value, undo: k.doc.canUndo.value, file: k.files.handle, drafting: leaves.includes('cizim') && leaves.includes('olcu'), active: k.doc.layers.active.value, origin: k.doc.origin, mode: k.doc.settings.workspace.value, home: k.doc.homeView }; })()`);
     check(
-      'Yeni proje opens an empty drawing with the chosen name, system, scale and work mode (not an announced one)',
-      np.size === 0 && np.name === 'Ada 200' && np.srid === 5254 && np.scale === 500 && np.mode === 'cad' && soonChosen === 'false' && !np.dirty && !np.undo && np.file === null && np.parcel && np.active === 'taslak',
+      'Yeni proje opens an empty drawing with the chosen name, system, scale and type (not an announced one), a CAD project’s layers and its home view',
+      np.size === 0 && np.name === 'Ada 200' && np.srid === 5254 && np.scale === 500 && np.mode === 'cad' && soonChosen === 'false' && !np.dirty && !np.undo && np.file === null && np.drafting && np.active === 'cizim' && !!np.home,
       JSON.stringify(np),
     );
     // A typed line lands exactly; the first Ctrl+S asks where to write, under the project's name.

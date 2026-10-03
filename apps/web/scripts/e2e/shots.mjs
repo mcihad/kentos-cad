@@ -3352,6 +3352,70 @@ SCENES.projecttype = [
 ];
 
 /**
+ * Dosya → Yeni proje as a wizard (docs/adr/0165 §3): the type's cards with their pictures; a CBS project's province,
+ * its suggested system and the zone strip; a CAD project local in millimetres, and with real coordinates; the last
+ * step's scale and summary. The desktop's are `project::wizard::tests::screens`.
+ */
+const WIZARD = `!!document.querySelector('.dialog--wizard .wiz__page')`;
+const openWizard = async (ui) => (await ui.eval(`window.kentos.commands.execute('file.new')`), await ui.waitFor(WIZARD), await ui.sleep(300));
+const wizardNext = async (ui) => (await ui.clickText('.dialog--wizard .dialog__foot .btn', 'İleri'), await ui.sleep(250));
+const wizardType = async (ui, mode) => (await ui.clickSel(`.dialog--wizard .wspick__card[data-mode="${mode}"]`), await ui.sleep(150));
+SCENES.newproject = [
+  { id: 'wizard-type', open: async (ui) => (await openWizard(ui), await wizardType(ui, 'gis')), close: async (ui) => await ui.escapeAll(1) },
+  {
+    id: 'wizard-gis-izmir',
+    open: async (ui) => {
+      await openWizard(ui);
+      await wizardType(ui, 'gis');
+      await wizardNext(ui);
+      await ui.clickSel('.dialog--wizard .wiz__search');
+      await ui.type('izm');
+      await ui.key('Enter');
+      await ui.sleep(300);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
+  {
+    id: 'wizard-cad-local',
+    open: async (ui) => {
+      await openWizard(ui);
+      await wizardType(ui, 'cad');
+      await wizardNext(ui);
+      await ui.clickSel('.dialog--wizard .wiz__choice[data-id="mm"]');
+      await ui.sleep(250);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
+  {
+    id: 'wizard-cad-real',
+    open: async (ui) => {
+      await openWizard(ui);
+      await wizardType(ui, 'cad');
+      await wizardNext(ui);
+      await ui.clickSel('.dialog--wizard .wiz__choice[data-id="real"]');
+      await ui.sleep(200);
+      await ui.clickSel('.dialog--wizard .wiz__search');
+      await ui.type('61');
+      await ui.key('Enter');
+      await ui.sleep(300);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
+  {
+    id: 'wizard-details',
+    open: async (ui) => {
+      await openWizard(ui);
+      await wizardType(ui, 'cad');
+      await wizardNext(ui);
+      await ui.clickSel('.dialog--wizard .wiz__choice[data-id="mm"]');
+      await wizardNext(ui);
+      await ui.sleep(250);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
+];
+
+/**
  * A local project in millimetres (docs/adr/0165 §2), new and without a coordinate system: Proje ayarları' Çizim
  * birimi, then a plate 120 × 80 mm with a hole at the origin, selected, read in millimetres. The desktop's are
  * `project::tests::screens` (proje-*-6, -7).

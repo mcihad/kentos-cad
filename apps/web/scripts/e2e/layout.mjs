@@ -128,6 +128,10 @@ const ITEMS = [
   { id: 'project-settings-crs', open: (ui) => ui.run('crs.set') },
   { id: 'project-settings-units', open: async (ui) => (await ui.run('file.settings'), await ui.clickText('.settings__navitem', 'Birimler')) },
   { id: 'new-project', open: (ui) => ui.run('file.new') },
+  // The wizard's other steps (docs/adr/0165 §3): a CBS project's lists and zone strip, a CAD project's units, the summary.
+  { id: 'new-project-coords', open: async (ui) => (await ui.run('file.new'), await ui.click('.dialog--wizard .wspick__card[data-mode="gis"]'), await ui.clickText('.dialog__foot .btn--primary', 'İleri')) },
+  { id: 'new-project-units', open: async (ui) => (await ui.run('file.new'), await ui.click('.dialog--wizard .wspick__card[data-mode="cad"]'), await ui.clickText('.dialog__foot .btn--primary', 'İleri')) },
+  { id: 'new-project-details', open: async (ui) => (await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'İleri'), await ui.clickText('.dialog__foot .btn--primary', 'İleri')) },
   { id: 'start', open: (ui) => ui.run('file.start') },
   { id: 'import-ncn', open: async (ui) => (await ui.pick([['liste.ncn', btoa('1001 487061.123 4420101.456 105.2\r\n1002 487071.5 4420111.25 106.75\r\n')]]), await ui.run('file.import.ncn')), ready: '.dialog--io tbody tr' },
   { id: 'import-dxf', open: async (ui) => (await ui.pick([['entities.dxf', raw(new URL('entities.dxf', formats))]]), await ui.run('file.import.dxf')), ready: '.dialog--io .dialog__foot .btn--primary' },
@@ -216,7 +220,7 @@ const ITEMS = [
     close: (ui) => ui.escapeAll(2),
   },
   // Last: it leaves the drawing unsaved.
-  { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
+  { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'İleri'), await ui.clickText('.dialog__foot .btn--primary', 'İleri'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
 ];
 
 /** Faults a person would see, read from the page: a list of short Turkish sentences. */

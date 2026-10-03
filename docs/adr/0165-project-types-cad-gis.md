@@ -97,7 +97,9 @@ Başlangıç görünümü:
 2. **Yerel CAD ve çizim birimi:** SRID 0, `drawingUnit`, biçimlendirici, KCAD ve sunucu, dosya alışverişinin kuralları.
 3. **Yeni proje sihirbazı:** üç adım, iller ve TM ileri izdüşümü (bağımsız başvuruyla), başlangıç ve ana görünüm, masaüstünde boyut beklenmesi; Proje ayarları ve Uygulama ayarları → Yeni projeler.
    - 3a. Çekirdek ve veri: ileri TM izdüşümü (geometri çekirdeği `geodesy::tm_forward`, Krüger serisi 6. derece; PROJ'un değerleriyle `fixtures/geodesy/v1/tm-forward.json`, `scripts/fixtures/tm_cases.py --check`; web WASM'dan), 81 il (web'in `geo/provinces.ts`'i, iki platformun okuduğu `fixtures/crs/v1/provinces.json`), TUREF dilim önerisi masaüstünde de (kayıt defterinin `zoneSuggestions`'ı), başlangıç görünümü (CBS: ilin merkezi ya da dilimin çalışma alanı, ölçekte bir pafta; CAD: A3 yatay kâğıt, 0,0 sol altta) iki platformda aynı kuralla.
-   - 3b. Web'in sihirbazı; 3c. masaüstünün sihirbazı (aynı adımlar, kartlar ve şerit); 3d. CAD'in katman şablonu, ana görünümün projeye yazılması, Uygulama ayarları → Yeni projeler'de tür ve birim, masaüstünde görünümün boyut beklemesi.
+   - CAD'in katman şablonu (web `cadLayers`, masaüstü `cad_layers`) ve ana görünümün projeye yazılması 3a'nın ardından yapıldı; `fixtures/project/v1/new-project.json` ikisini de tutar.
+   - 3b. Web'in sihirbazı: kuralları `model/newProjectWizard.ts` (adımlar, taslak, önerilen sistem, türün ölçekleri, adımların notları, özet, ilerlemeyi durduran neden), pencere `ui/settings/NewProjectWizard.ts`, sayfalar `wizardSteps.ts`, dilim şeridi `zoneStrip.ts`, kartların resimleri `ui/settings/art/*.svg`; kuralların yanıtları masaüstü için `fixtures/project/v1/wizard.json`.
+   - 3c. Masaüstünün sihirbazı: aynı adımlar, kartlar (aynı SVG resimleri) ve dilim şeridi; kuralları `kentos_project::wizard`, `wizard.json`'u geçer. 3d. Uygulama ayarları → Yeni projeler'de tür ve birim, masaüstünde görünümün boyut beklemesi.
 4. **Eksen ve açı düzeni:** okumalar, yazma ve kutupsal giriş (fixture'ıyla), açı varsayılanları.
 5. **Sahne:** koordinat ekseni simgesi, türe göre zemin, ölçek seçici.
 6. **Her türün kendi şeridi.**

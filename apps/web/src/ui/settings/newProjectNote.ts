@@ -1,6 +1,6 @@
 /**
  * What Yeni proje says of the drawing on screen before anything is done
- * (NewProjectDialog.ts; docs/inventory/parity-audit.md N1): a cloud project
+ * (NewProjectWizard.ts; docs/inventory/parity-audit.md N1): a cloud project
  * that saves by itself is closed and what waits is sent; unsaved changes of
  * a database project that does not save (read-only, archived, gone) are not
  * sent, and what to do is asked at Oluştur; a local drawing's or a file
