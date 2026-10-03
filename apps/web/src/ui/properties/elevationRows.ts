@@ -21,21 +21,28 @@ import type { PropRow } from '../widgets/PropertyGrid';
  *   an elevation has the same at every vertex, `kot yok` when none has any, `Çeşitli` otherwise.
  */
 
-/** What was typed into a Kot row: a number (a trailing “m” is allowed), nothing (none), or undefined when it is neither. */
-export function parseElevation(text: string): number | null | undefined {
-  const t = text.trim().replace(/\s*m$/, '');
-  if (!t) return null;
-  return parseNumber(t) ?? undefined;
+/**
+ * What was typed into a Kot row: a number (the unit's mark after it is allowed, “m” in a project in metres),
+ * nothing (none), or undefined when it is neither. The number is in the unit it was typed in.
+ */
+export function parseElevation(text: string, unit = 'm'): number | null | undefined {
+  const t = text.trim();
+  const bare = t.endsWith(unit) ? t.slice(0, -unit.length).trimEnd() : t;
+  if (!bare) return null;
+  return parseNumber(bare) ?? undefined;
 }
 
-/** The editor of a Kot row: what is typed goes to `write` as a number, or null for none; anything else is not taken. */
-function elevationEditor(write?: (z: number | null) => void): PropRow['editor'] {
+/**
+ * The editor of a Kot row: what is typed goes to `write` as a number in metres (typed in the project's unit,
+ * docs/adr/0165 §2), or null for none; anything else is not taken.
+ */
+function elevationEditor(f: AppContext['format'], write?: (z: number | null) => void): PropRow['editor'] {
   return write
     ? {
         type: 'number',
         commit: (text) => {
-          const z = parseElevation(text);
-          if (z !== undefined) write(z);
+          const z = parseElevation(text, f.lengthUnitLabel);
+          if (z !== undefined) write(z === null ? null : f.toMetres(z));
         },
       }
     : undefined;
@@ -47,19 +54,19 @@ function elevationEditor(write?: (z: number | null) => void): PropRow['editor'] 
  */
 export function elevationRow(ctx: AppContext, label: string, zs: readonly (number | null)[], write?: (z: number | null) => void): PropRow {
   const f = ctx.format;
-  const editor = elevationEditor(write);
+  const editor = elevationEditor(f, write);
   const s = summarizeElevations(zs);
-  const range = (min: number, max: number) => `${f.length(min, false)}–${f.length(max, false)} m`;
+  const range = (min: number, max: number) => `${f.length(min, false)}–${f.length(max, false)} ${f.lengthUnitLabel}`;
   switch (s.kind) {
     case 'none':
       return { label, value: 'kot yok', numeric: true, editor };
     case 'value':
-      return { label, value: f.length(s.z, false), numeric: true, unit: 'm', editor };
+      return { label, value: f.length(s.z, false), numeric: true, unit: f.lengthUnitLabel, editor };
     case 'range':
       return { label, value: range(s.min, s.max), numeric: true, editor };
     case 'partial': {
       const note = '(bazı köşeler kotsuz)';
-      return s.min === s.max ? { label, value: f.length(s.min, false), numeric: true, unit: 'm', note, editor } : { label, value: range(s.min, s.max), numeric: true, note, editor };
+      return s.min === s.max ? { label, value: f.length(s.min, false), numeric: true, unit: f.lengthUnitLabel, note, editor } : { label, value: range(s.min, s.max), numeric: true, note, editor };
     }
   }
 }
@@ -80,7 +87,7 @@ export function pathElevationRow(ctx: AppContext, e: Extract<Entity, { kind: 'po
 /** `3B uzunluk` or `3B çevre`, when every vertex has an elevation; none otherwise. */
 export function spaceRow(ctx: AppContext, e: Entity): PropRow[] {
   const space = spaceLength(e);
-  return space ? [{ label: space.label, value: ctx.format.length(space.value, false), numeric: true, unit: 'm' }] : [];
+  return space ? [{ label: space.label, value: ctx.format.length(space.value, false), numeric: true, unit: ctx.format.lengthUnitLabel }] : [];
 }
 
 /**
@@ -101,6 +108,6 @@ export function commonElevationRow(ctx: AppContext, ents: readonly Entity[], loc
     if (common === 'mixed') break;
   }
   // The one value, or none; anything else (different values, some vertices without one) has no value to show.
-  if (common === 'mixed') return [{ label: 'Kot', value: 'Çeşitli', editor: elevationEditor(write) }];
+  if (common === 'mixed') return [{ label: 'Kot', value: 'Çeşitli', editor: elevationEditor(ctx.format, write) }];
   return [elevationRow(ctx, 'Kot', [common ?? null], write)];
 }

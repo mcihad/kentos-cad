@@ -11,7 +11,7 @@ import { topologyArcPath, topologyClean, topologyPathArc, type TopoObject, type 
 import { elevatedPaths } from '../product/elevation';
 import type { ViewTransform } from '../viewport/Camera';
 import { ringMark } from './constructPreview';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { uidOf, writeEdit } from './editCommand';
 import { MAX_GHOSTS } from './modifyTools';
 import { drawTag, strokeGeometry, strokePath } from './preview';
@@ -160,7 +160,7 @@ export class TopologyTool implements Tool {
   private refresh(): void {
     const { format } = this.ctx;
     const tolerance = format.length(TopologyTool.tolerance);
-    if (this.typing) this.prompt.set(`${LABEL}: toleransı yazın, metre (Enter: ${tolerance})`);
+    if (this.typing) this.prompt.set(`${LABEL}: toleransı yazın, ${format.lengthUnitName} (Enter: ${tolerance})`);
     else {
       const plan = this.current();
       const w = TopologyTool.works;
@@ -197,10 +197,10 @@ export class TopologyTool implements Tool {
         return true;
       }
     }
-    const n = parseNumber(text);
-    if (n === null || /[,;@<]/.test(text)) return false;
+    const n = /[,;@<]/.test(text) ? null : parseLength(this.ctx.format, text);
+    if (n === null) return false;
     if (!(Number.isFinite(n) && n >= LEAST)) {
-      this.ctx.log.warn('Tolerans en az 0.000001 m olmalı.');
+      this.ctx.log.warn(`Tolerans en az ${this.ctx.format.plain(LEAST)} ${this.ctx.format.lengthUnitLabel} olmalı.`);
       return true;
     }
     TopologyTool.tolerance = n;

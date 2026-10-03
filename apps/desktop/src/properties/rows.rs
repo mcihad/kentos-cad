@@ -476,7 +476,7 @@ fn turn(deg: f64) -> String {
 /// plan one, which stays the measure of record.
 fn space_length(e: &Entity, f: &Format) -> Option<Row> {
     let (label, length) = elevation::space_length(e)?;
-    Some(Row::figure(label, f.length_bare(length)).unit("m"))
+    Some(Row::figure(label, f.length_bare(length)).unit(f.length_unit_label()))
 }
 
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
@@ -518,11 +518,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     let f = Format::of(doc.settings());
     let decimals = doc.settings().area_decimals as usize;
     let len = |label: &'static str, value: f64| Row::figure(label, f.length_bare(value));
-    let metres = |label: &'static str, value: f64| len(label, value).unit("m");
-    // An area: one row in m², or m² and the project's unit.
+    // Lengths in the project's unit: a local project's millimetres (docs/adr/0165 §2).
+    let metres = |label: &'static str, value: f64| len(label, value).unit(f.length_unit_label());
+    // An area: one row in m² (or a local project's unit squared), or m² and the project's unit.
     let area = |m2: f64| -> Vec<Row> {
-        if f.area_unit_label() == "m²" {
-            vec![Row::figure("Alan", f.area_bare(m2)).unit("m²")]
+        if f.area_unit_label() == "m²" || f.unit != kentos_contracts::DrawingUnit::M {
+            vec![Row::figure("Alan", f.area_bare(m2)).unit(f.area_unit_label())]
         } else {
             vec![
                 Row::figure("Alan", fixed(m2, decimals)).unit("m²"),
@@ -1049,7 +1050,7 @@ fn leader_rows(
             .collect(),
     };
     let height_row = match height {
-        Some(h) => Row::figure("Yükseklik", f.length_bare(h)).unit("m"),
+        Some(h) => Row::figure("Yükseklik", f.length_bare(h)).unit(f.length_unit_label()),
         None => Row::text("Yükseklik", MIXED),
     };
     let turn_row = match turn {
@@ -1206,7 +1207,8 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
     }
     let mut totals = Vec::new();
     if length > 0.0 {
-        totals.push(Row::figure("Toplam uzunluk", f.length_bare(length)).unit("m"));
+        totals
+            .push(Row::figure("Toplam uzunluk", f.length_bare(length)).unit(f.length_unit_label()));
     }
     if area > 0.0 {
         totals.push(Row::figure("Toplam alan", f.area_bare(area)).unit(f.area_unit_label()));

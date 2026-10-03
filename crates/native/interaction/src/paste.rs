@@ -14,7 +14,6 @@
 use kentos_contracts::Entity;
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::store::Store;
-use kentos_geometry_core::tools::point_text::point_from_text;
 
 use crate::Vec2;
 use crate::clipboard;
@@ -131,8 +130,7 @@ impl Tool for Paste {
 
     /// A typed point: `@dY,dX` and a distance are measured from the base point.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(at) = point_from_text(text, Some(self.base), self.hover, |d| cx.track_along(d))
-        else {
+        let Some(at) = cx.typed_point(text, Some(self.base), self.hover) else {
             return false;
         };
         self.place(at, cx);

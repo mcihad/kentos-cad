@@ -11,7 +11,7 @@ mod objects;
 
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
-    DocumentSnapshotV2, DrawingFont, LabelInk, LabelPlacement, LabelStyle, LayerNode,
+    DocumentSnapshotV2, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
     LayerNodeType, LayerSnap, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol,
     ProjectId, ProjectSettings, ProjectStyles, Vec2, Workspace,
 };
@@ -262,7 +262,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                 )?)
             }
             "homeView" => home_view = Some(bounds(r)?),
-            "settings" => settings_ = Some(settings(r)?),
+            "settings" => settings_ = Some(settings(r, has.drawing_unit)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "migratedFrom" => migrated_from = Some(source(r)?),
@@ -295,8 +295,10 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     })
 }
 
-fn settings(r: &mut Reader<'_>) -> Result<ProjectSettings, KcadError> {
+/// The settings; `unit`: the schema has the drawing unit (11 and up).
+fn settings(r: &mut Reader<'_>, unit: bool) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
+    let mut drawing_unit = None;
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -346,6 +348,16 @@ fn settings(r: &mut Reader<'_>) -> Result<ProjectSettings, KcadError> {
                     ],
                 )?)
             }
+            "drawingUnit" if unit => {
+                drawing_unit = Some(named(
+                    r,
+                    &[
+                        ("mm", DrawingUnit::Mm),
+                        ("cm", DrawingUnit::Cm),
+                        ("m", DrawingUnit::M),
+                    ],
+                )?)
+            }
             "areaDecimals" => area_decimals = Some(r.uint(u64::from(u32::MAX))? as u32),
             "lengthDecimals" => length_decimals = Some(r.uint(u64::from(u32::MAX))? as u32),
             _ => return Err(unknown(r)),
@@ -361,6 +373,7 @@ fn settings(r: &mut Reader<'_>) -> Result<ProjectSettings, KcadError> {
         plot_scale: required(r, plot_scale, "plotScale")?,
         workspace,
         drawing_font,
+        drawing_unit,
     })
 }
 

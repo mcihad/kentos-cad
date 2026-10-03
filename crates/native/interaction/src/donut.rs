@@ -14,7 +14,7 @@
 
 use kentos_contracts::{EntityGeometry, HatchPattern, HatchPatternType};
 use kentos_geometry_core::tools::drawing::donut_rings;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -178,11 +178,11 @@ impl Tool for Donut {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let done = if self.option(&upper_tr(js_trim(text))) {
             true
-        } else if let (Some(ask), Some(n)) = (self.ask, points::plain_number(text)) {
+        } else if let (Some(ask), Some(n)) = (self.ask, points::plain_length(text, cx)) {
             self.diameter(ask, n, cx);
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

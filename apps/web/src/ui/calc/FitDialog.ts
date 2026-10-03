@@ -312,7 +312,8 @@ class FitDialog {
    * projective's numbers. The affine's scales by the surveyor's axes (CLAUDE.md §5): Y is east (the core's x scale), X north.
    */
   private parameters(fit: Fit): string {
-    const { format } = this.ctx;
+    // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+    const format = this.ctx.format.metric();
     if (solvedBy(state.kind) === 'helmert' && fit.scale !== undefined && fit.rotation !== undefined)
       return `Ölçek ${fixed(fit.scale, 8)} (${fixed((fit.scale - 1) * 1e6, 1)} ppm), dönüklük ${format.angle(fit.rotation)}.`;
     if (state.kind === 'affine' && fit.scaleX !== undefined && fit.scaleY !== undefined && fit.rotation !== undefined && fit.shear !== undefined)

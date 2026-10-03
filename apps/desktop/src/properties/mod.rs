@@ -466,9 +466,12 @@ fn commit_elevation(
     spot: Spot,
     text: &str,
 ) -> Vec<String> {
-    let Some(value) = elevation::parse_typed(text) else {
+    // Typed in the project's unit (docs/adr/0165 §2).
+    let f = kentos_interaction::Format::of(model.settings());
+    let Some(value) = elevation::parse_typed_in(text, f.length_unit_label()) else {
         return Vec::new();
     };
+    let value = value.map(|z| f.to_metres(z));
     let change = match spot {
         Spot::Start => Change::End(0, value),
         Spot::End => Change::End(1, value),
@@ -480,6 +483,8 @@ fn commit_elevation(
 /// A cell's text into the drawing, as the web's editors take it; what they
 /// do not take changes nothing. What to say: the command's refusal.
 fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec<String> {
+    // Lengths and coordinates are typed in the project's unit (docs/adr/0165 §2).
+    let f = kentos_interaction::Format::of(model.settings());
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         Field::Elevations(slots) => return commit_elevation(model, slots, Spot::All, text),
@@ -503,7 +508,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             });
         }
         Field::LeaderHeight(slots) => {
-            let n = web_number(text);
+            let n = f.to_metres(web_number(text));
             if !(n.is_finite() && n > 0.0) {
                 return Vec::new();
             }
@@ -515,7 +520,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             });
         }
         Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
-            let n = web_number(text);
+            let n = f.to_metres(web_number(text));
             if !n.is_finite() {
                 return Vec::new();
             }
@@ -590,19 +595,19 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
     };
     let taken = match (field, &mut e) {
         (Field::PointX(_), Entity::Point(p)) if finite => {
-            p.p.x = n;
+            p.p.x = f.to_metres(n);
             true
         }
         (Field::PointY(_), Entity::Point(p)) if finite => {
-            p.p.y = n;
+            p.p.y = f.to_metres(n);
             true
         }
         (Field::DimensionOffset(_), Entity::Dimension(d)) if finite => {
-            d.offset = n;
+            d.offset = f.to_metres(n);
             true
         }
         (Field::DimensionHeight(_), Entity::Dimension(d)) if finite && n > 0.0 => {
-            d.height = n;
+            d.height = f.to_metres(n);
             true
         }
         (Field::DimensionText(_), Entity::Dimension(d)) => {
@@ -615,7 +620,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             true
         }
         (Field::HatchSpacing(_), Entity::Hatch(h)) if finite && n > 0.0 => {
-            h.pattern.spacing = n;
+            h.pattern.spacing = f.to_metres(n);
             true
         }
         // Trimmed, as the in-place editor stores it; an empty text is not taken.
@@ -629,7 +634,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             }
         }
         (Field::TextHeight(_), Entity::Text(t)) if finite && n > 0.0 => {
-            t.height = n;
+            t.height = f.to_metres(n);
             true
         }
         (Field::TextAngle(_), Entity::Text(t)) if finite => {
@@ -637,11 +642,11 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             true
         }
         (Field::InsertX(_), Entity::Insert(i)) if finite => {
-            i.p.x = n;
+            i.p.x = f.to_metres(n);
             true
         }
         (Field::InsertY(_), Entity::Insert(i)) if finite => {
-            i.p.y = n;
+            i.p.y = f.to_metres(n);
             true
         }
         (Field::InsertScale(_), Entity::Insert(i)) if finite && n > 0.0 => {

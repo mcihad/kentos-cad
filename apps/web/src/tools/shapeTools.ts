@@ -71,7 +71,7 @@ export class RectangleTool extends PointInputTool {
     const n = parseNumber(text);
     if (this.stage === 'cornerSize') {
       if (n === null || n < 0) return false;
-      RectangleTool.corners = n > 0 ? { kind: this.pendingCorner, size: n } : { kind: 'none' };
+      RectangleTool.corners = n > 0 ? { kind: this.pendingCorner, size: this.ctx.format.toMetres(n) } : { kind: 'none' };
       this.stage = 'first';
       this.refreshPrompt();
       return true;
@@ -87,7 +87,7 @@ export class RectangleTool extends PointInputTool {
     if (this.stage === 'size') {
       const m = text.trim().match(/^(\d+(?:\.\d+)?)\s*[,; ]\s*(\d+(?:\.\d+)?)$/);
       if (!m || +m[1] <= 0 || +m[2] <= 0) return false;
-      this.size = { length: +m[1], width: +m[2] };
+      this.size = { length: this.ctx.format.toMetres(+m[1]), width: this.ctx.format.toMetres(+m[2]) };
       this.stage = 'side';
       this.refreshPrompt();
       return true;
@@ -201,7 +201,7 @@ export class RotatedRectangleTool extends PointInputTool {
     if (this.pts.length === 2 && n !== null && n > 0 && !/[,;@<]/.test(text)) {
       // Typed width goes to the side the mouse is on.
       const side = this.hover && sideDistance(this.pts[0], this.pts[1], this.hover) < 0 ? -1 : 1;
-      this.commit(n * side);
+      this.commit(this.ctx.format.toMetres(n) * side);
       this.refreshPrompt();
       return true;
     }
@@ -293,7 +293,7 @@ export class RegularPolygonTool extends PointInputTool {
     }
     if (plain && !this.byEdge && this.pts.length === 1 && n! > 0) {
       // Bottom edge horizontal: the edge middle sits straight below the centre.
-      this.commit(regularPolygonRadius(this.pts[0], RegularPolygonTool.sides, n!, RegularPolygonTool.inscribed));
+      this.commit(regularPolygonRadius(this.pts[0], RegularPolygonTool.sides, this.ctx.format.toMetres(n!), RegularPolygonTool.inscribed));
       this.refreshPrompt();
       return true;
     }

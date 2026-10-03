@@ -5,8 +5,6 @@
 //! give none. The tool is not in the catalog and is not repeated
 //! ([`crate::Session::run`]).
 
-use kentos_geometry_core::tools::point_text::point_from_text;
-
 use crate::Vec2;
 use crate::format::Format;
 use crate::prompt::Prompt;
@@ -92,7 +90,7 @@ impl Tool for PickPoint {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(p) = point_from_text(text, None, self.hover, |d| cx.track_along(d)) else {
+        let Some(p) = cx.typed_point(text, None, self.hover) else {
             return false;
         };
         self.finish(Some(p), cx);

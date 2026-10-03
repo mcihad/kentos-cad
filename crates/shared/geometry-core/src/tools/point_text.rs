@@ -67,13 +67,31 @@ pub fn point_from_text(
     cursor: Option<Vec2>,
     along: impl FnOnce(f64) -> Option<Vec2>,
 ) -> Option<Vec2> {
+    point_from_text_in(text, last, cursor, along, |v| v)
+}
+
+/// [`point_from_text`] with the typed lengths and coordinates turned into
+/// metres by `metres`: a local project's drawing unit (docs/adr/0165 §2;
+/// the web's `parsePointInput`'s `metres`). An angle stays as typed.
+pub fn point_from_text_in(
+    text: &str,
+    last: Option<Vec2>,
+    cursor: Option<Vec2>,
+    along: impl FnOnce(f64) -> Option<Vec2>,
+    metres: impl Fn(f64) -> f64,
+) -> Option<Vec2> {
     match parse_point_text(text)? {
-        PointText::Relative { dx, dy } => last.map(|last| relative_point(last, dx, dy)),
-        PointText::Polar { distance, angle } => {
-            last.map(|last| polar_offset(last, distance, angle))
+        PointText::Relative { dx, dy } => {
+            last.map(|last| relative_point(last, metres(dx), metres(dy)))
         }
-        PointText::Absolute(p) => Some(p),
-        PointText::Distance(d) => along(d).or_else(|| toward_point(last?, cursor?, d)),
+        PointText::Polar { distance, angle } => {
+            last.map(|last| polar_offset(last, metres(distance), angle))
+        }
+        PointText::Absolute(p) => Some(Vec2::new(metres(p.x), metres(p.y))),
+        PointText::Distance(d) => {
+            let d = metres(d);
+            along(d).or_else(|| toward_point(last?, cursor?, d))
+        }
     }
 }
 

@@ -28,12 +28,13 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP,
-    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS,
+    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
-    angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
-    workspace,
+    angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
+    point_symbol, workspace,
 };
 
 /// The payload of a drawing; `watch` hears the objects as they are written
@@ -267,7 +268,10 @@ impl<'d> Encoder<'d> {
     }
 
     fn settings(&mut self, s: &ProjectSettings) -> Result<(), KcadError> {
-        let n = 6 + usize::from(s.workspace.is_some()) + usize::from(s.drawing_font.is_some());
+        let n = 6
+            + usize::from(s.workspace.is_some())
+            + usize::from(s.drawing_font.is_some())
+            + usize::from(s.drawing_unit.is_some());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -284,6 +288,10 @@ impl<'d> Encoder<'d> {
         if let Some(f) = s.drawing_font {
             self.key("drawingFont");
             self.w.text(drawing_font(f));
+        }
+        if let Some(u) = s.drawing_unit {
+            self.key("drawingUnit");
+            self.w.text(drawing_unit(u));
         }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
@@ -549,6 +557,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
+    if doc.settings.drawing_unit.is_some() {
+        return SCHEMA_WITH_DRAWING_UNIT;
+    }
     if snaps(&doc.layers) {
         return SCHEMA_WITH_LAYER_SNAP;
     }
@@ -662,6 +673,7 @@ mod tests {
                 "plotScale",
                 "workspace",
                 "drawingFont",
+                "drawingUnit",
                 "areaDecimals",
                 "lengthDecimals",
             ],

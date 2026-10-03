@@ -582,8 +582,13 @@ impl App {
                     EditColumn::Code => d.code,
                 }
             }
-            Target::Point(slot) => match self.document.as_ref().and_then(|d| d.model.get(slot)) {
-                Some(Entity::Point(p)) => edit::cell_text(p, col),
+            Target::Point(slot) => match self
+                .document
+                .as_ref()
+                .and_then(|d| Some((d.model.get(slot)?, d.settings().unit())))
+            {
+                // In a local project's unit (docs/adr/0165 §2).
+                Some((Entity::Point(p), unit)) => edit::cell_text(p, col, unit.per_metre()),
                 _ => String::new(),
             },
         };

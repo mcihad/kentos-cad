@@ -57,7 +57,8 @@ export function knownField(pick: Picker, label: string, state: { text: string },
   const show = () => {
     const r = resolvePoint(ctx, state.text);
     resolved.dataset.kind = r && 'error' in r ? 'error' : '';
-    resolved.textContent = !r ? (hint ?? 'Henüz verilmedi') : 'error' in r ? r.error : ctx.format.point(r.p);
+    // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+    resolved.textContent = !r ? (hint ?? 'Henüz verilmedi') : 'error' in r ? r.error : ctx.format.metric().point(r.p);
   };
   input.addEventListener('input', () => {
     state.text = input.value;

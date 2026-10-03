@@ -73,7 +73,7 @@ export class ParallelLineTool extends PointInputTool {
         this.ctx.log.warn('Mesafe sıfır ya da pozitif olmalı; karşı taraf için diğer seçeneği kullanın.');
         return true;
       }
-      this.setDistance(n);
+      this.setDistance(this.ctx.format.toMetres(n));
       return true;
     }
     return super.input(text);

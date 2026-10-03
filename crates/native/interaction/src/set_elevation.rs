@@ -37,7 +37,7 @@ use crate::elevation::{self, Change};
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
-use crate::points::plain_number;
+use crate::points::plain_length;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow};
 
@@ -89,6 +89,8 @@ fn signed(by: f64, f: &Format) -> String {
 pub struct SetElevation {
     /// Artır: the number typed is a difference to add, not the elevation.
     raise: bool,
+    /// The project's length unit as the prompt names it (docs/adr/0165 §2); none: metres.
+    unit: Option<&'static str>,
     /// The selection holds nothing that takes an elevation: picking goes on.
     none_takes: bool,
     /// The tool goes back to picking, asked of the base after this call.
@@ -213,6 +215,7 @@ impl Stages for SetElevation {
     /// elevation, or the tool says so and picking goes on.
     fn begin(&mut self, cx: &mut Context<'_>) -> Flow {
         self.back = false;
+        self.unit = Some(cx.format().length_unit_label());
         let doc = &*cx.doc;
         self.none_takes = !Self::selected(cx)
             .iter()
@@ -254,10 +257,11 @@ impl Stages for SetElevation {
     }
 
     fn prompt(&self, _n: usize) -> Prompt {
+        let unit = self.unit.unwrap_or("m");
         let step = if self.raise {
-            "eklenecek farkı yazın (m)"
+            format!("eklenecek farkı yazın ({unit})")
         } else {
-            "kotu yazın (m)"
+            format!("kotu yazın ({unit})")
         };
         self.chips(Prompt::new(LABEL, step))
     }
@@ -276,7 +280,7 @@ impl Stages for SetElevation {
             "A" => self.raise = !self.raise,
             "S" => self.write(Give::Clear, cx),
             _ => {
-                let n = plain_number(text)?;
+                let n = plain_length(text, cx)?;
                 self.write(
                     if self.raise {
                         Give::Raise(n)

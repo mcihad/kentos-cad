@@ -9,12 +9,11 @@
 
 use kentos_geometry_core::geom::shapes::{rect_from_edge, side_distance};
 use kentos_geometry_core::geometry::{dist, signed_area};
-use kentos_geometry_core::tools::point_text::point_from_text;
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number};
+use crate::points::{self, Taken};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tool};
 
@@ -123,7 +122,7 @@ impl Tool for RotatedRectangle {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         if self.d.pts.len() == 2
-            && let Some(n) = plain_number(text).filter(|n| *n > 0.0)
+            && let Some(n) = points::plain_length(text, cx).filter(|n| *n > 0.0)
         {
             // A typed width goes to the side the mouse is on.
             let (a, b) = (self.d.pts[0], self.d.pts[1]);
@@ -134,7 +133,7 @@ impl Tool for RotatedRectangle {
             self.commit(n * side, cx);
             return true;
         }
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import cases from '../../../../fixtures/point-input/v1/cases.json?raw';
 import type { Vec2 } from '../model/geometry';
+import { UNIT_PER_METRE, type DrawingUnit } from '../model/projectSettings';
 import { looksLikeCoordinate, parseNumber, parsePointInput, pointName } from './coordinateInput';
 
 describe('parsePointInput', () => {
@@ -43,6 +44,8 @@ interface Case {
   cursor?: Vec2 | null;
   expect: Vec2 | number | boolean | string | null;
   tolerance?: number;
+  /** A local project's drawing unit the text is typed in; the point is in metres. */
+  unit?: DrawingUnit;
 }
 
 /**
@@ -60,7 +63,9 @@ describe('shared point input cases (fixtures/point-input/v1)', () => {
   for (const c of file.cases) {
     it(`${c.fn}: ${c.name} (${JSON.stringify(c.text)})`, () => {
       if (c.fn === 'point') {
-        const got = parsePointInput(c.text, c.last ?? null, c.cursor ?? null);
+        const perMetre = UNIT_PER_METRE[c.unit ?? 'm'];
+        // The conversion the formatter's `toMetres` makes (app/format.ts).
+        const got = parsePointInput(c.text, c.last ?? null, c.cursor ?? null, undefined, (v) => v / perMetre);
         const want = c.expect as Vec2 | null;
         if (!want) return void expect(got).toBeNull();
         const tol = c.tolerance ?? 0;

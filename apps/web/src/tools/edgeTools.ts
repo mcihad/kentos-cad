@@ -7,7 +7,7 @@ import { dist, type Vec2 } from '../model/geometry';
 import { offsetEntity, offsetThroughDistance, type OffsetResult } from '../model/ops/offset';
 import { nearestS, pathOf, pointAtS } from '../model/ops/path';
 import type { ViewTransform } from '../viewport/Camera';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { fenceEdits, planFence, type FencePlan } from './fenceTool';
 import { drawTag, strokeGeometry, strokePath } from './preview';
@@ -204,7 +204,7 @@ export class OffsetTool extends EdgePickTool {
       this.ctx.view.requestOverlay();
       return true;
     }
-    const n = parseNumber(text);
+    const n = parseLength(this.ctx.format, text);
     if (n === null || n <= 0) return false;
     OffsetTool.distance = n;
     OffsetTool.through = false;

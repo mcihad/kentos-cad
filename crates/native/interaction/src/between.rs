@@ -23,7 +23,7 @@
 use kentos_contracts::EntityGeometry;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::construct::{Between, points_between};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -205,9 +205,14 @@ impl PointsBetween {
                 cx.memory.between_parts = n as u32;
             }
             Method::Distances | Method::Ratios => {
-                let Some(list) = number_list(text) else {
+                let Some(mut list) = number_list(text) else {
                     return false;
                 };
+                // Distances are typed in the project's unit (docs/adr/0165 §2); ratios have none.
+                if self.method == Method::Distances {
+                    let f = cx.format();
+                    list.iter_mut().for_each(|d| *d = f.to_metres(*d));
+                }
                 let Some(values) = Values::from_slice(&list) else {
                     cx.say(
                         Level::Warn,
@@ -245,10 +250,12 @@ impl PointsBetween {
             Method::Distances if m.between_distances.as_slice().len() > 3 => {
                 format!("{} uzaklık", m.between_distances.as_slice().len())
             }
-            Method::Distances => format!(
-                "{} m",
-                join(m.between_distances.as_slice(), crate::format::js_number)
-            ),
+            // In the project's unit (docs/adr/0165 §2).
+            Method::Distances => {
+                let f = self.format();
+                let shown = join(m.between_distances.as_slice(), |d| f.plain(d));
+                format!("{shown} {}", f.length_unit_label())
+            }
             Method::Ratios if m.between_ratios.is_empty() => "oran yok".to_owned(),
             Method::Ratios if m.between_ratios.as_slice().len() > 3 => {
                 format!("{} oran", m.between_ratios.as_slice().len())
@@ -352,9 +359,7 @@ impl Tool for PointsBetween {
             "O" => self.method = Method::Ratios,
             _ if self.d.pts.len() >= 2 => return self.value(text, cx),
             _ => {
-                let Some(p) =
-                    point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d))
-                else {
+                let Some(p) = cx.typed_point(text, self.d.last(), self.d.hover) else {
                     return false;
                 };
                 self.accept(p, cx);

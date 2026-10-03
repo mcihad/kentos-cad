@@ -408,7 +408,7 @@ export class PointTool extends PointInputTool {
   }
 
   protected promptFor(): string {
-    return this.pendingZ ? 'kot değerini yazın (m)' : 'nokta konumunu belirtin';
+    return this.pendingZ ? `kot değerini yazın (${this.ctx.format.lengthUnitLabel})` : 'nokta konumunu belirtin';
   }
 
   protected onPoint(p: Vec2): void {
@@ -421,9 +421,11 @@ export class PointTool extends PointInputTool {
 
   override input(text: string): boolean {
     if (this.pendingZ) {
-      const z = parseNumber(text);
-      if (z === null) return false;
-      this.writePoint({ p: this.pendingZ, z, label: fixed(z, 2), attrs: { Tür: 'Kot noktası', 'Z (m)': fixed(z, 3) } });
+      const typed = parseNumber(text);
+      if (typed === null) return false;
+      // Typed in the project's unit and labelled so; kept, and its attribute written, in metres (docs/adr/0165 §2).
+      const z = this.ctx.format.toMetres(typed);
+      this.writePoint({ p: this.pendingZ, z, label: fixed(typed, 2), attrs: { Tür: 'Kot noktası', 'Z (m)': fixed(z, 3) } });
       this.pendingZ = null;
       this.refreshPrompt();
       this.ctx.view.requestOverlay();

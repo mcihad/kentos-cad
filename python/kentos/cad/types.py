@@ -206,6 +206,21 @@ DrawingFontName = Literal["barlow", "arimo", "overpass", "quicksand", "architect
 """The names of :class:`DrawingFont`, for a plain string."""
 
 
+class DrawingUnit(_StrEnum):
+    """The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
+    Geometry stays in metres: the unit is where the user meets the numbers
+    (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A
+    project with a coordinate system has the system's unit.
+    """
+    MM = "mm"
+    CM = "cm"
+    M = "m"
+
+
+DrawingUnitName = Literal["mm", "cm", "m"]
+"""The names of :class:`DrawingUnit`, for a plain string."""
+
+
 class EditOperation(_StrEnum):
     """The modify tool an edit comes from; it names the undo step.
 
@@ -4849,6 +4864,8 @@ class ProjectSettings(_Model):
     Attributes:
         plot_scale: Plot scale denominator (1:1000 → 1000).
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
+        drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
+            project without a coordinate system (SRID 0) has another.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -4860,6 +4877,7 @@ class ProjectSettings(_Model):
     angle_unit: AngleUnit | AngleUnitName
     plot_scale: float
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4872,6 +4890,8 @@ class ProjectSettings(_Model):
         out["plotScale"] = float(self.plot_scale)
         if self.drawing_font is not UNSET:
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
+        if self.drawing_unit is not UNSET:
+            out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -4886,6 +4906,7 @@ class ProjectSettings(_Model):
             angle_unit=_enum_in(AngleUnit, data["angleUnit"]),
             plot_scale=float(data["plotScale"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
+            drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -6439,6 +6460,8 @@ __all__ = [
     "DimensionStyleName",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingUnit",
+    "DrawingUnitName",
     "EditOperation",
     "EditOperationName",
     "EllipseEntity",

@@ -81,7 +81,7 @@ export class JoinTool extends SelectionActionTool {
     }
     const n = parseNumber(text);
     if (!this.picking || n === null || n < 0) return super.input(text);
-    JoinTool.tolerance = n;
+    JoinTool.tolerance = this.ctx.format.toMetres(n);
     this.refresh();
     return true;
   }

@@ -443,11 +443,13 @@ export class ScaleTool extends SelectionFirstTool {
         this.ctx.log.warn(this.refMode ? 'Uzunluk sıfırdan büyük olmalı.' : 'Ölçek faktörü sıfırdan büyük olmalı.');
         return true;
       }
+      // A reference length is typed in the project's unit and set against picked lengths in metres.
+      const length = this.ctx.format.toMetres(n);
       if (this.refMode && this.refLength === null) {
-        this.refLength = n;
+        this.refLength = length;
         this.refFrom = null;
         this.refresh();
-      } else this.scale(this.refMode ? n / this.refLength! : n);
+      } else this.scale(this.refMode ? length / this.refLength! : n);
       return true;
     }
     return super.input(text);
@@ -562,7 +564,7 @@ export class ArrayTool extends SelectionFirstTool {
       this.rows = r;
       this.cols = c;
       this.stage = 'spacing';
-    } else this.build(+m[1], +m[2]);
+    } else this.build(this.ctx.format.toMetres(+m[1]), this.ctx.format.toMetres(+m[2]));
     this.refresh();
     return true;
   }

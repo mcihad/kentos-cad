@@ -13,6 +13,7 @@ import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { COORD_FILES } from '../io/coordFiles';
 import { batchTargets, importTargets, type BatchOp } from './pointBatch';
 import { cellText, EDIT_COLUMNS, emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn, type Outcome } from './pointEdit';
+import { UNIT_PER_METRE } from '../../model/projectSettings';
 
 /**
  * Noktalar, the bottom panel's point editor (docs/adr/0153 §1–§4): every point of the drawing in a table, its search,
@@ -488,7 +489,7 @@ export class PointTable extends Component {
       cells.map((c, j) => {
         const col = POINT_COLUMNS[j];
         const editing = col.edit !== null && col.edit === ed;
-        return h('td', { class: `${col.numeric ? 'num' : ''}${editing ? ' is-editing' : ''}` || null }, editing ? this.editor(this.typed ?? cellText(e, col.edit!), col.numeric) : c);
+        return h('td', { class: `${col.numeric ? 'num' : ''}${editing ? ' is-editing' : ''}` || null }, editing ? this.editor(this.typed ?? cellText(e, col.edit!, UNIT_PER_METRE[this.ctx.doc.settings.unit]), col.numeric) : c);
       }),
     );
   }

@@ -25,7 +25,7 @@ use kentos_geometry_core::geom::parallel::{clean_axis, corridor_area, parallel_s
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::ops::areas::polygon_of_area;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::edit_geometry;
 
 use crate::Vec2;
@@ -314,7 +314,7 @@ impl Tool for Parallel {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let done = if self.option(&upper_tr(js_trim(text)), cx) {
             true
-        } else if let (Some(_), Some(n)) = (self.ask, points::plain_number(text)) {
+        } else if let (Some(_), Some(n)) = (self.ask, points::plain_length(text, cx)) {
             if n < 0.0 {
                 cx.say(
                     Level::Warn,
@@ -325,7 +325,7 @@ impl Tool for Parallel {
             }
             true
         } else {
-            match point_from_text(text, self.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

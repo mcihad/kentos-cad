@@ -274,7 +274,7 @@ export class IntersectPointTool extends PointInputTool {
       if (n === null) return false;
       if (this.method === 'distances') {
         if (n <= 0) this.ctx.log.warn('Uzaklık sıfırdan büyük olmalı.');
-        else this.value(n);
+        else this.value(this.ctx.format.toMetres(n));
       } else this.value((((this.ctx.format.angleFromTyped(n) % TAU) + TAU) % TAU));
       handled = true;
     } else if (this.next === 'point') {

@@ -637,6 +637,15 @@
             ],
             "type": "string"
           },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
+          },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
             "properties": {
@@ -1881,6 +1890,17 @@
                 ],
                 "description": "Absent in files written before drawing typefaces (read as Barlow)."
               },
+              "drawingUnit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
               "lengthDecimals": {
                 "format": "uint32",
                 "minimum": 0,
@@ -2648,6 +2668,15 @@
             ],
             "type": "string"
           },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
+          },
           "LabelInk": {
             "enum": [
               "fg",
@@ -2938,6 +2967,17 @@
                   }
                 ],
                 "description": "Absent in files written before drawing typefaces (read as Barlow)."
+              },
+              "drawingUnit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
               },
               "lengthDecimals": {
                 "format": "uint32",
@@ -3786,6 +3826,15 @@
               "architects-daughter",
               "courier-prime",
               "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
             ],
             "type": "string"
           },
@@ -5020,6 +5069,17 @@
                   }
                 ],
                 "description": "Absent in files written before drawing typefaces (read as Barlow)."
+              },
+              "drawingUnit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
               },
               "lengthDecimals": {
                 "format": "uint32",

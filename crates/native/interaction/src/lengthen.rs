@@ -288,10 +288,12 @@ impl Tool for Lengthen {
                 cx.say(Level::Warn, "Değer sıfırdan büyük olmalı.");
                 return true;
             }
+            // Lengths are typed in the project's unit (docs/adr/0165 §2); a percentage has none.
+            let length = cx.format().to_metres(n);
             match ask {
-                LengthenMode::Delta => cx.memory.lengthen_delta = n,
+                LengthenMode::Delta => cx.memory.lengthen_delta = length,
                 LengthenMode::Percent => cx.memory.lengthen_percent = n,
-                _ => cx.memory.lengthen_total = n,
+                _ => cx.memory.lengthen_total = length,
             }
             self.ask = None;
             self.see(cx);
@@ -299,7 +301,8 @@ impl Tool for Lengthen {
             return true;
         }
         if let Some((slot, at_end)) = self.target.take() {
-            self.apply(slot, at_end, n, cx);
+            let length = cx.format().to_metres(n);
+            self.apply(slot, at_end, length, cx);
             self.drawn = Preview::default();
             self.see(cx);
             return true;

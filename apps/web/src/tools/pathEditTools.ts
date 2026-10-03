@@ -138,7 +138,7 @@ export class DivideTool extends EdgePickTool {
     }
     const n = parseNumber(text);
     if (n === null || n <= 0) return false;
-    if (DivideTool.byStep) DivideTool.step = n;
+    if (DivideTool.byStep) DivideTool.step = this.ctx.format.toMetres(n);
     else {
       if (!Number.isInteger(n) || n < 2 || n > 10_000) {
         this.ctx.log.warn('Parça sayısı 2 ile 10 000 arasında bir tam sayı olmalı.');

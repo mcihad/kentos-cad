@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 265,
-      "implemented": 265,
+      "total": 267,
+      "implemented": 267,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 265,
-        "implemented": 265,
+        "total": 267,
+        "implemented": 267,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -14254,6 +14254,21 @@
       }
     },
     {
+      "id": "DrawingUnit",
+      "contract": "DrawingUnit",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "values": [
+        "mm",
+        "cm",
+        "m"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "EllipseEntity.attrs",
       "contract": "EllipseEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -16006,6 +16021,19 @@
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "drawingFont",
       "type": "DrawingFont",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.drawingUnit",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "drawingUnit",
+      "type": "DrawingUnit",
       "optional": true,
       "status": "implemented",
       "platforms": {

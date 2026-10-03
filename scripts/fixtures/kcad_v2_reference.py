@@ -180,6 +180,7 @@ def settings(s):
                 "plotScale": (f64, True),
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
+                "drawingUnit": (enum(("mm", "cm", "m")), False),
             },
             "settings",
         )
@@ -421,11 +422,12 @@ def document(d):
         "belge",
     )
     assert d.get("blocks", [None]), "boş blok listesi yazılmaz"
-    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"])))
+    return root(cmap(body), version=uint(schema_of(d["entities"], d.get("blocks"), d["layers"], d["settings"])))
 
 
-def schema_of(entities, blocks=None, layers=()):
-    """The oldest schema that holds the drawing: 10 with a layer's own snapping (docs/adr/0163 §4), 9 with one of
+def schema_of(entities, blocks=None, layers=(), settings=None):
+    """The oldest schema that holds the drawing: 11 with a local project's drawing unit (docs/adr/0165 §2), 10 with a
+    layer's own snapping (docs/adr/0163 §4), 9 with one of
     schema 9's dimension kinds, a dimension's mask or a
     slope's elevations, in the drawing or a block definition (docs/adr/0147), 8 with a leader, in the drawing or a
     block definition (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
@@ -435,6 +437,8 @@ def schema_of(entities, blocks=None, layers=()):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    if settings and "drawingUnit" in settings:
+        return 11
     if snaps(layers):
         return 10
 
@@ -643,7 +647,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-11.kcad"] = container(root(cmap(parts), version=b"\x0b"))
+    files["schema-version-12.kcad"] = container(root(cmap(parts), version=b"\x0c"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -817,6 +821,10 @@ def broken(minimal_content, minimal_file):
     files["big-negative.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([b"\x3b" + b"\xff" * 8]), "categories": array([])})}))
     files["bytes-in-opaque.kcad"] = container(with_parts({**parts, "styles": cmap({"items": array([blob(b"\x01")]), "categories": array([])})}))
     files["bad-enum.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "areaUnit": text("acre")})}))
+    # A local project's drawing unit is schema 11's (docs/adr/0165 §2): in schema 10 it is an unknown field; only
+    # mm, cm and m are units.
+    files["drawing-unit-in-schema-10.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), "drawingUnit": text("mm")})}), version=uint(10)))
+    files["drawing-unit-unknown.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), "drawingUnit": text("km")})}), version=uint(11)))
     files["srid-range.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "srid": uint(1 << 32)})}))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
@@ -824,7 +832,7 @@ def broken(minimal_content, minimal_file):
 
 def settings_parts(s):
     out = {"srid": uint(s["srid"]), "lengthDecimals": uint(s["lengthDecimals"]), "areaDecimals": uint(s["areaDecimals"]), "areaUnit": text(s["areaUnit"]), "angleUnit": text(s["angleUnit"]), "plotScale": f64(s["plotScale"])}
-    for k in ("workspace", "drawingFont"):
+    for k in ("workspace", "drawingFont", "drawingUnit"):
         if k in s:
             out[k] = text(s[k])
     return out
@@ -855,6 +863,7 @@ def build():
     out["leaders.kcad"] = container(document(load("leaders.json")))
     out["dimensions.kcad"] = container(document(load("dimensions.json")))
     out["layer-snap.kcad"] = container(document(load("layer-snap.json")))
+    out["drawing-unit.kcad"] = container(document(load("drawing-unit.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

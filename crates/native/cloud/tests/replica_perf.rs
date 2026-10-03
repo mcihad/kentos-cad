@@ -83,6 +83,7 @@ fn opened(n: usize) -> Opened {
         plot_scale: 1000.0,
         workspace: None,
         drawing_font: None,
+        drawing_unit: None,
     };
     let layers = vec![LayerNode {
         id: "parsel".into(),

@@ -18,7 +18,7 @@
 
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{BlockId, EntityGeometry};
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::fixed;
@@ -245,7 +245,7 @@ impl Tool for BlockInsert {
             self.value(ask, n, cx);
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

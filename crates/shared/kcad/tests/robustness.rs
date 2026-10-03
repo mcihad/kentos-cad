@@ -18,11 +18,11 @@ use std::collections::BTreeMap;
 use kentos_kcad::Code;
 use kentos_kcad::contracts::{
     AngleUnit, AreaUnit, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
-    DocumentSnapshotV2, DrawingFont, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
-    HatchPatternType, InsertEntity, LabelInk, LabelPlacement, LabelStyle, LayerNode, LayerNodeType,
-    LayerStyle, LineEntity, LineType, MigrationSource, PathEntity, PointEntity, PointStyle,
-    PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry, TextEntity, Vec2,
-    Workspace,
+    DocumentSnapshotV2, DrawingFont, DrawingUnit, Entity, EntityBase, EntityId, HatchEntity,
+    HatchPattern, HatchPatternType, InsertEntity, LabelInk, LabelPlacement, LabelStyle, LayerNode,
+    LayerNodeType, LayerStyle, LineEntity, LineType, MigrationSource, PathEntity, PointEntity,
+    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, RingGeometry, TextEntity,
+    Vec2, Workspace,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -439,6 +439,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             plot_scale: rng.float(),
             workspace: rng.chance(50).then_some(Workspace::Gis),
             drawing_font: rng.chance(50).then_some(DrawingFont::ArchitectsDaughter),
+            // A drawing unit is put on by `with_schema` (schema 11), from a stream of its own.
+            drawing_unit: None,
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {
@@ -468,8 +470,19 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
 /// their holes too, one per vertex with some vertices without (schema 4); 3
 /// gives it block definitions, each holding some of its objects and an insert
 /// of the one before, and inserts of them (schema 6). Returns the schema the
-/// drawing needs.
+/// drawing needs. A quarter of them, of every mode, are then a local
+/// project in millimetres (schema 11, docs/adr/0165 §2).
 fn with_schema(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
+    let schema = with_features(doc, mode, rng);
+    if rng.chance(25) {
+        doc.settings.srid = 0;
+        doc.settings.drawing_unit = Some(DrawingUnit::Mm);
+        return 11;
+    }
+    schema
+}
+
+fn with_features(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
     if mode == 0 {
         return 2;
     }

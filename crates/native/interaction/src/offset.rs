@@ -25,7 +25,7 @@ use kentos_geometry_core::geom::intersect::closest_on_edge;
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::offset::{offset_entity, through_distance};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
@@ -318,7 +318,8 @@ impl Tool for Offset {
             "N" => cx.memory.offset_through = !cx.memory.offset_through,
             "I" => cx.memory.offset_both = !cx.memory.offset_both,
             "S" => cx.memory.offset_erase = !cx.memory.offset_erase,
-            _ => match parse_number(text) {
+            // Typed in the project's unit (docs/adr/0165 §2).
+            _ => match cx.typed_length(text) {
                 Some(n) if n > 0.0 => {
                     cx.memory.offset_distance = n;
                     cx.memory.offset_through = false;

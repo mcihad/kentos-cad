@@ -37,6 +37,9 @@ Araştırma (öbür programların sahnesi):
 - CAD projesi varsayılan olarak **yereldir** (sahibin kararı): koordinat sistemi yok, başlangıç 0,0. Kayıtlarda yerel sistem **SRID 0**'dır: “Yerel (koordinat sistemi yok)”, kayıt defterinde (`fixtures/crs/v1/registry.json`) `kind: "local"`. PostGIS'te SRID 0 “bilinmiyor” demektir; sunucunun `srid` sütunu ve geometri denetimi değişmez.
 - İsteyen **gerçek koordinatlı CAD** seçer (ölçme çizimleri): CBS'deki gibi TM/UTM dilimi; CAD'in düzeni (§4) gerçek koordinatlarda da geçerlidir.
 - **Çizim birimi** (`settings.drawingUnit`: `mm`, `cm`, `m`; yalnız yerel projede, varsayılan `m`): yazılan ve gösterilen uzunlukların, koordinatların ve alanların birimidir. **Geometri metrede saklanır**; birim kullanıcıyla buluşulan yerde çevrilir (yazma, okuma, `mm²` gibi alan birimi, DXF'in `$INSUNITS`'i). Böylece pafta ölçeği, yazı yükseklikleri, semboller, pafta düzenleri, ölçüler ve kenet aralıkları tek birimle (metre) kalır; gösterim kesinliği değişmez. Koordinat sistemli projede birim sistemin birimidir.
+- **Birimin değdiği yerler** (adım 2b): okumalar (durum çubuğu, Öznitelikler, üzerine gelme kartı, Noktalar, komut satırının yankısı ve iletileri, ölçü değerleri) ve yazılanlar (noktalar: `x,y`, `@dx,dy` ve `@mesafe<açı`'nın mesafesi; araçların uzunluk, yarıçap, aralık, tolerans ve kotları; Öznitelikler'in ve Noktalar'ın hücreleri; bir hücrede birimin adı yazılabilir: `250 mm`). Açı, adet, çarpan ve kâğıt üstündeki yazı yüksekliği (mm) birimsizdir. Ortak `fixtures/point-input/v1` durumları birim taşır (`unit`).
+- **Ölçme işi metrededir:** Hesap pencereleri (Poligon hesabı, Kutupsal alım, kestirmeler, Aplikasyon, Vektör oturtma, Kenar eşleme) ve İşlemler'in araçları arazi ölçüsüyle çalışır; okumaları ve yazılanları metrededir, alanları `m` yazar (`Formatter.metric`, `Format::metric`).
+- **Sistem atanan proje metrededir:** Proje ayarları'nda koordinat sistemi seçilip kaydedilince birim düşer. `.kcad`'de birim şema 11'dir; metre yazılmaz.
 - **Yerel projede dosya alışverişi:** DXF iki yönde birimiyle (`$INSUNITS`). Koordinat sistemi taşıyan CBS verisi (GeoJSON, Shapefile, NCZ) yerel projeye koordinatları olduğu gibi gelir ve pencere bunu söyler; CBS biçimlerine yazarken sistem yazılmaz ve uyarılır.
 
 ### 3. Yeni proje sihirbazı
@@ -47,7 +50,7 @@ Tek pencerede üç adım; solda adımlar (numara, ad, tamamlananda işaret), alt
 2. **Koordinatlar:**
    - **CBS:** **il** seçimi (81 il, aranır) ve **koordinat sistemi**. İl seçilince boylamına göre TUREF/ITRF96 3° TM dilimi önerilir ve listenin başında “Önerilen” olarak durur; liste datumlara göre gruplu (TUREF TM, ED50 TM, UTM, coğrafi, web); Türkiye'nin 27°–45° boylamları bir şerit üstünde dilimleriyle, ilin yeri işaretli gösterilir.
    - **CAD:** **birim** (mm, cm, m kartları) ve **koordinatlar**: “Yerel (0,0)” ya da “Gerçek koordinatlı” (CBS'nin il ve sistem seçimi).
-3. **Ölçek ve ayrıntılar:** proje adı; **ölçek** (CBS harita ölçekleri 1:500 … 1:50 000; CAD çizim ölçekleri 1:1 … 1:1000; ikisinde de elle yazılır); katman şablonu (CBS: bugünkü kadastro paftası ağacı; CAD: teknik çizim katmanları — Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen); çizim yazı tipi; seçimlerin özeti.
+3. **Ölçek ve ayrıntılar:** proje adı; **ölçek** (CBS harita ölçekleri 1:500 … 1:50 000; CAD çizim ölçekleri 1:1 … 1:1000; ikisinde de elle yazılır; yerel CAD'de varsayılan 1:1, çünkü kalınlıklar kâğıt ölçeğinde çizilir: 1:1000'de 0,25 mm'lik kalem çizimde 25 cm olur ve mm'lik parçayı örter); katman şablonu (CBS: bugünkü kadastro paftası ağacı; CAD: teknik çizim katmanları — Çizim, Ölçü, Yazı, Tarama, Yardımcı, Eksen); çizim yazı tipi; seçimlerin özeti.
 
 Başlangıç görünümü:
 

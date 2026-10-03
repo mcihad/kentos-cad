@@ -31,7 +31,6 @@ use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::ops::curve_cuts::{Cut, Geometry};
 use kentos_geometry_core::ops::offset::through_distance;
 use kentos_geometry_core::ops::path::{nearest_s, path_of};
-use kentos_geometry_core::tools::point_text::point_from_text;
 use kentos_native_application::geometry::shape;
 
 use crate::edge::{self, Hover, Outline};
@@ -548,7 +547,7 @@ impl Tool for Boundary {
                 return true;
             }
             let last = self.fence.last();
-            let Some(p) = point_from_text(text, last, last, |d| cx.track_along(d)) else {
+            let Some(p) = cx.typed_point(text, last, last) else {
                 return false;
             };
             self.fence.add(p, cx);

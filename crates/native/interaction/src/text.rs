@@ -25,7 +25,7 @@ use kentos_contracts::{EntityGeometry, MAX_WIDTH_FACTOR, TextAlign, width_factor
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::drawing::text_angle;
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::{Format, fixed, js_number};
@@ -477,15 +477,13 @@ impl Tool for Text {
                     true
                 }
                 (Stage::Width, None) => false,
-                _ => {
-                    match point_from_text(text, self.last(), self.d.hover, |d| cx.track_along(d)) {
-                        Some(p) => {
-                            self.accept(p, cx);
-                            true
-                        }
-                        None => false,
+                _ => match cx.typed_point(text, self.last(), self.d.hover) {
+                    Some(p) => {
+                        self.accept(p, cx);
+                        true
                     }
-                }
+                    None => false,
+                },
             }
         };
         self.see(cx);

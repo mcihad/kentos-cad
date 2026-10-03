@@ -270,7 +270,8 @@ impl Split {
                 cx.say(Level::Warn, "Uzunluk sıfırdan büyük olmalı.");
                 return true;
             }
-            cx.memory.split_length = n;
+            // Typed in the project's unit (docs/adr/0165 §2).
+            cx.memory.split_length = cx.format().to_metres(n);
         }
         self.see(cx);
         if self.target.is_some() {

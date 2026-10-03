@@ -329,7 +329,7 @@ export class PathTool extends PointInputTool {
     const s = this.spec;
     if (plain && this.askStep) {
       if (n! > 0) {
-        PathTool.streamStep = n!;
+        PathTool.streamStep = this.ctx.format.toMetres(n!);
         this.askStep = false;
       } else this.ctx.log.warn('Adım boyu sıfırdan büyük olmalı.');
       this.refreshPrompt();
@@ -339,7 +339,7 @@ export class PathTool extends PointInputTool {
       const t = this.tangent();
       if (t && n! > 0) {
         this.askLength = false;
-        this.accept(offsetAlong(this.last!, t, n!));
+        this.accept(offsetAlong(this.last!, t, this.ctx.format.toMetres(n!)));
       } else this.ctx.log.warn('Uzunluk sıfırdan büyük olmalı.');
       return true;
     }
@@ -350,7 +350,7 @@ export class PathTool extends PointInputTool {
       return true;
     }
     if (plain && this.arcMode && s.kind === 'radius' && s.r === null) {
-      if (n! > 0) s.r = n!;
+      if (n! > 0) s.r = this.ctx.format.toMetres(n!);
       else this.ctx.log.warn('Yarıçap sıfırdan büyük olmalı.');
       this.refreshPrompt();
       return true;

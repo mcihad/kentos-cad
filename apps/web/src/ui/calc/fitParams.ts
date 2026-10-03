@@ -89,7 +89,8 @@ function landing(p: Params): Vec2 {
 
 /** The summary: the numbers, where the base lands, and what the objects become. */
 export function paramsSummary(ctx: AppContext, p: Params): HTMLElement[] {
-  const { format } = ctx;
+  // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+  const format = ctx.format.metric();
   const mirrored = p.scaleY * p.scaleX < 0 ? ' Ölçeklerden biri eksi: nesneler aynalanır.' : '';
   return [
     summaryLine('ok', `Y ölçeği ${String(p.scaleY)}, X ölçeği ${String(p.scaleX)}, dönüklük ${format.angle(p.rotation)}, öteleme ΔY ${format.length(p.shift.x)}, ΔX ${format.length(p.shift.y)}.`),

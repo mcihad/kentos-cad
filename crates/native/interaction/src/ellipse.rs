@@ -25,7 +25,7 @@ use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::tools::drawing::{ellipse_param_toward, ellipse_rotation_half};
 use kentos_geometry_core::tools::point_input::midpoint;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -289,7 +289,7 @@ impl Tool for Ellipse {
             }
             return true;
         }
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

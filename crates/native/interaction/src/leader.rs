@@ -20,7 +20,7 @@
 use kentos_contracts::{CreateOperation, EntityGeometry, LeaderArrow};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::leader::{self, Head, LeaderLayout};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
@@ -395,17 +395,13 @@ impl Tool for Leader {
                     _ => false,
                 },
                 Stage::Typing => false,
-                Stage::Pts => {
-                    match point_from_text(text, self.pts.last().copied(), self.d.hover, |d| {
-                        cx.track_along(d)
-                    }) {
-                        Some(p) => {
-                            self.accept(p, cx);
-                            true
-                        }
-                        None => false,
+                Stage::Pts => match cx.typed_point(text, self.pts.last().copied(), self.d.hover) {
+                    Some(p) => {
+                        self.accept(p, cx);
+                        true
                     }
-                }
+                    None => false,
+                },
             }
         };
         self.see(cx);

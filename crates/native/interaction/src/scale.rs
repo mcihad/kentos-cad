@@ -183,13 +183,15 @@ impl Stages for Scale {
             cx.say(Level::Warn, why);
             return Some(Flow::Stay);
         }
+        // A reference length is typed in the project's unit and set against picked lengths in metres.
+        let typed = cx.format().to_metres(n);
         match (self.ref_mode, self.ref_length) {
             (true, None) => {
-                self.ref_length = Some(n);
+                self.ref_length = Some(typed);
                 self.ref_from = None;
                 Some(Flow::Stay)
             }
-            (true, Some(length)) => Some(self.scale(n / length, cx)),
+            (true, Some(length)) => Some(self.scale(typed / length, cx)),
             (false, _) => Some(self.scale(n, cx)),
         }
     }

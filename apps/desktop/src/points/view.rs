@@ -411,7 +411,7 @@ impl App {
                     EditColumn::East => format.coord(p.p.x),
                     EditColumn::North => format.coord(p.p.y),
                     EditColumn::Z => p.z.map(|z| format.length_bare(z)).unwrap_or_default(),
-                    _ => cell_text(p, col),
+                    _ => cell_text(p, col, 1.0),
                 };
                 let values = [
                     // Under Çiftleri göster, Sıra is the group's number.

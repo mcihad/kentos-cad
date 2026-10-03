@@ -205,7 +205,7 @@ export class SplitTool extends SelectionFirstTool {
         log.warn('Parça uzunluğu sıfırdan büyük olmalı.');
         return true;
       }
-      SplitTool.pieceLength = n;
+      SplitTool.pieceLength = this.ctx.format.toMetres(n);
     }
     this.preview();
     this.refresh();

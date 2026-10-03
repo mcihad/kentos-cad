@@ -8,7 +8,7 @@ import { elevationAt } from '../product/elevationValues';
 import type { ViewTransform } from '../viewport/Camera';
 import type { SnapHit } from '../viewport/picking';
 import { arcLengthEnds, edgeArms, radialDimension, vertexArms } from './constructions';
-import { parseNumber } from './coordinateInput';
+import { parseLength, parseNumber } from './coordinateInput';
 import { rememberDimension } from './dimChainTools';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokeGeometry, strokePath } from './preview';
@@ -252,8 +252,8 @@ export class DimensionTool extends PointInputTool {
       case 'slope': {
         const slope = this.mode === 'slope';
         if (this.picksEdge) step = slope ? 'eğimi ölçülecek kenara tıklayın' : 'semti ölçülecek kenara tıklayın';
-        else if (this.asking === 0) step = 'birinci noktanın kotunu yazın (m)';
-        else if (this.asking === 1) step = 'ikinci noktanın kotunu yazın (m)';
+        else if (this.asking === 0) step = `birinci noktanın kotunu yazın (${this.ctx.format.lengthUnitLabel})`;
+        else if (this.asking === 1) step = `ikinci noktanın kotunu yazın (${this.ctx.format.lengthUnitLabel})`;
         else if (n === 0) step = slope ? 'eğim ölçüsünün birinci noktasını gösterin' : 'semt ölçüsünün başlangıcını gösterin';
         else if (n === 1) step = slope ? 'ikinci noktayı gösterin' : 'kenarın sonunu gösterin';
         else step = 'okun yerini gösterin ya da uzaklık yazın';
@@ -439,9 +439,9 @@ export class DimensionTool extends PointInputTool {
   }
 
   override input(text: string): boolean {
-    // Eğim's elevation asked for: a number, metres.
+    // Eğim's elevation asked for: a number, in the project's unit (docs/adr/0165 §2).
     if (this.asking >= 0) {
-      const z = parseNumber(text);
+      const z = parseLength(this.ctx.format, text);
       if (z === null || /[,;@<]/.test(text)) return false;
       this.zs[this.asking] = z;
       this.refreshPrompt();
@@ -461,7 +461,7 @@ export class DimensionTool extends PointInputTool {
     // Radius and diameter are placed by pointing only (their prompt asks for no number); an ordinate's typed
     // number is its line's length toward the cursor, as every point tool takes one (docs/adr/0147 §7).
     if (this.placing && n !== null && !/[,;@<]/.test(text) && this.mode !== 'radius' && this.mode !== 'diameter' && this.mode !== 'ordinate') {
-      this.commit(this.geomAt(this.hover ?? this.pts[0] ?? this.edges[0]?.at ?? { x: 0, y: 0 }, n));
+      this.commit(this.geomAt(this.hover ?? this.pts[0] ?? this.edges[0]?.at ?? { x: 0, y: 0 }, this.ctx.format.toMetres(n)));
       return true;
     }
     // An edge or a circle is picked with the mouse: a typed point would pick nothing, yet end the tool's

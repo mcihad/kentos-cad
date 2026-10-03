@@ -42,7 +42,7 @@ use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::tools::editing::{
     PickedEdge, arc_length_ends, edge_arms, radial_dimension, vertex_arms,
 };
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 
 use kentos_geometry_core::store::snap::SnapHit;
@@ -753,6 +753,8 @@ impl Tool for Dimension {
                 _ => "ölçü çizgisinin yerini gösterin ya da mesafe yazın",
             },
         };
+        // An elevation is typed in the project's unit (docs/adr/0165 §2).
+        let step = step.replace("(m)", &format!("({})", self.format.length_unit_label()));
         let mut prompt = Prompt::new(LABEL, step);
         if self.mode() == Mode::Linear && n == 2 {
             let way = match self.memory.dimension_lock {
@@ -949,7 +951,7 @@ impl Tool for Dimension {
             }
         } else if let Some(i) = self.asking() {
             // Eğim's elevation asked for: a number, metres.
-            match points::plain_number(text) {
+            match points::plain_length(text, cx) {
                 Some(z) => {
                     self.zs[i] = Some(z);
                     true
@@ -958,7 +960,7 @@ impl Tool for Dimension {
             }
         } else if self.option(&upper_tr(js_trim(text)), cx) {
             true
-        } else if let Some(n) = points::plain_number(text).filter(|_| {
+        } else if let Some(n) = points::plain_length(text, cx).filter(|_| {
             self.placing() && !matches!(self.mode(), Mode::Radius | Mode::Diameter | Mode::Ordinate)
         }) {
             let loc = self
@@ -972,9 +974,7 @@ impl Tool for Dimension {
             true
         } else if self.picks_edge() {
             false
-        } else if let Some(p) =
-            point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d))
-        {
+        } else if let Some(p) = cx.typed_point(text, self.d.last(), self.d.hover) {
             self.accept(p, cx);
             true
         } else {

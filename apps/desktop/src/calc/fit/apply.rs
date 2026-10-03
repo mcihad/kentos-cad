@@ -75,7 +75,8 @@ impl App {
             return;
         };
         let form = &self.calc.fit;
-        let format = Format::of(doc.settings());
+        // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+        let format = Format::of(doc.settings()).metric();
         let (Some(plan), true) = (
             form.plan(&doc.model, &format),
             form.has_targets(&doc.model, self.selection.len()),

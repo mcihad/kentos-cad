@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(14);
+    expect(valid).toBe(15);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -179,6 +179,8 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['elevations.json', 'elevations.kcad'],
       // Schema 6: the definitions from the page's head, as the Python writer wrote them (docs/adr/0144).
       ['blocks.json', 'blocks.kcad'],
+      // Schema 11: a local project's drawing unit, kept by the page's head (docs/adr/0165 §2).
+      ['drawing-unit.json', 'drawing-unit.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

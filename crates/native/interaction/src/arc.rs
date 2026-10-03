@@ -28,7 +28,7 @@ use kentos_geometry_core::geom::shapes::{
 use kentos_geometry_core::geometry::{angle_deg, dist};
 use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::tools::drawing::{deg_direction, end_tangent};
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, arc};
 
 use crate::Vec2;
@@ -379,17 +379,19 @@ impl Tool for Arc {
             && let Some(n) = plain_number(text)
         {
             let (p0, p1) = (self.d.pts[0], self.d.pts[1]);
+            // A chord or a radius is a length typed in the project's unit (docs/adr/0165 §2); an angle is not.
+            let length = cx.format().to_metres(n);
             let g = match self.mode {
                 Mode::StartCenter | Mode::CenterStart => {
                     let (s, c) = self.start_center();
                     if self.sub == Sub::Chord {
-                        arc_start_center_chord(s, c, n)
+                        arc_start_center_chord(s, c, length)
                     } else {
                         arc_start_center_angle(s, c, n)
                     }
                 }
                 _ => match self.sub {
-                    Sub::Radius => arc_start_end_radius(p0, p1, n),
+                    Sub::Radius => arc_start_end_radius(p0, p1, length),
                     Sub::Direction => arc_start_end_direction(p0, p1, deg_direction(n)),
                     _ => arc_start_end_angle(p0, p1, n),
                 },
@@ -400,7 +402,7 @@ impl Tool for Arc {
         if self.option(&upper_tr(js_trim(text)), cx) {
             return true;
         }
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

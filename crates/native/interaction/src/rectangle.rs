@@ -23,9 +23,7 @@ use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::jsmath::PI;
 use kentos_geometry_core::ops::fillet::{CornerOp, CornerResult, corners_of_ring};
 use kentos_geometry_core::tools::drawing::direction_angle;
-use kentos_geometry_core::tools::point_text::{
-    is_js_space, js_trim, parse_number, point_from_text,
-};
+use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::{Format, short_degrees};
@@ -373,10 +371,12 @@ impl Rectangle {
                 let Some(n) = n.filter(|n| *n >= 0.0) else {
                     return false;
                 };
+                // Typed in the project's unit (docs/adr/0165 §2).
+                let size = cx.format().to_metres(n);
                 cx.memory.rect_corners = match (n > 0.0, self.pending) {
                     (false, _) => Corners::Sharp,
-                    (true, Pending::Fillet) => Corners::Fillet(n),
-                    (true, Pending::Chamfer) => Corners::Chamfer(n),
+                    (true, Pending::Fillet) => Corners::Fillet(size),
+                    (true, Pending::Chamfer) => Corners::Chamfer(size),
                 };
                 self.stage = Stage::First;
                 true
@@ -391,13 +391,14 @@ impl Rectangle {
             }
             Stage::Size => match size_text(text) {
                 Some((length, width)) if length > 0.0 && width > 0.0 => {
-                    self.size = Some((length, width));
+                    let f = cx.format();
+                    self.size = Some((f.to_metres(length), f.to_metres(width)));
                     self.stage = Stage::Side;
                     true
                 }
                 _ => false,
             },
-            _ => match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            _ => match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

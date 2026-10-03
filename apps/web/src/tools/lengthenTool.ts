@@ -110,13 +110,14 @@ export class LengthenTool extends EdgePickTool {
         this.ctx.log.warn('Değer sıfırdan büyük olmalı.');
         return true;
       }
-      LengthenTool.values[this.ask] = n;
+      // Lengths are typed in the project's unit (docs/adr/0165 §2); a percentage has none.
+      LengthenTool.values[this.ask] = this.ask === 'percent' ? n : this.ctx.format.toMetres(n);
       this.ask = null;
       this.refresh();
       return true;
     }
     if (this.target) {
-      this.apply(this.target.e, this.target.atEnd, n);
+      this.apply(this.target.e, this.target.atEnd, this.ctx.format.toMetres(n));
       this.target = null;
       this.refresh();
       return true;

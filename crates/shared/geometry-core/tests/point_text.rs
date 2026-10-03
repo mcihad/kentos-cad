@@ -5,7 +5,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::tools::point_text::{
-    looks_like_coordinate, parse_number, point_from_text, point_name,
+    looks_like_coordinate, parse_number, point_from_text_in, point_name,
 };
 use serde_json::Value;
 
@@ -29,8 +29,21 @@ fn every_shared_case_reads_as_the_web_reads_it() {
         let tolerance = case["tolerance"].as_f64().unwrap_or(0.0);
         let bad = match case["fn"].as_str() {
             Some("point") => {
-                let got =
-                    point_from_text(text, point(&case["last"]), point(&case["cursor"]), |_| None);
+                // A local project's drawing unit: typed in it, the point in metres, as
+                // the desktop's `Format::to_metres` divides (docs/adr/0165 §2).
+                let per_metre = match case["unit"].as_str() {
+                    None | Some("m") => 1.0,
+                    Some("cm") => 100.0,
+                    Some("mm") => 1000.0,
+                    Some(other) => panic!("{name}: bilinmeyen birim {other}"),
+                };
+                let got = point_from_text_in(
+                    text,
+                    point(&case["last"]),
+                    point(&case["cursor"]),
+                    |_| None,
+                    |v| v / per_metre,
+                );
                 let want = point(&case["expect"]);
                 let same = match (got, want) {
                     (Some(g), Some(w)) => {

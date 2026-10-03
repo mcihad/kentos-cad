@@ -5,7 +5,7 @@
 use iced::Task;
 use kentos_domain::Slot;
 
-use super::edit::{Draft, EditColumn, write_cell, write_draft};
+use super::edit::{Draft, EditColumn, cell_text, write_cell, write_draft};
 use super::{COLUMNS, Event, Walk, click_pick, focus_field, next_cell, next_sort, row_of};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
@@ -93,6 +93,57 @@ fn a_click_selects_the_row_ctrl_turns_one_over_shift_takes_a_run() {
         s(&[12, 13, 14, 15])
     );
     assert_eq!(click_pick(&[], &shown, 3, None, false, true), s(&[14]));
+}
+
+/// A local project's drawing unit (docs/adr/0165 §2): a cell opens and is
+/// typed in it, the drawing keeps metres (the web's `pointEdit.test.ts`).
+#[test]
+fn a_local_project_edits_its_points_in_its_unit() {
+    use kentos_contracts::{DrawingUnit, Entity, ProjectSettings};
+    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+        "../../../../fixtures/interaction/v1/point-editor.kcad"
+    ))
+    .expect("the drawing reads");
+    let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("opens");
+    let settings = ProjectSettings {
+        srid: 0,
+        drawing_unit: Some(DrawingUnit::Mm),
+        ..doc.settings().clone()
+    };
+    doc.set_settings(settings);
+    let out = write_draft(
+        &mut doc,
+        &Draft {
+            name: "Y1".into(),
+            east: "100".into(),
+            north: "250".into(),
+            z: "12.5".into(),
+            code: String::new(),
+        },
+        "nokta",
+        None,
+    );
+    assert!(out.outcome.step.is_some(), "{:?}", out.outcome.said);
+    let (slot, p) = doc
+        .entities()
+        .find_map(|e| match e {
+            Entity::Point(p) if p.base.label.as_deref() == Some("Y1") => {
+                Some((Slot(p.base.id), p.clone()))
+            }
+            _ => None,
+        })
+        .expect("the point written");
+    assert_eq!((p.p.x, p.p.y, p.z), (0.1, 0.25, Some(0.0125)));
+    // 0.1 m reads as 100, not 100.00000000000001.
+    let texts =
+        [EditColumn::East, EditColumn::North, EditColumn::Z].map(|c| cell_text(&p, c, 1000.0));
+    assert_eq!(texts, ["100", "250", "12.5"]);
+    let out = write_cell(&mut doc, slot, EditColumn::East, "1500", false);
+    assert!(out.step.is_some(), "{:?}", out.said);
+    let Some(Entity::Point(p)) = doc.get(slot) else {
+        panic!("a point");
+    };
+    assert_eq!(p.p.x, 1.5);
 }
 
 #[test]

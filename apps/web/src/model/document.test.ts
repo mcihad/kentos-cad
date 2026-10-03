@@ -346,4 +346,13 @@ describe('Formatter', () => {
     expect(f.bearing(100)).toBe('90.0000°');
     expect(f.point({ x: 1.23456, y: 2 })).toBe('Y 1.235  X 2.000');
   });
+  it("follows a local project's drawing unit, and writes it only when it is not metres (docs/adr/0165 §2)", () => {
+    const doc = makeDoc();
+    const f = new Formatter(doc.settings);
+    doc.settings.assign({ srid: 0, drawingUnit: 'mm' });
+    expect([f.unit, f.coord(0.1), f.length(0.12), f.area(0.0001), f.areaUnitLabel]).toEqual(['mm', '100.000', '120.000 mm', '100.00 mm²', 'mm²']);
+    expect(doc.settings.toJSON().drawingUnit).toBe('mm');
+    doc.settings.assign({ drawingUnit: 'm' });
+    expect([f.unit, f.length(0.12), 'drawingUnit' in doc.settings.toJSON()]).toEqual(['m', '0.120 m', false]);
+  });
 });

@@ -1,8 +1,8 @@
 import type { AppContext } from '../../app/context';
 import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
-import { crsBySrid, crsTitle } from '../../geo/crs';
-import { PROJECT_SETTINGS_DEFAULTS, type ProjectSettingsData } from '../../model/projectSettings';
+import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
+import { PROJECT_SETTINGS_DEFAULTS, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
 import { h, type Child } from '../dom';
 import { PLOT_SCALES } from '../ribbon/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
@@ -100,7 +100,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       icon: 'units',
       title: 'Birimler ve hassasiyet',
       lead: 'Bu projede panellerde, komut satırında ve ölçüm etiketlerinde sayıların nasıl gösterileceği.',
-      keys: ['lengthDecimals', 'areaDecimals', 'areaUnit', 'angleUnit'],
+      keys: ['drawingUnit', 'lengthDecimals', 'areaDecimals', 'areaUnit', 'angleUnit'],
       render: (api) => unitsSection(api),
     },
   ];
@@ -110,13 +110,14 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
     scope: { icon: 'save', title: 'Proje dosyasına kaydedilir', detail: doc.name.value },
     sections,
     initial,
-    defaults: { ...PROJECT_SETTINGS_DEFAULTS, srid: initial.srid, name: initial.name },
+    defaults: { ...PROJECT_SETTINGS_DEFAULTS, drawingUnit: 'm', srid: initial.srid, name: initial.name },
     section,
     onSave: (draft, init) => {
       const name = draft.name.trim() || init.name;
       if (name !== init.name) doc.name.set(name);
       const { name: _n, ...settings } = draft;
-      doc.settings.assign(settings);
+      // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres.
+      doc.settings.assign({ ...settings, drawingUnit: settings.srid === LOCAL_SRID ? (settings.drawingUnit ?? 'm') : 'm' });
       if (draft.srid !== init.srid) {
         const c = crsBySrid(draft.srid)!;
         ctx.log.success(`Proje koordinat sistemi ${crsTitle(c)} olarak atandı. Koordinat değerleri değiştirilmedi.`);
@@ -128,33 +129,55 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
 
 function unitsSection(api: DraftApi<ProjectDraft>): Child {
   const d = api.draft;
+  // A local project's unit (docs/adr/0165 §2); a project with a coordinate system is in its system's metres.
+  const local = d.srid === LOCAL_SRID;
   const f = new Formatter({
     lengthDecimals: new Signal(d.lengthDecimals),
     areaDecimals: new Signal(d.areaDecimals),
     areaUnit: new Signal(d.areaUnit),
     angleUnit: new Signal(d.angleUnit),
+    unit: local ? (d.drawingUnit ?? 'm') : 'm',
   });
   return [
     group(
       'Uzunluk ve koordinat',
+      local
+        ? settingRow(
+            'Çizim birimi',
+            'Uzunluklar, koordinatlar ve alanlar bu birimle yazılır ve gösterilir; çizimin kendisi değişmez.',
+            segmented({
+              label: 'Çizim birimi',
+              value: d.drawingUnit ?? 'm',
+              options: [
+                { value: 'mm', label: 'mm' },
+                { value: 'cm', label: 'cm' },
+                { value: 'm', label: 'm' },
+              ],
+              onChange: (v) => api.set('drawingUnit', v as DrawingUnit),
+            }),
+          )
+        : null,
       settingRow('Ondalık basamak', 'Koordinatlar, kenar uzunlukları ve mesafeler.', stepper({ label: 'Uzunluk basamağı', value: d.lengthDecimals, min: 0, max: 4, onChange: (v) => api.set('lengthDecimals', v) })),
     ),
     group(
       'Alan',
-      settingRow(
-        'Alan birimi',
-        'Parsel ve kapalı alanlarda gösterilen birim. Metrekare her zaman öznitelik panelinde de yer alır.',
-        segmented({
-          label: 'Alan birimi',
-          value: d.areaUnit,
-          options: [
-            { value: 'm2', label: 'm²' },
-            { value: 'donum', label: 'Dönüm' },
-            { value: 'ha', label: 'Hektar' },
-          ],
-          onChange: (v) => api.set('areaUnit', v),
-        }),
-      ),
+      // A local project in millimetres or centimetres reads its areas in the unit squared: no area unit to choose.
+      f.unit !== 'm'
+        ? null
+        : settingRow(
+            'Alan birimi',
+            'Parsel ve kapalı alanlarda gösterilen birim. Metrekare her zaman öznitelik panelinde de yer alır.',
+            segmented({
+              label: 'Alan birimi',
+              value: d.areaUnit,
+              options: [
+                { value: 'm2', label: 'm²' },
+                { value: 'donum', label: 'Dönüm' },
+                { value: 'ha', label: 'Hektar' },
+              ],
+              onChange: (v) => api.set('areaUnit', v),
+            }),
+          ),
       settingRow('Ondalık basamak', null, stepper({ label: 'Alan basamağı', value: d.areaDecimals, min: 0, max: 4, onChange: (v) => api.set('areaDecimals', v) })),
     ),
     group(

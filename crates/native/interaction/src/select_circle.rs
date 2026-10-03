@@ -21,7 +21,7 @@
 
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -159,11 +159,11 @@ impl Tool for SelectCircle {
         }
         let shift = cx.shift || self.shift;
         // A number is the radius; anything else a point.
-        if let (Some(c), Some(radius)) = (self.centre, points::plain_number(text)) {
+        if let (Some(c), Some(radius)) = (self.centre, points::plain_length(text, cx)) {
             self.finish(c, radius, shift, cx);
             return true;
         }
-        match point_from_text(text, self.centre, self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.centre, self.hover) {
             Some(p) => {
                 self.take(p, shift, cx);
                 true

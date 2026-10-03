@@ -71,6 +71,8 @@ SCHEMA_WITH_LEADERS = 8
 SCHEMA_WITH_DIMENSIONS = 9
 # Schema 10: schema 9 and a layer's own snapping, a layer node's `snap` (docs/adr/0163 §4).
 SCHEMA_WITH_LAYER_SNAP = 10
+# Schema 11: schema 10 and a local project's drawing unit, the settings' `drawingUnit` (docs/adr/0165 §2).
+SCHEMA_WITH_DRAWING_UNIT = 11
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
@@ -82,7 +84,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -477,6 +479,7 @@ class _Schema:
         self.leaders = version >= SCHEMA_WITH_LEADERS
         self.dimensions = version >= SCHEMA_WITH_DIMENSIONS
         self.layer_snap = version >= SCHEMA_WITH_LAYER_SNAP
+        self.drawing_unit = version >= SCHEMA_WITH_DRAWING_UNIT
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -527,6 +530,7 @@ class _Schema:
                 "plotScale": (self.float, True),
                 "workspace": (self.enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 "drawingFont": (self.enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
+                **({"drawingUnit": (self.enum(("mm", "cm", "m")), False)} if self.drawing_unit else {}),
                 "areaDecimals": (self.uint(32), True),
                 "lengthDecimals": (self.uint(32), True),
             }

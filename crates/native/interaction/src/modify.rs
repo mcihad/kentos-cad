@@ -27,7 +27,6 @@ use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::point_from_text;
 use kentos_native_application::{ExecutionContext, array, transform};
 
 use crate::Vec2;
@@ -412,9 +411,7 @@ impl<S: Stages> Tool for Modify<S> {
         if !self.stages.typed_points() {
             return false;
         }
-        let Some(p) = point_from_text(text, self.stages.anchor(), self.hover, |d| {
-            cx.track_along(d)
-        }) else {
+        let Some(p) = cx.typed_point(text, self.stages.anchor(), self.hover) else {
             return false;
         };
         let flow = self.stages.point(p, cx);

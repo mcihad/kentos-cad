@@ -163,7 +163,7 @@ impl Stages for QuickDimension {
             cx.memory.dimension_mask = !cx.memory.dimension_mask;
             return Some(Flow::Stay);
         }
-        let n = points::plain_number(text)?;
+        let n = points::plain_length(text, cx)?;
         // Without a cursor, the origin gives an open path's side (the web's).
         let at = self.hover.unwrap_or(Vec2::new(0.0, 0.0));
         Some(self.write(at, Some(n), cx))

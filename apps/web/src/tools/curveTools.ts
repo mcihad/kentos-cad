@@ -18,7 +18,7 @@ import { arcCreate } from '../product/arcCreate';
 import { circleCreate } from '../product/circleCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { circleOnDiameter, degDirection, endTangent } from './constructions';
-import { parseNumber } from './coordinateInput';
+import { parseLength, parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
@@ -158,12 +158,14 @@ export class ArcTool extends PointInputTool {
     const n = parseNumber(text);
     if (this.ready() && this.mode !== 'continue' && n !== null && !/[,;@<]/.test(text)) {
       const [p0, p1] = this.pts;
+      // A chord or a radius is a length typed in the project's unit (docs/adr/0165 §2); an angle is not.
+      const length = this.ctx.format.toMetres(n);
       let g: ArcGeom | null = null;
       if (this.mode === 'startCenter' || this.mode === 'centerStart') {
         const [s, c] = this.mode === 'startCenter' ? [p0, p1] : [p1, p0];
-        g = this.sub === 'chord' ? arcStartCenterChord(s, c, n) : arcStartCenterAngle(s, c, n);
+        g = this.sub === 'chord' ? arcStartCenterChord(s, c, length) : arcStartCenterAngle(s, c, n);
       } else if (this.mode === 'startEnd') {
-        if (this.sub === 'radius') g = arcStartEndRadius(p0, p1, n);
+        if (this.sub === 'radius') g = arcStartEndRadius(p0, p1, length);
         else if (this.sub === 'direction') g = arcStartEndDirection(p0, p1, degDirection(n));
         else g = arcStartEndAngle(p0, p1, n);
       } else return super.input(text);
@@ -324,8 +326,9 @@ export class CircleTool extends PointInputTool {
   }
 
   override input(text: string): boolean {
-    const r = parseNumber(text);
-    const radiusTyped = r !== null && r > 0 && !/[,;@<]/.test(text);
+    // A radius (or diameter) typed in the project's unit (docs/adr/0165 §2).
+    const r = /[,;@<]/.test(text) ? null : parseLength(this.ctx.format, text);
+    const radiusTyped = r !== null && r > 0;
     if (this.mode === 'ttr' && this.tangents.length === 2) {
       if (!radiusTyped) return false;
       this.commitTangent(r!);

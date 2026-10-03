@@ -56,7 +56,7 @@ export class QuickDimensionTool extends SelectionFirstTool {
     const n = parseNumber(text);
     if (n === null || /[,;@<]/.test(text)) return false;
     // The cursor still gives an open path's side; without one, the origin does.
-    this.write(this.hover ?? { x: 0, y: 0 }, n);
+    this.write(this.hover ?? { x: 0, y: 0 }, this.ctx.format.toMetres(n));
     return true;
   }
 

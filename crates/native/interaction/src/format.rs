@@ -3,7 +3,7 @@
 //! §23.2): nothing here rounds a coordinate that is kept. The decimal
 //! separator is the point, as typed input takes it.
 
-use kentos_contracts::{AngleUnit, AreaUnit, ProjectSettings};
+use kentos_contracts::{AngleUnit, AreaUnit, DrawingUnit, ProjectSettings};
 
 use crate::Vec2;
 
@@ -17,6 +17,9 @@ pub struct Format {
     pub area_decimals: usize,
     pub area_unit: AreaUnit,
     pub angle_unit: AngleUnit,
+    /// The unit lengths are typed and read in: metres, or a local project's
+    /// drawing unit (docs/adr/0165 §2). Geometry stays in metres.
+    pub unit: DrawingUnit,
 }
 
 impl Default for Format {
@@ -27,6 +30,7 @@ impl Default for Format {
             area_decimals: 2,
             area_unit: AreaUnit::M2,
             angle_unit: AngleUnit::Grad,
+            unit: DrawingUnit::M,
         }
     }
 }
@@ -38,25 +42,81 @@ impl Format {
             area_decimals: (settings.area_decimals as usize).min(12),
             area_unit: settings.area_unit,
             angle_unit: settings.angle_unit,
+            unit: settings.unit(),
         }
+    }
+
+    /// The same settings in metres: the Hesap windows' (surveying, whose field
+    /// measurements are metres whatever a local project's unit; docs/adr/0165 §2).
+    pub fn metric(self) -> Self {
+        Self {
+            unit: DrawingUnit::M,
+            ..self
+        }
+    }
+
+    /// A length or coordinate typed in the unit, in metres (what the geometry keeps).
+    pub fn to_metres(&self, typed: f64) -> f64 {
+        typed / self.unit.per_metre()
+    }
+
+    /// A length or coordinate in metres, in the unit (a field's starting value).
+    pub fn from_metres(&self, metres: f64) -> f64 {
+        metres * self.unit.per_metre()
+    }
+
+    /// A length in metres in the unit with the digits it needs, not rounded to
+    /// the length decimals: a limit in a message, a kept value in a prompt
+    /// (`0.000001` m, `0.001` mm). Without the unit; the web's `plain`.
+    pub fn plain(&self, metres: f64) -> String {
+        let v = self.from_metres(metres);
+        js_number(format!("{v:.14e}").parse().unwrap_or(v))
+    }
+
+    /// The length unit in words, for prompts (the web's `lengthUnitName`):
+    /// `metre`, or a local project's `milimetre` or `santimetre`.
+    pub fn length_unit_name(&self) -> &'static str {
+        match self.unit {
+            DrawingUnit::Mm => "milimetre",
+            DrawingUnit::Cm => "santimetre",
+            DrawingUnit::M => "metre",
+        }
+    }
+
+    /// The length unit's mark (the web's `lengthUnitLabel`): `m`, or a local project's `mm` or `cm`.
+    pub fn length_unit_label(&self) -> &'static str {
+        self.unit.mark()
     }
 
     /// A grid coordinate (Y or X) without a unit.
     pub fn coord(&self, v: f64) -> String {
-        fixed(v, self.length_decimals)
+        fixed(self.from_metres(v), self.length_decimals)
     }
 
     pub fn length(&self, metres: f64) -> String {
-        format!("{} m", fixed(metres, self.length_decimals))
+        format!(
+            "{} {}",
+            fixed(self.from_metres(metres), self.length_decimals),
+            self.unit.mark()
+        )
     }
 
     /// A length without its unit (the web's `length(m, false)`): `20.000 × 10.000 m`.
     pub fn length_bare(&self, metres: f64) -> String {
-        fixed(metres, self.length_decimals)
+        fixed(self.from_metres(metres), self.length_decimals)
+    }
+
+    /// An area in the unit squared, for a local project in millimetres or centimetres.
+    fn square_units(&self, square_metres: f64) -> Option<String> {
+        let k = self.unit.per_metre();
+        (self.unit != DrawingUnit::M).then(|| fixed(square_metres * k * k, self.area_decimals))
     }
 
     /// An area in the project's unit without the unit (the web's `area(m2, false)`).
     pub fn area_bare(&self, square_metres: f64) -> String {
+        if let Some(s) = self.square_units(square_metres) {
+            return s;
+        }
         let d = self.area_decimals;
         match self.area_unit {
             AreaUnit::Donum => fixed(square_metres / 1000.0, d),
@@ -65,8 +125,14 @@ impl Format {
         }
     }
 
-    /// The area unit's name (the web's `areaUnitLabel`): `m²`, `dönüm` or `ha`.
+    /// The area unit's name (the web's `areaUnitLabel`): `m²`, `dönüm` or `ha`;
+    /// a local project's `mm²` or `cm²`.
     pub fn area_unit_label(&self) -> &'static str {
+        match self.unit {
+            DrawingUnit::Mm => return "mm²",
+            DrawingUnit::Cm => return "cm²",
+            DrawingUnit::M => {}
+        }
         match self.area_unit {
             AreaUnit::Donum => "dönüm",
             AreaUnit::Ha => "ha",
@@ -75,6 +141,9 @@ impl Format {
     }
 
     pub fn area(&self, square_metres: f64) -> String {
+        if let Some(s) = self.square_units(square_metres) {
+            return format!("{s} {}", self.area_unit_label());
+        }
         let d = self.area_decimals;
         match self.area_unit {
             AreaUnit::Donum => format!("{} dönüm", fixed(square_metres / 1000.0, d)),
@@ -224,6 +293,46 @@ mod tests {
         };
         assert_eq!(other.area(1500.0), "1.50 dönüm");
         assert_eq!(other.bearing(100.0), "90.0000°");
+    }
+
+    /// A local project's drawing unit (docs/adr/0165 §2): lengths, coordinates
+    /// and areas read and typed in it, the geometry in metres; a project with
+    /// a coordinate system is in metres whatever unit it once had.
+    #[test]
+    fn a_local_project_reads_in_its_unit() {
+        let mut settings = ProjectSettings {
+            srid: 0,
+            length_decimals: 3,
+            area_decimals: 2,
+            area_unit: AreaUnit::M2,
+            angle_unit: AngleUnit::Grad,
+            plot_scale: 100.0,
+            workspace: None,
+            drawing_font: None,
+            drawing_unit: Some(DrawingUnit::Mm),
+        };
+        let f = Format::of(&settings);
+        assert_eq!(f.coord(0.1), "100.000");
+        assert_eq!(f.length(0.12), "120.000 mm");
+        assert_eq!(f.area(0.0001), "100.00 mm²");
+        assert_eq!((f.length_unit_label(), f.area_unit_label()), ("mm", "mm²"));
+        assert_eq!((f.to_metres(250.0), f.from_metres(0.25)), (0.25, 250.0));
+        assert_eq!(f.dimension("", "length", 0.12), "120.000");
+        // A limit with the digits it needs, and the unit in words.
+        assert_eq!(
+            (f.plain(1e-6), f.length_unit_name()),
+            ("0.001".to_owned(), "milimetre")
+        );
+        // The Hesap windows stay in metres.
+        assert_eq!(f.metric().length(0.12), "0.120 m");
+        settings.drawing_unit = Some(DrawingUnit::Cm);
+        assert_eq!(Format::of(&settings).area(0.0001), "1.00 cm²");
+        settings.srid = 5254;
+        let f = Format::of(&settings);
+        assert_eq!(
+            (f.length(0.12), f.to_metres(250.0)),
+            ("0.120 m".to_owned(), 250.0)
+        );
     }
 
     /// The display rule (docs/adr/0149); every case of it is the core's

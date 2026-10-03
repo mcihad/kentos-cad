@@ -201,7 +201,9 @@ impl Stages for Array {
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
         let (a, b) = pair(text)?;
         if self.stage == Stage::Spacing {
-            return Some(self.build(a, b, cx));
+            // Spacings are typed in the project's unit (docs/adr/0165 §2).
+            let f = cx.format();
+            return Some(self.build(f.to_metres(a), f.to_metres(b), cx));
         }
         let (r, c) = (js_round(a), js_round(b));
         if r < 1.0 || c < 1.0 || r * c < 2.0 || r * c > 10_000.0 {

@@ -41,7 +41,7 @@ use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::explode::explode_entity;
 use kentos_geometry_core::ops::join::{ChainObject, chain, join_entities};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::blocks::core_entity;
 use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
 
@@ -544,7 +544,8 @@ impl Stages for ObjectAction {
             self.see(cx);
             return true;
         }
-        match parse_number(text) {
+        // Typed in the project's unit (docs/adr/0165 §2).
+        match cx.typed_length(text) {
             Some(n) if n >= 0.0 => {
                 cx.memory.join_tolerance = n;
                 true

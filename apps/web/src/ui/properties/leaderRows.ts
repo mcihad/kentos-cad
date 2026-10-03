@@ -72,8 +72,12 @@ export function leaderRows(ctx: AppContext, leaders: readonly LeaderEntity[], lo
       label: 'Yükseklik',
       value: height === MIXED ? MIXED : f.length(height, false),
       numeric: height !== MIXED,
-      unit: 'm',
-      editor: number((x) => x > 0 && write((l) => (l.height === x ? null : { height: x }))),
+      unit: f.lengthUnitLabel,
+      // Typed in the project's unit (docs/adr/0165 §2).
+      editor: number((typed) => {
+        const x = f.toMetres(typed);
+        return x > 0 && write((l) => (l.height === x ? null : { height: x }));
+      }),
     },
     {
       label: 'Dönüş',

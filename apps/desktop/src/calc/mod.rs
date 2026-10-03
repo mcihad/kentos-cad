@@ -473,7 +473,8 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let format = Format::of(doc.settings());
+        // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+        let format = Format::of(doc.settings()).metric();
         let title = self.calc_title(window);
         let model = &doc.model;
         let lines = match window {
@@ -654,7 +655,8 @@ impl App {
         let (Some(window), Some(doc)) = (self.calc.open, &self.document) else {
             return column![].into();
         };
-        let format = Format::of(doc.settings());
+        // The Hesap windows are in metres, as typed (docs/adr/0165 §2).
+        let format = Format::of(doc.settings()).metric();
         let model = &doc.model;
         let dialog = match window {
             Window::Traverse => self.calc.traverse.view(model, &format),

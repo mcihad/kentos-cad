@@ -92,3 +92,46 @@ fn other_formats_and_versions_are_refused() {
             .contains("JSON değil")
     );
 }
+
+/// A local project's drawing unit (docs/adr/0165 §2): written only when it
+/// is not metres, read back as written; only a project without a coordinate
+/// system (SRID 0) is in it.
+#[test]
+fn a_drawing_unit_is_a_local_projects() {
+    use kentos_contracts::{DrawingUnit, ProjectSettings};
+    let read = |json: &str| -> ProjectSettings { serde_json::from_str(json).expect("settings") };
+    let base =
+        r#""lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":100"#;
+    let local = read(&format!(r#"{{"srid":0,{base},"drawingUnit":"mm"}}"#));
+    assert_eq!(
+        (local.drawing_unit, local.unit()),
+        (Some(DrawingUnit::Mm), DrawingUnit::Mm)
+    );
+    assert!(
+        serde_json::to_string(&local)
+            .expect("json")
+            .contains(r#""drawingUnit":"mm""#)
+    );
+    let metres = read(&format!(r#"{{"srid":0,{base}}}"#));
+    assert_eq!((metres.drawing_unit, metres.unit()), (None, DrawingUnit::M));
+    assert!(
+        !serde_json::to_string(&metres)
+            .expect("json")
+            .contains("drawingUnit")
+    );
+    let placed = ProjectSettings {
+        srid: 5254,
+        ..local
+    };
+    assert_eq!(placed.unit(), DrawingUnit::M);
+    assert!(
+        serde_json::from_str::<ProjectSettings>(&format!(
+            r#"{{"srid":0,{base},"drawingUnit":"inch"}}"#
+        ))
+        .is_err()
+    );
+    assert_eq!(
+        (DrawingUnit::Mm.per_metre(), DrawingUnit::Cm.mark()),
+        (1000.0, "cm")
+    );
+}

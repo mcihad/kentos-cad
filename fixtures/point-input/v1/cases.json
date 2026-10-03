@@ -1,7 +1,7 @@
 {
   "format": "kentos.point-input-cases",
   "version": 1,
-  "note": "Yazılan nokta ve sayı girişinin dilbilgisi (TODOS.md UX-04, UX-05; docs/adr/0018, 0021). Web'in okuyucusu apps/web/src/tools/coordinateInput.ts (coordinateInput.test.ts), masaüstününki crates/shared/geometry-core/src/tools/point_text.rs (tests/point_text.rs); ikisi de bu dosyayı okur. fn: point (parsePointInput: metin, son nokta, imleç; nesne izleme yok), number (parseNumber), looksLikeCoordinate, pointName (#ad: noktanın adı, docs/adr/0152 §4; adın çözümü uygulamanındır). Noktalar tam eşit karşılaştırılır; tolerance verilmişse o kadar. null: nokta ya da sayı yok. Bugünkü dilbilgisidir; değişikliği UX-05'in kararıyla iki okuyucuda ve burada birlikte yapın.",
+  "note": "Yazılan nokta ve sayı girişinin dilbilgisi (TODOS.md UX-04, UX-05; docs/adr/0018, 0021). Web'in okuyucusu apps/web/src/tools/coordinateInput.ts (coordinateInput.test.ts), masaüstününki crates/shared/geometry-core/src/tools/point_text.rs (tests/point_text.rs); ikisi de bu dosyayı okur. fn: point (parsePointInput: metin, son nokta, imleç; nesne izleme yok), number (parseNumber), looksLikeCoordinate, pointName (#ad: noktanın adı, docs/adr/0152 §4; adın çözümü uygulamanındır). Noktalar tam eşit karşılaştırılır; tolerance verilmişse o kadar. null: nokta ya da sayı yok. unit (mm, cm): yazılan uzunluk ve koordinatlar yerel projenin o biriminde, nokta metrede beklenir (docs/adr/0165 §2); açı birimsizdir. Bugünkü dilbilgisidir; değişikliği UX-05'in kararıyla iki okuyucuda ve burada birlikte yapın.",
   "cases": [
     { "name": "mutlak Y,X, TM", "fn": "point", "text": "486512.34,4420118.9", "last": null, "cursor": null, "expect": { "x": 486512.34, "y": 4420118.9 } },
     { "name": "mutlak, noktalı virgül", "fn": "point", "text": "10;20", "last": null, "cursor": null, "expect": { "x": 10, "y": 20 } },
@@ -86,6 +86,12 @@
     { "name": "ad: # yok", "fn": "pointName", "text": "101", "expect": null },
     { "name": "ad: göreli değil", "fn": "pointName", "text": "@#101", "expect": null },
     { "name": "ad bir nokta biçimi değildir: uygulama onu koordinata çevirir", "fn": "point", "text": "#101", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": null },
-    { "name": "# ile başlayan değer alanı açar (noktanın adı)", "fn": "looksLikeCoordinate", "text": "#101", "expect": true }
+    { "name": "# ile başlayan değer alanı açar (noktanın adı)", "fn": "looksLikeCoordinate", "text": "#101", "expect": true },
+
+    { "name": "mm: mutlak", "fn": "point", "unit": "mm", "text": "100,250", "last": null, "cursor": null, "expect": { "x": 0.1, "y": 0.25 } },
+    { "name": "mm: göreli", "fn": "point", "unit": "mm", "text": "@500,-250", "last": { "x": 1, "y": 1 }, "cursor": null, "expect": { "x": 1.5, "y": 0.75 } },
+    { "name": "mm: kutupsal, açı birimsiz", "fn": "point", "unit": "mm", "text": "@100<90", "last": { "x": 0, "y": 0 }, "cursor": null, "expect": { "x": 0, "y": 0.1 }, "tolerance": 1e-12 },
+    { "name": "mm: mesafe, imleç yönünde", "fn": "point", "unit": "mm", "text": "250", "last": { "x": 0, "y": 0 }, "cursor": { "x": 1, "y": 0 }, "expect": { "x": 0.25, "y": 0 } },
+    { "name": "cm: mutlak", "fn": "point", "unit": "cm", "text": "12.5,-3", "last": null, "cursor": null, "expect": { "x": 0.125, "y": -0.03 } }
   ]
 }

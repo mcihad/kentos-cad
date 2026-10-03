@@ -79,15 +79,34 @@ fn js_number(v: f64) -> String {
 }
 
 /// The text a cell's editor opens with: the name and the code as written, a
-/// number whole (the web's `cellText`).
-pub fn cell_text(p: &PointEntity, col: EditColumn) -> String {
+/// number whole (the web's `cellText`), in a local project's unit
+/// (`per_metre`, docs/adr/0165 §2) without the multiplication's last-digit noise.
+pub fn cell_text(p: &PointEntity, col: EditColumn, per_metre: f64) -> String {
+    let shown = |v: f64| {
+        if per_metre == 1.0 {
+            js_number(v)
+        } else {
+            js_number(
+                format!("{:.14e}", v * per_metre)
+                    .parse()
+                    .unwrap_or(v * per_metre),
+            )
+        }
+    };
     match col {
         EditColumn::Name => p.base.label.clone().unwrap_or_default(),
         EditColumn::Code => p.base.attrs.get("Kod").cloned().unwrap_or_default(),
-        EditColumn::East => js_number(p.p.x),
-        EditColumn::North => js_number(p.p.y),
-        EditColumn::Z => p.z.map(js_number).unwrap_or_default(),
+        EditColumn::East => shown(p.p.x),
+        EditColumn::North => shown(p.p.y),
+        EditColumn::Z => p.z.map(shown).unwrap_or_default(),
     }
+}
+
+/// Typed coordinates and elevations in metres: typed in a local project's
+/// unit (docs/adr/0165 §2).
+fn metres_of(doc: &Document) -> impl Fn(f64) -> f64 + use<> {
+    let per_metre = doc.settings().unit().per_metre();
+    move |typed| typed / per_metre
 }
 
 /// Whether another point has the name (trimmed).
@@ -256,11 +275,12 @@ pub fn write_cell(
         };
     }
     let blank = js_trim(text).is_empty();
+    let metres = metres_of(doc);
     let v = if col == EditColumn::Z && blank {
         None
     } else {
         match parse_number(text) {
-            Some(v) => Some(v),
+            Some(v) => Some(metres(v)),
             None => {
                 return Outcome {
                     said: vec![format!("{PREFIX}{} bir sayı olmalı.", col.word())],
@@ -393,17 +413,18 @@ pub fn write_draft(
     if north.is_empty() {
         return fail(format!("{PREFIX}X yazılmalı."));
     }
-    let Some(x) = parse_number(east) else {
+    let metres = metres_of(doc);
+    let Some(x) = parse_number(east).map(&metres) else {
         return fail(format!("{PREFIX}Y bir sayı olmalı."));
     };
-    let Some(y) = parse_number(north) else {
+    let Some(y) = parse_number(north).map(&metres) else {
         return fail(format!("{PREFIX}X bir sayı olmalı."));
     };
     let z = if js_trim(&d.z).is_empty() {
         None
     } else {
         match parse_number(&d.z) {
-            Some(z) => Some(z),
+            Some(z) => Some(metres(z)),
             None => return fail(format!("{PREFIX}Z bir sayı olmalı.")),
         }
     };

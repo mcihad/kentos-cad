@@ -15,7 +15,6 @@
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, sin};
 use kentos_geometry_core::tools::construct::angle_at;
-use kentos_geometry_core::tools::point_text::point_from_text;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -226,9 +225,7 @@ impl Tool for MeasureAngle {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(p) = point_from_text(text, self.d.pts.first().copied(), self.d.hover, |d| {
-            cx.track_along(d)
-        }) else {
+        let Some(p) = cx.typed_point(text, self.d.pts.first().copied(), self.d.hover) else {
             return false;
         };
         self.accept(p, cx);

@@ -17,7 +17,7 @@
 
 use kentos_contracts::{CreateOperation, EntityGeometry};
 use kentos_geometry_core::entity::TextPlace;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::drawing_font;
 
 use crate::Vec2;
@@ -315,7 +315,7 @@ impl Tool for PlaceTextFile {
         if self.file.is_none() {
             return false;
         }
-        let Some(p) = point_from_text(text, None, self.d.hover, |d| cx.track_along(d)) else {
+        let Some(p) = cx.typed_point(text, None, self.d.hover) else {
             return false;
         };
         self.place(p, cx);

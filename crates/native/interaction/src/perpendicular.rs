@@ -27,7 +27,7 @@ use kentos_geometry_core::geom::survey::{side_offsets, side_point};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::tools::drawing::radial_point;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
@@ -367,7 +367,7 @@ impl Tool for Perpendicular {
         // Dik çık reads a plain number first: the foot's distance, then the length.
         if self.out
             && matches!(self.reference, Some(Reference::Seg { .. }))
-            && let Some(n) = points::plain_number(text)
+            && let Some(n) = points::plain_length(text, cx)
         {
             match self.absis {
                 None => self.absis = Some(n),
@@ -382,7 +382,7 @@ impl Tool for Perpendicular {
         if self.reference.is_none() {
             return false;
         }
-        match point_from_text(text, None, self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, None, self.hover) {
             Some(p) => {
                 self.point(p, cx);
                 true

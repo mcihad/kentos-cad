@@ -9,7 +9,7 @@ import { blockFaultMessage, definitionsFault, type AttributeDefinition, type Blo
 import type { CadDocument, DocumentContent } from './document';
 import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
 import type { LayerInit, LayerSnap } from './layers';
-import { DRAWING_FONT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
+import { DRAWING_FONT_IDS, DRAWING_UNIT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
 
 /**
  * The drawing as a versioned file (`.kcad`): the v1 JSON (contract
@@ -335,6 +335,8 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
           : { workspace: oneOf(settings.workspace, WORKSPACE_IDS, 'Proje ayarları › proje türü') }),
         // And before drawing typefaces: Barlow, as they were drawn.
         drawingFont: settings.drawingFont === undefined ? 'barlow' : oneOf(settings.drawingFont, DRAWING_FONT_IDS, 'Proje ayarları › çizim yazı tipi'),
+        // A local project's unit (docs/adr/0165 §2); none: metres.
+        ...(settings.drawingUnit === undefined ? {} : { drawingUnit: oneOf(settings.drawingUnit, DRAWING_UNIT_IDS, 'Proje ayarları › çizim birimi') }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

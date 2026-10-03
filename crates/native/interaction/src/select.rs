@@ -33,7 +33,6 @@ use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::ops::grips::{mid_grip_segment, move_grip};
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::point_from_text;
 use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
 use kentos_native_application::{ExecutionContext, edit};
 
@@ -299,8 +298,7 @@ impl Select {
         let Some(g) = &self.grip else {
             return false;
         };
-        let Some(p) = point_from_text(text, Some(g.origin), self.grip_point, |d| cx.track_along(d))
-        else {
+        let Some(p) = cx.typed_point(text, Some(g.origin), self.grip_point) else {
             return false;
         };
         self.commit(p, cx);

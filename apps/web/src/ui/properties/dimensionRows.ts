@@ -72,13 +72,14 @@ export function dimensionRows(ctx: AppContext, dims: readonly DimensionEntity[],
         label,
         value: z === MIXED ? MIXED : f.length(z, false),
         numeric: z !== MIXED,
-        unit: 'm',
+        unit: f.lengthUnitLabel,
         editor: locked
           ? undefined
           : {
               type: 'number',
               commit: (v: string) => {
-                const x = parseFloat(v.replace(',', '.'));
+                // Typed in the project's unit (docs/adr/0165 §2).
+                const x = f.toMetres(parseFloat(v.replace(',', '.')));
                 if (Number.isFinite(x)) write((d) => (d[key] === x ? null : { [key]: x }));
               },
             },
@@ -94,7 +95,7 @@ export function dimensionRows(ctx: AppContext, dims: readonly DimensionEntity[],
       return l && d.c ? l.value / dist(d.a, d.c) : NaN;
     });
     rows.push(
-      { label: 'Yarıçap', value: radius === MIXED ? MIXED : f.length(radius, false), numeric: radius !== MIXED, unit: 'm' },
+      { label: 'Yarıçap', value: radius === MIXED ? MIXED : f.length(radius, false), numeric: radius !== MIXED, unit: f.lengthUnitLabel },
       { label: 'Açı', value: sweep === MIXED ? MIXED : f.angle(sweep, false), numeric: sweep !== MIXED, unit: f.angleUnitLabel },
     );
   }

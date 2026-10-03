@@ -258,6 +258,43 @@ fn a_point_is_moved_by_its_typed_coordinates_read_as_the_web_reads_them() {
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
 }
 
+/// A local project's drawing unit (docs/adr/0165 §2): rows read in it, typed
+/// values are taken in it (a trailing unit too), the drawing keeps metres.
+#[test]
+fn a_local_project_reads_and_takes_its_unit() {
+    let mut app = objects();
+    {
+        let doc = app.document.as_mut().expect("open");
+        let settings = kentos_contracts::ProjectSettings {
+            srid: 0,
+            drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+            ..doc.model.settings().clone()
+        };
+        doc.model.set_settings(settings);
+    }
+    select(&mut app, &[5]);
+    event(
+        &mut app,
+        Event::Commit(Field::PointX(Slot(5)), "1500".into()),
+    );
+    let Entity::Point(p) = entity(&app, 5) else {
+        panic!("a point");
+    };
+    assert_eq!(p.p.x, 1.5);
+    assert_eq!(value(&app, "Geometri", "Y (sağa)"), "1500.000 mm");
+    let line = line_z(&mut app, Some(0.1), None);
+    select(&mut app, &[line]);
+    assert_eq!(value(&app, "Geometri", "Kot (başlangıç)"), "100.000 mm");
+    event(
+        &mut app,
+        Event::Commit(Field::Elevation(Slot(line), Spot::End), "250 mm".into()),
+    );
+    let Entity::Line(l) = entity(&app, line) else {
+        panic!("a line");
+    };
+    assert_eq!(l.zb, Some(0.25));
+}
+
 #[test]
 fn an_attribute_is_written_as_typed_and_the_parcel_number_follows() {
     let mut app = objects();

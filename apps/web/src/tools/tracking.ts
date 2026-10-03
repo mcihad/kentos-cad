@@ -62,5 +62,6 @@ export function drawTracking(g: CanvasRenderingContext2D, view: ViewTransform, t
  * from the tracked point along that line.
  */
 export function pointFromText(ctx: AppContext, text: string, last: Vec2 | null, cursor: Vec2 | null): Vec2 | null {
-  return parsePointInput(text, last, cursor, (d) => ctx.view.trackAlong(d));
+  // Typed in the project's unit: a local project's millimetres become metres here (docs/adr/0165 §2).
+  return parsePointInput(text, last, cursor, (d) => ctx.view.trackAlong(d), (v) => ctx.format.toMetres(v));
 }

@@ -18,7 +18,7 @@
 
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -141,7 +141,7 @@ impl Tool for SelectFence {
         if upper_tr(js_trim(text)) == "G" {
             return self.pts.pop().is_some();
         }
-        match point_from_text(text, self.last(), self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.last(), self.hover) {
             Some(p) => {
                 self.add(p);
                 true

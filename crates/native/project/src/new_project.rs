@@ -54,6 +54,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         plot_scale: 1000.0,
         workspace: Some(Workspace::Gis),
         drawing_font: Some(DrawingFont::Barlow),
+        drawing_unit: None,
     }
 }
 

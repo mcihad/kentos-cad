@@ -260,6 +260,13 @@ pub(crate) fn plain_number(text: &str) -> Option<f64> {
     kentos_geometry_core::tools::point_text::parse_number(text)
 }
 
+/// A plain number that is a length (a distance, a radius, a tolerance, an
+/// elevation), typed in the project's unit, in metres (docs/adr/0165 §2;
+/// the web's `parseLength`).
+pub(crate) fn plain_length(text: &str, cx: &crate::tool::Context<'_>) -> Option<f64> {
+    plain_number(text).map(|n| cx.format().to_metres(n))
+}
+
 /// What every point-input tool keeps (the web's `PointInputTool` fields,
 /// docs/adr/0032): its points, the effective cursor, and the objects written
 /// for the object being drawn, so Ctrl+Z can take the newest back as an

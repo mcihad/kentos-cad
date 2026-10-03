@@ -21,7 +21,6 @@ use kentos_contracts::{DimensionEntity, DimensionStyle, Entity, EntityGeometry};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
 use kentos_geometry_core::tools::construct::{baseline_dimension, continue_dimension};
-use kentos_geometry_core::tools::point_text::point_from_text;
 
 use crate::Vec2;
 use crate::edge;
@@ -382,8 +381,7 @@ impl Tool for DimensionChain {
         if self.choosing {
             return false;
         }
-        let Some(p) = point_from_text(text, self.anchor(), self.hover, |d| cx.track_along(d))
-        else {
+        let Some(p) = cx.typed_point(text, self.anchor(), self.hover) else {
             return false;
         };
         self.point(p, cx);

@@ -67,6 +67,13 @@ describe('.kcad snapshots', () => {
     const soon = readSnapshot(JSON.stringify(good));
     expect(soon.ok && soon.content.settings.workspace).toBe('plan3d');
   });
+  it("reads a local project's drawing unit; a file without one is in metres and writes none (docs/adr/0165 §2)", () => {
+    const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
+    expect('drawingUnit' in good.settings).toBe(false);
+    Object.assign(good.settings, { srid: 0, drawingUnit: 'mm' });
+    const r = readSnapshot(JSON.stringify(good));
+    expect(r.ok && r.content.settings.drawingUnit).toBe('mm');
+  });
   it('refuses what it does not know, saying what and where', () => {
     const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
     const err = (mutate: (d: any) => void) => {
@@ -81,6 +88,7 @@ describe('.kcad snapshots', () => {
     expect(err((d) => (d.settings.srid = 99999))).toContain('EPSG:99999 tanınmıyor');
     expect(err((d) => (d.settings.workspace = 'bim'))).toContain('Proje ayarları › proje türü');
     expect(err((d) => (d.settings.drawingFont = 'comic-sans'))).toContain('Proje ayarları › çizim yazı tipi');
+    expect(err((d) => Object.assign(d.settings, { srid: 0, drawingUnit: 'inch' }))).toContain('Proje ayarları › çizim birimi');
     expect(err((d) => (d.entities[0].kind = 'blok'))).toContain('Nesne 1 › tür');
     expect(err((d) => (d.entities[1].layerId = 'yok'))).toContain('“yok” katmanı dosyada yok');
     expect(err((d) => (d.entities[1].a.x = '486512.34'))).toContain('a.x: sonlu bir sayı olmalı');

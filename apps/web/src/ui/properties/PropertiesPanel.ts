@@ -217,10 +217,11 @@ export class PropertiesPanel extends Panel {
 
     const f = this.ctx.format;
     const geo: PropRow[] = [];
-    const num = (label: string, v: number, unit?: string): PropRow => ({ label, value: f.length(v, false), numeric: true, unit });
+    // Lengths and coordinates in the project's unit: a local project's millimetres (docs/adr/0165 §2).
+    const num = (label: string, v: number, unit?: string): PropRow => ({ label, value: f.length(v, false), numeric: true, unit: unit === 'm' ? f.lengthUnitLabel : unit });
     const area = (m2: number): PropRow[] =>
-      this.ctx.doc.settings.areaUnit.value === 'm2'
-        ? [{ label: 'Alan', value: f.area(m2, false), numeric: true, unit: 'm²' }]
+      this.ctx.doc.settings.areaUnit.value === 'm2' || f.unit !== 'm'
+        ? [{ label: 'Alan', value: f.area(m2, false), numeric: true, unit: f.areaUnitLabel }]
         : [
             { label: 'Alan', value: fixed(m2, this.ctx.doc.settings.areaDecimals.value), numeric: true, unit: 'm²' },
             { label: 'Alan', value: f.area(m2, false), numeric: true, unit: f.areaUnitLabel },
@@ -234,7 +235,7 @@ export class PropertiesPanel extends Panel {
                 type: 'number',
                 commit: (v: string) => {
                   const n = parseFloat(v.replace(',', '.'));
-                  if (Number.isFinite(n)) setGeometry(this.ctx, e, { p: { ...e.p, [axis]: n } });
+                  if (Number.isFinite(n)) setGeometry(this.ctx, e, { p: { ...e.p, [axis]: f.toMetres(n) } });
                 },
               } as const);
         geo.push({ ...num('Y (sağa)', e.p.x, 'm'), editor: edit('x') }, { ...num('X (yukarı)', e.p.y, 'm'), editor: edit('y') });
@@ -327,7 +328,7 @@ export class PropertiesPanel extends Panel {
                 type: 'number',
                 commit: (t: string) => {
                   const x = parseFloat(t.replace(',', '.'));
-                  if (Number.isFinite(x) && (key !== 'height' || x > 0)) setGeometry(this.ctx, e, { [key]: x });
+                  if (Number.isFinite(x) && (key !== 'height' || x > 0)) setGeometry(this.ctx, e, { [key]: f.toMetres(x) });
                 },
               },
         });
@@ -364,7 +365,7 @@ export class PropertiesPanel extends Panel {
                 type: 'number',
                 commit: (t: string) => {
                   const x = parseFloat(t.replace(',', '.'));
-                  if (Number.isFinite(x) && (key === 'angle' || x > 0)) setPattern({ [key]: x });
+                  if (Number.isFinite(x) && (key === 'angle' || x > 0)) setPattern({ [key]: key === 'angle' ? x : f.toMetres(x) });
                 },
               } as const);
         geo.push(
@@ -380,7 +381,7 @@ export class PropertiesPanel extends Panel {
                 },
           },
           { label: 'Açı', value: fixed(e.pattern.angle, 2), numeric: true, unit: '°', editor: numEdit('angle') },
-          { label: 'Aralık', value: f.length(e.pattern.spacing, false), numeric: true, unit: 'm', editor: numEdit('spacing') },
+          { label: 'Aralık', value: f.length(e.pattern.spacing, false), numeric: true, unit: f.lengthUnitLabel, editor: numEdit('spacing') },
           ...area(entityArea(e)!),
         );
         break;
@@ -397,7 +398,7 @@ export class PropertiesPanel extends Panel {
                   type: 'number',
                   commit: (t: string) => {
                     const x = parseFloat(t.replace(',', '.'));
-                    if (Number.isFinite(x) && x > 0) setGeometry(this.ctx, e, { height: x });
+                    if (Number.isFinite(x) && x > 0) setGeometry(this.ctx, e, { height: f.toMetres(x) });
                   },
                 },
           },
@@ -450,8 +451,8 @@ export class PropertiesPanel extends Panel {
                   items: () => this.ctx.doc.blocks.value.map((b) => ({ label: b.name, radio: true, checked: b.id === e.block, run: () => setGeometry(this.ctx, e, { block: b.id }) })),
                 },
           },
-          { ...num('Konum Y', e.p.x), editor: numEdit((x) => ({ p: { ...e.p, x } })) },
-          { ...num('Konum X', e.p.y), editor: numEdit((y) => ({ p: { ...e.p, y } })) },
+          { ...num('Konum Y', e.p.x), editor: numEdit((x) => ({ p: { ...e.p, x: f.toMetres(x) } })) },
+          { ...num('Konum X', e.p.y), editor: numEdit((y) => ({ p: { ...e.p, y: f.toMetres(y) } })) },
           { label: 'Ölçek', value: fixed(e.scale, 4), numeric: true, editor: numEdit((x) => (x > 0 ? { scale: x } : null)) },
           { label: 'Dönüş', value: fixed((e.rotation * 180) / Math.PI, 4), numeric: true, unit: '°', editor: numEdit((x) => ({ rotation: turnOf(x) })) },
           {
@@ -538,7 +539,7 @@ export class PropertiesPanel extends Panel {
     ];
     const totals: PropRow[] = [];
     const f = this.ctx.format;
-    if (length > 0) totals.push({ label: 'Toplam uzunluk', value: f.length(length, false), numeric: true, unit: 'm' });
+    if (length > 0) totals.push({ label: 'Toplam uzunluk', value: f.length(length, false), numeric: true, unit: f.lengthUnitLabel });
     if (area > 0) totals.push({ label: 'Toplam alan', value: f.area(area, false), numeric: true, unit: f.areaUnitLabel });
     const sections: PropSection[] = [{ id: 'general', title: 'Ortak özellikler', rows }];
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or “Çeşitli” (docs/adr/0145 §6).

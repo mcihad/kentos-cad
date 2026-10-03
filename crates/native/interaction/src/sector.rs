@@ -23,7 +23,7 @@ use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{TAU, atan2};
 use kentos_geometry_core::tools::construct::sector;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -286,7 +286,8 @@ impl Tool for Sector {
                     if n <= 0.0 {
                         cx.say(Level::Warn, "Yarıçap sıfırdan büyük olmalı.");
                     } else {
-                        self.radius = Some(n);
+                        // Typed in the project's unit (docs/adr/0165 §2).
+                        self.radius = Some(self.format.to_metres(n));
                     }
                 }
                 Stage::StartAngle => self.start = Some(self.format.angle_from_typed(n)),
@@ -298,9 +299,7 @@ impl Tool for Sector {
             }
             return true;
         }
-        let Some(p) = point_from_text(js_trim(text), self.d.last(), self.d.hover, |d| {
-            cx.track_along(d)
-        }) else {
+        let Some(p) = cx.typed_point(js_trim(text), self.d.last(), self.d.hover) else {
             return false;
         };
         self.accept(p, cx);

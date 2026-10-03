@@ -73,7 +73,7 @@ use kentos_geometry_core::tools::drawing::{
     centre_bulge, offset_along, radial_point, radius_bulge, unit_toward,
 };
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
@@ -1356,10 +1356,12 @@ impl Tool for Path {
         }
         let number = parse_number(text);
         let plain = number.filter(|_| !text.contains([',', ';', '@', '<']));
+        // Lengths are typed in the project's unit (docs/adr/0165 §2); an angle is not.
+        let unit = cx.format();
         if let Some(n) = plain.filter(|_| self.ask_step) {
             if n > 0.0 {
-                cx.memory.stream_step = n;
-                self.memory.stream_step = n;
+                cx.memory.stream_step = unit.to_metres(n);
+                self.memory.stream_step = unit.to_metres(n);
                 self.ask_step = false;
             } else {
                 cx.say(Level::Warn, "Adım boyu sıfırdan büyük olmalı.");
@@ -1371,7 +1373,7 @@ impl Tool for Path {
                 match (self.tangent(), self.last()) {
                     (Some(t), Some(last)) if n > 0.0 => {
                         self.ask_length = false;
-                        self.accept(offset_along(last, t, n), cx);
+                        self.accept(offset_along(last, t, unit.to_metres(n)), cx);
                     }
                     _ => cx.say(Level::Warn, "Uzunluk sıfırdan büyük olmalı."),
                 }
@@ -1393,7 +1395,9 @@ impl Tool for Path {
                 && let Spec::Radius { r: None } = self.spec
             {
                 if n > 0.0 {
-                    self.spec = Spec::Radius { r: Some(n) };
+                    self.spec = Spec::Radius {
+                        r: Some(unit.to_metres(n)),
+                    };
                 } else {
                     cx.say(Level::Warn, "Yarıçap sıfırdan büyük olmalı.");
                 }
@@ -1401,7 +1405,7 @@ impl Tool for Path {
             }
         }
         // Object tracking has no line on the desktop yet: a bare number follows the cursor.
-        match point_from_text(text, self.base(), self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.base(), self.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

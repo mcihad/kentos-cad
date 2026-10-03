@@ -316,19 +316,22 @@ impl PointCalc {
     /// Takes a value typed once every reference is shown; false when the kind cannot read it.
     fn take(&mut self, t: &str, cx: &mut Context<'_>) -> bool {
         let (a, b) = (self.pts[0], self.pts[1]);
+        // Lengths are typed in the project's unit (docs/adr/0165 §2).
+        let f = cx.format();
+        let m = |typed: f64| f.to_metres(typed);
         match self.kind {
             CalcKind::Side => {
                 let Some((absis, ordinat)) = pair(t) else {
                     return false;
                 };
-                self.finish(side_point(a, b, absis, ordinat), cx);
+                self.finish(side_point(a, b, m(absis), m(ordinat)), cx);
                 true
             }
             CalcKind::Distances => {
                 let Some((d1, d2)) = pair(t) else {
                     return false;
                 };
-                let solutions = distance_intersection(a, b, d1, d2);
+                let solutions = distance_intersection(a, b, m(d1), m(d2));
                 match solutions.len() {
                     0 => cx.say(
                         Level::Warn,
@@ -349,7 +352,7 @@ impl PointCalc {
                 let Some(n) = parse_number(t) else {
                     return false;
                 };
-                self.finish(along_line(a, b, n), cx);
+                self.finish(along_line(a, b, m(n)), cx);
                 true
             }
             CalcKind::Polar => {
@@ -357,7 +360,7 @@ impl PointCalc {
                     return false;
                 };
                 let unit = if self.degrees { "deg" } else { "grad" };
-                self.finish(calc_polar(a, b, angle, unit, distance), cx);
+                self.finish(calc_polar(a, b, angle, unit, m(distance)), cx);
                 true
             }
             CalcKind::Lines | CalcKind::Mid => false,

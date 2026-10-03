@@ -594,7 +594,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   belge ve v1 göçü onu yazmaz; türsüz proje CBS gösterilir ve kullanıcının açtığında bir kez sorulur (web `ProjectTypeDialog.ts`,
   masaüstü `project/ask_type.rs`); ayarlarda emekli değer (`RETIRED_VALUES`); envanterde `layout.ribbon` CBS'nin, `ribbonByMode`
   her türün; pafta profillerinde hibrit satırı yok; arayüzde “Çalışma modu” yerine “Proje türü”, bulut kataloğunun etiketi “İş
-  türü”. Sıradaki: 2. adım (yerel CAD: SRID 0, çizim birimi), sonra sihirbaz, eksenler, sahne, her türün şeridi.
+  türü”. 2. adımın yerel sistemi (SRID 0, “Yerel (koordinat sistemi yok)”) ve çizim birimi (`settings.drawingUnit`, `.kcad`
+  şema 11; geometri metrede, birim yalnız okuma ve yazmada: `Formatter.toMetres`, `Format::to_metres`, `Context::typed_point`,
+  `typed_length`, `point_from_text_in`; Hesap pencereleri ve İşlemler metrede) bitti. Sıradaki: 2c (DXF `$INSUNITS`), sonra
+  sihirbaz, eksenler, sahne, her türün şeridi.
 
 - Bitti (30 Eylül): yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7),
   1–5. adımlar iki platformda: sözleşme ve şema 7; çekirdek ve çizim; komutlar; araçlar ve arayüz (Yazı'nın

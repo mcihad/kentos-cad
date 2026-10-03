@@ -121,7 +121,7 @@ export class SectorTool extends PointInputTool {
     switch (this.stage) {
       case 'start':
         if (!(n > 0)) log.warn('Yarıçap sıfırdan büyük olmalı.');
-        else this.radius = n;
+        else this.radius = format.toMetres(n);
         break;
       case 'startAngle':
         this.start = format.angleFromTyped(n);

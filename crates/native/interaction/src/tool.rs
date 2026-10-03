@@ -757,6 +757,35 @@ impl Context<'_> {
         self.tracking.along(distance)
     }
 
+    /// Typed point text (the web's `pointFromText`): an absolute, relative or
+    /// polar point, or a distance along the tracking line or toward
+    /// `cursor`; its lengths and coordinates typed in the project's unit
+    /// (docs/adr/0165 §2).
+    pub fn typed_point(
+        &self,
+        text: &str,
+        last: Option<Vec2>,
+        cursor: Option<Vec2>,
+    ) -> Option<Vec2> {
+        let format = self.format();
+        kentos_geometry_core::tools::point_text::point_from_text_in(
+            text,
+            last,
+            cursor,
+            |d| self.track_along(d),
+            |v| format.to_metres(v),
+        )
+    }
+
+    /// A typed length (a distance, a radius, a tolerance, an elevation) in
+    /// the project's unit, in metres (the web's `parseLength`); none for no
+    /// number. Counts, angles, factors and paper millimetres are read with
+    /// `parse_number`.
+    pub fn typed_length(&self, text: &str) -> Option<f64> {
+        kentos_geometry_core::tools::point_text::parse_number(text)
+            .map(|n| self.format().to_metres(n))
+    }
+
     pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
         self.log.push(Line::new(level, text));
     }

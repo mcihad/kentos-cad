@@ -4,7 +4,7 @@ import type { Vec2 } from '../model/geometry';
 import { chamferLines, cornerInPath, filletLines } from '../model/ops/fillet';
 import type { ViewTransform } from '../viewport/Camera';
 import { chamferLine, cornerNear, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pathCornerAt, pulledDistance, sharedCorner, type CornerGeom } from './constructions';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry, strokePath } from './preview';
@@ -318,8 +318,8 @@ export class FilletTool extends CornerTool {
     return { radius: filletRadiusFor(t, c.phi) };
   }
   protected opForText(text: string): CornerOp | null {
-    const n = parseNumber(text);
-    return n !== null && n >= 0 && !/[,;@<]/.test(text) ? { radius: n } : null;
+    const n = /[,;@<]/.test(text) ? null : parseLength(this.ctx.format, text);
+    return n !== null && n >= 0 ? { radius: n } : null;
   }
   protected lastOp(): CornerOp | null {
     return FilletTool.last !== null ? { radius: FilletTool.last } : null;
@@ -363,7 +363,9 @@ export class ChamferTool extends CornerTool {
   }
   protected opForText(text: string): CornerOp | null {
     const m = text.trim().match(/^(\d+(?:\.\d+)?)(?:\s*[,;]\s*(\d+(?:\.\d+)?))?$/);
-    return m ? { d1: +m[1], d2: m[2] !== undefined ? +m[2] : +m[1] } : null;
+    // Typed in the project's unit (docs/adr/0165 §2).
+    const d = (typed: string) => this.ctx.format.toMetres(+typed);
+    return m ? { d1: d(m[1]), d2: m[2] !== undefined ? d(m[2]) : d(m[1]) } : null;
   }
   protected lastOp(): CornerOp | null {
     return ChamferTool.last;

@@ -17,7 +17,7 @@ use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geom::shapes::cloud_of;
 use kentos_geometry_core::geometry::{dist, signed_area};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
@@ -198,7 +198,7 @@ impl Tool for RevCloud {
             self.ask_arc = false;
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

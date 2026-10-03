@@ -178,7 +178,8 @@ impl ArrayPath {
     fn typed_number(&mut self, n: f64, cx: &mut Context<'_>) {
         if self.last.path_by_spacing {
             if n > 0.0 {
-                cx.memory.path_spacing = n;
+                // Typed in the project's unit (docs/adr/0165 §2).
+                cx.memory.path_spacing = cx.format().to_metres(n);
             } else {
                 cx.say(Level::Warn, "Aralık sıfırdan büyük olmalı.");
             }

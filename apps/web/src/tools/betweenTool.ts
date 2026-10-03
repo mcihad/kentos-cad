@@ -82,7 +82,7 @@ export class PointsBetweenTool extends PointInputTool {
       case 'parts':
         return `${PointsBetweenTool.parts} parça`;
       case 'distances':
-        return PointsBetweenTool.distances.length ? `${PointsBetweenTool.distances.map((d) => f.length(d, false)).join(', ')} m` : 'uzaklık yok';
+        return PointsBetweenTool.distances.length ? `${PointsBetweenTool.distances.map((d) => f.length(d, false)).join(', ')} ${f.lengthUnitLabel}` : 'uzaklık yok';
       default:
         return PointsBetweenTool.ratios.length ? PointsBetweenTool.ratios.join(', ') : 'oran yok';
     }
@@ -148,7 +148,8 @@ export class PointsBetweenTool extends PointInputTool {
     } else {
       const list = numberList(text);
       if (!list) return false;
-      if (this.method === 'distances') PointsBetweenTool.distances = list;
+      // Distances are typed in the project's unit (docs/adr/0165 §2); ratios have none.
+      if (this.method === 'distances') PointsBetweenTool.distances = list.map((d) => this.ctx.format.toMetres(d));
       else PointsBetweenTool.ratios = list;
     }
     this.write();

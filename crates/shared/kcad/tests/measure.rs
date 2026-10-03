@@ -72,6 +72,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             plot_scale: 1000.0,
             workspace: None,
             drawing_font: None,
+            drawing_unit: None,
         },
         origin: Vec2 {
             x: 486_000.0,

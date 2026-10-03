@@ -131,7 +131,7 @@ export class PathArrayTool extends SelectionFirstTool {
           log.warn('Aralık sıfırdan büyük olmalı.');
           return true;
         }
-        l.spacing = n;
+        l.spacing = this.ctx.format.toMetres(n);
       } else {
         if (!Number.isInteger(n) || n < 2 || n > MAX_PLACES) {
           log.warn('Adet 2 ile 10 000 arasında bir tam sayı olmalı.');

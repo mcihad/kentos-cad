@@ -5,6 +5,7 @@ import type { Vec2 } from '../../model/geometry';
 import type { Elevated } from '../../model/ops/elevation';
 import { followPoint } from '../../model/ops/pointEditor';
 import { textIncrement } from '../../model/textEdit';
+import { UNIT_PER_METRE } from '../../model/projectSettings';
 import { elevatedPaths } from '../../product/elevation';
 import { entitiesEdit } from '../../product/entitiesEdit';
 import { entitiesSet } from '../../product/entitiesSet';
@@ -36,19 +37,27 @@ export interface Outcome {
 
 const nothing: Outcome = { said: [], step: null, stay: false };
 
+/** Typed coordinates and elevations in metres: typed in a local project's unit (docs/adr/0165 §2). */
+const metresOf = (doc: CadDocument) => {
+  const perMetre = UNIT_PER_METRE[doc.settings.unit];
+  return (typed: number) => typed / perMetre;
+};
+
 /** The text a cell's editor opens with: the name and the code as written, a number whole (the shortest that reads back). */
-export function cellText(e: PointEntity, col: EditColumn): string {
+export function cellText(e: PointEntity, col: EditColumn, perMetre = 1): string {
+  // In a local project's unit (docs/adr/0165 §2), without the multiplication's last-digit noise.
+  const shown = (v: number) => String(perMetre === 1 ? v : Number((v * perMetre).toPrecision(15)));
   switch (col) {
     case 'name':
       return e.label ?? '';
     case 'code':
       return e.attrs.Kod ?? '';
     case 'east':
-      return String(e.p.x);
+      return shown(e.p.x);
     case 'north':
-      return String(e.p.y);
+      return shown(e.p.y);
     case 'z':
-      return e.z === undefined ? '' : String(e.z);
+      return e.z === undefined ? '' : shown(e.z);
   }
 }
 
@@ -99,6 +108,7 @@ export function inStep(doc: CadDocument, label: string, write: () => string | nu
  * open; an unchanged one writes nothing.
  */
 export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, text: string, follow: boolean): Outcome {
+  const metres = metresOf(doc);
   const uid = doc.uidOf(e.id) ?? '';
   if (col === 'name' || col === 'code') {
     const v = text.trim() || null;
@@ -112,8 +122,9 @@ export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, tex
     return { said: col === 'name' && v !== null && named(doc, v, e.id) ? [sameName(v)] : [], step: STEP, stay: false };
   }
   const blank = text.trim() === '';
-  const v = col === 'z' && blank ? null : parseNumber(text);
-  if (v === null && !(col === 'z' && blank)) return { said: [`${PREFIX}${WORD[col]} bir sayı olmalı.`], step: null, stay: true };
+  const typed = col === 'z' && blank ? null : parseNumber(text);
+  if (typed === null && !(col === 'z' && blank)) return { said: [`${PREFIX}${WORD[col]} bir sayı olmalı.`], step: null, stay: true };
+  const v = typed === null ? null : metres(typed);
   const from = e.p;
   const to: Vec2 = col === 'east' ? { x: v as number, y: from.y } : col === 'north' ? { x: from.x, y: v as number } : from;
   const unchanged = col === 'z' ? (v ?? undefined) === e.z : to.x === from.x && to.y === from.y;
@@ -158,20 +169,23 @@ export interface DraftOutcome extends Outcome {
  * `layerId`, in `color` (none: the layer's). The step is the command's, “Ekle”.
  */
 export function writeDraft(doc: CadDocument, d: Draft, layerId: string, color: string | null): DraftOutcome {
+  const metres = metresOf(doc);
   const fail = (said: string): DraftOutcome => ({ said: [said], step: null, stay: true, next: null });
   const east = d.east.trim();
   const north = d.north.trim();
   if (!east && !north) return fail(`${PREFIX}Y ve X yazılmalı.`);
   if (!east) return fail(`${PREFIX}Y yazılmalı.`);
   if (!north) return fail(`${PREFIX}X yazılmalı.`);
-  const x = parseNumber(east);
-  if (x === null) return fail(`${PREFIX}Y bir sayı olmalı.`);
-  const y = parseNumber(north);
-  if (y === null) return fail(`${PREFIX}X bir sayı olmalı.`);
+  const typedX = parseNumber(east);
+  if (typedX === null) return fail(`${PREFIX}Y bir sayı olmalı.`);
+  const typedY = parseNumber(north);
+  if (typedY === null) return fail(`${PREFIX}X bir sayı olmalı.`);
+  const [x, y] = [metres(typedX), metres(typedY)];
   let z: number | null = null;
   if (d.z.trim()) {
-    z = parseNumber(d.z);
-    if (z === null) return fail(`${PREFIX}Z bir sayı olmalı.`);
+    const typedZ = parseNumber(d.z);
+    if (typedZ === null) return fail(`${PREFIX}Z bir sayı olmalı.`);
+    z = metres(typedZ);
   }
   const name = d.name.trim();
   const code = d.code.trim();

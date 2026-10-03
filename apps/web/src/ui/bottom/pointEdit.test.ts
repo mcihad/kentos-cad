@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Entity, NewEntity, PointEntity } from '../../model/entities';
 import { elevatedPaths } from '../../product/elevation';
 import { toolHarness } from '../../tools/toolHarness';
-import { emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn } from './pointEdit';
+import { cellText, emptyDraft, nextCell, writeCell, writeDraft, type Draft, type EditColumn } from './pointEdit';
 
 /**
  * Nokta editörü's writes against fixtures/point-editor/v1/edits.json (scripts/fixtures/point_edit_cases.py, worked
@@ -89,5 +89,21 @@ describe('Nokta editörü: hücreler arasında', () => {
     expect(nextCell(ids, 12, 'name', 'left')).toEqual({ id: 11, col: 'code' });
     expect(nextCell(ids, 11, 'name', 'left')).toBeNull();
     expect(nextCell(ids, 99, 'name', 'down')).toBeNull();
+  });
+});
+
+describe('Nokta editörü: yerel projenin birimi', () => {
+  it('opens a cell and takes what is typed in millimetres, the drawing kept in metres (docs/adr/0165 §2)', () => {
+    const h = toolHarness();
+    h.doc.settings.assign({ srid: 0, drawingUnit: 'mm' });
+    const p = h.add({ kind: 'point', p: { x: 0.1, y: 0.25 }, z: 0.0125 }) as PointEntity;
+    // 0.1 m reads as 100, not 100.00000000000001.
+    expect([cellText(p, 'east', 1000), cellText(p, 'north', 1000), cellText(p, 'z', 1000)]).toEqual(['100', '250', '12.5']);
+    expect(writeCell(h.doc, p, 'east', '1500', false).step).not.toBeNull();
+    expect((h.doc.get(p.id) as PointEntity).p.x).toBe(1.5);
+    const out = writeDraft(h.doc, { ...emptyDraft(), name: 'Y1', east: '100', north: '250', z: '12.5' }, 'cizim', null);
+    expect(out.step).not.toBeNull();
+    const added = [...h.doc.all()].at(-1) as PointEntity;
+    expect([added.p, added.z]).toEqual([{ x: 0.1, y: 0.25 }, 0.0125]);
   });
 });

@@ -20,7 +20,7 @@
 use kentos_geometry_core::geom::survey::{side_offsets, side_point};
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -227,7 +227,7 @@ impl Tool for StationOffset {
             self.new_line();
             return true;
         }
-        match point_from_text(text, self.last, self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.last, self.hover) {
             Some(p) => {
                 self.take(p, cx);
                 true

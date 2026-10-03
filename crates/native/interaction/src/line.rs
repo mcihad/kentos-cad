@@ -24,7 +24,7 @@ use kentos_contracts::{EntitiesDelete, LineCreate};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, delete, line};
 
 use crate::Vec2;
@@ -245,7 +245,7 @@ impl Tool for Line {
             return true;
         }
         // Object tracking has no line on the desktop yet: a bare number follows the cursor.
-        match point_from_text(text, self.last(), self.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.last(), self.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

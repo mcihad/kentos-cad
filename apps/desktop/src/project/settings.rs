@@ -8,7 +8,7 @@ use std::fmt;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Element, Fill};
-use kentos_contracts::{AngleUnit, AreaUnit, DrawingFont, ProjectSettings, Workspace};
+use kentos_contracts::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, ProjectSettings, Workspace};
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::number::NumberInput;
@@ -94,6 +94,16 @@ impl fmt::Display for Area {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Angle(AngleUnit);
 
+/// A drawing unit as the segmented control writes it (docs/adr/0165 §2).
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Unit(DrawingUnit);
+
+impl fmt::Display for Unit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.0.mark())
+    }
+}
+
 impl fmt::Display for Angle {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self.0 {
@@ -127,6 +137,8 @@ pub enum Event {
     AreaDecimals(u32),
     AreaUnit(AreaUnit),
     AngleUnit(AngleUnit),
+    /// A local project's drawing unit (docs/adr/0165 §2); metres are kept as none.
+    DrawingUnit(DrawingUnit),
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -189,6 +201,7 @@ impl App {
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
             Event::AngleUnit(u) => d.angle_unit = u,
+            Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
             Event::ResetSection => reset_section(s.section, d),
             Event::OpenApp | Event::Save => {}
         }
@@ -206,7 +219,12 @@ impl App {
             name.to_owned()
         };
         doc.model.set_name(&name);
-        doc.model.set_settings(s.settings.clone());
+        let mut settings = s.settings.clone();
+        // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres.
+        if settings.srid != crate::crs::LOCAL_SRID {
+            settings.drawing_unit = None;
+        }
+        doc.model.set_settings(settings);
         let assigned = (s.settings.srid != s.initial.srid).then_some(s.settings.srid);
         self.close_project_window();
         if let Some(srid) = assigned {
@@ -427,6 +445,17 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
         Angle(d.angle_unit),
         |a| event(Event::AngleUnit(a.0)),
     );
+    // A local project's unit (docs/adr/0165 §2); a project with a coordinate system is in its metres.
+    let local = d.srid == crate::crs::LOCAL_SRID;
+    let unit = Segmented::new(
+        [
+            Unit(DrawingUnit::Mm),
+            Unit(DrawingUnit::Cm),
+            Unit(DrawingUnit::M),
+        ],
+        Unit(d.drawing_unit.unwrap_or_default()),
+        |u| event(Event::DrawingUnit(u.0)),
+    );
     let f = Format::of(d);
     let preview = container(
         Column::new()
@@ -471,27 +500,33 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
     .padding(10)
     .width(Fill)
     .style(style::container::bordered);
+    let mut lengths = Column::new().spacing(10);
+    if local {
+        lengths = lengths.push(setting(
+            "Çizim birimi",
+            Some("Uzunluklar, koordinatlar ve alanlar bu birimle yazılır ve gösterilir; çizimin kendisi değişmez."),
+            unit,
+        ));
+    }
+    let lengths = lengths.push(setting(
+        "Ondalık basamak",
+        Some("Koordinatlar, kenar uzunlukları ve mesafeler."),
+        decimals(d.length_decimals, Event::LengthDecimals),
+    ));
+    // A local project in millimetres or centimetres reads its areas in the unit squared: no area unit to choose.
+    let mut areas = Column::new().spacing(10);
+    if f.unit == DrawingUnit::M {
+        areas = areas.push(setting(
+            "Alan birimi",
+            Some("Parsel ve kapalı alanlarda gösterilen birim. Metrekare her zaman öznitelik panelinde de yer alır."),
+            area,
+        ));
+    }
+    let areas = areas.push(setting("Ondalık basamak", None, decimals(d.area_decimals, Event::AreaDecimals)));
     Column::new()
         .spacing(16)
-        .push(group(
-            "Uzunluk ve koordinat",
-            setting(
-                "Ondalık basamak",
-                Some("Koordinatlar, kenar uzunlukları ve mesafeler."),
-                decimals(d.length_decimals, Event::LengthDecimals),
-            ),
-        ))
-        .push(group(
-            "Alan",
-            Column::new()
-                .spacing(10)
-                .push(setting(
-                    "Alan birimi",
-                    Some("Parsel ve kapalı alanlarda gösterilen birim. Metrekare her zaman öznitelik panelinde de yer alır."),
-                    area,
-                ))
-                .push(setting("Ondalık basamak", None, decimals(d.area_decimals, Event::AreaDecimals))),
-        ))
+        .push(group("Uzunluk ve koordinat", lengths))
+        .push(group("Alan", areas))
         .push(group(
             "Açı",
             setting("Açı birimi", Some("Semt açıları kuzeyden saat yönünde ölçülür."), angle),
@@ -523,6 +558,7 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
             d.drawing_font = read("project.drawingFont");
         }
         Section::Units => {
+            d.drawing_unit = None;
             d.length_decimals = default("project.lengthDecimals")
                 .and_then(|v| v.as_u64())
                 .and_then(|n| u32::try_from(n).ok())

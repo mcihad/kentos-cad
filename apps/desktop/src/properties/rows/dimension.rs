@@ -100,7 +100,7 @@ pub(super) fn rows(
                 if second { d.zb } else { d.za }.unwrap_or(f64::NAN)
             });
             let row = match z {
-                Some(z) => Row::figure(label, f.length_bare(z)).unit("m"),
+                Some(z) => Row::figure(label, f.length_bare(z)).unit(f.length_unit_label()),
                 None => Row::text(label, MIXED),
             };
             let field = if second {
@@ -124,7 +124,7 @@ pub(super) fn rows(
                 .map_or(f64::NAN, |l| l.value / radius_of(d))
         });
         rows.push(match radius {
-            Some(r) => Row::figure("Yarıçap", f.length_bare(r)).unit("m"),
+            Some(r) => Row::figure("Yarıçap", f.length_bare(r)).unit(f.length_unit_label()),
             None => Row::text("Yarıçap", MIXED),
         });
         rows.push(match sweep {

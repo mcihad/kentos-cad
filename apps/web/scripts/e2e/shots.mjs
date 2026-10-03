@@ -3351,6 +3351,43 @@ SCENES.projecttype = [
   { id: 'type-menu', open: async (ui) => (await ui.clickSel('.status__mode'), await ui.sleep(250)) },
 ];
 
+/**
+ * A local project in millimetres (docs/adr/0165 §2), new and without a coordinate system: Proje ayarları' Çizim
+ * birimi, then a plate 120 × 80 mm with a hole at the origin, selected, read in millimetres. The desktop's are
+ * `project::tests::screens` (proje-*-6, -7).
+ */
+const LOCAL_MM = `Promise.all([import('/src/model/newProject.ts'), import('/src/app/fileIO.ts')]).then(([np, io]) => {
+  const c = np.newProjectContent({ name: 'Mil plakası', srid: 0, plotScale: 1, workspace: 'cad' });
+  io.replaceDrawing(window.kentos, { ...c, settings: { ...c.settings, drawingUnit: 'mm' } });
+})`;
+SCENES.drawingunit = [
+  {
+    id: 'unit-settings',
+    open: async (ui) => {
+      await ui.eval(`${LOCAL_MM}.then(() => import('/src/ui/settings/ProjectSettingsDialog.ts')).then((m) => m.openProjectSettings(window.kentos, 'units'))`);
+      await ui.waitFor(`!!document.querySelector('.settings__content')`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
+  {
+    id: 'unit-drawing',
+    open: async (ui) => {
+      await ui.eval(`${LOCAL_MM}.then(() => {
+        const k = window.kentos;
+        const layerId = k.doc.layers.active.value;
+        const plate = k.doc.add({ kind: 'polygon', layerId, attrs: {}, pts: [{ x: 0, y: 0 }, { x: 0.12, y: 0 }, { x: 0.12, y: 0.08 }, { x: 0, y: 0.08 }] });
+        k.doc.add({ kind: 'circle', layerId, attrs: {}, c: { x: 0.06, y: 0.04 }, r: 0.025 });
+        k.selection.set([plate.id]);
+        k.view.camera.fit({ minX: -0.02, minY: -0.02, maxX: 0.14, maxY: 0.1 }, 24);
+        k.view.requestRender();
+      })`);
+      await ui.waitFor(`window.kentos.doc.name.value === 'Mil plakası' && window.kentos.doc.size === 2`);
+      await ui.sleep(600);
+    },
+  },
+];
+
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;
 SCENES.texts = [

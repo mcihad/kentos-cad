@@ -27,13 +27,13 @@ use kentos_geometry_core::geom::tangent_circle::{tangent_tangent_radius, tangent
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::edges::nearest_edge;
 use kentos_geometry_core::tools::drawing::circle_on_diameter;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, circle};
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, plain_number, wire};
+use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::spatial::record;
 use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tag, Tool};
@@ -369,7 +369,7 @@ impl Tool for Circle {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let radius = plain_number(text).filter(|r| *r > 0.0);
+        let radius = points::plain_length(text, cx).filter(|r| *r > 0.0);
         let done = if self.mode == Mode::Ttr && self.tangents.len() == 2 {
             match radius {
                 Some(r) => {
@@ -384,7 +384,7 @@ impl Tool for Circle {
         } else if self.option(&upper_tr(js_trim(text))) {
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

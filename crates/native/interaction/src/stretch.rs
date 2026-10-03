@@ -29,7 +29,6 @@ use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
 use kentos_geometry_core::ops::stretch::stretch_entity;
 use kentos_geometry_core::ops::topology_edit::{self, Change};
 use kentos_geometry_core::tools::point_input::Tracking;
-use kentos_geometry_core::tools::point_text::point_from_text;
 use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
@@ -399,7 +398,7 @@ impl Tool for Stretch {
         } else {
             None
         };
-        let Some(p) = point_from_text(text, from, self.hover, |d| cx.track_along(d)) else {
+        let Some(p) = cx.typed_point(text, from, self.hover) else {
             return false;
         };
         self.point(p, cx);

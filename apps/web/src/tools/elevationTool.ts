@@ -1,5 +1,5 @@
 import { hasVertexElevation, takesElevation } from '../product/elevationValues';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { writeElevations } from './editCommand';
 import { SelectionFirstTool } from './modifyTools';
 
@@ -45,7 +45,8 @@ export class ElevationTool extends SelectionFirstTool {
   }
 
   protected stagePrompt(): string {
-    return this.raise ? 'eklenecek farkı yazın (m)' : 'kotu yazın (m)';
+    const unit = this.ctx.format.lengthUnitLabel;
+    return this.raise ? `eklenecek farkı yazın (${unit})` : `kotu yazın (${unit})`;
   }
 
   protected point(): void {}
@@ -68,8 +69,8 @@ export class ElevationTool extends SelectionFirstTool {
       return true;
     }
     if (this.picking) return false;
-    const n = parseNumber(text);
-    if (n === null || /[,;@<]/.test(text)) return false;
+    const n = /[,;@<]/.test(text) ? null : parseLength(this.ctx.format, text);
+    if (n === null) return false;
     this.write(this.raise ? { kind: 'raise', by: n } : { kind: 'set', z: n });
     return true;
   }

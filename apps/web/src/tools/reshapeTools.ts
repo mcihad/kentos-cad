@@ -191,7 +191,7 @@ export class FilletAllTool extends ValueReshapeTool<{ radius: number }> {
       this.ctx.log.warn('Yarıçap sıfırdan büyük olmalı.');
       return 'refused' as const;
     }
-    return { radius: n };
+    return { radius: this.ctx.format.toMetres(n) };
   }
   protected compute(e: Entity, v: CornerValue) {
     return allCorners(e, v);
@@ -288,7 +288,7 @@ export class SimplifyTool extends ValueReshapeTool<{ tolerance: number }> {
       this.ctx.log.warn('Tolerans sıfırdan büyük olmalı.');
       return 'refused' as const;
     }
-    return { tolerance: n };
+    return { tolerance: this.ctx.format.toMetres(n) };
   }
   protected compute(e: Entity, v: { tolerance: number }) {
     return simplifyEntity(e, v.tolerance);
@@ -297,7 +297,7 @@ export class SimplifyTool extends ValueReshapeTool<{ tolerance: number }> {
     return `tolerans ${this.ctx.format.length(v.tolerance)}`;
   }
   protected askText(): string {
-    return 'toleransı yazın (m)';
+    return `toleransı yazın (${this.ctx.format.lengthUnitLabel})`;
   }
   protected tag(plan: Plan): string[] {
     return [`${plan.done} köşe atılacak`, `en büyük sapma ${this.ctx.format.length(plan.deviation)}`];

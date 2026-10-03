@@ -184,9 +184,15 @@ impl CornerTool {
     /// A typed size: a plain number above or at zero (Köşe yuvarla), `d` or
     /// `d1,d2` (Pah, the web's `/^(\d+(?:\.\d+)?)(?:\s*[,;]\s*(\d+(?:\.\d+)?))?$/`).
     fn op_for_text(&self, text: &str) -> Option<Op> {
+        // Typed in the project's unit (docs/adr/0165 §2).
+        let f = self.format();
         match self.kind {
-            Kind::Fillet => plain_number(text).filter(|n| *n >= 0.0).map(Op::Radius),
-            Kind::Chamfer => parse_cut(text).map(|(d1, d2)| Op::Cut(d1, d2)),
+            Kind::Fillet => plain_number(text)
+                .filter(|n| *n >= 0.0)
+                .map(|n| Op::Radius(f.to_metres(n))),
+            Kind::Chamfer => {
+                parse_cut(text).map(|(d1, d2)| Op::Cut(f.to_metres(d1), f.to_metres(d2)))
+            }
         }
     }
 

@@ -36,7 +36,6 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::text::edit::increment;
-use kentos_geometry_core::tools::point_text::{parse_number, point_from_text};
 use kentos_native_application::{ExecutionContext, edit, point, set};
 
 use crate::Vec2;
@@ -393,7 +392,8 @@ impl Point {
             layer_id: SPOT_LAYER.to_owned(),
             p: wire(p),
             z: Some(z),
-            label: Some(fixed(z, 2)),
+            // Labelled in the unit it was typed in; kept, and its attribute written, in metres (docs/adr/0165 §2).
+            label: Some(fixed(cx.format().from_metres(z), 2)),
             color: cx.draft.color.map(str::to_owned),
             attrs: Some(BTreeMap::from([
                 ("Tür".to_owned(), "Kot noktası".to_owned()),
@@ -459,9 +459,11 @@ impl Tool for Point {
     fn prompt(&self) -> Prompt {
         if self.spot {
             let step = if self.pending_z.is_some() {
-                "kot değerini yazın (m)"
+                // Typed in the project's unit (docs/adr/0165 §2).
+                let unit = self.seen.map(|(_, f)| f).unwrap_or_default();
+                format!("kot değerini yazın ({})", unit.length_unit_label())
             } else {
-                "nokta konumunu belirtin"
+                "nokta konumunu belirtin".to_owned()
             };
             return Prompt::new(SPOT_LABEL, step);
         }
@@ -512,7 +514,7 @@ impl Tool for Point {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         if let Some(p) = self.pending_z {
-            let Some(z) = parse_number(text) else {
+            let Some(z) = cx.typed_length(text) else {
                 return false;
             };
             self.write_spot(p, z, cx);
@@ -521,7 +523,7 @@ impl Tool for Point {
         }
         let key = upper_tr(crate::js_trim(text));
         let taken = match self.stage {
-            Stage::Z => match parse_number(text) {
+            Stage::Z => match cx.typed_length(text) {
                 Some(z) => {
                     cx.memory.point_z = Some(z);
                     self.back();
@@ -533,9 +535,7 @@ impl Tool for Point {
             Stage::Question { .. } => self.option(&key, cx),
             Stage::Points => {
                 (!self.spot && self.option(&key, cx))
-                    || match point_from_text(text, self.d.last(), self.d.hover, |d| {
-                        cx.track_along(d)
-                    }) {
+                    || match cx.typed_point(text, self.d.last(), self.d.hover) {
                         Some(p) => {
                             self.accept(p, cx);
                             true

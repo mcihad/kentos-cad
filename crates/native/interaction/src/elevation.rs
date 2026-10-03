@@ -205,8 +205,10 @@ impl Summary {
         };
         match *self {
             Summary::None => (NO_ELEVATION.to_owned(), None),
-            Summary::Value(z) => (f.length_bare(z), Some("m")),
-            Summary::Range(lo, hi) | Summary::Partial(lo, hi) => (range(lo, hi), Some("m")),
+            Summary::Value(z) => (f.length_bare(z), Some(f.length_unit_label())),
+            Summary::Range(lo, hi) | Summary::Partial(lo, hi) => {
+                (range(lo, hi), Some(f.length_unit_label()))
+            }
         }
     }
 
@@ -238,8 +240,14 @@ impl Summary {
 /// “m”, is `Some(Some(z))`; nothing (or an “m” alone) is `Some(None)`, the
 /// elevation cleared; anything else is `None`, not taken.
 pub fn parse_typed(text: &str) -> Option<Option<f64>> {
+    parse_typed_in(text, "m")
+}
+
+/// [`parse_typed`] in a project whose unit is `unit` (docs/adr/0165 §2): its
+/// mark may follow the number; the number is in the unit it was typed in.
+pub fn parse_typed_in(text: &str, unit: &str) -> Option<Option<f64>> {
     let typed = js_trim(text);
-    let typed = match typed.strip_suffix('m') {
+    let typed = match typed.strip_suffix(unit) {
         Some(rest) => rest.trim_end_matches(is_js_space),
         None => typed,
     };

@@ -2,6 +2,7 @@
 import type { AngleUnit } from "./AngleUnit";
 import type { AreaUnit } from "./AreaUnit";
 import type { DrawingFont } from "./DrawingFont";
+import type { DrawingUnit } from "./DrawingUnit";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -21,4 +22,9 @@ workspace?: Workspace,
 /**
  * Absent in files written before drawing typefaces (read as Barlow).
  */
-drawingFont?: DrawingFont, };
+drawingFont?: DrawingFont, 
+/**
+ * A local project's unit (docs/adr/0165 §2); absent: metres. Only a
+ * project without a coordinate system (SRID 0) has another.
+ */
+drawingUnit?: DrawingUnit, };

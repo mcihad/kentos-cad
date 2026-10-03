@@ -17,7 +17,6 @@
 
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::tools::point_text::point_from_text;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -108,7 +107,7 @@ impl Tool for SelectContaining {
 
     /// A typed point is a click there.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        match point_from_text(text, None, None, |d| cx.track_along(d)) {
+        match cx.typed_point(text, None, None) {
             Some(at) => {
                 let add = cx.shift;
                 self.click(at, add, cx);

@@ -255,10 +255,12 @@ export class PerpendicularOutTool extends PerpendicularTool {
   override input(text: string): boolean {
     const n = parseNumber(text);
     if (this.ref?.kind === 'seg' && n !== null && !/[,;@<]/.test(text)) {
+      // Typed in the project's unit (docs/adr/0165 §2).
+      const length = this.ctx.format.toMetres(n);
       if (this.absis === null) {
-        this.absis = n;
+        this.absis = length;
         this.refresh();
-      } else this.place(n);
+      } else this.place(length);
       return true;
     }
     return super.input(text);

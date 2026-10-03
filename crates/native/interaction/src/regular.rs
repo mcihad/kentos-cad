@@ -19,7 +19,7 @@ use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geom::shapes::{regular_polygon, regular_polygon_on_edge};
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::tools::drawing::regular_polygon_radius;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -145,17 +145,18 @@ impl RegularPolygon {
             if !self.by_edge && self.d.pts.len() == 1 && n > 0.0 {
                 // The bottom edge horizontal: the edge middle sits straight below the centre.
                 let m = *cx.memory;
+                // A radius typed in the project's unit (docs/adr/0165 §2).
                 let ring = regular_polygon_radius(
                     self.d.pts[0],
                     f64::from(m.polygon_sides),
-                    n,
+                    cx.format().to_metres(n),
                     m.polygon_inscribed,
                 );
                 self.commit(ring, cx);
                 return true;
             }
         }
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

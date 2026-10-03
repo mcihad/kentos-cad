@@ -2,8 +2,8 @@
 //! them (the test below holds the two equal).
 
 use kentos_contracts::{
-    AngleUnit, AreaUnit, DimensionStyle, DrawingFont, HatchPatternType, LabelInk, LabelPlacement,
-    LineType, PointSymbol, Workspace,
+    AngleUnit, AreaUnit, DimensionStyle, DrawingFont, DrawingUnit, HatchPatternType, LabelInk,
+    LabelPlacement, LineType, PointSymbol, Workspace,
 };
 
 pub(crate) fn area_unit(u: AreaUnit) -> &'static str {
@@ -40,6 +40,14 @@ pub(crate) fn drawing_font(f: DrawingFont) -> &'static str {
         DrawingFont::ArchitectsDaughter => "architects-daughter",
         DrawingFont::CourierPrime => "courier-prime",
         DrawingFont::PlexMono => "plex-mono",
+    }
+}
+
+pub(crate) fn drawing_unit(u: DrawingUnit) -> &'static str {
+    match u {
+        DrawingUnit::Mm => "mm",
+        DrawingUnit::Cm => "cm",
+        DrawingUnit::M => "m",
     }
 }
 
@@ -130,6 +138,9 @@ mod tests {
             DrawingFont::PlexMono,
         ] {
             assert_eq!(drawing_font(f), serde_name(f));
+        }
+        for u in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M] {
+            assert_eq!(drawing_unit(u), serde_name(u));
         }
         for t in [
             LineType::Continuous,

@@ -4,7 +4,7 @@ import { dist, type Vec2 } from '../model/geometry';
 import { alongLine, clockwiseAngle, distanceIntersection, lineIntersection, sideOffsets, sidePoint } from '../model/geom/survey';
 import type { ViewTransform } from '../viewport/Camera';
 import { alongRatio, calcPolar, midpoint, nearestOf } from './constructions';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { drawTag, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 
@@ -215,14 +215,16 @@ class PointCalcTool implements Tool {
   private take(t: string): boolean {
     const pair = t.match(/^(-?\d+(?:\.\d+)?)\s*[,; ]\s*(-?\d+(?:\.\d+)?)$/);
     const [a, b] = this.pts;
+    // Lengths are typed in the project's unit (docs/adr/0165 §2).
+    const m = (typed: string) => this.ctx.format.toMetres(+typed);
     switch (this.kind) {
       case 'side':
         if (!pair) return false;
-        this.finish(sidePoint(a, b, +pair[1], +pair[2]));
+        this.finish(sidePoint(a, b, m(pair[1]), m(pair[2])));
         return true;
       case 'distances': {
         if (!pair) return false;
-        const sol = distanceIntersection(a, b, +pair[1], +pair[2]);
+        const sol = distanceIntersection(a, b, m(pair[1]), m(pair[2]));
         if (!sol.length) {
           this.ctx.log.warn('Bu uzaklıklarla kesişim yok: iki uzaklığın toplamı A–B aralığından küçük ya da farkı büyük.');
           return true;
@@ -240,14 +242,14 @@ class PointCalcTool implements Tool {
           this.finish(alongRatio(a, b, +ratio[1], +ratio[2]));
           return true;
         }
-        const n = parseNumber(t);
+        const n = parseLength(this.ctx.format, t);
         if (n === null) return false;
         this.finish(alongLine(a, b, n));
         return true;
       }
       case 'polar': {
         if (!pair) return false;
-        this.finish(calcPolar(a, b, +pair[1], this.ctx.doc.settings.angleUnit.value, +pair[2]));
+        this.finish(calcPolar(a, b, +pair[1], this.ctx.doc.settings.angleUnit.value, m(pair[2])));
         return true;
       }
       default:

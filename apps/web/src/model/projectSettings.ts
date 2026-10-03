@@ -1,11 +1,17 @@
 import { Signal, watchAll } from '../core/signal';
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
+import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
-export type { DrawingFont, Workspace };
+export type { DrawingFont, DrawingUnit, Workspace };
+
+/** How many of a drawing unit make a metre (docs/adr/0165 §2). */
+export const UNIT_PER_METRE: Record<DrawingUnit, number> = { mm: 1000, cm: 100, m: 1 };
+/** Every drawing unit a file may name. */
+export const DRAWING_UNIT_IDS: readonly DrawingUnit[] = ['mm', 'cm', 'm'];
 
 /** Every drawing typeface a file may name (contract `DrawingFont`; the list with names is app/appearance.ts). */
 export const DRAWING_FONT_IDS: readonly DrawingFont[] = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'];
@@ -37,6 +43,8 @@ export interface ProjectSettingsData {
   workspace?: Workspace;
   /** Typeface of the drawing's own text (text objects, dimension values, labels). */
   drawingFont: DrawingFont;
+  /** A local project's unit (docs/adr/0165 §2): lengths are typed and read in it; absent: metres. */
+  drawingUnit?: DrawingUnit;
 }
 
 export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
@@ -65,6 +73,8 @@ export class ProjectSettings {
   readonly plotScale: Signal<number>;
   readonly workspace: Signal<Workspace | null>;
   readonly drawingFont: Signal<DrawingFont>;
+  /** A local project's drawing unit; metres when none is set (and for any project with a coordinate system). */
+  readonly drawingUnit: Signal<DrawingUnit>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -78,7 +88,8 @@ export class ProjectSettings {
     this.plotScale = new Signal(d.plotScale);
     this.workspace = new Signal(typeOf(d.workspace));
     this.drawingFont = new Signal(d.drawingFont);
-    watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont], () =>
+    this.drawingUnit = new Signal(d.drawingUnit ?? 'm');
+    watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont, this.drawingUnit], () =>
       this.changed.update((v) => v + 1),
     );
   }
@@ -94,13 +105,21 @@ export class ProjectSettings {
       // A type not asked yet is not written (docs/adr/0165 §1).
       ...(this.workspace.value ? { workspace: this.workspace.value } : {}),
       drawingFont: this.drawingFont.value,
+      // Metres are not written: a file names a unit only when it has another (KCAD schema 11).
+      ...(this.drawingUnit.value !== 'm' ? { drawingUnit: this.drawingUnit.value } : {}),
     };
+  }
+
+  /** The unit lengths are typed and read in: a local project's own, metres for any other (docs/adr/0165 §2). */
+  get unit(): DrawingUnit {
+    return this.crs.value.kind === 'local' ? this.drawingUnit.value : 'm';
   }
 
   /** Takes a whole snapshot's settings: one without a type has its type not asked yet. */
   replace(data: ProjectSettingsData): void {
     this.assign(data);
     this.workspace.set(typeOf(data.workspace));
+    this.drawingUnit.set(data.drawingUnit ?? 'm');
   }
 
   /** Applies a (partial) snapshot. Unknown SRIDs are rejected, not guessed. */
@@ -118,5 +137,6 @@ export class ProjectSettings {
     // A partial patch without a type keeps the project's (`replace` takes a whole snapshot's).
     if (data.workspace !== undefined) this.workspace.set(typeOf(data.workspace));
     if (data.drawingFont !== undefined) this.drawingFont.set(data.drawingFont);
+    if (data.drawingUnit !== undefined) this.drawingUnit.set(data.drawingUnit);
   }
 }

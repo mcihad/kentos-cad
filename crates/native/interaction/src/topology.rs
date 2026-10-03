@@ -37,7 +37,7 @@ use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
 use crate::modify::MAX_GHOSTS;
-use crate::points::plain_number;
+use crate::points::plain_length;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Preview, Stroke, Tag, Tone, Tool};
 
@@ -628,7 +628,11 @@ impl Tool for Topology {
         if self.typing {
             return Prompt::new(
                 LABEL,
-                format!("toleransı yazın, metre (Enter: {})", f.length(tolerance)),
+                format!(
+                    "toleransı yazın, {} (Enter: {})",
+                    f.length_unit_name(),
+                    f.length(tolerance)
+                ),
             );
         }
         let step = match &self.plan {
@@ -693,11 +697,19 @@ impl Tool for Topology {
                 return true;
             }
         }
-        let Some(n) = plain_number(text) else {
+        let Some(n) = plain_length(text, cx) else {
             return false;
         };
         if !(n.is_finite() && n >= LEAST) {
-            cx.say(Level::Warn, "Tolerans en az 0.000001 m olmalı.");
+            let f = cx.format();
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Tolerans en az {} {} olmalı.",
+                    f.plain(LEAST),
+                    f.length_unit_label()
+                ),
+            );
             return true;
         }
         cx.memory.topology_tolerance = n;

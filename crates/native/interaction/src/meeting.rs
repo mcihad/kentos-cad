@@ -31,7 +31,7 @@ use kentos_geometry_core::geom::intersect::line_line;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{TAU, atan2, cos, sin};
 use kentos_geometry_core::tools::construct::{bearing_bearing, distance_distance};
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -544,16 +544,15 @@ impl IntersectPoint {
                         cx.say(Level::Warn, "Uzaklık sıfırdan büyük olmalı.");
                         return true;
                     }
-                    self.value(n, false, cx);
+                    // Typed in the project's unit (docs/adr/0165 §2).
+                    self.value(f.to_metres(n), false, cx);
                 } else {
                     self.value(f.angle_from_typed(n).rem_euclid(TAU), false, cx);
                 }
                 true
             }
             Some(Point) => {
-                let Some(p) =
-                    point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d))
-                else {
+                let Some(p) = cx.typed_point(text, self.d.last(), self.d.hover) else {
                     return false;
                 };
                 self.take(p, p, cx);

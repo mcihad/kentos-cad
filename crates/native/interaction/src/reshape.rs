@@ -33,7 +33,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::object::ObjectAction;
-use crate::points::plain_number;
+use crate::points::plain_length;
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Marker, MarkerShape, Memory, Preview, Stroke, Tag, Tone};
 
@@ -165,7 +165,7 @@ impl Reshape {
     fn take_value(&self, text: &str, cx: &mut Context<'_>) -> Option<()> {
         match self.kind {
             Kind::FilletAll => {
-                let n = plain_number(text)?;
+                let n = plain_length(text, cx)?;
                 if n > 0.0 {
                     cx.memory.fillet_radius = Some(n);
                 } else {
@@ -174,6 +174,9 @@ impl Reshape {
             }
             Kind::ChamferAll => {
                 let (d1, d2) = parse_cut(text)?;
+                // Typed in the project's unit (docs/adr/0165 §2).
+                let f = cx.format();
+                let (d1, d2) = (f.to_metres(d1), f.to_metres(d2));
                 if d1 > 0.0 && d2 > 0.0 {
                     cx.memory.chamfer = Some((d1, d2));
                 } else {
@@ -181,7 +184,7 @@ impl Reshape {
                 }
             }
             Kind::Simplify => {
-                let n = plain_number(text)?;
+                let n = plain_length(text, cx)?;
                 if n > 0.0 {
                     cx.memory.simplify_tolerance = n;
                 } else {
@@ -562,6 +565,8 @@ impl Stages for Reshape {
             Kind::Reverse => "yeni yönü görün",
             Kind::Simplify => "toleransı yazın (m)",
         };
+        // A tolerance is typed in the project's unit (docs/adr/0165 §2).
+        let step = step.replace("(m)", &format!("({})", f.length_unit_label()));
         let mut prompt = Prompt::new(self.label(), step);
         if let Some(note) = self.value_note(&m, &f) {
             prompt = prompt.note(note).then();

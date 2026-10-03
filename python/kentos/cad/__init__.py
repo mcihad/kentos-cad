@@ -98,6 +98,8 @@ __all__ = [
     "DocumentInfo",
     "DrawingFont",
     "DrawingFontName",
+    "DrawingUnit",
+    "DrawingUnitName",
     "EditOperation",
     "EditOperationName",
     "EllipseEntity",

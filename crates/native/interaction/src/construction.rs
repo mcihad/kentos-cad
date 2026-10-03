@@ -18,7 +18,7 @@
 use kentos_contracts::EntityGeometry;
 use kentos_geometry_core::geometry::angle_deg;
 use kentos_geometry_core::tools::drawing::{unit_toward, xline_direction};
-use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 
 use crate::Vec2;
 use crate::format::{Format, fixed, js_number};
@@ -249,7 +249,7 @@ impl Tool for Xline {
         let done = if self.option(&upper_tr(js_trim(text))) {
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+            match cx.typed_point(text, self.d.last(), self.d.hover) {
                 Some(p) => {
                     self.accept(p, cx);
                     true
@@ -392,7 +392,7 @@ impl Tool for Ray {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

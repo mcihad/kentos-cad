@@ -238,7 +238,8 @@ impl Tool for Divide {
             return false;
         };
         if cx.memory.divide_by_step {
-            cx.memory.divide_step = n;
+            // Typed in the project's unit (docs/adr/0165 §2).
+            cx.memory.divide_step = cx.format().to_metres(n);
         } else {
             if n.fract() != 0.0 || !(2.0..=MAX_POINTS as f64).contains(&n) {
                 cx.say(

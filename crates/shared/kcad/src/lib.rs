@@ -123,8 +123,15 @@ pub const SCHEMA_WITH_DIMENSIONS: u32 = 9;
 /// drawing that has one rather than snap to a layer its author turned off.
 pub const SCHEMA_WITH_LAYER_SNAP: u32 = 10;
 
+/// Document schema 11 (docs/specs/kcad-v2.md §6.1): schema 10 and a local
+/// project's drawing unit, the settings' `drawingUnit` (docs/adr/0165 §2). A
+/// writer writes it only when the drawing names a unit: any other stays 10 or
+/// older, byte for byte, and a reader of those still opens it; one of those
+/// refuses a drawing that names one rather than read its millimetres as metres.
+pub const SCHEMA_WITH_DRAWING_UNIT: u32 = 11;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 9] = [
+pub const SCHEMAS: [u32; 10] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -134,6 +141,7 @@ pub const SCHEMAS: [u32; 9] = [
     SCHEMA_WITH_LEADERS,
     SCHEMA_WITH_DIMENSIONS,
     SCHEMA_WITH_LAYER_SNAP,
+    SCHEMA_WITH_DRAWING_UNIT,
 ];
 
 /// The file a drawing is saved as.

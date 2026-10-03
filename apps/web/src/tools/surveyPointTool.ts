@@ -7,7 +7,7 @@ import { entitiesEdit } from '../product/entitiesEdit';
 import { entitiesSet } from '../product/entitiesSet';
 import { pointCreate } from '../product/pointCreate';
 import type { ViewTransform } from '../viewport/Camera';
-import { parseNumber } from './coordinateInput';
+import { parseLength } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag } from './preview';
 import type { ToolPointer } from './Tool';
@@ -185,7 +185,7 @@ export class SurveyPointTool extends PointInputTool {
 
   override input(text: string): boolean {
     if (this.stage === 'z') {
-      const z = parseNumber(text);
+      const z = parseLength(this.ctx.format, text);
       if (z === null) return false;
       SurveyPointTool.z = z;
       this.back();

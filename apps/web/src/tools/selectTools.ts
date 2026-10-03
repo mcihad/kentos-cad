@@ -116,7 +116,7 @@ export class CircleSelectTool extends PointInputTool {
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const r = parseNumber(text);
     if (this.pts[0] && r !== null && !/[,;@<]/.test(text)) {
-      this.select(this.pts[0], r);
+      this.select(this.pts[0], this.ctx.format.toMetres(r));
       return true;
     }
     return super.input(text);

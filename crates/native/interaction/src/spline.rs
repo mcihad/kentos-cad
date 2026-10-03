@@ -16,7 +16,7 @@ use kentos_contracts::EntityGeometry;
 use kentos_geometry_core::entity::entity_length;
 use kentos_geometry_core::geom::spline::catmull_rom;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::tools::point_text::{js_trim, point_from_text};
+use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
@@ -143,7 +143,7 @@ impl Tool for Spline {
         if self.option(&upper_tr(js_trim(text)), cx) {
             return true;
         }
-        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
+        match cx.typed_point(text, self.d.last(), self.d.hover) {
             Some(p) => {
                 self.accept(p, cx);
                 true

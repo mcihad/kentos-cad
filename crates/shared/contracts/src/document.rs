@@ -81,6 +81,42 @@ pub enum DrawingFont {
     PlexMono,
 }
 
+/// The unit a local project's lengths are typed and read in (docs/adr/0165 §2).
+/// Geometry stays in metres: the unit is where the user meets the numbers
+/// (typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A
+/// project with a coordinate system has the system's unit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DrawingUnit {
+    Mm,
+    Cm,
+    #[default]
+    M,
+}
+
+impl DrawingUnit {
+    /// How many of the unit make a metre.
+    pub fn per_metre(self) -> f64 {
+        match self {
+            Self::Mm => 1000.0,
+            Self::Cm => 100.0,
+            Self::M => 1.0,
+        }
+    }
+
+    /// The unit's mark: `mm`, `cm`, `m`.
+    pub fn mark(self) -> &'static str {
+        match self {
+            Self::Mm => "mm",
+            Self::Cm => "cm",
+            Self::M => "m",
+        }
+    }
+}
+
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -105,6 +141,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+    /// A local project's unit (docs/adr/0165 §2); absent: metres. Only a
+    /// project without a coordinate system (SRID 0) has another.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing_unit: Option<DrawingUnit>,
 }
 
 impl ProjectSettings {
@@ -112,6 +153,16 @@ impl ProjectSettings {
     /// former Hibrit mode's (docs/adr/0165 §1).
     pub fn project_type(&self) -> Option<Workspace> {
         self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
+    }
+
+    /// The unit lengths are typed and read in: a local project's own, metres
+    /// for any other (docs/adr/0165 §2).
+    pub fn unit(&self) -> DrawingUnit {
+        if self.srid == 0 {
+            self.drawing_unit.unwrap_or_default()
+        } else {
+            DrawingUnit::M
+        }
     }
 }
 

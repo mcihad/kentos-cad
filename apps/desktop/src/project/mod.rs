@@ -241,7 +241,7 @@ fn setting<'a, M: 'a>(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{AreaUnit, DrawingFont, Workspace};
+    use kentos_contracts::{AreaUnit, DrawingFont, DrawingUnit, Workspace};
 
     use super::Event;
     use super::new::Event as New;
@@ -429,7 +429,76 @@ mod tests {
             // The type question of a project opened without one (docs/adr/0165 §1).
             app.ask_project_type();
             picture(&mut app, &format!("proje-{mode}-5-tur-sorusu"));
+            send(&mut app, Event::Close);
+            // A local project in millimetres (docs/adr/0165 §2): a new one without a coordinate
+            // system, its unit in Proje ayarları, then a plate 120 × 80 mm with a hole, selected.
+            let _ = app.update(Message::Run("file.new"));
+            send(&mut app, Event::New(New::Name("Mil plakası".into())));
+            send(&mut app, Event::New(New::Mode(Workspace::Cad)));
+            send(&mut app, Event::New(New::Crs(0)));
+            // A part drawn at full size: at 1:1000 a 0.25 mm pen would be 25 cm wide on it.
+            send(&mut app, Event::New(New::Scale(1.0)));
+            send(&mut app, Event::New(New::Create));
+            if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+                let _ = app.update(Message::DialogConfirmed);
+            }
+            let _ = app.update(Message::Run("file.settings"));
+            send(&mut app, Event::Settings(Settings::Section(Section::Units)));
+            send(
+                &mut app,
+                Event::Settings(Settings::DrawingUnit(DrawingUnit::Mm)),
+            );
+            picture(&mut app, &format!("proje-{mode}-6-yerel-birim"));
+            send(&mut app, Event::Settings(Settings::Save));
+            let plate = local_plate(&mut app);
+            app.selection.set(vec![plate]);
+            let _ = app.update(Message::Run("view.zoomSelection"));
+            // Genel closed, so that the plate's measures show.
+            let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+                "general",
+            )));
+            picture(&mut app, &format!("proje-{mode}-7-yerel-cizim"));
         }
+    }
+
+    /// A plate 120 × 80 mm with a hole of 25 mm radius at the origin of a
+    /// local drawing (kept in metres); the plate's slot.
+    fn local_plate(app: &mut App) -> kentos_domain::Slot {
+        use kentos_contracts::{CircleEntity, Entity, EntityBase, PathEntity, Vec2};
+        let base = || EntityBase {
+            id: 0,
+            layer_id: app
+                .document
+                .as_ref()
+                .expect("open")
+                .model
+                .layers()
+                .active()
+                .to_owned(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+        };
+        let pts = [(0.0, 0.0), (0.12, 0.0), (0.12, 0.08), (0.0, 0.08)];
+        let plate = Entity::Polygon(PathEntity {
+            base: base(),
+            pts: pts.iter().map(|&(x, y)| Vec2 { x, y }).collect(),
+            bulges: None,
+            holes: None,
+            zs: None,
+            parts: None,
+        });
+        let hole = Entity::Circle(CircleEntity {
+            base: base(),
+            c: Vec2 { x: 0.06, y: 0.04 },
+            r: 0.025,
+        });
+        let model = &mut app.document.as_mut().expect("open").model;
+        let slot = model.add(plate).expect("a slot");
+        model.add(hole).expect("a slot");
+        slot
     }
 
     #[test]

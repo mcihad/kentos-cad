@@ -4,7 +4,7 @@ import { cloudOf } from '../model/geom/shapes';
 import { bulgePathOutline } from '../model/geom/bulge';
 import type { ViewTransform } from '../viewport/Camera';
 import { donutRings } from './constructions';
-import { parseNumber } from './coordinateInput';
+import { parseLength, parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawArea, strokePath, tint } from './preview';
 
@@ -38,7 +38,7 @@ export class DonutTool extends PointInputTool {
 
   override input(text: string): boolean {
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
-    const n = parseNumber(text);
+    const n = parseLength(this.ctx.format, text);
     if (this.ask && n !== null && !/[,;@<]/.test(text)) {
       if (this.ask === 'inner') {
         if (n < 0) this.ctx.log.warn('İç çap sıfır ya da pozitif olmalı.');
