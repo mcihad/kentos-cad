@@ -711,7 +711,7 @@ mod tests {
             "kind": { "type": "map", "view": { "type": "fixed", "scale": 5000 }, "overviewOf": "h" }
         });
         let note = value(&item_note("\"cad\"", &overview.to_string()));
-        assert!(note.as_str().unwrap().contains("CBS kipinin aracıdır"));
+        assert!(note.as_str().unwrap().contains("CBS projelerinin aracıdır"));
         let plan = value(&plan_sync(
             r#"[{"id":"t","name":"A","baseRevision":1}]"#,
             r#"[{"id":"t","name":"A","revision":2}]"#,

@@ -31,8 +31,8 @@ import { thumbCanvas } from './thumb';
  * project's drawing), with its badges, searched and filtered by paper and
  * kind; on the right the chosen template (galleryDetails.ts). The order is
  * the engine's for the project (`rankTemplates`: its type's templates
- * first, then its mode's, then the common ones); “Bütün kiplerin
- * şablonları” shows the others too, badged with their mode. Kullan makes a
+ * first, then its mode's, then the common ones); “Bütün türlerin
+ * şablonları” shows the others too, badged with their type. Kullan makes a
  * sheet on the paper picked at the bottom; it asks first when the template
  * needs what the project lacks (the engine's preflight of it).
  */
@@ -93,9 +93,9 @@ class TemplateGallery {
       this.grid.querySelector<HTMLElement>('.tcard')?.focus();
     });
     this.filters = h('div', { class: 'tgal__filters', style: 'display:contents' });
-    const all = toggleSwitch({ label: 'Bütün kiplerin şablonları', checked: false, onChange: () => this.toggleAllModes() });
-    const allBox = h('label', { class: 'tgal__all' }, all, 'Bütün kiplerin şablonları');
-    this.d.add(tooltip(allBox, () => ({ title: 'Bütün kiplerin şablonları', description: 'Başka çalışma modlarının şablonlarını da gösterir; kip rozetiyle. Veri kipten bağımsızdır: her şablon kullanılabilir.' })));
+    const all = toggleSwitch({ label: 'Bütün türlerin şablonları', checked: false, onChange: () => this.toggleAllModes() });
+    const allBox = h('label', { class: 'tgal__all' }, all, 'Bütün türlerin şablonları');
+    this.d.add(tooltip(allBox, () => ({ title: 'Bütün türlerin şablonları', description: 'Başka proje türlerinin şablonlarını da gösterir; tür rozetiyle. Veri türden bağımsızdır: her şablon kullanılabilir.' })));
     this.nav = h('nav', { class: 'tgal__nav', 'aria-label': 'Şablon kaynakları' });
     // One stop for the sources: the arrows, Home and End move among them and show each.
     this.nav.addEventListener('keydown', (e) => {
@@ -233,7 +233,7 @@ class TemplateGallery {
   /** Says how the list is ordered for this project (design §11a). */
   private orderNote(): string {
     const mode = effectiveWorkspace(this.host.traits().workspace).label;
-    return `Sıra: önce projenin türüne, sonra çalışma moduna (${mode}) uyanlar, sonra ortak şablonlar.${this.allModes ? ' Başka kiplerinkiler en sonda, kip rozetiyle.' : ''}`;
+    return `Sıra: önce işin türüne, sonra proje türüne (${mode}) uyanlar, sonra ortak şablonlar.${this.allModes ? ' Başka türlerinkiler en sonda, tür rozetiyle.' : ''}`;
   }
 
   private renderFilters(): void {
@@ -277,7 +277,7 @@ class TemplateGallery {
     replaceChildren(
       this.head,
       h('span', null, state.state === 'ready' ? `${label}: ${this.listed.length} şablon` : label),
-      hidden ? h('span', null, `· ${hidden} şablon başka kiplerin (“Bütün kiplerin şablonları” ile görünür)`) : null,
+      hidden ? h('span', null, `· ${hidden} şablon başka türlerin (“Bütün türlerin şablonları” ile görünür)`) : null,
     );
     hideTooltip(this.grid);
     this.cardsD.dispose();

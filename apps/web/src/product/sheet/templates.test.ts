@@ -6,7 +6,7 @@ import { arrangeTemplates, cardOf, categoryLabel, facetsOf, hiddenByMode, metasO
 /**
  * The gallery's list (docs/sheet/design.md §11, §11a): the engine's order for
  * the project (`rankTemplates`), kept; another mode's templates only with
- * “Bütün kiplerin şablonları”, with the engine's badge; the query's
+ * “Bütün türlerin şablonları”, with the engine's badge; the query's
  * section, paper, kind and words; the facets the filters offer.
  */
 
@@ -45,7 +45,7 @@ describe('template gallery', () => {
   });
 
   it('filters by section, paper, kind and words (Turkish letters folded)', () => {
-    const ranked = e.rankTemplates(metasOf(cards), 'hybrid', null);
+    const ranked = e.rankTemplates(metasOf(cards), null, null);
     expect(arrangeTemplates(cards, ranked, q({ section: 'mine' })).map((a) => a.card.id).sort()).toEqual(['dev-1', 'dev-2']);
     expect(arrangeTemplates(cards, ranked, q({ paper: 'a1' })).every((a) => a.card.papers.some((p) => p.paper === 'a1'))).toBe(true);
     expect(arrangeTemplates(cards, ranked, q({ kind: 'kadastro' })).every((a) => a.card.category === 'kadastro')).toBe(true);

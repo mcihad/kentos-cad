@@ -69,7 +69,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
   const search = h('input', { class: 'field field--search', type: 'search', placeholder: 'Ara: ad, açıklama, etiket', 'aria-label': 'Projelerde ara', spellcheck: 'false' });
   const typeSelect = h(
     'select',
-    { class: 'field', 'aria-label': 'Proje türü' },
+    { class: 'field', 'aria-label': 'İş türü' },
     h('option', { value: '' }, 'Tüm türler'),
     PROJECT_TYPES.map((t) => h('option', { value: t }, TYPE_LABEL[t])),
   );

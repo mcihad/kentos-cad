@@ -63,7 +63,7 @@ const SETUP = (ws = 'cad', open = 'sys:ifraz-paftasi') =>
   s.state.clearSelection();
   s.state.tool.set({ kind: 'select' });
   return true;`);
-const BACK = run(`s.state.openSheet(null); s.state.clearSelection(); s.state.tool.set({ kind: 'select' }); k.selection.clear(); k.doc.settings.workspace.set('hybrid'); return true;`);
+const BACK = run(`s.state.openSheet(null); s.state.clearSelection(); s.state.tool.set({ kind: 'select' }); k.selection.clear(); k.doc.settings.workspace.set('gis'); return true;`);
 /** Chooses items of the sheet in front by their names. */
 const CHOOSE = (...names) => run(`const sh = s.state.sheet; s.state.select(sh.items.filter((i) => ${JSON.stringify(names)}.includes(i.name)).map((i) => i.id)); return s.state.selection.value.size;`);
 /** The window position (CSS px) of an item's frame point (fx, fy of its width and height) on the paper. */

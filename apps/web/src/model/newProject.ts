@@ -16,7 +16,7 @@ export interface NewProjectOptions {
   srid: number;
   /** Plot scale denominator (1:1000 → 1000). */
   plotScale: number;
-  /** Work mode (hybrid when not given). */
+  /** Project type (CBS when not given, docs/adr/0165). */
   workspace?: Workspace;
   /** Drawing typeface (Barlow when not given). */
   drawingFont?: DrawingFont;

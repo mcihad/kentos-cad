@@ -24,7 +24,7 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `format`, `version` | `"kentos.catalog"`, `1` |
 | `timeZone` | Zamanlar cihazın yerel saatiyle yazılır; durumlar bu bölgeyle (`Europe/Istanbul`) denetlenir |
 | `views` | Listeler, pencerenin sırasıyla: `id`, `label`, `sorts` (sunulan sıralamalar; ilki listenin kendi sırası), `empty` (arama yokken boş listenin sözü), `note` (listenin üstündeki not; varsa) |
-| `sorts`, `states`, `types`, `typeHint` | Sıralama, durum ve proje türü adları; türün ne anlama gelmediğini söyleyen not |
+| `sorts`, `states`, `types`, `typeHint` | Sıralama, durum ve iş türü adları; iş türünün ne anlama gelmediğini söyleyen not |
 | `emptySearch`, `noOrganization` | Arama ya da tür süzgeci varken boş liste; etkin kurum üyeliği yokken “Kurum projeleri” |
 | `tips` | Yetkinin olmadığı işin nedeni (`denied`: `{name}`, `{what}`, `{permission}` yerlerine konur) ve arşivlenmiş projenin nedeni (`archived`) |
 | `project` | Durumların temel projesi (`ProjectSummary`); her durum üstüne değişikliklerini yazar (`access` alan alan birleşir) |
@@ -105,7 +105,7 @@ Durumlar, bir açık dosya projesinin bildiklerinden (`RevisionState`) yola çı
 | Alan | Anlamı |
 |---|---|
 | `format`, `version` | `"kentos.forms"`, `1` |
-| `texts` | Formların sözleri; değerlerden yapılan söz `{ sample: [değerler], text }`. Proje türlerinin adları ve türün notu `catalog.json`'dadır |
+| `texts` | Formların sözleri; değerlerden yapılan söz `{ sample: [değerler], text }`. İş türlerinin adları ve iş türünün notu `catalog.json`'dadır |
 | `limits` | Adın (200) ve açıklamanın (2000) en çok uzunluğu |
 | `tags` | Etiket alanının okunuşu: virgülle bölünür, her parça kırpılır ve içindeki boşluklar teke iner, boşlar düşer |
 | `copyNames` | Kopyaya önerilen ad: `<ad> (kopya)` |

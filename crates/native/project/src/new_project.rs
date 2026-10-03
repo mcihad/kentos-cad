@@ -52,7 +52,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         area_unit: AreaUnit::M2,
         angle_unit: AngleUnit::Grad,
         plot_scale: 1000.0,
-        workspace: Some(Workspace::Hybrid),
+        workspace: Some(Workspace::Gis),
         drawing_font: Some(DrawingFont::Barlow),
     }
 }
@@ -364,7 +364,7 @@ mod tests {
             let o = &case["options"];
             let workspace: Workspace = o
                 .get("workspace")
-                .map_or(Ok(Workspace::Hybrid), |w| serde_json::from_value(w.clone()))
+                .map_or(Ok(Workspace::Gis), |w| serde_json::from_value(w.clone()))
                 .expect("a mode");
             let drawing_font: DrawingFont = o
                 .get("drawingFont")
@@ -392,7 +392,7 @@ mod tests {
             name: "x".into(),
             srid: 1234,
             plot_scale: 1000.0,
-            workspace: Workspace::Hybrid,
+            workspace: Workspace::Gis,
             drawing_font: DrawingFont::Barlow,
         });
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));

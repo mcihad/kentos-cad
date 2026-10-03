@@ -308,6 +308,12 @@ export const RENAMED: readonly (readonly [string, string])[] = [
  */
 export const RETIRED: readonly string[] = ['appearance.shell'];
 
+/**
+ * Values earlier versions kept that no longer mean anything, as `RETIRED_VALUES` has them: dropped as they are read,
+ * without a report, so the default applies. The former Hibrit mode, since projects are CAD or CBS (docs/adr/0165).
+ */
+export const RETIRED_VALUES: readonly (readonly [string, string])[] = [['newProjects.workspace', 'hybrid']];
+
 /** The web's five text sizes before they were pixels. */
 const OLDER_TEXT_SIZES: Readonly<Record<string, number>> = { small: 12, standard: 13, large: 14, xlarge: 15, xxlarge: 16 };
 
@@ -345,6 +351,7 @@ export function renamedSetting(key: string, value: unknown): Renamed | undefined
 function renamedLayer(layer: 'user' | 'device', values: Record<string, unknown>, diagnostics: SettingDiagnostic[]): Record<string, unknown> {
   const out: Record<string, unknown> = { ...values };
   for (const key of RETIRED) delete out[key];
+  for (const [key, value] of RETIRED_VALUES) if (out[key] === value) delete out[key];
   for (const [from] of RENAMED) {
     if (!Object.hasOwn(out, from)) continue;
     const value = out[from];

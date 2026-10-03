@@ -685,9 +685,17 @@ impl Viewport {
         }
     }
 
-    /// Shows `b` as large as it fits, with the margin a fit keeps.
+    /// Shows `b` as large as it fits, with the margin a fit keeps; before the
+    /// area has its size, once it has it. (A new project made on the start
+    /// screen, its sheet fitted to the camera's 1 × 1 pixel, opened at about
+    /// 1:500 000; docs/adr/0165 §3.)
     pub fn show(&mut self, b: &Bounds) {
-        self.camera.fit(b, FIT_PADDING);
+        if self.sized {
+            self.camera.fit(b, FIT_PADDING);
+        } else {
+            self.fit_pending = true;
+            self.opened_extent = Some(*b);
+        }
     }
 
     /// A view change a tool asked for (Kaydır, Pencere yakınlaştır;

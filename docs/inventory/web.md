@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 283 | 270 | 0 | 13 |
+| Komutlar | 282 | 269 | 0 | 13 |
 | Araçlar | 89 | 87 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
-| Çalışma modları | 5 | 3 | 0 | 2 |
+| Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 74 | 74 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 265 | 265 | 0 | 0 |
-| Pencereler ve paneller | 85 | 85 | 0 | 0 |
+| Pencereler ve paneller | 86 | 86 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -35,8 +35,8 @@ Yok.
 - Komutlar: `workspace.plan3d` 3D Plan — Yakında
 - Araçlar: `stakeout` Aplikasyon — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - Araçlar: `subdivide` İfraz — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
-- Çalışma modları: `disaster` Afet ve risk analizi
-- Çalışma modları: `plan3d` İmar planından 3D kent tasarımı
+- Proje türleri: `disaster` Afet ve risk analizi
+- Proje türleri: `plan3d` İmar planından 3D kent tasarımı
 
 ## Arayüzde yeri görünmeyen komutlar (27)
 
@@ -46,19 +46,19 @@ Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçm
 
 ## Masaüstü
 
-Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), çalışma modları (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).
+Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), proje türleri (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 210 | 0 | 58 | 13 | 2 | 283 |
+| Komutlar | 209 | 0 | 58 | 13 | 2 | 282 |
 | Araçlar | 87 | 0 | 0 | 2 | 0 | 89 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
-| Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
+| Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 71 | 0 | 2 | 0 | 1 | 74 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 265 | 0 | 0 | 0 | 0 | 265 |
-| Pencereler ve paneller | 68 | 2 | 14 | 0 | 1 | 85 |
+| Pencereler ve paneller | 68 | 2 | 15 | 0 | 1 | 86 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,7 +77,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 283; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (58 / 282; ayrıca 13 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -164,7 +164,7 @@ Yok.
 
 Yok.
 
-#### Çalışma modları (0 / 5; ayrıca 2 iki platformda da bekliyor)
+#### Proje türleri (0 / 4; ayrıca 2 iki platformda da bekliyor)
 
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
@@ -182,8 +182,9 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (16 / 85)
+#### Pencereler ve paneller (17 / 86)
 
+- `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
 - `apps/web/src/ui/sheet/ExpressionDialog.ts#openExpressionDialog` openExpressionDialog
 - `apps/web/src/ui/sheet/ItemTree.ts#ItemTree` ItemTree
@@ -203,4 +204,4 @@ Yok.
 
 ## Test başvurusu
 
-110 / 283 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+109 / 282 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

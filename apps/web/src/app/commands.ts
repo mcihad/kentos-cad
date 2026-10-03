@@ -13,7 +13,7 @@ import type { ThemeId } from './appearance';
 import { PREF_KEYS, type OverlapMode } from './state';
 import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
-import { WORKSPACES, type WorkspaceSpec } from './workspaces';
+import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -85,16 +85,16 @@ function overlapMode(ctx: AppContext, mode: OverlapMode, title: string, icon: st
 }
 
 /**
- * A work mode as a radio command. Choosing one changes the project setting
- * (the project is unsaved afterwards, like any project setting); an
- * announced mode says “Yakında” and changes nothing.
+ * A project type as a radio command (docs/adr/0165). Choosing one changes the
+ * project setting (the project is unsaved afterwards, like any project
+ * setting); an announced type says “Yakında” and changes nothing.
  */
 function workspace(ctx: AppContext, w: WorkspaceSpec): Command {
   const setting = () => ctx.doc.settings.workspace;
   const soon = w.status === 'soon';
   return {
     id: `workspace.${w.id}`,
-    title: w.id === 'hybrid' ? `${w.label} (${w.title})` : w.label,
+    title: w.label,
     category: 'Görünüm',
     icon: w.icon,
     description: w.description,
@@ -103,14 +103,14 @@ function workspace(ctx: AppContext, w: WorkspaceSpec): Command {
     pendingNote: soon ? 'Yakında' : undefined,
     run: () => {
       if (soon) {
-        ctx.log.info(`“${w.label}” çalışma modu yakında geliyor. Şimdilik Hibrit, CAD ya da CBS modunu kullanın.`);
+        ctx.log.info(`“${w.label}” proje türü yakında geliyor. Şimdilik CAD ya da CBS kullanın.`);
         return;
       }
       if (setting().value === w.id) return;
       setting().set(w.id);
-      ctx.log.info(`Çalışma modu: ${w.label}. Gizlenen komutlar komut satırından ve kısayoluyla yine çalışır.`);
+      ctx.log.info(`Proje türü: ${w.label}. Şeridinde olmayan komutlar komut satırından ve kısayoluyla yine çalışır.`);
     },
-    isChecked: () => setting().value === w.id,
+    isChecked: () => effectiveWorkspace(setting().value).id === w.id,
     watch: [setting()],
   };
 }

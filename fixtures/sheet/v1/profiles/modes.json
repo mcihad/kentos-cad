@@ -1,5 +1,5 @@
 {
-  "description": "Kip profilleri (design §11a): araçların durumu, adları ve hazır biçimleri (kipin satırı bir aracın hazır biçimlerini söylemiyorsa ortak profilinkiler); şablon galerisinin sırası. Beklenenler tasarımın tablosundan elle yazıldı.",
+  "description": "Proje türlerinin profilleri (design §11a; Hibrit ADR 0165 ile kalktı): araçların durumu, adları ve hazır biçimleri (türün satırı bir aracın hazır biçimlerini söylemiyorsa ortak profilinkiler); şablon galerisinin sırası. Beklenenler tasarımın tablosundan elle yazıldı.",
   "profiles": [
     {
       "description": "CAD, koordinat sistemi yok: kuzey oku, karelaj ve atlas görünmez; harita “Görünüm penceresi”",
@@ -136,53 +136,6 @@
           "table": {
             "state": "enabled",
             "presets": [
-              "fixed"
-            ]
-          }
-        },
-        "absent": []
-      }
-    },
-    {
-      "description": "Hibrit: CAD ve CBS'nin birleşimi; harita “Harita”; çerçevenin hazır biçimleri ikisinden",
-      "workspace": "hybrid",
-      "capabilities": {
-        "georeferenced": true,
-        "attributeLayers": true
-      },
-      "expect": {
-        "profile": "hybrid",
-        "defaultTemplate": "sys:genel-a3-yatay",
-        "tools": {
-          "map": {
-            "state": "enabled",
-            "label": "Harita"
-          },
-          "attributeTable": {
-            "state": "enabled"
-          },
-          "overviewMap": {
-            "state": "enabled"
-          },
-          "border": {
-            "state": "enabled",
-            "presets": [
-              "zones",
-              "neat"
-            ]
-          },
-          "northArrow": {
-            "state": "enabled",
-            "presets": [
-              "k",
-              "compass"
-            ]
-          },
-          "table": {
-            "state": "enabled",
-            "presets": [
-              "revisions",
-              "drawings",
               "fixed"
             ]
           }
@@ -340,63 +293,6 @@
           "fit": "other",
           "matches": false,
           "badge": "CAD şablonu"
-        }
-      ]
-    },
-    {
-      "description": "Hibrit, imar planı projesi: hem CAD'in hem CBS'nin şablonları kipine uyar",
-      "workspace": "hybrid",
-      "projectType": "zoningPlan",
-      "expect": [
-        {
-          "id": "sys:imar-plani",
-          "fit": "projectType",
-          "matches": true
-        },
-        {
-          "id": "sys:cad-teknik",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:cad-mimari",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:aplikasyon-krokisi",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:ifraz-paftasi",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:gis-tematik",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:gis-atlas",
-          "fit": "workspace",
-          "matches": true
-        },
-        {
-          "id": "sys:genel-a3-yatay",
-          "fit": "common",
-          "matches": true
-        },
-        {
-          "id": "sys:genel-a4-dikey",
-          "fit": "common",
-          "matches": true
-        },
-        {
-          "id": "sys:rapor-sayfasi",
-          "fit": "common",
-          "matches": true
         }
       ]
     },

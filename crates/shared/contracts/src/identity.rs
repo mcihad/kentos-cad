@@ -35,6 +35,7 @@ use ts_rs::TS;
 
 use crate::document::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, MigrationSource,
+    ProjectSettings,
 };
 use crate::layer::LayerNode;
 
@@ -387,7 +388,8 @@ pub fn v1_identities(text: &str) -> Result<V1Identities, String> {
 /// its derived persistent id, the project its derived id, and the source is
 /// recorded, so a v2 file keeps where the ids came from (TODOS.md FILE-05,
 /// FILE-21). The objects keep their v1 local ids as slots; a v2 file does not
-/// write them.
+/// write them. The former Hibrit mode is a project type not asked yet and is
+/// not written (docs/adr/0165 §1).
 pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, String> {
     let ids = v1_uids(&snapshot)?;
     let DocumentSnapshotV1 {
@@ -406,7 +408,10 @@ pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, St
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION_2,
         name,
-        settings,
+        settings: ProjectSettings {
+            workspace: settings.project_type(),
+            ..settings
+        },
         origin,
         home_view,
         layers,

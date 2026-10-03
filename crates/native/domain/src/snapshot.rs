@@ -13,7 +13,7 @@ use std::sync::Arc;
 use kentos_contracts::{
     BlockDefinition, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV1,
     DocumentSnapshotV2, Entity, EntityId, LayerNode, LayerNodeType, MigrationSource, ProjectId,
-    v1_uids,
+    ProjectSettings, v1_uids,
 };
 
 use crate::document::Document;
@@ -125,6 +125,11 @@ impl Document {
             blocks,
             ..
         } = parts.snapshot;
+        // The former Hibrit mode is held as a type not asked yet, as the web holds it (docs/adr/0165 §1).
+        let settings = ProjectSettings {
+            workspace: settings.project_type(),
+            ..settings
+        };
         let largest = entities.iter().map(|e| e.base().id).max().unwrap_or(0);
         let mut store = Store::default();
         for (entity, uid) in entities.into_iter().zip(parts.uids) {

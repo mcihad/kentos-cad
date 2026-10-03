@@ -20,7 +20,7 @@
           "areaUnit": "m2",
           "angleUnit": "grad",
           "plotScale": 1000,
-          "workspace": "hybrid",
+          "workspace": "gis",
           "drawingFont": "barlow"
         },
         "origin": {
@@ -1034,7 +1034,7 @@
         "name": "Web haritası",
         "srid": 3857,
         "plotScale": 2000,
-        "workspace": "hybrid",
+        "workspace": "gis",
         "drawingFont": "plex-mono"
       },
       "snapshot": {
@@ -1048,7 +1048,7 @@
           "areaUnit": "m2",
           "angleUnit": "grad",
           "plotScale": 2000,
-          "workspace": "hybrid",
+          "workspace": "gis",
           "drawingFont": "plex-mono"
         },
         "origin": {
@@ -1389,7 +1389,7 @@
           "areaUnit": "m2",
           "angleUnit": "grad",
           "plotScale": 5000,
-          "workspace": "hybrid",
+          "workspace": "gis",
           "drawingFont": "barlow"
         },
         "origin": {

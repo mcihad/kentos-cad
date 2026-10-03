@@ -76,9 +76,9 @@ const SCENES: [Scene; 31] = [
     scene("ice-aktar", Some("Dosya"), "İçe aktar", Open::Caption),
     scene("disa-aktar", Some("Dosya"), "Dışa aktar", Open::Caption),
     scene(
-        "calisma-modu",
+        "proje-turu",
         Some("Görünüm"),
-        "Çalışma modu",
+        "Proje türü",
         Open::Caption,
     ),
     scene(
@@ -88,8 +88,8 @@ const SCENES: [Scene; 31] = [
         Open::Caption,
     ),
     scene("katman", None, "Bina", Open::Menu),
-    // The status bar's work mode.
-    scene("mod", None, "Hibrit", Open::Caption),
+    // The status bar's project type.
+    scene("mod", None, "CAD", Open::Caption),
     on_sheet("pafta-yeni", "Yeni", Open::Caption),
     on_sheet("pafta-sekil", "Şekil", Open::Arrow),
     on_sheet("pafta-harita", "Harita", Open::Arrow),
@@ -166,6 +166,11 @@ fn icon_tour() {
                 (1440.0, 900.0)
             };
             let mut app = app_with_drawing();
+            // The drawing's lists in CAD's ribbon, which has them all (CBS leaves dimensions,
+            // arrays and helpers out); the sheet's in CBS's profile (docs/adr/0165).
+            if !scene.sheet {
+                let _ = app.update(Message::Run("workspace.cad"));
+            }
             let _ = app
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(mode))]);

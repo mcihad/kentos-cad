@@ -48,9 +48,8 @@ SAMPLES = {
     'cannotStart': (['Daire', '3 nokta'], lambda t, l: f'“{t}: {l}” şu an başlatılamadı.'),
 }
 
-# The web's tabs in each ready work mode (app/ribbon.ts ribbonTabs), in order; the selection tab is contextual.
+# The web's tabs in each ready project type (app/ribbon.ts ribbonTabs; docs/adr/0165), in order; the selection tab is contextual.
 TABS = {
-    'hybrid': [('file', 'Dosya'), ('home', 'Giriş'), ('draw', 'Çizim'), ('modify', 'Değiştir'), ('map', 'Harita'), ('view', 'Görünüm'), ('processing', 'İşlemler'), ('tools', 'Araçlar'), ('selection', 'Seçim')],
     'cad': [('file', 'Dosya'), ('home', 'Giriş'), ('draw', 'Çizim'), ('modify', 'Değiştir'), ('map', 'Ölçme'), ('view', 'Görünüm'), ('tools', 'Araçlar'), ('selection', 'Seçim')],
     'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('draw', 'Çizim'), ('modify', 'Değiştir'), ('map', 'Harita'), ('view', 'Görünüm'), ('processing', 'İşlemler'), ('tools', 'Araçlar'), ('selection', 'Seçim')],
 }
@@ -190,7 +189,7 @@ def split_face(e):
 
 LETTERS = ['Çizim', 'İşlemler', 'Görünüm: ölçü', 'Değiştir', 'Kâğıt', 'ışık', 'I/O 2', 'Yeni proje', 'Kaydet…', '3 nokta', 'Aç–kapat']
 ASSIGNS = [
-    ('the tabs of the hybrid mode', [l for _, l in TABS['hybrid'][:-1]], []),
+    ('the tabs of the CBS type', [l for _, l in TABS['gis'][:-1]], []),
     ('one first letter each', ['Dosya', 'Giriş', 'Harita'], []),
     ('shared first letters get two, from the initials first', ['Yeni proje', 'Yapıştır', 'Yakınlaştır', 'Yay'], []),
     ('a reserved tip is never given', ['1. adım', 'Kaydet', 'Kes'], ['1', '2']),
@@ -199,7 +198,7 @@ ASSIGNS = [
     ('the controls of a panel', ['Yapıştır', 'Kes', 'Panoya kopyala', 'Özgün koordinatlara yapıştır', 'Seç', 'Pencere yakınlaştır', 'Kaydır', 'Çizgi', 'Çoklu çizgi', 'Daire: Merkez, yarıçap', 'Daire: diğer seçenekler', 'Yay: 3 nokta', 'Yay: diğer seçenekler', 'Kapalı alan'], []),
 ]
 FIRST_LEVELS = [
-    (3, 'hybrid', False), (5, 'hybrid', True), (3, 'cad', False), (3, 'gis', False), (12, 'hybrid', False), (0, 'cad', True),
+    (4, 'gis', False), (5, 'gis', True), (3, 'cad', False), (3, 'gis', False), (12, 'gis', False), (0, 'cad', True),
 ]
 TIPS = ['1', '2', '3', 'D', 'GI', 'C', 'DE', 'H', 'GO', 'I', 'A', 'S']
 STEPS = [

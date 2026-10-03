@@ -214,13 +214,14 @@ class Document:
         *,
         srid: int,
         plot_scale: float = 1000.0,
-        workspace: Workspace | WorkspaceName = Workspace.HYBRID,
+        workspace: Workspace | WorkspaceName = Workspace.GIS,
         drawing_font: DrawingFont | DrawingFontName = DrawingFont.BARLOW,
     ) -> Document:
         """A new project, as Yeni proje makes it: the standard layer tree,
         the zone's work area, the default units. ``srid`` is the project's
         coordinate system (5254…5259 TUREF/TM, 32635…32638 UTM …); it is
-        asked, never guessed."""
+        asked, never guessed. ``workspace`` is the project's type: CBS
+        (``gis``) or CAD (``cad``), docs/adr/0165."""
         return cls(
             _host(
                 _native.Session.new_project,

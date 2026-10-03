@@ -21,7 +21,7 @@ fn new_drawing() -> Session {
         name: "Ada 101".into(),
         srid: 5256,
         plot_scale: 1000.0,
-        workspace: Workspace::Hybrid,
+        workspace: Workspace::Gis,
         drawing_font: DrawingFont::Barlow,
     })
     .expect("a new project")

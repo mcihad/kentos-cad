@@ -412,7 +412,7 @@ impl App {
                         .ok()
                         .map(|w| {
                             format!(
-                                "Yeni projeler “{}” çalışma moduyla önerilecek. Açık projenin modu değişmedi.",
+                                "Yeni projeler “{}” türüyle önerilecek. Açık projenin türü değişmedi.",
                                 crate::catalog::mode_of(Some(w))
                             )
                         })
@@ -842,7 +842,7 @@ mod tests {
         );
         assert!(
             said.contains(
-                &"Yeni projeler “CAD” çalışma moduyla önerilecek. Açık projenin modu değişmedi."
+                &"Yeni projeler “CAD” türüyle önerilecek. Açık projenin türü değişmedi."
             ),
             "{said:?}"
         );

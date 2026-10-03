@@ -1,11 +1,13 @@
-//! The project's windows (the web's `ui/settings/NewProjectDialog.ts` and
-//! `ProjectSettingsDialog.ts`): Yeni proje and Proje ayarları. Nothing
+//! The project's windows (the web's `ui/settings/NewProjectDialog.ts`,
+//! `ProjectSettingsDialog.ts` and `ProjectTypeDialog.ts`): Yeni proje, Proje
+//! ayarları and the type question of a project opened without one. Nothing
 //! changes until the window's button. A new project replaces the drawing;
 //! unsaved work is asked about first, over the window, and Vazgeç there
 //! comes back to it. Project settings are assigned to the drawing: an edit,
 //! not an undo step, and a new coordinate system is assigned, never a
 //! transformation of the coordinates (CLAUDE.md §5).
 
+mod ask_type;
 mod content;
 mod new;
 pub(crate) mod settings;
@@ -31,12 +33,14 @@ use crate::crs::grouped;
 pub enum Window {
     New(Box<new::State>),
     Settings(Box<settings::State>),
+    Type(Box<ask_type::State>),
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
     New(new::Event),
     Settings(settings::Event),
+    Type(ask_type::Event),
     Close,
 }
 
@@ -82,6 +86,10 @@ impl App {
                 self.project_settings_event(e);
                 Task::none()
             }
+            Event::Type(e) => {
+                self.project_type_event(e);
+                Task::none()
+            }
             Event::Close => {
                 self.close_project_window();
                 Task::none()
@@ -96,10 +104,19 @@ impl App {
         }
     }
 
+    /// Esc or × closed a project window (its state goes): the type question
+    /// says what that leaves.
+    pub(crate) fn project_dismissed(&mut self) {
+        if let Some(Window::Type(s)) = self.project.take() {
+            self.type_left_unasked(&s.name);
+        }
+    }
+
     pub(crate) fn project_view(&self) -> Element<'_, Message> {
         match &self.project {
             Some(Window::New(s)) => self.new_project_view(s),
             Some(Window::Settings(s)) => self.project_settings_view(s),
+            Some(Window::Type(s)) => self.project_type_view(s),
             None => text("").into(),
         }
     }
@@ -134,12 +151,14 @@ fn scales<'a, M: Clone + 'a>(value: f64, on: impl Fn(f64) -> M) -> Element<'a, M
     Segmented::new(PLOT_SCALES.map(Scale), Scale(value), move |s| on(s.0)).into()
 }
 
-/// The work modes as cards (the web's `workspacePicker`): the ones that can
-/// be chosen, then the announced ones, dimmed, with “Yakında”. `compact`
-/// leaves out what each is for (Proje ayarları).
+/// The project types as cards (the web's `workspacePicker`): the ones that
+/// can be chosen, then, with `soon`, the announced ones, dimmed, with
+/// “Yakında”. `compact` leaves out what each is for (Proje ayarları) and the
+/// announced ones.
 fn modes<'a, M: Clone + 'a>(
     value: Workspace,
     compact: bool,
+    soon: bool,
     on: impl Fn(Workspace) -> M,
 ) -> Element<'a, M> {
     let card = |m: &'static crate::catalog::Mode| -> Element<'a, M> {
@@ -180,14 +199,14 @@ fn modes<'a, M: Clone + 'a>(
     };
     let all = catalog().modes();
     let ready: Vec<Element<'a, M>> = all.iter().filter(|m| m.ready).map(card).collect();
-    let soon: Vec<Element<'a, M>> = all.iter().filter(|m| !m.ready).map(card).collect();
+    let announced: Vec<Element<'a, M>> = all.iter().filter(|m| !m.ready).map(card).collect();
     let mut out = Column::new()
         .spacing(8)
         .push(Row::with_children(ready).spacing(8));
-    if !soon.is_empty() && !compact {
+    if !announced.is_empty() && soon && !compact {
         out = out
             .push(label::caption("Yakında"))
-            .push(Row::with_children(soon).spacing(8));
+            .push(Row::with_children(announced).spacing(8));
     }
     out.into()
 }
@@ -306,6 +325,25 @@ mod tests {
         );
     }
 
+    /// Made on the start screen, before the drawing area has its size, a new
+    /// project opens on its sheet at its scale once the area has it (it
+    /// opened at about 1:500 000, docs/adr/0165 §3).
+    #[test]
+    fn a_new_project_made_before_the_area_has_its_size_opens_at_its_scale() {
+        use iced::{Point, Rectangle, Size};
+
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Run("file.new"));
+        let _ = app.update(Message::Project(Box::new(Event::New(New::Create))));
+        assert!(app.document.is_some());
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+            Rectangle::new(Point::ORIGIN, Size::new(1000.0, 750.0)),
+        )));
+        // The sheet (500 × 375 m at 1:1000) fills the area: about 2 pixels a metre.
+        let scale = app.viewport.camera.scale;
+        assert!((1.5..2.1).contains(&scale), "{scale}");
+    }
+
     #[test]
     fn unsaved_work_is_asked_about_and_vazgec_comes_back_to_the_window() {
         let mut app = app_with_drawing();
@@ -387,6 +425,10 @@ mod tests {
                 Event::Settings(Settings::AreaUnit(AreaUnit::Donum)),
             );
             picture(&mut app, &format!("proje-{mode}-4-ayarlar-birimler"));
+            send(&mut app, Event::Close);
+            // The type question of a project opened without one (docs/adr/0165 §1).
+            app.ask_project_type();
+            picture(&mut app, &format!("proje-{mode}-5-tur-sorusu"));
         }
     }
 

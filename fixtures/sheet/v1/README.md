@@ -45,7 +45,7 @@ Beklenenlerin iki kaynağı vardır; her ailenin satırı hangisi olduğunu söy
 
 **Eşitleme** (`sync/rules.json`): satırlar §13 tablosunun sırasıyla; eylemler kimlik sırasıyla.
 
-**Profiller** (`profiles/modes.json`): CAD satırının söylemediği araçların (şekil, ölçek çubuğu) hazır biçimleri ortak profilden; hibrit CAD ile GIS'in birleşimi (tablo: revizyon, çizim listesi, sabit tablo). Galeri: önce proje türüne uyanlar, sonra kipin şablonları, sonra ortaklar, en sonda rozetli öbür kipinkiler; aynı sınıfta kipin galeri sırası.
+**Profiller** (`profiles/modes.json`): CAD satırının söylemediği araçların (şekil, ölçek çubuğu) hazır biçimleri ortak profilden (Hibrit profili ADR 0165 ile kalktı). Galeri: önce iş türüne uyanlar, sonra proje türünün şablonları, sonra ortaklar, en sonda rozetli öbür türlerinkiler; aynı sınıfta türün galeri sırası.
 
 **Yerleşim düzenleri** (`relayout/variants.json`): 400 × 280 yatay kâğıtta harita, sağda şerit ve şeridin üstünde logo; dikey düzen haritayı ve şeridi 200 × 280 kâğıtta anar (şerit altta). 210 × 297 dikey kâğıtta dikey düzen geçerli olur: harita iki kenar boşluğunu korur (10…200 × 10…207), şerit altta 80 mm (207…287); logoyu düzen anmaz, temel düzenden gelir: sağ kenar boşluğuna 40 mm (390 − 350), yani 200 − 40 − 30 = 130. 500 × 300 yatayda hiçbir düzen uymaz: temel düzen kısıtlarıyla (logo 490 − 40 − 30 = 420).
 

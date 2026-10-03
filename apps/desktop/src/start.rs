@@ -161,7 +161,7 @@ impl App {
                 "file.new",
                 Icon::DocumentNew,
                 "Yeni proje",
-                "Çalışma modu, koordinat sistemi ve ölçekle boş çizim".to_owned(),
+                "Proje türü, koordinat sistemi ve ölçekle boş çizim".to_owned(),
             ))
             .push(action(
                 "file.open",

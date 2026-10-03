@@ -37,23 +37,29 @@ pub enum AngleUnit {
     Deg,
 }
 
-/// The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon
-/// tabs and tools the interface shows. Presentation only, never what the data
-/// means: every command still runs in every mode. `plan3d` and `disaster` are
-/// announced ("Yakında") and cannot be chosen yet; a file naming them opens in
-/// the hybrid presentation. Files written before modes existed have none
-/// (hybrid).
+/// A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
+/// with its own scene, axes and ribbon; every command still runs in both.
+/// `plan3d` and `disaster` are announced ("Yakında") and cannot be chosen yet;
+/// a file naming them shows as CBS. There is no hybrid type any more.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum Workspace {
-    Hybrid,
     Cad,
     Gis,
     Plan3d,
     Disaster,
+    /// The former Hibrit mode, as files written before project types name it
+    /// (docs/adr/0165 §1): read and kept as written, so such a file reads and
+    /// its v1 objects' ids derive as before (docs/adr/0014). It means the
+    /// project's type is not asked yet; nothing chooses it, and the apps hold
+    /// it as none (`ProjectSettings::project_type`).
+    #[serde(rename = "hybrid")]
+    #[cfg_attr(feature = "ts", ts(skip))]
+    #[cfg_attr(feature = "schema", schemars(skip))]
+    LegacyHybrid,
 }
 
 /// The typeface of the text that is part of the drawing (text objects,
@@ -89,7 +95,9 @@ pub struct ProjectSettings {
     pub angle_unit: AngleUnit,
     /// Plot scale denominator (1:1000 → 1000).
     pub plot_scale: f64,
-    /// Absent in files written before work modes (read as hybrid).
+    /// The project's type; none while it is not asked (files written before
+    /// types). The former Hibrit mode reads as written and means the same
+    /// (see [`ProjectSettings::project_type`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub workspace: Option<Workspace>,
@@ -97,6 +105,14 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+}
+
+impl ProjectSettings {
+    /// The project's type; none while it is not asked: no value, or the
+    /// former Hibrit mode's (docs/adr/0165 §1).
+    pub fn project_type(&self) -> Option<Workspace> {
+        self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

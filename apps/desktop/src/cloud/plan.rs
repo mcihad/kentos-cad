@@ -27,7 +27,7 @@ pub const NO_ORGANIZATION: &str =
 
 /// What choosing a type means, and does not (said wherever one is chosen:
 /// Proje bilgileri, catalog_forms_view.rs).
-pub const TYPE_HINT: &str = "Tür yalnız projeleri bulmak ve düzenlemek içindir: bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.";
+pub const TYPE_HINT: &str = "İş türü yalnız projeleri bulmak ve düzenlemek içindir: proje türünü (CAD ya da CBS) değiştirmez, bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.";
 
 /// The types a project can have, in the web's order (`PROJECT_TYPES`).
 pub const PROJECT_TYPES: [ProjectType; 7] = [

@@ -58,7 +58,7 @@ const ITEMS = [
   // The shell itself: the ribbon (the only chrome, docs/adr/0155) and the bars at this width.
   { id: 'shell', open: async () => {} },
   { id: 'appmenu', open: (ui) => ui.click('.brand') },
-  // Every tab of the ribbon in the hybrid mode (fixtures/shell/v1/ribbon.json), the file tab being the app menu.
+  // Every tab of the ribbon of a project not asked its type, CBS's (fixtures/shell/v1/ribbon.json), the file tab being the app menu.
   ...['home', 'draw', 'modify', 'map', 'view', 'processing', 'tools'].map((t) => ({ id: `tab-${t}`, open: (ui) => ui.click(`.ribbon__tab[data-tab="${t}"]`), close: (ui) => ui.click('.ribbon__tab[data-tab="home"]') })),
   { id: 'ribbon-layer', open: (ui) => ui.click('.ribbon__strip .dropdown--layer') },
   // The Özellikler panel's colour list: in the panel, or under the panel's button when the window folds it (1100 wide).

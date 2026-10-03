@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 283,
-      "implemented": 270,
+      "total": 282,
+      "implemented": 269,
       "partial": 0,
       "pending": 13
     },
@@ -43,8 +43,8 @@
       "pending": 0
     },
     "workspaces": {
-      "total": 5,
-      "implemented": 3,
+      "total": 4,
+      "implemented": 2,
       "partial": 0,
       "pending": 2
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 85,
-      "implemented": 85,
+      "total": 86,
+      "implemented": 86,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 110,
-    "commandsOnDesktop": 210,
+    "commandsWithoutTests": 109,
+    "commandsOnDesktop": 209,
     "desktop": {
       "commands": {
-        "total": 283,
-        "implemented": 210,
+        "total": 282,
+        "implemented": 209,
         "partial": 0,
         "pending": 13,
         "none": 58,
@@ -137,8 +137,8 @@
         "n/a": 0
       },
       "workspaces": {
-        "total": 5,
-        "implemented": 3,
+        "total": 4,
+        "implemented": 2,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -169,11 +169,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 85,
+        "total": 86,
         "implemented": 68,
         "partial": 2,
         "pending": 0,
-        "none": 14,
+        "none": 15,
         "n/a": 1
       }
     },
@@ -3606,7 +3606,7 @@
       "short": "Şablondan",
       "category": "Pafta",
       "icon": "sheetTemplate",
-      "description": "Pafta şablonları: sistemin, sizin, kurumunuzun ve sizinle paylaşılanlar; kipinize ve proje türünüze göre sıralı.",
+      "description": "Pafta şablonları: sistemin, sizin, kurumunuzun ve sizinle paylaşılanlar; projenin türüne ve iş türüne göre sıralı.",
       "aliases": [
         "SABLON",
         "PAFTASABLONU"
@@ -3871,7 +3871,7 @@
       "title": "Yeni pafta",
       "category": "Pafta",
       "icon": "sheetNew",
-      "description": "Çalışma modunun varsayılan şablonundan yeni bir pafta açar.",
+      "description": "Proje türünün varsayılan şablonundan yeni bir pafta açar.",
       "aliases": [
         "YENIPAFTA",
         "YP"
@@ -8703,7 +8703,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Görünüm › Görünüş › Çalışma modu"
+        "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
         "Görünüm › Görünüş"
@@ -8731,7 +8731,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Görünüm › Görünüş › Çalışma modu"
+        "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
         "Görünüm › Görünüş"
@@ -8759,34 +8759,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Görünüm › Görünüş › Çalışma modu"
-      ],
-      "ribbon": [
-        "Görünüm › Görünüş"
-      ],
-      "quickAccess": false,
-      "hiddenIn": [],
-      "uiSources": [],
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "implemented"
-      },
-      "tests": []
-    },
-    {
-      "id": "workspace.hybrid",
-      "title": "Hibrit (CAD + CBS)",
-      "category": "Görünüm",
-      "icon": "modeHybrid",
-      "description": "Hassas çizim ile coğrafi veri bir arada: bütün menüler, sekmeler ve araçlar.",
-      "aliases": [
-        "MODHibrit"
-      ],
-      "kind": "toggle",
-      "shortcuts": [],
-      "menus": [
-        "Görünüm › Görünüş › Çalışma modu"
+        "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
         "Görünüm › Görünüş"
@@ -8814,7 +8787,7 @@
       "kind": "toggle",
       "shortcuts": [],
       "menus": [
-        "Görünüm › Görünüş › Çalışma modu"
+        "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
         "Görünüm › Görünüş"
@@ -11801,23 +11774,6 @@
       }
     },
     {
-      "id": "hybrid",
-      "label": "Hibrit",
-      "title": "CAD + CBS",
-      "description": "Hassas çizim ile coğrafi veri bir arada: bütün menüler, sekmeler ve araçlar.",
-      "highlights": [
-        "Bütün çizim ve düzenleme araçları",
-        "Harita, parsel ve koordinat işleri",
-        "İşlem araçları ve modeller"
-      ],
-      "hide": {},
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "implemented"
-      }
-    },
-    {
       "id": "plan3d",
       "label": "3D Plan",
       "title": "İmar planından 3D kent tasarımı",
@@ -12180,7 +12136,7 @@
       "scope": "project",
       "persistence": ".kcad settings, cloud project",
       "type": "string",
-      "default": "hybrid",
+      "default": "gis",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -12475,7 +12431,7 @@
       "scope": "user",
       "persistence": "localStorage kentos.settings.v1",
       "type": "string",
-      "default": "hybrid",
+      "default": "gis",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -16527,7 +16483,6 @@
       "contract": "Workspace",
       "rust": "crates/shared/contracts/src/document.rs",
       "values": [
-        "hybrid",
         "cad",
         "gis",
         "plan3d",
@@ -17192,6 +17147,17 @@
       "desktopWhere": "apps/desktop/src/project/settings.rs (ADR 0049)"
     },
     {
+      "id": "apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog",
+      "name": "openProjectTypeDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/settings/ProjectTypeDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog",
       "name": "openExportDialog",
       "role": "window",
@@ -17715,12 +17681,11 @@
             "label": "Görünüş",
             "items": [
               {
-                "label": "Çalışma modu",
+                "label": "Proje türü",
                 "items": [
                   {
                     "label": "",
                     "items": [
-                      "workspace.hybrid",
                       "workspace.cad",
                       "workspace.gis"
                     ]
@@ -18490,27 +18455,6 @@
               {
                 "command": "tool.adjoin",
                 "size": "small"
-              },
-              {
-                "split": [
-                  {
-                    "command": "tool.rectangle",
-                    "title": "Dikdörtgen",
-                    "label": "Dikdörtgen"
-                  },
-                  {
-                    "command": "tool.rectangle3",
-                    "title": "Döndürülmüş dikdörtgen",
-                    "label": "Döndürülmüş dikdörtgen"
-                  },
-                  {
-                    "command": "tool.regularPolygon",
-                    "title": "Düzgün çokgen",
-                    "label": "Düzgün çokgen"
-                  }
-                ],
-                "key": "rectangle",
-                "size": "small"
               }
             ],
             "overflow": [],
@@ -18585,32 +18529,6 @@
                 ],
                 "key": "extend",
                 "size": "small"
-              },
-              {
-                "split": [
-                  {
-                    "command": "tool.fillet",
-                    "title": "Köşe yuvarla",
-                    "label": "Köşe yuvarla"
-                  },
-                  {
-                    "command": "tool.chamfer",
-                    "title": "Pah",
-                    "label": "Pah"
-                  },
-                  {
-                    "command": "tool.filletAll",
-                    "title": "Tüm köşeleri yuvarla",
-                    "label": "Tüm köşeleri yuvarla"
-                  },
-                  {
-                    "command": "tool.chamferAll",
-                    "title": "Tüm köşelere pah",
-                    "label": "Tüm köşelere pah"
-                  }
-                ],
-                "key": "corner",
-                "size": "small"
               }
             ],
             "overflow": [],
@@ -18629,159 +18547,6 @@
                 "size": "large"
               },
               {
-                "split": [
-                  {
-                    "command": "tool.dimension",
-                    "option": "H",
-                    "title": "Ölçülendirme",
-                    "label": "Hizalı",
-                    "description": "İki nokta arası, kendi doğrultusunda",
-                    "aliases": [
-                      "DIMALIGNED",
-                      "DAL"
-                    ],
-                    "icon": "dimAligned"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "D",
-                    "title": "Ölçülendirme",
-                    "label": "Doğrusal",
-                    "description": "ΔY yatay ya da ΔX düşey",
-                    "aliases": [
-                      "DIMLIN",
-                      "DIMLINEAR",
-                      "DLI"
-                    ],
-                    "icon": "dimLinear"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "A",
-                    "title": "Ölçülendirme",
-                    "label": "Açı",
-                    "description": "İki kenar ya da iki kol arası",
-                    "aliases": [
-                      "DIMANG",
-                      "DIMANGULAR",
-                      "DAN"
-                    ],
-                    "icon": "dimAngular"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "R",
-                    "title": "Ölçülendirme",
-                    "label": "Yarıçap",
-                    "description": "Daire ya da yayın yarıçapı",
-                    "aliases": [
-                      "DIMRAD",
-                      "DIMRADIUS",
-                      "DRA"
-                    ],
-                    "icon": "dimRadius"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "Ç",
-                    "title": "Ölçülendirme",
-                    "label": "Çap",
-                    "description": "Daire ya da yayın çapı",
-                    "aliases": [
-                      "DIMDIA",
-                      "DIMDIAMETER",
-                      "DDI"
-                    ],
-                    "icon": "dimDiameter"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "O",
-                    "title": "Ölçülendirme",
-                    "label": "Koordinat",
-                    "description": "Noktanın Y ya da X koordinatı",
-                    "aliases": [
-                      "KOORDINATOLCU",
-                      "DIMORDINATE",
-                      "DOR"
-                    ],
-                    "icon": "dimOrdinate"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "U",
-                    "title": "Ölçülendirme",
-                    "label": "Yay uzunluğu",
-                    "description": "Yayın ya da iki noktasının arası",
-                    "aliases": [
-                      "YAYUZUNLUGU",
-                      "DIMARC",
-                      "DAR"
-                    ],
-                    "icon": "dimArcLength"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "I",
-                    "title": "Ölçülendirme",
-                    "label": "Kırıklı yarıçap",
-                    "description": "Merkezi uzak yayın yarıçapı",
-                    "aliases": [
-                      "KIRIKLI",
-                      "DIMJOGGED",
-                      "DJO"
-                    ],
-                    "icon": "dimJogged"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "T",
-                    "title": "Ölçülendirme",
-                    "label": "Semt",
-                    "description": "Kenarın semti, yanında okla",
-                    "aliases": [
-                      "SEMT",
-                      "SEMTOLCU"
-                    ],
-                    "icon": "dimAzimuth"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "E",
-                    "title": "Ölçülendirme",
-                    "label": "Eğim",
-                    "description": "İki kot arası eğim, yüzde",
-                    "aliases": [
-                      "EGIM",
-                      "EGIMOLCU",
-                      "SLOPE"
-                    ],
-                    "icon": "dimSlope"
-                  },
-                  {
-                    "command": "tool.dimContinue",
-                    "title": "Zincir ölçü",
-                    "label": "Zincir ölçü"
-                  },
-                  {
-                    "command": "tool.dimBaseline",
-                    "title": "Baz ölçü",
-                    "label": "Baz ölçü"
-                  },
-                  {
-                    "command": "tool.quickDimension",
-                    "title": "Hızlı ölçü",
-                    "label": "Hızlı ölçü"
-                  }
-                ],
-                "key": "dimension",
-                "size": "lead"
-              },
-              {
-                "command": "tool.hatch",
-                "size": "large"
-              },
-              {
                 "command": "text.findReplace",
                 "size": "small"
               }
@@ -18791,6 +18556,38 @@
             "launcher": {
               "tab": "draw",
               "title": "Tüm araçlar: Çizim sekmesi"
+            }
+          },
+          {
+            "label": "Harita",
+            "icon": "parcel",
+            "items": [
+              {
+                "command": "tool.parcel",
+                "size": "large"
+              },
+              {
+                "command": "tool.boundary",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaUnion",
+                "size": "large"
+              },
+              {
+                "command": "tool.measure",
+                "size": "small"
+              },
+              {
+                "command": "tool.area",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "tab": "map",
+              "title": "Tüm araçlar: Harita sekmesi"
             }
           },
           {
@@ -18847,10 +18644,6 @@
               },
               {
                 "command": "tool.adjoin",
-                "size": "small"
-              },
-              {
-                "command": "tool.parallel",
                 "size": "small"
               }
             ],
@@ -18932,87 +18725,8 @@
                 "size": "large"
               },
               {
-                "command": "tool.ellipse",
-                "size": "small"
-              },
-              {
-                "command": "tool.spline",
-                "size": "small"
-              },
-              {
                 "command": "tool.sector",
                 "size": "small"
-              }
-            ],
-            "overflow": [
-              "tool.donut"
-            ],
-            "keep": false
-          },
-          {
-            "label": "Şekil",
-            "icon": "rectangle",
-            "items": [
-              {
-                "split": [
-                  {
-                    "command": "tool.rectangle",
-                    "title": "Dikdörtgen",
-                    "label": "Dikdörtgen"
-                  },
-                  {
-                    "command": "tool.rectangle3",
-                    "title": "Döndürülmüş dikdörtgen",
-                    "label": "Döndürülmüş dikdörtgen"
-                  },
-                  {
-                    "command": "tool.regularPolygon",
-                    "title": "Düzgün çokgen",
-                    "label": "Düzgün çokgen"
-                  }
-                ],
-                "key": "rectangle",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Yardımcı",
-            "icon": "xline",
-            "items": [
-              {
-                "split": [
-                  {
-                    "command": "tool.xline",
-                    "title": "Yardımcı çizgi",
-                    "label": "Yardımcı çizgi"
-                  },
-                  {
-                    "command": "tool.ray",
-                    "title": "Işın",
-                    "label": "Işın"
-                  }
-                ],
-                "key": "construction",
-                "size": "large"
-              },
-              {
-                "split": [
-                  {
-                    "command": "tool.perpIn",
-                    "title": "Dik in",
-                    "label": "Dik in"
-                  },
-                  {
-                    "command": "tool.perpOut",
-                    "title": "Dik çık",
-                    "label": "Dik çık"
-                  }
-                ],
-                "key": "perpendicular",
-                "size": "large"
               }
             ],
             "overflow": [],
@@ -19111,134 +18825,6 @@
               {
                 "split": [
                   {
-                    "command": "tool.dimension",
-                    "option": "H",
-                    "title": "Ölçülendirme",
-                    "label": "Hizalı",
-                    "description": "İki nokta arası, kendi doğrultusunda",
-                    "aliases": [
-                      "DIMALIGNED",
-                      "DAL"
-                    ],
-                    "icon": "dimAligned"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "D",
-                    "title": "Ölçülendirme",
-                    "label": "Doğrusal",
-                    "description": "ΔY yatay ya da ΔX düşey",
-                    "aliases": [
-                      "DIMLIN",
-                      "DIMLINEAR",
-                      "DLI"
-                    ],
-                    "icon": "dimLinear"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "A",
-                    "title": "Ölçülendirme",
-                    "label": "Açı",
-                    "description": "İki kenar ya da iki kol arası",
-                    "aliases": [
-                      "DIMANG",
-                      "DIMANGULAR",
-                      "DAN"
-                    ],
-                    "icon": "dimAngular"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "R",
-                    "title": "Ölçülendirme",
-                    "label": "Yarıçap",
-                    "description": "Daire ya da yayın yarıçapı",
-                    "aliases": [
-                      "DIMRAD",
-                      "DIMRADIUS",
-                      "DRA"
-                    ],
-                    "icon": "dimRadius"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "Ç",
-                    "title": "Ölçülendirme",
-                    "label": "Çap",
-                    "description": "Daire ya da yayın çapı",
-                    "aliases": [
-                      "DIMDIA",
-                      "DIMDIAMETER",
-                      "DDI"
-                    ],
-                    "icon": "dimDiameter"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "O",
-                    "title": "Ölçülendirme",
-                    "label": "Koordinat",
-                    "description": "Noktanın Y ya da X koordinatı",
-                    "aliases": [
-                      "KOORDINATOLCU",
-                      "DIMORDINATE",
-                      "DOR"
-                    ],
-                    "icon": "dimOrdinate"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "U",
-                    "title": "Ölçülendirme",
-                    "label": "Yay uzunluğu",
-                    "description": "Yayın ya da iki noktasının arası",
-                    "aliases": [
-                      "YAYUZUNLUGU",
-                      "DIMARC",
-                      "DAR"
-                    ],
-                    "icon": "dimArcLength"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "I",
-                    "title": "Ölçülendirme",
-                    "label": "Kırıklı yarıçap",
-                    "description": "Merkezi uzak yayın yarıçapı",
-                    "aliases": [
-                      "KIRIKLI",
-                      "DIMJOGGED",
-                      "DJO"
-                    ],
-                    "icon": "dimJogged"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "T",
-                    "title": "Ölçülendirme",
-                    "label": "Semt",
-                    "description": "Kenarın semti, yanında okla",
-                    "aliases": [
-                      "SEMT",
-                      "SEMTOLCU"
-                    ],
-                    "icon": "dimAzimuth"
-                  },
-                  {
-                    "command": "tool.dimension",
-                    "option": "E",
-                    "title": "Ölçülendirme",
-                    "label": "Eğim",
-                    "description": "İki kot arası eğim, yüzde",
-                    "aliases": [
-                      "EGIM",
-                      "EGIMOLCU",
-                      "SLOPE"
-                    ],
-                    "icon": "dimSlope"
-                  },
-                  {
                     "command": "tool.dimContinue",
                     "title": "Zincir ölçü",
                     "label": "Zincir ölçü"
@@ -19255,16 +18841,10 @@
                   }
                 ],
                 "key": "dimension",
-                "size": "lead"
-              },
-              {
-                "command": "tool.hatch",
-                "size": "large"
+                "size": "small"
               }
             ],
-            "overflow": [
-              "tool.revcloud"
-            ],
+            "overflow": [],
             "keep": false
           },
           {
@@ -19326,41 +18906,8 @@
                 "size": "small"
               },
               {
-                "command": "tool.stretch",
-                "size": "small"
-              },
-              {
                 "command": "tool.align",
                 "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Dizi",
-            "icon": "array",
-            "items": [
-              {
-                "split": [
-                  {
-                    "command": "tool.array",
-                    "title": "Dizi",
-                    "label": "Dizi"
-                  },
-                  {
-                    "command": "tool.arrayPolar",
-                    "title": "Kutupsal dizi",
-                    "label": "Kutupsal dizi"
-                  },
-                  {
-                    "command": "tool.arrayPath",
-                    "title": "Yol boyunca dizi",
-                    "label": "Yol boyunca dizi"
-                  }
-                ],
-                "key": "array",
-                "size": "large"
               }
             ],
             "overflow": [],
@@ -19444,45 +18991,7 @@
                 "size": "small"
               }
             ],
-            "overflow": [
-              "tool.lengthen"
-            ],
-            "keep": false
-          },
-          {
-            "label": "Köşe",
-            "icon": "fillet",
-            "items": [
-              {
-                "split": [
-                  {
-                    "command": "tool.fillet",
-                    "title": "Köşe yuvarla",
-                    "label": "Köşe yuvarla"
-                  },
-                  {
-                    "command": "tool.chamfer",
-                    "title": "Pah",
-                    "label": "Pah"
-                  },
-                  {
-                    "command": "tool.filletAll",
-                    "title": "Tüm köşeleri yuvarla",
-                    "label": "Tüm köşeleri yuvarla"
-                  },
-                  {
-                    "command": "tool.chamferAll",
-                    "title": "Tüm köşelere pah",
-                    "label": "Tüm köşelere pah"
-                  }
-                ],
-                "key": "corner",
-                "size": "large"
-              }
-            ],
-            "overflow": [
-              "tool.vertex"
-            ],
+            "overflow": [],
             "keep": false
           },
           {
@@ -19892,16 +19401,15 @@
           },
           {
             "label": "Görünüş",
-            "icon": "modeHybrid",
+            "icon": "projectType",
             "items": [
               {
-                "menu": "Çalışma modu",
+                "menu": "Proje türü",
                 "size": "large",
                 "blocks": [
                   {
                     "label": "",
                     "items": [
-                      "workspace.hybrid",
                       "workspace.cad",
                       "workspace.gis"
                     ]
@@ -20241,41 +19749,8 @@
                 "size": "small"
               },
               {
-                "command": "tool.stretch",
-                "size": "small"
-              },
-              {
                 "command": "tool.align",
                 "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Dizi",
-            "icon": "array",
-            "items": [
-              {
-                "split": [
-                  {
-                    "command": "tool.array",
-                    "title": "Dizi",
-                    "label": "Dizi"
-                  },
-                  {
-                    "command": "tool.arrayPolar",
-                    "title": "Kutupsal dizi",
-                    "label": "Kutupsal dizi"
-                  },
-                  {
-                    "command": "tool.arrayPath",
-                    "title": "Yol boyunca dizi",
-                    "label": "Yol boyunca dizi"
-                  }
-                ],
-                "key": "array",
-                "size": "large"
               }
             ],
             "overflow": [],
@@ -22012,16 +21487,15 @@
             },
             {
               "label": "Görünüş",
-              "icon": "modeHybrid",
+              "icon": "projectType",
               "items": [
                 {
-                  "menu": "Çalışma modu",
+                  "menu": "Proje türü",
                   "size": "large",
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "workspace.hybrid",
                         "workspace.cad",
                         "workspace.gis"
                       ]
@@ -23717,16 +23191,15 @@
             },
             {
               "label": "Görünüş",
-              "icon": "modeHybrid",
+              "icon": "projectType",
               "items": [
                 {
-                  "menu": "Çalışma modu",
+                  "menu": "Proje türü",
                   "size": "large",
                   "blocks": [
                     {
                       "label": "",
                       "items": [
-                        "workspace.hybrid",
                         "workspace.cad",
                         "workspace.gis"
                       ]
@@ -24453,7 +23926,7 @@
     "error": "<circle cx=\"10\" cy=\"10\" r=\"7\"/><path d=\"m7.3 7.3 5.4 5.4M12.7 7.3l-5.4 5.4\"/>",
     "success": "<circle cx=\"10\" cy=\"10\" r=\"7\"/><path d=\"m6.8 10.2 2.3 2.3 4.2-4.6\"/>",
     "more": "<circle cx=\"5\" cy=\"10\" r=\"1\" fill=\"currentColor\"/><circle cx=\"10\" cy=\"10\" r=\"1\" fill=\"currentColor\"/><circle cx=\"15\" cy=\"10\" r=\"1\" fill=\"currentColor\"/>",
-    "modeHybrid": "<path d=\"m10 10.2 7.5 3.4-7.5 3.4-7.5-3.4z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M4.5 8.2 15.5 3.2\"/><rect x=\"3\" y=\"6.699999999999999\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14\" y=\"1.7000000000000002\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "projectType": "<path d=\"m10 10.2 7.5 3.4-7.5 3.4-7.5-3.4z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M4.5 8.2 15.5 3.2\"/><rect x=\"3\" y=\"6.699999999999999\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14\" y=\"1.7000000000000002\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "modeCad": "<path d=\"M3.5 16.5V4l12.5 12.5z\"/><path d=\"M6.5 13.5V11.2l2.3 2.3z\"/><path d=\"M3.5 7.5h1.6M3.5 10.5h1.6\"/>",
     "modeGis": "<path d=\"M2.5 5.8 7 3.8l6 2 4.5-2v10.4L13 16.2l-6-2-4.5 2z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M7 3.8v10.4M13 5.8v10.4\"/>",
     "modePlan3d": "<path d=\"m3 13.2 7 3.8 7-3.8\"/><path d=\"M5 6.2 8.5 4.4 12 6.2 8.5 8z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M5 6.2v6.4l3.5 1.9 3.5-1.9V6.2M8.5 8v6.5M12 9.6l2.8-1.4 2.2 1.1v3.6l-5 2.6\"/>",

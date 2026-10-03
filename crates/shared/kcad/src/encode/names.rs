@@ -23,11 +23,11 @@ pub(crate) fn angle_unit(u: AngleUnit) -> &'static str {
 
 pub(crate) fn workspace(w: Workspace) -> &'static str {
     match w {
-        Workspace::Hybrid => "hybrid",
         Workspace::Cad => "cad",
         Workspace::Gis => "gis",
         Workspace::Plan3d => "plan3d",
         Workspace::Disaster => "disaster",
+        Workspace::LegacyHybrid => "hybrid",
     }
 }
 
@@ -112,11 +112,11 @@ mod tests {
             assert_eq!(angle_unit(u), serde_name(u));
         }
         for w in [
-            Workspace::Hybrid,
             Workspace::Cad,
             Workspace::Gis,
             Workspace::Plan3d,
             Workspace::Disaster,
+            Workspace::LegacyHybrid,
         ] {
             assert_eq!(workspace(w), serde_name(w));
         }

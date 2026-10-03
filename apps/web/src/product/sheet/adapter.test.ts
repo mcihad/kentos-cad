@@ -41,7 +41,7 @@ describe('bookView', () => {
     expect(bookView(book.book, src(null)).sheets[0].items.every((i) => !i.note)).toBe(true);
     expect(asked).toEqual([]);
     const s = bookView(book.book, src(sheet)).sheets[0];
-    expect(s.items.find((i) => i.kind === 'table')!.note).toContain('CBS kipinin aracıdır');
+    expect(s.items.find((i) => i.kind === 'table')!.note).toContain('CBS projelerinin aracıdır');
     expect(s.items.filter((i) => i.note).length).toBe(1);
     // The template's revision 2 is newer than the sheet's 1.
     expect(s.template).toEqual({ name: 'İfraz / tevhit paftası', newer: true });

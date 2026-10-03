@@ -687,7 +687,7 @@ export class CadDocument {
     this.projectId = data.projectId ?? null;
     this.migratedFrom = data.migratedFrom ?? null;
     this.layers.reset(data.layers, data.activeLayer);
-    this.settings.assign(data.settings);
+    this.settings.replace(data.settings);
     this.name.set(data.name);
     this.styles.set(data.styles);
     this.blocks.set(data.blocks ?? []);

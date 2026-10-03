@@ -358,6 +358,11 @@
       "expect": { "user": { "drafting.snapAperture": 14 }, "device": {}, "migrations": 0, "diagnostics": [] }
     },
     {
+      "name": "emekli değer sessizce düşer, varsayılan geçer: eski Hibrit modu (ADR 0165)",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "newProjects.workspace": "hybrid", "drafting.snapAperture": 14 }, "device": {} },
+      "expect": { "user": { "drafting.snapAperture": 14 }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
       "name": "okunamayan eski değer eski adıyla söylenir; çevrilen değer bugünkü adıyla denetlenir",
       "document": { "format": "kentos.settings", "version": 1, "user": { "appearance.accentColor": "bozuk", "appearance.uiScale": 3, "appearance.typeface": "comic", "appearance.monoTypeface": "plexMono" } },
       "expect": {

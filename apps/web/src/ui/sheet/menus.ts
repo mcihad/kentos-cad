@@ -14,7 +14,7 @@ import type { SheetHost } from './host';
 /** “+”: a new sheet, from a template, or a `.kpafta` file. */
 export function newSheetItems(ctx: AppContext): MenuItem[] {
   return [
-    commandItem(ctx, 'sheet.new', { detail: 'Çalışma modunun varsayılan şablonundan' }),
+    commandItem(ctx, 'sheet.new', { detail: 'Proje türünün varsayılan şablonundan' }),
     commandItem(ctx, 'sheet.fromTemplate', { detail: 'Pafta şablonları: sistem, benim, kurumum, paylaşılan' }),
     { kind: 'separator' },
     commandItem(ctx, 'sheet.importKpafta', { detail: '.kpafta dosyasındaki paftalar ve varlıkları' }),

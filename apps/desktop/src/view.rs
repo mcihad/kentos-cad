@@ -1393,7 +1393,7 @@ const STATUS_STEPS: u8 = 6;
 pub(crate) fn launch(launcher: &Launcher) -> Option<Message> {
     match &launcher.target {
         LauncherTarget::Tab(tab) => catalog()
-            .tabs()
+            .every_tab()
             .any(|t| t.id == *tab)
             .then_some(Message::RibbonTab(tab)),
         LauncherTarget::Command(id) => catalog().get(id).and_then(enabled),

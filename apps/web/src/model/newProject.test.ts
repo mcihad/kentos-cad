@@ -26,8 +26,8 @@ describe('new project', () => {
     const frame = c.layers.find((n) => n.id === 'g-pafta')!.children!.find((n) => n.id === 'pafta')!;
     expect(frame.style?.label?.template).toBe('Pafta {label}   1:500');
     expect(newProjectContent({ name: ' ', srid: 5256, plotScale: 1000 }).name).toBe(NEW_PROJECT_NAME);
-    // The work mode chosen in the dialog; hybrid when none is given.
-    expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000 }).settings.workspace).toBe('hybrid');
+    // The type chosen in the wizard; CBS when none is given (docs/adr/0165).
+    expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000 }).settings.workspace).toBe('gis');
     expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, workspace: 'gis' }).settings.workspace).toBe('gis');
     expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000 }).settings.drawingFont).toBe('barlow');
     expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, drawingFont: 'arimo' }).settings.drawingFont).toBe('arimo');

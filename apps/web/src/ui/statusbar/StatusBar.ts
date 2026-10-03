@@ -78,14 +78,14 @@ export class StatusBar extends Component {
       ),
     );
 
-    // The project's work mode: which menus, tabs and tools show (app/workspaces.ts).
+    // The project's type: its scene, axes and ribbon (app/workspaces.ts, docs/adr/0165).
     const modeName = h('span', { class: 'status__mode-name' });
     const modeIcon = h('span', { class: 'status__mode-icon' });
     const mode = h('button', { class: 'status__cell status__btn status__mode', type: 'button', 'aria-haspopup': 'menu' }, modeIcon, modeName);
     mode.addEventListener('click', () =>
       PopupMenu.open(
         [
-          { kind: 'header', label: 'Çalışma modu' },
+          { kind: 'header', label: 'Proje türü' },
           ...WORKSPACES.filter((w) => w.status === 'ready').map((w) => commandItem(ctx, `workspace.${w.id}`)),
           { kind: 'separator' },
           ...WORKSPACES.filter((w) => w.status === 'soon').map((w) => commandItem(ctx, `workspace.${w.id}`)),
@@ -105,10 +105,15 @@ export class StatusBar extends Component {
     );
     this.d.add(
       tooltip(mode, () => {
-        const set = workspaceById(ctx.doc.settings.workspace.value);
-        const w = effectiveWorkspace(set.id);
-        const note = set.id !== w.id ? ` Proje “${set.label}” modunda kaydedilmiş; bu mod yakında geliyor, şimdilik Hibrit gösteriliyor.` : '';
-        return { title: `Çalışma modu: ${w.label}`, description: `${w.description}${note} Proje ayarıdır; değiştirmek için tıklayın. Gizlenen komutlar komut satırından yine çalışır.` };
+        const id = ctx.doc.settings.workspace.value;
+        const w = effectiveWorkspace(id);
+        const note =
+          id === null
+            ? ' Projenin türü henüz seçilmedi; CBS olarak gösteriliyor.'
+            : id !== w.id
+              ? ` Proje “${workspaceById(id).label}” türünde kaydedilmiş; bu tür yakında geliyor, şimdilik CBS olarak gösteriliyor.`
+              : '';
+        return { title: `Proje türü: ${w.label}`, description: `${w.description}${note} Proje ayarıdır; değiştirmek için tıklayın. Şeridinde olmayan komutlar komut satırından yine çalışır.` };
       }, 'top'),
     );
 

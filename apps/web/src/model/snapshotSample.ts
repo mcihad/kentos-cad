@@ -21,7 +21,8 @@ export function snapshotSampleDocument(): CadDocument {
     ],
     'parsel',
   );
-  const doc = new CadDocument({ name: 'Örnek pafta.kcad', layers, origin: { x: E, y: N }, settings: { srid: 5256, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, lengthDecimals: 3, areaDecimals: 2 } });
+  // Its type not asked: the recorded file names the former Hibrit mode (docs/adr/0165 §1).
+  const doc = new CadDocument({ name: 'Örnek pafta.kcad', layers, origin: { x: E, y: N }, settings: { srid: 5256, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, lengthDecimals: 3, areaDecimals: 2, workspace: undefined } });
   const at = (dx: number, dy: number) => ({ x: E + dx, y: N + dy });
   const list: NewEntity[] = [
     { kind: 'point', layerId: 'cizim', p: at(1.001, 2.002), z: 1024.35, attrs: { Ad: 'P1' }, label: 'P1' },

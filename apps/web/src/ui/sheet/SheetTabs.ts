@@ -49,7 +49,7 @@ export class SheetTabs extends Component {
         this.openAddMenu(add).focusFirst();
       }),
     );
-    this.d.add(tooltip(add, () => ({ title: 'Yeni pafta', description: 'Çalışma modunun varsayılan şablonundan, şablondan ya da .kpafta dosyasından.', note: host.state.whyNoEngine() ?? undefined }), 'top'));
+    this.d.add(tooltip(add, () => ({ title: 'Yeni pafta', description: 'Proje türünün varsayılan şablonundan, şablondan ya da .kpafta dosyasından.', note: host.state.whyNoEngine() ?? undefined }), 'top'));
     this.note = h('span', { class: 'sheet-tabs__note' });
     this.el = h('div', { class: 'sheet-tabs', role: 'navigation', 'aria-label': 'Paftalar' }, this.list, h('span', { class: 'sheet-tabs__sep', 'aria-hidden': 'true' }), add, h('span', { class: 'sheet-tabs__spacer' }), this.note);
     this.d.add(listen<KeyboardEvent>(this.list, 'keydown', (e) => this.onKey(e)));

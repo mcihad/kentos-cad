@@ -89,16 +89,14 @@ export async function collectInPage() {
       })),
     }));
   const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
+  const ribbonOf = (m) => ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf, filter: m.filter }));
   const layout = {
     menus: menus.MAIN_MENU.map((m) => ({ id: m.id, label: m.label, blocks: menuLayout(m.items) })),
-    ribbon: ribbonLayout(tabs),
-    // The ribbon of each other ready mode, built with its filter as the web builds it
-    // (ui/ribbon/Ribbon.ts): what the mode hides is left out, tabs take the mode's names.
-    ribbonByMode: Object.fromEntries(
-      modes
-        .filter((m) => m.id !== 'hybrid')
-        .map((m) => [m.id, ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf, filter: m.filter }))]),
-    ),
+    // The ribbon a project shows while its type is not asked: the CBS type's (docs/adr/0165 §1).
+    ribbon: ribbonOf(modes.find((m) => m.id === workspaces.FALLBACK_WORKSPACE)),
+    // The ribbon of every ready project type, built with its filter as the web builds it
+    // (ui/ribbon/Ribbon.ts): what the type leaves out is left out, tabs take the type's names.
+    ribbonByMode: Object.fromEntries(modes.map((m) => [m.id, ribbonOf(m)])),
     quickAccess: [...ribbon.QUICK_ACCESS],
   };
 

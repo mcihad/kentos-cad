@@ -702,9 +702,11 @@
   flex-direction: column;
   gap: 10px;
 }
+/* One column per card: the types that can be chosen (CAD, CBS), the announced ones under them. */
 .wspick__row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
 }
 .wspick__card {
@@ -832,9 +834,6 @@
   content: '';
   flex: 1;
   border-top: 1px dashed var(--c-line-strong);
-}
-.wspick__soon .wspick__row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .wspick__card[data-status='soon'] {
   flex-direction: row;

@@ -202,7 +202,7 @@ impl Designer {
                     return Vec::new();
                 }
                 if d.workspaces.is_empty() {
-                    self.error = Some("En az bir çalışma modu seçin.".into());
+                    self.error = Some("En az bir proje türü seçin.".into());
                     return Vec::new();
                 }
                 match self.extract_template(&d) {
@@ -394,15 +394,15 @@ impl Designer {
                 .label(name),
             );
         }
-        let mut col = column![caption("Çalışma modları"), modes].spacing(3);
+        let mut col = column![caption("Proje türleri"), modes].spacing(3);
         if d.workspaces.len() == 2 {
             col = col.push(caption(
-                "İki kip de seçili: ortak şablon, her kipte gösterilir.",
+                "İki tür de seçili: ortak şablon, her türde gösterilir.",
             ));
         }
         if d.workspaces.is_empty() {
             col = col
-                .push(label::caption("En az bir çalışma modu seçin.").style(style::text::danger));
+                .push(label::caption("En az bir proje türü seçin.").style(style::text::danger));
         }
         body = body.push(col);
         let mut types = column![].spacing(4);
@@ -419,9 +419,9 @@ impl Designer {
             }
             types = types.push(r);
         }
-        let mut col = column![caption("Proje türleri"), types].spacing(3);
+        let mut col = column![caption("İş türleri"), types].spacing(3);
         if d.project_types.is_empty() {
-            col = col.push(caption("Hiçbiri: her proje türüne."));
+            col = col.push(caption("Hiçbiri: her iş türüne."));
         }
         body = body.push(col);
         if let Some(s) = self.open_sheet() {

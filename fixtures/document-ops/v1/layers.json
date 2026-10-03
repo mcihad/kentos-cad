@@ -14,7 +14,7 @@
       "areaUnit": "m2",
       "angleUnit": "grad",
       "plotScale": 1000,
-      "workspace": "hybrid",
+      "workspace": "gis",
       "drawingFont": "barlow"
     },
     "origin": {"x": 486500, "y": 4420100},

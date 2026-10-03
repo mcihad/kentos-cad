@@ -46,7 +46,7 @@ fn text<T: serde::Serialize + ?Sized>(value: &T) -> PyResult<String> {
     })
 }
 
-/// A contract enum from its wire name (`hybrid`, `barlow`).
+/// A contract enum from its wire name (`gis`, `barlow`).
 fn named<T: serde::de::DeserializeOwned>(value: &str, what: &str) -> PyResult<T> {
     serde_json::from_value(Value::String(value.to_owned())).map_err(|_| {
         host(HeadlessError::new(
@@ -79,7 +79,7 @@ impl PySession {
             name,
             srid,
             plot_scale,
-            workspace: named(workspace, "çalışma modu (hybrid, cad, gis …)")?,
+            workspace: named(workspace, "proje türü (cad ya da gis)")?,
             drawing_font: named(drawing_font, "çizim yazı tipi (barlow, arimo …)")?,
         };
         py.detach(|| Session::new(&choices))

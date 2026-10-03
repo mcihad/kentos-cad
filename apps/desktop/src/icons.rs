@@ -93,7 +93,7 @@ fn closest(name: &str) -> Icon {
         "crs" | "crsQuery" | "crsTransform" | "cloud" | "server" | "signIn" | "signOut" => {
             Icon::Globe
         }
-        "modeHybrid" | "modeCad" | "modeGis" | "modePlan3d" | "modeDisaster" => Icon::Layout,
+        "projectType" | "modeCad" | "modeGis" | "modePlan3d" | "modeDisaster" => Icon::Layout,
         // Help and settings
         "info" => Icon::Info,
         "keyboard" | "terminal" => Icon::Terminal,

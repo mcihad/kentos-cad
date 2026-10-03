@@ -94,7 +94,7 @@ describe('inspector', () => {
     expect(sameGroup([byId('i-4'), byId('i-3')])).toBe(false);
     const notes = notesOf([byId('i-7'), byId('i-3'), byId('i-7')]);
     expect(notes).toHaveLength(1);
-    expect(notes[0]).toContain('CBS kipinin aracıdır');
+    expect(notes[0]).toContain('CBS projelerinin aracıdır');
   });
 });
 

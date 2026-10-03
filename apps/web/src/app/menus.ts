@@ -131,7 +131,7 @@ export const MAIN_MENU: TopMenu[] = [
       'view.keyTips',
       'view.fullscreen',
       sec('Görünüş'),
-      { label: 'Çalışma modu', icon: 'modeHybrid', primary: true, items: ['workspace.hybrid', 'workspace.cad', 'workspace.gis', '-', 'workspace.plan3d', 'workspace.disaster'] },
+      { label: 'Proje türü', icon: 'projectType', primary: true, items: ['workspace.cad', 'workspace.gis', '-', 'workspace.plan3d', 'workspace.disaster'] },
       { label: 'Tema', icon: 'appearance', items: ['view.theme.dark', 'view.theme.light'] },
       { label: 'Çizim motoru', icon: 'chip', items: ['view.renderer.webgl2', 'view.renderer.webgpu'] },
       { label: 'Sembol boyutu', icon: 'styles', items: ['view.symbols.plot', 'view.symbols.screen'] },

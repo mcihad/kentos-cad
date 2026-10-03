@@ -121,8 +121,8 @@ pub const PORTED: &[&str] = &[
     "file.settings",
     // The start screen with the recent files (start.rs).
     "file.start",
-    // The work modes that can be chosen (modes.rs); the announced ones stay pending.
-    "workspace.hybrid",
+    // The project types that can be chosen (modes.rs, docs/adr/0165); the announced
+    // ones stay pending.
     "workspace.cad",
     "workspace.gis",
     // GeoJSON in and out, a Shapefile in from its files or its zip archive
@@ -476,16 +476,22 @@ pub struct Mode {
     pub ready: bool,
 }
 
-/// The mode the interface shows for a project's setting: its own when it
-/// can be chosen, else Hibrit (the web's `effectiveWorkspace`).
+/// The type a project not asked its type yet, or of an announced type,
+/// shows as (the web's `FALLBACK_WORKSPACE`, docs/adr/0165 §1).
+pub const FALLBACK_MODE: kentos_contracts::Workspace = kentos_contracts::Workspace::Gis;
+
+/// The type the interface shows for a project's setting: its own when it
+/// can be chosen, else CBS (the web's `effectiveWorkspace`).
 pub fn effective_mode(workspace: Option<kentos_contracts::Workspace>) -> &'static Mode {
     use kentos_contracts::Workspace;
     let modes = catalog().modes();
-    let wanted = workspace.unwrap_or(Workspace::Hybrid);
+    let wanted = workspace
+        .filter(|w| *w != Workspace::LegacyHybrid)
+        .unwrap_or(FALLBACK_MODE);
     modes
         .iter()
         .find(|m| m.id == wanted && m.ready)
-        .or_else(|| modes.iter().find(|m| m.id == Workspace::Hybrid))
+        .or_else(|| modes.iter().find(|m| m.id == FALLBACK_MODE))
         .unwrap_or(&modes[0])
 }
 
@@ -498,9 +504,9 @@ pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
 pub fn mode_command(mode: kentos_contracts::Workspace) -> &'static str {
     use kentos_contracts::Workspace;
     match mode {
-        Workspace::Hybrid => "workspace.hybrid",
         Workspace::Cad => "workspace.cad",
-        Workspace::Gis => "workspace.gis",
+        // A project whose type is not asked shows as CBS (docs/adr/0165 §1).
+        Workspace::Gis | Workspace::LegacyHybrid => "workspace.gis",
         Workspace::Plan3d => "workspace.plan3d",
         Workspace::Disaster => "workspace.disaster",
     }
@@ -607,11 +613,12 @@ pub struct Entry {
 pub struct Catalog {
     commands: Vec<Command>,
     by_id: HashMap<&'static str, usize>,
-    /// The ribbon as Hibrit shows it: every tab.
+    /// The ribbon as a project not asked its type shows it: CBS's
+    /// (the inventory's `layout.ribbon`, docs/adr/0165).
     tabs: Vec<Tab>,
-    /// The ribbon of the other ready modes, as the web builds it with the
-    /// mode's filter (`app/workspaces.ts`): what they hide left out, their
-    /// own tab names (CAD's Harita is Ölçme).
+    /// The ribbon of every ready type, as the web builds it with the type's
+    /// filter (`app/workspaces.ts`): what it hides left out, its own tab
+    /// names (CAD's Harita is Ölçme).
     mode_tabs: Vec<(kentos_contracts::Workspace, Vec<Tab>)>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
@@ -633,10 +640,11 @@ impl Catalog {
     }
 
     /// The tool's method a typed name starts (an entry of a ribbon split
-    /// with that alias and an option), folded as command names are.
+    /// with that alias and an option), folded as command names are; in every
+    /// project type, whichever ribbon shows the method.
     pub fn method_by_alias(&self, text: &str) -> Option<&Entry> {
         let folded = crate::app::fold(text);
-        self.tabs()
+        self.every_tab()
             .flat_map(|tab| tab.panels.iter())
             .flat_map(|panel| panel.items.iter())
             .filter_map(|item| match item {
@@ -656,8 +664,18 @@ impl Catalog {
         self.tabs.iter().filter(|tab| !tab.contextual)
     }
 
-    /// The ribbon tabs of a work mode (Hibrit's when the mode hides nothing
-    /// or is not ready), the contextual ones left out.
+    /// The tabs of every project type's ribbon (a tab two types share comes
+    /// once per type), the contextual ones left out: what holds whatever the
+    /// type (a method's typed name, a tab a launcher opens).
+    pub fn every_tab(&self) -> impl Iterator<Item = &Tab> {
+        self.tabs
+            .iter()
+            .chain(self.mode_tabs.iter().flat_map(|(_, tabs)| tabs.iter()))
+            .filter(|tab| !tab.contextual)
+    }
+
+    /// The ribbon tabs of a project type (CBS's when the type has none of
+    /// its own), the contextual ones left out.
     pub fn tabs_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
             .iter()
@@ -667,7 +685,7 @@ impl Catalog {
             .filter(|tab| !tab.contextual)
     }
 
-    /// The contextual ribbon tabs of a work mode (the web's Seçim, shown
+    /// The contextual ribbon tabs of a project type (the web's Seçim, shown
     /// while something is selected).
     pub fn contextual_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
@@ -1118,8 +1136,9 @@ mod tests {
     #[test]
     fn split_entries_keep_their_methods() {
         let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        // Whichever project type's ribbon shows them (CBS has no Dikdörtgen).
         let splits: Vec<&Vec<Entry>> = catalog
-            .tabs()
+            .every_tab()
             .flat_map(|tab| tab.panels.iter())
             .flat_map(|panel| panel.items.iter())
             .filter_map(|item| match item {

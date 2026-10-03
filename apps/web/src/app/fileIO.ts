@@ -215,6 +215,15 @@ export class DocumentFiles {
   };
   /** The user chose to drop the drawing's unsaved changes (the recovery copy goes too, app/recovery.ts). */
   discarded: () => void = () => {};
+  /**
+   * Asks the type of the project on screen, opened without one (docs/adr/0165
+   * §1): a window in the app, loaded when first asked; tests and pages
+   * without a document ask nothing.
+   */
+  askType: (ctx: AppContext) => void = (ctx) => {
+    if (typeof document === 'undefined') return;
+    void import('../ui/settings/ProjectTypeDialog').then((m) => m.openProjectTypeDialog(ctx)).catch(() => undefined);
+  };
   private readonly ctx: AppContext;
   /** Counts opens: a later one overtakes an earlier that is still running. */
   private opens = 0;
@@ -233,6 +242,15 @@ export class DocumentFiles {
     return this.run(() => this.chooseAndWrite());
   }
 
+  /**
+   * After an open the user made (a file, a recent file, a recovery copy, a
+   * cloud project): a project without a type is asked it, once per open
+   * (docs/adr/0165 §1). `load` asks nothing: it is the tests' and scripts' way in.
+   */
+  askTypeIfNeeded(): void {
+    if (this.ctx.doc.settings.workspace.value === null) this.askType(this.ctx);
+  }
+
   /** Opens a drawing, asking first about unsaved changes. True when one was opened. */
   open(): Promise<boolean> {
     return this.run(async () => {
@@ -249,7 +267,7 @@ export class DocumentFiles {
       if (readOnly) handle = await pickWithInput();
       if (!handle) return false;
       // A local file replaces an open cloud project: what waits is sent, the rest stays in the device draft.
-      return this.openStaged({ label: handle.name, handle, readOnly, leaveCloud: true });
+      return this.asked(await this.openStaged({ label: handle.name, handle, readOnly, leaveCloud: true }));
     });
   }
 
@@ -277,7 +295,7 @@ export class DocumentFiles {
         this.ctx.log.error(`“${entry.name}” için izin istenemedi: ${message(e)}. Dosyayı Aç ile seçin.`);
         return false;
       }
-      return this.openStaged({ label: entry.name, handle, readOnly: false, leaveCloud: true, gone: () => void this.recent.remove(entry.id) });
+      return this.asked(await this.openStaged({ label: entry.name, handle, readOnly: false, leaveCloud: true, gone: () => void this.recent.remove(entry.id) }));
     });
   }
 
@@ -350,7 +368,7 @@ export class DocumentFiles {
   recover(bytes: Uint8Array, name: string): Promise<boolean> {
     return this.run(async () => {
       if (this.mustAsk() && !(await this.confirmDiscard('Kurtarma kopyası açılırsa bu değişiklikler kaybolur.'))) return false;
-      return this.openStaged({
+      return this.asked(await this.openStaged({
         label: `“${name}” kurtarma kopyası`,
         handle: null,
         bytes,
@@ -365,7 +383,7 @@ export class DocumentFiles {
             `“${ctx.doc.name.value}” kaydedilmemiş çalışması geri yüklendi: ${count(ctx.doc.size)} nesne. Çizim kaydedilmemiş sayılıyor; Kaydet dosyanın yerini sorar, hiçbir dosyanın üzerine kendiliğinden yazılmaz.`,
           );
         },
-      });
+      }));
     });
   }
 
@@ -380,7 +398,7 @@ export class DocumentFiles {
    */
   async openCloud(label: string, fetch: FetchBytes, put: (read: Extract<ReadDrawing, { ok: true }>) => void): Promise<boolean> {
     if (this.busy.value) throw new Error('Bir dosya işlemi sürüyor (açma ya da kaydetme); bitince yeniden deneyin.');
-    return this.run(() => this.openStaged({ label, handle: null, fetch, readOnly: true, leaveCloud: true, put }));
+    return this.run(async () => this.asked(await this.openStaged({ label, handle: null, fetch, readOnly: true, leaveCloud: true, put })));
   }
 
   /**
@@ -506,6 +524,12 @@ export class DocumentFiles {
       offReset();
       view.close();
     }
+  }
+
+  /** An open's outcome, the type asked after one that went through. */
+  private asked(opened: boolean): boolean {
+    if (opened) this.askTypeIfNeeded();
+    return opened;
   }
 
   /** An open that was stopped: said once; the drawing on screen is as it was. */

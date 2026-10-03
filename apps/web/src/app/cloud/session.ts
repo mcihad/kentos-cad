@@ -680,6 +680,8 @@ export class CloudSession {
     this.ctx.log.success(`“${info.name}” bulut projesi açıldı: ${records.length} nesne.`);
     if (info.state === 'archived')
       this.ctx.log.info(`“${info.name}” arşivlenmiş bir proje: salt okunur açıldı; değişiklikler buluta kaydedilmez. Düzenlemek için arşivden çıkarılmalı ya da kopyası oluşturulmalı.`);
+    // A project without a type is asked it (docs/adr/0165 §1); the answer goes with its settings.
+    this.ctx.files.askTypeIfNeeded();
     return true;
   }
 

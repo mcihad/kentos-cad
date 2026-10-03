@@ -12,8 +12,8 @@ use crate::files_testing::app_with_drawing;
 
 fn panel(tab: &str, label: &str) -> &'static RibbonPanel {
     catalog()
-        .tabs_in(Workspace::Hybrid)
-        .chain(catalog().contextual_in(Workspace::Hybrid))
+        .tabs_in(Workspace::Gis)
+        .chain(catalog().contextual_in(Workspace::Gis))
         .find(|t| t.id == tab)
         .and_then(|t| t.panels.iter().find(|p| p.label == label))
         .unwrap_or_else(|| panic!("{tab} › {label}"))

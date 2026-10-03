@@ -85,7 +85,7 @@ describe('Pafta tab from the mode’s profile', () => {
   it('gives every entry of the tab’s drop-downs an icon of its own, drawn from the set, in every mode (DESIGN.md §6)', () => {
     const { ctx } = setup();
     registerSheetIcons();
-    for (const mode of ['hybrid', 'cad', 'gis'] as const) {
+    for (const mode of ['cad', 'gis'] as const) {
       const profile = engine.profileFor(mode, { georeferenced: true, attributeLayers: true, plotScale: 1000 });
       const tools = profile.groups.flatMap((g) => g.tools);
       // A ready look's command is made with its tool's (toolCommands.ts): its icon is the look's.

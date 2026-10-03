@@ -77,7 +77,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                     "name": { "type": "string", "description": "Projenin adı." },
                     "srid": { "type": "integer", "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …)." },
                     "plotScale": { "type": "number", "description": "Çizim ölçeği paydası (1000: 1:1000)." },
-                    "workspace": { "type": "string", "enum": ["hybrid", "cad", "gis", "disaster"] },
+                    "workspace": { "type": "string", "enum": ["cad", "gis"], "description": "Proje türü (docs/adr/0165): cad ya da gis; verilmezse gis." },
                     "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …)." }
                 }),
                 &["srid"],
@@ -529,11 +529,8 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                     .get("plotScale")
                     .and_then(Value::as_f64)
                     .unwrap_or(1000.0),
-                workspace: serde_json::from_value(named("workspace", "hybrid")?).map_err(|_| {
-                    refused(
-                        "invalid_input",
-                        "workspace: hybrid, cad, gis ya da disaster.",
-                    )
+                workspace: serde_json::from_value(named("workspace", "gis")?).map_err(|_| {
+                    refused("invalid_input", "workspace: cad ya da gis.")
                 })?,
                 drawing_font: serde_json::from_value(named("drawingFont", "barlow")?).map_err(
                     |_| {

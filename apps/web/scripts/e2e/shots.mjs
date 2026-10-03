@@ -2841,7 +2841,7 @@ SCENES.rounding = [
         format: 'kentos.document',
         version: 1,
         name: 'Yarım yarıçap',
-        settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+        settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'cad', drawingFont: 'barlow' },
         origin: { x: E, y: N },
         layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
         activeLayer: 'cizim',
@@ -2932,7 +2932,7 @@ function dimensionToolScenes() {
     format: 'kentos.document',
     version: 1,
     name: 'Ölçülendirme',
-    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'cad', drawingFont: 'barlow' },
     origin: { x: E, y: N },
     layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('yol', 'Yol', '#E5484D', 0.5), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
     activeLayer: 'cizim',
@@ -3243,7 +3243,7 @@ function leaderToolScenes() {
     format: 'kentos.document',
     version: 1,
     name: 'Kılavuz',
-    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'hybrid', drawingFont: 'barlow' },
+    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'cad', drawingFont: 'barlow' },
     origin: { x: E, y: N },
     layers: [layer('cizim', 'Çizim', 'fg', 0.25), layer('yol', 'Yol', '#E5484D', 0.5), layer('parsel', 'Parsel', '#3E63DD', 0.35)],
     activeLayer: 'cizim',
@@ -3336,6 +3336,20 @@ function leaderToolScenes() {
     { id: 'leader-edit', open: edit, close },
   ];
 }
+
+/** The project's type (docs/adr/0165): the question of a project opened without one, the status bar's menu. */
+SCENES.projecttype = [
+  {
+    id: 'type-question',
+    open: async (ui) => {
+      await ui.eval(`(() => { const k = window.kentos; k.doc.settings.workspace.set(null); k.files.askTypeIfNeeded(); })()`);
+      await ui.waitFor(`!!document.querySelector('.dialog--projtype')`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(1), await ui.eval(`window.kentos.doc.settings.workspace.set('gis')`)),
+  },
+  { id: 'type-menu', open: async (ui) => (await ui.clickSel('.status__mode'), await ui.sleep(250)) },
+];
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;

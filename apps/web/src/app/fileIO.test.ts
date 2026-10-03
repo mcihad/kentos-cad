@@ -127,6 +127,34 @@ describe.skipIf(!formatsBuilt)('local drawing files', () => {
     }
   });
 
+  it('asks the type of a project the user opens without one, after each such open; a script’s load and a typed file ask nothing (docs/adr/0165 §1)', async () => {
+    const { doc, files } = setup();
+    const asked: number[] = [];
+    files.askType = () => void asked.push(doc.size);
+    // The web's recorded v1 sample names the former Hibrit mode: its type is not asked yet.
+    const old = memoryFile('Örnek.kcad', { data: fixture('document/v1/sample.json') });
+    files.picker = pick(null, old);
+    expect(await files.open()).toBe(true);
+    expect(doc.settings.workspace.value).toBeNull();
+    expect(asked).toHaveLength(1);
+    // Not answered: the next open asks again.
+    files.picker = pick(null, old);
+    expect(await files.open()).toBe(true);
+    expect(asked).toHaveLength(2);
+    // A script's load asks nothing.
+    expect(await files.load(old.bytes, null)).toBe(true);
+    expect(asked).toHaveLength(2);
+    // Answered and saved: the file has its type and is not asked about.
+    doc.settings.workspace.set('cad');
+    const typed = memoryFile('Türlü.kcad');
+    files.picker = pick(typed);
+    expect(await files.saveAs()).toBe(true);
+    files.picker = pick(null, typed);
+    expect(await files.open()).toBe(true);
+    expect(doc.settings.workspace.value).toBe('cad');
+    expect(asked).toHaveLength(2);
+  });
+
   it('keeps every persistent id across v2 saves and opens, edited or not', async () => {
     const { doc, files } = setup();
     const file = memoryFile('Örnek.kcad');

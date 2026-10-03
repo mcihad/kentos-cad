@@ -34,7 +34,7 @@ fn drawing(file: &Value) -> kentos_domain::Document {
     let snapshot = json!({
         "format": "kentos.document", "version": 1, "name": "Deneme",
         "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-            "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow" },
+            "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow" },
         "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": "cizim", "entities": file["objects"],
         "styles": { "items": [], "categories": [] }
     });

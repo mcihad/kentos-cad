@@ -53,7 +53,7 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
     '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M7.5 7.5v9" stroke-width="1.1"/><path d="m5 9.3 1.4 2.4H3.6zM5 12.8l1.4 2.4H3.6z" stroke-width="1"/><path d="M9.5 10.5h6M9.5 14h4.5" stroke-width="1.1"/>',
   sheetTableDrawings:
     '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M7.5 7.5v9" stroke-width="1.1"/><rect x="3.9" y="8.9" width="2.2" height="2.8" rx=".3" stroke-width="1"/><rect x="3.9" y="12.6" width="2.2" height="2.8" rx=".3" stroke-width="1"/><path d="M9.5 10.5h6M9.5 14h4.5" stroke-width="1.1"/>',
-  // Harita ▾ in the hybrid mode: a CAD viewport (the model's line with its grips) beside the map; Lejant ▾: the
+  // CAD's map preset, the viewport: the model's line with its grips (CBS's is the map); Lejant ▾: the
   // layers with their line types, a thematic legend's graded classes.
   sheetViewport:
     '<rect x="2.5" y="3.5" width="15" height="13" rx=".6"/><path d="m5.5 13 3-4.5 3 2.5 3-4.5" stroke-width="1.1"/><rect x="4" y="11.5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="13" y="5" width="3" height="3" fill="currentColor" stroke="none"/>',

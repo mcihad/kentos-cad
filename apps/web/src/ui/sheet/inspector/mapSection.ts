@@ -114,7 +114,7 @@ function gridFields(c: SectionCtx): Child[] {
     patchKindEach(c, 'map', g ? 'Karelaj' : 'Karelajı kaldır', (m) => ({ grids: g ? m.grids.map((x, j) => (j === i ? { ...x, ...g } : x)) : m.grids.filter((_, j) => j !== i) }));
   const add = h('button', { class: 'btn btn--small', type: 'button', disabled: c.readOnly !== null || !c.ctx.commands.isEnabled('sheet.grid') }, icon('sheetGrid', 14), 'Karelaj ekle');
   add.addEventListener('click', () => c.ctx.commands.execute('sheet.grid'));
-  c.d.add(tooltip(add, () => ({ title: 'Karelaj ekle', description: 'Çalışma modunun şablonlarındaki karelajdan başlar; aralığı ölçekten seçilir.', note: c.ctx.commands.get('sheet.grid')?.whyDisabled?.() ?? undefined })));
+  c.d.add(tooltip(add, () => ({ title: 'Karelaj ekle', description: 'Proje türünün şablonlarındaki karelajdan başlar; aralığı ölçekten seçilir.', note: c.ctx.commands.get('sheet.grid')?.whyDisabled?.() ?? undefined })));
   const out: Child[] = [h('h4', { class: 'sheet-insp__sub-head' }, 'Karelaj')];
   if (!k.grids.length) out.push(h('p', { class: 'sheet-insp__hint' }, 'Bu haritada karelaj yok.'));
   k.grids.forEach((g, i) => {

@@ -107,11 +107,19 @@ fn objects_read_from_a_v1_file_get_uids_and_keep_their_ids_as_slots() {
 #[test]
 fn a_v1_file_round_trips_unchanged_through_the_document() {
     let snapshot = sample();
+    // Recorded under the former Hibrit mode, which the document holds as a
+    // type not asked yet (docs/adr/0165 §1); everything else is unchanged.
+    assert_eq!(
+        snapshot.settings.workspace,
+        Some(kentos_contracts::Workspace::LegacyHybrid)
+    );
+    let mut want = snapshot.clone();
+    want.settings.workspace = None;
     let doc = Document::from_snapshot(snapshot.clone()).expect("opens");
-    assert_eq!(doc.to_snapshot(), snapshot);
+    assert_eq!(doc.to_snapshot(), want);
     assert_eq!(
         serde_json::to_string(&doc.to_snapshot()).expect("writes"),
-        serde_json::to_string(&snapshot).expect("writes")
+        serde_json::to_string(&want).expect("writes")
     );
     // Edits and their undo leave the same file (a changed object keeps its place).
     let mut doc = doc;
@@ -119,7 +127,7 @@ fn a_v1_file_round_trips_unchanged_through_the_document() {
     let entity = doc.get(first).expect("first").clone();
     doc.update(first, entity);
     doc.undo();
-    assert_eq!(doc.to_snapshot(), snapshot);
+    assert_eq!(doc.to_snapshot(), want);
 }
 
 #[test]

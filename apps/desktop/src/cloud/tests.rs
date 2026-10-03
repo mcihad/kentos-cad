@@ -101,7 +101,9 @@ fn permissions(write: bool) -> Vec<ProjectPermission> {
 }
 
 pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) -> ProjectInfo {
-    let s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
+    let mut s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
+    // A CBS project: one without a type would be asked it on opening (docs/adr/0165 §1).
+    s.settings.workspace = Some(kentos_contracts::Workspace::Gis);
     ProjectInfo {
         blocks: Vec::new(),
         id: PROJECT.into(),
@@ -135,7 +137,8 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
 
 /// The sample drawing as the server would send it: the same persistent ids every time.
 fn server_drawing() -> kentos_domain::Document {
-    let s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
+    let mut s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
+    s.settings.workspace = Some(kentos_contracts::Workspace::Gis);
     let mut doc = kentos_domain::Document::from_snapshot(s).expect("opens");
     let mut v2 = doc.to_snapshot_v2();
     for (i, uid) in v2.uids.iter_mut().enumerate() {

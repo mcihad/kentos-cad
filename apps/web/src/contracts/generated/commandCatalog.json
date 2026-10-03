@@ -1905,7 +1905,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Absent in files written before work modes (read as hybrid)."
+                "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
               }
             },
             "required": [
@@ -2179,15 +2179,18 @@
             "type": "object"
           },
           "Workspace": {
-            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
-            "enum": [
-              "hybrid",
-              "cad",
-              "gis",
-              "plan3d",
-              "disaster"
-            ],
-            "type": "string"
+            "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
+            "oneOf": [
+              {
+                "enum": [
+                  "cad",
+                  "gis",
+                  "plan3d",
+                  "disaster"
+                ],
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2960,7 +2963,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Absent in files written before work modes (read as hybrid)."
+                "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
               }
             },
             "required": [
@@ -3065,15 +3068,18 @@
             "type": "object"
           },
           "Workspace": {
-            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
-            "enum": [
-              "hybrid",
-              "cad",
-              "gis",
-              "plan3d",
-              "disaster"
-            ],
-            "type": "string"
+            "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
+            "oneOf": [
+              {
+                "enum": [
+                  "cad",
+                  "gis",
+                  "plan3d",
+                  "disaster"
+                ],
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -5039,7 +5045,7 @@
                     "type": "null"
                   }
                 ],
-                "description": "Absent in files written before work modes (read as hybrid)."
+                "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
               }
             },
             "required": [
@@ -5365,15 +5371,18 @@
             "type": "object"
           },
           "Workspace": {
-            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
-            "enum": [
-              "hybrid",
-              "cad",
-              "gis",
-              "plan3d",
-              "disaster"
-            ],
-            "type": "string"
+            "description": "A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each\nwith its own scene, axes and ribbon; every command still runs in both.\n`plan3d` and `disaster` are announced (\"Yakında\") and cannot be chosen yet;\na file naming them shows as CBS. There is no hybrid type any more.",
+            "oneOf": [
+              {
+                "enum": [
+                  "cad",
+                  "gis",
+                  "plan3d",
+                  "disaster"
+                ],
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",

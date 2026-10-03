@@ -11,11 +11,18 @@ export type { DrawingFont, Workspace };
 export const DRAWING_FONT_IDS: readonly DrawingFont[] = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'];
 
 /**
- * Every work mode a file may name (contract `Workspace`). What each shows,
- * and which can be chosen yet, is app/workspaces.ts; the model only keeps
- * the value. Files written before modes existed read as hybrid.
+ * Every project type a file may name (contract `Workspace`, docs/adr/0165).
+ * What each shows, and which can be chosen yet, is app/workspaces.ts; the
+ * model only keeps the value. Files written before types, and those that
+ * named the former Hibrit mode, have their type not asked yet (null).
  */
-export const WORKSPACE_IDS: readonly Workspace[] = ['hybrid', 'cad', 'gis', 'plan3d', 'disaster'];
+export const WORKSPACE_IDS: readonly Workspace[] = ['cad', 'gis', 'plan3d', 'disaster'];
+
+/** How the former Hibrit mode was written: a file naming it has its type not asked yet. */
+export const LEGACY_HYBRID = 'hybrid';
+
+/** A project's type as written, or null when it is not asked yet: absent, the former Hibrit mode (a server's metadata may still say it). */
+const typeOf = (w: unknown): Workspace | null => ((WORKSPACE_IDS as readonly unknown[]).includes(w) ? (w as Workspace) : null);
 
 /** Serialized form, stored inside the project file. */
 export interface ProjectSettingsData {
@@ -26,8 +33,8 @@ export interface ProjectSettingsData {
   angleUnit: AngleUnit;
   /** Plot scale denominator (1:1000 → 1000). */
   plotScale: number;
-  /** The work mode the project opens in (menus, ribbon and tools shown). */
-  workspace: Workspace;
+  /** The project's type (CAD or CBS: its scene, axes and ribbon); absent while it is not asked (docs/adr/0165 §1). */
+  workspace?: Workspace;
   /** Typeface of the drawing's own text (text objects, dimension values, labels). */
   drawingFont: DrawingFont;
 }
@@ -39,7 +46,7 @@ export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
   areaUnit: 'm2',
   angleUnit: 'grad',
   plotScale: 1000,
-  workspace: 'hybrid',
+  workspace: 'gis',
   drawingFont: 'barlow',
 };
 
@@ -56,7 +63,7 @@ export class ProjectSettings {
   readonly areaUnit: Signal<AreaUnit>;
   readonly angleUnit: Signal<AngleUnit>;
   readonly plotScale: Signal<number>;
-  readonly workspace: Signal<Workspace>;
+  readonly workspace: Signal<Workspace | null>;
   readonly drawingFont: Signal<DrawingFont>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
@@ -69,7 +76,7 @@ export class ProjectSettings {
     this.areaUnit = new Signal(d.areaUnit);
     this.angleUnit = new Signal(d.angleUnit);
     this.plotScale = new Signal(d.plotScale);
-    this.workspace = new Signal(d.workspace);
+    this.workspace = new Signal(typeOf(d.workspace));
     this.drawingFont = new Signal(d.drawingFont);
     watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont], () =>
       this.changed.update((v) => v + 1),
@@ -84,9 +91,16 @@ export class ProjectSettings {
       areaUnit: this.areaUnit.value,
       angleUnit: this.angleUnit.value,
       plotScale: this.plotScale.value,
-      workspace: this.workspace.value,
+      // A type not asked yet is not written (docs/adr/0165 §1).
+      ...(this.workspace.value ? { workspace: this.workspace.value } : {}),
       drawingFont: this.drawingFont.value,
     };
+  }
+
+  /** Takes a whole snapshot's settings: one without a type has its type not asked yet. */
+  replace(data: ProjectSettingsData): void {
+    this.assign(data);
+    this.workspace.set(typeOf(data.workspace));
   }
 
   /** Applies a (partial) snapshot. Unknown SRIDs are rejected, not guessed. */
@@ -101,8 +115,8 @@ export class ProjectSettings {
     if (data.areaUnit !== undefined) this.areaUnit.set(data.areaUnit);
     if (data.angleUnit !== undefined) this.angleUnit.set(data.angleUnit);
     if (data.plotScale !== undefined) this.plotScale.set(data.plotScale);
-    // A snapshot without a mode (older files, partial patches) is hybrid only when it replaces the whole settings.
-    if (data.workspace !== undefined) this.workspace.set(data.workspace);
+    // A partial patch without a type keeps the project's (`replace` takes a whole snapshot's).
+    if (data.workspace !== undefined) this.workspace.set(typeOf(data.workspace));
     if (data.drawingFont !== undefined) this.drawingFont.set(data.drawingFont);
   }
 }

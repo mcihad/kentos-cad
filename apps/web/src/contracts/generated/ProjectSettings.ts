@@ -13,7 +13,9 @@ export type ProjectSettings = { srid: number, lengthDecimals: number, areaDecima
  */
 plotScale: number, 
 /**
- * Absent in files written before work modes (read as hybrid).
+ * The project's type; none while it is not asked (files written before
+ * types). The former Hibrit mode reads as written and means the same
+ * (see [`ProjectSettings::project_type`]).
  */
 workspace?: Workspace, 
 /**

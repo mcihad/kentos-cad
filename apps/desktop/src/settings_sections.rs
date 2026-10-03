@@ -83,7 +83,7 @@ impl Section {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
             }
             Self::NewProjects => {
-                "Oluşturacağınız her yeni projede başlangıçta önerilecek çalışma modu, çizim yazı tipi ve koordinat sistemi."
+                "Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim yazı tipi ve koordinat sistemi."
             }
             Self::Engine => {
                 "Çizim alanını ekran kartında çizerken kenar yumuşatma, çözünürlük, sembol boyutu ve çizgi kalınlığı. Bu cihaza özgüdür; menüler, paneller ve pencereler her zaman tam kalitede çizilir."

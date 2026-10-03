@@ -32,7 +32,7 @@ pub(crate) mod fields {
     pub(crate) const TAGS_PLACEHOLDER: &str = "Virgülle ayırın: Kadıköy, 2026";
     /// The web's name for the type field (its screen reader's).
     #[cfg(test)]
-    pub(crate) const TYPE_LABEL: &str = "Proje türü";
+    pub(crate) const TYPE_LABEL: &str = "İş türü";
 }
 
 /// Proje bilgileri.

@@ -55,7 +55,7 @@ impl Section {
     fn lead(self) -> &'static str {
         match self {
             Section::General => {
-                "Projenin adı, çalışma modu, çizim ölçeği ve çizimdeki yazıların yazı tipi."
+                "Projenin adı, türü, çizim ölçeği ve çizimdeki yazıların yazı tipi."
             }
             Section::Crs => {
                 "Bu projenin konum referansı. Koordinatlar bu sistemde saklanır, ölçülür ve dışa aktarılır."
@@ -329,12 +329,13 @@ impl App {
                     )),
             ))
             .push(group(
-                "Çalışma modu",
+                "Proje türü",
                 column![
-                    label::caption("Hangi menülerin, şerit sekmelerinin ve araçların görüneceğini seçer; veriyi değiştirmez. Gizlenen komutlar komut satırından yine çalışır."),
+                    label::caption("CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir; veri değişmez. Şeritte olmayan komutlar komut satırından yine çalışır."),
                     modes(
-                        s.settings.workspace.unwrap_or(Workspace::Hybrid),
+                        crate::catalog::effective_mode(s.settings.workspace).id,
                         true,
+                        false,
                         |w| event(Event::Mode(w)),
                     ),
                 ]

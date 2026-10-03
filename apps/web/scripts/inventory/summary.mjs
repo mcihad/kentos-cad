@@ -6,7 +6,7 @@ const SECTIONS = {
   tools: 'Araçlar',
   processing: 'İşlem araçları',
   models: 'İşlem modelleri',
-  workspaces: 'Çalışma modları',
+  workspaces: 'Proje türleri',
   settings: 'Ayarlar',
   storage: 'Tarayıcı depoları',
   fileFields: '`.kcad` alanları (v1 okunur, v2 yazılır)',
@@ -60,7 +60,7 @@ function desktopMarkdown(inv, name) {
   const out = [
     '## Masaüstü',
     '',
-    'Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`\'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), çalışma modları (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).',
+    'Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/desktop/equivalents.json`\'ın bütün bir bölüm için dediği; masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`) ve onlarla araçları (`tool.<kimlik>`), işlem araçları ve modelleri (`processing.run.…`, `processing.model.…`), proje türleri (`workspace.<kimlik>`); şeması masaüstünü de barındıran tipli ayarlar; tablonun öğe öğe dediği (masaüstündeki yeri ya da orada neden anlamsız olduğu); en son `annotations.json`. Bilinmeyen `none`dır. Masaüstünde komutu olmayanlar şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017).',
     '',
     '| Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |',
     '|---|---|---|---|---|---|---|',

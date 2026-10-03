@@ -497,11 +497,7 @@ mod tests {
     #[test]
     fn the_tabs_are_the_web_s_in_every_mode() {
         let fixture: Value = serde_json::from_str(FIXTURE).expect("ribbon.json reads");
-        for (mode, workspace) in [
-            ("hybrid", Workspace::Hybrid),
-            ("cad", Workspace::Cad),
-            ("gis", Workspace::Gis),
-        ] {
+        for (mode, workspace) in [("cad", Workspace::Cad), ("gis", Workspace::Gis)] {
             let ours: Vec<(String, String, bool)> = catalog()
                 .tabs_in(workspace)
                 .map(|t| (t.id.to_owned(), t.label.to_owned(), false))

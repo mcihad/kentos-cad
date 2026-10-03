@@ -9,7 +9,7 @@ import { blockFaultMessage, definitionsFault, type AttributeDefinition, type Blo
 import type { CadDocument, DocumentContent } from './document';
 import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
 import type { LayerInit, LayerSnap } from './layers';
-import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
+import { DRAWING_FONT_IDS, LEGACY_HYBRID, WORKSPACE_IDS } from './projectSettings';
 
 /**
  * The drawing as a versioned file (`.kcad`): the v1 JSON (contract
@@ -328,8 +328,11 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         areaUnit: oneOf(settings.areaUnit, ['m2', 'donum', 'ha'] as const, 'Proje ayarları › alan birimi'),
         angleUnit: oneOf(settings.angleUnit, ['grad', 'deg'] as const, 'Proje ayarları › açı birimi'),
         plotScale: num(settings.plotScale, 'Proje ayarları › çizim ölçeği'),
-        // Files written before work modes have none: they open as they always did (hybrid).
-        workspace: settings.workspace === undefined ? 'hybrid' : oneOf(settings.workspace, WORKSPACE_IDS, 'Proje ayarları › çalışma modu'),
+        // Files written before project types, and those that named the former Hibrit mode, have their type not
+        // asked yet: none is kept (docs/adr/0165 §1).
+        ...(settings.workspace === undefined || settings.workspace === null || settings.workspace === LEGACY_HYBRID
+          ? {}
+          : { workspace: oneOf(settings.workspace, WORKSPACE_IDS, 'Proje ayarları › proje türü') }),
         // And before drawing typefaces: Barlow, as they were drawn.
         drawingFont: settings.drawingFont === undefined ? 'barlow' : oneOf(settings.drawingFont, DRAWING_FONT_IDS, 'Proje ayarları › çizim yazı tipi'),
       },

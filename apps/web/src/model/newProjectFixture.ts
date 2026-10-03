@@ -15,7 +15,7 @@ export const NEW_PROJECT_CASES: readonly NewProjectOptions[] = [
   { name: 'Yeni proje', srid: 5256, plotScale: 1000 },
   { name: '  Ada 101  ', srid: 5254, plotScale: 500, workspace: 'cad', drawingFont: 'arimo' },
   { name: 'Harita', srid: 4326, plotScale: 25000, workspace: 'gis' },
-  { name: 'Web haritası', srid: 3857, plotScale: 2000, workspace: 'hybrid', drawingFont: 'plex-mono' },
+  { name: 'Web haritası', srid: 3857, plotScale: 2000, workspace: 'gis', drawingFont: 'plex-mono' },
   { name: '', srid: 32636, plotScale: 5000 },
 ];
 

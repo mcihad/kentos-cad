@@ -261,7 +261,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
-| `workspace` | numaralı metin | | `hybrid`, `cad`, `gis`, `plan3d`, `disaster` |
+| `workspace` | numaralı metin | | projenin türü: `cad`, `gis`, `plan3d`, `disaster`; eski dosyaların `hybrid`'i (kalkan Hibrit modu) okunur ve olduğu gibi yazılır, alanın yokluğu gibi türü sorulmamış proje demektir (ADR 0165 §1) |
 | `drawingFont` | numaralı metin | | `barlow`, `arimo`, `overpass`, `quicksand`, `architects-daughter`, `courier-prime`, `plex-mono` |
 | `areaDecimals` | u32 | evet | alan gösterim basamağı |
 | `lengthDecimals` | u32 | evet | uzunluk gösterim basamağı |

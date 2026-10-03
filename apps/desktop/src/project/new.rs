@@ -113,10 +113,7 @@ impl State {
         } else {
             5256
         };
-        let workspace = serde_json::from_value(s.effective("newProjects.workspace"))
-            .ok()
-            .filter(|w| ready(*w))
-            .unwrap_or(Workspace::Hybrid);
+        let workspace = default_type(app);
         let drawing_font = serde_json::from_value(s.effective("newProjects.drawingFont"))
             .unwrap_or(DrawingFont::Barlow);
         Self {
@@ -130,6 +127,15 @@ impl State {
             pending: None,
         }
     }
+}
+
+/// The type a new project starts with: the app's default for new projects
+/// (`newProjects.workspace`) when it can be chosen, else CBS.
+pub(super) fn default_type(app: &App) -> Workspace {
+    serde_json::from_value(app.settings.effective("newProjects.workspace"))
+        .ok()
+        .filter(|w| ready(*w))
+        .unwrap_or(crate::catalog::FALLBACK_MODE)
 }
 
 /// Whether a mode can be chosen yet (an announced one never is, even if a preference names it).
@@ -311,7 +317,7 @@ impl App {
                         scales(s.plot_scale, |v| event(Event::Scale(v))),
                     )),
             ))
-            .push(group("Çalışma modu", modes(s.workspace, false, |w| event(Event::Mode(w)))))
+            .push(group("Proje türü", modes(s.workspace, false, true, |w| event(Event::Mode(w)))))
             .push(group(
                 "Koordinat sistemi",
                 crs::picker(

@@ -8,6 +8,7 @@ import { PLOT_SCALES } from '../ribbon/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
+import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 import { fixed } from '../../core/displayNumber';
@@ -30,7 +31,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       label: 'Genel',
       icon: 'folder',
       title: 'Genel',
-      lead: 'Projenin adı, çalışma modu, çizim ölçeği ve çizimdeki yazıların yazı tipi.',
+      lead: 'Projenin adı, türü, çizim ölçeği ve çizimdeki yazıların yazı tipi.',
       keys: ['plotScale', 'workspace', 'drawingFont'],
       render: (api) => [
         group(
@@ -48,9 +49,9 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
           ),
         ),
         group(
-          'Çalışma modu',
-          h('p', { class: 'sgroup__note' }, 'Hangi menülerin, şerit sekmelerinin ve araçların görüneceğini seçer; veriyi değiştirmez. Gizlenen komutlar komut satırından yine çalışır.'),
-          workspacePicker({ value: api.draft.workspace, compact: true, onChange: (id) => api.set('workspace', id, false) }),
+          'Proje türü',
+          h('p', { class: 'sgroup__note' }, 'CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir; veri değişmez. Şeritte olmayan komutlar komut satırından yine çalışır.'),
+          workspacePicker({ value: effectiveWorkspace(api.draft.workspace ?? null).id, compact: true, onChange: (id) => api.set('workspace', id, false) }),
         ),
         group(
           'Çizim yazı tipi',

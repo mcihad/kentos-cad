@@ -81,7 +81,7 @@ export function openStartScreen(ctx: AppContext): void {
           h(
             'div',
             { class: 'start__actions' },
-            action('file.new', 'fileNew', 'Yeni proje', 'Çalışma modu, koordinat sistemi ve ölçekle boş çizim'),
+            action('file.new', 'fileNew', 'Yeni proje', 'Proje türü, koordinat sistemi ve ölçekle boş çizim'),
             action('file.open', 'fileOpen', 'Dosya aç', 'Bu bilgisayardaki bir .kcad çizimi'),
             cloud,
             action('file.import.dxf', 'import', 'DXF içe aktar', 'AutoCAD ve Netcad çizimleri, katmanlarıyla'),

@@ -4,8 +4,9 @@
 //! (`data/profiles.json`): its tools and groups, their presets, the names an
 //! item goes by there (“Görünüm penceresi” in CAD, “Harita” in GIS), the
 //! default template and the gallery's order. A mode with no row uses the
-//! common profile; the hybrid mode is the union of CAD and GIS. Removing a
-//! mode is removing its row: no code names one.
+//! common profile; a row may be the union of others (`union`). Removing a
+//! mode is removing its row: no code names one. (The Hibrit mode's row, the
+//! union of CAD and GIS, went with the mode: docs/adr/0165.)
 //!
 //! A tool whose presets a mode's row does not name takes the common
 //! profile's (a shape is a shape in every mode); a row that names them
@@ -450,7 +451,7 @@ pub fn item_note(workspace: Option<Workspace>, item: &Item) -> Option<String> {
         .find(|t| t.id == tool)
         .map_or(tool, |t| t.label.as_str());
     Some(format!(
-        "Bu öğe ({label}) {} kipinin aracıdır; {} kipinde yenisi eklenmez, var olan düzenlenir.",
+        "Bu öğe ({label}) {} projelerinin aracıdır; {} projelerinde yenisi eklenmez, var olan düzenlenir.",
         owner.label, r.label
     ))
 }
@@ -558,7 +559,7 @@ pub enum TemplateFit {
     Workspace,
     /// For every mode.
     Common,
-    /// Another mode's: shown with “Bütün kiplerin şablonları”.
+    /// Another type's: shown with “Bütün türlerin şablonları”.
     Other,
 }
 
@@ -569,7 +570,7 @@ pub enum TemplateFit {
 pub struct RankedTemplate {
     pub id: String,
     pub fit: TemplateFit,
-    /// Shown without “Bütün kiplerin şablonları”.
+    /// Shown without “Bütün türlerin şablonları”.
     pub matches: bool,
     /// “GIS şablonu”, “CAD şablonu” for another mode's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -740,12 +741,6 @@ mod tests {
             tool(&gis, "attributeTable").unwrap().state,
             ToolState::Disabled
         );
-        // Hybrid: the union of CAD and GIS.
-        let hy = tool_availability(Some(Workspace::Hybrid), &caps(true));
-        assert!(tool(&hy, "attributeTable").is_some() && tool(&hy, "overviewMap").is_some());
-        assert_eq!(tool(&hy, "map").unwrap().label, "Harita");
-        let border = tool(&hy, "border").unwrap();
-        assert!(border.presets.iter().any(|p| p.id == "zones"));
         // A mode with no profile row: the common profile.
         let p3 = profile_for(Some(Workspace::Plan3d), &caps(true));
         assert_eq!(p3.id, "common");
@@ -820,8 +815,7 @@ mod tests {
         )
         .unwrap();
         let note = item_note(Some(Workspace::Cad), &m).unwrap();
-        assert!(note.contains("CBS kipinin aracıdır"), "{note}");
+        assert!(note.contains("CBS projelerinin aracıdır"), "{note}");
         assert!(item_note(Some(Workspace::Gis), &m).is_none());
-        assert!(item_note(Some(Workspace::Hybrid), &m).is_none());
     }
 }

@@ -448,6 +448,11 @@ pub const RENAMED: &[(&str, &str)] = &[
 /// (docs/adr/0155).
 pub const RETIRED: &[&str] = &["appearance.shell"];
 
+/// Values earlier versions kept that no longer mean anything: dropped as they
+/// are read, without a report, so the default applies. The former Hibrit
+/// mode, since projects are CAD or CBS (docs/adr/0165).
+pub const RETIRED_VALUES: &[(&str, &str)] = &[("newProjects.workspace", "hybrid")];
+
 /// An older key's value under today's key: `None` when `key` is not an
 /// older key; an error when its value has no reading today.
 ///
@@ -512,6 +517,11 @@ fn renamed_layer(
 ) -> Map<String, Value> {
     for key in RETIRED {
         values.remove(*key);
+    }
+    for (key, value) in RETIRED_VALUES {
+        if values.get(*key).and_then(Value::as_str) == Some(*value) {
+            values.remove(*key);
+        }
     }
     for (from, _) in RENAMED {
         let Some(value) = values.remove(*from) else {

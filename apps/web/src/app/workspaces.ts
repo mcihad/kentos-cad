@@ -3,18 +3,17 @@ import type { ToolDescriptor } from '../tools/Tool';
 import type { AppContext } from './context';
 
 /**
- * Work modes (Çalışma modu): one project, one data model, several ways of
- * presenting it. A mode decides which menus (the ribbon's sources), ribbon
- * tabs, panels and tools are shown; it never changes what the data means, and
- * every command still runs from the command line and its shortcut in every
- * mode. The mode is a project setting (`ProjectSettings.workspace`), asked
- * when a project is created and changed from the status bar or
- * Görünüm → Çalışma modu.
+ * Project types (docs/adr/0165): CAD and CBS, each with its own scene, axes
+ * and ribbon; the tools both use are in both. The type is a project setting
+ * (`ProjectSettings.workspace`), chosen when a project is created; it never
+ * changes what the data means, and every command still runs from the
+ * command line and its shortcut in both. There is no hybrid type: a project
+ * whose type is not asked yet (an older file) shows as CBS until it is.
  *
- * A new mode is one entry here (and its id in the contract enum,
- * crates/shared/contracts `Workspace`). Modes announced but not built yet
+ * A new type is one entry here (and its id in the contract enum,
+ * crates/shared/contracts `Workspace`). Types announced but not built yet
  * carry `status: 'soon'`: they are shown with "Yakında" and cannot be
- * chosen; a file naming one opens in the hybrid presentation.
+ * chosen; a file naming one shows as CBS.
  */
 
 export type WorkspaceStatus = 'ready' | 'soon';
@@ -44,15 +43,6 @@ export interface WorkspaceSpec {
 }
 
 export const WORKSPACES: readonly WorkspaceSpec[] = [
-  {
-    id: 'hybrid',
-    label: 'Hibrit',
-    title: 'CAD + CBS',
-    icon: 'modeHybrid',
-    description: 'Hassas çizim ile coğrafi veri bir arada: bütün menüler, sekmeler ve araçlar.',
-    highlights: ['Bütün çizim ve düzenleme araçları', 'Harita, parsel ve koordinat işleri', 'İşlem araçları ve modeller'],
-    status: 'ready',
-  },
   {
     id: 'cad',
     label: 'CAD',
@@ -115,28 +105,31 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
 
 // Every id the contract knows has an entry, and no entry is unknown to it.
 if (WORKSPACES.length !== WORKSPACE_IDS.length || !WORKSPACE_IDS.every((id) => WORKSPACES.some((w) => w.id === id))) {
-  throw new Error('app/workspaces.ts: çalışma modları sözleşmeyle aynı değil');
+  throw new Error('app/workspaces.ts: proje türleri sözleşmeyle aynı değil');
 }
 
 export const workspaceById = (id: Workspace): WorkspaceSpec => WORKSPACES.find((w) => w.id === id)!;
 
-/** The mode the interface shows for a project's setting: an announced mode shows as hybrid. */
-export function effectiveWorkspace(id: Workspace): WorkspaceSpec {
-  const w = workspaceById(id);
-  return w.status === 'ready' ? w : workspaceById('hybrid');
+/** The type a project whose type is not asked yet, or is an announced one, shows as (docs/adr/0165 §1). */
+export const FALLBACK_WORKSPACE: Workspace = 'gis';
+
+/** The type the interface shows for a project's setting: one not asked yet, or announced, shows as CBS. */
+export function effectiveWorkspace(id: Workspace | null): WorkspaceSpec {
+  const w = id === null ? undefined : workspaceById(id);
+  return w && w.status === 'ready' ? w : workspaceById(FALLBACK_WORKSPACE);
 }
 
-/** What a mode shows: the ribbon and its menus ask it item by item. */
+/** What a type shows: the ribbon and its menus ask it item by item (null: no filter). */
 export interface WorkspaceFilter {
-  readonly id: Workspace;
+  readonly id: Workspace | null;
   menu(id: string): boolean;
   tool(t: ToolDescriptor): boolean;
   /** A command id; `tool.x` asks the tool's own entry (its group and section). */
   command(id: string): boolean;
 }
 
-/** Everything shown: hybrid, and callers that do not filter. */
-export const SHOW_ALL: WorkspaceFilter = { id: 'hybrid', menu: () => true, tool: () => true, command: () => true };
+/** Everything shown: callers that do not filter (a type's own lists, the inventory's places). */
+export const SHOW_ALL: WorkspaceFilter = { id: null, menu: () => true, tool: () => true, command: () => true };
 
 export function workspaceFilter(spec: WorkspaceSpec, tools: readonly ToolDescriptor[]): WorkspaceFilter {
   const hide = spec.hide;

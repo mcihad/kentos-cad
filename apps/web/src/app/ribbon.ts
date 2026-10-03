@@ -275,7 +275,8 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
         const b = BUILTIN_LABEL[src.builtin];
         panel(b.label, b.icon).entries.push({ kind: 'builtin', name: src.builtin });
       } else if ('pick' in src) {
-        if (src.workspaces && !src.workspaces.includes(filter.id)) continue;
+        // A type's own panel: left out where no type filters (the inventory's places).
+        if (src.workspaces && (filter.id === null || !src.workspaces.includes(filter.id))) continue;
         const d = panel(src.pick, src.icon, src.more, src.compact);
         for (const id of src.commands) command(d, id);
       } else if ('tools' in src) {
@@ -324,7 +325,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
         const launcher = spec.launchers?.[d.label] ?? (d.more ? { tab: d.more, title: `Tüm araçlar: ${specs.find((s) => s.id === d.more)?.label ?? d.more} sekmesi` } : undefined);
         return { label: d.label, icon, items, launcher, overflow: overflow.length ? overflow : undefined, keep: spec.keep?.includes(d.label) || undefined };
       });
-    return { id: spec.id, label: spec.labels?.[filter.id] ?? spec.label, contextual: spec.contextual, panels };
+    return { id: spec.id, label: (filter.id && spec.labels?.[filter.id]) || spec.label, contextual: spec.contextual, panels };
   });
   // A tab the work mode leaves empty (İşlemler in CAD) is not shown.
   return tabs.filter((t) => t.panels.length);

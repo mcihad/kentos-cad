@@ -28,6 +28,8 @@ interface Case {
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 const fixture = (name: string) => fs.readFileSync(new URL(`../../../../fixtures/document/v1/identity/${name}`, import.meta.url), 'utf8');
 const expected = JSON.parse(fixture('expected.json')) as { cases: Case[] };
+/** How the compact sample names the former Hibrit mode. */
+const HYBRID = '"workspace":"hybrid",';
 
 describe.skipIf(!formatsBuilt)('v1 drawing identities in the browser (formats WASM module)', () => {
   it('gives every input of every case the reference ids', async () => {
@@ -41,7 +43,8 @@ describe.skipIf(!formatsBuilt)('v1 drawing identities in the browser (formats WA
   });
 
   it('reads the drawing the app writes: the compact sample is the app’s own file', () => {
-    expect(fixture('sample.compact.kcad')).toBe(`${JSON.stringify(toSnapshot(snapshotSampleDocument()))}\n`);
+    // Recorded under the former Hibrit mode, which the app no longer writes (a type not asked yet, docs/adr/0165 §1).
+    expect(fixture('sample.compact.kcad').replace(HYBRID, '')).toBe(`${JSON.stringify(toSnapshot(snapshotSampleDocument()))}\n`);
   });
 
   it('gives the opened drawing’s objects those ids, each object by its local id', async () => {
@@ -52,9 +55,16 @@ describe.skipIf(!formatsBuilt)('v1 drawing identities in the browser (formats WA
     const doc = new CadDocument({ name: 'boş', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } });
     doc.replaceWith(read.content);
     for (const { id, uid } of expected.cases[0].entities) expect(doc.byUid(uid)?.id).toBe(id);
-    // Written again, then opened again: the same ids (the file is the same drawing).
+    // Written again it is the same file but for the former Hibrit mode, which is not written back
+    // (docs/adr/0165 §1); that file, opened and written again, is itself and keeps its ids.
     const again = JSON.stringify(toSnapshot(doc));
-    expect((await v1IdentitiesInProcess(again)).entities).toEqual(expected.cases[0].entities);
+    expect(`${again}\n`).toBe(text.replace(HYBRID, ''));
+    const reread = readSnapshot(again);
+    if (!reread.ok) throw new Error(reread.error);
+    const ids = await v1IdentitiesInProcess(again);
+    expect(attachV1Identities(reread.content, ids)).toBeNull();
+    doc.replaceWith(reread.content);
+    expect((await v1IdentitiesInProcess(JSON.stringify(toSnapshot(doc)))).entities).toEqual(ids.entities);
   });
 
   it('refuses ids that do not belong to the drawing read, and a drawing the contract cannot read says why', async () => {

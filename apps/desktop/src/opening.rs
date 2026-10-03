@@ -365,9 +365,13 @@ impl App {
                             doc.model.mark_unsaved();
                             let task = self.update(Message::Opened(Some(Ok(doc))));
                             self.recovered(id, name);
+                            self.ask_project_type();
                             return task;
                         }
-                        return self.update(Message::Opened(Some(Ok(doc))));
+                        let task = self.update(Message::Opened(Some(Ok(doc))));
+                        // A project without a type is asked it (docs/adr/0165 §1).
+                        self.ask_project_type();
+                        return task;
                     }
                 }
             }

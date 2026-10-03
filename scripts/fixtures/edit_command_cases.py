@@ -50,7 +50,7 @@ SETUP = {
     "format": "kentos.document",
     "version": 1,
     "name": "Ürün komutu",
-    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
     "origin": {"x": 487000, "y": 4420000},
     "layers": [
         layer("yapi", "Yapı"),

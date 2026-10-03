@@ -889,7 +889,8 @@ impl App {
             .then(|| crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned));
         let c = self.viewport.camera.center;
         Context {
-            workspace: settings.and_then(|s| s.workspace),
+            // The type the interface shows: a project not asked its type is CBS (docs/adr/0165).
+            workspace: doc.map(|_| self.work_mode()),
             // The project's type is the catalog's; the opened drawing does not carry it yet.
             project_type: None,
             capabilities: Capabilities {
@@ -1435,9 +1436,11 @@ mod tests {
         app.spatial.reload(&app.document.as_ref().unwrap().model);
         new_sheet(&mut app);
         let ways = app.sheets.pdf_ways(&app.sheet_painter());
-        assert_eq!(ways.len(), 1, "{ways:?}");
+        // CBS's sheet has the map and its overview (a project not asked its type is CBS, docs/adr/0165).
+        assert_eq!(ways.len(), 2, "{ways:?}");
         assert!(
-            !ways[0].vector && ways[0].why == "Bina (desen dolgusu)",
+            ways.iter()
+                .all(|w| !w.vector && w.why == "Bina (desen dolgusu)"),
             "{ways:?}"
         );
         let _ = app.update(Message::Sheet(Sheet::Export(

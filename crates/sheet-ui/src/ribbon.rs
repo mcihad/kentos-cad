@@ -183,7 +183,7 @@ impl Designer {
                         .menu(new_menu)
                         .tip(
                             Tip::new("Yeni pafta")
-                                .body("Kipin varsayılan şablonundan yeni bir pafta açar."),
+                                .body("Proje türünün varsayılan şablonundan yeni bir pafta açar."),
                         ),
                 )
                 .tool(

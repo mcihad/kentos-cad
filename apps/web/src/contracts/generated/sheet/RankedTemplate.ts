@@ -3,7 +3,7 @@ import type { TemplateFit } from "./TemplateFit";
 
 export type RankedTemplate = { id: string, fit: TemplateFit, 
 /**
- * Shown without “Bütün kiplerin şablonları”.
+ * Shown without “Bütün türlerin şablonları”.
  */
 matches: boolean, 
 /**

@@ -60,7 +60,7 @@
     "road": "Yol",
     "architecture": "Mimari"
   },
-  "typeHint": "Tür yalnız projeleri bulmak ve düzenlemek içindir: bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.",
+  "typeHint": "İş türü yalnız projeleri bulmak ve düzenlemek içindir: proje türünü (CAD ya da CBS) değiştirmez, bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.",
   "emptySearch": "Aramanıza uyan proje yok. Başka sözcüklerle ya da tür süzgeci olmadan deneyin.",
   "noOrganization": "Etkin üyeliğiniz olan bir kurum yok; kurum projeleri burada görünür.",
   "tips": {

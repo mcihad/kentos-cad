@@ -131,9 +131,9 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
         let prompt = app.session.prompt().text();
         assert!(prompt.starts_with(&format!("Ölçü: {step}")), "{name}: {prompt}");
     }
-    // Every method's name answers to its method alone.
+    // Every method's name answers to its method alone (one ribbon's splits).
     let methods = catalog()
-        .tabs()
+        .tabs_in(kentos_contracts::Workspace::Cad)
         .flat_map(|tab| tab.panels.iter())
         .flat_map(|panel| panel.items.iter())
         .filter_map(|item| match item {

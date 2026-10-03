@@ -929,12 +929,8 @@
     {
       "key": "newProjects.workspace",
       "type": "enum",
-      "default": "hybrid",
+      "default": "gis",
       "choices": [
-        {
-          "value": "hybrid",
-          "label": "Hibrit"
-        },
         {
           "value": "cad",
           "label": "CAD"
@@ -951,8 +947,8 @@
       ],
       "version": 1,
       "group": "newProjects",
-      "title": "Çalışma modu",
-      "description": "Yeni projelerde önce önerilen çalışma modu; proje kendi modunu saklar.",
+      "title": "Proje türü",
+      "description": "Yeni proje sihirbazında önce seçili gelen tür; proje kendi türünü saklar (ADR 0165).",
       "sensitive": false,
       "apply": "live"
     },
@@ -1255,12 +1251,8 @@
     {
       "key": "project.workspace",
       "type": "enum",
-      "default": "hybrid",
+      "default": "gis",
       "choices": [
-        {
-          "value": "hybrid",
-          "label": "Hibrit"
-        },
         {
           "value": "cad",
           "label": "CAD"
@@ -1285,8 +1277,8 @@
       ],
       "version": 1,
       "group": "project",
-      "title": "Çalışma modu",
-      "description": "Projenin açıldığı çalışma modu; yalnız sunuşu değiştirir, veriyi değil.",
+      "title": "Proje türü",
+      "description": "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir (ADR 0165).",
       "sensitive": false,
       "apply": "live"
     },

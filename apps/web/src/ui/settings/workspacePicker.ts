@@ -4,13 +4,15 @@ import { h } from '../dom';
 import { icon } from '../icons';
 
 /**
- * The work modes as cards (Yeni proje, Proje ayarları → Genel): the mode's
- * picture, name, what it is for and three points. Modes announced but not
- * built are shown last, dimmed, with “Yakında”, and cannot be chosen. A
- * radio group: ←/→ (and ↑/↓) move between the modes that can be chosen.
+ * The project types as cards (Yeni proje, Proje ayarları → Genel, the type
+ * question of a project opened without one): the type's picture, name, what
+ * it is for and three points. Types announced but not built are shown last,
+ * dimmed, with “Yakında”, and cannot be chosen (`soon: false` leaves them
+ * out). A radio group: ←/→ (and ↑/↓) move between the types that can be
+ * chosen.
  */
-export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspace) => void; compact?: boolean }): HTMLElement {
-  const group = h('div', { class: `wspick${opts.compact ? ' wspick--compact' : ''}`, role: 'radiogroup', 'aria-label': 'Çalışma modu' });
+export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspace) => void; compact?: boolean; soon?: boolean }): HTMLElement {
+  const group = h('div', { class: `wspick${opts.compact ? ' wspick--compact' : ''}`, role: 'radiogroup', 'aria-label': 'Proje türü' });
   const ready = WORKSPACES.filter((w) => w.status === 'ready');
   const soon = WORKSPACES.filter((w) => w.status === 'soon');
   const cards = new Map<Workspace, HTMLButtonElement>();
@@ -53,7 +55,8 @@ export function workspacePicker(opts: { value: Workspace; onChange: (id: Workspa
     cards.set(w.id, c);
     return c;
   };
-  group.append(h('div', { class: 'wspick__row' }, ...ready.map(card)), h('div', { class: 'wspick__soon' }, h('span', { class: 'wspick__soonlabel' }, 'Yakında'), h('div', { class: 'wspick__row' }, ...soon.map(card))));
+  group.append(h('div', { class: 'wspick__row' }, ...ready.map(card)));
+  if (opts.soon !== false) group.append(h('div', { class: 'wspick__soon' }, h('span', { class: 'wspick__soonlabel' }, 'Yakında'), h('div', { class: 'wspick__row' }, ...soon.map(card))));
   group.addEventListener('keydown', (e) => {
     const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
     if (!step) return;

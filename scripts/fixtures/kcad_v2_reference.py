@@ -19,8 +19,9 @@ outcome: the sniffed kind, the error code, or the drawing (floats bit for bit).
 migrated.json is not written by hand: it is fixtures/document/v1/sample.json
 (the web app's recorded v1 sample) with the ids the independent v1 reference
 derived for it (fixtures/document/v1/identity/expected.json, docs/adr/0014),
-the project id and the migration source; so it is what opening that v1 file
-and saving it as v2 must give on every platform.
+the project id and the migration source, its former Hibrit mode left out (a
+project type not asked yet, docs/adr/0165 §1); so it is what opening that v1
+file and saving it as v2 must give on every platform.
 """
 import hashlib
 import json
@@ -541,11 +542,15 @@ def migrated():
             out[k] = v
         return out
 
+    settings = typed(v1["settings"], {"plotScale"})
+    # The former Hibrit mode is a project type not asked yet: not written (docs/adr/0165 §1).
+    if settings.get("workspace") == "hybrid":
+        del settings["workspace"]
     return {
         "format": "kentos.document",
         "version": 2,
         "name": v1["name"],
-        "settings": typed(v1["settings"], {"plotScale"}),
+        "settings": settings,
         "origin": {"x": float(v1["origin"]["x"]), "y": float(v1["origin"]["y"])},
         "homeView": {k: float(x) for k, x in v1["homeView"].items()},
         "layers": [layer_(n) for n in v1["layers"]],

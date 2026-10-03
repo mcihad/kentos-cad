@@ -73,7 +73,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Yeni projeler',
       icon: 'fileNew',
       title: 'Yeni proje varsayılanları',
-      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek çalışma modu, çizim yazı tipi ve koordinat sistemi.',
+      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim yazı tipi ve koordinat sistemi.',
       keys: ['defaultSrid', 'defaultWorkspace', 'defaultDrawingFont'],
       render: (api) => {
         const current = ctx.doc.crs.value;
@@ -81,7 +81,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
         openProject.addEventListener('click', () => ctx.commands.execute('file.settings'));
         return [
           group(
-            'Çalışma modu',
+            'Proje türü',
             workspacePicker({ value: api.draft.defaultWorkspace, compact: true, onChange: (id) => api.set('defaultWorkspace', id, false) }),
           ),
           group('Çizim yazı tipi', drawingFontPicker({ value: api.draft.defaultDrawingFont, onChange: (id) => api.set('defaultDrawingFont', id) })),
@@ -146,7 +146,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
         ctx.log.info(`Yeni projeler ${c.name} (EPSG:${c.srid}) ile oluşturulacak. Açık projenin sistemi değişmedi.`);
       }
       if (draft.defaultWorkspace !== init.defaultWorkspace) {
-        ctx.log.info(`Yeni projeler “${workspaceById(draft.defaultWorkspace).label}” çalışma moduyla önerilecek. Açık projenin modu değişmedi.`);
+        ctx.log.info(`Yeni projeler “${workspaceById(draft.defaultWorkspace).label}” türüyle önerilecek. Açık projenin türü değişmedi.`);
       }
       ctx.log.success('Uygulama ayarları kaydedildi.');
     },

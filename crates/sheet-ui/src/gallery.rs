@@ -10,7 +10,7 @@
 //! actions with their reasons, what it needs that the project lacks, and
 //! what it is. The order is the core's for the project (`rank_templates`:
 //! its type's templates first, then its mode's, then the common ones);
-//! “Bütün kiplerin şablonları” shows the others too, badged with their mode.
+//! “Bütün türlerin şablonları” shows the others too, badged with their type.
 
 use std::cell::Cell;
 use std::collections::BTreeMap;
@@ -193,7 +193,7 @@ pub(crate) struct Card<'a> {
     /// Another mode's badge (“CBS şablonu”), from the core.
     pub mode: Option<String>,
     pub fit: TemplateFit,
-    /// Shown without “Bütün kiplerin şablonları”.
+    /// Shown without “Bütün türlerin şablonları”.
     pub matches: bool,
     /// Who shared it, for one shared with the account.
     pub shared_by: Option<&'a str>,
@@ -224,10 +224,10 @@ pub struct CardView {
 /// How a card stands with the project (the web's `FIT_LABEL`).
 fn fit_label(f: TemplateFit) -> &'static str {
     match f {
-        TemplateFit::ProjectType => "Projenin türüne uygun",
-        TemplateFit::Workspace => "Çalışma moduna uygun",
-        TemplateFit::Common => "Ortak: her çalışma modunda",
-        TemplateFit::Other => "Başka bir çalışma modu için",
+        TemplateFit::ProjectType => "İşin türüne uygun",
+        TemplateFit::Workspace => "Proje türüne uygun",
+        TemplateFit::Common => "Ortak: her proje türünde",
+        TemplateFit::Other => "Başka bir proje türü için",
     }
 }
 
@@ -277,11 +277,11 @@ pub(crate) fn category_label(c: &str) -> String {
     }
 }
 
+/// A project type's name; one not asked yet, or announced, shows as CBS (docs/adr/0165).
 fn mode_label(w: Option<Workspace>) -> &'static str {
     match w {
         Some(Workspace::Cad) => "CAD",
-        Some(Workspace::Gis) => "CBS",
-        _ => "Hibrit",
+        _ => "CBS",
     }
 }
 
@@ -1607,10 +1607,10 @@ impl Designer {
         nav = nav.push(space().height(8));
         nav = nav.push(
             label::caption(format!(
-                "Sıra: önce projenin türüne, sonra çalışma moduna ({}) uyanlar, sonra ortak şablonlar.{}",
+                "Sıra: önce işin türüne, sonra proje türüne ({}) uyanlar, sonra ortak şablonlar.{}",
                 mode_label(self.ctx.workspace),
                 if g.all_modes {
-                    " Başka kiplerinkiler en sonda, kip rozetiyle."
+                    " Başka türlerinkiler en sonda, tür rozetiyle."
                 } else {
                     ""
                 }
@@ -1702,9 +1702,9 @@ impl Designer {
             .width(170),
             tip(
                 Switch::new(g.all_modes, move |on| gm(GalleryMessage::AllModes(on)))
-                    .label("Bütün kiplerin şablonları"),
-                Tip::new("Bütün kiplerin şablonları").body(
-                    "Başka çalışma modlarının şablonlarını da gösterir; kip rozetiyle. Veri kipten bağımsızdır: her şablon kullanılabilir."
+                    .label("Bütün türlerin şablonları"),
+                Tip::new("Bütün türlerin şablonları").body(
+                    "Başka proje türlerinin şablonlarını da gösterir; tür rozetiyle. Veri türden bağımsızdır: her şablon kullanılabilir."
                 ),
                 iced::widget::tooltip::Position::Bottom,
             ),
@@ -1732,7 +1732,7 @@ impl Designer {
         if hidden > 0 {
             head = head.push(
                 label::caption(format!(
-                    "· {hidden} şablon başka kiplerin (“Bütün kiplerin şablonları” ile görünür)"
+                    "· {hidden} şablon başka türlerin (“Bütün türlerin şablonları” ile görünür)"
                 ))
                 .style(style::text::muted),
             );
@@ -1745,7 +1745,7 @@ impl Designer {
                 State::Ready if searching => (
                     crate::icons::TEMPLATE,
                     "Eşleşen şablon yok",
-                    "Aramayı ya da kâğıt ve tür süzgeçlerini değiştirin; başka kiplerin şablonları için “Bütün kiplerin şablonları”nı açın.",
+                    "Aramayı ya da kâğıt ve tür süzgeçlerini değiştirin; başka türlerin şablonları için “Bütün türlerin şablonları”nı açın.",
                 ),
                 State::Ready => match g.source {
                     Source::System => (
@@ -2084,9 +2084,9 @@ impl Designer {
         let common = m.workspaces.is_empty()
             || (m.workspaces.contains(&Workspace::Cad) && m.workspaces.contains(&Workspace::Gis));
         fields = fields.push(field(
-            "Çalışma modu",
+            "Proje türü",
             if common {
-                "Ortak (bütün kipler)".to_owned()
+                "Ortak (bütün türler)".to_owned()
             } else {
                 m.workspaces
                     .iter()
@@ -2097,7 +2097,7 @@ impl Designer {
         ));
         if !m.project_types.is_empty() {
             fields = fields.push(field(
-                "Proje türleri",
+                "İş türleri",
                 m.project_types
                     .iter()
                     .map(|t| type_label(*t))

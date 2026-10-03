@@ -449,13 +449,13 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         choice(
             "newProjects.workspace",
-            "hybrid",
-            &[("hybrid", "Hibrit"), ("cad", "CAD"), ("gis", "CBS")],
+            "gis",
+            &[("cad", "CAD"), ("gis", "CBS")],
         )
         .hosts(&[Web, Desktop])
         .text(
-            "Çalışma modu",
-            "Yeni projelerde önce önerilen çalışma modu; proje kendi modunu saklar.",
+            "Proje türü",
+            "Yeni proje sihirbazında önce seçili gelen tür; proje kendi türünü saklar (ADR 0165).",
         ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
             .hosts(&[Web, Desktop])
@@ -573,9 +573,8 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         choice(
             "project.workspace",
-            "hybrid",
+            "gis",
             &[
-                ("hybrid", "Hibrit"),
                 ("cad", "CAD"),
                 ("gis", "CBS"),
                 ("plan3d", "3D Plan"),
@@ -585,8 +584,8 @@ fn settings() -> Vec<SettingDescriptor> {
         .scope(SettingScope::Project)
         .hosts(&[Web, Desktop])
         .text(
-            "Çalışma modu",
-            "Projenin açıldığı çalışma modu; yalnız sunuşu değiştirir, veriyi değil.",
+            "Proje türü",
+            "CAD ya da CBS: sahnesi, eksen ve açı düzeni ve şeridi türe göredir (ADR 0165).",
         ),
         choice("project.drawingFont", "barlow", DRAWING_FONTS)
             .scope(SettingScope::Project)

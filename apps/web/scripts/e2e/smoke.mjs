@@ -2540,16 +2540,16 @@ try {
       !cadUi.tabs.includes('processing') && cadUi.tabs.includes('draw') && cadUi.map === 'Ölçme' && measuring.commands > 0 && !measuring.parcel && cadUi.status === 'CAD' && byName === 'parcel',
       JSON.stringify({ ...cadUi, measuring, byName }),
     );
-    // Back to Hibrit from the status bar's mode cell; announced modes are listed with Yakında.
+    // To CBS from the status bar's type cell; no Hibrit (docs/adr/0165), the announced types are listed with Yakında.
     await press('.status__mode');
     const modeMenu = await b.eval(`[...document.querySelectorAll('.menu__item')].map((e) => e.textContent)`);
     await b.shot('workspace-menu');
-    await press('.menu__item', 'Hibrit');
-    const hybridUi = await ui();
+    await press('.menu__item', 'CBS');
+    const gisUi = await ui();
     check(
-      'the status bar switches the work mode back to Hibrit (the project is unsaved); 3D Plan and Afet Analizi say Yakında',
-      hybridUi.mode === 'hybrid' && hybridUi.tabs.includes('map') && hybridUi.status === 'Hibrit' && hybridUi.dirty && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
-      JSON.stringify({ ...hybridUi, modeMenu }),
+      'the status bar switches the project type to CBS (the project is unsaved); no Hibrit; 3D Plan and Afet Analizi say Yakında',
+      gisUi.mode === 'gis' && gisUi.tabs.includes('map') && gisUi.tabs.includes('processing') && gisUi.status === 'CBS' && gisUi.dirty && !modeMenu.some((t) => t.includes('Hibrit')) && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
+      JSON.stringify({ ...gisUi, modeMenu }),
     );
   }
 
@@ -2572,19 +2572,26 @@ try {
     const only = await b.eval(`({ ribbon: !!document.querySelector('.ribbon .ribbon__strip .rpanel'), menubar: !!document.querySelector('.menubar'), toolbar: !!document.querySelector('.toolbar'), toolbox: !!document.querySelector('.toolbox') })`);
     check('the ribbon is the only chrome: no menu bar, toolbar or toolbox', only.ribbon && !only.menubar && !only.toolbar && !only.toolbox, JSON.stringify(only));
 
-    // Every tool of the catalog and every menu command has a button; the tabs are derived, nothing lists tools twice.
-    const tabIds = await b.eval(`[...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab)`);
+    // Every tool of the catalog and every menu command has a button in a project type's ribbon, CBS's or CAD's
+    // (docs/adr/0165); the tabs are derived, nothing lists tools twice. The drawing tools below are CAD's: the
+    // ribbon stays CAD's to the end of this part.
     const seen = new Set();
-    for (const id of tabIds) {
-      await tab(id);
-      // Buttons, the choices of split buttons and the panels' ▾ lists.
-      for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-command]')].map((e) => e.dataset.command)`)) seen.add(c);
-      for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-commands]')].flatMap((e) => e.dataset.commands.split(' '))`)) seen.add(c);
+    let tabIds = [];
+    for (const type of ['gis', 'cad']) {
+      await b.eval(`window.kentos.doc.settings.workspace.set('${type}')`);
+      await sleep(150);
+      tabIds = await b.eval(`[...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab)`);
+      for (const id of tabIds) {
+        await tab(id);
+        // Buttons, the choices of split buttons and the panels' ▾ lists.
+        for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-command]')].map((e) => e.dataset.command)`)) seen.add(c);
+        for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-commands]')].flatMap((e) => e.dataset.commands.split(' '))`)) seen.add(c);
+      }
     }
     const tools = await b.eval(`window.kentos.tools.list().map((t) => 'tool.' + t.id)`);
     const missing = tools.filter((id) => !seen.has(id));
     const unknown = await b.eval(`${JSON.stringify([...seen])}.filter((id) => !window.kentos.commands.get(id))`);
-    check('every tool of the catalog is on the ribbon (a button, a split button or a panel’s ▾), and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
+    check('every tool of the catalog is on a project type’s ribbon (a button, a split button or a panel’s ▾), and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
 
     // A tool button runs its tool (filled amber); Giriş, which also offers it, carries the running-tool dot.
     await tab('draw');
@@ -3001,8 +3008,10 @@ try {
     const expected = JSON.parse(readFileSync(new URL('expected.json', dir), 'utf8')).cases[0].entities;
     const opened = await b.eval(`(async () => {
       const k = window.kentos;
-      const keep = { picker: k.files.picker, ask: k.files.ask };
+      // The script answers the questions itself (the sample has no project type: docs/adr/0165 §1).
+      const keep = { picker: k.files.picker, ask: k.files.ask, askType: k.files.askType };
       k.files.ask = async () => 'drop';
+      k.files.askType = () => {};
       k.files.picker = { open: async () => ({ name: 'kimlik.kcad', getFile: async () => new Blob([${JSON.stringify(text)}]) }), save: async () => null };
       try {
         const ok = await k.files.open();
@@ -3010,6 +3019,7 @@ try {
       } finally {
         k.files.picker = keep.picker;
         k.files.ask = keep.ask;
+        k.files.askType = keep.askType;
       }
     })()`);
     check('opening a v1 drawing gives its objects the ids its content derives', opened.ok && JSON.stringify(opened.ids) === JSON.stringify(expected), JSON.stringify(opened.ids.slice(0, 2)));

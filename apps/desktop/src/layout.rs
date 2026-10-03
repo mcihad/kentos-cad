@@ -200,9 +200,10 @@ impl App {
     pub(crate) fn apply_layout(&mut self) {
         let keeper = &self.layout;
         let ribbon_tab = keeper.text("ribbonTab").to_owned();
-        let tabs: Vec<(&str, bool)> = catalog().tabs().map(|t| (t.id, t.contextual)).collect();
+        // A tab of either type's ribbon: the drawing's type, once open, keeps it or gives Giriş.
+        let tabs: Vec<(&str, bool)> = catalog().every_tab().map(|t| (t.id, t.contextual)).collect();
         let start = plan::start_tab(&ribbon_tab, &tabs);
-        if let Some(tab) = catalog().tabs().find(|t| t.id == start) {
+        if let Some(tab) = catalog().every_tab().find(|t| t.id == start) {
             self.tab = tab.id;
         }
         self.ribbon_collapsed = keeper.flag("ribbonCollapsed");

@@ -23,19 +23,20 @@ const ribbonOf = (filter: WorkspaceFilter) =>
     .filter((t) => !t.contextual)
     .flatMap((t) => t.panels.flatMap((p) => [...panelCommands(p), ...p.items.flatMap((i) => (i.kind === 'menu' ? menuCommands(i.menu.items, filter) : []))]));
 
-describe('work modes', () => {
-  it('have one entry per contract id; announced modes show as hybrid', () => {
+describe('project types (docs/adr/0165)', () => {
+  it('have one entry per contract id; one not asked yet and the announced ones show as CBS', () => {
     expect(WORKSPACES.map((w) => w.id).sort()).toEqual([...WORKSPACE_IDS].sort());
-    expect(WORKSPACES.filter((w) => w.status === 'ready').map((w) => w.id)).toEqual(['hybrid', 'cad', 'gis']);
-    expect(effectiveWorkspace('plan3d').id).toBe('hybrid');
-    expect(effectiveWorkspace('disaster').id).toBe('hybrid');
-    expect(effectiveWorkspace('gis').id).toBe('gis');
+    expect(WORKSPACES.filter((w) => w.status === 'ready').map((w) => w.id)).toEqual(['cad', 'gis']);
+    expect(effectiveWorkspace('plan3d').id).toBe('gis');
+    expect(effectiveWorkspace('disaster').id).toBe('gis');
+    expect(effectiveWorkspace(null).id).toBe('gis');
+    expect(effectiveWorkspace('cad').id).toBe('cad');
     for (const w of WORKSPACES) expect(w.highlights, w.id).toHaveLength(3);
   });
 
-  it('hybrid shows exactly what an unfiltered interface shows', () => {
-    expect(tabsIn(filterFor('hybrid'))).toEqual(tabsIn(SHOW_ALL));
-    expect(menusOf(filterFor('hybrid'))).toEqual(menusOf(SHOW_ALL));
+  it('loses no command: what one type leaves out the other shows', () => {
+    const both = new Set([...menusOf(filterFor('cad')), ...menusOf(filterFor('gis'))]);
+    expect(menusOf(SHOW_ALL).filter((id) => !both.has(id))).toEqual([]);
   });
 
   it('shows every tool it keeps in its menus and ribbon, and none it hides', () => {
@@ -90,6 +91,7 @@ describe('work modes', () => {
     const ribbon = new Set(ribbonOf(gis));
     for (const id of ['tool.hatch', 'tool.dimension', 'tool.rectangle', 'tool.xline', 'tool.fillet', 'tool.array']) expect(ribbon.has(id), id).toBe(false);
     for (const id of ['tool.line', 'tool.polyline', 'tool.polygon', 'tool.parcel', 'processing.toolbox', 'crs.set']) expect(ribbon.has(id), id).toBe(true);
-    expect(tabsIn(filterFor('hybrid')).find((t) => t.id === 'home')!.panels.some((p) => p.label === 'Harita')).toBe(false);
+    // A type's own panel is left out where no type filters (the inventory's places).
+    expect(tabsIn(SHOW_ALL).find((t) => t.id === 'home')!.panels.some((p) => p.label === 'Harita')).toBe(false);
   });
 });

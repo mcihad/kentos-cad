@@ -48,7 +48,11 @@ fn a_v1_file_opens_with_the_reference_ids() {
 
 #[test]
 fn the_same_file_opens_with_the_same_ids_and_new_objects_get_v7() {
-    let text = read("sample.compact.kcad");
+    // Without the former Hibrit mode, which is not written back (a project type
+    // not asked yet, docs/adr/0165 §1): written unchanged, it is the same file.
+    let legacy = read("sample.compact.kcad");
+    let text = legacy.replace(r#""workspace":"hybrid","#, "");
+    assert_ne!(text, legacy);
     let (mut first, second) = (open(&text), open(&text));
     let ids = |doc: &Document| {
         doc.entities()

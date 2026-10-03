@@ -807,8 +807,10 @@ try {
   const uploadFile = (title) =>
     b.eval(`(async () => {
       const k = window.kentos;
-      const keep = { picker: k.files.picker, ask: k.files.ask };
+      // The script answers the questions itself (the sample has no project type: docs/adr/0165 §1).
+      const keep = { picker: k.files.picker, ask: k.files.ask, askType: k.files.askType };
       k.files.ask = async () => 'drop';
+      k.files.askType = () => {};
       k.files.picker = { open: async () => ({ name: 'kimlik.kcad', getFile: async () => new Blob([${JSON.stringify(kcad)}]) }), save: async () => null };
       try {
         if (!(await k.files.open())) return null;
@@ -819,6 +821,7 @@ try {
       } finally {
         k.files.picker = keep.picker;
         k.files.ask = keep.ask;
+        k.files.askType = keep.askType;
       }
     })()`);
   const stamp = new Date().toISOString().slice(0, 19);

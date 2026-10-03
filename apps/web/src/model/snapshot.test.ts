@@ -5,6 +5,7 @@ import { LayerStore } from './layers';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import { readSnapshot, readSnapshotV2, toSnapshot, toSnapshotV2 } from './snapshot';
 import { snapshotSampleDocument } from './snapshotSample';
+import { LEGACY_HYBRID } from './projectSettings';
 
 const blank = () => new CadDocument({ name: 'boş', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } });
 /** The objects without their persistent ids, which v1 does not write (docs/adr/0014). */
@@ -45,16 +46,23 @@ describe('.kcad snapshots', () => {
     expect(JSON.parse(JSON.stringify(toSnapshot(doc)))).toEqual(JSON.parse(text));
   });
   it('matches the recorded fixture the Rust contracts read', () => {
-    expect(JSON.parse(sampleText)).toEqual(JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument()))));
+    // Recorded under the former Hibrit mode, a type not asked yet as the sample's (docs/adr/0165 §1).
+    const recorded = JSON.parse(sampleText);
+    expect(recorded.settings.workspace).toBe(LEGACY_HYBRID);
+    delete recorded.settings.workspace;
+    expect(recorded).toEqual(JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument()))));
     expect(readSnapshot(sampleText).ok).toBe(true);
   });
-  it('reads a file from before work modes and drawing typefaces as hybrid and Barlow, and keeps an announced mode', () => {
+  it('reads a file from before project types, or naming the former Hibrit mode, with its type not asked; Barlow; keeps an announced type', () => {
     const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
     delete good.settings.workspace;
     delete good.settings.drawingFont;
     const old = readSnapshot(JSON.stringify(good));
-    expect(old.ok && old.content.settings.workspace).toBe('hybrid');
+    expect(old.ok && 'workspace' in old.content.settings).toBe(false);
     expect(old.ok && old.content.settings.drawingFont).toBe('barlow');
+    good.settings.workspace = 'hybrid';
+    const hybrid = readSnapshot(JSON.stringify(good));
+    expect(hybrid.ok && 'workspace' in hybrid.content.settings).toBe(false);
     good.settings.workspace = 'plan3d';
     const soon = readSnapshot(JSON.stringify(good));
     expect(soon.ok && soon.content.settings.workspace).toBe('plan3d');
@@ -71,7 +79,7 @@ describe('.kcad snapshots', () => {
     expect(err((d) => (d.format = 'kentos-style'))).toContain('KentOS çizim dosyası değil');
     expect(err((d) => (d.version = 2))).toContain('sürümü 2');
     expect(err((d) => (d.settings.srid = 99999))).toContain('EPSG:99999 tanınmıyor');
-    expect(err((d) => (d.settings.workspace = 'bim'))).toContain('Proje ayarları › çalışma modu');
+    expect(err((d) => (d.settings.workspace = 'bim'))).toContain('Proje ayarları › proje türü');
     expect(err((d) => (d.settings.drawingFont = 'comic-sans'))).toContain('Proje ayarları › çizim yazı tipi');
     expect(err((d) => (d.entities[0].kind = 'blok'))).toContain('Nesne 1 › tür');
     expect(err((d) => (d.entities[1].layerId = 'yok'))).toContain('“yok” katmanı dosyada yok');

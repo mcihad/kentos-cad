@@ -323,11 +323,12 @@ fn settings(r: &mut Reader<'_>) -> Result<ProjectSettings, KcadError> {
                 workspace = Some(named(
                     r,
                     &[
-                        ("hybrid", Workspace::Hybrid),
                         ("cad", Workspace::Cad),
                         ("gis", Workspace::Gis),
                         ("plan3d", Workspace::Plan3d),
                         ("disaster", Workspace::Disaster),
+                        // The former Hibrit mode: a type not asked yet (docs/adr/0165 §1).
+                        ("hybrid", Workspace::LegacyHybrid),
                     ],
                 )?)
             }

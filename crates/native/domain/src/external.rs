@@ -188,7 +188,11 @@ impl Document {
                 self.forget_tree_history();
             }
             if let Some(settings) = meta.settings {
-                self.settings = settings;
+                // The former Hibrit mode is a type not asked yet (docs/adr/0165 §1).
+                self.settings = ProjectSettings {
+                    workspace: settings.project_type(),
+                    ..settings
+                };
             }
             if let Some(name) = meta.name {
                 self.name = name;

@@ -177,14 +177,6 @@
       "whenMissing": {},
       "defaultTemplate": "sys:gis-tematik",
       "gallery": ["sys:gis-tematik", "sys:gis-atlas", "sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:imar-plani", "sys:rapor-sayfasi"]
-    },
-    {
-      "id": "hybrid",
-      "label": "Hibrit",
-      "workspaces": ["hybrid"],
-      "union": ["cad", "gis"],
-      "names": { "map": "Harita" },
-      "defaultTemplate": "sys:genel-a3-yatay"
     }
   ]
 }

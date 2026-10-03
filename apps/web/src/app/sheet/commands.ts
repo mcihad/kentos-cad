@@ -128,7 +128,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
       category: P,
       icon: 'sheetNew',
       aliases: ['YENIPAFTA', 'YP'],
-      description: 'Çalışma modunun varsayılan şablonundan yeni bir pafta açar.',
+      description: 'Proje türünün varsayılan şablonundan yeni bir pafta açar.',
       run: () => void sheets.newSheet().catch((e: Error) => sheets.report('Yeni pafta açılamadı', e)),
       isEnabled: () => state.whyNoEngine() === null,
       whyDisabled: () => state.whyNoEngine(),
@@ -141,7 +141,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
       category: P,
       icon: 'sheetTemplate',
       aliases: ['SABLON', 'PAFTASABLONU'],
-      description: 'Pafta şablonları: sistemin, sizin, kurumunuzun ve sizinle paylaşılanlar; kipinize ve proje türünüze göre sıralı.',
+      description: 'Pafta şablonları: sistemin, sizin, kurumunuzun ve sizinle paylaşılanlar; projenin türüne ve iş türüne göre sıralı.',
       run: () => hooks.gallery(),
     },
     {
@@ -216,7 +216,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
       const s = sheet();
       const maps = s ? s.items.filter((i) => state.selection.value.has(i.id) && i.kind.type === 'map') : [];
       const grid = defaultGrid(sheets);
-      if (!grid) return ctx.log.warn('Karelaj eklenemedi: çalışma modunun şablonlarında örnek karelaj yok.');
+      if (!grid) return ctx.log.warn('Karelaj eklenemedi: proje türünün şablonlarında örnek karelaj yok.');
       const ops: Op[] = maps.map((m) => {
         const k = m.kind as Extract<typeof m.kind, { type: 'map' }>;
         return { op: 'setItemProps', id: m.id, patch: { kind: { grids: [...k.grids, { ...grid.grid, name: freeGridName(k.grids.map((g) => g.name), grid.grid.name) }], labelBand: Math.max(k.labelBand, grid.band) } } };
@@ -332,7 +332,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
 /** Why a tool of the profile cannot be used now (hidden or off in this mode, with the profile's reason); null when it can. */
 function toolReason(sheets: SheetService, id: string): string | null {
   const t = sheets.tools.value.find((x) => x.id === id);
-  if (!t) return 'Bu çalışma modunda bu araç yok.';
+  if (!t) return 'Bu proje türünde bu araç yok.';
   return t.state === 'enabled' ? null : (t.reason ?? 'Bu projede kullanılamaz.');
 }
 

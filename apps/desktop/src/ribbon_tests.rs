@@ -39,8 +39,8 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     typography::set(Typography::DEFAULT);
     let mut app = app_with_drawing();
-    // In every work mode: each has its own ribbon (modes.rs).
-    for mode in ["workspace.hybrid", "workspace.cad", "workspace.gis"] {
+    // In every project type: each has its own ribbon (modes.rs).
+    for mode in ["workspace.cad", "workspace.gis"] {
         let _ = app.update(Message::Run(mode));
         let tabs: Vec<&'static str> = app.ribbon_tabs().map(|t| t.id).collect();
         for tab in tabs {

@@ -98,7 +98,7 @@ export function openNewProjectDialog(ctx: AppContext): void {
         settingRow('Proje adı', 'İlk kayıtta dosya adı olarak önerilir.', name),
         settingRow('Çizim ölçeği', 'Yazı yükseklikleri ve pafta çıktıları bu ölçeğe göre hesaplanır.', scaleSlot),
       ),
-      group('Çalışma modu', workspacePicker({ value: draft.workspace, onChange: (id) => (draft.workspace = id) })),
+      group('Proje türü', workspacePicker({ value: draft.workspace, onChange: (id) => (draft.workspace = id) })),
       group('Koordinat sistemi', crsSlot),
       note(
         'info',

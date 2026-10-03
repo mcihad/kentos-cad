@@ -30,7 +30,7 @@ export const TYPE_LABEL: Record<ProjectType, string> = {
 
 /** What choosing a type means, and does not (said wherever one is chosen). */
 export const TYPE_HINT =
-  'Tür yalnız projeleri bulmak ve düzenlemek içindir: bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.';
+  'İş türü yalnız projeleri bulmak ve düzenlemek içindir: proje türünü (CAD ya da CBS) değiştirmez, bir modül açmaz, mevzuata uygunluk ya da resmî onay anlamına gelmez, projenin nasıl saklandığını değiştirmez.';
 
 export interface ViewDef {
   id: CatalogView;

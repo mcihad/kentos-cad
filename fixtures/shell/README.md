@@ -18,7 +18,7 @@
 | `format`, `version` | `"kentos.ribbon"`, `1` |
 | `texts` | Şeridin sözleri: hızlı erişim, özelleştirme ve ipucu, “sabit”, ekle, kaldır, sabit, daralt ve sabitle, bölünmüş düğmenin oku, yöntem adı, panelin ▾'i, başlatılamayan yöntem. Bir değerden yapılan söz `{ sample, text }` |
 | `quickAccessFixed`, `quickAccessOffers` | Çubuğun sabit üç komutu; ▾ menüsünün önerdikleri, sırasıyla |
-| `tabs` | Web'in her hazır çalışma modunda (`hybrid`, `cad`, `gis`) sekmeleri sırasıyla: kimlik, ad, bağlamsal mı (Seçim) |
+| `tabs` | Web'in her hazır proje türünde (`cad`, `gis`; ADR 0165) sekmeleri sırasıyla: kimlik, ad, bağlamsal mı (Seçim) |
 | `keyTips.letters` | Bir addan harfler: Türkçe küçük harf, ç ğ ı i ö ş ü â î û düz büyük harfe, A–Z ve 0–9 dışı düşer |
 | `keyTips.assign` | Adlar ve ayrılmış ipuçları → ipuçları: ilk harfi yalnız kendinin olan ad o harfi, kalanlar iki harf (baş harfler, ilk harf ve öbür harfleri, ilk harf ve alfabe); hiçbir ipucu tek harflik bir ipucuyla başlamaz; harfi olmayan ad `X` ile |
 | `keyTips.firstLevel` | Birinci düzey: çubuğun kullanılabilen düğme sayısı ve görünen sekmelerin adları → ilk dokuz düğmeye 1…9, sekmelere harfler (rakamlar ayrılmış) |

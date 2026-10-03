@@ -8,7 +8,7 @@
   "noPlace": "Proje açabileceğiniz bir çalışma alanınız yok (project.create); kurum yöneticinize başvurun.",
   "fields": {
    "type": "Tür",
-   "typeLabel": "Proje türü",
+   "typeLabel": "İş türü",
    "description": "Açıklama",
    "descriptionPlaceholder": "İsteğe bağlı: işin konusu, yeri, dayanağı",
    "tags": "Etiketler",

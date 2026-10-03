@@ -56,45 +56,6 @@
   "view.theme.toggle"
  ],
  "tabs": {
-  "hybrid": [
-   {
-    "id": "file",
-    "label": "Dosya"
-   },
-   {
-    "id": "home",
-    "label": "Giriş"
-   },
-   {
-    "id": "draw",
-    "label": "Çizim"
-   },
-   {
-    "id": "modify",
-    "label": "Değiştir"
-   },
-   {
-    "id": "map",
-    "label": "Harita"
-   },
-   {
-    "id": "view",
-    "label": "Görünüm"
-   },
-   {
-    "id": "processing",
-    "label": "İşlemler"
-   },
-   {
-    "id": "tools",
-    "label": "Araçlar"
-   },
-   {
-    "id": "selection",
-    "label": "Seçim",
-    "contextual": true
-   }
-  ],
   "cad": [
    {
     "id": "file",
@@ -219,7 +180,7 @@
   ],
   "assign": [
    {
-    "title": "the tabs of the hybrid mode",
+    "title": "the tabs of the CBS type",
     "labels": [
      "Dosya",
      "Giriş",
@@ -413,9 +374,9 @@
   ],
   "firstLevel": [
    {
-    "mode": "hybrid",
+    "mode": "gis",
     "selection": false,
-    "quickAccess": 3,
+    "quickAccess": 4,
     "tabLabels": [
      "Dosya",
      "Giriş",
@@ -430,7 +391,8 @@
      "quickAccess": [
       "1",
       "2",
-      "3"
+      "3",
+      "4"
      ],
      "tabs": [
       "DO",
@@ -445,7 +407,7 @@
     }
    },
    {
-    "mode": "hybrid",
+    "mode": "gis",
     "selection": true,
     "quickAccess": 5,
     "tabLabels": [
@@ -543,7 +505,7 @@
     }
    },
    {
-    "mode": "hybrid",
+    "mode": "gis",
     "selection": false,
     "quickAccess": 12,
     "tabLabels": [

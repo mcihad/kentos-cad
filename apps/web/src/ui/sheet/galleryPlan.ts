@@ -89,7 +89,7 @@ export function emptyText(section: GallerySection | 'all', searching: boolean, s
   // Kurumum with none to list is no failure: the account has no organisation, or is not signed in.
   if (state.state === 'unavailable') return { title: section === 'org' ? 'Kurum şablonu yok' : 'Şimdi listelenemiyor', text: state.reason };
   if (state.state === 'loading') return { title: 'Yükleniyor…', text: '' };
-  if (searching) return { title: 'Eşleşen şablon yok', text: 'Aramayı ya da kâğıt ve tür süzgeçlerini değiştirin; başka kiplerin şablonları için “Bütün kiplerin şablonları”nı açın.' };
+  if (searching) return { title: 'Eşleşen şablon yok', text: 'Aramayı ya da kâğıt ve tür süzgeçlerini değiştirin; başka türlerin şablonları için “Bütün türlerin şablonları”nı açın.' };
   switch (section) {
     case 'system':
       return { title: 'Sistem şablonu yok', text: 'Sistem şablonları uygulamayla gelir.' };

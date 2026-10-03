@@ -52,7 +52,7 @@ export function openSaveTemplate(_ctx: AppContext, host: SheetHost, sheetId: str
     description: origin?.description ?? '',
     category: origin?.category ?? categories[0] ?? 'genel',
     tags: (origin?.tags ?? []).join(', '),
-    workspaces: new Set<Workspace>(origin?.workspaces ?? (ws === 'hybrid' ? ['cad', 'gis'] : [ws])),
+    workspaces: new Set<Workspace>(origin?.workspaces ?? [ws]),
     projectTypes: new Set<ProjectType>(origin?.projectTypes ?? []),
   };
   const d = new DisposableStore();
@@ -97,10 +97,10 @@ export function openSaveTemplate(_ctx: AppContext, host: SheetHost, sheetId: str
       longText({ label: 'Açıklama', key: 'description', value: s.description, rows: 2, onCommit: (v) => ((s.description = v), render()) }, d),
       choice({ label: 'Tür', key: 'category', value: s.category, options: categories.map((c) => ({ value: c, label: categoryLabel(c) })), onChange: (v) => ((s.category = v), render()) }, d),
       textInput({ label: 'Etiketler (virgülle)', key: 'tags', value: s.tags, placeholder: 'kadastro, ifraz', onCommit: (v) => ((s.tags = v), render()) }, d),
-      field('Çalışma modları', toggles<Workspace>([{ value: 'cad', label: 'CAD' }, { value: 'gis', label: 'CBS' }], s.workspaces), s.workspaces.size === 2 ? 'İki kip de seçili: ortak şablon, her kipte gösterilir.' : null),
-      field('Proje türleri', toggles(PROJECT_TYPES, s.projectTypes), s.projectTypes.size ? null : 'Hiçbiri: her proje türüne.'),
+      field('Proje türleri', toggles<Workspace>([{ value: 'cad', label: 'CAD' }, { value: 'gis', label: 'CBS' }], s.workspaces), s.workspaces.size === 2 ? 'İki tür de seçili: ortak şablon, her türde gösterilir.' : null),
+      field('İş türleri', toggles(PROJECT_TYPES, s.projectTypes), s.projectTypes.size ? null : 'Hiçbiri: her iş türüne.'),
       field('Kâğıt', h('span', null, `${sheet.page.paper.toUpperCase()} ${sheet.page.orientation === 'landscape' ? 'yatay' : 'dikey'}`), 'Şablon her kâğıtta kullanılır; öğeler kısıtlarıyla yerleşir.'),
-      s.workspaces.size ? null : note('warn', 'En az bir çalışma modu seçin.'),
+      s.workspaces.size ? null : note('warn', 'En az bir proje türü seçin.'),
     );
   };
   render();

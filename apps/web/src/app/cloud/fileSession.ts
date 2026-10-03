@@ -55,6 +55,8 @@ export async function openFileProject(s: CloudSession, info: ProjectInfo, progre
     replaceDrawing(ctx, read.content);
     s.attachFile(info, '0', info.eventCursor, noticeNewer(s, info));
     opened('0');
+    // A project without a type is asked it (docs/adr/0165 §1); a revision is asked by its open.
+    ctx.files.askTypeIfNeeded();
     return true;
   }
   const listed = revs.revisions.find((r) => r.revision === current);

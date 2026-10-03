@@ -98,7 +98,7 @@ LAYERS = [
     group("arsiv", "Arşiv", [layer("eski", "Eski")], locked=True),
 ]
 
-SETTINGS = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"}
+SETTINGS = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"}
 
 
 def setup(blocks=BLOCKS, entities=ENTITIES):

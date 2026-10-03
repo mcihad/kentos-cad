@@ -173,10 +173,10 @@ export interface ProjectTraits {
 
 /** How a card stands with the project (the engine's `TemplateFit`), as the gallery's headings say it. */
 export const FIT_LABEL: Record<TemplateFit, string> = {
-  projectType: 'Projenin türüne uygun',
-  workspace: 'Çalışma moduna uygun',
-  common: 'Ortak: her çalışma modunda',
-  other: 'Başka bir çalışma modu için',
+  projectType: 'İşin türüne uygun',
+  workspace: 'Proje türüne uygun',
+  common: 'Ortak: her proje türünde',
+  other: 'Başka bir proje türü için',
 };
 
 export interface GalleryQuery {
@@ -187,7 +187,7 @@ export interface GalleryQuery {
   readonly paper: Paper | null;
   /** A category, or null for any. */
   readonly kind: string | null;
-  /** “Bütün kiplerin şablonları”: other modes' templates too, with their mode's badge. */
+  /** “Bütün türlerin şablonları”: other types' templates too, with their type's badge. */
   readonly allModes: boolean;
 }
 
@@ -232,7 +232,7 @@ export function arrangeTemplates(cards: readonly TemplateCard[], ranked: readonl
   return out;
 }
 
-/** How many cards of a section the work mode keeps out now (said under the list: “4 şablon başka kiplerin”). */
+/** How many cards of a section the work mode keeps out now (said under the list: “4 şablon başka türlerin”). */
 export function hiddenByMode(cards: readonly TemplateCard[], ranked: readonly RankedTemplate[], section: GallerySection | 'all'): number {
   const out = new Set(ranked.filter((r) => !r.matches).map((r) => r.id));
   return cards.filter((c) => (section === 'all' || sectionOf(c.source) === section) && out.has(c.id)).length;

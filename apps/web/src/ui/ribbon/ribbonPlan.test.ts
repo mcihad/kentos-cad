@@ -28,7 +28,7 @@ const F = JSON.parse(Object.values(files)[0]) as {
   texts: Record<string, unknown>;
   quickAccessFixed: string[];
   quickAccessOffers: string[];
-  tabs: Record<'hybrid' | 'cad' | 'gis', { id: string; label: string; contextual?: boolean }[]>;
+  tabs: Record<'cad' | 'gis', { id: string; label: string; contextual?: boolean }[]>;
   keyTips: {
     letters: { label: string; letters: string }[];
     assign: { title: string; labels: string[]; reserved: string[]; tips: string[] }[];
@@ -67,7 +67,7 @@ describe('the ribbon (fixtures/shell/v1/ribbon.json)', () => {
     expect([F.format, F.version]).toEqual(['kentos.ribbon', 1]);
     expect(fileTexts(F.texts)).toEqual(F.texts);
     expect([QUICK_ACCESS, QUICK_ACCESS_OFFERS]).toEqual([F.quickAccessFixed, F.quickAccessOffers]);
-    for (const mode of ['hybrid', 'cad', 'gis'] as const) {
+    for (const mode of ['cad', 'gis'] as const) {
       const tabs = ribbonTabs({ tools: TOOL_CATALOG, processing: registry.tree(), models: BUILTIN_MODELS, iconOf: () => undefined, filter: workspaceFilter(workspaceById(mode), TOOL_CATALOG) });
       expect(
         tabs.map((t) => ({ id: t.id, label: t.label, ...(t.contextual ? { contextual: true } : {}) })),

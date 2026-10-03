@@ -28,7 +28,7 @@ export const FORM_TEXTS = {
   noPlace: NO_PLACE,
   fields: {
     type: 'Tür',
-    typeLabel: 'Proje türü',
+    typeLabel: 'İş türü',
     description: 'Açıklama',
     descriptionPlaceholder: 'İsteğe bağlı: işin konusu, yeri, dayanağı',
     tags: 'Etiketler',

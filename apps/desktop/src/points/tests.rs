@@ -332,7 +332,7 @@ fn every_edit_is_written_as_the_reference_writes_it() {
         let snapshot = json!({
             "format": "kentos.document", "version": 1, "name": name,
             "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow" },
+                "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow" },
             "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": c["active"], "entities": c["objects"],
             "styles": { "items": [], "categories": [] }
         });

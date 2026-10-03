@@ -27,22 +27,22 @@ Bir komut, araç, işlem aracı, ayar, depo, pencere ya da `.kcad` alanı ekleni
 | `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; yerleşimin `LAYOUT_KEY`'i (`app/layoutPlan.ts`); tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE`; sessionStorage kullanan modülün `export const …_KEY` sabitleri (sekmeye özgü depo) |
 | `fileFields` | `.kcad`: `DocumentSnapshotV1`'den (okunan v1 JSON) ve `DocumentSnapshotV2`'den (yazılan binary v2, [docs/specs/kcad-v2.md](../specs/kcad-v2.md)) erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
 | `screens` | Kaynak taraması (`src/ui`): `export function open…` pencereleri, `Component`/`Panel`'den türeyen paneller |
-| `layout` | Menü çubuğu, şerit (çalışma moduna göre de: `ribbonByMode`) ve hızlı erişim, web'in sırasıyla; masaüstü menüsünü ve şeridini bundan kurar ([ADR 0017](../adr/0017-desktop-shell.md)) |
+| `layout` | Menü çubuğu, şerit (`ribbon`: türü sorulmamış projenin, CBS'ninki; `ribbonByMode`: her proje türünün, ADR 0165) ve hızlı erişim, web'in sırasıyla; masaüstü menüsünü ve şeridini bundan kurar ([ADR 0017](../adr/0017-desktop-shell.md)) |
 | `icons` | İkon seti (`ui/icons.ts`, `ICONS`): ad → 20×20'lik çizgi ikonun SVG metni (tutamaçlar içinde). Masaüstü komutların ikonlarını bundan, web'in çizdiği gibi çizer ([ADR 0054](../adr/0054-desktop-draws-the-web-icons.md)) |
 
-Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yolu, şerit sekmesi ve paneli, hızlı erişim. Kısayollar tuş eşleminden gelir. `hiddenIn`, komutu hangi hazır çalışma modunun gizlediğini söyler.
+Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yolu, şerit sekmesi ve paneli, hızlı erişim. Kısayollar tuş eşleminden gelir. `hiddenIn`, komutu hangi hazır proje türünün şeridinde olmadığını söyler.
 
 ## Alanlar
 
 - **`status`:** `implemented` | `partial` | `pending`.
-  - Komutta `pending(...)` ile, araçta `ready: false` ile, çalışma modunda “Yakında” ile gelen durum `pending`'dir.
+  - Komutta `pending(...)` ile, araçta `ready: false` ile, proje türünde “Yakında” ile gelen durum `pending`'dir.
   - Öbür öğeler `implemented` başlar.
   - `partial` yalnız `annotations.json`'dan gelir ve nedenini `note` alanında taşır.
 - **`platforms`:** `{ web, desktop }`.
   - `web` `status`'la aynıdır.
   - `desktop`: `implemented` | `partial` | `pending` | `none` | `n/a`; aşağıdaki kaynaklardan, her biri öncekinin üstüne, bu sırayla gelir. Hiçbiri bir şey demezse `none`'dır.
     1. `apps/desktop/equivalents.json`'ın `sections`'ı: bütün bir bölüm için tek söz (ör. `.kcad` alanlarının hepsi, ortak kodek).
-    2. `apps/desktop/ported.json`: masaüstü kabuğunun çalıştırdığı komutlar (masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır; onlarla araçlar (`tool.<id>`), işlem araçları ve modeller (`processing.run.<id>`, `processing.model.<id>`) ve çalışma modları (`workspace.<id>`).
+    2. `apps/desktop/ported.json`: masaüstü kabuğunun çalıştırdığı komutlar (masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır; onlarla araçlar (`tool.<id>`), işlem araçları ve modeller (`processing.run.<id>`, `processing.model.<id>`) ve proje türleri (`workspace.<id>`).
     3. Ayarlarda tipli ayarın `hosts`'unda masaüstü varsa `implemented` (`settingsSchema.json`).
     4. `apps/desktop/equivalents.json`'ın öğe öğe dedikleri; öğeye `desktopWhere` (masaüstündeki yeri) ve `desktopNote` (neden; `n/a`'da zorunlu) da gelir.
     5. `annotations.json`'daki `desktop`.

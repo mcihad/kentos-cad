@@ -57,7 +57,7 @@ function cloudText(c: TemplateCard): string {
 }
 
 const modesText = (c: TemplateCard) =>
-  c.workspaces.length === 0 || (c.workspaces.includes('cad') && c.workspaces.includes('gis')) ? 'Ortak (bütün kipler)' : c.workspaces.map((m) => WORKSPACES.find((w) => w.id === m)?.label ?? m).join(', ');
+  c.workspaces.length === 0 || (c.workspaces.includes('cad') && c.workspaces.includes('gis')) ? 'Ortak (bütün türler)' : c.workspaces.map((m) => WORKSPACES.find((w) => w.id === m)?.label ?? m).join(', ');
 
 export interface DetailsInput {
   readonly arranged: ArrangedCard;
@@ -107,8 +107,8 @@ export function detailsOf(i: DetailsInput, d: DisposableStore): Child[] {
       first ? field(c.papers.length > 1 ? 'Önerilen kâğıtlar' : 'Önerilen kâğıt', h('span', { class: 'num' }, [recommended, ...c.papers.slice(1).map((p) => paperText(p, i.paperName))].join(', '))) : null,
       field('Yerleşim düzenleri', layoutsOf(c)),
       field('Tür', categoryLabel(c.category)),
-      field('Çalışma modu', modesText(c)),
-      c.projectTypes.length ? field('Proje türleri', c.projectTypes.map((t) => (TYPE_LABEL as Record<string, string>)[t] ?? t).join(', ')) : null,
+      field('Proje türü', modesText(c)),
+      c.projectTypes.length ? field('İş türleri', c.projectTypes.map((t) => (TYPE_LABEL as Record<string, string>)[t] ?? t).join(', ')) : null,
       field('Sürüm', h('span', { class: 'num' }, `${c.revision}${c.updated ? ` · ${c.updated.slice(0, 10)}` : ''}`)),
       field('Saklandığı yer', cloudText(c)),
       c.author && c.source !== 'shared' && c.source !== 'org' ? field('Yazar', c.author) : null,
