@@ -3,6 +3,7 @@ import { formatChord } from '../core/keymap';
 import { h } from './dom';
 import { icon } from './icons';
 import { Dialog } from './widgets/Dialog';
+import { crsTitle } from '../geo/crs';
 
 /** Every bound shortcut grouped by command category, generated from the keymap. */
 /** What each mouse action does (left: meaning, right: the action). */
@@ -116,7 +117,7 @@ export function openAboutDialog(ctx: AppContext): void {
         h('dt', null, 'Çizim motoru'),
         h('dd', null, ctx.view.backendLabel.value),
         h('dt', null, 'Koordinat sistemi'),
-        h('dd', null, `${ctx.doc.crs.value.name} (EPSG:${ctx.doc.crs.value.srid})`),
+        h('dd', null, crsTitle(ctx.doc.crs.value)),
         h('dt', null, 'Sunucu'),
         h('dd', null, serverText(ctx)),
       ),

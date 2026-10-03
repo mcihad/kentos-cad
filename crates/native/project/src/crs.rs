@@ -12,9 +12,9 @@ use std::sync::OnceLock;
 pub struct System {
     pub srid: u32,
     pub name: String,
-    /// `projected` or `geographic`.
+    /// `projected`, `geographic` or `local` (SRID 0: no coordinate system, docs/adr/0165 §2).
     pub kind: String,
-    /// `TUREF`, `ED50` or `WGS84`.
+    /// `TUREF`, `ED50`, `WGS84`, or `LOCAL` for the local system.
     pub datum: String,
     /// `Transverse Mercator`, `UTM` or `Pseudo-Mercator`; none for a geographic system.
     #[serde(default)]
@@ -23,7 +23,9 @@ pub struct System {
     pub false_easting: Option<f64>,
     #[serde(default)]
     pub false_northing: Option<f64>,
-    pub ellipsoid: String,
+    /// None for the local system.
+    #[serde(default)]
+    pub ellipsoid: Option<String>,
     #[serde(default)]
     pub central_meridian: Option<f64>,
     #[serde(default)]
@@ -72,6 +74,17 @@ pub fn datum_label(datum: &str) -> &str {
         "TUREF" => "TUREF (ITRF96)",
         "ED50" => "ED50",
         "WGS84" => "WGS 84",
+        "LOCAL" => "Yerel",
         other => other,
+    }
+}
+
+/// The local system's SRID: not an EPSG code; PostGIS reads 0 as “unknown” (docs/adr/0165 §2).
+pub const LOCAL_SRID: u32 = 0;
+
+impl System {
+    /// Whether this is the local system: no coordinate system, coordinates bound to no place.
+    pub fn is_local(&self) -> bool {
+        self.kind == "local"
     }
 }

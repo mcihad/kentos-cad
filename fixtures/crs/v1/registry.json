@@ -5,6 +5,14 @@
   "defaultSrid": 5256,
   "systems": [
     {
+      "srid": 0,
+      "name": "Yerel",
+      "kind": "local",
+      "datum": "LOCAL",
+      "unit": "metre",
+      "area": "Koordinat sistemi yok: teknik çizim, başlangıç 0,0"
+    },
+    {
       "srid": 5253,
       "name": "TUREF / TM27",
       "kind": "projected",

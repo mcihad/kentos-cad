@@ -403,20 +403,20 @@ impl App {
                     .and_then(crate::crs::system)
                     .map(|c| {
                         format!(
-                            "Yeni projeler {} (EPSG:{}) ile oluşturulacak. Açık projenin sistemi değişmedi.",
-                            c.name, c.srid
+                            "Yeni projeler {} ile oluşturulacak. Açık projenin sistemi değişmedi.",
+                            crate::crs::title(c)
                         )
                     }),
-                "newProjects.workspace" => {
-                    serde_json::from_value::<kentos_contracts::Workspace>(value.clone())
-                        .ok()
-                        .map(|w| {
-                            format!(
-                                "Yeni projeler “{}” türüyle önerilecek. Açık projenin türü değişmedi.",
-                                crate::catalog::mode_of(Some(w))
-                            )
-                        })
-                }
+                "newProjects.workspace" => serde_json::from_value::<kentos_contracts::Workspace>(
+                    value.clone(),
+                )
+                .ok()
+                .map(|w| {
+                    format!(
+                        "Yeni projeler “{}” türüyle önerilecek. Açık projenin türü değişmedi.",
+                        crate::catalog::mode_of(Some(w))
+                    )
+                }),
                 _ => None,
             })
             .collect();
@@ -579,10 +579,9 @@ pub(crate) fn listed(key: &'static str, current: &Value) -> Element<'static, Mes
 /// The coordinate system new projects are offered with: the registry's list.
 pub(crate) fn crs_choice(srid: u32) -> Element<'static, Message> {
     let systems = crate::crs::systems();
-    let labels = systems.iter().map(|s| {
-        Choice::new(format!("{} (EPSG:{})", s.name, s.srid))
-            .detail(crate::crs::datum_label(&s.datum))
-    });
+    let labels = systems
+        .iter()
+        .map(|s| Choice::new(crate::crs::title(s)).detail(crate::crs::datum_label(&s.datum)));
     let selected = systems.iter().position(|s| s.srid == srid);
     Select::new(labels, selected, move |i| {
         Message::Settings(Edit::Value(
@@ -841,9 +840,7 @@ mod tests {
             "{said:?}"
         );
         assert!(
-            said.contains(
-                &"Yeni projeler “CAD” türüyle önerilecek. Açık projenin türü değişmedi."
-            ),
+            said.contains(&"Yeni projeler “CAD” türüyle önerilecek. Açık projenin türü değişmedi."),
             "{said:?}"
         );
         assert_eq!(said.last(), Some(&"Uygulama ayarları kaydedildi."));

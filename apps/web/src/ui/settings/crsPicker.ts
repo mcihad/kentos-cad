@@ -1,4 +1,4 @@
-import { crsBySrid, DATUM_LABEL, searchCrs, type CrsDef, type Datum } from '../../geo/crs';
+import { crsBySrid, crsCode, DATUM_LABEL, searchCrs, type CrsDef, type Datum } from '../../geo/crs';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { note } from '../widgets/controls';
@@ -127,16 +127,20 @@ function currentCard(c: CrsDef, changed: boolean, mode: CrsPickerOptions['mode']
     'div',
     { class: 'crs-current', 'data-changed': changed && mode !== 'new' ? '' : null },
     h('div', { class: 'crs-current__label' }, label),
-    h('div', { class: 'crs-current__row' }, h('span', { class: 'crs-current__name' }, c.name), h('span', { class: 'crs-chip num' }, `EPSG:${c.srid}`)),
+    h('div', { class: 'crs-current__row' }, h('span', { class: 'crs-current__name' }, c.name), h('span', { class: 'crs-chip num' }, crsCode(c))),
   );
 }
 
+const KIND_LABEL: Record<CrsDef['kind'], string> = {
+  projected: 'Projeksiyonlu (metre)',
+  geographic: 'Coğrafi (derece)',
+  local: 'Yerel: koordinat sistemi yok (metre)',
+};
+
 function detailsCard(c: CrsDef): Child {
-  const rows: [string, string][] = [
-    ['Tür', c.kind === 'projected' ? 'Projeksiyonlu (metre)' : 'Coğrafi (derece)'],
-    ['Datum', DATUM_LABEL[c.datum]],
-    ['Elipsoid', c.ellipsoid],
-  ];
+  const rows: [string, string][] = [['Tür', KIND_LABEL[c.kind]]];
+  if (c.kind !== 'local') rows.push(['Datum', DATUM_LABEL[c.datum]]);
+  if (c.ellipsoid) rows.push(['Elipsoid', c.ellipsoid]);
   if (c.projection) rows.push(['Projeksiyon', c.projection === 'UTM' ? 'UTM (Transverse Mercator)' : c.projection]);
   if (c.centralMeridian !== undefined) rows.push(['Orta meridyen', `${c.centralMeridian}° D`]);
   if (c.scaleFactor !== undefined) rows.push(['Ölçek faktörü', String(c.scaleFactor)]);
@@ -166,5 +170,12 @@ function assignNotes(c: CrsDef, initial: CrsDef): Child[] {
 }
 
 function unitNotes(c: CrsDef): Child[] {
+  if (c.kind === 'local')
+    return [
+      note(
+        'info',
+        'Yerel: koordinatlar bir konuma bağlı değildir (teknik çizim, başlangıç 0,0). Koordinat sistemi taşıyan CBS verisi olduğu gibi gelir; dışa aktarılan CBS dosyalarında koordinat sistemi yazılmaz. Gerçek konum için bir sistem seçin.',
+      ),
+    ];
   return c.kind === 'geographic' ? [note('info', 'Coğrafi sistemlerde birim derecedir. Çizim ve ölçüm araçları metre cinsinden projeksiyonlu bir sistem bekler.')] : [];
 }

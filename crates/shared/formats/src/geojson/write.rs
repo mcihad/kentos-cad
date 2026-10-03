@@ -470,7 +470,14 @@ pub fn write(input: &GeoJsonWriteInput) -> (Vec<u8>, ExportReport) {
     let mut out = String::with_capacity(64 + input.entities.len() * 160);
     out.push_str("{\"type\":\"FeatureCollection\",\"name\":");
     quote(&input.name, &mut out);
-    if input.srid != 4326 {
+    if input.srid == 0 {
+        // A local project's coordinates are bound to no place (docs/adr/0165 §2): no crs member.
+        rep.note(
+            "Koordinat sistemi",
+            "yerel proje (koordinat sistemi yok): koordinatlar olduğu gibi yazıldı, dosya bir koordinat sistemi adlandırmıyor; okuyan program onları WGS 84 boylam, enlem sayabilir",
+            0,
+        );
+    } else if input.srid != 4326 {
         let _ = write!(
             out,
             ",\"crs\":{{\"type\":\"name\",\"properties\":{{\"name\":\"urn:ogc:def:crs:EPSG::{}\"}}}}",
@@ -755,6 +762,23 @@ mod tests {
         let text = String::from_utf8(bytes).expect("utf8");
         assert!(!text.contains("\"crs\""));
         assert!(!report.notes.iter().any(|i| i.what == "Koordinat sistemi"));
+    }
+
+    /// A local project (SRID 0, docs/adr/0165 §2) names no system: no crs member, and the
+    /// report says why.
+    #[test]
+    fn a_local_project_names_no_coordinate_system() {
+        let mut input = input_from_json(INPUT).expect("input");
+        input.srid = 0;
+        let (bytes, report) = write(&input);
+        let text = String::from_utf8(bytes).expect("utf8");
+        assert!(!text.contains("\"crs\""));
+        assert!(
+            report
+                .notes
+                .iter()
+                .any(|i| i.what == "Koordinat sistemi" && i.reason.starts_with("yerel proje"))
+        );
     }
 
     #[test]

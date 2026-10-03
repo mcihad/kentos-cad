@@ -20,6 +20,7 @@ import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
+import { crsCode } from '../../geo/crs';
 
 /**
  * Öznitelikler: geometry and GIS attributes of the selection, editable. It
@@ -99,7 +100,7 @@ export class PropertiesPanel extends Panel {
         rows: [
           { label: 'Dosya', value: doc.name.value },
           { label: 'Koordinat sistemi', value: doc.crs.value.name },
-          { label: 'SRID', value: `EPSG:${doc.crs.value.srid}`, numeric: true },
+          { label: 'SRID', value: crsCode(doc.crs.value), numeric: true },
           { label: 'Çizim ölçeği', value: `1:${doc.settings.plotScale.value}`, numeric: true },
           { label: 'Nesne sayısı', value: String(doc.size), numeric: true },
           { label: 'Etkin katman', value: active ? doc.layers.path(active.id) : '—' },

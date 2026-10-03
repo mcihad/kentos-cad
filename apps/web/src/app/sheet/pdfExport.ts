@@ -80,7 +80,7 @@ const named = (s: string) => (s === 'WGS84' ? 'WGS 84' : s);
 /** The project's system for `tmWkt`; null when it is not a transverse Mercator one. */
 export function tmCrsOf(crs: CrsDef): TmCrs | null {
   const info = crsInfo(crs);
-  if (!info.tm) return null;
+  if (!info.tm || !crs.ellipsoid) return null;
   return { name: crs.name, datum: named(crs.datum), ellipsoid: named(crs.ellipsoid), epsg: crs.srid, tm: info.tm };
 }
 

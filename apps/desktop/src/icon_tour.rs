@@ -75,12 +75,7 @@ const SCENES: [Scene; 31] = [
     scene("olcu", Some("Çizim"), "Ölçülendirme", Open::Caption),
     scene("ice-aktar", Some("Dosya"), "İçe aktar", Open::Caption),
     scene("disa-aktar", Some("Dosya"), "Dışa aktar", Open::Caption),
-    scene(
-        "proje-turu",
-        Some("Görünüm"),
-        "Proje türü",
-        Open::Caption,
-    ),
+    scene("proje-turu", Some("Görünüm"), "Proje türü", Open::Caption),
     scene(
         "sembol-boyutu",
         Some("Görünüm"),

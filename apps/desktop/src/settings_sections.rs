@@ -447,8 +447,7 @@ impl App {
             .help(Fields::help("newProjects.srid"));
         // The open project keeps its own system: said, with the way to it (the web's).
         if let Some(doc) = &self.document {
-            let srid = doc.settings().srid;
-            let name = crate::crs::system(srid).map_or_else(String::new, |c| c.name.clone());
+            let name = crate::crs::title_of(doc.settings().srid);
             form = form
                 .section("Açık proje")
                 .field(
@@ -456,7 +455,7 @@ impl App {
                     action("Proje ayarlarını aç", Edit::OpenProject),
                 )
                 .help(format!(
-                    "{name} (EPSG:{srid}). Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir."
+                    "{name}. Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir."
                 ));
         }
         form.into()

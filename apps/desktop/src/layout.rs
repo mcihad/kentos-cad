@@ -201,7 +201,10 @@ impl App {
         let keeper = &self.layout;
         let ribbon_tab = keeper.text("ribbonTab").to_owned();
         // A tab of either type's ribbon: the drawing's type, once open, keeps it or gives Giriş.
-        let tabs: Vec<(&str, bool)> = catalog().every_tab().map(|t| (t.id, t.contextual)).collect();
+        let tabs: Vec<(&str, bool)> = catalog()
+            .every_tab()
+            .map(|t| (t.id, t.contextual))
+            .collect();
         let start = plan::start_tab(&ribbon_tab, &tabs);
         if let Some(tab) = catalog().every_tab().find(|t| t.id == start) {
             self.tab = tab.id;

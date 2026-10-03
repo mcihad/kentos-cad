@@ -210,12 +210,11 @@ impl App {
         let assigned = (s.settings.srid != s.initial.srid).then_some(s.settings.srid);
         self.close_project_window();
         if let Some(srid) = assigned {
-            let system =
-                crs::system(srid).map_or_else(|| format!("EPSG:{srid}"), |c| c.name.clone());
             self.say(
                 Level::Success,
                 format!(
-                    "Proje koordinat sistemi {system} (EPSG:{srid}) olarak atandı. Koordinat değerleri değiştirilmedi."
+                    "Proje koordinat sistemi {} olarak atandı. Koordinat değerleri değiştirilmedi.",
+                    crs::title_of(srid)
                 ),
             );
         }
@@ -371,12 +370,8 @@ impl App {
     fn crs_section<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let open_app = words::secondary("Uygulama ayarlarını aç", Some(event(Event::OpenApp)));
         let default_srid = self.settings.number("newProjects.srid") as u32;
-        let default = crs::system(default_srid).map(|c| {
-            format!(
-                "{} (EPSG:{}). Uygulama ayarlarından değiştirilir.",
-                c.name, c.srid
-            )
-        });
+        let default = crs::system(default_srid)
+            .map(|c| format!("{}. Uygulama ayarlarından değiştirilir.", crs::title(c)));
         column![
             crs::picker(
                 s.settings.srid,

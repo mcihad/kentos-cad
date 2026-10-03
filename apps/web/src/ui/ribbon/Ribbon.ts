@@ -17,6 +17,7 @@ import { KeyTips } from './keytips';
 import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { commandMenu, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, withQuickAccess, type RibbonRow } from './ribbonPlan';
 import { RibbonSearch } from './search';
+import { crsTitle } from '../../geo/crs';
 
 /**
  * A contextual tab another part of the app owns (the sheet layouts' Pafta
@@ -146,7 +147,7 @@ export class Ribbon extends Component {
     this.d.add(ctx.doc.dirty.subscribe((v) => dirty.toggleAttribute('hidden', !v), true));
     this.d.add(ctx.doc.crs.subscribe((c) => (crs.querySelector('.ribbon__crs-name')!.textContent = c.name), true));
     this.d.add(listen(crs, 'click', () => ctx.commands.execute('crs.set')));
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${ctx.doc.crs.value.name}, EPSG:${ctx.doc.crs.value.srid}. Değiştirmek için tıklayın.` })));
+    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Değiştirmek için tıklayın.` })));
     this.d.add(
       listen<PointerEvent>(help, 'pointerdown', (e) => {
         if (e.button !== 0) return;

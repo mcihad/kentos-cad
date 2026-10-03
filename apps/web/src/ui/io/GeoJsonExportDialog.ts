@@ -11,6 +11,7 @@ import { Dialog } from '../widgets/Dialog';
 import { exportName, field, kindCounts, reportText, summaryLine } from './common';
 import { saveExport } from './save';
 import { SCOPE_LABEL, scopeEntities, type ExportScope } from './scope';
+import { isLocal, LOCAL_SRID } from '../../geo/crs';
 
 /**
  * GeoJSON dışa aktar (docs/adr/0046): the objects of the selection, of the
@@ -158,7 +159,13 @@ class GeoJsonExportDialog {
       written.length
         ? summaryLine('ok', `${written.length} nesne yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON\'a yazılmaz.'),
-      rfc
+      isLocal(crs)
+        ? summaryLine(
+            'warn',
+            h('strong', null, 'Dosya bir koordinat sistemi adlandırmayacak. '),
+            'Proje yerel (koordinat sistemi yok): koordinatlar olduğu gibi yazılır, crs üyesi yazılmaz. RFC 7946’yı bilen programlar onları WGS 84 boylam, enlem sayar ve yanlış yere koyar; gerçek konum için projeye bir koordinat sistemi atayın.',
+          )
+        : rfc
         ? summaryLine('ok', 'Proje WGS 84 (EPSG:4326) sisteminde: dosya RFC 7946 GeoJSON olur (boylam, enlem).')
         : summaryLine(
             'warn',
@@ -204,7 +211,7 @@ class GeoJsonExportDialog {
         return;
       }
       const count = Object.values(out.report.counts).reduce((s, n) => s + (n ?? 0), 0);
-      ctx.log.success(`“${name}” yazıldı: ${count} nesne (GeoJSON${input.srid === 4326 ? ', RFC 7946' : `, EPSG:${input.srid}`}).`);
+      ctx.log.success(`“${name}” yazıldı: ${count} nesne (GeoJSON${input.srid === 4326 ? ', RFC 7946' : input.srid === LOCAL_SRID ? ', koordinat sistemi yok' : `, EPSG:${input.srid}`}).`);
       for (const item of out.report.notes) ctx.log.info(reportText(item));
       if (out.report.skipped.length) ctx.log.warn(`“${name}” içine yazılmayanlar: ${out.report.skipped.map(reportText).join(' ')}`);
       this.dialog.close();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import text from '../../../../fixtures/crs/v1/registry.json?raw';
-import { CRS_REGISTRY, crsBySrid, DEFAULT_SRID, searchCrs, turefZoneFor, workAreaCentre } from './crs';
+import { CRS_REGISTRY, crsBySrid, crsCode, crsTitle, DEFAULT_SRID, isLocal, LOCAL_SRID, searchCrs, turefZoneFor, workAreaCentre } from './crs';
 import { crsFixture } from './crsFixture';
 
 const file = JSON.parse(text) as ReturnType<typeof crsFixture>;
@@ -30,6 +30,18 @@ describe('CRS registry', () => {
     expect(workAreaCentre(crsBySrid(3857)!)).toEqual({ x: 3_896_000, y: 4_722_000 });
     // Every TM zone of the country (36°–42° K) lies within ~340 km of the anchor.
     for (const north of [3_985_000, 4_650_000]) expect(Math.abs(north - workAreaCentre(crsBySrid(5254)!).y)).toBeLessThan(340_000);
+  });
+
+  it('knows the local system, SRID 0: no coordinate system, first in the list, anchored at 0,0 (docs/adr/0165 §2)', () => {
+    const local = crsBySrid(LOCAL_SRID)!;
+    expect(CRS_REGISTRY[0]).toBe(local);
+    expect([local.kind, local.datum, local.unit, local.ellipsoid, local.projection]).toEqual(['local', 'LOCAL', 'metre', undefined, undefined]);
+    expect(isLocal(local) && !isLocal(crsBySrid(DEFAULT_SRID)!)).toBe(true);
+    expect(workAreaCentre(local)).toEqual({ x: 0, y: 0 });
+    // Named as no coordinate system, never as an EPSG code.
+    expect([crsTitle(local), crsCode(local)]).toEqual(['Yerel (koordinat sistemi yok)', 'SRID 0']);
+    expect([crsTitle(crsBySrid(5256)!), crsCode(crsBySrid(5256)!)]).toEqual(['TUREF / TM36 (EPSG:5256)', 'EPSG:5256']);
+    expect(searchCrs('yerel').map((c) => c.srid)).toEqual([LOCAL_SRID]);
   });
 
   it('is searched by SRID, name or area, with Turkish case folding', () => {

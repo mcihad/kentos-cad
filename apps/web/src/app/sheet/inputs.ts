@@ -37,7 +37,7 @@ import type { AppContext } from '../context';
  * TR8350.2; International 1924: Hayford). geo/crs.ts names the ellipsoid of
  * every system and keeps no axes; this table belongs there on merge.
  */
-const ELLIPSOID: Record<CrsDef['ellipsoid'], { semiMajor: number; inverseFlattening: number }> = {
+const ELLIPSOID: Record<NonNullable<CrsDef['ellipsoid']>, { semiMajor: number; inverseFlattening: number }> = {
   GRS80: { semiMajor: 6_378_137, inverseFlattening: 298.257_222_101 },
   WGS84: { semiMajor: 6_378_137, inverseFlattening: 298.257_223_563 },
   'International 1924': { semiMajor: 6_378_388, inverseFlattening: 297 },
@@ -45,7 +45,7 @@ const ELLIPSOID: Record<CrsDef['ellipsoid'], { semiMajor: number; inverseFlatten
 
 export function crsInfo(crs: CrsDef): CrsInfo {
   const tm = crs.projection === 'Transverse Mercator' || crs.projection === 'UTM';
-  if (!tm || crs.centralMeridian === undefined) return { name: crs.name };
+  if (!tm || crs.centralMeridian === undefined || !crs.ellipsoid) return { name: crs.name };
   return {
     name: crs.name,
     tm: { centralMeridian: crs.centralMeridian, scaleFactor: crs.scaleFactor ?? 1, falseEasting: crs.falseEasting ?? 0, falseNorthing: crs.falseNorthing ?? 0, ...ELLIPSOID[crs.ellipsoid] },

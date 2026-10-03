@@ -257,7 +257,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 
 | Anahtar | Tür | Zorunlu | Değerler |
 |---|---|---|---|
-| `srid` | u32 | evet | EPSG kodu. Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
+| `srid` | u32 | evet | EPSG kodu; 0 yerel sistemdir (koordinat sistemi yok, ADR 0165 §2). Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
@@ -460,7 +460,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 Dosya biçimi geçerli olsa da uygulamalar açılışta çizimin kendi kurallarını ayrıca denetler (v1'deki gibi; web `model/snapshot.ts`, masaüstü `kentos_domain::Document`):
 
 - en az bir katman (`type: layer`) olmalı; her nesnenin `layerId`'si bir katmanın (grubun değil) kimliği olmalı;
-- `srid` uygulamanın tanıdığı bir koordinat sistemi olmalı (tahmin yapılmaz);
+- `srid` uygulamanın tanıdığı bir koordinat sistemi ya da yerel sistem (0) olmalı (tahmin yapılmaz);
 - `polyline`, `polygon` ve parça en az 2, delik ve `hatch` halkası en az 3, `spline` en az 2 nokta; `bulges` nokta sayısından uzun olamaz; çemberin yarıçapı pozitif;
 - proje stilleri paylaşılan bir `.kstil` dosyası gibi denetlenir.
 

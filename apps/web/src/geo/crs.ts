@@ -1,20 +1,25 @@
 /**
- * Coordinate reference systems known to KentOS, keyed by EPSG SRID.
+ * Coordinate reference systems known to KentOS, keyed by EPSG SRID, and the
+ * local system (SRID 0): no coordinate system, a technical drawing's own
+ * plane (docs/adr/0165 §2).
  *
  * This is the single source of truth for CRS metadata. Transformations
  * (datum shifts, reprojection) will live in `geo/transform.ts` and consume
  * these definitions; nothing else should hard-code projection parameters.
  */
 
-export type Datum = 'TUREF' | 'ED50' | 'WGS84';
+export type Datum = 'TUREF' | 'ED50' | 'WGS84' | 'LOCAL';
 
 export interface CrsDef {
+  /** The EPSG code; 0 for the local system (PostGIS's “unknown”). */
   srid: number;
-  /** EPSG name, e.g. "TUREF / TM36". */
+  /** EPSG name, e.g. "TUREF / TM36"; “Yerel” for the local system. */
   name: string;
-  kind: 'projected' | 'geographic';
+  /** `local`: no coordinate system, coordinates bound to no place (a CAD drawing's, docs/adr/0165 §2). */
+  kind: 'projected' | 'geographic' | 'local';
   datum: Datum;
-  ellipsoid: 'GRS80' | 'International 1924' | 'WGS84';
+  /** None for the local system. */
+  ellipsoid?: 'GRS80' | 'International 1924' | 'WGS84';
   projection?: 'Transverse Mercator' | 'UTM' | 'Pseudo-Mercator';
   /** Degrees east of Greenwich. */
   centralMeridian?: number;
@@ -30,7 +35,30 @@ export const DATUM_LABEL: Record<Datum, string> = {
   TUREF: 'TUREF (ITRF96)',
   ED50: 'ED50',
   WGS84: 'WGS 84',
+  LOCAL: 'Yerel',
 };
+
+/** The local system's SRID: not an EPSG code; PostGIS reads 0 as “unknown” (docs/adr/0165 §2). */
+export const LOCAL_SRID = 0;
+
+/** No coordinate system: a technical drawing's own plane, its origin 0,0 (a CAD project's by default). */
+const LOCAL: CrsDef = {
+  srid: LOCAL_SRID,
+  name: 'Yerel',
+  kind: 'local',
+  datum: 'LOCAL',
+  unit: 'metre',
+  area: 'Koordinat sistemi yok: teknik çizim, başlangıç 0,0',
+};
+
+/** Whether a system is the local one (no coordinate system). */
+export const isLocal = (crs: CrsDef): boolean => crs.kind === 'local';
+
+/** A system's code as a value or a chip shows it: “EPSG:5256”; the local one is no EPSG code: “SRID 0”. */
+export const crsCode = (crs: CrsDef): string => (crs.kind === 'local' ? `SRID ${crs.srid}` : `EPSG:${crs.srid}`);
+
+/** A system as a sentence names it: “TUREF / TM36 (EPSG:5256)”, “Yerel (koordinat sistemi yok)”. */
+export const crsTitle = (crs: CrsDef): string => (crs.kind === 'local' ? 'Yerel (koordinat sistemi yok)' : `${crs.name} (EPSG:${crs.srid})`);
 
 const tm = (srid: number, datum: 'TUREF' | 'ED50', cm: number): CrsDef => ({
   srid,
@@ -68,6 +96,7 @@ const utm = (srid: number, datum: 'ED50' | 'WGS84', zone: number): CrsDef => {
 const TM_MERIDIANS = [27, 30, 33, 36, 39, 42, 45];
 
 export const CRS_REGISTRY: readonly CrsDef[] = [
+  LOCAL,
   ...TM_MERIDIANS.map((cm, i) => tm(5253 + i, 'TUREF', cm)),
   { srid: 5252, name: 'TUREF', kind: 'geographic', datum: 'TUREF', ellipsoid: 'GRS80', unit: 'degree', area: 'Türkiye, coğrafi (enlem/boylam)' },
   ...TM_MERIDIANS.map((cm, i) => tm(2319 + i, 'ED50', cm)),
@@ -108,6 +137,8 @@ const WORK_NORTHING = 4_320_000;
  * transformation (none is done here).
  */
 export function workAreaCentre(crs: CrsDef): { x: number; y: number } {
+  // A drawing in no coordinate system starts at 0,0 (AutoCAD's new drawing).
+  if (crs.kind === 'local') return { x: 0, y: 0 };
   if (crs.kind === 'geographic') return { x: WORK_LON, y: WORK_LAT };
   if (crs.projection === 'Pseudo-Mercator') {
     const r = 6_378_137;

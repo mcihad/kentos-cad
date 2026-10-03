@@ -124,8 +124,12 @@ pub fn check_name(name: &str) -> AppResult<()> {
     Ok(())
 }
 
-/// Only SRIDs PostGIS knows are accepted (the same catalogue the transformations will use).
+/// Only SRIDs PostGIS knows are accepted (the same catalogue the transformations will use),
+/// and 0: a local project's, no coordinate system (PostGIS's “unknown”, docs/adr/0165 §2).
 pub async fn check_srid(tx: &mut Transaction<'static, Postgres>, srid: u32) -> AppResult<()> {
+    if srid == 0 {
+        return Ok(());
+    }
     let known: bool =
         sqlx::query_scalar("select exists (select 1 from public.spatial_ref_sys where srid = $1)")
             .bind(srid as i32)

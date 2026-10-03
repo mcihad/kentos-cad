@@ -44,6 +44,16 @@ describe('new project', () => {
     expect(read.ok && read.content.settings.plotScale).toBe(2000);
   });
 
+  it('a local CAD project (SRID 0) starts at 0,0 and is written and read as one (docs/adr/0165 §2)', () => {
+    const c = newProjectContent({ name: 'Plan', srid: 0, plotScale: 50, workspace: 'cad' });
+    expect([c.settings.srid, c.settings.workspace, c.origin]).toEqual([0, 'cad', { x: 0, y: 0 }]);
+    const doc = open();
+    doc.replaceWith(c);
+    expect(doc.crs.value.kind).toBe('local');
+    const read = readSnapshot(JSON.stringify(toSnapshot(doc)));
+    expect(read.ok && read.content.settings.srid).toBe(0);
+  });
+
   it('gives every project its own copy of the layer styles', () => {
     const a = newProjectContent({ name: 'a', srid: 5256, plotScale: 1000 });
     const b = newProjectContent({ name: 'b', srid: 5256, plotScale: 1000 });

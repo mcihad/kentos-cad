@@ -2,7 +2,7 @@ import '../../styles/io.css';
 import type { AppContext } from '../../app/context';
 import type { Bounds } from '../../contracts/generated/Bounds';
 import type { ReportItem } from '../../contracts/generated/ReportItem';
-import { CRS_REGISTRY, crsBySrid, DATUM_LABEL, type CrsDef, type Datum } from '../../geo/crs';
+import { CRS_REGISTRY, crsBySrid, crsTitle, DATUM_LABEL, isLocal, type CrsDef, type Datum } from '../../geo/crs';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
@@ -131,9 +131,13 @@ export class CrsQuestion {
     this.render();
   }
 
-  /** Whether the file's system is the project's (the only case that can be imported). */
+  /**
+   * Whether the file can be imported: its system is the project's, or the
+   * project is local (no coordinate system), which takes any file's
+   * coordinates as they are (docs/adr/0165 §2).
+   */
   get matches(): boolean {
-    return this.srid !== null && this.srid === this.ctx.doc.crs.value.srid;
+    return this.srid !== null && (this.srid === this.ctx.doc.crs.value.srid || isLocal(this.ctx.doc.crs.value));
   }
 
   /**
@@ -166,7 +170,7 @@ export class CrsQuestion {
             h(
               'option',
               { value: String(c.srid), selected: c.srid === this.srid },
-              `${c.name} (EPSG:${c.srid})${c.srid === project ? ', projenin sistemi' : ''}${this.statement?.srid === c.srid && this.statement.source !== 'none' ? ', dosyanın dediği' : ''}`,
+              `${crsTitle(c)}${c.srid === project ? ', projenin sistemi' : ''}${this.statement?.srid === c.srid && this.statement.source !== 'none' ? ', dosyanın dediği' : ''}`,
             ),
           ),
         ),
@@ -237,7 +241,14 @@ export class CrsQuestion {
           `Dosya EPSG:${st.srid} diyor; koordinatlar ${source.name} (EPSG:${source.srid}) sayılacak, dönüştürülmeden. Yalnız dosyanın gerçekte bu sistemde olduğunu biliyorsanız seçin.`,
         ),
       );
-    if (this.matches) {
+    if (isLocal(project) && source.srid !== project.srid) {
+      lines.push(
+        note(
+          'info',
+          `Proje yerel (koordinat sistemi yok): ${crsTitle(source)} koordinatları olduğu gibi alınır; dönüştürülmez, yuvarlanmaz ve bir konuma bağlanmaz.`,
+        ),
+      );
+    } else if (this.matches) {
       lines.push(h('p', { class: 'io-field__hint' }, `Projenin sistemi (${project.name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz.`));
     } else {
       const what =

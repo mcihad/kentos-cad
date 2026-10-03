@@ -25,7 +25,37 @@ use kentos_ui::widget::Banner;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
-pub use kentos_project::crs::{System, datum_label, system, systems};
+pub use kentos_project::crs::{LOCAL_SRID, System, datum_label, system, systems};
+
+/// A system as a sentence names it (the web's `crsTitle`): “TUREF / TM36
+/// (EPSG:5256)”, the local one “Yerel (koordinat sistemi yok)”.
+pub fn title(s: &System) -> String {
+    if s.is_local() {
+        "Yerel (koordinat sistemi yok)".to_owned()
+    } else {
+        format!("{} (EPSG:{})", s.name, s.srid)
+    }
+}
+
+/// The title of a project's system by its SRID; an unknown one by its EPSG code.
+pub fn title_of(srid: u32) -> String {
+    system(srid).map_or_else(|| format!("EPSG:{srid}"), title)
+}
+
+/// The code of a project's system by its SRID (Öznitelikler's SRID row).
+pub fn code_of(srid: u32) -> String {
+    system(srid).map_or_else(|| format!("EPSG:{srid}"), code)
+}
+
+/// A system's code as a value or a chip shows it (the web's `crsCode`):
+/// “EPSG:5256”; the local one is no EPSG code: “SRID 0”.
+pub fn code(s: &System) -> String {
+    if s.is_local() {
+        format!("SRID {}", s.srid)
+    } else {
+        format!("EPSG:{}", s.srid)
+    }
+}
 
 /// Where a file's statement of its system comes from (the web's `CrsStatement.source`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -126,9 +156,11 @@ impl CrsQuestion {
         self.bounds = bounds;
     }
 
-    /// Whether the file's system is the project's: the only case that can be imported.
+    /// Whether the file can be imported: its system is the project's, or the
+    /// project is local (no coordinate system), which takes any file's
+    /// coordinates as they are (docs/adr/0165 §2).
     pub fn matches(&self, project: u32) -> bool {
-        self.srid == Some(project)
+        self.srid.is_some() && (self.srid == Some(project) || project == LOCAL_SRID)
     }
 
     /// What the file said, as a line.
@@ -216,6 +248,10 @@ impl CrsQuestion {
             )));
         }
         match system(project) {
+            _ if project == LOCAL_SRID && source.srid != project => notes.push(Note::Info(format!(
+                "Proje yerel (koordinat sistemi yok): {} koordinatları olduğu gibi alınır; dönüştürülmez, yuvarlanmaz ve bir konuma bağlanmaz.",
+                title(source)
+            ))),
             _ if self.matches(project) => notes.push(Note::Hint(format!(
                 "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
             ))),
@@ -270,8 +306,7 @@ impl CrsQuestion {
             } else {
                 ""
             };
-            Choice::new(format!("{} (EPSG:{}){own}{file}", s.name, s.srid))
-                .detail(datum_label(&s.datum))
+            Choice::new(format!("{}{own}{file}", title(s))).detail(datum_label(&s.datum))
         });
         let selected = self
             .srid
@@ -350,7 +385,7 @@ pub fn picker<'a, Message: Clone + 'a>(
                 text(chosen.name.clone())
                     .font(typography::ui_strong())
                     .size(typography::body()),
-                container(label::mono_caption(format!("EPSG:{}", chosen.srid)))
+                container(label::mono_caption(code(chosen)))
                     .padding([1, 6])
                     .style(style::container::badge),
             ]
@@ -454,18 +489,21 @@ pub fn picker<'a, Message: Clone + 'a>(
         .style(style::container::bordered),
     );
 
-    let mut details: Vec<(&str, String)> = vec![
-        (
-            "Tür",
-            if chosen.kind == "projected" {
-                "Projeksiyonlu (metre)".to_owned()
-            } else {
-                "Coğrafi (derece)".to_owned()
-            },
-        ),
-        ("Datum", datum_label(&chosen.datum).to_owned()),
-        ("Elipsoid", chosen.ellipsoid.clone()),
-    ];
+    let mut details: Vec<(&str, String)> = vec![(
+        "Tür",
+        match chosen.kind.as_str() {
+            "projected" => "Projeksiyonlu (metre)",
+            "local" => "Yerel: koordinat sistemi yok (metre)",
+            _ => "Coğrafi (derece)",
+        }
+        .to_owned(),
+    )];
+    if !chosen.is_local() {
+        details.push(("Datum", datum_label(&chosen.datum).to_owned()));
+    }
+    if let Some(e) = &chosen.ellipsoid {
+        details.push(("Elipsoid", e.clone()));
+    }
     if let Some(p) = &chosen.projection {
         details.push((
             "Projeksiyon",
@@ -525,6 +563,11 @@ pub fn picker<'a, Message: Clone + 'a>(
             "Coğrafi sistemlerde birim derecedir. Çizim ve ölçüm araçları metre cinsinden projeksiyonlu bir sistem bekler.",
         ));
     }
+    if chosen.is_local() {
+        notes = notes.push(Banner::info(
+            "Yerel: koordinatlar bir konuma bağlı değildir (teknik çizim, başlangıç 0,0). Koordinat sistemi taşıyan CBS verisi olduğu gibi gelir; dışa aktarılan CBS dosyalarında koordinat sistemi yazılmaz. Gerçek konum için bir sistem seçin.",
+        ));
+    }
     column![
         current,
         row![
@@ -568,9 +611,11 @@ mod tests {
     #[test]
     fn the_list_is_the_web_registry_grouped_by_datum() {
         let datums: Vec<&str> = systems().iter().map(|s| s.datum.as_str()).collect();
+        // The local system first (docs/adr/0165 §2), then the datums.
+        assert_eq!(datums[0], "LOCAL");
         let first_ed50 = datums.iter().position(|d| *d == "ED50").expect("ED50");
         let first_wgs = datums.iter().position(|d| *d == "WGS84").expect("WGS 84");
-        assert!(datums[..first_ed50].iter().all(|d| *d == "TUREF"));
+        assert!(datums[1..first_ed50].iter().all(|d| *d == "TUREF"));
         assert!(datums[first_ed50..first_wgs].iter().all(|d| *d == "ED50"));
         assert!(datums[first_wgs..].iter().all(|d| *d == "WGS84"));
         assert_eq!(system(5256).map(|s| s.name.as_str()), Some("TUREF / TM36"));
@@ -616,6 +661,33 @@ mod tests {
         kind.pick(5252);
         let kind = warnings(&kind, 5256).join(" ");
         assert!(kind.contains("coğrafi ile projeksiyonlu"), "{kind}");
+    }
+
+    /// A local project (SRID 0, docs/adr/0165 §2) takes any file's coordinates
+    /// as they are, and says so; it is named as no coordinate system.
+    #[test]
+    fn a_local_project_takes_any_files_coordinates_as_they_are() {
+        let mut q = CrsQuestion::new(LOCAL_SRID);
+        q.declare(
+            LOCAL_SRID,
+            statement(Some(5256), "EPSG:5256", Said::Prj),
+            None,
+        );
+        assert!(q.matches(LOCAL_SRID));
+        assert!(warnings(&q, LOCAL_SRID).is_empty());
+        let notes = q.notes(LOCAL_SRID, &Format::default());
+        assert!(
+            notes.iter().any(|n| matches!(n, Note::Info(i)
+                if i.starts_with("Proje yerel (koordinat sistemi yok): TUREF / TM36 (EPSG:5256)"))),
+            "{notes:?}"
+        );
+        let local = system(LOCAL_SRID).expect("the local system");
+        assert!(local.is_local() && local.ellipsoid.is_none());
+        assert_eq!(title(local), "Yerel (koordinat sistemi yok)");
+        assert_eq!(
+            (code_of(LOCAL_SRID), title_of(5256)),
+            ("SRID 0".to_owned(), "TUREF / TM36 (EPSG:5256)".to_owned())
+        );
     }
 
     fn statement(srid: Option<u32>, text: &str, source: Said) -> Option<Statement> {

@@ -2,7 +2,7 @@ import { applyAccent, applyUiFont, TEXT_SIZES, type ThemeId } from '../../app/ap
 import { accentPicker, drawingFontPicker, fontPicker } from './appearancePickers';
 import type { AppContext } from '../../app/context';
 import { PREF_KEYS, PREFERENCE_DEFAULTS, type PreferencesData } from '../../app/state';
-import { crsBySrid } from '../../geo/crs';
+import { crsBySrid, crsTitle } from '../../geo/crs';
 import { settingDescriptor } from '../../core/settings/schema';
 import { h } from '../dom';
 import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
@@ -95,7 +95,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
           }),
           group(
             'Açık proje',
-            settingRow('Bu projenin sistemi', `${current.name} (EPSG:${current.srid}). Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir.`, openProject),
+            settingRow('Bu projenin sistemi', `${crsTitle(current)}. Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir.`, openProject),
           ),
         ];
       },
@@ -143,7 +143,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       if (draft.uiFont !== init.uiFont) void applyUiFont(draft.uiFont).then(() => ctx.view.refreshFonts());
       if (draft.defaultSrid !== init.defaultSrid) {
         const c = crsBySrid(draft.defaultSrid)!;
-        ctx.log.info(`Yeni projeler ${c.name} (EPSG:${c.srid}) ile oluşturulacak. Açık projenin sistemi değişmedi.`);
+        ctx.log.info(`Yeni projeler ${crsTitle(c)} ile oluşturulacak. Açık projenin sistemi değişmedi.`);
       }
       if (draft.defaultWorkspace !== init.defaultWorkspace) {
         ctx.log.info(`Yeni projeler “${workspaceById(draft.defaultWorkspace).label}” türüyle önerilecek. Açık projenin türü değişmedi.`);

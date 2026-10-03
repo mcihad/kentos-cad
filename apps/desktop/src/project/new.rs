@@ -242,10 +242,7 @@ impl App {
             max_x: b.max_x,
             max_y: b.max_y,
         });
-        let system = system.map_or_else(
-            || format!("EPSG:{}", settings.srid),
-            |s| format!("{} (EPSG:{})", s.name, s.srid),
-        );
+        let system = crs::title_of(settings.srid);
         self.say(
             Level::Success,
             format!(

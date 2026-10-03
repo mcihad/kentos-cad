@@ -17,6 +17,7 @@ import { hideTooltip, tooltip } from '../widgets/tooltip';
 import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
+import { crsTitle } from '../../geo/crs';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
 
@@ -157,7 +158,7 @@ export class StatusBar extends Component {
         this.refit();
       }, true),
     );
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `EPSG:${ctx.doc.crs.value.srid}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.` }), 'top'));
+    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.` }), 'top'));
     const syncRenderer = () => {
       const k = ctx.view.backendKind.value;
       rendererName.textContent = k === 'webgpu' ? 'WebGPU' : k === 'webgl2' ? 'WebGL2' : ctx.view.backendLabel.value;

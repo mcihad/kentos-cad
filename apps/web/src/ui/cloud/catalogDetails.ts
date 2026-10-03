@@ -4,7 +4,7 @@ import { detailPlan } from '../../app/cloud/catalogPlan';
 import { ROLE_LABEL, STORAGE_TEXT } from '../../app/cloud/sharing';
 import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
-import { crsBySrid } from '../../geo/crs';
+import { crsBySrid, crsTitle } from '../../geo/crs';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { renderHistory, type HistoryActions, type HistoryState } from './catalogHistory';
@@ -119,7 +119,7 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
       case 'Rolünüz':
         return `${ROLE_LABEL[p.access.role]}${p.access.via === 'policy' ? ' (kurum politikası)' : ''}`;
       case 'Koordinat sistemi':
-        return crs ? `${crs.name} (EPSG:${p.srid})` : `EPSG:${p.srid}`;
+        return crs ? crsTitle(crs) : `EPSG:${p.srid}`;
       case 'Alan birimi':
         return AREA_UNIT[p.areaUnit];
       case 'Nesne':

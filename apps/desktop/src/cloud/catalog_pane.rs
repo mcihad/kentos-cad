@@ -240,10 +240,7 @@ impl App {
                     ""
                 }
             )),
-            "Koordinat sistemi" => plain(match crate::document::crs_name(p.srid) {
-                Some(name) => format!("{name} (EPSG:{})", p.srid),
-                None => format!("EPSG:{}", p.srid),
-            }),
+            "Koordinat sistemi" => plain(crate::crs::title_of(p.srid)),
             "Alan birimi" => plain(
                 match p.area_unit {
                     AreaUnit::M2 => "m²",

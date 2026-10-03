@@ -178,15 +178,19 @@ mod tests {
     }
 
     #[test]
-    fn a_project_with_its_type_is_not_asked_and_the_question_is_the_drawing_s_it_was_asked_about()
-    {
+    fn a_project_with_its_type_is_not_asked_and_the_question_is_the_drawing_s_it_was_asked_about() {
         let dir = scratch("tur-var");
         let path = saved(&dir, "eski.kcad", 0);
         let mut app = app_with_drawing();
         open(&mut app, path.clone());
         send(&mut app, Event::Pick);
         let typed = dir.join("türlü.kcad");
-        let snapshot = app.document.as_ref().expect("a drawing").model.to_snapshot_v2();
+        let snapshot = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .to_snapshot_v2();
         crate::document::write(&snapshot, &typed).expect("writes");
         open(&mut app, typed);
         assert!(!asked(&app), "a typed project is not asked");
@@ -198,7 +202,11 @@ mod tests {
         send(&mut app, Event::Choose(Workspace::Cad));
         send(&mut app, Event::Pick);
         assert_eq!(
-            app.document.as_ref().expect("a drawing").settings().workspace,
+            app.document
+                .as_ref()
+                .expect("a drawing")
+                .settings()
+                .workspace,
             None
         );
         let _ = std::fs::remove_dir_all(&dir);

@@ -95,6 +95,22 @@ fn matches_epsg_for_every_zone() {
     assert_eq!(system(&f, 3857)["projection"], "Pseudo-Mercator");
 }
 
+/// SRID 0 is the local system (docs/adr/0165 §2): no coordinate system, no
+/// datum or ellipsoid, no projection; metres; first in the list.
+#[test]
+fn srid_zero_is_the_local_system() {
+    let f = file();
+    let local = system(&f, 0);
+    assert_eq!(f["systems"][0]["srid"], 0, "the local system comes first");
+    assert_eq!(
+        (&local["kind"], &local["datum"], &local["unit"]),
+        (&"local".into(), &"LOCAL".into(), &"metre".into())
+    );
+    for absent in ["ellipsoid", "projection", "centralMeridian", "scaleFactor"] {
+        assert!(local.get(absent).is_none(), "{absent}");
+    }
+}
+
 #[test]
 fn suggests_the_nearest_turef_zone() {
     let f = file();

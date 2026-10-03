@@ -53,6 +53,8 @@ struct System {
     name: String,
     #[serde(default)]
     datum: String,
+    /// Empty for the local system (no coordinate system, docs/adr/0165 §2).
+    #[serde(default)]
     ellipsoid: String,
     projection: Option<String>,
     central_meridian: Option<f64>,

@@ -109,6 +109,10 @@ pub fn standard_layer(id: &str, plot_scale: f64) -> Option<LayerNode> {
 
 /// The middle of the zone at Türkiye's centre latitude (the web's `workAreaCentre`).
 pub fn work_area_centre(crs: &System) -> Vec2 {
+    // A drawing in no coordinate system starts at 0,0 (AutoCAD's new drawing).
+    if crs.is_local() {
+        return Vec2 { x: 0.0, y: 0.0 };
+    }
     if crs.kind == "geographic" {
         return Vec2 {
             x: WORK_LON,

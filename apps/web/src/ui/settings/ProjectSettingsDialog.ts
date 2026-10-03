@@ -1,7 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
-import { crsBySrid } from '../../geo/crs';
+import { crsBySrid, crsTitle } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, type ProjectSettingsData } from '../../model/projectSettings';
 import { h, type Child } from '../dom';
 import { PLOT_SCALES } from '../ribbon/fields';
@@ -90,7 +90,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
             state: crsState,
             onChange: (srid, rerender) => api.set('srid', srid, rerender),
           }),
-          group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${def.name} (EPSG:${def.srid}). Uygulama ayarlarından değiştirilir.` : null, openApp)),
+          group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${crsTitle(def)}. Uygulama ayarlarından değiştirilir.` : null, openApp)),
         ];
       },
     },
@@ -119,7 +119,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       doc.settings.assign(settings);
       if (draft.srid !== init.srid) {
         const c = crsBySrid(draft.srid)!;
-        ctx.log.success(`Proje koordinat sistemi ${c.name} (EPSG:${c.srid}) olarak atandı. Koordinat değerleri değiştirilmedi.`);
+        ctx.log.success(`Proje koordinat sistemi ${crsTitle(c)} olarak atandı. Koordinat değerleri değiştirilmedi.`);
       }
       ctx.log.success('Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak.');
     },

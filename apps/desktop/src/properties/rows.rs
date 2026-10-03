@@ -258,7 +258,7 @@ fn document_section(doc: &Document) -> Section {
                 "Koordinat sistemi",
                 crs_name(s.srid).map_or_else(|| format!("EPSG:{}", s.srid), str::to_owned),
             ),
-            Row::figure("SRID", format!("EPSG:{}", s.srid)),
+            Row::figure("SRID", crate::crs::code_of(s.srid)),
             Row::figure("Çizim ölçeği", format!("1:{}", s.plot_scale)),
             Row::figure("Nesne sayısı", doc.entity_count().to_string()),
             Row::text("Etkin katman", active),

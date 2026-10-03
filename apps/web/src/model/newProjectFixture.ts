@@ -17,6 +17,8 @@ export const NEW_PROJECT_CASES: readonly NewProjectOptions[] = [
   { name: 'Harita', srid: 4326, plotScale: 25000, workspace: 'gis' },
   { name: 'Web haritası', srid: 3857, plotScale: 2000, workspace: 'gis', drawingFont: 'plex-mono' },
   { name: '', srid: 32636, plotScale: 5000 },
+  // A local CAD project: no coordinate system, its origin 0,0 (docs/adr/0165 §2).
+  { name: 'Plan', srid: 0, plotScale: 50, workspace: 'cad' },
 ];
 
 export function newProjectFixture() {

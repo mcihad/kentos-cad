@@ -216,10 +216,10 @@ impl App {
             Some(Ok(name)) => {
                 let (report, srid) = s.written.take().unwrap_or_default();
                 let written: u32 = report.counts.values().sum();
-                let system = if srid == 4326 {
-                    ", RFC 7946".to_owned()
-                } else {
-                    format!(", EPSG:{srid}")
+                let system = match srid {
+                    4326 => ", RFC 7946".to_owned(),
+                    0 => ", koordinat sistemi yok".to_owned(),
+                    _ => format!(", EPSG:{srid}"),
                 };
                 self.say(
                     Level::Success,
@@ -406,7 +406,13 @@ impl App {
                 "Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON'a yazılmaz.",
             )
         }];
-        lines.push(if srid == 4326 {
+        lines.push(if srid == 0 {
+            // A local project (docs/adr/0165 §2): its coordinates are bound to no place.
+            words::text_line(
+                Line::Warn,
+                "Dosya bir koordinat sistemi adlandırmayacak. Proje yerel (koordinat sistemi yok): koordinatlar olduğu gibi yazılır, crs üyesi yazılmaz. RFC 7946'yı bilen programlar onları WGS 84 boylam, enlem sayar ve yanlış yere koyar; gerçek konum için projeye bir koordinat sistemi atayın.",
+            )
+        } else if srid == 4326 {
             words::text_line(
                 Line::Ok,
                 "Proje WGS 84 (EPSG:4326) sisteminde: dosya RFC 7946 GeoJSON olur (boylam, enlem).",

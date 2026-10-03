@@ -1008,7 +1008,8 @@ impl App {
                         .icon(crate::icons::from_web(Some("crs")))
                         .on_press(Message::Run("crs.set"))
                         .tip(Tip::new("Koordinat sistemi").body(format!(
-                            "EPSG:{srid}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın."
+                            "{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
+                            crate::crs::title_of(srid)
                         ))),
                 );
             }
@@ -1218,13 +1219,7 @@ impl App {
             Asking::About => {
                 let crs = self.document.as_ref().map_or_else(
                     || "Açık çizim yok".to_owned(),
-                    |doc| {
-                        let srid = doc.settings().srid;
-                        format!(
-                            "{} (EPSG:{srid})",
-                            crs_name(srid).unwrap_or("Bilinmeyen sistem")
-                        )
-                    },
+                    |doc| crate::crs::title_of(doc.settings().srid),
                 );
                 let rows = kentos_ui::widget::PropertySheet::new()
                     .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
@@ -1545,8 +1540,10 @@ fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message>
             .on_press(Message::Run("crs.set"))
             .padding([4, 8])
             .style(style::button::flat),
-        Tip::new("Koordinat sistemi")
-            .body(format!("{name}, EPSG:{srid}. Değiştirmek için tıklayın.")),
+        Tip::new("Koordinat sistemi").body(format!(
+            "{}. Değiştirmek için tıklayın.",
+            crate::crs::title_of(srid)
+        )),
         iced::widget::tooltip::Position::Bottom,
     )
 }
