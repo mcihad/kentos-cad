@@ -1261,6 +1261,7 @@ impl App {
         let s = &self.settings;
         self.draft = Draft {
             ortho: s.bool("drafting.ortho"),
+            right_angle: s.bool("drafting.rightAngle"),
             polar: s
                 .bool("drafting.polar")
                 .then(|| s.number("drafting.polarIncrement")),
@@ -1514,6 +1515,7 @@ impl App {
             // Koordinat oku: a tool that reads the clicked point into the log (docs/adr/0140).
             "crs.query" => return self.start_tool(kentos_interaction::coordinate::ID),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
+            "draft.rightAngle" => self.toggle_session("drafting.rightAngle", "Dik açı"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "draft.tracking" => self.toggle_session("drafting.tracking", "Nesne izleme"),
             "draft.topology" => self.toggle_session("drafting.topology", "Topolojik düzenleme"),
@@ -1648,6 +1650,7 @@ impl App {
     pub fn checked(&self, id: &str) -> Option<bool> {
         Some(match id {
             "draft.ortho" => self.draft.ortho,
+            "draft.rightAngle" => self.draft.right_angle,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
             id if crate::snap_menu::setting(id).is_some() => {

@@ -614,6 +614,11 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     }),
     toggle('draft.grid', 'Izgara', settings.grid, { category: 'Çizim yardımcıları', icon: 'grid' }),
     toggle('draft.ortho', 'Orto', settings.ortho, { category: 'Çizim yardımcıları', icon: 'ortho', description: 'Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner.' }),
+    toggle('draft.rightAngle', 'Dik açı', settings.rightAngle, {
+      category: 'Çizim yardımcıları',
+      icon: 'rightAngle',
+      description: 'Aracın ikinci kenarından başlayarak her kenar öncekine dik çizilir; hangi yöne gideceğini imleç seçer. Elle kilitlenen doğrultu önce gelir. Kapalı alanda Dik kapat (D) son köşeyi ilk kenara dik kapatır.',
+    }),
     toggle('draft.polar', 'Kutupsal izleme', settings.polar, {
       category: 'Çizim yardımcıları',
       icon: 'polar',

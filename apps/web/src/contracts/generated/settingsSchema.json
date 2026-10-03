@@ -56,6 +56,22 @@
       "apply": "live"
     },
     {
+      "key": "drafting.rightAngle",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Dik açı",
+      "description": "Aracın ikinci kenarından başlayarak her kenar öncekine dik çizilir; hangi yöne gideceğini imleç seçer. Elle kilitlenen doğrultu önce gelir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.polar",
       "type": "boolean",
       "default": false,

@@ -48,6 +48,7 @@ pub const PORTED: &[&str] = &[
     // aids of the session the tool session reads.
     "tools.options",
     "draft.ortho",
+    "draft.rightAngle",
     "draft.polar",
     // The line and polyline tools (docs/adr/0027), each writing through its product command.
     "tool.line",

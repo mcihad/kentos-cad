@@ -49,6 +49,7 @@ export class StatusBar extends Component {
       this.snapCell(this.toggle('draft.snap', 'Kenet', () => snapMenu(ctx), () => this.snapNote())),
       this.toggle('draft.grid', 'Izgara'),
       this.toggle('draft.ortho', 'Orto'),
+      this.toggle('draft.rightAngle', 'Dik açı'),
       this.toggle('draft.polar', 'Kutupsal'),
       this.toggle('draft.tracking', 'İzleme'),
       // Topolojik düzenleme (docs/adr/0160 §1): its option, Noktalar da, is on the cell's right-click menu.

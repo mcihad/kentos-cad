@@ -229,3 +229,77 @@ fn no_edge_pick_before_the_first_point() {
         )]
     );
 }
+
+/// The newest area's corners, relative to (E, N).
+fn corners(b: &Bench) -> Vec<[f64; 2]> {
+    let Entity::Polygon(area) = b.newest() else {
+        panic!("an area, not {:?}", b.newest());
+    };
+    area.pts.iter().map(|p| rel(*p)).collect()
+}
+
+#[test]
+fn dik_aci_squares_each_edge_after_the_first_and_dik_kapat_closes_square() {
+    let mut b = Bench::new("polygon");
+    b.draft.right_angle = true;
+    b.click(-10.0, -10.0);
+    // The first edge is free.
+    b.click(6.0, -2.0);
+    // The second square to it: the click goes onto the square line, (4, 2).
+    b.click(10.0, 5.0);
+    assert_eq!(b.points(), 3);
+    assert!(b.options().contains(&"D"), "{:?}", b.options());
+    // Dik kapat: the fourth corner where the two square lines meet; the area is written.
+    assert!(b.type_text("D"));
+    assert_eq!(b.points(), 0);
+    let pts = corners(&b);
+    let want = [[-10.0, -10.0], [6.0, -2.0], [4.0, 2.0], [-12.0, -6.0]];
+    assert_eq!(pts.len(), 4, "{pts:?}");
+    assert!(pts.iter().zip(want).all(|(p, w)| near(*p, w)), "{pts:?}");
+}
+
+#[test]
+fn dik_kapat_says_why_when_the_first_and_last_edges_run_parallel() {
+    let mut b = Bench::new("polygon");
+    b.draft.right_angle = true;
+    b.click(-15.0, 10.0);
+    b.click(-5.0, 10.0);
+    b.click(-3.0, 14.0);
+    b.click(-20.0, 12.0);
+    assert_eq!(b.points(), 4);
+    let before = b.log.len();
+    assert!(b.type_text("D"));
+    assert_eq!(
+        b.said(before),
+        [(Level::Warn, kentos_interaction::NO_SQUARE_CLOSE)]
+    );
+    assert_eq!(b.points(), 4, "the corners stay");
+    b.confirm();
+    let pts = corners(&b);
+    let want = [[-15.0, 10.0], [-5.0, 10.0], [-5.0, 14.0], [-20.0, 14.0]];
+    assert!(pts.iter().zip(want).all(|(p, w)| near(*p, w)), "{pts:?}");
+}
+
+#[test]
+fn a_direction_locked_by_hand_comes_before_dik_aci() {
+    let mut b = Bench::new("polyline");
+    b.draft.right_angle = true;
+    b.click(0.0, 0.0);
+    b.click(10.0, 0.0);
+    // Square to the first edge would be north–south; a semt of 50 grads wins.
+    assert!(b.type_text("<50"));
+    b.click(20.0, 9.0);
+    b.confirm();
+    let p = points(&b)[2];
+    // Along 50 grads (north-east), the cursor projected: (10, 0) + t·(√½, √½).
+    assert!((p[0] - 10.0 - (p[1])).abs() < 1e-9 && p[1] > 0.0, "{p:?}");
+}
+
+#[test]
+fn polyline_has_no_dik_kapat() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    b.click(5.0, 0.0);
+    b.click(5.0, 5.0);
+    assert!(!b.options().contains(&"D"), "{:?}", b.options());
+}

@@ -159,6 +159,9 @@ pub enum Cursor {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Draft {
     pub ortho: bool,
+    /// Dik açı (`drafting.rightAngle`, docs/adr/0166 §4): from the tool's
+    /// second edge on, each edge square to the one before.
+    pub right_angle: bool,
     /// Polar tracking's step in degrees; `None` when it is off.
     pub polar: Option<f64>,
     /// How near a click must be to a point to be that point (kenet yarıçapı), logical pixels.
@@ -209,6 +212,7 @@ impl Default for Draft {
     fn default() -> Self {
         Self {
             ortho: false,
+            right_angle: false,
             polar: None,
             snap_aperture: 11.0,
             snap: true,

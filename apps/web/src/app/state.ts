@@ -21,6 +21,8 @@ export class DraftingSettings {
   readonly snap = new Signal(sessionDefault('drafting.snap'));
   readonly grid = new Signal(sessionDefault('drafting.grid'));
   readonly ortho = new Signal(sessionDefault('drafting.ortho'));
+  /** Dik açı (docs/adr/0166 §4): from the tool's second edge on, each edge square to the one before. */
+  readonly rightAngle = new Signal(sessionDefault('drafting.rightAngle'));
   readonly polar = new Signal(sessionDefault('drafting.polar'));
   /** Object snap tracking: alignment lines from acquired snap points. */
   readonly tracking = new Signal(sessionDefault('drafting.tracking'));

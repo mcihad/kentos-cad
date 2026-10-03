@@ -1,0 +1,28 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-right-angle",
+  "title": "Kullanım: Dik açı ve Dik kapat; Kapalı alan ile L biçimli bir yapı: ilk kenar eğik ve serbest, sonrakiler öncekine dik; Dik kapat son köşeyi ilk kenara dik kapatır",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0166 §4",
+  "covers": ["HYB-10"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.05 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.05,
+  "steps": [
+    { "run": "draft.rightAngle", "note": "Durum çubuğunda Dik açı." },
+    { "run": "tool.polygon", "note": "Kapalı alan." },
+    { "click": [-4, -8] },
+    { "click": [4, -4], "note": "İlk kenar eğik, serbest." },
+    { "click": [2, 0], "note": "Sonraki kenarlar öncekine dik." },
+    { "click": [-2, -2] },
+    { "click": [-4, 2], "expect": { "points": 5 } },
+    { "move": [-7, 0.5] },
+    { "shot": "dik-kenar", "note": "Önizlemenin kenarı öncekine dik; istemde Dik kapat (D); durum çubuğunda Dik açı açık." },
+    { "key": "D", "note": "Dik kapat: altıncı köşe (−8, 0), alan kapanır.", "expect": { "entities": 1, "newest": { "kind": "polygon", "points": [[-4, -8], [4, -4], [2, 0], [-2, -2], [-4, 2], [-8, 0]] } } },
+    { "shot": "kapandi" },
+    { "key": "Esc" },
+    { "run": "draft.rightAngle", "note": "Dik açı kapanır: bellek başladığı gibi bırakılır." }
+  ]
+}

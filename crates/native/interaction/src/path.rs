@@ -72,6 +72,7 @@ use kentos_geometry_core::ops::trace::Traced;
 use kentos_geometry_core::tools::drawing::{
     centre_bulge, offset_along, radial_point, radius_bulge, unit_toward,
 };
+use kentos_geometry_core::tools::locks::square_corner;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::{ExecutionContext, create, polygon, polyline};
@@ -110,6 +111,9 @@ pub const PARCEL_LABEL: &str = "Parsel";
 pub const PARCEL_LAYER: &str = "parsel";
 /// Alan olarak çiz's undo step (docs/adr/0141).
 pub const DRAW_AREA_LABEL: &str = "Alan olarak çiz";
+
+/// Dik kapat with the first and the last edge parallel (docs/adr/0166 §4).
+pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar paralel.";
 
 /// What the tool draws.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -707,6 +711,12 @@ impl Path {
         if self.fixed() && key != "G" {
             return false;
         }
+        // Dik kapat (docs/adr/0166 §4): a ring of three corners or more, its
+        // last edge drawn straight, closes square on its first edge.
+        if key == "D" && !self.arc_mode && self.shape.closed() && self.pts.len() >= 3 {
+            self.square_close(cx);
+            return true;
+        }
         let arc = match key {
             "A" => Some(Spec::Angle { sweep: None }),
             "M" => Some(Spec::Centre { c: None }),
@@ -755,6 +765,26 @@ impl Path {
             return false;
         }
         true
+    }
+
+    /// Dik kapat: the corner where the line through the last corner square
+    /// to the last edge meets the line through the first corner square to
+    /// the first edge (the edges' chords), then the shape closes. A shape
+    /// already square there takes no corner; parallel edges, none at all.
+    fn square_close(&mut self, cx: &mut Context<'_>) {
+        let n = self.pts.len();
+        let (first, last) = (self.pts[0], self.pts[n - 1]);
+        let Some(corner) = square_corner(first, self.pts[1], self.pts[n - 2], last) else {
+            cx.say(Level::Warn, NO_SQUARE_CLOSE.to_owned());
+            return;
+        };
+        if dist(corner, last) > SAME && dist(corner, first) > SAME {
+            points::echo(corner, cx);
+            self.pts.push(corner);
+            self.bulges.push(0.0);
+        }
+        self.closing = 0.0;
+        self.finish(cx);
     }
 
     /// Commits the shape when it has enough points, then starts over.
@@ -1211,7 +1241,9 @@ impl Tool for Path {
     /// The tangent at the last corner (docs/adr/0166 §1); Sabit ilk nokta's
     /// rays travel nowhere.
     fn travel(&self) -> Option<Vec2> {
-        if self.fixed() {
+        // Rays from a fixed first point, and an arc being drawn, have no edge
+        // for Sapma and Dik açı to turn from.
+        if self.fixed() || self.arc_mode {
             return None;
         }
         self.tangent()
@@ -1295,6 +1327,10 @@ impl Tool for Path {
                     "B",
                     self.format.length(self.memory.stream_step),
                 );
+            }
+            // Dik kapat once a ring has three corners (docs/adr/0166 §4).
+            if self.shape.closed() && n >= 3 {
+                prompt = prompt.option("Dik kapat", "D");
             }
             let prompt = prompt.option("Geri", "G");
             return if done {

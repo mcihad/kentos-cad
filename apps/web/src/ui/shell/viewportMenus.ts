@@ -81,6 +81,7 @@ function commandItems(ctx: AppContext): MenuItem[] {
     ...(lockReference(ctx) ? [{ label: 'Kilit', icon: 'lock', items: () => lockItems(ctx) }] : []),
     commandItem(ctx, 'draft.snap'),
     commandItem(ctx, 'draft.ortho'),
+    commandItem(ctx, 'draft.rightAngle'),
     commandItem(ctx, 'draft.polar'),
     commandItem(ctx, 'draft.tracking'),
     commandItem(ctx, 'draft.topology'),

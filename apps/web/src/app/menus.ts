@@ -179,7 +179,7 @@ export const MAIN_MENU: TopMenu[] = [
     items: [
       sec('Komut'),
       'commandline.focus',
-      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints', 'draft.overlap'] },
+      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.rightAngle', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints', 'draft.overlap'] },
       { label: 'Çakışma', icon: 'overlap', items: ['draft.overlap.allow', 'draft.overlap.layer', 'draft.overlap.layers'] },
       sec('Stil'),
       'style.manager',

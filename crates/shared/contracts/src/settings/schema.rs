@@ -93,6 +93,13 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Orto",
                 "Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner (F8).",
             ),
+        boolean("drafting.rightAngle", false)
+            .scope(SettingScope::Session)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Dik açı",
+                "Aracın ikinci kenarından başlayarak her kenar öncekine dik çizilir; hangi yöne gideceğini imleç seçer. Elle kilitlenen doğrultu önce gelir.",
+            ),
         boolean("drafting.polar", false)
             .scope(SettingScope::Session)
             .hosts(&[Web, Desktop])

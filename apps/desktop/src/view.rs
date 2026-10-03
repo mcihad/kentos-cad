@@ -1423,10 +1423,11 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 8] = [
+const STATUS_AIDS: [(&str, &str); 9] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
+    ("draft.rightAngle", "Dik açı"),
     ("draft.polar", "Kutupsal"),
     ("draft.tracking", "İzleme"),
     ("draft.topology", "Topoloji"),

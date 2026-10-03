@@ -35,7 +35,8 @@ fn prompts_are_the_web_s_text_and_options() {
     );
     b.click(10.0, 0.0);
     b.click(10.0, 10.0);
-    assert_eq!(b.options(), ["Y", "U", "İ", "A", "G", "Enter"]);
+    // A ring of three corners offers Dik kapat (docs/adr/0166 §4).
+    assert_eq!(b.options(), ["Y", "U", "İ", "A", "D", "G", "Enter"]);
     assert!(b.type_text("y"));
     assert_eq!(
         b.session.prompt().text(),

@@ -12,11 +12,15 @@ import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from '
 import { parseNumber } from './coordinateInput';
 import { fixedLayerLocked, PointInputTool } from './drawTools';
 import { joinCorners, sayJoined } from './junctions';
+import { squareCorner } from './locks';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
 import { VisibleTrace } from './visibleTrace';
+
+/** Dik kapat with the first and the last edge parallel (docs/adr/0166 §4; the desktop's words). */
+const NO_SQUARE_CLOSE = 'Dik kapatılamıyor: ilk kenar ile son kenar paralel.';
 
 const whenOn = (on: boolean) => (on ? ': açık' : '');
 
@@ -141,7 +145,9 @@ export class PathTool extends PointInputTool {
     if (this.askStep) return 'akışın adım boyunu yazın [Geri (G)]';
     if (!this.arcMode) {
       const step = PathTool.stream ? ` / Adım boyu (B): ${this.ctx.format.length(PathTool.streamStep)}` : '';
-      return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Akış (A)${whenOn(PathTool.stream)}${step} / Geri (G)${done}]`;
+      // Dik kapat once a ring has three corners (docs/adr/0166 §4).
+      const square = this.closed && n >= 3 ? ' / Dik kapat (D)' : '';
+      return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Akış (A)${whenOn(PathTool.stream)}${step}${square} / Geri (G)${done}]`;
     }
     const arcOpts = `Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G)${done}`;
     const s = this.spec;
@@ -168,8 +174,9 @@ export class PathTool extends PointInputTool {
   }
 
   /** The tangent at the last vertex: Sapma turns from it (docs/adr/0166 §1). */
+  /** An arc being drawn has no edge for Sapma and Dik açı to turn from. */
   override travelDirection(): Vec2 | null {
-    return this.tangent();
+    return this.arcMode ? null : this.tangent();
   }
 
   /** Travel direction at the last vertex (end tangent of the last segment). */
@@ -288,7 +295,31 @@ export class PathTool extends PointInputTool {
     this.finish();
   }
 
+  /**
+   * Dik kapat (docs/adr/0166 §4): the corner where the line through the last corner square to the last edge meets the
+   * line through the first corner square to the first edge (the edges' chords), then the shape closes. A shape already
+   * square there takes no corner; parallel edges, none at all.
+   */
+  private squareClose(): void {
+    const n = this.pts.length;
+    const [first, last] = [this.pts[0], this.pts[n - 1]];
+    const c = squareCorner(first, this.pts[1], this.pts[n - 2], last);
+    if (!c) return void this.ctx.log.warn(NO_SQUARE_CLOSE);
+    if (dist(c, last) > 1e-9 && dist(c, first) > 1e-9) {
+      this.ctx.log.info(`  ${this.ctx.format.point(c)}`);
+      this.pts.push(c);
+      this.bulges.push(0);
+    }
+    this.closing = 0;
+    this.finish();
+  }
+
   protected override option(key: string): boolean {
+    // Dik kapat: a ring of three corners or more, its last edge drawn straight.
+    if (key === 'D' && !this.arcMode && this.closed && this.pts.length >= 3) {
+      this.squareClose();
+      return true;
+    }
     const arcKeys: Record<string, () => ArcSpec> = {
       A: () => ({ kind: 'angle', sweep: null }),
       M: () => ({ kind: 'centre', c: null }),

@@ -129,6 +129,11 @@ Bağımsız başvuru `scripts/fixtures/lock_cases.py` (`fixtures/locks/v1/cases.
    - **Oturum:** komut tıklamayı bekler (masaüstü `Session::pick_lock_edge`, `LockPick`; web `ToolManager.pickLockEdge`, `lockPick`): istem aracın adıyla “paralel kilidi için kenarı ya da yayı seçin [Vazgeç (Esc)]”, imleç seçme biçiminde; basış araca gitmez, bırakışı da; boş yerde “Tıklanan yerde düz kenar ya da yay yok.” denir, bekleme sürer; Esc önce beklemeyi, sonra kilitleri bırakır. Seçilen kenar kilit durdukça kenet renginde, 2 px düz çizilir (`LockState::edge`).
    - **Komutlar ve menü:** `draft.lock.parallel`, `draft.lock.perpendicular` (ikonları `lockParallel`, `lockPerpendicular`); Kilit ▸'te Sapma…'nın altında.
    - **Ortak iz** `lock-edges.json` (sahne `lock-edges.kcad`: eğik çizgi ve yarım daire yay), resim senaryosu `usage-lock-edges.json`.
+
+   *(4 Ekim: 3b, Dik açılı çizim ve Dik kapat, tamam; 3. adım bitti.)*
+   - **Dik açı:** oturum ayarı `drafting.rightAngle` (kapalı), komutu `draft.rightAngle` (ikonu `rightAngle`); durum çubuğunda Orto'nun yanında, Araçlar › Çizim yardımcıları'nda ve çizimin komut menüsünde. Kural imlecin kuralındadır (masaüstü `points::constrain`, web `constrainPoint`): aracın son doğrultusu varken (ikinci kenardan başlayarak) ve elle doğrultu kilitlenmemişken doğrultu öncekine dik, iki yönlü; uzunluk kilidi ve yazılan mesafe onunla durur. Yay çizilirken yol aracının doğrultusu yoktur: Sapma ve Dik açı yaya uygulanmaz.
+   - **Dik kapat (D):** Kapalı alan, Parsel oluştur ve Alan hesapla'da, düz kenar kipinde, üç köşeden sonra istemde (`square_corner`; kenarların kirişleri alınır). Köşe zaten oradaysa eklenmez; ilk ve son kenar paralelse “Dik kapatılamıyor: ilk kenar ile son kenar paralel.” denir, noktalar kalır. Bitişik alan'da yoktur: onun yolu ilk köşesinde değil komşularıyla kapanır.
+   - **Ortak iz** `right-angle.json` (boş çizimde: serbest ilk kenar, dik kenarlar, Dik kapat, yazılan mesafe, paralel kenarların uyarısı, Çoklu çizgi'de seçeneğin olmaması), resim senaryosu `usage-right-angle.json`.
 4. Referans noktası ve yapım kipi; ortak iz; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

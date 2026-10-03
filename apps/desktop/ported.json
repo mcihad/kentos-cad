@@ -22,6 +22,7 @@
     "view.zoomExtents",
     "tools.options",
     "draft.ortho",
+    "draft.rightAngle",
     "draft.polar",
     "tool.line",
     "tool.polyline",

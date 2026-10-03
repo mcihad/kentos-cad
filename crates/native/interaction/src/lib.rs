@@ -204,6 +204,7 @@ pub use kentos_geometry_core::tools::point_input::Tracking;
 pub use kentos_geometry_core::tools::point_text::{is_js_space, js_trim};
 pub use locks::{LockAsk, LockPick, LockState, NO_LOCK_EDGE, Toward};
 pub use log::{Level, Line};
+pub use path::NO_SQUARE_CLOSE;
 pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;

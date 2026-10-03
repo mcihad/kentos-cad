@@ -4,7 +4,7 @@
 //! product command's answer reaches the user.
 
 use kentos_contracts::CommandResult;
-use kentos_geometry_core::tools::locks::constrain_locked;
+use kentos_geometry_core::tools::locks::{Direction, constrain_locked, perpendicular};
 use kentos_geometry_core::tools::point_input::{Tracking, constrain_cursor};
 use kentos_native_application::codes;
 
@@ -35,8 +35,20 @@ pub(crate) fn constrain(
     let exact = p.snap.is_some() || p.tracked;
     let ortho = cx.draft.ortho != p.shift;
     let tol = cx.view.world_length(CAPTURE_PX);
-    if cx.locks.any() {
-        let locks = cx.locks.locks(cx.format().angles());
+    // Dik açı (docs/adr/0166 §4): from the second edge on, square to the one
+    // before, either way; a direction locked by hand comes first, a length
+    // lock holds with it.
+    let square = cx
+        .locks
+        .travel
+        .filter(|_| cx.draft.right_angle && cx.locks.toward.is_none())
+        .map(|t| Direction {
+            u: perpendicular(t),
+            both: true,
+        });
+    if cx.locks.any() || square.is_some() {
+        let mut locks = cx.locks.locks(cx.format().angles());
+        locks.direction = locks.direction.or(square);
         return match constrain_locked(
             Some(from),
             p.world,

@@ -39,8 +39,13 @@ export function constrainPoint(ctx: AppContext, from: Vec2 | null, p: ToolPointe
   const locks = ctx.settings.locks?.value ?? NO_LOCKS;
   const polarStep = ctx.settings.polar.value ? ctx.prefs.polarIncrement.value : null;
   const ortho = ctx.settings.ortho.value !== p.shift;
-  if (from && hasLocks(locks)) {
-    const dir = lockedDirection(locks, lockTravel(ctx), ctx.format.angles);
+  // Dik açı (docs/adr/0166 §4): from the second edge on, square to the one before, either way; a direction locked by
+  // hand comes first, a length lock holds with it.
+  // The tool's direction is asked only when a rule needs it (a tool's unit test has no tool manager).
+  const right = from && ctx.settings.rightAngle?.value && !locks.toward ? lockTravel(ctx) : null;
+  const square = right ? { u: { x: -right.y, y: right.x }, both: true } : null;
+  if (from && (hasLocks(locks) || square)) {
+    const dir = (locks.toward ? lockedDirection(locks, lockTravel(ctx), ctx.format.angles) : null) ?? square;
     const r = constrainLocked(from, p.world, !!(p.snap || p.track), ortho, polarStep, ctx.view.worldTolerance(CAPTURE_PX), locks.length, dir?.u ?? null, dir?.both ?? false);
     return r ?? { point: from, tracking: null };
   }

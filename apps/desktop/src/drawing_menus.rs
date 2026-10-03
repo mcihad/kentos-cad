@@ -323,6 +323,7 @@ impl App {
         [
             "draft.snap",
             "draft.ortho",
+            "draft.rightAngle",
             "draft.polar",
             "draft.tracking",
             "draft.topology",

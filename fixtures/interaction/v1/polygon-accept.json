@@ -18,7 +18,7 @@
     { "text": "2", "expect": { "dynamicInput": "12" } },
     { "key": "Enter", "expect": { "dynamicInput": null, "points": 2 } },
     { "text": "@0,8", "expect": { "dynamicInput": "@0,8" } },
-    { "key": "Enter", "expect": { "dynamicInput": null, "points": 3, "options": ["Y", "U", "İ", "A", "G", "Enter"] } },
+    { "key": "Enter", "note": "Üç köşeyle Dik kapat (D) da gelir (ADR 0166 §4).", "expect": { "dynamicInput": null, "points": 3, "options": ["Y", "U", "İ", "A", "D", "G", "Enter"] } },
     {
       "key": "Enter",
       "note": "Enter alanı kapatıp çizime yazar; araç yeni bir alan için açık kalır.",
