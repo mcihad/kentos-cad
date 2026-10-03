@@ -744,6 +744,10 @@ Bu bölümde bir aracın listelenmesi sıfırdan yazılması gerektiği anlamın
 
 **Sıra (sahibin kararı, 1 Ekim 2026):** önce hibrit işler (§16.0), sonra CAD (§16.1), sonra CBS (§16.2); biçimler §16.3'tedir. PDF, yazdırma ve pafta/sayfa düzeni çıktısı en sondadır (§16.4), sahip “zamanı geldi” deyince başlar. 1 Ekim'de eklenen `HYB-`, `CAD-18`…, `GIS-15`… ve `OUT-` maddeleri ile mevcut maddelerin altındaki “1 Ekim, araştırma” notları Netcad, ArcGIS Pro ve QGIS belgelerinin taramasından çıktı; kaynakları ve sınıflandırması [araştırma kaydındadır](docs/research/2026-10-01-netcad-arcgis-qgis.md). **[M]** işaretli maddeler mevzuata bağlıdır: yalnız açık yazıldı, davranışı sahip tarif eder; bu yol haritası resmî ya da mevzuata uygunluk iddiası taşımaz.
 
+**Proje türleri (sahibin kararı, 3 Ekim 2026):** Hibrit çalışma modu kalkar; projeler CAD ya da CBS'dir (ileride 3D Plan, Afet Analizi), her türün kendi sahnesi, eksen ve açı düzeni ve şeridi vardır; yeni proje sihirbazla açılır. Aşağıdaki “hibrit” işler iki türde de kullanılan ortak araçlardır, mod değildir.
+
+- [ ] `PRJ-01` Proje türleri ([ADR 0165](docs/adr/0165-project-types-cad-gis.md)): 1. Hibrit kalkar (sözleşme, okuyucular, iki platformun modları, pafta profilleri, envanter, sorulmamış projenin sorusu); 2. yerel CAD (SRID 0) ve çizim birimi; 3. yeni proje sihirbazı (tür, koordinatlar ve il, ölçek ve ayrıntılar; TM ileri izdüşümü bağımsız başvuruyla; başlangıç ve ana görünüm); 4. eksen ve açı düzeni (CAD X,Y ve derece; CBS Y,X ve semt); 5. sahne (koordinat ekseni simgesi, türe göre zemin, ölçek seçici); 6. her türün kendi şeridi.
+
 ### 16.0 Hibrit (ortak) — CAD çiziminde ve CBS verisinde aynı çalışan işler
 
 Sahibin sırasında ilk grup (1 Ekim 2026). Netcad'in CAD çekirdeğinde ya da Hesap modülünde, ArcGIS Pro ya da QGIS'in düzenleme araçlarında karşılığı olan; çizime de CBS katmanına da aynı biçimde uygulanan işler. Bu gruba yakın mevcut maddeler kendi bölümlerinde kalır: `GIS-04` (topoloji doğrulaması), `GIS-05` (ölçme hesapları), `NUM-04`…`NUM-07` (koordinat sistemi ve dönüşüm), `NUM-10` (topoloji modeli), `UX-05` (nokta girişi dilbilgisi).
