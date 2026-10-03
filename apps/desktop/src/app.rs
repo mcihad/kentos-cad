@@ -1424,6 +1424,14 @@ impl App {
         {
             return self.start_tool(tool);
         }
+        // Modele dön (MODEL), as the web's: the sheet mode's own message (docs/adr/0164).
+        if id == "sheet.model" {
+            if !self.sheets.is_active() {
+                self.output("Model zaten önde.");
+                return Task::none();
+            }
+            return self.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+        }
         if id.starts_with("cloud.") {
             return self.cloud_command(id);
         }

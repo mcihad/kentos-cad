@@ -208,7 +208,8 @@
     "tool.selectContaining",
     "tool.setElevation",
     "tool.partsJoin",
-    "tool.partsSplit"
+    "tool.partsSplit",
+    "sheet.model"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -50,7 +50,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 209 | 0 | 59 | 13 | 2 | 283 |
+| Komutlar | 210 | 0 | 58 | 13 | 2 | 283 |
 | Araçlar | 87 | 0 | 0 | 2 | 0 | 89 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -77,7 +77,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (59 / 283; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (58 / 283; ayrıca 13 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -110,7 +110,6 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `sheet.lockItems` Kilitle ya da aç
 - `sheet.matchSize.height` Aynı yükseklik
 - `sheet.matchSize.width` Aynı genişlik
-- `sheet.model` Modele dön
 - `sheet.moveLeft` Sola taşı
 - `sheet.moveRight` Sağa taşı
 - `sheet.new` Yeni pafta

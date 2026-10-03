@@ -328,6 +328,8 @@ pub const PORTED: &[&str] = &[
     // Çok parçalı alan (docs/adr/0143): the parts joined into one area, an area split into its parts.
     "tool.partsJoin",
     "tool.partsSplit",
+    // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
+    "sheet.model",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
@@ -718,6 +720,10 @@ impl Catalog {
                     .find(|(desktop, _)| *desktop == id)
                     .map_or_else(|| leak(c.description.unwrap_or_default()), |(_, d)| *d);
                 let pending_note = c.pending_note.map(leak);
+                // The sheet mode's keys are its own (docs/adr/0164): the web binds them only
+                // while a sheet is in front, and the desktop's sheet mode takes them itself
+                // (sheets.rs). In the drawing's key table they took Esc, F2, H, V and Home.
+                let sheet_keys = id.starts_with("sheet.");
                 Command {
                     id,
                     title,
@@ -725,8 +731,16 @@ impl Catalog {
                     description,
                     line_note: line_note(standing, pending_note, description),
                     aliases: leak_list(c.aliases),
-                    shortcuts: leak_list(c.shortcuts),
-                    shortcuts_in_input: leak_list(c.shortcuts_in_input),
+                    shortcuts: if sheet_keys {
+                        &[]
+                    } else {
+                        leak_list(c.shortcuts)
+                    },
+                    shortcuts_in_input: if sheet_keys {
+                        &[]
+                    } else {
+                        leak_list(c.shortcuts_in_input)
+                    },
                     icon: icons::from_web(c.icon.as_deref()),
                     standing,
                     pending_note,

@@ -1295,6 +1295,18 @@ mod tests {
         assert!(!app.sheet_tab);
     }
 
+    /// MODEL (`sheet.model`) returns from a sheet to the drawing, as the web's command does.
+    #[test]
+    fn the_model_command_returns_from_a_sheet() {
+        let mut app = app_with_drawing();
+        let _ = app.run("sheet.model");
+        assert_eq!(crate::files_testing::last_said(&app), "Model zaten önde.");
+        new_sheet(&mut app);
+        assert!(app.sheets.is_active());
+        let _ = app.run("sheet.model");
+        assert!(!app.sheets.is_active());
+    }
+
     /// Pictures of the sheet mode in the desktop for the owner: the demo
     /// drawing's sheet, its map painted from the drawing's own scene, in the
     /// Pafta (light) and Grafit (dark) themes, 1440 and 1100 pixels wide.

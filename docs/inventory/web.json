@@ -102,14 +102,14 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 209,
+    "commandsOnDesktop": 210,
     "desktop": {
       "commands": {
         "total": 283,
-        "implemented": 209,
+        "implemented": 210,
         "partial": 0,
         "pending": 13,
-        "none": 59,
+        "none": 58,
         "n/a": 2
       },
       "tools": {
@@ -3815,7 +3815,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
