@@ -34,6 +34,8 @@ mod expression;
 #[cfg(test)]
 mod files_testing;
 mod hover_card;
+#[cfg(test)]
+mod icon_tour;
 mod icons;
 mod input;
 mod keys;

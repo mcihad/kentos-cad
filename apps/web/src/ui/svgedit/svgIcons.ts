@@ -65,8 +65,15 @@ const ICONS: Record<string, string> = {
   raise: '<path d="M10 16V5M6.5 8.5 10 5l3.5 3.5"/>',
   lower: '<path d="M10 4v11M6.5 11.5 10 15l3.5-3.5"/>',
   toBottom: '<path d="M4 17h12M10 4v10M6.5 10.5 10 14l3.5-3.5"/>',
+  // Flips: the axis, the shape and its mirror image.
+  flipH: `<path d="M10 2.5v15" stroke-dasharray="2 1.6"/><path d="M7.5 5 3 10l4.5 5zM12.5 5 17 10l-4.5 5z" ${fillA}/>`,
+  flipV: `<path d="M2.5 10h15" stroke-dasharray="2 1.6"/><path d="M5 7.5 10 3l5 4.5zM5 12.5l5 4.5 5-4.5z" ${fillA}/>`,
   // Selection helpers.
+  // Seç's helpers: two shapes alike (the ones chosen) and one not: the same fill, the same stroke (heavy), both, the same kind.
   selectSame: `<path d="M3 4h6v6H3zM11 10h6v6h-6z" ${fillA}/><path d="M13 4h4v4h-4z"/>`,
+  selectSameStroke: '<path d="M3 4h6v6H3zM11 10h6v6h-6z" stroke-width="2.2"/><path d="M13 4h4v4h-4z" stroke-width="1.1"/>',
+  selectSameBoth: `<path d="M3 4h6v6H3zM11 10h6v6h-6z" ${fillA} stroke-width="2.2"/><path d="M13 4h4v4h-4z" stroke-width="1.1"/>`,
+  selectSameKind: '<circle cx="6" cy="7" r="3"/><circle cx="14" cy="13" r="3"/><path d="M13 4h4v4h-4z" stroke-width="1.1"/>',
   selectInvert: `<path d="M3 3h14v14H3z"/><path d="M3 3h7v14H3z" ${fillA}/>`,
   rulers: '<path d="M3 3h14v4H7v10H3z"/><path d="M9 3v2m3-2v2m3-2v2M3 9h2m-2 3h2m-2 3h2" />',
   guide: '<path d="M2 10h16" stroke-dasharray="3 2"/><path d="M10 2v16" stroke-dasharray="3 2" opacity=".5"/>',

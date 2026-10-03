@@ -231,8 +231,8 @@ function orderGroup(host: PropsHost): HTMLElement {
       act('raise', 'Bir öne (Page Up)', () => e.restack('raise')),
       act('lower', 'Bir arkaya (Page Down)', () => e.restack('lower')),
       act('toBottom', 'En arkaya (End)', () => e.restack('bottom')),
-      t('flipH', 'Yatay çevir (H)', '⇋'),
-      t('flipV', 'Dikey çevir (Shift+H)', '⥮'),
+      b('flipH', 'flipH', 'Yatay çevir (H)'),
+      b('flipV', 'flipV', 'Dikey çevir (Shift+H)'),
       b('rot90', 'rotate', '90° döndür'),
     ),
     h(

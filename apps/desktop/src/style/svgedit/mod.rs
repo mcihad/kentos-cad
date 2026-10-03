@@ -56,6 +56,8 @@ use std::sync::Arc;
 use crate::app::Message;
 
 pub use doc::Drawing;
+#[cfg(test)]
+pub(crate) use icons::known as known_icon;
 pub(crate) use state::{After, Opening, SvgEditor};
 pub(crate) use update::dropped;
 

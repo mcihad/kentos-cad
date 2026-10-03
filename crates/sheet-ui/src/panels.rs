@@ -27,14 +27,14 @@ pub fn kind_icon(item: &Item) -> Icon {
     match profile::tool_of(item) {
         "map" => icons::MAP,
         "overviewMap" => icons::OVERVIEW,
-        "text" => Icon::Type,
+        "text" => icons::TEXT,
         "scaleBar" => icons::SCALE_BAR,
         "northArrow" => icons::NORTH,
-        "legend" => Icon::Legend,
+        "legend" => icons::LEGEND,
         "picture" => icons::PICTURE,
         "shape" => icons::SHAPE,
         "line" => icons::LINE,
-        "table" | "attributeTable" => Icon::Table,
+        "table" | "attributeTable" => icons::TABLE,
         "coordinateList" => icons::COORDINATES,
         "titleBlock" => icons::TITLE_BLOCK,
         "border" => icons::BORDER,
@@ -90,19 +90,25 @@ impl Designer {
         node = node.menu(move |_| {
             Menu::new()
                 .item("Yalnız bunu seç", Message::TreeClick(iid.clone(), false))
+                .icon(icons::SELECT)
                 .item("Seçime ekle / çıkar", Message::TreeClick(iid.clone(), true))
+                .icon(icons::SELECT_TOGGLE)
                 .separator()
                 .item(
                     "Öne getir",
                     Message::Order(kentos_sheet::ops::ReorderTo::Front),
                 )
+                .icon(icons::FRONT)
                 .item(
                     "Arkaya gönder",
                     Message::Order(kentos_sheet::ops::ReorderTo::Back),
                 )
+                .icon(icons::BACK)
                 .separator()
                 .item("Çoğalt", Message::Duplicate)
+                .icon(icons::COPY)
                 .item("Sil", Message::Delete)
+                .icon(icons::TRASH)
         });
         if matches!(item.kind, kentos_sheet::kinds::ItemKind::Group(_)) {
             let open = self.expanded.contains(&item.id);
@@ -165,9 +171,12 @@ impl Designer {
             sheets = sheets.push(ContextMenu::new(face, move |_| {
                 Menu::new()
                     .item("Aç", Message::Tab(i + 1))
+                    .icon(icons::LAYOUT)
                     .item("Çoğalt", Message::DuplicateSheet(id.clone()))
+                    .icon(icons::COPY)
                     .separator()
                     .item("Sil", Message::RemoveSheet(id.clone()))
+                    .icon(icons::TRASH)
                     .danger()
             }));
         }

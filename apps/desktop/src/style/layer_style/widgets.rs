@@ -142,6 +142,7 @@ fn slot<'a>(
                 "Basit görünüşe dön",
                 has.then(|| ev(Event::Symbol(at.clone(), class, None))),
             )
+            .icon(crate::icons::from_web(Some("symbolClear")))
     };
     tip(
         MenuButton::new(face, menu),

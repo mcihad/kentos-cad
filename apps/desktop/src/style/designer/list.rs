@@ -22,6 +22,24 @@ use super::parts;
 use super::{Designer, Event, ev};
 use crate::app::Message;
 
+/// A layer type's icon in Katman ekle's menu (the web's `LAYER_ICON`).
+fn layer_icon(t: &str) -> &'static str {
+    match t {
+        "simpleFill" => "fillSolid",
+        "hatchFill" => "hatch",
+        "patternFill" => "fillPattern",
+        "imageFill" => "fillImage",
+        "centroidMarker" => "snapCentroid",
+        "simpleLine" => "symbolStroke",
+        "markerLine" => "symbolLine",
+        "shape" => "sheetShape",
+        "svg" => "penTool",
+        "text" => "text",
+        "raster" => "sheetPicture",
+        _ => "more",
+    }
+}
+
 /// A child row's indent under the layer that places its marker.
 const INDENT: f32 = 18.0;
 
@@ -69,12 +87,16 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
         move || {
             let mut m = Menu::new().header(texts::INTO_SYMBOL);
             for t in layer_types(&kind) {
-                m = m.item(layer_label(t), ev(Event::Add(t, None)));
+                m = m
+                    .item(layer_label(t), ev(Event::Add(t, None)))
+                    .icon(crate::icons::from_web(Some(layer_icon(t))));
             }
             if let (Some(i), Some(name)) = (parent, parent_label) {
                 m = m.separator().header(texts::into_marker(name));
                 for t in layer_types("marker") {
-                    m = m.item(layer_label(t), ev(Event::Add(t, Some(i))));
+                    m = m
+                        .item(layer_label(t), ev(Event::Add(t, Some(i))))
+                        .icon(crate::icons::from_web(Some(layer_icon(t))));
                 }
             }
             m
@@ -222,5 +244,23 @@ fn row_style(theme: &Theme, status: button::Status, chosen: bool) -> button::Sty
             radius: kentos_ui::theme::shape::radius(4.0).into(),
         },
         ..button::Style::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// Katman ekle's menu draws the web's icon of every layer type.
+    #[test]
+    fn every_layer_type_has_the_webs_icon() {
+        let _ = crate::catalog::catalog();
+        for kind in ["fill", "line", "marker"] {
+            for t in super::layer_types(kind) {
+                let name = super::layer_icon(t);
+                assert!(
+                    name != "more" && crate::icons::web_markup(name).is_some(),
+                    "{t}: {name}"
+                );
+            }
+        }
     }
 }

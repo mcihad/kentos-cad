@@ -194,6 +194,14 @@ fn screens() {
             click: Some("Nesne"),
         },
         Scene {
+            name: "menu-sec",
+            setup: |app| {
+                open(app);
+                three(app);
+            },
+            click: Some("Seç"),
+        },
+        Scene {
             name: "kaynak",
             setup: |app| {
                 open(app);
@@ -328,12 +336,20 @@ fn screens() {
             }
             snapshot.settle(&mut app, App::view, &mut update);
             if let Some(label) = scene.click {
-                // The editor's bar: the highest match under the application's own menu bar.
-                let at = crate::point_calc::texts(&mut snapshot, &app)
-                    .into_iter()
-                    .filter(|(t, at)| t == label && at.y > 50.0)
-                    .map(|(_, at)| at)
+                // The editor's bar, from its Dosya on (the ribbon behind and the tool list have a
+                // Seç of their own): the first match, row by row.
+                let texts = crate::point_calc::texts(&mut snapshot, &app);
+                let bar = texts
+                    .iter()
+                    .filter(|(t, at)| t == "Dosya" && at.y > 50.0)
+                    .map(|(_, at)| *at)
                     .min_by(|a, b| a.y.total_cmp(&b.y))
+                    .expect("the editor's bar");
+                let at = texts
+                    .into_iter()
+                    .filter(|(t, at)| t == label && at.y > bar.y - 4.0 && at.x > bar.x - 4.0)
+                    .map(|(_, at)| at)
+                    .min_by(|a, b| a.y.total_cmp(&b.y).then(a.x.total_cmp(&b.x)))
                     .unwrap_or_else(|| panic!("“{label}” is not shown"));
                 snapshot.input(&mut app, App::view, &mut update, Input::Click(at.center()));
             }

@@ -550,23 +550,29 @@ impl App {
             .icon(crate::icons::from_web(Some("blockInsert")))
             .shortcut("Enter")
             .item("Yeniden adlandır", msg(Event::Rename(id)))
+            .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
-            .item("Öznitelikler…", msg(Event::Attributes(id)));
+            .item("Öznitelikler…", msg(Event::Attributes(id)))
+            .icon(crate::icons::from_web(Some("blockAttributes")));
         let attributes = model.block(id).map_or(0, |b| b.attributes.len());
         if attributes > 0 {
             menu = menu.hint(attributes.to_string());
         }
-        menu = menu.item(
-            "Taban noktasını değiştir…",
-            via.is_ok().then(|| msg(Event::Rebase(id))),
-        );
+        menu = menu
+            .item(
+                "Taban noktasını değiştir…",
+                via.is_ok().then(|| msg(Event::Rebase(id))),
+            )
+            .icon(crate::icons::from_web(Some("blockBase")));
         if let Err(why) = via {
             menu = menu.detail(why);
         }
-        menu = menu.item(
-            "Seçili nesnelerle yeniden tanımla…",
-            selected.then(|| msg(Event::Redefine(id))),
-        );
+        menu = menu
+            .item(
+                "Seçili nesnelerle yeniden tanımla…",
+                selected.then(|| msg(Event::Redefine(id))),
+            )
+            .icon(crate::icons::from_web(Some("blockDefine")));
         if !selected {
             menu = menu.detail("Önce bloğun yeni nesnelerini seçin.");
         }

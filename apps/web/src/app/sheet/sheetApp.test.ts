@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { testEngine } from '../../product/sheet/engineTesting';
+import { presetIcon } from '../../product/sheet/profile';
 import { copyItems, withChildren } from '../../product/sheet/ops';
 import { BookStore, MemoryKeyValue } from '../../product/sheet/store';
+import { ICONS } from '../../ui/icons';
+import { registerSheetIcons } from '../../ui/sheet/icons';
 import type { AppContext } from '../context';
 import { registerSheetCommands } from './commands';
 import { sheetToolCommands } from './toolCommands';
@@ -77,6 +80,29 @@ describe('Pafta tab from the mode’s profile', () => {
     const plain = sheetRibbonTab(engine.profileFor('cad', { georeferenced: false, attributeLayers: false }));
     expect(sheetTabCommands(plain)).not.toContain('sheet.add.northArrow');
     expect(sheetTabCommands(plain)).not.toContain('sheet.grid');
+  });
+
+  it('gives every entry of the tab’s drop-downs an icon of its own, drawn from the set, in every mode (DESIGN.md §6)', () => {
+    const { ctx } = setup();
+    registerSheetIcons();
+    for (const mode of ['hybrid', 'cad', 'gis'] as const) {
+      const profile = engine.profileFor(mode, { georeferenced: true, attributeLayers: true, plotScale: 1000 });
+      const tools = profile.groups.flatMap((g) => g.tools);
+      // A ready look's command is made with its tool's (toolCommands.ts): its icon is the look's.
+      const iconOf = (id: string) => {
+        const [, , tool, preset] = id.split('.');
+        const t = tools.find((x) => x.id === tool);
+        return id.startsWith('sheet.add.') && t && preset ? presetIcon(t, preset) : ctx.commands.get(id)?.icon;
+      };
+      for (const panel of sheetRibbonTab(profile).panels) {
+        for (const item of panel.items) {
+          if (item.kind !== 'menu') continue;
+          const icons = item.menu.items.filter((x): x is string => typeof x === 'string' && x !== '-').map(iconOf);
+          for (const icon of icons) expect(ICONS, `${mode} ${item.menu.label}`).toHaveProperty(icon ?? '-');
+          expect(new Set(icons).size, `${mode} ${item.menu.label}: ${icons.join(', ')}`).toBe(icons.length);
+        }
+      }
+    }
   });
 
   it('registers every command the tab names (the mode’s tools with their ready looks), each with an icon and a title', async () => {

@@ -100,7 +100,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
       title: 'Modele dön',
       short: 'Model',
       category: P,
-      icon: 'polyline',
+      icon: 'sheetModel',
       aliases: ['MODEL', 'MODELE'],
       description: 'Çizim alanına döner; paftalar sekmelerinde kalır.',
       run: () => sheets.openSheet(null),
@@ -148,7 +148,7 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
       id: 'sheet.importKpafta',
       title: '.kpafta dosyasından…',
       category: P,
-      icon: 'import',
+      icon: 'importKpafta',
       description: 'Bir .kpafta dosyasındaki paftaları ve resimlerini bu projeye alır.',
       run: () => hooks.window('importKpafta'),
       isEnabled: () => state.whyNoEngine() === null,
@@ -190,11 +190,11 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
     alignTo('page', 'Sayfaya göre'),
     alignTo('margins', 'Kenar boşluklarına göre'),
     onSheet('sheet.distribute.hCenters', 'Yatayda ortaları eşit dağıt', 'sheetDistributeH', distribute('x', 'centers'), { also: needsThree }),
-    onSheet('sheet.distribute.hGaps', 'Yatayda aralıkları eşitle', 'sheetDistributeH', distribute('x', 'gaps'), { also: needsThree }),
+    onSheet('sheet.distribute.hGaps', 'Yatayda aralıkları eşitle', 'sheetDistributeHGaps', distribute('x', 'gaps'), { also: needsThree }),
     onSheet('sheet.distribute.vCenters', 'Düşeyde ortaları eşit dağıt', 'sheetDistributeV', distribute('y', 'centers'), { also: needsThree }),
-    onSheet('sheet.distribute.vGaps', 'Düşeyde aralıkları eşitle', 'sheetDistributeV', distribute('y', 'gaps'), { also: needsThree }),
-    onSheet('sheet.matchSize.width', 'Aynı genişlik', 'sheetAlignCenter', () => apply([{ op: 'matchSize', ids: free('Aynı genişlik'), dimension: 'width' }]), { also: needsTwo }),
-    onSheet('sheet.matchSize.height', 'Aynı yükseklik', 'sheetAlignMiddle', () => apply([{ op: 'matchSize', ids: free('Aynı yükseklik'), dimension: 'height' }]), { also: needsTwo }),
+    onSheet('sheet.distribute.vGaps', 'Düşeyde aralıkları eşitle', 'sheetDistributeVGaps', distribute('y', 'gaps'), { also: needsThree }),
+    onSheet('sheet.matchSize.width', 'Aynı genişlik', 'sheetMatchWidth', () => apply([{ op: 'matchSize', ids: free('Aynı genişlik'), dimension: 'width' }]), { also: needsTwo }),
+    onSheet('sheet.matchSize.height', 'Aynı yükseklik', 'sheetMatchHeight', () => apply([{ op: 'matchSize', ids: free('Aynı yükseklik'), dimension: 'height' }]), { also: needsTwo }),
     onSheet('sheet.order.front', 'Öne getir', 'sheetFront', order('front'), { also: needsChoice }),
     onSheet('sheet.order.forward', 'Bir öne', 'sheetForward', order('forward'), { also: needsChoice }),
     onSheet('sheet.order.backward', 'Bir arkaya', 'sheetBackward', order('backward'), { also: needsChoice }),
@@ -301,10 +301,10 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
     // Output.
     onSheet('sheet.preflight', 'Ön denetim', 'sheetPreflight', () => hooks.window('preflight'), { description: 'Dışa aktarmadan önce: sayfa dışında kalan, örtülen, bağı kopuk öğeler, sığmayan yazılar, düşük çözünürlük …' }),
     onSheet('sheet.print', 'Yazdır…', 'print', () => hooks.window('export', { format: 'pdf', print: true }), { short: 'Yazdır', description: 'Paftayı PDF olarak hazırlar ve tarayıcının yazdırma penceresinde açar.' }),
-    onSheet('sheet.export.pdf', 'PDF olarak…', 'export', () => hooks.window('export', { format: 'pdf' }), { description: 'Seçilen paftalar tek PDF’te, her biri bir sayfa: yazılar seçilebilir, haritalar vektör, konumlu haritalar GeoPDF.' }),
-    onSheet('sheet.export.svg', 'SVG olarak…', 'export', () => hooks.window('export', { format: 'svg' })),
-    onSheet('sheet.export.png', 'PNG olarak…', 'export', () => hooks.window('export', { format: 'png' })),
-    onSheet('sheet.export.kpafta', '.kpafta dosyası olarak…', 'export', () => hooks.window('export', { format: 'kpafta' })),
+    onSheet('sheet.export.pdf', 'PDF olarak…', 'exportPdf', () => hooks.window('export', { format: 'pdf' }), { description: 'Seçilen paftalar tek PDF’te, her biri bir sayfa: yazılar seçilebilir, haritalar vektör, konumlu haritalar GeoPDF.' }),
+    onSheet('sheet.export.svg', 'SVG olarak…', 'exportSvg', () => hooks.window('export', { format: 'svg' })),
+    onSheet('sheet.export.png', 'PNG olarak…', 'exportPng', () => hooks.window('export', { format: 'png' })),
+    onSheet('sheet.export.kpafta', '.kpafta dosyası olarak…', 'exportKpafta', () => hooks.window('export', { format: 'kpafta' })),
     onSheet('sheet.saveTemplate', 'Şablon olarak kaydet', 'sheetSaveTemplate', () => hooks.window('saveTemplate'), {
       short: 'Şablon olarak kaydet',
       description: 'Paftadan bir şablon çıkarır: haritaların yeri atılır, ölçeği kalır; önce bu cihazda saklanır.',
@@ -312,7 +312,8 @@ export function registerSheetCommands(ctx: AppContext, sheets: SheetService, hoo
   ];
 
   function alignTo(to: 'selection' | 'page' | 'margins', title: string): Command {
-    return onSheet(`sheet.alignTo.${to}`, title, 'sheetAlignLeft', () => state.alignTo.set(to), { checked: () => state.alignTo.value === to });
+    const icon = { selection: 'sheetAlignToSelection', page: 'sheetAlignToPage', margins: 'sheetAlignToMargins' }[to];
+    return onSheet(`sheet.alignTo.${to}`, title, icon, () => state.alignTo.set(to), { checked: () => state.alignTo.value === to });
   }
   function index(args: unknown): number {
     const s = target(args);

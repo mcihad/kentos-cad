@@ -151,11 +151,12 @@ export class BlocksPanel extends Panel {
     const attributes = ctx.doc.block(r.id)?.attributes?.length ?? 0;
     return [
       { label: 'Blok ekle', icon: 'blockInsert', shortcut: 'Enter', run: () => insertBlock(ctx, r.id) },
-      { label: 'Yeniden adlandır', shortcut: 'F2', run: () => this.rename(r) },
-      { label: 'Öznitelikler…', hint: attributes ? String(attributes) : undefined, run: () => ctx.blocks.attributes(r.id) },
-      { label: 'Taban noktasını değiştir…', disabled: 'why' in via, detail: 'why' in via ? via.why : undefined, run: () => rebaseBlock(ctx, r.id) },
+      { label: 'Yeniden adlandır', icon: 'edit', shortcut: 'F2', run: () => this.rename(r) },
+      { label: 'Öznitelikler…', icon: 'blockAttributes', hint: attributes ? String(attributes) : undefined, run: () => ctx.blocks.attributes(r.id) },
+      { label: 'Taban noktasını değiştir…', icon: 'blockBase', disabled: 'why' in via, detail: 'why' in via ? via.why : undefined, run: () => rebaseBlock(ctx, r.id) },
       {
         label: 'Seçili nesnelerle yeniden tanımla…',
+        icon: 'blockDefine',
         disabled: !selected,
         detail: selected ? undefined : 'Önce bloğun yeni nesnelerini seçin.',
         run: () => redefineBlock(ctx, r.id),

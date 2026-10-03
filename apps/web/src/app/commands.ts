@@ -146,6 +146,7 @@ function renderer(ctx: AppContext, kind: BackendKind, title: string, description
     id: `view.renderer.${kind}`,
     title,
     category: 'Görünüm',
+    icon: kind === 'webgpu' ? 'rendererWebgpu' : 'rendererWebgl2',
     description,
     aliases: [kind.toUpperCase()],
     run: () => {
@@ -304,7 +305,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => !ctx.files.busy.value,
       watch: [ctx.files.busy],
     },
-    pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
+    pending(ctx, 'file.export.pdf', 'PDF pafta…', F, 'exportPdf'),
     {
       ...print,
       short: 'Yazdır',
@@ -510,6 +511,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       id: 'view.symbols.plot',
       title: 'Çizim ölçeğinde',
       category: V,
+      icon: 'symbolsPlot',
       description: 'Semboller basılı paftadaki boylarında durur; harita yaklaştıkça büyür, uzaklaştıkça küçülür.',
       aliases: ['SEMBOLOLCEK'],
       run: () => ctx.prefs.symbolSize.set('plot'),
@@ -520,6 +522,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       id: 'view.symbols.screen',
       title: 'Ekranda sabit',
       category: V,
+      icon: 'symbolsScreen',
       description: 'Semboller her yakınlıkta ekranda aynı boyda kalır (gezinmek için); basılı boyları görmek için Çizim ölçeğinde seçin.',
       aliases: ['SEMBOLEKRAN'],
       run: () => ctx.prefs.symbolSize.set('screen'),
@@ -534,7 +537,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['KALINLIK', 'LWT', 'LWDISPLAY'],
     }),
     // Between the light theme and the dark ones (night and high contrast are dark).
-    { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ctx.prefs.theme.value === 'light' ? 'dark' : 'light') },
+    { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, icon: 'appearance', run: () => applyTheme(ctx, ctx.prefs.theme.value === 'light' ? 'dark' : 'light') },
     {
       id: 'view.ribbonCollapse',
       title: 'Şeridi daralt',
@@ -706,21 +709,22 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       whyDisabled: () => treeLocked(ctx),
       watch: [ctx.cloud.project],
     },
-    { id: 'layer.showAll', title: 'Tüm katmanları göster', short: 'Katmanları göster', category: 'Katman', icon: 'eye', run: () => doc.layers.showAll() },
+    { id: 'layer.showAll', title: 'Tüm katmanları göster', short: 'Katmanları göster', category: 'Katman', icon: 'layersShowAll', run: () => doc.layers.showAll() },
 
     // Araç akışı
-    { id: 'tool.cancel', title: 'İptal', category: 'Komut', run: () => tools.exit() },
+    { id: 'tool.cancel', title: 'İptal', category: 'Komut', icon: 'close', run: () => tools.exit() },
     {
       id: 'tool.confirm',
       title: 'Onayla',
       category: 'Komut',
+      icon: 'check',
       // Shift+Enter comes with `{ shift: true }` (app/keybindings.ts).
       run: (args) => {
         const t = tools.active;
         t.confirm ? t.confirm(args as ConfirmMods | undefined) : tools.repeatLast();
       },
     },
-    { id: 'tool.repeat', title: 'Son komutu yinele', category: 'Komut', run: () => tools.repeatLast() },
+    { id: 'tool.repeat', title: 'Son komutu yinele', category: 'Komut', icon: 'repeat', run: () => tools.repeatLast() },
     { id: 'commandline.focus', title: 'Komut satırına git', category: 'Araçlar', icon: 'terminal', run: hooks.focusCommandLine },
 
     // Yardım

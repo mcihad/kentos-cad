@@ -874,7 +874,7 @@
       "title": "Nokta listesi içe aktar…",
       "short": "Nokta listesi",
       "category": "Koordinat",
-      "icon": "import",
+      "icon": "importNcn",
       "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NOKTALISTESI"
@@ -1960,7 +1960,7 @@
       "id": "file.export.dxf",
       "title": "DXF…",
       "category": "Dosya",
-      "icon": "export",
+      "icon": "exportDxf",
       "description": "Seçili, görünen ya da bütün nesneleri katmanlarıyla AutoCAD 2007 DXF'i olarak yazar (UTF-8, metre): koordinatlar tam, yuvarlanmadan; ölçüler çizgi ve yazıya patlatılır. Etiket, öznitelik ve semboller KentOS verisi olarak yazılır ve KentOS'a geri okunur.",
       "aliases": [
         "DXFYAZ",
@@ -1995,7 +1995,7 @@
       "id": "file.export.geojson",
       "title": "GeoJSON…",
       "category": "Dosya",
-      "icon": "export",
+      "icon": "exportGeojson",
       "description": "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam, dönüştürülmeden. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
       "aliases": [
         "GEOJSONYAZ",
@@ -2028,7 +2028,7 @@
       "id": "file.export.ncn",
       "title": "Koordinat listesi (NCN, TXT, CSV)…",
       "category": "Dosya",
-      "icon": "export",
+      "icon": "exportNcn",
       "description": "Noktaları (seçili, görünen ya da hepsi) ad, Y, X ve Z sütunlarıyla bir koordinat listesine yazar; değerler tam, yuvarlanmadan yazılır.",
       "aliases": [
         "NCNYAZ",
@@ -2062,6 +2062,7 @@
       "id": "file.export.pdf",
       "title": "PDF pafta…",
       "category": "Dosya",
+      "icon": "exportPdf",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -2088,7 +2089,7 @@
       "id": "file.import.dxf",
       "title": "DXF…",
       "category": "Dosya",
-      "icon": "import",
+      "icon": "importDxf",
       "description": "AutoCAD DXF (ASCII) çizimini içe aktarır: katmanlar, bloklar (patlatılarak), yaylı çoklu çizgiler, taramalar ve yazılar; alınamayanlar nedeniyle listelenir. DWG açılamaz: kapalı (tescilli) bir biçimdir; AutoCAD ya da Netcad'de DXF olarak kaydedip onu açın.",
       "aliases": [
         "DXF",
@@ -2124,7 +2125,7 @@
       "id": "file.import.geojson",
       "title": "GeoJSON…",
       "category": "Dosya",
-      "icon": "import",
+      "icon": "importGeojson",
       "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar, çizgiler, çoklu çizgiler ve delikli alanlar, köşe kotlarıyla (Z); özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
       "aliases": [
         "GEOJSON",
@@ -2157,7 +2158,7 @@
       "id": "file.import.ncn",
       "title": "Koordinat listesi (NCN, TXT, CSV)…",
       "category": "Dosya",
-      "icon": "import",
+      "icon": "importNcn",
       "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NCN",
@@ -2192,7 +2193,7 @@
       "id": "file.import.ncz",
       "title": "Netcad NCZ…",
       "category": "Dosya",
-      "icon": "import",
+      "icon": "importNcz",
       "description": "Netcad NCZ çizimini içe aktarır: katmanlar, noktalar, çizgiler, yaylı çoklu çizgiler, yazılar ve imar planının akıllı nesneleri (yerleşim, yapılaşma, yol, plan notu, fonksiyon adı) Netcad sembolleriyle, en üstte çizilerek. Dosyanın bildirdiği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
       "aliases": [
         "NCZ",
@@ -2223,7 +2224,7 @@
       "id": "file.import.shp",
       "title": "Shapefile…",
       "category": "Dosya",
-      "icon": "import",
+      "icon": "importShp",
       "description": "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar, çizgiler ve delikli alanlar, köşe kotlarıyla (Z); .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
       "aliases": [
         "SHP",
@@ -2634,7 +2635,7 @@
       "title": "Tüm katmanları göster",
       "short": "Katmanları göster",
       "category": "Katman",
-      "icon": "eye",
+      "icon": "layersShowAll",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -3218,7 +3219,7 @@
       "id": "sheet.alignTo.margins",
       "title": "Kenar boşluklarına göre",
       "category": "Pafta",
-      "icon": "sheetAlignLeft",
+      "icon": "sheetAlignToMargins",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "toggle",
@@ -3239,7 +3240,7 @@
       "id": "sheet.alignTo.page",
       "title": "Sayfaya göre",
       "category": "Pafta",
-      "icon": "sheetAlignLeft",
+      "icon": "sheetAlignToPage",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "toggle",
@@ -3260,7 +3261,7 @@
       "id": "sheet.alignTo.selection",
       "title": "Seçime göre",
       "category": "Pafta",
-      "icon": "sheetAlignLeft",
+      "icon": "sheetAlignToSelection",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "toggle",
@@ -3378,7 +3379,7 @@
       "id": "sheet.distribute.hGaps",
       "title": "Yatayda aralıkları eşitle",
       "category": "Pafta",
-      "icon": "sheetDistributeH",
+      "icon": "sheetDistributeHGaps",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3420,7 +3421,7 @@
       "id": "sheet.distribute.vGaps",
       "title": "Düşeyde aralıkları eşitle",
       "category": "Pafta",
-      "icon": "sheetDistributeV",
+      "icon": "sheetDistributeVGaps",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3515,7 +3516,7 @@
       "id": "sheet.export.kpafta",
       "title": ".kpafta dosyası olarak…",
       "category": "Pafta",
-      "icon": "export",
+      "icon": "exportKpafta",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3536,7 +3537,7 @@
       "id": "sheet.export.pdf",
       "title": "PDF olarak…",
       "category": "Pafta",
-      "icon": "export",
+      "icon": "exportPdf",
       "description": "Seçilen paftalar tek PDF’te, her biri bir sayfa: yazılar seçilebilir, haritalar vektör, konumlu haritalar GeoPDF.",
       "aliases": [],
       "pendingNote": "pafta açık değil",
@@ -3561,7 +3562,7 @@
       "id": "sheet.export.png",
       "title": "PNG olarak…",
       "category": "Pafta",
-      "icon": "export",
+      "icon": "exportPng",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3582,7 +3583,7 @@
       "id": "sheet.export.svg",
       "title": "SVG olarak…",
       "category": "Pafta",
-      "icon": "export",
+      "icon": "exportSvg",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3710,7 +3711,7 @@
       "id": "sheet.importKpafta",
       "title": ".kpafta dosyasından…",
       "category": "Pafta",
-      "icon": "import",
+      "icon": "importKpafta",
       "description": "Bir .kpafta dosyasındaki paftaları ve resimlerini bu projeye alır.",
       "aliases": [],
       "kind": "action",
@@ -3756,7 +3757,7 @@
       "id": "sheet.matchSize.height",
       "title": "Aynı yükseklik",
       "category": "Pafta",
-      "icon": "sheetAlignMiddle",
+      "icon": "sheetMatchHeight",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3777,7 +3778,7 @@
       "id": "sheet.matchSize.width",
       "title": "Aynı genişlik",
       "category": "Pafta",
-      "icon": "sheetAlignCenter",
+      "icon": "sheetMatchWidth",
       "aliases": [],
       "pendingNote": "pafta açık değil",
       "kind": "action",
@@ -3799,7 +3800,7 @@
       "title": "Modele dön",
       "short": "Model",
       "category": "Pafta",
-      "icon": "polyline",
+      "icon": "sheetModel",
       "description": "Çizim alanına döner; paftalar sekmelerinde kalır.",
       "aliases": [
         "MODEL",
@@ -5252,6 +5253,7 @@
       "id": "tool.cancel",
       "title": "İptal",
       "category": "Komut",
+      "icon": "close",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -5413,6 +5415,7 @@
       "id": "tool.confirm",
       "title": "Onayla",
       "category": "Komut",
+      "icon": "check",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -6997,6 +7000,7 @@
       "id": "tool.repeat",
       "title": "Son komutu yinele",
       "category": "Komut",
+      "icon": "repeat",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -8306,6 +8310,7 @@
       "id": "view.renderer.webgl2",
       "title": "WebGL2",
       "category": "Görünüm",
+      "icon": "rendererWebgl2",
       "description": "Tüm güncel tarayıcılarda çalışır. Varsayılan çizim motoru.",
       "aliases": [
         "WEBGL2"
@@ -8337,6 +8342,7 @@
       "id": "view.renderer.webgpu",
       "title": "WebGPU",
       "category": "Görünüm",
+      "icon": "rendererWebgpu",
       "description": "Yeni nesil grafik arayüzü. Tarayıcı ve ekran kartı desteklemelidir.",
       "aliases": [
         "WEBGPU"
@@ -8433,6 +8439,7 @@
       "id": "view.symbols.plot",
       "title": "Çizim ölçeğinde",
       "category": "Görünüm",
+      "icon": "symbolsPlot",
       "description": "Semboller basılı paftadaki boylarında durur; harita yaklaştıkça büyür, uzaklaştıkça küçülür.",
       "aliases": [
         "SEMBOLOLCEK"
@@ -8459,6 +8466,7 @@
       "id": "view.symbols.screen",
       "title": "Ekranda sabit",
       "category": "Görünüm",
+      "icon": "symbolsScreen",
       "description": "Semboller her yakınlıkta ekranda aynı boyda kalır (gezinmek için); basılı boyları görmek için Çizim ölçeğinde seçin.",
       "aliases": [
         "SEMBOLEKRAN"
@@ -8543,6 +8551,7 @@
       "id": "view.theme.toggle",
       "title": "Temayı değiştir",
       "category": "Görünüm",
+      "icon": "appearance",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -18165,7 +18174,7 @@
         "panels": [
           {
             "label": "Proje",
-            "icon": "more",
+            "icon": "fileNew",
             "items": [
               {
                 "command": "file.new",
@@ -18185,7 +18194,7 @@
           },
           {
             "label": "Kaydet",
-            "icon": "more",
+            "icon": "save",
             "items": [
               {
                 "command": "file.save",
@@ -18201,7 +18210,7 @@
           },
           {
             "label": "Bulut",
-            "icon": "more",
+            "icon": "cloud",
             "items": [
               {
                 "command": "cloud.open",
@@ -18282,7 +18291,7 @@
           },
           {
             "label": "Çıktı",
-            "icon": "more",
+            "icon": "print",
             "items": [
               {
                 "command": "file.print",
@@ -18294,7 +18303,7 @@
           },
           {
             "label": "Ayarlar",
-            "icon": "more",
+            "icon": "folder",
             "items": [
               {
                 "command": "file.settings",
@@ -18312,7 +18321,7 @@
         "panels": [
           {
             "label": "Pano",
-            "icon": "more",
+            "icon": "paste",
             "items": [
               {
                 "command": "edit.paste",
@@ -18340,7 +18349,7 @@
           },
           {
             "label": "Seçim",
-            "icon": "more",
+            "icon": "select",
             "items": [
               {
                 "split": [
@@ -18416,28 +18425,32 @@
                     "option": "2N",
                     "title": "Daire",
                     "label": "2 nokta",
-                    "description": "Çapın iki ucundan"
+                    "description": "Çapın iki ucundan",
+                    "icon": "circle2p"
                   },
                   {
                     "command": "tool.circle",
                     "option": "3N",
                     "title": "Daire",
                     "label": "3 nokta",
-                    "description": "Çember üzerindeki üç noktadan"
+                    "description": "Çember üzerindeki üç noktadan",
+                    "icon": "circle3p"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTY",
                     "title": "Daire",
                     "label": "Teğet, teğet, yarıçap",
-                    "description": "İki nesneye teğet, yarıçap yazılır"
+                    "description": "İki nesneye teğet, yarıçap yazılır",
+                    "icon": "circleTtr"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTT",
                     "title": "Daire",
                     "label": "Teğet, teğet, teğet",
-                    "description": "Üç nesneye teğet"
+                    "description": "Üç nesneye teğet",
+                    "icon": "circleTtt"
                   }
                 ],
                 "key": "circle",
@@ -18455,14 +18468,16 @@
                     "option": "M",
                     "title": "Yay",
                     "label": "Merkez, başlangıç, bitiş",
-                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                    "icon": "arcCenter"
                   },
                   {
                     "command": "tool.arc",
                     "option": "D",
                     "title": "Yay",
                     "label": "Devam",
-                    "description": "Son çizilen nesneye teğet devam eder"
+                    "description": "Son çizilen nesneye teğet devam eder",
+                    "icon": "arcContinue"
                   }
                 ],
                 "key": "arc",
@@ -18545,7 +18560,8 @@
                     "option": "C",
                     "title": "Buda",
                     "label": "Çit",
-                    "description": "Çizilen çitin kestiği her parçayı budar"
+                    "description": "Çizilen çitin kestiği her parçayı budar",
+                    "icon": "trimFence"
                   }
                 ],
                 "key": "trim",
@@ -18563,7 +18579,8 @@
                     "option": "C",
                     "title": "Uzat",
                     "label": "Çit",
-                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                    "icon": "extendFence"
                   }
                 ],
                 "key": "extend",
@@ -18814,7 +18831,7 @@
         "panels": [
           {
             "label": "Çizgi",
-            "icon": "more",
+            "icon": "line",
             "items": [
               {
                 "command": "tool.line",
@@ -18842,7 +18859,7 @@
           },
           {
             "label": "Eğri",
-            "icon": "more",
+            "icon": "circle",
             "items": [
               {
                 "split": [
@@ -18856,28 +18873,32 @@
                     "option": "2N",
                     "title": "Daire",
                     "label": "2 nokta",
-                    "description": "Çapın iki ucundan"
+                    "description": "Çapın iki ucundan",
+                    "icon": "circle2p"
                   },
                   {
                     "command": "tool.circle",
                     "option": "3N",
                     "title": "Daire",
                     "label": "3 nokta",
-                    "description": "Çember üzerindeki üç noktadan"
+                    "description": "Çember üzerindeki üç noktadan",
+                    "icon": "circle3p"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTY",
                     "title": "Daire",
                     "label": "Teğet, teğet, yarıçap",
-                    "description": "İki nesneye teğet, yarıçap yazılır"
+                    "description": "İki nesneye teğet, yarıçap yazılır",
+                    "icon": "circleTtr"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTT",
                     "title": "Daire",
                     "label": "Teğet, teğet, teğet",
-                    "description": "Üç nesneye teğet"
+                    "description": "Üç nesneye teğet",
+                    "icon": "circleTtt"
                   }
                 ],
                 "key": "circle",
@@ -18895,14 +18916,16 @@
                     "option": "M",
                     "title": "Yay",
                     "label": "Merkez, başlangıç, bitiş",
-                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                    "icon": "arcCenter"
                   },
                   {
                     "command": "tool.arc",
                     "option": "D",
                     "title": "Yay",
                     "label": "Devam",
-                    "description": "Son çizilen nesneye teğet devam eder"
+                    "description": "Son çizilen nesneye teğet devam eder",
+                    "icon": "arcContinue"
                   }
                 ],
                 "key": "arc",
@@ -18928,7 +18951,7 @@
           },
           {
             "label": "Şekil",
-            "icon": "more",
+            "icon": "rectangle",
             "items": [
               {
                 "split": [
@@ -18957,7 +18980,7 @@
           },
           {
             "label": "Yardımcı",
-            "icon": "more",
+            "icon": "xline",
             "items": [
               {
                 "split": [
@@ -18997,7 +19020,7 @@
           },
           {
             "label": "Nokta",
-            "icon": "more",
+            "icon": "point",
             "items": [
               {
                 "command": "tool.point",
@@ -19023,14 +19046,16 @@
                     "option": "U",
                     "title": "Ara nokta",
                     "label": "Uzaklıkla",
-                    "description": "İlk noktadan verilen uzaklıklarda"
+                    "description": "İlk noktadan verilen uzaklıklarda",
+                    "icon": "pointsBetweenDistance"
                   },
                   {
                     "command": "tool.pointsBetween",
                     "option": "O",
                     "title": "Ara nokta",
                     "label": "Oranla",
-                    "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                    "description": "İki nokta arasının oranında (0 ile 1 arası)",
+                    "icon": "pointsBetweenRatio"
                   }
                 ],
                 "key": "pointsBetween",
@@ -19048,14 +19073,16 @@
                     "option": "D",
                     "title": "Kesişim noktası",
                     "label": "İki doğrultu",
-                    "description": "İki noktadan okunan doğrultular"
+                    "description": "İki noktadan okunan doğrultular",
+                    "icon": "intersectDirections"
                   },
                   {
                     "command": "tool.intersectPoint",
                     "option": "L",
                     "title": "Kesişim noktası",
                     "label": "İki doğru",
-                    "description": "İki noktayla verilen iki doğru"
+                    "description": "İki noktayla verilen iki doğru",
+                    "icon": "intersectLines"
                   }
                 ],
                 "key": "intersectPoint",
@@ -19067,7 +19094,7 @@
           },
           {
             "label": "Açıklama",
-            "icon": "more",
+            "icon": "text",
             "items": [
               {
                 "command": "tool.text",
@@ -19242,7 +19269,7 @@
           },
           {
             "label": "Blok",
-            "icon": "more",
+            "icon": "blockDefine",
             "items": [
               {
                 "command": "tool.blockDefine",
@@ -19276,7 +19303,7 @@
         "panels": [
           {
             "label": "Dönüştür",
-            "icon": "more",
+            "icon": "move",
             "items": [
               {
                 "command": "tool.move",
@@ -19312,7 +19339,7 @@
           },
           {
             "label": "Dizi",
-            "icon": "more",
+            "icon": "array",
             "items": [
               {
                 "split": [
@@ -19341,7 +19368,7 @@
           },
           {
             "label": "Kenar",
-            "icon": "more",
+            "icon": "offset",
             "items": [
               {
                 "command": "tool.offset",
@@ -19359,7 +19386,8 @@
                     "option": "C",
                     "title": "Buda",
                     "label": "Çit",
-                    "description": "Çizilen çitin kestiği her parçayı budar"
+                    "description": "Çizilen çitin kestiği her parçayı budar",
+                    "icon": "trimFence"
                   }
                 ],
                 "key": "trim",
@@ -19377,7 +19405,8 @@
                     "option": "C",
                     "title": "Uzat",
                     "label": "Çit",
-                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                    "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                    "icon": "extendFence"
                   }
                 ],
                 "key": "extend",
@@ -19399,14 +19428,16 @@
                     "option": "E",
                     "title": "Parçala",
                     "label": "Eşit parçalara",
-                    "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                    "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır",
+                    "icon": "splitEqual"
                   },
                   {
                     "command": "tool.split",
                     "option": "U",
                     "title": "Parçala",
                     "label": "Uzunluktan",
-                    "description": "Başından verilen uzunlukta parçalara ayırır"
+                    "description": "Başından verilen uzunlukta parçalara ayırır",
+                    "icon": "splitLength"
                   }
                 ],
                 "key": "split",
@@ -19420,7 +19451,7 @@
           },
           {
             "label": "Köşe",
-            "icon": "more",
+            "icon": "fillet",
             "items": [
               {
                 "split": [
@@ -19456,7 +19487,7 @@
           },
           {
             "label": "Nesne",
-            "icon": "more",
+            "icon": "join",
             "items": [
               {
                 "command": "tool.join",
@@ -19492,7 +19523,7 @@
           },
           {
             "label": "Kot",
-            "icon": "more",
+            "icon": "setElevation",
             "items": [
               {
                 "split": [
@@ -19506,14 +19537,16 @@
                     "option": "A",
                     "title": "Kot ver",
                     "label": "Artır",
-                    "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                    "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır",
+                    "icon": "setElevationIncrement"
                   },
                   {
                     "command": "tool.setElevation",
                     "option": "S",
                     "title": "Kot ver",
                     "label": "Sıfırla",
-                    "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                    "description": "Köşelerin kotunu siler: kot yok, 0 değil",
+                    "icon": "setElevationReset"
                   }
                 ],
                 "key": "setElevation",
@@ -19525,7 +19558,7 @@
           },
           {
             "label": "Oluştur ve çevir",
-            "icon": "more",
+            "icon": "boundary",
             "items": [
               {
                 "command": "tool.boundary",
@@ -19547,7 +19580,7 @@
           },
           {
             "label": "Birleştir ve böl",
-            "icon": "more",
+            "icon": "areaUnion",
             "items": [
               {
                 "command": "tool.areaUnion",
@@ -19585,7 +19618,7 @@
         "panels": [
           {
             "label": "Parsel",
-            "icon": "more",
+            "icon": "parcel",
             "items": [
               {
                 "command": "tool.parcel",
@@ -19609,7 +19642,7 @@
           },
           {
             "label": "Arazi",
-            "icon": "more",
+            "icon": "stakeout",
             "items": [
               {
                 "command": "tool.stakeout",
@@ -19633,7 +19666,7 @@
           },
           {
             "label": "Ölçme",
-            "icon": "more",
+            "icon": "measure",
             "items": [
               {
                 "command": "tool.measure",
@@ -19657,7 +19690,7 @@
           },
           {
             "label": "Pafta",
-            "icon": "more",
+            "icon": "sheet",
             "items": [
               {
                 "command": "map.sheet",
@@ -19669,7 +19702,7 @@
           },
           {
             "label": "Poligon",
-            "icon": "more",
+            "icon": "surveyTraverse",
             "items": [
               {
                 "command": "calc.traverse",
@@ -19681,7 +19714,7 @@
           },
           {
             "label": "Nokta alımı",
-            "icon": "more",
+            "icon": "surveyPolar",
             "items": [
               {
                 "command": "calc.polar",
@@ -19697,7 +19730,7 @@
           },
           {
             "label": "Kestirme",
-            "icon": "more",
+            "icon": "surveyForward",
             "items": [
               {
                 "command": "calc.forward",
@@ -19713,7 +19746,7 @@
           },
           {
             "label": "Koordinat sistemi",
-            "icon": "more",
+            "icon": "crs",
             "items": [
               {
                 "command": "crs.set",
@@ -19733,7 +19766,7 @@
           },
           {
             "label": "Koordinatlar",
-            "icon": "more",
+            "icon": "crsQuery",
             "items": [
               {
                 "command": "crs.query",
@@ -19765,7 +19798,7 @@
           },
           {
             "label": "Arazi analizi",
-            "icon": "more",
+            "icon": "volume",
             "items": [
               {
                 "command": "analysis.volume",
@@ -19787,7 +19820,7 @@
         "panels": [
           {
             "label": "Yakınlaştır",
-            "icon": "more",
+            "icon": "zoomExtents",
             "items": [
               {
                 "command": "view.zoomExtents",
@@ -19831,7 +19864,7 @@
           },
           {
             "label": "Paneller",
-            "icon": "more",
+            "icon": "panelRight",
             "items": [
               {
                 "command": "view.rightPanel",
@@ -19942,7 +19975,7 @@
         "panels": [
           {
             "label": "İşlemler",
-            "icon": "more",
+            "icon": "processing",
             "items": [
               {
                 "command": "processing.toolbox",
@@ -19958,7 +19991,7 @@
           },
           {
             "label": "Modeller",
-            "icon": "more",
+            "icon": "modelNew",
             "items": [
               {
                 "command": "processing.newModel",
@@ -19974,7 +20007,7 @@
           },
           {
             "label": "Nokta işlemleri",
-            "icon": "more",
+            "icon": "numberVertices",
             "items": [
               {
                 "command": "processing.run.points.numberVertices",
@@ -19986,7 +20019,7 @@
           },
           {
             "label": "Yazı ve etiket",
-            "icon": "more",
+            "icon": "edgeLengths",
             "items": [
               {
                 "command": "processing.run.annotation.edgeLengths",
@@ -19998,7 +20031,7 @@
           },
           {
             "label": "Öznitelik",
-            "icon": "more",
+            "icon": "fieldCalc",
             "items": [
               {
                 "command": "processing.run.attributes.calculate",
@@ -20010,7 +20043,7 @@
           },
           {
             "label": "Seçim",
-            "icon": "more",
+            "icon": "selectExpression",
             "items": [
               {
                 "command": "processing.run.selection.byExpression",
@@ -20028,7 +20061,7 @@
         "panels": [
           {
             "label": "Komut",
-            "icon": "more",
+            "icon": "terminal",
             "items": [
               {
                 "command": "commandline.focus",
@@ -20054,7 +20087,7 @@
           },
           {
             "label": "Çizim yardımcıları",
-            "icon": "more",
+            "icon": "snap",
             "items": [
               {
                 "command": "draft.snap",
@@ -20099,7 +20132,7 @@
           },
           {
             "label": "Stil",
-            "icon": "more",
+            "icon": "styles",
             "items": [
               {
                 "command": "style.manager",
@@ -20131,7 +20164,7 @@
           },
           {
             "label": "Uygulama",
-            "icon": "more",
+            "icon": "keyboard",
             "items": [
               {
                 "command": "help.shortcuts",
@@ -20151,7 +20184,7 @@
           },
           {
             "label": "Yardım",
-            "icon": "more",
+            "icon": "search",
             "items": [
               {
                 "command": "view.commandSearch",
@@ -20185,7 +20218,7 @@
           },
           {
             "label": "Dönüştür",
-            "icon": "more",
+            "icon": "move",
             "items": [
               {
                 "command": "tool.move",
@@ -20221,7 +20254,7 @@
           },
           {
             "label": "Dizi",
-            "icon": "more",
+            "icon": "array",
             "items": [
               {
                 "split": [
@@ -20250,7 +20283,7 @@
           },
           {
             "label": "Nesne",
-            "icon": "more",
+            "icon": "join",
             "items": [
               {
                 "command": "tool.join",
@@ -20286,7 +20319,7 @@
           },
           {
             "label": "Oluştur ve çevir",
-            "icon": "more",
+            "icon": "boundary",
             "items": [
               {
                 "command": "tool.boundary",
@@ -20308,7 +20341,7 @@
           },
           {
             "label": "Birleştir ve böl",
-            "icon": "more",
+            "icon": "areaUnion",
             "items": [
               {
                 "command": "tool.areaUnion",
@@ -20340,7 +20373,7 @@
           },
           {
             "label": "Pano",
-            "icon": "more",
+            "icon": "cut",
             "items": [
               {
                 "command": "edit.cut",
@@ -20389,7 +20422,7 @@
           "panels": [
             {
               "label": "Proje",
-              "icon": "more",
+              "icon": "fileNew",
               "items": [
                 {
                   "command": "file.new",
@@ -20409,7 +20442,7 @@
             },
             {
               "label": "Kaydet",
-              "icon": "more",
+              "icon": "save",
               "items": [
                 {
                   "command": "file.save",
@@ -20425,7 +20458,7 @@
             },
             {
               "label": "Bulut",
-              "icon": "more",
+              "icon": "cloud",
               "items": [
                 {
                   "command": "cloud.open",
@@ -20506,7 +20539,7 @@
             },
             {
               "label": "Çıktı",
-              "icon": "more",
+              "icon": "print",
               "items": [
                 {
                   "command": "file.print",
@@ -20518,7 +20551,7 @@
             },
             {
               "label": "Ayarlar",
-              "icon": "more",
+              "icon": "folder",
               "items": [
                 {
                   "command": "file.settings",
@@ -20536,7 +20569,7 @@
           "panels": [
             {
               "label": "Pano",
-              "icon": "more",
+              "icon": "paste",
               "items": [
                 {
                   "command": "edit.paste",
@@ -20564,7 +20597,7 @@
             },
             {
               "label": "Seçim",
-              "icon": "more",
+              "icon": "select",
               "items": [
                 {
                   "split": [
@@ -20640,28 +20673,32 @@
                       "option": "2N",
                       "title": "Daire",
                       "label": "2 nokta",
-                      "description": "Çapın iki ucundan"
+                      "description": "Çapın iki ucundan",
+                      "icon": "circle2p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
                       "title": "Daire",
                       "label": "3 nokta",
-                      "description": "Çember üzerindeki üç noktadan"
+                      "description": "Çember üzerindeki üç noktadan",
+                      "icon": "circle3p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
                       "title": "Daire",
                       "label": "Teğet, teğet, yarıçap",
-                      "description": "İki nesneye teğet, yarıçap yazılır"
+                      "description": "İki nesneye teğet, yarıçap yazılır",
+                      "icon": "circleTtr"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
                       "title": "Daire",
                       "label": "Teğet, teğet, teğet",
-                      "description": "Üç nesneye teğet"
+                      "description": "Üç nesneye teğet",
+                      "icon": "circleTtt"
                     }
                   ],
                   "key": "circle",
@@ -20679,14 +20716,16 @@
                       "option": "M",
                       "title": "Yay",
                       "label": "Merkez, başlangıç, bitiş",
-                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                      "icon": "arcCenter"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
                       "title": "Yay",
                       "label": "Devam",
-                      "description": "Son çizilen nesneye teğet devam eder"
+                      "description": "Son çizilen nesneye teğet devam eder",
+                      "icon": "arcContinue"
                     }
                   ],
                   "key": "arc",
@@ -20769,7 +20808,8 @@
                       "option": "C",
                       "title": "Buda",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her parçayı budar"
+                      "description": "Çizilen çitin kestiği her parçayı budar",
+                      "icon": "trimFence"
                     }
                   ],
                   "key": "trim",
@@ -20787,7 +20827,8 @@
                       "option": "C",
                       "title": "Uzat",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                      "icon": "extendFence"
                     }
                   ],
                   "key": "extend",
@@ -21038,7 +21079,7 @@
           "panels": [
             {
               "label": "Çizgi",
-              "icon": "more",
+              "icon": "line",
               "items": [
                 {
                   "command": "tool.line",
@@ -21066,7 +21107,7 @@
             },
             {
               "label": "Eğri",
-              "icon": "more",
+              "icon": "circle",
               "items": [
                 {
                   "split": [
@@ -21080,28 +21121,32 @@
                       "option": "2N",
                       "title": "Daire",
                       "label": "2 nokta",
-                      "description": "Çapın iki ucundan"
+                      "description": "Çapın iki ucundan",
+                      "icon": "circle2p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
                       "title": "Daire",
                       "label": "3 nokta",
-                      "description": "Çember üzerindeki üç noktadan"
+                      "description": "Çember üzerindeki üç noktadan",
+                      "icon": "circle3p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
                       "title": "Daire",
                       "label": "Teğet, teğet, yarıçap",
-                      "description": "İki nesneye teğet, yarıçap yazılır"
+                      "description": "İki nesneye teğet, yarıçap yazılır",
+                      "icon": "circleTtr"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
                       "title": "Daire",
                       "label": "Teğet, teğet, teğet",
-                      "description": "Üç nesneye teğet"
+                      "description": "Üç nesneye teğet",
+                      "icon": "circleTtt"
                     }
                   ],
                   "key": "circle",
@@ -21119,14 +21164,16 @@
                       "option": "M",
                       "title": "Yay",
                       "label": "Merkez, başlangıç, bitiş",
-                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                      "icon": "arcCenter"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
                       "title": "Yay",
                       "label": "Devam",
-                      "description": "Son çizilen nesneye teğet devam eder"
+                      "description": "Son çizilen nesneye teğet devam eder",
+                      "icon": "arcContinue"
                     }
                   ],
                   "key": "arc",
@@ -21152,7 +21199,7 @@
             },
             {
               "label": "Şekil",
-              "icon": "more",
+              "icon": "rectangle",
               "items": [
                 {
                   "split": [
@@ -21181,7 +21228,7 @@
             },
             {
               "label": "Yardımcı",
-              "icon": "more",
+              "icon": "xline",
               "items": [
                 {
                   "split": [
@@ -21221,7 +21268,7 @@
             },
             {
               "label": "Nokta",
-              "icon": "more",
+              "icon": "point",
               "items": [
                 {
                   "command": "tool.point",
@@ -21247,14 +21294,16 @@
                       "option": "U",
                       "title": "Ara nokta",
                       "label": "Uzaklıkla",
-                      "description": "İlk noktadan verilen uzaklıklarda"
+                      "description": "İlk noktadan verilen uzaklıklarda",
+                      "icon": "pointsBetweenDistance"
                     },
                     {
                       "command": "tool.pointsBetween",
                       "option": "O",
                       "title": "Ara nokta",
                       "label": "Oranla",
-                      "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                      "description": "İki nokta arasının oranında (0 ile 1 arası)",
+                      "icon": "pointsBetweenRatio"
                     }
                   ],
                   "key": "pointsBetween",
@@ -21272,14 +21321,16 @@
                       "option": "D",
                       "title": "Kesişim noktası",
                       "label": "İki doğrultu",
-                      "description": "İki noktadan okunan doğrultular"
+                      "description": "İki noktadan okunan doğrultular",
+                      "icon": "intersectDirections"
                     },
                     {
                       "command": "tool.intersectPoint",
                       "option": "L",
                       "title": "Kesişim noktası",
                       "label": "İki doğru",
-                      "description": "İki noktayla verilen iki doğru"
+                      "description": "İki noktayla verilen iki doğru",
+                      "icon": "intersectLines"
                     }
                   ],
                   "key": "intersectPoint",
@@ -21291,7 +21342,7 @@
             },
             {
               "label": "Açıklama",
-              "icon": "more",
+              "icon": "text",
               "items": [
                 {
                   "command": "tool.text",
@@ -21466,7 +21517,7 @@
             },
             {
               "label": "Blok",
-              "icon": "more",
+              "icon": "blockDefine",
               "items": [
                 {
                   "command": "tool.blockDefine",
@@ -21500,7 +21551,7 @@
           "panels": [
             {
               "label": "Dönüştür",
-              "icon": "more",
+              "icon": "move",
               "items": [
                 {
                   "command": "tool.move",
@@ -21536,7 +21587,7 @@
             },
             {
               "label": "Dizi",
-              "icon": "more",
+              "icon": "array",
               "items": [
                 {
                   "split": [
@@ -21565,7 +21616,7 @@
             },
             {
               "label": "Kenar",
-              "icon": "more",
+              "icon": "offset",
               "items": [
                 {
                   "command": "tool.offset",
@@ -21583,7 +21634,8 @@
                       "option": "C",
                       "title": "Buda",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her parçayı budar"
+                      "description": "Çizilen çitin kestiği her parçayı budar",
+                      "icon": "trimFence"
                     }
                   ],
                   "key": "trim",
@@ -21601,7 +21653,8 @@
                       "option": "C",
                       "title": "Uzat",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                      "icon": "extendFence"
                     }
                   ],
                   "key": "extend",
@@ -21623,14 +21676,16 @@
                       "option": "E",
                       "title": "Parçala",
                       "label": "Eşit parçalara",
-                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır",
+                      "icon": "splitEqual"
                     },
                     {
                       "command": "tool.split",
                       "option": "U",
                       "title": "Parçala",
                       "label": "Uzunluktan",
-                      "description": "Başından verilen uzunlukta parçalara ayırır"
+                      "description": "Başından verilen uzunlukta parçalara ayırır",
+                      "icon": "splitLength"
                     }
                   ],
                   "key": "split",
@@ -21644,7 +21699,7 @@
             },
             {
               "label": "Köşe",
-              "icon": "more",
+              "icon": "fillet",
               "items": [
                 {
                   "split": [
@@ -21680,7 +21735,7 @@
             },
             {
               "label": "Nesne",
-              "icon": "more",
+              "icon": "join",
               "items": [
                 {
                   "command": "tool.join",
@@ -21716,7 +21771,7 @@
             },
             {
               "label": "Kot",
-              "icon": "more",
+              "icon": "setElevation",
               "items": [
                 {
                   "split": [
@@ -21730,14 +21785,16 @@
                       "option": "A",
                       "title": "Kot ver",
                       "label": "Artır",
-                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır",
+                      "icon": "setElevationIncrement"
                     },
                     {
                       "command": "tool.setElevation",
                       "option": "S",
                       "title": "Kot ver",
                       "label": "Sıfırla",
-                      "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                      "description": "Köşelerin kotunu siler: kot yok, 0 değil",
+                      "icon": "setElevationReset"
                     }
                   ],
                   "key": "setElevation",
@@ -21749,7 +21806,7 @@
             },
             {
               "label": "Oluştur ve çevir",
-              "icon": "more",
+              "icon": "boundary",
               "items": [
                 {
                   "command": "tool.boundary",
@@ -21771,7 +21828,7 @@
             },
             {
               "label": "Birleştir ve böl",
-              "icon": "more",
+              "icon": "areaUnion",
               "items": [
                 {
                   "command": "tool.areaUnion",
@@ -21809,7 +21866,7 @@
           "panels": [
             {
               "label": "Poligon",
-              "icon": "more",
+              "icon": "surveyTraverse",
               "items": [
                 {
                   "command": "calc.traverse",
@@ -21821,7 +21878,7 @@
             },
             {
               "label": "Nokta alımı",
-              "icon": "more",
+              "icon": "surveyPolar",
               "items": [
                 {
                   "command": "calc.polar",
@@ -21837,7 +21894,7 @@
             },
             {
               "label": "Kestirme",
-              "icon": "more",
+              "icon": "surveyForward",
               "items": [
                 {
                   "command": "calc.forward",
@@ -21853,7 +21910,7 @@
             },
             {
               "label": "Ölçme",
-              "icon": "more",
+              "icon": "measure",
               "items": [
                 {
                   "command": "tool.measure",
@@ -21883,7 +21940,7 @@
           "panels": [
             {
               "label": "Yakınlaştır",
-              "icon": "more",
+              "icon": "zoomExtents",
               "items": [
                 {
                   "command": "view.zoomExtents",
@@ -21927,7 +21984,7 @@
             },
             {
               "label": "Paneller",
-              "icon": "more",
+              "icon": "panelRight",
               "items": [
                 {
                   "command": "view.rightPanel",
@@ -22038,7 +22095,7 @@
           "panels": [
             {
               "label": "Komut",
-              "icon": "more",
+              "icon": "terminal",
               "items": [
                 {
                   "command": "commandline.focus",
@@ -22064,7 +22121,7 @@
             },
             {
               "label": "Çizim yardımcıları",
-              "icon": "more",
+              "icon": "snap",
               "items": [
                 {
                   "command": "draft.snap",
@@ -22109,7 +22166,7 @@
             },
             {
               "label": "Stil",
-              "icon": "more",
+              "icon": "styles",
               "items": [
                 {
                   "command": "style.manager",
@@ -22141,7 +22198,7 @@
             },
             {
               "label": "Uygulama",
-              "icon": "more",
+              "icon": "keyboard",
               "items": [
                 {
                   "command": "help.shortcuts",
@@ -22161,7 +22218,7 @@
             },
             {
               "label": "Yardım",
-              "icon": "more",
+              "icon": "search",
               "items": [
                 {
                   "command": "view.commandSearch",
@@ -22195,7 +22252,7 @@
             },
             {
               "label": "Dönüştür",
-              "icon": "more",
+              "icon": "move",
               "items": [
                 {
                   "command": "tool.move",
@@ -22231,7 +22288,7 @@
             },
             {
               "label": "Dizi",
-              "icon": "more",
+              "icon": "array",
               "items": [
                 {
                   "split": [
@@ -22260,7 +22317,7 @@
             },
             {
               "label": "Nesne",
-              "icon": "more",
+              "icon": "join",
               "items": [
                 {
                   "command": "tool.join",
@@ -22296,7 +22353,7 @@
             },
             {
               "label": "Oluştur ve çevir",
-              "icon": "more",
+              "icon": "boundary",
               "items": [
                 {
                   "command": "tool.boundary",
@@ -22318,7 +22375,7 @@
             },
             {
               "label": "Birleştir ve böl",
-              "icon": "more",
+              "icon": "areaUnion",
               "items": [
                 {
                   "command": "tool.areaUnion",
@@ -22350,7 +22407,7 @@
             },
             {
               "label": "Pano",
-              "icon": "more",
+              "icon": "cut",
               "items": [
                 {
                   "command": "edit.cut",
@@ -22398,7 +22455,7 @@
           "panels": [
             {
               "label": "Proje",
-              "icon": "more",
+              "icon": "fileNew",
               "items": [
                 {
                   "command": "file.new",
@@ -22418,7 +22475,7 @@
             },
             {
               "label": "Kaydet",
-              "icon": "more",
+              "icon": "save",
               "items": [
                 {
                   "command": "file.save",
@@ -22434,7 +22491,7 @@
             },
             {
               "label": "Bulut",
-              "icon": "more",
+              "icon": "cloud",
               "items": [
                 {
                   "command": "cloud.open",
@@ -22515,7 +22572,7 @@
             },
             {
               "label": "Çıktı",
-              "icon": "more",
+              "icon": "print",
               "items": [
                 {
                   "command": "file.print",
@@ -22527,7 +22584,7 @@
             },
             {
               "label": "Ayarlar",
-              "icon": "more",
+              "icon": "folder",
               "items": [
                 {
                   "command": "file.settings",
@@ -22545,7 +22602,7 @@
           "panels": [
             {
               "label": "Pano",
-              "icon": "more",
+              "icon": "paste",
               "items": [
                 {
                   "command": "edit.paste",
@@ -22573,7 +22630,7 @@
             },
             {
               "label": "Seçim",
-              "icon": "more",
+              "icon": "select",
               "items": [
                 {
                   "split": [
@@ -22649,28 +22706,32 @@
                       "option": "2N",
                       "title": "Daire",
                       "label": "2 nokta",
-                      "description": "Çapın iki ucundan"
+                      "description": "Çapın iki ucundan",
+                      "icon": "circle2p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
                       "title": "Daire",
                       "label": "3 nokta",
-                      "description": "Çember üzerindeki üç noktadan"
+                      "description": "Çember üzerindeki üç noktadan",
+                      "icon": "circle3p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
                       "title": "Daire",
                       "label": "Teğet, teğet, yarıçap",
-                      "description": "İki nesneye teğet, yarıçap yazılır"
+                      "description": "İki nesneye teğet, yarıçap yazılır",
+                      "icon": "circleTtr"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
                       "title": "Daire",
                       "label": "Teğet, teğet, teğet",
-                      "description": "Üç nesneye teğet"
+                      "description": "Üç nesneye teğet",
+                      "icon": "circleTtt"
                     }
                   ],
                   "key": "circle",
@@ -22688,14 +22749,16 @@
                       "option": "M",
                       "title": "Yay",
                       "label": "Merkez, başlangıç, bitiş",
-                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                      "icon": "arcCenter"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
                       "title": "Yay",
                       "label": "Devam",
-                      "description": "Son çizilen nesneye teğet devam eder"
+                      "description": "Son çizilen nesneye teğet devam eder",
+                      "icon": "arcContinue"
                     }
                   ],
                   "key": "arc",
@@ -22757,7 +22820,8 @@
                       "option": "C",
                       "title": "Buda",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her parçayı budar"
+                      "description": "Çizilen çitin kestiği her parçayı budar",
+                      "icon": "trimFence"
                     }
                   ],
                   "key": "trim",
@@ -22775,7 +22839,8 @@
                       "option": "C",
                       "title": "Uzat",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                      "icon": "extendFence"
                     }
                   ],
                   "key": "extend",
@@ -22879,7 +22944,7 @@
           "panels": [
             {
               "label": "Çizgi",
-              "icon": "more",
+              "icon": "line",
               "items": [
                 {
                   "command": "tool.line",
@@ -22903,7 +22968,7 @@
             },
             {
               "label": "Eğri",
-              "icon": "more",
+              "icon": "circle",
               "items": [
                 {
                   "split": [
@@ -22917,28 +22982,32 @@
                       "option": "2N",
                       "title": "Daire",
                       "label": "2 nokta",
-                      "description": "Çapın iki ucundan"
+                      "description": "Çapın iki ucundan",
+                      "icon": "circle2p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
                       "title": "Daire",
                       "label": "3 nokta",
-                      "description": "Çember üzerindeki üç noktadan"
+                      "description": "Çember üzerindeki üç noktadan",
+                      "icon": "circle3p"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
                       "title": "Daire",
                       "label": "Teğet, teğet, yarıçap",
-                      "description": "İki nesneye teğet, yarıçap yazılır"
+                      "description": "İki nesneye teğet, yarıçap yazılır",
+                      "icon": "circleTtr"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
                       "title": "Daire",
                       "label": "Teğet, teğet, teğet",
-                      "description": "Üç nesneye teğet"
+                      "description": "Üç nesneye teğet",
+                      "icon": "circleTtt"
                     }
                   ],
                   "key": "circle",
@@ -22956,14 +23025,16 @@
                       "option": "M",
                       "title": "Yay",
                       "label": "Merkez, başlangıç, bitiş",
-                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
+                      "icon": "arcCenter"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
                       "title": "Yay",
                       "label": "Devam",
-                      "description": "Son çizilen nesneye teğet devam eder"
+                      "description": "Son çizilen nesneye teğet devam eder",
+                      "icon": "arcContinue"
                     }
                   ],
                   "key": "arc",
@@ -22979,7 +23050,7 @@
             },
             {
               "label": "Nokta",
-              "icon": "more",
+              "icon": "point",
               "items": [
                 {
                   "command": "tool.point",
@@ -23005,14 +23076,16 @@
                       "option": "U",
                       "title": "Ara nokta",
                       "label": "Uzaklıkla",
-                      "description": "İlk noktadan verilen uzaklıklarda"
+                      "description": "İlk noktadan verilen uzaklıklarda",
+                      "icon": "pointsBetweenDistance"
                     },
                     {
                       "command": "tool.pointsBetween",
                       "option": "O",
                       "title": "Ara nokta",
                       "label": "Oranla",
-                      "description": "İki nokta arasının oranında (0 ile 1 arası)"
+                      "description": "İki nokta arasının oranında (0 ile 1 arası)",
+                      "icon": "pointsBetweenRatio"
                     }
                   ],
                   "key": "pointsBetween",
@@ -23030,14 +23103,16 @@
                       "option": "D",
                       "title": "Kesişim noktası",
                       "label": "İki doğrultu",
-                      "description": "İki noktadan okunan doğrultular"
+                      "description": "İki noktadan okunan doğrultular",
+                      "icon": "intersectDirections"
                     },
                     {
                       "command": "tool.intersectPoint",
                       "option": "L",
                       "title": "Kesişim noktası",
                       "label": "İki doğru",
-                      "description": "İki noktayla verilen iki doğru"
+                      "description": "İki noktayla verilen iki doğru",
+                      "icon": "intersectLines"
                     }
                   ],
                   "key": "intersectPoint",
@@ -23049,7 +23124,7 @@
             },
             {
               "label": "Açıklama",
-              "icon": "more",
+              "icon": "text",
               "items": [
                 {
                   "command": "tool.text",
@@ -23090,7 +23165,7 @@
             },
             {
               "label": "Blok",
-              "icon": "more",
+              "icon": "blockDefine",
               "items": [
                 {
                   "command": "tool.blockDefine",
@@ -23124,7 +23199,7 @@
           "panels": [
             {
               "label": "Dönüştür",
-              "icon": "more",
+              "icon": "move",
               "items": [
                 {
                   "command": "tool.move",
@@ -23156,7 +23231,7 @@
             },
             {
               "label": "Kenar",
-              "icon": "more",
+              "icon": "offset",
               "items": [
                 {
                   "command": "tool.offset",
@@ -23174,7 +23249,8 @@
                       "option": "C",
                       "title": "Buda",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her parçayı budar"
+                      "description": "Çizilen çitin kestiği her parçayı budar",
+                      "icon": "trimFence"
                     }
                   ],
                   "key": "trim",
@@ -23192,7 +23268,8 @@
                       "option": "C",
                       "title": "Uzat",
                       "label": "Çit",
-                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır"
+                      "description": "Çizilen çitin kestiği her nesnenin ucunu uzatır",
+                      "icon": "extendFence"
                     }
                   ],
                   "key": "extend",
@@ -23214,14 +23291,16 @@
                       "option": "E",
                       "title": "Parçala",
                       "label": "Eşit parçalara",
-                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır"
+                      "description": "Nesneyi verilen sayıda eşit uzunlukta parçaya ayırır",
+                      "icon": "splitEqual"
                     },
                     {
                       "command": "tool.split",
                       "option": "U",
                       "title": "Parçala",
                       "label": "Uzunluktan",
-                      "description": "Başından verilen uzunlukta parçalara ayırır"
+                      "description": "Başından verilen uzunlukta parçalara ayırır",
+                      "icon": "splitLength"
                     }
                   ],
                   "key": "split",
@@ -23233,7 +23312,7 @@
             },
             {
               "label": "Nesne",
-              "icon": "more",
+              "icon": "join",
               "items": [
                 {
                   "command": "tool.join",
@@ -23269,7 +23348,7 @@
             },
             {
               "label": "Kot",
-              "icon": "more",
+              "icon": "setElevation",
               "items": [
                 {
                   "split": [
@@ -23283,14 +23362,16 @@
                       "option": "A",
                       "title": "Kot ver",
                       "label": "Artır",
-                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır"
+                      "description": "Her köşenin kotuna yazılan farkı ekler; kotsuz köşe kotsuz kalır",
+                      "icon": "setElevationIncrement"
                     },
                     {
                       "command": "tool.setElevation",
                       "option": "S",
                       "title": "Kot ver",
                       "label": "Sıfırla",
-                      "description": "Köşelerin kotunu siler: kot yok, 0 değil"
+                      "description": "Köşelerin kotunu siler: kot yok, 0 değil",
+                      "icon": "setElevationReset"
                     }
                   ],
                   "key": "setElevation",
@@ -23302,7 +23383,7 @@
             },
             {
               "label": "Oluştur ve çevir",
-              "icon": "more",
+              "icon": "boundary",
               "items": [
                 {
                   "command": "tool.boundary",
@@ -23324,7 +23405,7 @@
             },
             {
               "label": "Birleştir ve böl",
-              "icon": "more",
+              "icon": "areaUnion",
               "items": [
                 {
                   "command": "tool.areaUnion",
@@ -23362,7 +23443,7 @@
           "panels": [
             {
               "label": "Parsel",
-              "icon": "more",
+              "icon": "parcel",
               "items": [
                 {
                   "command": "tool.parcel",
@@ -23386,7 +23467,7 @@
             },
             {
               "label": "Arazi",
-              "icon": "more",
+              "icon": "stakeout",
               "items": [
                 {
                   "command": "tool.stakeout",
@@ -23410,7 +23491,7 @@
             },
             {
               "label": "Ölçme",
-              "icon": "more",
+              "icon": "measure",
               "items": [
                 {
                   "command": "tool.measure",
@@ -23434,7 +23515,7 @@
             },
             {
               "label": "Pafta",
-              "icon": "more",
+              "icon": "sheet",
               "items": [
                 {
                   "command": "map.sheet",
@@ -23446,7 +23527,7 @@
             },
             {
               "label": "Poligon",
-              "icon": "more",
+              "icon": "surveyTraverse",
               "items": [
                 {
                   "command": "calc.traverse",
@@ -23458,7 +23539,7 @@
             },
             {
               "label": "Nokta alımı",
-              "icon": "more",
+              "icon": "surveyPolar",
               "items": [
                 {
                   "command": "calc.polar",
@@ -23474,7 +23555,7 @@
             },
             {
               "label": "Kestirme",
-              "icon": "more",
+              "icon": "surveyForward",
               "items": [
                 {
                   "command": "calc.forward",
@@ -23490,7 +23571,7 @@
             },
             {
               "label": "Koordinat sistemi",
-              "icon": "more",
+              "icon": "crs",
               "items": [
                 {
                   "command": "crs.set",
@@ -23510,7 +23591,7 @@
             },
             {
               "label": "Koordinatlar",
-              "icon": "more",
+              "icon": "crsQuery",
               "items": [
                 {
                   "command": "crs.query",
@@ -23542,7 +23623,7 @@
             },
             {
               "label": "Arazi analizi",
-              "icon": "more",
+              "icon": "volume",
               "items": [
                 {
                   "command": "analysis.volume",
@@ -23564,7 +23645,7 @@
           "panels": [
             {
               "label": "Yakınlaştır",
-              "icon": "more",
+              "icon": "zoomExtents",
               "items": [
                 {
                   "command": "view.zoomExtents",
@@ -23608,7 +23689,7 @@
             },
             {
               "label": "Paneller",
-              "icon": "more",
+              "icon": "panelRight",
               "items": [
                 {
                   "command": "view.rightPanel",
@@ -23719,7 +23800,7 @@
           "panels": [
             {
               "label": "İşlemler",
-              "icon": "more",
+              "icon": "processing",
               "items": [
                 {
                   "command": "processing.toolbox",
@@ -23735,7 +23816,7 @@
             },
             {
               "label": "Modeller",
-              "icon": "more",
+              "icon": "modelNew",
               "items": [
                 {
                   "command": "processing.newModel",
@@ -23751,7 +23832,7 @@
             },
             {
               "label": "Nokta işlemleri",
-              "icon": "more",
+              "icon": "numberVertices",
               "items": [
                 {
                   "command": "processing.run.points.numberVertices",
@@ -23763,7 +23844,7 @@
             },
             {
               "label": "Yazı ve etiket",
-              "icon": "more",
+              "icon": "edgeLengths",
               "items": [
                 {
                   "command": "processing.run.annotation.edgeLengths",
@@ -23775,7 +23856,7 @@
             },
             {
               "label": "Öznitelik",
-              "icon": "more",
+              "icon": "fieldCalc",
               "items": [
                 {
                   "command": "processing.run.attributes.calculate",
@@ -23787,7 +23868,7 @@
             },
             {
               "label": "Seçim",
-              "icon": "more",
+              "icon": "selectExpression",
               "items": [
                 {
                   "command": "processing.run.selection.byExpression",
@@ -23805,7 +23886,7 @@
           "panels": [
             {
               "label": "Komut",
-              "icon": "more",
+              "icon": "terminal",
               "items": [
                 {
                   "command": "commandline.focus",
@@ -23831,7 +23912,7 @@
             },
             {
               "label": "Çizim yardımcıları",
-              "icon": "more",
+              "icon": "snap",
               "items": [
                 {
                   "command": "draft.snap",
@@ -23876,7 +23957,7 @@
             },
             {
               "label": "Stil",
-              "icon": "more",
+              "icon": "styles",
               "items": [
                 {
                   "command": "style.manager",
@@ -23908,7 +23989,7 @@
             },
             {
               "label": "Uygulama",
-              "icon": "more",
+              "icon": "keyboard",
               "items": [
                 {
                   "command": "help.shortcuts",
@@ -23928,7 +24009,7 @@
             },
             {
               "label": "Yardım",
-              "icon": "more",
+              "icon": "search",
               "items": [
                 {
                   "command": "view.commandSearch",
@@ -23962,7 +24043,7 @@
             },
             {
               "label": "Dönüştür",
-              "icon": "more",
+              "icon": "move",
               "items": [
                 {
                   "command": "tool.move",
@@ -23994,7 +24075,7 @@
             },
             {
               "label": "Nesne",
-              "icon": "more",
+              "icon": "join",
               "items": [
                 {
                   "command": "tool.join",
@@ -24030,7 +24111,7 @@
             },
             {
               "label": "Oluştur ve çevir",
-              "icon": "more",
+              "icon": "boundary",
               "items": [
                 {
                   "command": "tool.boundary",
@@ -24052,7 +24133,7 @@
             },
             {
               "label": "Birleştir ve böl",
-              "icon": "more",
+              "icon": "areaUnion",
               "items": [
                 {
                   "command": "tool.areaUnion",
@@ -24084,7 +24165,7 @@
             },
             {
               "label": "Pano",
-              "icon": "more",
+              "icon": "cut",
               "items": [
                 {
                   "command": "edit.cut",
@@ -24142,7 +24223,13 @@
     "line": "<path d=\"M4.5 15.5 15.5 4.5\"/><rect x=\"3\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "polyline": "<path d=\"m3.5 15 4-8 5 5 4-8\"/><rect x=\"2\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"6\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11\" y=\"10.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "arc": "<path d=\"M3.5 16A12.5 12.5 0 0 1 16 3.5\"/><rect x=\"2\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"5.7\" y=\"5.7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "arcCenter": "<path d=\"M16 15A11 11 0 0 0 5 4\"/><path d=\"M5 15h11M5 15V4\" stroke-dasharray=\"1.4 1.6\" stroke-width=\"1.1\"/><circle cx=\"5\" cy=\"15\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"3.5\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "arcContinue": "<path d=\"M2.5 15.5H8\" stroke-width=\"1.1\"/><path d=\"M8 15.5a7.5 7.5 0 0 0 7.5-7.5V5\"/><path d=\"m13.2 6.8 2.3-2.3 2.3 2.3\"/><rect x=\"6.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "circle": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><path d=\"M10 10h6.5\"/><rect x=\"8.5\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "circle2p": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><path d=\"M3.5 10h13\" stroke-width=\"1.1\"/><rect x=\"2\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "circle3p": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><rect x=\"8.5\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"2.87\" y=\"11.75\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.13\" y=\"11.75\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "circleTtr": "<path d=\"M3 2.5V17h14.5\" stroke-width=\"1.1\"/><circle cx=\"8.5\" cy=\"11.5\" r=\"5.5\"/><path d=\"m8.5 11.5 3.9-3.9\"/><circle cx=\"8.5\" cy=\"11.5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "circleTtt": "<path d=\"M2.5 17h15L10 3z\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"12.51\" r=\"4.49\"/>",
     "rectangle": "<rect x=\"3.5\" y=\"5.5\" width=\"13\" height=\"9\"/><rect x=\"2\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"4\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "ellipse": "<ellipse cx=\"10\" cy=\"10\" rx=\"7.6\" ry=\"4.3\" transform=\"rotate(-28 10 10)\"/><rect x=\"1.7999999999999998\" y=\"12.1\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.2\" y=\"4.9\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "xline": "<path d=\"M1.5 16 18.5 4\" stroke-dasharray=\"3.2 1.6\"/><rect x=\"8.5\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
@@ -24167,6 +24254,7 @@
     "blockDefine": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\" rx=\"1\" stroke-dasharray=\"2.2 1.6\"/><circle cx=\"8\" cy=\"8\" r=\"2\"/><path d=\"m10.8 13.2 2.2-4 2.2 4z\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "blocks": "<rect x=\"3\" y=\"3\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"11\" y=\"3\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"3\" y=\"11\" width=\"6\" height=\"6\" rx=\"1\"/><circle cx=\"14\" cy=\"14\" r=\"3\"/>",
     "blockAttributes": "<rect x=\"3\" y=\"4.5\" width=\"7\" height=\"7\" rx=\"1.2\"/><circle cx=\"6.5\" cy=\"8\" r=\"1.8\"/><path d=\"M12.5 5.5h5M12.5 8.5h5M12.5 11.5h3.5M3 15.5h14.5\"/>",
+    "blockBase": "<rect x=\"2.5\" y=\"2.5\" width=\"10\" height=\"10\" rx=\"1.2\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"2.2\"/><rect x=\"1.3\" y=\"11.3\" width=\"2.4\" height=\"2.4\" stroke-width=\"1.1\"/><path d=\"M4.2 15.2c2.6 1.8 6.4 2 9.4.7\" stroke-width=\"1.1\" stroke-dasharray=\"1.6 1.4\"/><rect x=\"14.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "move": "<path d=\"M10 2.5v15M2.5 10h15\"/><path d=\"M7.8 4.7 10 2.5l2.2 2.2M7.8 15.3l2.2 2.2 2.2-2.2M4.7 7.8 2.5 10l2.2 2.2M15.3 7.8l2.2 2.2-2.2 2.2\"/>",
     "copy": "<rect x=\"3.5\" y=\"7.5\" width=\"9\" height=\"9\" rx=\"1\"/><path d=\"M7.5 7.5v-4h9v9h-4\"/>",
     "rotate": "<path d=\"M16 10.5A6 6 0 1 1 13.6 5.7\"/><path d=\"M14 2.6v3.5h-3.5\"/>",
@@ -24175,18 +24263,22 @@
     "offset": "<path d=\"M3.5 13.5C5 8.5 8.5 5 14.5 4\"/><path d=\"M6.2 16.5c1.4-4.4 4.4-7.3 10-8.2\"/>",
     "trim": "<path d=\"M12.5 3v14\"/><path d=\"M3 10h9.5\"/><path d=\"M12.5 10H17\" stroke-dasharray=\"1.6 1.8\"/><path d=\"m14.2 5.8 2.6-2.6M16.8 5.8l-2.6-2.6\"/>",
     "extend": "<path d=\"M16.5 3v14\"/><path d=\"M3 10h7\"/><path d=\"M10 10h6.5\" stroke-dasharray=\"1.6 1.8\"/><path d=\"m12.6 7.6 2.4 2.4-2.4 2.4\"/>",
-    "fillet": "<path d=\"M4 16.5V10a5.5 5.5 0 0 1 5.5-5.5h7\"/><rect x=\"2.5\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
-    "chamfer": "<path d=\"M4 16.5V9.5l5-5h7.5\"/><rect x=\"2.5\" y=\"8\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "trimFence": "<path d=\"M10 3v14\"/><path d=\"M2.5 7H10M2.5 13H10\"/><path d=\"M10 7h7.5M10 13h7.5\" stroke-dasharray=\"1.6 1.8\"/><path d=\"m15.8 3-2.3 4.6 2.3 4.6-2.3 4.6\" stroke-width=\"1.8\"/>",
+    "extendFence": "<path d=\"M17 3v14\"/><path d=\"M2.5 7H9M2.5 13H9\"/><path d=\"M9 7h8M9 13h8\" stroke-dasharray=\"1.6 1.8\"/><path d=\"m7.6 3-2.3 4.6 2.3 4.6-2.3 4.6\" stroke-width=\"1.8\"/>",
+    "fillet": "<path d=\"M3.5 16V11M11 3.5H16\"/><path d=\"M3.5 11A7.5 7.5 0 0 1 11 3.5\" stroke-width=\"2.4\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "chamfer": "<path d=\"M3.5 16V11M11 3.5H16\"/><path d=\"M3.5 11 11 3.5\" stroke-width=\"2.4\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "break": "<path d=\"M3 15 8 12M12 9.6l5-3\"/><rect x=\"6.5\" y=\"10.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"10.5\" y=\"8.1\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m8.8 6.5 2.4 1.6M8.8 15l2.4 1.6\" stroke-dasharray=\"1.4 1.2\"/>",
     "join": "<path d=\"M3 15.5 7.5 7.5M12.5 7.5l4.5 8\"/><path d=\"M7.5 7.5h5\" stroke-dasharray=\"1.6 1.4\"/><rect x=\"6\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "explode": "<path d=\"M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4\"/><path d=\"M10 8V6.5M10 13.5V12M8 10H6.5M13.5 10H12\"/>",
     "stretch": "<path d=\"M3.5 5.5h6l6 4.5-6 4.5h-6z\"/><rect x=\"8.5\" y=\"2.5\" width=\"9\" height=\"15\" stroke-dasharray=\"1.8 1.6\"/><rect x=\"14\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "vertex": "<path d=\"m3 15 5-9 9 5\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"6.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M12.5 12.5v5M10 15h5\"/>",
-    "filletAll": "<rect x=\"3.5\" y=\"4.5\" width=\"13\" height=\"11\" rx=\"3.6\"/><path d=\"M8 10h4M10 8v4\" stroke-width=\"1.1\"/>",
-    "chamferAll": "<path d=\"M7 4.5h6l3.5 3.5v4L13 15.5H7L3.5 12V8z\"/><path d=\"M8 10h4M10 8v4\" stroke-width=\"1.1\"/>",
+    "filletAll": "<path d=\"M8 3.5h4M16.5 8v4M12 16.5H8M3.5 12V8\" stroke-width=\"1.1\"/><path d=\"M3.5 8A4.5 4.5 0 0 1 8 3.5M12 3.5A4.5 4.5 0 0 1 16.5 8M16.5 12a4.5 4.5 0 0 1-4.5 4.5M8 16.5A4.5 4.5 0 0 1 3.5 12\" stroke-width=\"2.4\"/>",
+    "chamferAll": "<path d=\"M8 3.5h4M16.5 8v4M12 16.5H8M3.5 12V8\" stroke-width=\"1.1\"/><path d=\"M3.5 8 8 3.5M12 3.5 16.5 8M16.5 12 12 16.5M8 16.5 3.5 12\" stroke-width=\"2.4\"/>",
     "reverse": "<path d=\"M3.5 7h12\"/><path d=\"m13 4.5 2.5 2.5-2.5 2.5\"/><path d=\"M16.5 13h-12\"/><path d=\"m7 10.5-2.5 2.5L7 15.5\"/>",
     "simplify": "<path d=\"m3 12 2.2-2.6 1.6 1.4 2.4-3.3 1.6 1.2 2.2-3 1.6 1.1L17 5.5\" stroke-dasharray=\"1.5 1.3\"/><path d=\"M3 16 17 8.5\"/><rect x=\"1.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "split": "<path d=\"M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1\"/><path d=\"m7.4 9.4 1.9 4M10.6 7.6l1.9 4\" stroke-width=\"1.1\"/><rect x=\"1.5\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5.6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "splitEqual": "<path d=\"M2.5 11h4.2M8 11h4M13.3 11h4.2\"/><path d=\"M7.35 7.5v7M12.65 7.5v7\" stroke-width=\"1.1\"/><rect x=\"1\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "splitLength": "<path d=\"M2.5 13h7.6M11.4 13h6.1\"/><path d=\"M2.5 5.5v4M10.75 5.5v9.5M2.5 7.5h8.25\" stroke-width=\"1.1\"/><path d=\"m4.3 6.3-1.8 1.2 1.8 1.2M8.95 6.3l1.8 1.2-1.8 1.2\" stroke-width=\"1.1\"/><rect x=\"1\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "cleanup": "<path d=\"M14.5 2.8 10.4 9\"/><path d=\"M6.4 9.4h7.2l1.2 7.1H5.2z\"/><path d=\"M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3\"/>",
     "topology": "<circle cx=\"10\" cy=\"10.5\" r=\"2.3\"/><path d=\"M10 2.8v5.4M3.2 16.6l5.1-4.6M16.8 16.6l-5.1-4.6\"/><circle cx=\"10\" cy=\"10.5\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
     "topologyEdit": "<path d=\"M2.5 4.5h15v11h-15z\"/><path d=\"M8.5 4.5v11\" stroke-dasharray=\"1.6 1.5\" stroke-width=\"1.1\"/><path d=\"M12.5 4.5 8.5 15.5\"/><rect x=\"11\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
@@ -24197,9 +24289,15 @@
     "overlapLayers": "<path d=\"M2.5 2.5h8v8h-8z\"/><path d=\"M10.5 5h6v8.5h-9v-3h3z\" fill=\"currentColor\" fill-opacity=\".14\"/><path d=\"M2 14.8 5.5 13.2 9 14.8 5.5 16.4z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1.1\"/><path d=\"M2 17 5.5 18.6 9 17\" stroke-width=\"1.1\"/>",
     "matchProperties": "<path d=\"m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z\"/><path d=\"M6.3 8.3 3.2 16.8l8.5-3.1\"/><path d=\"M4.6 12.9 7 15.4\"/>",
     "setElevation": "<path d=\"M3 16.5h14\"/><path d=\"M10 13.5V3.5\"/><path d=\"m7 6.5 3-3 3 3\"/><path d=\"M13.5 13.5h3M13.5 10.5h2\" stroke-width=\"1.1\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "setElevationIncrement": "<path d=\"M2.5 17h15\"/><path d=\"M5 17v-3.5M10 17v-6.5M15 17v-9.5\" stroke-width=\"1.1\"/><rect x=\"3.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.5\" y=\"9\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13.5\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M5.5 3.5v5M3 6h5\"/>",
+    "setElevationReset": "<path d=\"M2.5 16h15\"/><path d=\"M10 4v8.5\" stroke-dasharray=\"1.6 1.8\"/><path d=\"m7.2 10.8 2.8 2.8 2.8-2.8\"/><rect x=\"8.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m13.5 3.5 3 3M16.5 3.5l-3 3\" stroke-width=\"1.1\"/>",
     "sector": "<path d=\"M5 15.5V4.5a11 11 0 0 1 11 11z\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"3.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"3.5\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "pointsBetween": "<path d=\"M3 14 17 6\"/><circle cx=\"7.7\" cy=\"11.3\" r=\"1.25\"/><circle cx=\"10\" cy=\"10\" r=\"1.25\"/><circle cx=\"12.3\" cy=\"8.7\" r=\"1.25\"/><rect x=\"1.5\" y=\"12.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "intersectPoint": "<circle cx=\"7.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"12.5\" cy=\"11\" r=\"4.6\"/><circle cx=\"10\" cy=\"7.15\" r=\"1.4\" fill=\"currentColor\"/><rect x=\"6\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "pointsBetweenDistance": "<path d=\"M3 16.5 17 8.5\"/><circle cx=\"10\" cy=\"12.5\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"14.2\" cy=\"10.1\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1.5\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M2.2 13.2 9.2 9.2M2.6 11.6l-.4 1.6 1.6.4M7.6 8.8l1.6.4-.4 1.6\" stroke-width=\"1.1\"/>",
+    "pointsBetweenRatio": "<path d=\"M3 16 17 8\"/><circle cx=\"10\" cy=\"12\" r=\"1.25\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"5\" cy=\"4.5\" r=\"1.3\" stroke-width=\"1.1\"/><circle cx=\"10\" cy=\"7.5\" r=\"1.3\" stroke-width=\"1.1\"/><path d=\"M10.5 3.5 4.5 8.5\" stroke-width=\"1.1\"/>",
+    "intersectDirections": "<path d=\"M3.5 16.5 11 3.5M16.5 16.5 9 3.5\"/><path d=\"M6.5 16.5a3 3 0 0 0-1.4-2.6M13.5 16.5a3 3 0 0 1 1.4-2.6\" stroke-width=\"1.1\"/><rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"5.2\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+    "intersectLines": "<path d=\"M2.5 15.5 17.5 5.5M2.5 5.5l15 10\"/><rect x=\"1\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"5\" y=\"11.33\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1\" y=\"4\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"5\" y=\"6.67\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"10.5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
     "measureAngle": "<path d=\"M3.5 16h13M3.5 16 13 5\"/><path d=\"M9.5 16a6 6 0 0 0-2.1-4.55\"/><path d=\"M11.4 13.2h2.4\" stroke-width=\"1.1\"/><rect x=\"2\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "stationOffset": "<path d=\"M3 13h14\"/><path d=\"M12 13V5.8\" stroke-dasharray=\"2 1.5\"/><path d=\"M12 10.8h2.2V13\"/><circle cx=\"12\" cy=\"4.6\" r=\"1.4\"/><path d=\"M3 16.2h9M3 15v2.4M12 15v2.4\" stroke-width=\"1.1\"/><rect x=\"1.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "dimContinue": "<path d=\"M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14\"/><path d=\"m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2\"/>",
@@ -24294,6 +24392,8 @@
     "extentCheck": "<path d=\"M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4\"/><rect x=\"5.5\" y=\"5.5\" width=\"5\" height=\"5\"/><circle cx=\"14.2\" cy=\"14.2\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/>",
     "layers": "<path d=\"m10 3 7 3.8-7 3.8-7-3.8z\"/><path d=\"m3 10.3 7 3.8 7-3.8\"/><path d=\"m3 13.6 7 3.9 7-3.9\"/>",
     "layerAdd": "<path d=\"m9 3 6.5 3.5L9 10 2.5 6.5z\"/><path d=\"m2.5 10 6.5 3.5 2-1.1M15.5 11.5v6M12.5 14.5h6\"/>",
+    "layerIsolate": "<path d=\"m10 3 7 3.8-7 3.8-7-3.8z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m3 10.3 7 3.8 7-3.8M3 13.6l7 3.9 7-3.9\" stroke-dasharray=\"1.6 1.6\" stroke-width=\"1.1\"/>",
+    "layersShowAll": "<path d=\"m10 8.6 7 3.3-7 3.3-7-3.3z\"/><path d=\"m3 14.7 7 3.3 7-3.3\"/><path d=\"M4.5 4.6S6.8 1.8 10 1.8s5.5 2.8 5.5 2.8-2.3 2.8-5.5 2.8-5.5-2.8-5.5-2.8z\" stroke-width=\"1.2\"/><circle cx=\"10\" cy=\"4.6\" r=\"1.2\" fill=\"currentColor\" stroke=\"none\"/>",
     "folderAdd": "<path d=\"M2.5 15.5v-10h5l1.5 2h8.5v3\"/><path d=\"M2.5 15.5h9M15 11.5v6M12 14.5h6\"/>",
     "folder": "<path d=\"M2.5 15.5v-10h5l1.5 2h8.5v8z\"/>",
     "eye": "<path d=\"M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z\"/><circle cx=\"10\" cy=\"10\" r=\"2.4\"/>",
@@ -24320,13 +24420,33 @@
     "target": "<circle cx=\"10\" cy=\"10\" r=\"5.9\"/><path d=\"M10 1.9v3.4M10 14.7v3.4M1.9 10h3.4M14.7 10h3.4\"/><circle cx=\"10\" cy=\"10\" r=\"1.3\" fill=\"currentColor\" stroke=\"none\"/>",
     "grid": "<path d=\"M3 7h14M3 13h14M7 3v14M13 3v14\"/>",
     "lineWeight": "<path d=\"M3 5h14\"/><path d=\"M3 10h14\" stroke-width=\"2.4\"/><path d=\"M3 15.5h14\" stroke-width=\"3.6\"/>",
+    "color": "<path d=\"M10 2.8C7.6 6 5 8.9 5 12a5 5 0 0 0 10 0c0-3.1-2.6-6-5-9.2z\"/><path d=\"M5 12h10a5 5 0 0 1-10 0z\" fill=\"currentColor\" fill-opacity=\".35\" stroke=\"none\"/>",
+    "lineType": "<path d=\"M3 5h14\"/><path d=\"M3 10h14\" stroke-dasharray=\"3 2.6\"/><path d=\"M3 15h14\" stroke-dasharray=\"5 2.6 .1 2.6\"/>",
     "ortho": "<path d=\"M4 3.5v12.5h12.5\"/><path d=\"M4 12h4v4\"/>",
     "polar": "<path d=\"M3 16.5h14M3 16.5 14.5 5\"/><path d=\"M9 16.5a6 6 0 0 0-1.8-4.2\"/>",
+    "rendererWebgl2": "<rect x=\"5\" y=\"5\" width=\"10\" height=\"10\" rx=\"1.5\"/><path d=\"M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5\"/><path d=\"M10 7.6 12.6 12.2H7.4z\" stroke-width=\"1.1\"/>",
+    "rendererWebgpu": "<rect x=\"5\" y=\"5\" width=\"10\" height=\"10\" rx=\"1.5\"/><path d=\"M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5\"/><path d=\"M10.8 7.2 8.6 10.4h2.8L9.2 13\" stroke-width=\"1.2\"/>",
+    "symbolsPlot": "<path d=\"m10 4 1.25 2.55 2.8.4-2 1.98.47 2.8L10 10.4l-2.52 1.33.48-2.8-2-1.98 2.8-.4z\" stroke-width=\"1.1\"/><path d=\"M3 16h14\" stroke-width=\"1.2\"/><path d=\"M3 14v2M6.5 15v1M10 14v2M13.5 15v1M17 14v2\" stroke-width=\"1\"/>",
+    "symbolsScreen": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"10.5\" rx=\"1\" stroke-width=\"1.2\"/><path d=\"M7 17h6M10 13.5V17\" stroke-width=\"1.2\"/><path d=\"m10 5 .95 1.95 2.15.3-1.55 1.5.37 2.14L10 9.88l-1.92 1.01.37-2.14-1.55-1.5 2.15-.3z\" stroke-width=\"1\"/>",
+    "repeat": "<path d=\"M15.6 10.2a5.6 5.6 0 1 1-1.7-4.1\"/><path d=\"M14.6 2.6v3.7h-3.7\"/><path d=\"M8.9 7.9v4.4l3.5-2.2z\" fill=\"currentColor\" stroke=\"none\"/>",
     "sun": "<circle cx=\"10\" cy=\"10\" r=\"3.4\"/><path d=\"M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3 6 14M14 6l1.3-1.3\"/>",
     "moon": "<path d=\"M15.8 12.6A6.5 6.5 0 0 1 7.4 4.2a6.5 6.5 0 1 0 8.4 8.4z\"/>",
     "keyboard": "<rect x=\"2\" y=\"5\" width=\"16\" height=\"10\" rx=\"1.2\"/><path d=\"M5 8h1M8 8h1M11 8h1M14 8h1M5 11h1M14 11h1M8 11h4\"/>",
     "import": "<path d=\"M10 3v9M6.5 8.5 10 12l3.5-3.5\"/><path d=\"M3.5 13v3.5h13V13\"/>",
     "export": "<path d=\"M10 12V3M6.5 6.5 10 3l3.5 3.5\"/><path d=\"M3.5 13v3.5h13V13\"/>",
+    "importDxf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"m9.5 14.5 5.75-5.25\" stroke-width=\"1.1\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13.75\" y=\"7.75\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "importNcz": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M10 15.2V8.8l5 6.4V8.8\" stroke-width=\"1.2\"/>",
+    "importShp": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"m12.5 8.4 3.2 2.3-1.2 3.9h-4l-1.2-3.9z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1.1\"/>",
+    "importGeojson": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M11.4 8.6h-.5a.9.9 0 0 0-.9.9v1.4l-.8.8.8.8v1.4a.9.9 0 0 0 .9.9h.5M14.1 8.6h.5a.9.9 0 0 1 .9.9v1.4l.8.8-.8.8v1.4a.9.9 0 0 1-.9.9h-.5\" stroke-width=\"1.1\"/>",
+    "importNcn": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M11.8 9.4h3.7M11.8 12h3.7M11.8 14.6h3.7\" stroke-width=\"1.1\"/><circle cx=\"9.8\" cy=\"9.4\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"14.6\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "importKpafta": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><rect x=\"9.4\" y=\"8.6\" width=\"6.4\" height=\"7\" stroke-width=\"1\"/><path d=\"M9.4 13.4h6.4M13 13.4v2.2\" stroke-width=\"1\"/>",
+    "exportDxf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"m9.5 14.5 5.75-5.25\" stroke-width=\"1.1\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13.75\" y=\"7.75\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "exportGeojson": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M11.4 8.6h-.5a.9.9 0 0 0-.9.9v1.4l-.8.8.8.8v1.4a.9.9 0 0 0 .9.9h.5M14.1 8.6h.5a.9.9 0 0 1 .9.9v1.4l.8.8-.8.8v1.4a.9.9 0 0 1-.9.9h-.5\" stroke-width=\"1.1\"/>",
+    "exportNcn": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M11.8 9.4h3.7M11.8 12h3.7M11.8 14.6h3.7\" stroke-width=\"1.1\"/><circle cx=\"9.8\" cy=\"9.4\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"12\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"9.8\" cy=\"14.6\" r=\"0.8\" fill=\"currentColor\" stroke=\"none\"/>",
+    "exportPdf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M10.6 15.4V8.8h2.5a1.8 1.8 0 0 1 0 3.6h-2.5\" stroke-width=\"1.3\"/>",
+    "exportSvg": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.5 15C10 11 12 9.5 15.5 9.5\" stroke-width=\"1.1\"/><path d=\"M12.5 9.5h3\" stroke-width=\"1\"/><rect x=\"8\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.5\" cy=\"9.5\" r=\"0.9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "exportPng": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"m9.4 15.2 2.4-3.2 1.7 2 1.1-1.3 1.4 2.5z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1\"/><circle cx=\"14.3\" cy=\"9.6\" r=\"0.9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "exportKpafta": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><rect x=\"9.4\" y=\"8.6\" width=\"6.4\" height=\"7\" stroke-width=\"1\"/><path d=\"M9.4 13.4h6.4M13 13.4v2.2\" stroke-width=\"1\"/>",
     "print": "<path d=\"M5.5 7.5v-4h9v4\"/><rect x=\"2.5\" y=\"7.5\" width=\"15\" height=\"6.5\" rx=\"1\"/><path d=\"M5.5 12h9v5h-9z\"/>",
     "info": "<circle cx=\"10\" cy=\"10\" r=\"7\"/><path d=\"M10 9v4.5M10 6.3v.2\"/>",
     "warning": "<path d=\"M10 3 17.5 16h-15z\"/><path d=\"M10 8v3.8M10 13.8v.2\"/>",
@@ -24383,6 +24503,12 @@
     "legend": "<rect x=\"3\" y=\"3.5\" width=\"4\" height=\"3\" rx=\".5\"/><rect x=\"3\" y=\"8.5\" width=\"4\" height=\"3\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"M3 15h4\" stroke-dasharray=\"1.4 1.2\"/><path d=\"M9.5 5h7.5M9.5 10h7.5M9.5 15h5\"/>",
     "symbolAssign": "<path d=\"m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z\"/><path d=\"M14.5 11v6.5M11.25 14.25h6.5\"/>",
     "symbolClear": "<path d=\"m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z\"/><path d=\"m12.2 12 4.6 4.6M16.8 12l-4.6 4.6\"/>",
+    "symbolLine": "<path d=\"M2.5 14 17.5 6\"/><path d=\"M4.7 10.9l1.6 3M9.2 8.5l1.6 3M13.7 6.1l1.6 3\" stroke-width=\"1.1\"/>",
+    "symbolMarker": "<path d=\"M10 17.5S4.5 12.1 4.5 8a5.5 5.5 0 0 1 11 0c0 4.1-5.5 9.5-5.5 9.5z\"/><circle cx=\"10\" cy=\"8\" r=\"2\"/>",
+    "fillSolid": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\" rx=\"1\" fill=\"currentColor\" fill-opacity=\".35\"/>",
+    "fillPattern": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\" rx=\"1\"/><circle cx=\"6.75\" cy=\"6.75\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"6.75\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.25\" cy=\"6.75\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6.75\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.25\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"6.75\" cy=\"13.25\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"13.25\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.25\" cy=\"13.25\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "fillImage": "<rect x=\"3.5\" y=\"3.5\" width=\"13\" height=\"13\" rx=\"1\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.4\"/><path d=\"m3.5 14 3.6-3.2 2.6 2 2.6-2.6 4.2 3.8\"/>",
+    "symbolStroke": "<path d=\"M3 14.5c3.5-7 7.5-7 9-3.5s3.5 2.5 5-3\" stroke-width=\"2\"/>",
     "ribbon": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"14\" rx=\"1\"/><path d=\"M2.5 6.2h15M2.5 11h15\"/><rect x=\"4.5\" y=\"7.4\" width=\"2.4\" height=\"2.4\" rx=\".4\"/><path d=\"M8.8 7.9h2.6M8.8 9.4h2.6M13 7.9h2.5\"/>",
     "launcher": "<path d=\"M4.5 4.5h11v11\"/><path d=\"m15.5 15.5-7-7M15.5 10.5v5h-5\"/>",
     "help": "<circle cx=\"10\" cy=\"10\" r=\"7\"/><path d=\"M7.9 7.8a2.2 2.2 0 0 1 4.2.8c0 1.5-2.1 1.8-2.1 3.2M10 14.1v.1\"/>",
@@ -24425,6 +24551,16 @@
     "sheetPolygon": "<path d=\"m10 3 6.6 4.8-2.5 7.7H5.9L3.4 7.8z\"/>",
     "sheetLine": "<path d=\"M3.5 15.5 16.5 4.5\"/><path d=\"m12.4 4.6 4.1-.1-.1 4.1\"/>",
     "sheetArrow": "<path d=\"M3 10h13\"/><path d=\"m12 6 4.5 4-4.5 4\"/>",
+    "sheetRounded": "<rect x=\"3\" y=\"5\" width=\"14\" height=\"10\" rx=\"3.2\"/>",
+    "sheetLinePlain": "<path d=\"M3.5 15.5 16.5 4.5\"/>",
+    "sheetScaleNumeric": "<rect x=\"2.5\" y=\"5\" width=\"15\" height=\"10\" rx=\"1\"/><path d=\"m5.8 8.3 1.7-1.3v6M12.3 13V9.8a1.6 1.6 0 0 1 3.2 0V13\" stroke-width=\"1.2\"/><circle cx=\"10\" cy=\"8.6\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"10\" cy=\"11.6\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
+    "sheetBorderNeat": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".4\" stroke-width=\"2\"/>",
+    "sheetTableRevisions": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7.5h15M7.5 7.5v9\" stroke-width=\"1.1\"/><path d=\"m5 9.3 1.4 2.4H3.6zM5 12.8l1.4 2.4H3.6z\" stroke-width=\"1\"/><path d=\"M9.5 10.5h6M9.5 14h4.5\" stroke-width=\"1.1\"/>",
+    "sheetTableDrawings": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7.5h15M7.5 7.5v9\" stroke-width=\"1.1\"/><rect x=\"3.9\" y=\"8.9\" width=\"2.2\" height=\"2.8\" rx=\".3\" stroke-width=\"1\"/><rect x=\"3.9\" y=\"12.6\" width=\"2.2\" height=\"2.8\" rx=\".3\" stroke-width=\"1\"/><path d=\"M9.5 10.5h6M9.5 14h4.5\" stroke-width=\"1.1\"/>",
+    "sheetViewport": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".6\"/><path d=\"m5.5 13 3-4.5 3 2.5 3-4.5\" stroke-width=\"1.1\"/><rect x=\"4\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "sheetLegendLayers": "<path d=\"M3 5h4\"/><path d=\"M3 10h4\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M3 15h4\" stroke-dasharray=\"3 1.3 .1 1.3\"/><path d=\"M9.5 5h7.5M9.5 10h7.5M9.5 15h5\"/>",
+    "sheetLegendThematic": "<rect x=\"3\" y=\"3.5\" width=\"4\" height=\"3\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".14\"/><rect x=\"3\" y=\"8.5\" width=\"4\" height=\"3\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".45\"/><rect x=\"3\" y=\"13.5\" width=\"4\" height=\"3\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".85\"/><path d=\"M9.5 5h7.5M9.5 10h7.5M9.5 15h5\"/>",
+    "sheetCompass": "<circle cx=\"10\" cy=\"10\" r=\"5\" stroke-width=\"1.1\"/><path d=\"M10 2.5 11.5 8.5 17.5 10 11.5 11.5 10 17.5 8.5 11.5 2.5 10 8.5 8.5z\"/><path d=\"M10 2.5 11.5 8.5 10 10 8.5 8.5z\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/>",
     "sheetBorder": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".4\"/><rect x=\"5\" y=\"6\" width=\"10\" height=\"8\" rx=\".3\"/><path d=\"M10 3.5V6M10 14v2.5M2.5 10H5M15 10h2.5\" stroke-width=\"1.1\"/>",
     "sheetGrid": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\".6\"/><path d=\"M7.5 6v3M6 7.5h3M12.5 6v3M11 7.5h3M7.5 11v3M6 12.5h3M12.5 11v3M11 12.5h3\" stroke-width=\"1.2\"/>",
     "sheetAtlas": "<rect x=\"6\" y=\"2.5\" width=\"11.5\" height=\"12.5\" rx=\".8\"/><path d=\"M4 5v11.5a1 1 0 0 0 1 1h9.5\"/><path d=\"m8 12 2.5-2.5 2 1.5 3-3\" stroke-width=\"1.2\"/>",
@@ -24438,8 +24574,16 @@
     "sheetAlignTop": "<path d=\"M2.5 3.5h15\"/><rect x=\"5\" y=\"5.5\" width=\"3.5\" height=\"10\" rx=\".5\"/><rect x=\"11.5\" y=\"5.5\" width=\"3.5\" height=\"6\" rx=\".5\"/>",
     "sheetAlignMiddle": "<path d=\"M2.5 10h15\"/><rect x=\"5\" y=\"4\" width=\"3.5\" height=\"12\" rx=\".5\"/><rect x=\"11.5\" y=\"6.5\" width=\"3.5\" height=\"7\" rx=\".5\"/>",
     "sheetAlignBottom": "<path d=\"M2.5 16.5h15\"/><rect x=\"5\" y=\"4.5\" width=\"3.5\" height=\"10\" rx=\".5\"/><rect x=\"11.5\" y=\"8.5\" width=\"3.5\" height=\"6\" rx=\".5\"/>",
+    "sheetAlignToPage": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\".6\" stroke-width=\"1.1\"/><rect x=\"7\" y=\"7.5\" width=\"6\" height=\"5\" rx=\".5\"/><path d=\"M10 2.5V5M10 15v2.5M3.5 10h2M14.5 10h2\" stroke-width=\"1.1\"/>",
+    "sheetAlignToMargins": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\".6\" stroke-width=\"1.1\"/><rect x=\"5.6\" y=\"4.6\" width=\"8.8\" height=\"10.8\" stroke-dasharray=\"1.4 1.3\" stroke-width=\"1.1\"/><rect x=\"7.6\" y=\"8\" width=\"4.8\" height=\"4\" rx=\".5\"/>",
+    "sheetAlignToSelection": "<rect x=\"2.5\" y=\"3\" width=\"15\" height=\"14\" stroke-dasharray=\"1.6 1.4\" stroke-width=\"1.1\"/><rect x=\"5\" y=\"5.8\" width=\"8.5\" height=\"3.4\" rx=\".5\"/><rect x=\"7.5\" y=\"10.8\" width=\"7.5\" height=\"3.4\" rx=\".5\"/>",
     "sheetDistributeH": "<rect x=\"2.5\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><rect x=\"8.25\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><rect x=\"14\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><path d=\"M2.5 3h15\" stroke-dasharray=\"1.6 1.4\"/>",
     "sheetDistributeV": "<rect x=\"6\" y=\"2.5\" width=\"8\" height=\"3.5\" rx=\".5\"/><rect x=\"6\" y=\"8.25\" width=\"8\" height=\"3.5\" rx=\".5\"/><rect x=\"6\" y=\"14\" width=\"8\" height=\"3.5\" rx=\".5\"/><path d=\"M3 2.5v15\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sheetDistributeHGaps": "<rect x=\"2.5\" y=\"4\" width=\"3\" height=\"8.5\" rx=\".5\"/><rect x=\"8.25\" y=\"4\" width=\"3.5\" height=\"8.5\" rx=\".5\"/><rect x=\"14.5\" y=\"4\" width=\"3\" height=\"8.5\" rx=\".5\"/><path d=\"M5.5 15.5h2.75M11.75 15.5h2.75M5.5 14.2v2.6M8.25 14.2v2.6M11.75 14.2v2.6M14.5 14.2v2.6\" stroke-width=\"1.1\"/>",
+    "sheetDistributeVGaps": "<rect x=\"4\" y=\"2.5\" width=\"8.5\" height=\"3\" rx=\".5\"/><rect x=\"4\" y=\"8.25\" width=\"8.5\" height=\"3.5\" rx=\".5\"/><rect x=\"4\" y=\"14.5\" width=\"8.5\" height=\"3\" rx=\".5\"/><path d=\"M15.5 5.5v2.75M15.5 11.75v2.75M14.2 5.5h2.6M14.2 8.25h2.6M14.2 11.75h2.6M14.2 14.5h2.6\" stroke-width=\"1.1\"/>",
+    "sheetMatchWidth": "<rect x=\"5\" y=\"7.5\" width=\"10\" height=\"3\" rx=\".5\"/><rect x=\"5\" y=\"12.5\" width=\"10\" height=\"5\" rx=\".5\"/><path d=\"M5 4h10M6.8 2.4 5 4l1.8 1.6M13.2 2.4 15 4l-1.8 1.6\" stroke-width=\"1.1\"/>",
+    "sheetMatchHeight": "<rect x=\"7.5\" y=\"5\" width=\"3\" height=\"10\" rx=\".5\"/><rect x=\"12.5\" y=\"5\" width=\"5\" height=\"10\" rx=\".5\"/><path d=\"M4 5v10M2.4 6.8 4 5l1.6 1.8M2.4 13.2 4 15l1.6-1.8\" stroke-width=\"1.1\"/>",
+    "sheetModel": "<path d=\"M3.5 16.5V8M3.5 16.5H12\" stroke-width=\"1.1\"/><path d=\"m2 9.6 1.5-2 1.5 2M10.4 15l2 1.5-2 1.5\" stroke-width=\"1.1\"/><path d=\"m6.8 12.6 3-5.2 3.4 3 3.6-6\"/><rect x=\"5.3\" y=\"11.1\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.3\" y=\"2.9\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "sheetMoveLeft": "<path d=\"M16 10H4.5M8.5 6l-4 4 4 4\"/>",
     "sheetMoveRight": "<path d=\"M4 10h11.5M11.5 6l4 4-4 4\"/>",
     "sheetFront": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\".5\"/><rect x=\"8\" y=\"8\" width=\"9\" height=\"9\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\"/>",

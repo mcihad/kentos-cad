@@ -328,8 +328,11 @@ fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
     let new_menu = MenuButton::new(menu_face("plus", "Yeni sembol", false), || {
         Menu::new()
             .item("Alan sembolü", ev(Event::NewSymbol("fill")))
+            .icon(crate::icons::from_web(Some("hatch")))
             .item("Çizgi sembolü", ev(Event::NewSymbol("line")))
+            .icon(crate::icons::from_web(Some("symbolLine")))
             .item("İşaret sembolü", ev(Event::NewSymbol("marker")))
+            .icon(crate::icons::from_web(Some("symbolMarker")))
             .separator()
             .item("SVG çizimi (düzenleyicide)…", ev(Event::NewDrawing))
             .icon(crate::icons::from_web(Some("edit")))
@@ -338,8 +341,10 @@ fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
         MenuButton::new(menu_face("import", "İçe aktar", true), || {
             Menu::new()
                 .item("Dosyadan…", ev(Event::ImportFile))
+                .icon(crate::icons::from_web(Some("fileOpen")))
                 .detail(".kstil, PNG ya da JPEG")
                 .item("Panodan yapıştır", ev(Event::ImportClipboard))
+                .icon(crate::icons::from_web(Some("paste")))
                 .detail("Paylaşılan stil metni")
         }),
         Tip::new("Sembolleri kitaplığa ya da projeye alır"),
@@ -349,8 +354,10 @@ fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
         MenuButton::new(menu_face("export", "Dışa aktar", true), || {
             Menu::new()
                 .item("Dosyaya (.kstil)", ev(Event::ExportListed))
+                .icon(crate::icons::from_web(Some("save")))
                 .detail("Kullandıkları çizimlerle birlikte")
                 .item("Panoya kopyala", ev(Event::ExportClipboard))
+                .icon(crate::icons::from_web(Some("copy")))
                 .detail("Bir iletiye yapıştırıp paylaşmak için")
         }),
         Tip::new("Listedeki sembolleri kullandıkları çizimlerle birlikte verir"),
@@ -590,6 +597,7 @@ fn category_menu<'a>(
                 "Yeniden adlandır",
                 (writable && !path.is_empty()).then(|| ev(Event::Rename(source, path.clone()))),
             )
+            .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
             .separator()
             .item(

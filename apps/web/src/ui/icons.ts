@@ -10,6 +10,28 @@ const grip = (x: number, y: number) => `<rect x="${x - 1.5}" y="${y - 1.5}" widt
 const textAlign = (x: number, y: number) =>
   `<rect x="3" y="4.5" width="14" height="11" rx="1" stroke-dasharray="2 1.6"/><path d="M3 12.5h14" stroke-width="1"/><circle cx="${x}" cy="${y}" r="2.6" fill="currentColor" stroke="none"/>`;
 
+/**
+ * A file kind brought in or written out: the page, the arrow into or out of it on the left, the kind's emblem on it
+ * (DXF a line between grips, NCZ an N, Shapefile a polygon, GeoJSON braces, a coordinate list its rows, PDF a P,
+ * SVG a curve with its handle, PNG a picture, .kpafta a sheet with its title block).
+ */
+const filePage = '<path d="M7.5 2.5H14l3.5 3.5v11.5h-10z" stroke-width="1.2"/><path d="M14 2.5V6h3.5" stroke-width="1.1"/>';
+const fileIn = (emblem: string) => `${filePage}<path d="M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14"/>${emblem}`;
+const fileOut = (emblem: string) => `${filePage}<path d="M7 11.5H1.5M4 9l-2.5 2.5L4 14"/>${emblem}`;
+const dot = (x: number, y: number, r: number) => `<circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" stroke="none"/>`;
+const EMBLEM = {
+  dxf: `<path d="m9.5 14.5 5.75-5.25" stroke-width="1.1"/>${grip(9.5, 14.5)}${grip(15.25, 9.25)}`,
+  ncz: '<path d="M10 15.2V8.8l5 6.4V8.8" stroke-width="1.2"/>',
+  shp: '<path d="m12.5 8.4 3.2 2.3-1.2 3.9h-4l-1.2-3.9z" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/>',
+  geojson:
+    '<path d="M11.4 8.6h-.5a.9.9 0 0 0-.9.9v1.4l-.8.8.8.8v1.4a.9.9 0 0 0 .9.9h.5M14.1 8.6h.5a.9.9 0 0 1 .9.9v1.4l.8.8-.8.8v1.4a.9.9 0 0 1-.9.9h-.5" stroke-width="1.1"/>',
+  ncn: `<path d="M11.8 9.4h3.7M11.8 12h3.7M11.8 14.6h3.7" stroke-width="1.1"/>${dot(9.8, 9.4, 0.8)}${dot(9.8, 12, 0.8)}${dot(9.8, 14.6, 0.8)}`,
+  pdf: '<path d="M10.6 15.4V8.8h2.5a1.8 1.8 0 0 1 0 3.6h-2.5" stroke-width="1.3"/>',
+  svg: `<path d="M9.5 15C10 11 12 9.5 15.5 9.5" stroke-width="1.1"/><path d="M12.5 9.5h3" stroke-width="1"/>${grip(9.5, 15)}${dot(15.5, 9.5, 0.9)}`,
+  png: `<path d="m9.4 15.2 2.4-3.2 1.7 2 1.1-1.3 1.4 2.5z" fill="currentColor" fill-opacity=".3" stroke-width="1"/>${dot(14.3, 9.6, 0.9)}`,
+  kpafta: '<rect x="9.4" y="8.6" width="6.4" height="7" stroke-width="1"/><path d="M9.4 13.4h6.4M13 13.4v2.2" stroke-width="1"/>',
+};
+
 // Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
 export const ICONS = {
   // Tools
@@ -22,7 +44,15 @@ export const ICONS = {
   line: `<path d="M4.5 15.5 15.5 4.5"/>${grip(4.5, 15.5)}${grip(15.5, 4.5)}`,
   polyline: `<path d="m3.5 15 4-8 5 5 4-8"/>${grip(3.5, 15)}${grip(7.5, 7)}${grip(12.5, 12)}${grip(16.5, 4)}`,
   arc: `<path d="M3.5 16A12.5 12.5 0 0 1 16 3.5"/>${grip(3.5, 16)}${grip(16, 3.5)}${grip(7.2, 7.2)}`,
+  // The arc from its centre (the dot) and ends; and going on from the last line's end, tangent to it.
+  arcCenter: `<path d="M16 15A11 11 0 0 0 5 4"/><path d="M5 15h11M5 15V4" stroke-dasharray="1.4 1.6" stroke-width="1.1"/><circle cx="5" cy="15" r="1.4" fill="currentColor" stroke="none"/>${grip(16, 15)}${grip(5, 4)}`,
+  arcContinue: `<path d="M2.5 15.5H8" stroke-width="1.1"/><path d="M8 15.5a7.5 7.5 0 0 0 7.5-7.5V5"/><path d="m13.2 6.8 2.3-2.3 2.3 2.3"/>${grip(8, 15.5)}`,
   circle: `<circle cx="10" cy="10" r="6.5"/><path d="M10 10h6.5"/>${grip(10, 10)}`,
+  // The circle's other ways: a diameter's ends; three points on it; tangent to two lines with its radius; inside three.
+  circle2p: `<circle cx="10" cy="10" r="6.5"/><path d="M3.5 10h13" stroke-width="1.1"/>${grip(3.5, 10)}${grip(16.5, 10)}`,
+  circle3p: `<circle cx="10" cy="10" r="6.5"/>${grip(10, 3.5)}${grip(4.37, 13.25)}${grip(15.63, 13.25)}`,
+  circleTtr: '<path d="M3 2.5V17h14.5" stroke-width="1.1"/><circle cx="8.5" cy="11.5" r="5.5"/><path d="m8.5 11.5 3.9-3.9"/><circle cx="8.5" cy="11.5" r="1" fill="currentColor" stroke="none"/>',
+  circleTtt: '<path d="M2.5 17h15L10 3z" stroke-width="1.1"/><circle cx="10" cy="12.51" r="4.49"/>',
   rectangle: `<rect x="3.5" y="5.5" width="13" height="9"/>${grip(3.5, 14.5)}${grip(16.5, 5.5)}`,
   ellipse: `<ellipse cx="10" cy="10" rx="7.6" ry="4.3" transform="rotate(-28 10 10)"/>${grip(3.3, 13.6)}${grip(16.7, 6.4)}`,
   xline: `<path d="M1.5 16 18.5 4" stroke-dasharray="3.2 1.6"/>${grip(10, 10)}`,
@@ -55,6 +85,8 @@ export const ICONS = {
   blockDefine: `<rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-dasharray="2.2 1.6"/><circle cx="8" cy="8" r="2"/><path d="m10.8 13.2 2.2-4 2.2 4z"/>${grip(3.5, 16.5)}`,
   blocks: '<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/><rect x="3" y="11" width="6" height="6" rx="1"/><circle cx="14" cy="14" r="3"/>',
   blockAttributes: '<rect x="3" y="4.5" width="7" height="7" rx="1.2"/><circle cx="6.5" cy="8" r="1.8"/><path d="M12.5 5.5h5M12.5 8.5h5M12.5 11.5h3.5M3 15.5h14.5"/>',
+  // Taban noktasını değiştir: the block's old base (hollow) and where it goes (the grip).
+  blockBase: `<rect x="2.5" y="2.5" width="10" height="10" rx="1.2"/><circle cx="7.5" cy="7.5" r="2.2"/><rect x="1.3" y="11.3" width="2.4" height="2.4" stroke-width="1.1"/><path d="M4.2 15.2c2.6 1.8 6.4 2 9.4.7" stroke-width="1.1" stroke-dasharray="1.6 1.4"/>${grip(16, 15.5)}`,
   move: '<path d="M10 2.5v15M2.5 10h15"/><path d="M7.8 4.7 10 2.5l2.2 2.2M7.8 15.3l2.2 2.2 2.2-2.2M4.7 7.8 2.5 10l2.2 2.2M15.3 7.8l2.2 2.2-2.2 2.2"/>',
   copy: '<rect x="3.5" y="7.5" width="9" height="9" rx="1"/><path d="M7.5 7.5v-4h9v9h-4"/>',
   rotate: '<path d="M16 10.5A6 6 0 1 1 13.6 5.7"/><path d="M14 2.6v3.5h-3.5"/>',
@@ -63,18 +95,30 @@ export const ICONS = {
   offset: '<path d="M3.5 13.5C5 8.5 8.5 5 14.5 4"/><path d="M6.2 16.5c1.4-4.4 4.4-7.3 10-8.2"/>',
   trim: '<path d="M12.5 3v14"/><path d="M3 10h9.5"/><path d="M12.5 10H17" stroke-dasharray="1.6 1.8"/><path d="m14.2 5.8 2.6-2.6M16.8 5.8l-2.6-2.6"/>',
   extend: '<path d="M16.5 3v14"/><path d="M3 10h7"/><path d="M10 10h6.5" stroke-dasharray="1.6 1.8"/><path d="m12.6 7.6 2.4 2.4-2.4 2.4"/>',
-  fillet: `<path d="M4 16.5V10a5.5 5.5 0 0 1 5.5-5.5h7"/>${grip(4, 16.5)}${grip(16.5, 4.5)}`,
-  chamfer: `<path d="M4 16.5V9.5l5-5h7.5"/>${grip(4, 9.5)}${grip(9, 4.5)}`,
+  // Buda and Uzat with Çit: the fence, a zigzag, across the lines it cuts or carries on.
+  trimFence:
+    '<path d="M10 3v14"/><path d="M2.5 7H10M2.5 13H10"/><path d="M10 7h7.5M10 13h7.5" stroke-dasharray="1.6 1.8"/><path d="m15.8 3-2.3 4.6 2.3 4.6-2.3 4.6" stroke-width="1.8"/>',
+  extendFence:
+    '<path d="M17 3v14"/><path d="M2.5 7H9M2.5 13H9"/><path d="M9 7h8M9 13h8" stroke-dasharray="1.6 1.8"/><path d="m7.6 3-2.3 4.6 2.3 4.6-2.3 4.6" stroke-width="1.8"/>',
+  // Köşe yuvarla and Pah: the new edge heavy, the two lines' grips where they are clicked.
+  fillet: `<path d="M3.5 16V11M11 3.5H16"/><path d="M3.5 11A7.5 7.5 0 0 1 11 3.5" stroke-width="2.4"/>${grip(3.5, 16.5)}${grip(16.5, 3.5)}`,
+  chamfer: `<path d="M3.5 16V11M11 3.5H16"/><path d="M3.5 11 11 3.5" stroke-width="2.4"/>${grip(3.5, 16.5)}${grip(16.5, 3.5)}`,
   break: `<path d="M3 15 8 12M12 9.6l5-3"/>${grip(8, 12)}${grip(12, 9.6)}<path d="m8.8 6.5 2.4 1.6M8.8 15l2.4 1.6" stroke-dasharray="1.4 1.2"/>`,
   join: `<path d="M3 15.5 7.5 7.5M12.5 7.5l4.5 8"/><path d="M7.5 7.5h5" stroke-dasharray="1.6 1.4"/>${grip(7.5, 7.5)}${grip(12.5, 7.5)}`,
   explode: '<path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4"/><path d="M10 8V6.5M10 13.5V12M8 10H6.5M13.5 10H12"/>',
   stretch: `<path d="M3.5 5.5h6l6 4.5-6 4.5h-6z"/><rect x="8.5" y="2.5" width="9" height="15" stroke-dasharray="1.8 1.6"/>${grip(15.5, 10)}`,
   vertex: `<path d="m3 15 5-9 9 5"/>${grip(3, 15)}${grip(8, 6)}${grip(17, 11)}<path d="M12.5 12.5v5M10 15h5"/>`,
-  filletAll: '<rect x="3.5" y="4.5" width="13" height="11" rx="3.6"/><path d="M8 10h4M10 8v4" stroke-width="1.1"/>',
-  chamferAll: '<path d="M7 4.5h6l3.5 3.5v4L13 15.5H7L3.5 12V8z"/><path d="M8 10h4M10 8v4" stroke-width="1.1"/>',
+  // Every corner of a closed path rounded or cut, the new edges heavy.
+  filletAll:
+    '<path d="M8 3.5h4M16.5 8v4M12 16.5H8M3.5 12V8" stroke-width="1.1"/><path d="M3.5 8A4.5 4.5 0 0 1 8 3.5M12 3.5A4.5 4.5 0 0 1 16.5 8M16.5 12a4.5 4.5 0 0 1-4.5 4.5M8 16.5A4.5 4.5 0 0 1 3.5 12" stroke-width="2.4"/>',
+  chamferAll:
+    '<path d="M8 3.5h4M16.5 8v4M12 16.5H8M3.5 12V8" stroke-width="1.1"/><path d="M3.5 8 8 3.5M12 3.5 16.5 8M16.5 12 12 16.5M8 16.5 3.5 12" stroke-width="2.4"/>',
   reverse: '<path d="M3.5 7h12"/><path d="m13 4.5 2.5 2.5-2.5 2.5"/><path d="M16.5 13h-12"/><path d="m7 10.5-2.5 2.5L7 15.5"/>',
   simplify: `<path d="m3 12 2.2-2.6 1.6 1.4 2.4-3.3 1.6 1.2 2.2-3 1.6 1.1L17 5.5" stroke-dasharray="1.5 1.3"/><path d="M3 16 17 8.5"/>${grip(3, 16)}${grip(17, 8.5)}`,
   split: `<path d="M3 14.5 7.3 12.2M9.2 11.2l1.6-.8M12.7 9.4 17 7.1"/><path d="m7.4 9.4 1.9 4M10.6 7.6l1.9 4" stroke-width="1.1"/>${grip(3, 14.5)}${grip(17, 7.1)}`,
+  // Parçala into equal parts (three, the cuts marked) and by a length (measured off from the start).
+  splitEqual: `<path d="M2.5 11h4.2M8 11h4M13.3 11h4.2"/><path d="M7.35 7.5v7M12.65 7.5v7" stroke-width="1.1"/>${grip(2.5, 11)}${grip(17.5, 11)}`,
+  splitLength: `<path d="M2.5 13h7.6M11.4 13h6.1"/><path d="M2.5 5.5v4M10.75 5.5v9.5M2.5 7.5h8.25" stroke-width="1.1"/><path d="m4.3 6.3-1.8 1.2 1.8 1.2M8.95 6.3l1.8 1.2-1.8 1.2" stroke-width="1.1"/>${grip(2.5, 13)}${grip(17.5, 13)}`,
   cleanup: '<path d="M14.5 2.8 10.4 9"/><path d="M6.4 9.4h7.2l1.2 7.1H5.2z"/><path d="M8.1 12.2v4.3M10 12.2v4.3M11.9 12.2v4.3"/>',
   // Topolojik temizlik (docs/adr/0148): three line ends brought to one node.
   topology: '<circle cx="10" cy="10.5" r="2.3"/><path d="M10 2.8v5.4M3.2 16.6l5.1-4.6M16.8 16.6l-5.1-4.6"/><circle cx="10" cy="10.5" r=".9" fill="currentColor" stroke="none"/>',
@@ -93,9 +137,17 @@ export const ICONS = {
     '<path d="M2.5 2.5h8v8h-8z"/><path d="M10.5 5h6v8.5h-9v-3h3z" fill="currentColor" fill-opacity=".14"/><path d="M2 14.8 5.5 13.2 9 14.8 5.5 16.4z" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="M2 17 5.5 18.6 9 17" stroke-width="1.1"/>',
   matchProperties: '<path d="m11.4 3.2 5.4 5.4-5.1 5.1-5.4-5.4z"/><path d="M6.3 8.3 3.2 16.8l8.5-3.1"/><path d="M4.6 12.9 7 15.4"/>',
   setElevation: `<path d="M3 16.5h14"/><path d="M10 13.5V3.5"/><path d="m7 6.5 3-3 3 3"/><path d="M13.5 13.5h3M13.5 10.5h2" stroke-width="1.1"/>${grip(10, 13.5)}`,
+  setElevationIncrement: `<path d="M2.5 17h15"/><path d="M5 17v-3.5M10 17v-6.5M15 17v-9.5" stroke-width="1.1"/>${grip(5, 13.5)}${grip(10, 10.5)}${grip(15, 7.5)}<path d="M5.5 3.5v5M3 6h5"/>`,
+  setElevationReset: `<path d="M2.5 16h15"/><path d="M10 4v8.5" stroke-dasharray="1.6 1.8"/><path d="m7.2 10.8 2.8 2.8 2.8-2.8"/>${grip(10, 16)}<path d="m13.5 3.5 3 3M16.5 3.5l-3 3" stroke-width="1.1"/>`,
   sector: `<path d="M5 15.5V4.5a11 11 0 0 1 11 11z" fill="currentColor" fill-opacity=".14"/>${grip(5, 15.5)}${grip(5, 4.5)}${grip(16, 15.5)}`,
   pointsBetween: `<path d="M3 14 17 6"/><circle cx="7.7" cy="11.3" r="1.25"/><circle cx="10" cy="10" r="1.25"/><circle cx="12.3" cy="8.7" r="1.25"/>${grip(3, 14)}${grip(17, 6)}`,
   intersectPoint: `<circle cx="7.5" cy="11" r="4.6"/><circle cx="12.5" cy="11" r="4.6"/><circle cx="10" cy="7.15" r="1.4" fill="currentColor"/>${grip(7.5, 11)}${grip(12.5, 11)}`,
+  // Ara nokta by a distance along (measured) and by a ratio (%).
+  pointsBetweenDistance: `<path d="M3 16.5 17 8.5"/><circle cx="10" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.2" cy="10.1" r="1.3" fill="currentColor" stroke="none"/>${grip(3, 16.5)}${grip(17, 8.5)}<path d="M2.2 13.2 9.2 9.2M2.6 11.6l-.4 1.6 1.6.4M7.6 8.8l1.6.4-.4 1.6" stroke-width="1.1"/>`,
+  pointsBetweenRatio: `<path d="M3 16 17 8"/><circle cx="10" cy="12" r="1.25" fill="currentColor" stroke="none"/>${grip(3, 16)}${grip(17, 8)}<circle cx="5" cy="4.5" r="1.3" stroke-width="1.1"/><circle cx="10" cy="7.5" r="1.3" stroke-width="1.1"/><path d="M10.5 3.5 4.5 8.5" stroke-width="1.1"/>`,
+  // Kesişim noktası from two directions (their angles marked) and of two lines (two points each).
+  intersectDirections: `<path d="M3.5 16.5 11 3.5M16.5 16.5 9 3.5"/><path d="M6.5 16.5a3 3 0 0 0-1.4-2.6M13.5 16.5a3 3 0 0 1 1.4-2.6" stroke-width="1.1"/>${grip(3.5, 16.5)}${grip(16.5, 16.5)}<circle cx="10" cy="5.2" r="1.5" fill="currentColor" stroke="none"/>`,
+  intersectLines: `<path d="M2.5 15.5 17.5 5.5M2.5 5.5l15 10"/>${grip(2.5, 15.5)}${grip(6.5, 12.83)}${grip(2.5, 5.5)}${grip(6.5, 8.17)}<circle cx="10" cy="10.5" r="1.5" fill="currentColor" stroke="none"/>`,
   measureAngle: `<path d="M3.5 16h13M3.5 16 13 5"/><path d="M9.5 16a6 6 0 0 0-2.1-4.55"/><path d="M11.4 13.2h2.4" stroke-width="1.1"/>${grip(3.5, 16)}`,
   stationOffset: `<path d="M3 13h14"/><path d="M12 13V5.8" stroke-dasharray="2 1.5"/><path d="M12 10.8h2.2V13"/><circle cx="12" cy="4.6" r="1.4"/><path d="M3 16.2h9M3 15v2.4M12 15v2.4" stroke-width="1.1"/>${grip(3, 13)}${grip(17, 13)}`,
   dimContinue: '<path d="M3 5.5v10M10 5.5v10M17 5.5v10M3 12.5h14"/><path d="m5.1 11.3-2.1 1.2 2.1 1.2M7.9 11.3l2.1 1.2-2.1 1.2M12.1 11.3l-2.1 1.2 2.1 1.2M14.9 11.3l2.1 1.2-2.1 1.2"/>',
@@ -214,6 +266,11 @@ export const ICONS = {
   extentCheck: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="5.5" y="5.5" width="5" height="5"/><circle cx="14.2" cy="14.2" r="1.4" fill="currentColor" stroke="none"/>',
   layers: '<path d="m10 3 7 3.8-7 3.8-7-3.8z"/><path d="m3 10.3 7 3.8 7-3.8"/><path d="m3 13.6 7 3.9 7-3.9"/>',
   layerAdd: '<path d="m9 3 6.5 3.5L9 10 2.5 6.5z"/><path d="m2.5 10 6.5 3.5 2-1.1M15.5 11.5v6M12.5 14.5h6"/>',
+  // Yalnızca bunu göster: one layer, the others ghosted; Tüm katmanları göster: the layers under an eye.
+  layerIsolate:
+    '<path d="m10 3 7 3.8-7 3.8-7-3.8z" fill="currentColor" fill-opacity=".3"/><path d="m3 10.3 7 3.8 7-3.8M3 13.6l7 3.9 7-3.9" stroke-dasharray="1.6 1.6" stroke-width="1.1"/>',
+  layersShowAll:
+    '<path d="m10 8.6 7 3.3-7 3.3-7-3.3z"/><path d="m3 14.7 7 3.3 7-3.3"/><path d="M4.5 4.6S6.8 1.8 10 1.8s5.5 2.8 5.5 2.8-2.3 2.8-5.5 2.8-5.5-2.8-5.5-2.8z" stroke-width="1.2"/><circle cx="10" cy="4.6" r="1.2" fill="currentColor" stroke="none"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',
   folder: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v8z"/>',
   eye: '<path d="M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.4"/>',
@@ -243,13 +300,41 @@ export const ICONS = {
   target: '<circle cx="10" cy="10" r="5.9"/><path d="M10 1.9v3.4M10 14.7v3.4M1.9 10h3.4M14.7 10h3.4"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/>',
   grid: '<path d="M3 7h14M3 13h14M7 3v14M13 3v14"/>',
   lineWeight: '<path d="M3 5h14"/><path d="M3 10h14" stroke-width="2.4"/><path d="M3 15.5h14" stroke-width="3.6"/>',
+  // A layer's colour (a drop, half full) and line type (solid, dashed, dash-dot).
+  color: '<path d="M10 2.8C7.6 6 5 8.9 5 12a5 5 0 0 0 10 0c0-3.1-2.6-6-5-9.2z"/><path d="M5 12h10a5 5 0 0 1-10 0z" fill="currentColor" fill-opacity=".35" stroke="none"/>',
+  lineType: '<path d="M3 5h14"/><path d="M3 10h14" stroke-dasharray="3 2.6"/><path d="M3 15h14" stroke-dasharray="5 2.6 .1 2.6"/>',
   ortho: '<path d="M4 3.5v12.5h12.5"/><path d="M4 12h4v4"/>',
   polar: '<path d="M3 16.5h14M3 16.5 14.5 5"/><path d="M9 16.5a6 6 0 0 0-1.8-4.2"/>',
+  // Çizim motoru: a chip, a triangle on it (WebGL2) or a bolt (WebGPU).
+  rendererWebgl2:
+    '<rect x="5" y="5" width="10" height="10" rx="1.5"/><path d="M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5"/><path d="M10 7.6 12.6 12.2H7.4z" stroke-width="1.1"/>',
+  rendererWebgpu:
+    '<rect x="5" y="5" width="10" height="10" rx="1.5"/><path d="M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5"/><path d="M10.8 7.2 8.6 10.4h2.8L9.2 13" stroke-width="1.2"/>',
+  // Sembol boyutu: a symbol over a scale (the drawing's) or on a screen.
+  symbolsPlot:
+    '<path d="m10 4 1.25 2.55 2.8.4-2 1.98.47 2.8L10 10.4l-2.52 1.33.48-2.8-2-1.98 2.8-.4z" stroke-width="1.1"/><path d="M3 16h14" stroke-width="1.2"/><path d="M3 14v2M6.5 15v1M10 14v2M13.5 15v1M17 14v2" stroke-width="1"/>',
+  symbolsScreen:
+    '<rect x="2.5" y="3" width="15" height="10.5" rx="1" stroke-width="1.2"/><path d="M7 17h6M10 13.5V17" stroke-width="1.2"/><path d="m10 5 .95 1.95 2.15.3-1.55 1.5.37 2.14L10 9.88l-1.92 1.01.37-2.14-1.55-1.5 2.15-.3z" stroke-width="1"/>',
+  // Son komutu yinele: going round again, played.
+  repeat: '<path d="M15.6 10.2a5.6 5.6 0 1 1-1.7-4.1"/><path d="M14.6 2.6v3.7h-3.7"/><path d="M8.9 7.9v4.4l3.5-2.2z" fill="currentColor" stroke="none"/>',
   sun: '<circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3 6 14M14 6l1.3-1.3"/>',
   moon: '<path d="M15.8 12.6A6.5 6.5 0 0 1 7.4 4.2a6.5 6.5 0 1 0 8.4 8.4z"/>',
   keyboard: '<rect x="2" y="5" width="16" height="10" rx="1.2"/><path d="M5 8h1M8 8h1M11 8h1M14 8h1M5 11h1M14 11h1M8 11h4"/>',
   import: '<path d="M10 3v9M6.5 8.5 10 12l3.5-3.5"/><path d="M3.5 13v3.5h13V13"/>',
   export: '<path d="M10 12V3M6.5 6.5 10 3l3.5 3.5"/><path d="M3.5 13v3.5h13V13"/>',
+  importDxf: fileIn(EMBLEM.dxf),
+  importNcz: fileIn(EMBLEM.ncz),
+  importShp: fileIn(EMBLEM.shp),
+  importGeojson: fileIn(EMBLEM.geojson),
+  importNcn: fileIn(EMBLEM.ncn),
+  importKpafta: fileIn(EMBLEM.kpafta),
+  exportDxf: fileOut(EMBLEM.dxf),
+  exportGeojson: fileOut(EMBLEM.geojson),
+  exportNcn: fileOut(EMBLEM.ncn),
+  exportPdf: fileOut(EMBLEM.pdf),
+  exportSvg: fileOut(EMBLEM.svg),
+  exportPng: fileOut(EMBLEM.png),
+  exportKpafta: fileOut(EMBLEM.kpafta),
   print: '<path d="M5.5 7.5v-4h9v4"/><rect x="2.5" y="7.5" width="15" height="6.5" rx="1"/><path d="M5.5 12h9v5h-9z"/>',
   info: '<circle cx="10" cy="10" r="7"/><path d="M10 9v4.5M10 6.3v.2"/>',
   warning: '<path d="M10 3 17.5 16h-15z"/><path d="M10 8v3.8M10 13.8v.2"/>',
@@ -311,6 +396,14 @@ export const ICONS = {
   legend: '<rect x="3" y="3.5" width="4" height="3" rx=".5"/><rect x="3" y="8.5" width="4" height="3" rx=".5" fill="currentColor" fill-opacity=".3"/><path d="M3 15h4" stroke-dasharray="1.4 1.2"/><path d="M9.5 5h7.5M9.5 10h7.5M9.5 15h5"/>',
   symbolAssign: '<path d="m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z"/><path d="M14.5 11v6.5M11.25 14.25h6.5"/>',
   symbolClear: '<path d="m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z"/><path d="m12.2 12 4.6 4.6M16.8 12l-4.6 4.6"/>',
+  // Symbols' kinds and their layers (Stil yöneticisi, Sembol tasarımcısı): a line with marks along it, a pin;
+  // a solid fill, a pattern of dots, a picture filling the area, a stroke.
+  symbolLine: '<path d="M2.5 14 17.5 6"/><path d="M4.7 10.9l1.6 3M9.2 8.5l1.6 3M13.7 6.1l1.6 3" stroke-width="1.1"/>',
+  symbolMarker: '<path d="M10 17.5S4.5 12.1 4.5 8a5.5 5.5 0 0 1 11 0c0 4.1-5.5 9.5-5.5 9.5z"/><circle cx="10" cy="8" r="2"/>',
+  fillSolid: '<rect x="3.5" y="3.5" width="13" height="13" rx="1" fill="currentColor" fill-opacity=".35"/>',
+  fillPattern: `<rect x="3.5" y="3.5" width="13" height="13" rx="1"/>${[6.75, 10, 13.25].flatMap((y) => [6.75, 10, 13.25].map((x) => `<circle cx="${x}" cy="${y}" r=".9" fill="currentColor" stroke="none"/>`)).join('')}`,
+  fillImage: '<rect x="3.5" y="3.5" width="13" height="13" rx="1"/><circle cx="7.5" cy="7.5" r="1.4"/><path d="m3.5 14 3.6-3.2 2.6 2 2.6-2.6 4.2 3.8"/>',
+  symbolStroke: '<path d="M3 14.5c3.5-7 7.5-7 9-3.5s3.5 2.5 5-3" stroke-width="2"/>',
   // Ribbon chrome.
   ribbon: '<rect x="2.5" y="3" width="15" height="14" rx="1"/><path d="M2.5 6.2h15M2.5 11h15"/><rect x="4.5" y="7.4" width="2.4" height="2.4" rx=".4"/><path d="M8.8 7.9h2.6M8.8 9.4h2.6M13 7.9h2.5"/>',
   launcher: '<path d="M4.5 4.5h11v11"/><path d="m15.5 15.5-7-7M15.5 10.5v5h-5"/>',

@@ -2,8 +2,7 @@
 //! node, align and arrange commands drawn like the app's set (20 × 20, 1.4
 //! stroke, filled squares are nodes, a light fill is the result), the markup
 //! expanded from the web's table; names the app's set already has come from
-//! it (`crate::icons`). The two flips are drawn here (the web wrote them as
-//! the glyphs ⇋ and ⥮).
+//! it (`crate::icons`).
 
 /// An editor icon's markup by its web name; the app's icon of that name, or
 /// the plain button's, when the editor has none.
@@ -14,7 +13,7 @@ pub fn svg_icon(name: &str) -> &'static str {
     }
 }
 
-const ICONS: [(&str, &str); 53] = [
+const ICONS: [(&str, &str); 56] = [
     (
         "pathUnion",
         "<path d=\"M3 3h9v5h5v9H8v-5H3z\" fill=\"currentColor\" fill-opacity=\".28\"/>",
@@ -202,6 +201,18 @@ const ICONS: [(&str, &str); 53] = [
         "<path d=\"M3 4h6v6H3zM11 10h6v6h-6z\" fill=\"currentColor\" fill-opacity=\".28\"/><path d=\"M13 4h4v4h-4z\"/>",
     ),
     (
+        "selectSameStroke",
+        "<path d=\"M3 4h6v6H3zM11 10h6v6h-6z\" stroke-width=\"2.2\"/><path d=\"M13 4h4v4h-4z\" stroke-width=\"1.1\"/>",
+    ),
+    (
+        "selectSameBoth",
+        "<path d=\"M3 4h6v6H3zM11 10h6v6h-6z\" fill=\"currentColor\" fill-opacity=\".28\" stroke-width=\"2.2\"/><path d=\"M13 4h4v4h-4z\" stroke-width=\"1.1\"/>",
+    ),
+    (
+        "selectSameKind",
+        "<circle cx=\"6\" cy=\"7\" r=\"3\"/><circle cx=\"14\" cy=\"13\" r=\"3\"/><path d=\"M13 4h4v4h-4z\" stroke-width=\"1.1\"/>",
+    ),
+    (
         "selectInvert",
         "<path d=\"M3 3h14v14H3z\"/><path d=\"M3 3h7v14H3z\" fill=\"currentColor\" fill-opacity=\".28\"/>",
     ),
@@ -222,6 +233,12 @@ const ICONS: [(&str, &str); 53] = [
         "<path d=\"M2.5 10h15\" stroke-dasharray=\"2 1.6\"/><path d=\"M5 7.5 10 3l5 4.5zM5 12.5l5 4.5 5-4.5z\" fill=\"currentColor\" fill-opacity=\".28\"/>",
     ),
 ];
+
+/// Whether the editor's table or the app's set has an icon of this name.
+#[cfg(test)]
+pub fn known(name: &str) -> bool {
+    ICONS.iter().any(|(n, _)| *n == name) || crate::icons::web_markup(name).is_some()
+}
 
 #[cfg(test)]
 mod tests {

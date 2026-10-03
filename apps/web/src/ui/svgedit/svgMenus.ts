@@ -11,7 +11,7 @@ import type { CanvasOptions } from './svgView';
  * The SVG editor's menus above the canvas: Yol (path operations), Nesne
  * (arranging, the Hizala, Dönüştür and Dizi tabs, stacking order), Seç
  * (selection helpers), and the snapping and ruler switches with the list
- * of snap kinds. Every entry says its key.
+ * of snap kinds. Every entry has its icon and says its key.
  */
 
 export interface MenuHost {
@@ -24,6 +24,27 @@ export interface MenuHost {
   /** Keys go back to the canvas after a menu choice (shortcuts keep working). */
   focusCanvas(): void;
 }
+
+/** A path operation's icon (the Yol group's buttons draw the same). */
+const OP_ICON: Record<PathOpId, string> = {
+  union: 'pathUnion',
+  difference: 'pathDifference',
+  intersection: 'pathIntersection',
+  exclusion: 'pathExclusion',
+  division: 'pathDivision',
+  cut: 'pathCut',
+  combine: 'pathCombine',
+  breakApart: 'pathBreak',
+  split: 'pathSplit',
+  toPath: 'toPath',
+  strokeToPath: 'strokeToPath',
+  inset: 'inset',
+  outset: 'outset',
+  simplify: 'simplify',
+  reverse: 'reverse',
+  close: 'closePath',
+  open: 'openPath',
+};
 
 /** Opens a menu under its button; after a choice the canvas has the keys again. */
 const openAt = (host: MenuHost, b: HTMLElement, items: MenuItem[]) => {
@@ -40,7 +61,7 @@ function menuButton(host: MenuHost, label: string, iconName: string, title: stri
 
 export function editMenus(host: MenuHost): HTMLElement[] {
   const e = host.edit;
-  const p = (op: PathOpId, label: string, shortcut?: string, detail?: string): MenuItem => ({ label, shortcut, detail, run: () => e.path(op) });
+  const p = (op: PathOpId, label: string, shortcut?: string, detail?: string): MenuItem => ({ label, shortcut, detail, drawIcon: (n) => svgIcon(OP_ICON[op], n), run: () => e.path(op) });
   const path = menuButton(host, 'Yol', 'pathUnion', 'Yol işlemleri: birleşim, fark, kesişim, çizgiyi yola çevir, küçült/büyüt, sadeleştir', () => [
     p('union', 'Birleşim', 'Ctrl++', 'Seçilenlerin kapladığı her yer tek yol'),
     p('difference', 'Fark', 'Ctrl+-', 'Alttakinden üsttekiler çıkar'),
@@ -63,35 +84,36 @@ export function editMenus(host: MenuHost): HTMLElement[] {
     p('close', 'Yolu kapat'),
     p('open', 'Yolu aç'),
   ]);
-  const a = (name: ActionName, label: string, shortcut?: string): MenuItem => ({ label, shortcut, run: () => host.action(name) });
+  const a = (name: ActionName, label: string, glyph: string, shortcut?: string): MenuItem => ({ label, shortcut, drawIcon: (n) => svgIcon(glyph, n), run: () => host.action(name) });
+  const r = (to: Parameters<typeof e.restack>[0], label: string, glyph: string, shortcut: string): MenuItem => ({ label, shortcut, drawIcon: (n) => svgIcon(glyph, n), run: () => e.restack(to) });
   const obj = menuButton(host, 'Nesne', 'alignLeft', 'Hizala, dönüştür, dizi, sıra, grup', () => [
     { label: 'Hizala ve dağıt…', icon: 'align', shortcut: 'Ctrl+Shift+A', run: () => host.showTab('align') },
     { label: 'Dönüştür…', icon: 'move', shortcut: 'Ctrl+Shift+M', run: () => host.showTab('transform') },
     { label: 'Dizi ve aynalı kopya…', icon: 'array', run: () => host.showTab('array') },
     { kind: 'separator' },
-    { label: 'En öne', shortcut: 'Home', run: () => e.restack('top') },
-    { label: 'Bir öne', shortcut: 'PageUp', run: () => e.restack('raise') },
-    { label: 'Bir arkaya', shortcut: 'PageDown', run: () => e.restack('lower') },
-    { label: 'En arkaya', shortcut: 'End', run: () => e.restack('bottom') },
+    r('top', 'En öne', 'toTop', 'Home'),
+    r('raise', 'Bir öne', 'raise', 'PageUp'),
+    r('lower', 'Bir arkaya', 'lower', 'PageDown'),
+    r('bottom', 'En arkaya', 'toBottom', 'End'),
     { kind: 'separator' },
-    a('flipH', 'Yatay çevir', 'H'),
-    a('flipV', 'Dikey çevir', 'Shift+H'),
-    a('rot90', '90° döndür'),
+    a('flipH', 'Yatay çevir', 'flipH', 'H'),
+    a('flipV', 'Dikey çevir', 'flipV', 'Shift+H'),
+    a('rot90', '90° döndür', 'rotate'),
     { kind: 'separator' },
-    a('group', 'Grupla', 'Ctrl+G'),
-    a('ungroup', 'Grubu çöz', 'Ctrl+Shift+G'),
-    a('duplicate', 'Çoğalt', 'Ctrl+D'),
-    a('delete', 'Sil', 'Delete'),
+    a('group', 'Grupla', 'sheetGroup', 'Ctrl+G'),
+    a('ungroup', 'Grubu çöz', 'sheetUngroup', 'Ctrl+Shift+G'),
+    a('duplicate', 'Çoğalt', 'copy', 'Ctrl+D'),
+    a('delete', 'Sil', 'trash', 'Delete'),
   ]);
   const sel = menuButton(host, 'Seç', 'selectSame', 'Tümünü seç, ters çevir, benzerini seç', () => [
-    { label: 'Tümünü seç', shortcut: 'Ctrl+A', run: () => e.selectAll() },
-    { label: 'Seçimi ters çevir', shortcut: '!', run: () => e.invertSelection() },
-    { label: 'Seçimi kaldır', shortcut: 'Esc', run: () => host.select([]) },
+    { label: 'Tümünü seç', icon: 'selectAll', shortcut: 'Ctrl+A', run: () => e.selectAll() },
+    { label: 'Seçimi ters çevir', drawIcon: (n) => svgIcon('selectInvert', n), shortcut: '!', run: () => e.invertSelection() },
+    { label: 'Seçimi kaldır', icon: 'deselect', shortcut: 'Esc', run: () => host.select([]) },
     { kind: 'separator' },
-    { label: 'Aynı dolguyu seç', run: () => e.selectSame('fill') },
-    { label: 'Aynı çizgiyi seç', run: () => e.selectSame('stroke') },
-    { label: 'Aynı dolgu ve çizgiyi seç', run: () => e.selectSame('both') },
-    { label: 'Aynı türü seç', run: () => e.selectSame('kind') },
+    { label: 'Aynı dolguyu seç', drawIcon: (n) => svgIcon('selectSame', n), run: () => e.selectSame('fill') },
+    { label: 'Aynı çizgiyi seç', drawIcon: (n) => svgIcon('selectSameStroke', n), run: () => e.selectSame('stroke') },
+    { label: 'Aynı dolgu ve çizgiyi seç', drawIcon: (n) => svgIcon('selectSameBoth', n), run: () => e.selectSame('both') },
+    { label: 'Aynı türü seç', drawIcon: (n) => svgIcon('selectSameKind', n), run: () => e.selectSame('kind') },
   ]);
   return [path, obj, sel];
 }

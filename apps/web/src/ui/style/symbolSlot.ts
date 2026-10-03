@@ -70,7 +70,7 @@ export function symbolSlot(ctx: AppContext, ref: SymbolRef | undefined, cls: Geo
           },
         },
         { kind: 'separator' },
-        { label: 'Basit görünüşe dön', disabled: !ref, run: () => onChange(undefined) },
+        { label: 'Basit görünüşe dön', icon: 'symbolClear', disabled: !ref, run: () => onChange(undefined) },
       ],
       { x: r.left, y: r.bottom + 4 },
     );

@@ -8,6 +8,8 @@ export interface MenuItem {
   kind?: 'item' | 'separator' | 'header';
   label?: string;
   icon?: string;
+  /** An icon its owner draws from a set of its own (the SVG editor's), in place of `icon`. */
+  drawIcon?: (size: number) => SVGSVGElement;
   /** Colour chip (layer colour). */
   swatch?: string;
   shortcut?: string;
@@ -130,7 +132,7 @@ export class PopupMenu {
           { class: 'menu__check' },
           item.checked ? (item.radio ? h('span', { class: 'menu__dot' }) : icon('check', 14)) : null,
         ),
-        h('span', { class: 'menu__icon' }, item.swatch ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` }) : item.icon ? icon(item.icon, item.detail ? 22 : 16) : null),
+        h('span', { class: 'menu__icon' }, item.swatch ? h('span', { class: 'swatch', style: `--swatch:${item.swatch}` }) : item.drawIcon ? item.drawIcon(item.detail ? 22 : 16) : item.icon ? icon(item.icon, item.detail ? 22 : 16) : null),
         item.detail
           ? h('span', { class: 'menu__label menu__label--2' }, h('span', { class: 'menu__title' }, item.label), h('span', { class: 'menu__detail' }, item.detail))
           : h('span', { class: 'menu__label' }, item.label),

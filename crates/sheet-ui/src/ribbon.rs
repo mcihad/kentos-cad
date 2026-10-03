@@ -30,15 +30,15 @@ pub const TAB: &str = "Pafta";
 /// A tool's icon by its id.
 pub fn tool_icon(id: &str) -> Icon {
     match id {
-        "select" => Icon::Select,
-        "pan" => Icon::Pan,
+        "select" => icons::SELECT,
+        "pan" => icons::PAN,
         "map" => icons::MAP,
         "overviewMap" => icons::OVERVIEW,
-        "text" => Icon::Type,
-        "legend" => Icon::Legend,
+        "text" => icons::TEXT,
+        "legend" => icons::LEGEND,
         "scaleBar" => icons::SCALE_BAR,
         "northArrow" => icons::NORTH,
-        "table" | "attributeTable" => Icon::Table,
+        "table" | "attributeTable" => icons::TABLE,
         "coordinateList" => icons::COORDINATES,
         "titleBlock" => icons::TITLE_BLOCK,
         "border" => icons::BORDER,
@@ -49,6 +49,28 @@ pub fn tool_icon(id: &str) -> Icon {
         "atlas" => icons::ATLAS,
         "group" => icons::GROUP,
         _ => icons::LAYOUT,
+    }
+}
+
+/// A ready look's icon in its tool's list: its own picture, or the tool's (the web's `presetIcon`).
+pub fn preset_icon(tool: &str, preset: &str) -> Icon {
+    match preset {
+        "rect" => icons::RECT,
+        "rounded" => icons::ROUNDED,
+        "ellipse" => icons::ELLIPSE,
+        "triangle" => icons::TRIANGLE,
+        "polygon" => icons::POLYGON,
+        "plain" => icons::LINE_PLAIN,
+        "arrow" => icons::ARROW,
+        "numeric" => icons::SCALE_NUMERIC,
+        "neat" => icons::BORDER_NEAT,
+        "revisions" => icons::TABLE_REVISIONS,
+        "drawings" => icons::TABLE_DRAWINGS,
+        "compass" => icons::COMPASS,
+        "viewport" => icons::VIEWPORT,
+        "layers" => icons::LEGEND_LAYERS,
+        "thematic" => icons::LEGEND_THEMATIC,
+        _ => tool_icon(tool),
     }
 }
 
@@ -109,6 +131,7 @@ impl Designer {
                                     }))
                                 }),
                             )
+                            .icon(preset_icon(&id, &p.id))
                         })
                     })
                 } else {
@@ -138,12 +161,17 @@ impl Designer {
         let new_menu = {
             let open = open.clone();
             move || {
-                let mut m = Menu::new().item("Yeni pafta", wrap(Message::NewSheet));
+                let mut m = Menu::new()
+                    .item("Yeni pafta", wrap(Message::NewSheet))
+                    .icon(icons::NEW);
                 if let Some(id) = &open {
-                    m = m.item("Paftayı çoğalt", wrap(Message::DuplicateSheet(id.clone())));
+                    m = m
+                        .item("Paftayı çoğalt", wrap(Message::DuplicateSheet(id.clone())))
+                        .icon(icons::COPY);
                 }
                 m.separator()
                     .item(".kpafta dosyasından…", wrap(Message::ImportKpafta))
+                    .icon(icons::IMPORT_KPAFTA)
             }
         };
         groups.push(
@@ -184,7 +212,7 @@ impl Designer {
                         ),
                 )
                 .tool(
-                    Button::small(Icon::Layout, "Model")
+                    Button::small(icons::MODEL, "Model")
                         .on_press(wrap(Message::Model))
                         .tip(Tip::new("Modele dön").body("Çizim alanı öne gelir; paftalar sekmelerinde kalır.")),
                 ),
@@ -259,13 +287,17 @@ impl Designer {
         let export_menu = move || {
             Menu::new()
                 .item("PDF olarak…", wrap(Message::Export(ExportKind::Pdf)))
+                .icon(icons::EXPORT_PDF)
                 .item("SVG olarak…", wrap(Message::Export(ExportKind::Svg)))
+                .icon(icons::EXPORT_SVG)
                 .item("PNG olarak…", wrap(Message::Export(ExportKind::Png)))
+                .icon(icons::EXPORT_PNG)
                 .separator()
                 .item(
                     "Pafta dosyası (.kpafta)…",
                     wrap(Message::Export(ExportKind::Kpafta)),
                 )
+                .icon(icons::EXPORT_KPAFTA)
         };
         let errors = self
             .findings
@@ -285,7 +317,7 @@ impl Designer {
                                 .to_owned()
                         })),
                 )
-                .tool(Button::large(Icon::Export, "Dışa aktar").menu(export_menu))
+                .tool(Button::large(icons::EXPORT, "Dışa aktar").menu(export_menu))
                 .tool(
                     Button::large(icons::PRINT, "Yazdır")
                         .on_press(wrap(Message::Print))
@@ -312,18 +344,26 @@ fn arrange<M: Clone + 'static>(
     let align = move || {
         Menu::new()
             .item("Sola", wrap(Message::Align(AlignEdge::Left)))
+            .icon(icons::ALIGN_LEFT)
             .item("Ortaya", wrap(Message::Align(AlignEdge::Center)))
+            .icon(icons::ALIGN_CENTER)
             .item("Sağa", wrap(Message::Align(AlignEdge::Right)))
+            .icon(icons::ALIGN_RIGHT)
             .separator()
             .item("Üste", wrap(Message::Align(AlignEdge::Top)))
+            .icon(icons::ALIGN_TOP)
             .item("Düşeyde ortaya", wrap(Message::Align(AlignEdge::Middle)))
+            .icon(icons::ALIGN_MIDDLE)
             .item("Alta", wrap(Message::Align(AlignEdge::Bottom)))
+            .icon(icons::ALIGN_BOTTOM)
             .separator()
             .item("Sayfanın ortasına", wrap(Message::AlignTo(AlignTo::Page)))
+            .icon(icons::ALIGN_TO_PAGE)
             .item(
                 "Kenar boşluklarının ortasına",
                 wrap(Message::AlignTo(AlignTo::Margins)),
             )
+            .icon(icons::ALIGN_TO_MARGINS)
     };
     let distribute = move || {
         Menu::new()
@@ -331,35 +371,45 @@ fn arrange<M: Clone + 'static>(
                 "Yatayda ortalar eşit",
                 wrap(Message::Distribute(Axis::X, DistributeMode::Centers)),
             )
+            .icon(icons::DISTRIBUTE_H)
             .item(
                 "Yatayda aralıklar eşit",
                 wrap(Message::Distribute(Axis::X, DistributeMode::Gaps)),
             )
+            .icon(icons::DISTRIBUTE_H_GAPS)
             .separator()
             .item(
                 "Düşeyde ortalar eşit",
                 wrap(Message::Distribute(Axis::Y, DistributeMode::Centers)),
             )
+            .icon(icons::DISTRIBUTE_V)
             .item(
                 "Düşeyde aralıklar eşit",
                 wrap(Message::Distribute(Axis::Y, DistributeMode::Gaps)),
             )
+            .icon(icons::DISTRIBUTE_V_GAPS)
             .separator()
             .item(
                 "Genişlikleri eşitle",
                 wrap(Message::MatchSize(SizeDimension::Width)),
             )
+            .icon(icons::MATCH_WIDTH)
             .item(
                 "Yükseklikleri eşitle",
                 wrap(Message::MatchSize(SizeDimension::Height)),
             )
+            .icon(icons::MATCH_HEIGHT)
     };
     let order = move || {
         Menu::new()
             .item("En öne getir", wrap(Message::Order(ReorderTo::Front)))
+            .icon(icons::FRONT)
             .item("Bir öne", wrap(Message::Order(ReorderTo::Forward)))
+            .icon(icons::FORWARD)
             .item("Bir arkaya", wrap(Message::Order(ReorderTo::Backward)))
+            .icon(icons::BACKWARD)
             .item("En arkaya gönder", wrap(Message::Order(ReorderTo::Back)))
+            .icon(icons::BACK)
     };
     let _ = several;
     group

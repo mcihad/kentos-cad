@@ -132,6 +132,10 @@ mod tests {
                 named.extend(item["icon"].as_str());
             }
         }
+        // The ribbon's panels and split buttons name theirs too (a method's own icon).
+        let mut ribbon = Vec::new();
+        icons_in(&inventory["layout"], &mut ribbon);
+        named.extend(ribbon);
         assert!(named.len() > 100);
         for name in named {
             assert!(
@@ -139,8 +143,68 @@ mod tests {
                 "{name} is not in the web's set"
             );
         }
+        // And every icon this crate asks for by its name.
+        for (file, name) in asked("from_web(Some(\"") {
+            assert!(
+                super::web_markup(&name).is_some(),
+                "{file}: {name} is not in the web's set"
+            );
+        }
+        for (file, name) in asked("svg_icon(\"") {
+            assert!(
+                crate::style::svgedit::known_icon(&name),
+                "{file}: {name} is not an icon"
+            );
+        }
         // A command's icon is the web's drawing.
         let save = catalog().get("file.save").expect("Kaydet");
         assert!(matches!(save.icon, Icon::Svg(_)), "{:?}", save.icon);
+    }
+
+    /// Every `icon` a part of the inventory names.
+    fn icons_in<'a>(value: &'a serde_json::Value, out: &mut Vec<&'a str>) {
+        match value {
+            serde_json::Value::Object(map) => {
+                for (key, v) in map {
+                    match (key.as_str(), v.as_str()) {
+                        ("icon", Some(name)) => out.push(name),
+                        _ => icons_in(v, out),
+                    }
+                }
+            }
+            serde_json::Value::Array(items) => items.iter().for_each(|v| icons_in(v, out)),
+            _ => {}
+        }
+    }
+
+    /// The names this crate's sources give right after `call`, with their files.
+    fn asked(call: &str) -> Vec<(String, String)> {
+        fn sources(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+            for entry in std::fs::read_dir(dir).expect("the sources").flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    sources(&path, out);
+                } else if path.extension().is_some_and(|x| x == "rs") {
+                    out.push(path);
+                }
+            }
+        }
+        let mut files = Vec::new();
+        sources(
+            &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
+            &mut files,
+        );
+        let mut out = Vec::new();
+        for file in files {
+            let text = std::fs::read_to_string(&file).expect("a source");
+            for (at, _) in text.match_indices(call) {
+                let rest = &text[at + call.len()..];
+                if let Some(end) = rest.find('"') {
+                    out.push((file.display().to_string(), rest[..end].to_owned()));
+                }
+            }
+        }
+        assert!(!out.is_empty(), "no {call}");
+        out
     }
 }

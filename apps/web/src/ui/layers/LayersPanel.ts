@@ -307,11 +307,12 @@ export class LayersPanel extends Panel {
       { label: n.visible ? 'Gizle' : 'Göster', icon: n.visible ? 'eyeOff' : 'eye', shortcut: 'Space', run: () => layers.toggleVisible(n.id) },
       { label: n.locked ? 'Kilidi aç' : 'Kilitle', icon: n.locked ? 'unlock' : 'lock', run: () => layers.toggleLocked(n.id) },
       { label: 'Kenet', icon: 'magnet', items: () => layerSnapItems(this.ctx, n) },
-      { label: 'Yalnızca bunu göster', run: () => layers.isolate(n.id) },
-      { label: 'Tüm katmanları göster', run: () => layers.showAll() },
+      { label: 'Yalnızca bunu göster', icon: 'layerIsolate', run: () => layers.isolate(n.id) },
+      { label: 'Tüm katmanları göster', icon: 'layersShowAll', run: () => layers.showAll() },
       { kind: 'separator' },
       {
         label: 'Nesnelerini seç',
+        icon: 'select',
         run: () => {
           const ids = objectsOfNode(this.ctx, n);
           this.ctx.selection.set(ids);
@@ -323,14 +324,16 @@ export class LayersPanel extends Panel {
     );
     if (isLayer) {
       items.push(
-        { label: 'Renk', items: () => this.colorItems(n) },
+        { label: 'Renk', icon: 'color', items: () => this.colorItems(n) },
         {
           label: 'Çizgi tipi',
+          icon: 'lineType',
           items: () =>
             (Object.keys(LINE_TYPE_LABEL) as LineType[]).map((t) => ({ label: LINE_TYPE_LABEL[t], radio: true, checked: n.style.lineType === t, run: () => this.ctx.doc.setLayerStyle(n.id, { lineType: t }, 'Çizgi tipi') })),
         },
         {
           label: 'Kalınlık',
+          icon: 'lineWeight',
           items: () => LINE_WEIGHTS.map((w) => ({ label: `${fixed(w, 2)} mm`, radio: true, checked: n.style.lineWeight === w, run: () => this.ctx.doc.setLayerStyle(n.id, { lineWeight: w }, 'Çizgi kalınlığı') })),
         },
         {
@@ -342,7 +345,7 @@ export class LayersPanel extends Panel {
       );
     }
     items.push(
-      { label: 'Yeniden adlandır', shortcut: 'F2', run: () => this.rename(n) },
+      { label: 'Yeniden adlandır', icon: 'edit', shortcut: 'F2', run: () => this.rename(n) },
       {
         label: isLayer ? 'Yanına yeni katman' : 'İçine yeni katman',
         icon: 'layerAdd',

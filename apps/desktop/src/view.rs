@@ -492,7 +492,9 @@ impl App {
             move || rows_menu(&menu, folded)
         };
         let make = |command: &Command, size: Size| {
-            let button = sized(size, command.icon, command.short);
+            // The label is the short name without its “…” (the web's `ribbonLabel`); the tip has the title.
+            let label = command.short.strip_suffix('…').unwrap_or(command.short);
+            let button = sized(size, command.icon, label);
             // An off command that says why has the reason in its tip (the web's `whyDisabled`).
             let tip_of = match self.why_disabled(command.id) {
                 Some(why) => Tip::new(command.title).body(why),
@@ -1094,8 +1096,12 @@ impl App {
             ("draft.overlap.layer", "Kendi katmanında önle"),
             ("draft.overlap.layers", "Seçili katmanlarda önle"),
         ] {
-            let on_press = catalog().get(id).and_then(enabled);
+            let command = catalog().get(id);
+            let on_press = command.and_then(enabled);
             menu = menu.radio(label, self.checked(id).unwrap_or(false), on_press);
+            if let Some(c) = command {
+                menu = menu.icon(c.icon);
+            }
         }
         let mut layers_menu = Menu::new();
         if let Some(doc) = &self.document {
@@ -1122,7 +1128,9 @@ impl App {
                 }
             }
         }
-        menu.separator().submenu("Katmanlar", layers_menu)
+        menu.separator()
+            .submenu("Katmanlar", layers_menu)
+            .icon(crate::icons::from_web(Some("layers")))
     }
 
     /// About how wide the status bar's cells are with `fit` of its steps

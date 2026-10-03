@@ -1723,9 +1723,11 @@ fn item_row<'a, Message: 'a>(
     }
 
     let slot: Element<'a, Message> = match mark {
-        Mark::Icon(glyph) => icon(glyph).size(14.0).into(),
+        // DESIGN.md §6: a menu's icons are 16, as the web's (`.menu__icon`); its ✓ is 14.
+        Mark::Icon(Icon::Check) => icon(Icon::Check).size(14.0).into(),
+        Mark::Icon(glyph) => icon(glyph).size(ICON_SLOT).into(),
         Mark::Dot => dot(),
-        Mark::None => space::horizontal().width(14).into(),
+        Mark::None => space::horizontal().width(ICON_SLOT).into(),
     };
 
     let mut content = row![container(slot).width(ICON_SLOT).center_x(ICON_SLOT)]

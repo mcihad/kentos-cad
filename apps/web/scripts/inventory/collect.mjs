@@ -45,7 +45,10 @@ export async function collectInPage() {
 
   // Ribbon places, as “Sekme › Panel”; a drop-down button's items count as its panel's.
   const ribbonPlaces = {};
-  const tabs = ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf: () => undefined });
+  // A panel's icon follows its first command's, as the live ribbon's (ui/ribbon/Ribbon.ts): the desktop
+  // draws a folded panel with it.
+  const iconOf = (id) => k.commands.get(id)?.icon;
+  const tabs = ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf });
   for (const tab of tabs) {
     for (const panel of tab.panels) {
       const place = `${tab.label} › ${panel.label}`;
@@ -94,7 +97,7 @@ export async function collectInPage() {
     ribbonByMode: Object.fromEntries(
       modes
         .filter((m) => m.id !== 'hybrid')
-        .map((m) => [m.id, ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf: () => undefined, filter: m.filter }))]),
+        .map((m) => [m.id, ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf, filter: m.filter }))]),
     ),
     quickAccess: [...ribbon.QUICK_ACCESS],
   };

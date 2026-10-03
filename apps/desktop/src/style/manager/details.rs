@@ -386,11 +386,13 @@ pub fn details<'a>(
                     "Kitaplığıma",
                     ev(Event::Copy(copy_id.clone(), Source::User)),
                 )
+                .icon(crate::icons::from_web(Some("styles")))
                 .detail("Bu bilgisayarda, bütün çizimlerde")
                 .item(
                     "Projeye",
                     project_open.then(|| ev(Event::Copy(copy_id.clone(), Source::Project))),
                 )
+                .icon(crate::icons::from_web(Some("save")))
                 .detail(if project_open {
                     "Proje dosyasında; projeyi açan herkes görür"
                 } else {

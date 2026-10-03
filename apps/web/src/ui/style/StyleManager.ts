@@ -111,16 +111,16 @@ class StyleManager implements DetailsHost {
       const r = newBtn.getBoundingClientRect();
       PopupMenu.open(
         [
-          { label: 'Alan sembolü', run: () => this.design({ newKind: 'fill' }) },
-          { label: 'Çizgi sembolü', run: () => this.design({ newKind: 'line' }) },
-          { label: 'İşaret sembolü', run: () => this.design({ newKind: 'marker' }) },
+          { label: 'Alan sembolü', icon: 'hatch', run: () => this.design({ newKind: 'fill' }) },
+          { label: 'Çizgi sembolü', icon: 'symbolLine', run: () => this.design({ newKind: 'line' }) },
+          { label: 'İşaret sembolü', icon: 'symbolMarker', run: () => this.design({ newKind: 'marker' }) },
           { kind: 'separator' },
           { label: 'SVG çizimi (düzenleyicide)…', icon: 'edit', run: () => this.drawSvg() },
         ],
         { x: r.left, y: r.bottom + 4 },
       );
     });
-    const menuBtn = (label: string, iconName: string, title: string, items: () => { label: string; hint?: string; run: () => void }[]) => {
+    const menuBtn = (label: string, iconName: string, title: string, items: () => { label: string; icon: string; hint?: string; run: () => void }[]) => {
       const b = h('button', { class: 'btn btn--small', type: 'button', title }, icon(iconName, 14), label, icon('chevronDown', 12));
       b.addEventListener('click', () => {
         const r = b.getBoundingClientRect();
@@ -130,12 +130,12 @@ class StyleManager implements DetailsHost {
     };
     // Until the server exists, styles travel as .kstil files or as text on the clipboard (a chat message is enough).
     const importBtn = menuBtn('İçe aktar', 'import', 'Sembolleri kitaplığa ya da projeye alır', () => [
-      { label: 'Dosyadan…', hint: '.kstil, PNG, JPEG', run: () => void this.importFile() },
-      { label: 'Panodan yapıştır', hint: 'paylaşılan metin', run: () => void this.importClipboard() },
+      { label: 'Dosyadan…', icon: 'fileOpen', hint: '.kstil, PNG, JPEG', run: () => void this.importFile() },
+      { label: 'Panodan yapıştır', icon: 'paste', hint: 'paylaşılan metin', run: () => void this.importClipboard() },
     ]);
     const exportBtn = menuBtn('Dışa aktar', 'export', 'Listedeki sembolleri kullandıkları çizimlerle birlikte verir', () => [
-      { label: 'Dosyaya (.kstil)', run: () => this.exportListed() },
-      { label: 'Panoya kopyala', hint: 'paylaşmak için', run: () => void this.exportListed(true) },
+      { label: 'Dosyaya (.kstil)', icon: 'save', run: () => this.exportListed() },
+      { label: 'Panoya kopyala', icon: 'copy', hint: 'paylaşmak için', run: () => void this.exportListed(true) },
     ]);
 
     this.tree = new TreeView<Node>(
@@ -464,6 +464,7 @@ class StyleManager implements DetailsHost {
         },
         {
           label: 'Yeniden adlandır',
+          icon: 'edit',
           shortcut: 'F2',
           disabled: !editable || !n.path.length,
           run: () => this.renameInline(n.key, n.label, (to) => this.renameCategory(n.source as 'user' | 'project', n.path, to)),

@@ -226,17 +226,21 @@ fn object_menu() -> Menu<Message> {
             ed.touch();
         })
     };
-    let r = |m: Menu<Message>, op: Restack, words: &str, keys: &str| {
+    let r = |m: Menu<Message>, op: Restack, words: &str, glyph: &'static str, keys: &str| {
         m.item(words.to_owned(), change(move |ed| ed.restack(op)))
+            .icon(Icon::Svg(glyph))
             .shortcut(keys.to_owned())
     };
-    let a = |m: Menu<Message>, act: Action, words: &str, keys: Option<&str>| {
-        let m = m.item(words.to_owned(), change(move |ed| ed.action(act)));
-        match keys {
-            Some(k) => m.shortcut(k.to_owned()),
-            None => m,
-        }
-    };
+    let a =
+        |m: Menu<Message>, act: Action, words: &str, glyph: &'static str, keys: Option<&str>| {
+            let m = m
+                .item(words.to_owned(), change(move |ed| ed.action(act)))
+                .icon(Icon::Svg(glyph));
+            match keys {
+                Some(k) => m.shortcut(k.to_owned()),
+                None => m,
+            }
+        };
     let mut m = Menu::new()
         .item("Hizala ve dağıt…", tab(Tab::Align))
         .icon(Icon::Svg(svg_icon("alignLeft")))
@@ -247,35 +251,78 @@ fn object_menu() -> Menu<Message> {
         .item("Dizi ve aynalı kopya…", tab(Tab::Array))
         .icon(crate::icons::from_web(Some("array")))
         .separator();
-    m = r(m, Restack::Top, "En öne", "Home");
-    m = r(m, Restack::Raise, "Bir öne", "PageUp");
-    m = r(m, Restack::Lower, "Bir arkaya", "PageDown");
-    m = r(m, Restack::Bottom, "En arkaya", "End");
+    m = r(m, Restack::Top, "En öne", svg_icon("toTop"), "Home");
+    m = r(m, Restack::Raise, "Bir öne", svg_icon("raise"), "PageUp");
+    m = r(
+        m,
+        Restack::Lower,
+        "Bir arkaya",
+        svg_icon("lower"),
+        "PageDown",
+    );
+    m = r(m, Restack::Bottom, "En arkaya", svg_icon("toBottom"), "End");
     m = m.separator();
-    m = a(m, Action::FlipH, "Yatay çevir", Some("H"));
-    m = a(m, Action::FlipV, "Dikey çevir", Some("Shift+H"));
-    m = a(m, Action::Rot90, "90° döndür", None);
+    m = a(
+        m,
+        Action::FlipH,
+        "Yatay çevir",
+        svg_icon("flipH"),
+        Some("H"),
+    );
+    m = a(
+        m,
+        Action::FlipV,
+        "Dikey çevir",
+        svg_icon("flipV"),
+        Some("Shift+H"),
+    );
+    m = a(m, Action::Rot90, "90° döndür", svg_icon("rotate"), None);
     m = m.separator();
-    m = a(m, Action::Group, "Grupla", Some("Ctrl+G"));
-    m = a(m, Action::Ungroup, "Grubu çöz", Some("Ctrl+Shift+G"));
-    m = a(m, Action::Duplicate, "Çoğalt", Some("Ctrl+D"));
-    a(m, Action::Delete, "Sil", Some("Delete"))
+    m = a(
+        m,
+        Action::Group,
+        "Grupla",
+        svg_icon("sheetGroup"),
+        Some("Ctrl+G"),
+    );
+    m = a(
+        m,
+        Action::Ungroup,
+        "Grubu çöz",
+        svg_icon("sheetUngroup"),
+        Some("Ctrl+Shift+G"),
+    );
+    m = a(
+        m,
+        Action::Duplicate,
+        "Çoğalt",
+        svg_icon("copy"),
+        Some("Ctrl+D"),
+    );
+    a(m, Action::Delete, "Sil", svg_icon("trash"), Some("Delete"))
 }
 
 fn select_menu() -> Menu<Message> {
     let same = |what: Same| change(move |ed| ed.select_same(what));
     Menu::new()
         .item("Tümünü seç", change(|ed| ed.select_all()))
+        .icon(Icon::Svg(svg_icon("selectAll")))
         .shortcut("Ctrl+A")
         .item("Seçimi ters çevir", change(|ed| ed.invert_selection()))
+        .icon(Icon::Svg(svg_icon("selectInvert")))
         .shortcut("!")
         .item("Seçimi kaldır", change(|ed| ed.select(Vec::new())))
+        .icon(Icon::Svg(svg_icon("deselect")))
         .shortcut("Esc")
         .separator()
         .item("Aynı dolguyu seç", same(Same::Fill))
+        .icon(Icon::Svg(svg_icon("selectSame")))
         .item("Aynı çizgiyi seç", same(Same::Stroke))
+        .icon(Icon::Svg(svg_icon("selectSameStroke")))
         .item("Aynı dolgu ve çizgiyi seç", same(Same::Both))
+        .icon(Icon::Svg(svg_icon("selectSameBoth")))
         .item("Aynı türü seç", same(Same::Kind))
+        .icon(Icon::Svg(svg_icon("selectSameKind")))
 }
 
 fn snap_menu(ed: &SvgEditor) -> Menu<Message> {

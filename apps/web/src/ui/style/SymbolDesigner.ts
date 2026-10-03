@@ -72,6 +72,21 @@ export interface DesignerOptions {
 
 const HISTORY = 100;
 
+/** A layer type's icon in Katman ekle's menu (the desktop's list draws the same). */
+const LAYER_ICON: Record<LayerType, string> = {
+  simpleFill: 'fillSolid',
+  hatchFill: 'hatch',
+  patternFill: 'fillPattern',
+  imageFill: 'fillImage',
+  centroidMarker: 'snapCentroid',
+  simpleLine: 'symbolStroke',
+  markerLine: 'symbolLine',
+  shape: 'sheetShape',
+  svg: 'penTool',
+  text: 'text',
+  raster: 'sheetPicture',
+};
+
 export function openSymbolDesigner(ctx: AppContext, opts: DesignerOptions): void {
   const lib = ctx.styles.library;
   const item = opts.id ? lib.get(opts.id) : undefined;
@@ -237,10 +252,10 @@ class SymbolDesigner {
     const r = anchor.getBoundingClientRect();
     const kind = this.symbol.type;
     const parent = addParent(this.symbol, this.selected);
-    const items = LAYER_TYPES[kind].map((t) => ({ label: LAYER_LABEL[t], run: () => this.add(t, null) }));
+    const items = LAYER_TYPES[kind].map((t) => ({ label: LAYER_LABEL[t], icon: LAYER_ICON[t], run: () => this.add(t, null) }));
     const nested =
       parent !== null
-        ? [{ kind: 'header' as const, label: T.intoMarker(LAYER_LABEL[(this.symbol.layers as readonly AnyLayer[])[parent].type]) }, ...LAYER_TYPES.marker.map((t) => ({ label: LAYER_LABEL[t], run: () => this.add(t, parent) }))]
+        ? [{ kind: 'header' as const, label: T.intoMarker(LAYER_LABEL[(this.symbol.layers as readonly AnyLayer[])[parent].type]) }, ...LAYER_TYPES.marker.map((t) => ({ label: LAYER_LABEL[t], icon: LAYER_ICON[t], run: () => this.add(t, parent) }))]
         : [];
     PopupMenu.open([{ kind: 'header', label: T.intoSymbol }, ...items, ...(nested.length ? [{ kind: 'separator' as const }, ...nested] : [])], { x: r.left, y: r.bottom + 4 });
   }

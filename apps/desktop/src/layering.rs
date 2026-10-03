@@ -388,9 +388,12 @@ impl App {
         }
         menu = menu
             .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
+            .icon(crate::icons::from_web(Some("layerIsolate")))
             .item("Tüm katmanları göster", Message::Run("layer.showAll"))
+            .icon(crate::icons::from_web(Some("layersShowAll")))
             .separator()
             .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
+            .icon(crate::icons::from_web(Some("select")))
             .item(
                 if is_layer {
                     "Katmana yakınlaştır"
@@ -399,6 +402,7 @@ impl App {
                 },
                 (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
             )
+            .icon(crate::icons::from_web(Some("zoomSelection")))
             .separator();
         if is_layer {
             let style = &node.style;
@@ -419,8 +423,11 @@ impl App {
             });
             menu = menu
                 .submenu("Renk", self.layer_colors(node))
+                .icon(crate::icons::from_web(Some("color")))
                 .submenu("Çizgi tipi", types)
+                .icon(crate::icons::from_web(Some("lineType")))
                 .submenu("Kalınlık", weights)
+                .icon(crate::icons::from_web(Some("lineWeight")))
                 .item(
                     if style.renderer.is_some() {
                         "Katman stili… (özel)"
@@ -433,6 +440,7 @@ impl App {
                 .separator();
         }
         menu.item("Yeniden adlandır", event(Event::Rename(id.clone())))
+            .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
             .item(
                 if is_layer {
@@ -442,7 +450,7 @@ impl App {
                 },
                 event(Event::AddBeside(id.clone())),
             )
-            .icon(Icon::Layers)
+            .icon(crate::icons::from_web(Some("layerAdd")))
             .separator()
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))
@@ -564,8 +572,17 @@ impl App {
         };
         row![
             label::caption(format!("{count} katman")),
-            add(Icon::Layers, "Yeni katman", "layer.new"),
-            add(Icon::Folder, "Yeni grup", "layer.newGroup"),
+            // The commands' own icons, as the web's panel draws them.
+            add(
+                crate::icons::from_web(Some("layerAdd")),
+                "Yeni katman",
+                "layer.new"
+            ),
+            add(
+                crate::icons::from_web(Some("folderAdd")),
+                "Yeni grup",
+                "layer.newGroup"
+            ),
         ]
         .spacing(4)
         .align_y(Center)

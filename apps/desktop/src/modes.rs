@@ -15,13 +15,15 @@ use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 use crate::app::{App, Message};
 use crate::catalog::{Tab, catalog, effective_mode, mode_command};
 
-/// A mode's mark in the status bar.
+/// A mode's mark in the status bar and its menu (the web's `workspace.*` commands' icons).
 fn mode_icon(mode: Workspace) -> Icon {
-    match mode {
-        Workspace::Cad => Icon::Polyline,
-        Workspace::Gis => Icon::Legend,
-        _ => Icon::Layers,
-    }
+    crate::icons::from_web(Some(match mode {
+        Workspace::Hybrid => "modeHybrid",
+        Workspace::Cad => "modeCad",
+        Workspace::Gis => "modeGis",
+        Workspace::Plan3d => "modePlan3d",
+        Workspace::Disaster => "modeDisaster",
+    }))
 }
 
 impl App {
@@ -147,13 +149,16 @@ impl App {
                         m.id == current,
                         Message::Run(mode_command(m.id)),
                     )
+                    .icon(mode_icon(m.id))
                 },
             );
             modes
                 .iter()
                 .filter(|m| !m.ready)
                 .fold(ready.separator(), |menu, m| {
-                    menu.item(m.label, None).shortcut("Yakında")
+                    menu.item(m.label, None)
+                        .icon(mode_icon(m.id))
+                        .shortcut("Yakında")
                 })
         };
         tip(

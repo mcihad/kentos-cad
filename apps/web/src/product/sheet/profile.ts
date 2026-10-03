@@ -63,14 +63,23 @@ const TOOL_ICON: Readonly<Record<string, string>> = {
   overviewMap: 'sheetOverview',
 };
 
-/** Icons of ready looks that are a shape of their own (Şekil ▾, Çizgi ▾). */
+/** Icons of ready looks that are a picture of their own (Şekil ▾, Çizgi ▾, Ölçek ▾, Çerçeve ▾, Tablo ▾, Kuzey ▾, Harita ▾, Lejant ▾). */
 const PRESET_ICON: Readonly<Record<string, string>> = {
   rect: 'sheetRect',
-  rounded: 'sheetRect',
+  rounded: 'sheetRounded',
   ellipse: 'sheetEllipse',
   triangle: 'sheetTriangle',
   polygon: 'sheetPolygon',
+  plain: 'sheetLinePlain',
   arrow: 'sheetArrow',
+  numeric: 'sheetScaleNumeric',
+  neat: 'sheetBorderNeat',
+  revisions: 'sheetTableRevisions',
+  drawings: 'sheetTableDrawings',
+  compass: 'sheetCompass',
+  viewport: 'sheetViewport',
+  layers: 'sheetLegendLayers',
+  thematic: 'sheetLegendThematic',
 };
 
 const isKind = (k: string | undefined): k is ItemKindView => !!k && k in KIND_ICON;

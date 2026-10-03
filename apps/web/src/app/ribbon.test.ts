@@ -139,6 +139,20 @@ describe('ribbon', () => {
     for (const e of split.entries) if (e.icon) expect(ICONS, e.icon).toHaveProperty(e.icon);
   });
 
+  it('gives every way in a split button’s list an icon of its own, drawn from the set (DESIGN.md §6)', () => {
+    const toolIcon = (command: string) => TOOL_CATALOG.find((t) => `tool.${t.id}` === command)?.icon;
+    for (const tab of tabs) {
+      for (const panel of tab.panels) {
+        for (const item of panel.items) {
+          if (item.kind !== 'split') continue;
+          const icons = item.entries.map((e) => e.icon ?? toolIcon(e.command));
+          for (const [i, icon] of icons.entries()) expect(ICONS, `${tab.id} ${item.key}: ${item.entries[i].label}`).toHaveProperty(icon ?? '-');
+          expect(new Set(icons).size, `${tab.id} ${item.key}: ${icons.join(', ')}`).toBe(icons.length);
+        }
+      }
+    }
+  });
+
   it('puts a family in one split button and a tool with methods in its own, the ways listed in order', () => {
     const drawTab = tabs.find((t) => t.id === 'draw')!;
     const shape = drawTab.panels.find((p) => p.label === 'Şekil')!;

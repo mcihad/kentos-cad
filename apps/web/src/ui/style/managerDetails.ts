@@ -165,8 +165,8 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
     };
     PopupMenu.open(
       [
-        { label: 'Kitaplığıma', hint: 'bu tarayıcıda', run: () => copyTo('user') },
-        { label: 'Projeye', hint: 'proje dosyasında', run: () => copyTo('project') },
+        { label: 'Kitaplığıma', icon: 'styles', hint: 'bu tarayıcıda', run: () => copyTo('user') },
+        { label: 'Projeye', icon: 'save', hint: 'proje dosyasında', run: () => copyTo('project') },
       ],
       { x: r.left, y: r.bottom + 4 },
     );
