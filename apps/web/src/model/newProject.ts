@@ -42,6 +42,8 @@ export function newProjectContent(o: NewProjectOptions): DocumentContent {
       srid: crs.srid,
       plotScale: o.plotScale,
       workspace: o.workspace ?? PROJECT_SETTINGS_DEFAULTS.workspace,
+      // A CAD project's angles are degrees, a CBS project's grads (docs/adr/0165 §4); the project may change it.
+      angleUnit: o.workspace === 'cad' ? 'deg' : PROJECT_SETTINGS_DEFAULTS.angleUnit,
       drawingFont: o.drawingFont ?? PROJECT_SETTINGS_DEFAULTS.drawingFont,
       // Only a local project has a unit of its own; metres are not written.
       ...(crs.kind === 'local' && o.drawingUnit && o.drawingUnit !== 'm' ? { drawingUnit: o.drawingUnit } : {}),

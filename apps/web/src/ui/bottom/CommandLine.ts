@@ -143,8 +143,9 @@ export class CommandLine extends Component {
     this.options = [];
     if (!p.tool) return replaceChildren(this.prompt, h('b', null, p.step));
     const notes = p.notes.length ? ` (${p.notes.join('; ')})` : '';
-    // Options are buttons here too; typing their letter still works.
-    const text = h('span', { class: 'cmdline__text' }, h('b', null, p.tool), `: ${p.step}${notes}`);
+    // Options are buttons here too; typing their letter still works. The axes as the project's type names them
+    // (docs/adr/0165 §4).
+    const text = h('span', { class: 'cmdline__text' }, h('b', null, p.tool), this.ctx.format.axesText(`: ${p.step}${notes}`));
     this.chips = optionButtons(this.ctx, p.options, 'cmdline__chip');
     this.options = p.options;
     replaceChildren(this.prompt, text, ...this.chips, this.more, ...this.stripParts());
@@ -276,7 +277,7 @@ export class CommandLine extends Component {
       // Point calculator by its alias (YAN, KKES, DKES, HAT, AM, ORTA) while a point is expected.
       const calc = CALC_KINDS.find((k) => k.alias === text.toLocaleUpperCase('tr-TR'));
       if (calc && canCalcPoint(this.ctx)) return startPointCalc(this.ctx, calc.kind);
-      log.warn(`“${text}” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın.`);
+      log.warn(`“${text}” anlaşılamadı. Koordinatı ${this.ctx.format.pairLabel} ya da ${this.ctx.format.relativeLabel} biçiminde yazın.`);
       return;
     }
     // A tool's method by its own name (DOR: Ölçülendirme as Koordinat; docs/adr/0147 §7): the tool, then its option.

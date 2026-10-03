@@ -287,7 +287,11 @@ impl Tool for Line {
                 at: hover,
                 lines: vec![
                     format.length(dist(last, hover)),
-                    format!("Semt {}", format.bearing(bearing_grad(last, hover))),
+                    format!(
+                        "{} {}",
+                        format.direction_name(),
+                        format.direction(bearing_grad(last, hover))
+                    ),
                 ],
             }),
             _ => None,

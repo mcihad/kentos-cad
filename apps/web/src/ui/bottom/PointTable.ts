@@ -448,6 +448,9 @@ export class PointTable extends Component {
     this.removeBtn.disabled = selection.size === 0;
     this.count.textContent = `${this.shown.length} / ${this.points.length} nokta`;
     this.heads.forEach((th, i) => {
+      // East and north as the project's type names them (docs/adr/0165 §4).
+      const name = th.querySelector('.ptable__sort > span');
+      if (name) name.textContent = this.ctx.format.axesText(POINT_COLUMNS[i].label);
       const sorted = kept.sort !== null && POINT_COLUMNS[i].sort === kept.sort;
       th.setAttribute('aria-sort', sorted ? (kept.descending ? 'descending' : 'ascending') : 'none');
       th.classList.toggle('is-sorted', sorted);

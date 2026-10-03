@@ -89,6 +89,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         settings: ProjectSettings {
             plot_scale: o.plot_scale,
             workspace: Some(o.workspace),
+            // A CAD project's angles are degrees, a CBS project's grads (docs/adr/0165 §4).
+            angle_unit: if cad { AngleUnit::Deg } else { AngleUnit::Grad },
             drawing_font: Some(o.drawing_font),
             // Only a local project has a unit of its own; metres are not written.
             drawing_unit: o

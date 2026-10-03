@@ -65,7 +65,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
           settingRow(
             'Yerel çizim orijini',
             'Büyük TM koordinatları ekran kartında bu noktaya göre çizilir; hassasiyet kaybını önler.',
-            h('span', { class: 'srow__value num' }, `Y ${fixed(doc.origin.x, 0)}  X ${fixed(doc.origin.y, 0)}`),
+            // East and north as the project's type names them (docs/adr/0165 §4).
+            h('span', { class: 'srow__value num' }, `${ctx.format.eastLabel} ${fixed(doc.origin.x, 0)}  ${ctx.format.northLabel} ${fixed(doc.origin.y, 0)}`),
           ),
         ),
       ],

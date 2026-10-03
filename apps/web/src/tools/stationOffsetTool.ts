@@ -131,7 +131,7 @@ export class StationOffsetTool extends PointInputTool {
       indexMark(g, view, a, 'A', pal.snap, pal.labelHalo);
       if (at && dist(a, at) > 1e-9) {
         strokePath(g, view, [a, at], { color: pal.accent });
-        drawTag(g, view.worldToScreen(at), [f.length(dist(a, at)), `Semt ${f.bearing(bearingGrad(a, at))}`], pal.accent, pal.labelHalo);
+        drawTag(g, view.worldToScreen(at), [f.length(dist(a, at)), `${f.directionName} ${f.direction(bearingGrad(a, at))}`], pal.accent, pal.labelHalo);
       }
       return this.drawTracking(g, view);
     }

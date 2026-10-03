@@ -23,9 +23,6 @@ use kentos_ui::widget::beside;
 use crate::app::Message;
 use crate::marks::Marks;
 
-/// The value field's hint (the web's `.cursor-input__hint`).
-const HINT: &str = "mesafe · Y,X · @dY,dX · @mesafe<açı";
-
 /// The layer over the drawing area: the selection box and the snap marker
 /// (marks.rs, docs/adr/0029), the draft, the tag and the value field.
 /// Always present, empty when there is nothing to show, so the drawing
@@ -34,7 +31,7 @@ pub fn layer<'a>(
     camera: &Camera,
     marks: Marks,
     preview: Option<Preview>,
-    field: Option<(&'a str, Vec2)>,
+    field: Option<(&'a str, Vec2, String)>,
 ) -> Element<'a, Message> {
     let screen = |p: Vec2| {
         let [x, y] = camera.world_to_screen(p);
@@ -70,13 +67,13 @@ pub fn layer<'a>(
             ));
         }
     }
-    if let Some((value, at)) = field {
+    if let Some((value, at, hint)) = field {
         // Above right of the cursor, clear of the tag below right of it;
         // left of it near the drawing's right edge, lower near its top, never
         // outside it (the web's `besidePointer`, DESIGN.md §7.4.2).
         let at = screen(at);
         layers.push(beside(
-            value_field(value),
+            value_field(value, hint),
             Point::new(at.x.round(), at.y.round()),
             Vector::new(18.0, -58.0),
         ));
@@ -121,8 +118,8 @@ fn measurement<'a>(lines: Vec<String>, tone: Tone, snap: Color) -> Element<'a, M
 }
 
 /// The value field (the web's `CursorInput`): what is typed so far with a
-/// caret, and what can be typed.
-fn value_field<'a>(value: &'a str) -> Element<'a, Message> {
+/// caret, and what can be typed (`hint`, in the project's axes).
+fn value_field<'a>(value: &'a str, hint: String) -> Element<'a, Message> {
     let caret =
         container(Space::new().width(1).height(typography::body() + 2.0)).style(|theme: &Theme| {
             container::Style {
@@ -155,7 +152,7 @@ fn value_field<'a>(value: &'a str) -> Element<'a, Message> {
             ..container::Style::default()
         }
     });
-    let hint = text(HINT)
+    let hint = text(hint)
         .size(typography::caption() - 1.0)
         .style(|theme: &Theme| text::Style {
             color: Some(Tokens::of(theme).muted),

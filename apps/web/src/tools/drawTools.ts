@@ -285,7 +285,7 @@ export abstract class PointInputTool implements Tool {
     const last = this.last;
     if (last && this.hover) {
       const s = view.worldToScreen(this.hover);
-      drawTag(g, s, [this.ctx.format.length(dist(last, this.hover)), `Semt ${this.ctx.format.bearing(bearingGrad(last, this.hover))}`], pal.accent, pal.labelHalo);
+      drawTag(g, s, [this.ctx.format.length(dist(last, this.hover)), `${this.ctx.format.directionName} ${this.ctx.format.direction(bearingGrad(last, this.hover))}`], pal.accent, pal.labelHalo);
     }
     this.drawTracking(g, view);
   }

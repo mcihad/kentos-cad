@@ -3,9 +3,11 @@
 //! cursor and the command line send the same text to a tool.
 //!
 //! ```text
-//! 486512.34,4420118.9   absolute Y,X (also Y;X, or Y X)
-//! @12.5,-3              relative to the last point: @dY,dX
-//! @25<45                distance<angle, degrees counter-clockwise from east (the @ may be left out)
+//! 486512.34,4420118.9   absolute: east, then north (CBS's Y,X, CAD's X,Y; also ; or a space)
+//! @12.5,-3              relative to the last point: east, then north
+//! @25<45                distance<angle (the @ may be left out): a CAD project's angle from east,
+//!                       counter-clockwise, a CBS project's semt from north, clockwise, in the
+//!                       project's angle unit (docs/adr/0165 §4)
 //! 18.4                  a distance along the tracking line, else towards the cursor
 //! ```
 //!
@@ -22,7 +24,7 @@
 //! - a number reads as JavaScript's `Number()` reads it: both round to the
 //!   nearest double.
 
-use crate::tools::point_input::{polar_offset, relative_point, toward_point};
+use crate::tools::point_input::{Angles, polar_point_in, relative_point, toward_point};
 use crate::vec2::Vec2;
 
 /// What typed point text says, before it is placed.
@@ -32,7 +34,8 @@ pub enum PointText {
     Absolute(Vec2),
     /// `@dY,dX`: the last point moved by the differences.
     Relative { dx: f64, dy: f64 },
-    /// `@distance<angle`: from the last point, the angle in degrees counter-clockwise from east.
+    /// `@distance<angle`: from the last point, the angle as typed (its way
+    /// and unit are the project's, [`Angles`]).
     Polar { distance: f64, angle: f64 },
     /// A bare number: that far along the tracking line, else towards the cursor.
     Distance(f64),
@@ -60,32 +63,35 @@ pub fn parse_point_text(text: &str) -> Option<PointText> {
 /// tool's last point, `cursor` the effective cursor, `along` a point that far
 /// along an active tracking line (object tracking; `None` when there is none).
 /// Relative and polar input need a last point, a distance a last point and a
-/// cursor apart from it; without them the text gives no point.
+/// cursor apart from it; without them the text gives no point. A polar
+/// angle is in degrees from east, counter-clockwise.
 pub fn point_from_text(
     text: &str,
     last: Option<Vec2>,
     cursor: Option<Vec2>,
     along: impl FnOnce(f64) -> Option<Vec2>,
 ) -> Option<Vec2> {
-    point_from_text_in(text, last, cursor, along, |v| v)
+    point_from_text_in(text, last, cursor, along, |v| v, Angles::default())
 }
 
-/// [`point_from_text`] with the typed lengths and coordinates turned into
-/// metres by `metres`: a local project's drawing unit (docs/adr/0165 §2;
-/// the web's `parsePointInput`'s `metres`). An angle stays as typed.
+/// [`point_from_text`] in a project's way: the typed lengths and
+/// coordinates turned into metres by `metres` (a local project's drawing
+/// unit, docs/adr/0165 §2), a polar angle in its type's way and its angle
+/// unit (`angles`, §4); the web's `parsePointInput`'s `metres` and `angles`.
 pub fn point_from_text_in(
     text: &str,
     last: Option<Vec2>,
     cursor: Option<Vec2>,
     along: impl FnOnce(f64) -> Option<Vec2>,
     metres: impl Fn(f64) -> f64,
+    angles: Angles,
 ) -> Option<Vec2> {
     match parse_point_text(text)? {
         PointText::Relative { dx, dy } => {
             last.map(|last| relative_point(last, metres(dx), metres(dy)))
         }
         PointText::Polar { distance, angle } => {
-            last.map(|last| polar_offset(last, metres(distance), angle))
+            last.map(|last| polar_point_in(last, metres(distance), angle, angles))
         }
         PointText::Absolute(p) => Some(Vec2::new(metres(p.x), metres(p.y))),
         PointText::Distance(d) => {

@@ -46,6 +46,9 @@ interface Case {
   tolerance?: number;
   /** A local project's drawing unit the text is typed in; the point is in metres. */
   unit?: DrawingUnit;
+  /** The project's type and angle unit a polar angle is typed in (docs/adr/0165 §4); CAD's and degrees by default. */
+  convention?: 'cad' | 'gis';
+  angleUnit?: 'deg' | 'grad';
 }
 
 /**
@@ -65,7 +68,8 @@ describe('shared point input cases (fixtures/point-input/v1)', () => {
       if (c.fn === 'point') {
         const perMetre = UNIT_PER_METRE[c.unit ?? 'm'];
         // The conversion the formatter's `toMetres` makes (app/format.ts).
-        const got = parsePointInput(c.text, c.last ?? null, c.cursor ?? null, undefined, (v) => v / perMetre);
+        const angles = { fromNorth: c.convention === 'gis', grads: c.angleUnit === 'grad' };
+        const got = parsePointInput(c.text, c.last ?? null, c.cursor ?? null, undefined, (v) => v / perMetre, angles);
         const want = c.expect as Vec2 | null;
         if (!want) return void expect(got).toBeNull();
         const tol = c.tolerance ?? 0;

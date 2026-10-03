@@ -20,7 +20,8 @@ function harness(unit: 'mm' | 'cm' | 'm') {
     layers: new LayerStore([{ id: 'cizim', name: 'Çizim' }], 'cizim'),
     origin: { x: 0, y: 0 },
   });
-  doc.settings.assign({ srid: 0, drawingUnit: unit });
+  // A local CAD project, its angles in degrees, as a new one is (docs/adr/0165 §2, §4).
+  doc.settings.assign({ srid: 0, drawingUnit: unit, workspace: 'cad', angleUnit: 'deg' });
   const log = new MessageLog();
   const ctx = {
     doc,

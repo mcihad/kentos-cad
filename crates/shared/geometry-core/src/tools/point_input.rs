@@ -18,8 +18,36 @@ pub fn relative_point(last: Vec2, dx: f64, dy: f64) -> Vec2 {
 
 /// `@distance<angle`: from the last point, the angle in degrees counter-clockwise from east.
 pub fn polar_offset(last: Vec2, distance: f64, angle: f64) -> Vec2 {
-    let a = (angle * PI) / 180.0;
-    Vec2::new(last.x + cos(a) * distance, last.y + sin(a) * distance)
+    polar_point_in(last, distance, angle, Angles::default())
+}
+
+/// Where a typed polar angle starts and which way it runs (docs/adr/0165 §4).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AngleFrom {
+    /// A CAD project's: from east, counter-clockwise (AutoCAD's).
+    #[default]
+    East,
+    /// A CBS project's: from north, clockwise, the surveyor's semt.
+    North,
+}
+
+/// A typed polar angle's way and unit: a project's type and angle unit.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Angles {
+    pub from: AngleFrom,
+    /// Grads; else degrees.
+    pub grads: bool,
+}
+
+/// `@distance<angle` in a project's way (docs/adr/0165 §4): from east
+/// counter-clockwise, or a semt from north clockwise (ΔY = s·sin, ΔX =
+/// s·cos), in degrees or grads.
+pub fn polar_point_in(last: Vec2, distance: f64, angle: f64, angles: Angles) -> Vec2 {
+    let a = (angle * PI) / if angles.grads { 200.0 } else { 180.0 };
+    match angles.from {
+        AngleFrom::East => Vec2::new(last.x + cos(a) * distance, last.y + sin(a) * distance),
+        AngleFrom::North => Vec2::new(last.x + sin(a) * distance, last.y + cos(a) * distance),
+    }
 }
 
 /// A bare number: that far from the last point towards the cursor; None when they coincide.
@@ -149,6 +177,25 @@ pub(crate) static OPS: &[Op] = &[
     }),
     op!("polarOffset", |last: Vec2, distance: f64, angle: f64| {
         polar_offset(last, distance, angle)
+    }),
+    op!("polarPointIn", |last: Vec2,
+                         distance: f64,
+                         angle: f64,
+                         from_north: bool,
+                         grads: bool| {
+        polar_point_in(
+            last,
+            distance,
+            angle,
+            Angles {
+                from: if from_north {
+                    AngleFrom::North
+                } else {
+                    AngleFrom::East
+                },
+                grads,
+            },
+        )
     }),
     op!("towardPoint", |last: Vec2, cursor: Vec2, distance: f64| {
         toward_point(last, cursor, distance)

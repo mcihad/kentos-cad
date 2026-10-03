@@ -2,7 +2,7 @@
 //! `ui/blocks/attributeTable.ts`, docs/adr/0144 §7): each attribute
 //! definition is a row of its tag, prompt, default, text height, turn
 //! (degrees) and place as east (Y) and north (X) of the base point, in the
-//! block's own units. A number is written as a prompt writes it
+//! block's own units; a CAD project names them X and Y (docs/adr/0165 §4). A number is written as a prompt writes it
 //! (`+n.toFixed(6)`); a cell left as it was shown gives back the exact value
 //! it showed, so a list saved unchanged is the list it was. A definition's
 //! alignment and width factor (docs/adr/0145) have no cells: the row keeps
@@ -61,6 +61,22 @@ pub const COLUMNS: [Col; 7] = [
         numeric: true,
     },
 ];
+
+/// The columns in a CAD project, its east X and its north Y (docs/adr/0165 §4).
+pub const CAD_COLUMNS: [Col; 7] = {
+    let mut cols = COLUMNS;
+    cols[EAST].label = "X";
+    cols[NORTH].label = "Y";
+    cols
+};
+
+/// The table's columns in the project's axes.
+pub fn columns(format: &kentos_interaction::Format) -> &'static [Col; 7] {
+    match format.axes {
+        kentos_interaction::Axes::Cad => &CAD_COLUMNS,
+        kentos_interaction::Axes::Gis => &COLUMNS,
+    }
+}
 
 /// The exact values a row's numbers were shown from, and what the row has no cells for.
 #[derive(Clone, Copy, Debug, PartialEq)]

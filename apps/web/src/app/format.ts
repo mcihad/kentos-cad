@@ -1,5 +1,5 @@
 import { Signal, type ReadonlySignal } from '../core/signal';
-import { UNIT_PER_METRE, type AngleUnit, type AreaUnit, type DrawingUnit } from '../model/projectSettings';
+import { UNIT_PER_METRE, type AngleUnit, type AreaUnit, type DrawingUnit, type Workspace } from '../model/projectSettings';
 import { fixed } from '../core/displayNumber';
 
 /** The unit fields formatting depends on (ProjectSettings satisfies it). */
@@ -10,7 +10,22 @@ export interface UnitSettings {
   readonly angleUnit: ReadonlySignal<AngleUnit>;
   /** The unit lengths are typed and read in: a local project's drawing unit (docs/adr/0165 §2); none: metres. */
   readonly unit?: DrawingUnit;
+  /** The project's type, whose axes and angles readings and typed points follow (docs/adr/0165 §4); none: CBS's. */
+  readonly workspace?: ReadonlySignal<Workspace | null>;
   readonly changed?: ReadonlySignal<number>;
+}
+
+/**
+ * A project's axes and the way its angles run (docs/adr/0165 §4): a CBS project's Y east and X north, its directions
+ * bearings (semt) from north, clockwise; a CAD project's X east and Y north, its angles from east, counter-clockwise.
+ * A project not asked its type is shown as CBS.
+ */
+export type Axes = 'cad' | 'gis';
+
+/** How a typed polar angle runs, and its unit (the core's `Angles`). */
+export interface PolarAngles {
+  readonly fromNorth: boolean;
+  readonly grads: boolean;
 }
 
 const GRAD_PER_DEG = 400 / 360;
@@ -43,18 +58,87 @@ export class Formatter {
     return this.prefs.unit ?? 'm';
   }
 
+  /** The project's axes and the way its angles run (docs/adr/0165 §4). */
+  get axes(): Axes {
+    return this.prefs.workspace?.value === 'cad' ? 'cad' : 'gis';
+  }
+
+  /** How a typed polar angle runs and its unit: the project's type and angle unit (docs/adr/0165 §4). */
+  get angles(): PolarAngles {
+    return { fromNorth: this.axes === 'gis', grads: this.prefs.angleUnit.value === 'grad' };
+  }
+
+  /** The east axis's name: Y in a CBS project, X in a CAD one (docs/adr/0165 §4). */
+  get eastLabel(): 'X' | 'Y' {
+    return this.axes === 'cad' ? 'X' : 'Y';
+  }
+
+  /** The north axis's name: X in a CBS project, Y in a CAD one. */
+  get northLabel(): 'X' | 'Y' {
+    return this.axes === 'cad' ? 'Y' : 'X';
+  }
+
+  /** A point as it is typed: `Y,X` in a CBS project, `X,Y` in a CAD one; east first in both. */
+  get pairLabel(): string {
+    return `${this.eastLabel},${this.northLabel}`;
+  }
+
+  /** A relative point as it is typed: `@dY,dX` or `@dX,dY`. */
+  get relativeLabel(): string {
+    return `@d${this.eastLabel},d${this.northLabel}`;
+  }
+
+  /** A polar point as it is typed: a CBS project's `@mesafe<semt`, a CAD project's `@mesafe<açı`. */
+  get polarLabel(): string {
+    return this.axes === 'cad' ? '@mesafe<açı' : '@mesafe<semt';
+  }
+
+  /** A direction's reading's name: a CBS project's `Semt`, a CAD project's `Açı` (docs/adr/0165 §4). */
+  get directionName(): string {
+    return this.axes === 'cad' ? 'Açı' : 'Semt';
+  }
+
+  /**
+   * A direction given as its semt in grads, as the project's type reads it: the semt, or a CAD project's angle from
+   * east, counter-clockwise (100 − semt grads), in the project's angle unit (the desktop's `Format::direction`).
+   */
+  direction(semtGrad: number, withUnit = true): string {
+    let g = semtGrad;
+    if (this.axes === 'cad') {
+      g = 100 - semtGrad;
+      if (g < 0) g += 400;
+      if (g >= 400) g -= 400;
+    }
+    return this.bearing(g, withUnit);
+  }
+
+  /** The value field's hint: “mesafe · Y,X · @dY,dX · @mesafe<semt” in the project's axes. */
+  get inputHint(): string {
+    return `mesafe · ${this.pairLabel} · ${this.relativeLabel} · ${this.polarLabel}`;
+  }
+
+  /**
+   * Words written in a CBS project's terms (`Y,X`, `@dY,dX`, `Y (sağa)`, `X (yukarı)`) in the project's axes: a
+   * tool's prompt and steps, a column's heading (the desktop's `Format::axes_text`).
+   */
+  axesText(text: string): string {
+    if (this.axes === 'gis') return text;
+    return text.replaceAll('dY,dX', 'dX,dY').replaceAll('Y,X', 'X,Y').replaceAll('Y (sağa)', 'X (sağa)').replaceAll('X (yukarı)', 'Y (yukarı)');
+  }
+
   /** How many of the unit make a metre. */
   private get perMetre(): number {
     return UNIT_PER_METRE[this.unit];
   }
 
   /**
-   * The same settings in metres: the Hesap windows' (surveying, whose field
-   * measurements are metres whatever a local project's unit; docs/adr/0165 §2).
+   * The same settings in the surveyor's terms: the Hesap windows' (field measurements are metres whatever a local
+   * project's unit, read as Y, X and semt whatever its type; docs/adr/0165 §2, §4).
    */
   metric(): Formatter {
-    if (this.unit === 'm') return this;
+    if (this.unit === 'm' && this.axes === 'gis') return this;
     const p = this.prefs;
+    // The surveyor's terms too: Y, X and semt whatever the project's type (docs/adr/0165 §4).
     return new Formatter({ lengthDecimals: p.lengthDecimals, areaDecimals: p.areaDecimals, areaUnit: p.areaUnit, angleUnit: p.angleUnit, changed: this.changed, unit: 'm' });
   }
 
@@ -154,6 +238,6 @@ export class Formatter {
   }
 
   point(p: { x: number; y: number }): string {
-    return `Y ${this.coord(p.x)}  X ${this.coord(p.y)}`;
+    return `${this.eastLabel} ${this.coord(p.x)}  ${this.northLabel} ${this.coord(p.y)}`;
   }
 }

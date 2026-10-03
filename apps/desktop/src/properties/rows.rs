@@ -531,8 +531,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             ]
         }
     };
+    // A direction as the project's type reads it: a semt, or a CAD project's angle (docs/adr/0165 §4).
     let bearing = |a: Vec2, b: Vec2| {
-        Row::figure("Semt", f.bearing_bare(bearing_grad(a, b))).unit(f.angle_unit_label())
+        Row::figure(f.direction_name(), f.direction_bare(bearing_grad(a, b)))
+            .unit(f.angle_unit_label())
     };
     let number = |field: Field| edit(Editor::Number(field));
     let (area_of, length_of) = measures(e);
@@ -540,8 +542,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     let mut geo: Vec<Row> = Vec::new();
     match e {
         Entity::Point(p) => {
-            geo.push(metres("Y (sağa)", p.p.x).editor(number(Field::PointX(slot))));
-            geo.push(metres("X (yukarı)", p.p.y).editor(number(Field::PointY(slot))));
+            // East and north as the project's type names them (docs/adr/0165 §4).
+            let (east, north) = match f.axes {
+                kentos_interaction::Axes::Cad => ("X (sağa)", "Y (yukarı)"),
+                kentos_interaction::Axes::Gis => ("Y (sağa)", "X (yukarı)"),
+            };
+            geo.push(metres(east, p.p.x).editor(number(Field::PointX(slot))));
+            geo.push(metres(north, p.p.y).editor(number(Field::PointY(slot))));
             if let Some(z) = p.z {
                 geo.push(metres("Z (kot)", z));
             }

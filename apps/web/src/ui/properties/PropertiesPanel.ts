@@ -238,7 +238,8 @@ export class PropertiesPanel extends Panel {
                   if (Number.isFinite(n)) setGeometry(this.ctx, e, { p: { ...e.p, [axis]: f.toMetres(n) } });
                 },
               } as const);
-        geo.push({ ...num('Y (sağa)', e.p.x, 'm'), editor: edit('x') }, { ...num('X (yukarı)', e.p.y, 'm'), editor: edit('y') });
+        // East and north as the project's type names them (docs/adr/0165 §4).
+        geo.push({ ...num(f.axesText('Y (sağa)'), e.p.x, 'm'), editor: edit('x') }, { ...num(f.axesText('X (yukarı)'), e.p.y, 'm'), editor: edit('y') });
         if (e.z !== undefined) geo.push(num('Z (kot)', e.z, 'm'));
         break;
       }
@@ -252,7 +253,7 @@ export class PropertiesPanel extends Panel {
           lineEndRow(this.ctx, e, 1, locked),
           num('Uzunluk', dist(e.a, e.b), 'm'),
           ...spaceRow(this.ctx, e),
-          { label: 'Semt', value: f.bearing(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel },
+          { label: f.directionName, value: f.direction(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel },
         );
         break;
       case 'polyline':
@@ -309,7 +310,7 @@ export class PropertiesPanel extends Panel {
           num(e.kind === 'ray' ? 'Başlangıç Y' : 'Geçtiği nokta Y', e.p.x),
           num(e.kind === 'ray' ? 'Başlangıç X' : 'Geçtiği nokta X', e.p.y),
           { label: 'Doğrultu', value: fixed(((angleDeg({ x: 0, y: 0 }, e.dir) % 360) + 360) % 360, 4), numeric: true, unit: '°' },
-          { label: 'Semt', value: f.bearing(bearingGrad(e.p, { x: e.p.x + e.dir.x, y: e.p.y + e.dir.y }), false), numeric: true, unit: f.angleUnitLabel },
+          { label: f.directionName, value: f.direction(bearingGrad(e.p, { x: e.p.x + e.dir.x, y: e.p.y + e.dir.y }), false), numeric: true, unit: f.angleUnitLabel },
         );
         break;
       case 'spline':
@@ -340,7 +341,7 @@ export class PropertiesPanel extends Panel {
         else if (l?.unit === 'percent') geo.push({ label: 'Ölçülen eğim', value: f.percent(l.value), numeric: true, unit: '%' });
         else if (l?.unit === 'coordinate') geo.push(num(l.prefix === 'Y=' ? 'Ölçülen Y' : 'Ölçülen X', l.value, 'm'));
         else if (l) geo.push(num(style === 'diameter' ? 'Ölçülen çap' : style === 'radius' || style === 'jogged' ? 'Ölçülen yarıçap' : 'Ölçülen uzunluk', l.value, 'm'));
-        if (style === 'aligned') geo.push({ label: 'Semt', value: f.bearing(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel });
+        if (style === 'aligned') geo.push({ label: f.directionName, value: f.direction(bearingGrad(e.a, e.b), false), numeric: true, unit: f.angleUnitLabel });
         // An ordinate has no offset; a jogged radius's is where its jog is.
         if (style !== 'ordinate') geo.push(n(style === 'angular' ? 'Yay yarıçapı' : style === 'radius' || style === 'diameter' ? 'Dışa uzantı' : style === 'jogged' ? 'Kırık uzaklığı' : 'Ötelenme', 'offset', e.offset));
         geo.push(

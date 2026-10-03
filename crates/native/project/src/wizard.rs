@@ -319,6 +319,15 @@ impl Draft {
                 },
             ),
             ("Birim", lower_tr(unit_choice(self.unit()).name)),
+            // The type's axes and angles (docs/adr/0165 §4).
+            (
+                "Eksenler",
+                match self.kind {
+                    Kind::Cad => "X sağa, Y yukarı; açı derece, doğudan saat yönünün tersine",
+                    Kind::Gis => "Y doğuya, X kuzeye; semt grad, kuzeyden saat yönünde",
+                }
+                .to_owned(),
+            ),
         ];
         if let (false, Some(p)) = (local, p) {
             lines.push(("İl", p.name.clone()));

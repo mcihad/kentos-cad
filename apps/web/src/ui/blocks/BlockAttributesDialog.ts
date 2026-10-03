@@ -59,7 +59,8 @@ export function openBlockAttributesDialog(ctx: AppContext, id: string, draft?: A
     ctx.tools.run(new PickPointTool(ctx, `${r + 1}. özniteliğin yeri`, done), `Öznitelik yeri: ${name}`);
   };
   const model: GridModel = {
-    columns: ATTRIBUTE_COLUMNS.map((c) => ({ ...c })),
+    // East and north as the project's type names them (docs/adr/0165 §4).
+    columns: ATTRIBUTE_COLUMNS.map((c) => ({ ...c, label: c.key === 'y' ? ctx.format.eastLabel : c.key === 'x' ? ctx.format.northLabel : c.label })),
     rows: () => rows.map((r) => r.cells),
     readonly: () => false,
     canInsertAfter: () => true,

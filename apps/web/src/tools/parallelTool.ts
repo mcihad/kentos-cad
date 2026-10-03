@@ -171,7 +171,7 @@ export class ParallelLineTool extends PointInputTool {
     // The axis: solid when it will be drawn, dashed when it only guides.
     strokePath(g, view, chain, { color: pal.accent, dash: S.axis ? undefined : [6, 4] });
     const last = this.pts.at(-1);
-    if (last && this.hover) drawTag(g, view.worldToScreen(this.hover), [f.length(dist(last, this.hover)), `Semt ${f.bearing(bearingGrad(last, this.hover))}`], pal.accent, pal.labelHalo);
+    if (last && this.hover) drawTag(g, view.worldToScreen(this.hover), [f.length(dist(last, this.hover)), `${f.directionName} ${f.direction(bearingGrad(last, this.hover))}`], pal.accent, pal.labelHalo);
     this.drawTracking(g, view);
   }
 }

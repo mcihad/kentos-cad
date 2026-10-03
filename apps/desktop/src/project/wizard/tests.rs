@@ -327,3 +327,103 @@ fn screens() {
         }
     }
 }
+
+/// The type's axes on screen (docs/adr/0165 §4): a CAD project's X and Y and
+/// angles beside a CBS project's Y and X and semts, in the status bar, the
+/// coordinate list, Öznitelikler and the value field; `.run/shots/eksenler-*`.
+///
+/// ```text
+/// cargo test -p kentos-desktop project::wizard::tests::axes_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn axes_screens() {
+    use iced::{Point, Size};
+    use kentos_contracts::{Entity, EntityBase, PathEntity, Vec2};
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::bottom::BottomTab;
+    use crate::viewport::Event as Pointer;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (kind, name) in [(Workspace::Cad, "cad"), (Workspace::Gis, "cbs")] {
+        let mut app = app_with_drawing();
+        open(&mut app);
+        send(&mut app, Event::Type(kind));
+        send(&mut app, Event::Next);
+        if kind == Workspace::Cad {
+            send(&mut app, Event::Unit(DrawingUnit::Mm));
+        } else {
+            send(&mut app, Event::Province(35));
+        }
+        send(&mut app, Event::Next);
+        send(&mut app, Event::Next);
+        if matches!(app.dialog, Some(Dialog::Unsaved(_))) {
+            let _ = app.update(Message::DialogConfirmed);
+        }
+        // A plate 120 × 80 (mm in CAD, m on the CBS sheet) from the home view's corner.
+        let doc = app.document.as_mut().expect("a drawing");
+        let home = doc.model.home_view().expect("a home view");
+        let (x0, y0, s) = if kind == Workspace::Cad {
+            (0.02, 0.02, 0.001)
+        } else {
+            (
+                (home.min_x + home.max_x) / 2.0 - 60.0,
+                (home.min_y + home.max_y) / 2.0 - 40.0,
+                1.0,
+            )
+        };
+        let pts = [(0.0, 0.0), (120.0, 0.0), (120.0, 80.0), (30.0, 80.0)]
+            .map(|(x, y)| Vec2 {
+                x: x0 + x * s,
+                y: y0 + y * s,
+            })
+            .to_vec();
+        let plate = doc
+            .model
+            .add(Entity::Polygon(PathEntity {
+                base: EntityBase {
+                    id: 0,
+                    layer_id: doc.model.layers().active().to_owned(),
+                    color: None,
+                    attrs: Default::default(),
+                    label: None,
+                    symbol: None,
+                    line_weight: None,
+                },
+                pts,
+                bulges: None,
+                holes: None,
+                zs: None,
+                parts: None,
+            }))
+            .expect("a slot");
+        app.selection.set(vec![plate]);
+        let _ = app.update(Message::Run("view.zoomSelection"));
+        let _ = app.update(Message::BottomTab(BottomTab::Coords));
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Çizgi running, a value typed with the pointer resting on the drawing.
+        let _ = app.update(Message::Run("tool.line"));
+        let camera = app.viewport.camera;
+        let (x, y) = (camera.width * 0.35, camera.height * 0.3);
+        let _ = app.update(Message::Viewport(Pointer::Moved(Point::new(
+            x as f32, y as f32,
+        ))));
+        app.field = Some(crate::input::Field {
+            text: "@100<30".into(),
+            at: camera.screen_to_world(x, y),
+        });
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("eksenler-{name}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

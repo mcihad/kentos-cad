@@ -659,8 +659,12 @@ impl App {
         }
         self.echo_value(text.clone());
         if self.with_tool(|s, cx| s.input(&text, cx)) != Some(true) {
+            let f = self.format();
             self.warn(format!(
-                "“{text}” anlaşılamadı. Mesafe, Y,X, @dY,dX ya da @mesafe<açı yazın."
+                "“{text}” anlaşılamadı. Mesafe, {}, {} ya da {} yazın.",
+                f.pair_label(),
+                f.relative_label(),
+                f.polar_label()
             ));
         }
         Task::none()
@@ -683,8 +687,11 @@ impl App {
                 {
                     return self.start_point_calc(def.kind);
                 }
+                let f = self.format();
                 self.warn(format!(
-                    "“{text}” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın."
+                    "“{text}” anlaşılamadı. Koordinatı {} ya da {} biçiminde yazın.",
+                    f.pair_label(),
+                    f.relative_label()
                 ));
             }
             return Task::none();

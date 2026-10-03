@@ -191,7 +191,7 @@ pub mod vertex_points;
 pub mod view_history;
 
 pub use clipboard::Clipboard;
-pub use format::{Format, fixed};
+pub use format::{Axes, Format, fixed};
 pub use kentos_geometry_core::Vec2;
 /// The surveying computations the Hesap windows call (docs/adr/0070).
 pub use kentos_geometry_core::survey;

@@ -210,7 +210,7 @@ export class BottomPanel extends Component {
     const points = ents.filter((e) => e.kind === 'point');
     if (points.length === ents.length) {
       return this.table(
-        ['Nokta', 'Y (sağa)', 'X (yukarı)', 'Z (kot)', 'Katman'],
+        ['Nokta', f.axesText('Y (sağa)'), f.axesText('X (yukarı)'), 'Z (kot)', 'Katman'],
         points.length,
         (i) => {
           const p = points[i];
@@ -234,7 +234,7 @@ export class BottomPanel extends Component {
         f.coord(p.x),
         f.coord(p.y),
         next ? f.length(dist(p, next), false) : '',
-        next ? f.bearing(bearingGrad(p, next), false) : '',
+        next ? f.direction(bearingGrad(p, next), false) : '',
       ];
     };
     const title = e.label ? `${e.attrs.Ada ? `${e.attrs.Ada} ada ` : ''}${e.label}` : `#${e.id}`;
@@ -244,7 +244,9 @@ export class BottomPanel extends Component {
         : length !== null
           ? `${title}   Uzunluk ${f.length(length)}`
           : title;
-    return this.table(['Köşe', 'Y (sağa)', 'X (yukarı)', 'Kenar (m)', `Semt (${f.angleUnitLabel})`], pts.length, row, ents.length > 1 ? `${footer}   (ilk nesne gösteriliyor)` : footer, [0, 1, 2, 3, 4]);
+    // East and north as the project's type names them (docs/adr/0165 §4); the edges in the project's unit (§2).
+    const headings = ['Köşe', f.axesText('Y (sağa)'), f.axesText('X (yukarı)'), `Kenar (${f.lengthUnitLabel})`, `${f.directionName} (${f.angleUnitLabel})`];
+    return this.table(headings, pts.length, row, ents.length > 1 ? `${footer}   (ilk nesne gösteriliyor)` : footer, [0, 1, 2, 3, 4]);
   }
 
   /** A coordinate table whose rows are built only in the panel's scroll window (ten thousand points stay light). */

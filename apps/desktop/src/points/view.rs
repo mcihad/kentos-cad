@@ -308,6 +308,7 @@ impl App {
         // A row's menu names the selected rows; a row not selected, itself alone.
         let selected_header = batch::targets(&rows.shown, |s| self.selection.contains(s)).1;
 
+        // East and north as the project's type names them (docs/adr/0165 §4).
         let columns = COLUMNS
             .iter()
             .enumerate()
@@ -324,7 +325,7 @@ impl App {
                     1 | 5 | 6 => Length::FillPortion(2),
                     _ => Length::FillPortion(3),
                 };
-                let column = TableColumn::new(*title)
+                let column = TableColumn::new(format.axes_text(title))
                     .width(width)
                     .sortable(order, msg(Event::Sort(i)));
                 if *numeric {

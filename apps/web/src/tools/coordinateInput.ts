@@ -1,3 +1,4 @@
+import type { PolarAngles } from '../app/format';
 import type { Vec2 } from '../model/geometry';
 import { op } from '../wasm/core';
 
@@ -9,17 +10,19 @@ const DIST = new RegExp(String.raw`^(${NUM})$`);
 
 // The points themselves come from the Rust core (tools/point_input.rs, docs/adr/0008 S5).
 const relativePoint = op<(last: Vec2, dx: number, dy: number) => Vec2>('relativePoint');
-const polarOffset = op<(last: Vec2, distance: number, angle: number) => Vec2>('polarOffset');
+const polarPointIn = op<(last: Vec2, distance: number, angle: number, fromNorth: boolean, grads: boolean) => Vec2>('polarPointIn');
 const towardPoint = op<(last: Vec2, cursor: Vec2, distance: number) => Vec2 | null>('towardPoint');
 
 /**
  * Parses command-line point input (decimal point, "," or ";" as separator):
- *   486512.34,4420118.9   absolute Y,X
- *   @12.5,-3              relative to the last point
- *   @25<45                distance<angle (degrees, CCW from east)
+ *   486512.34,4420118.9   absolute: east, then north (CBS's Y,X, CAD's X,Y)
+ *   @12.5,-3              relative to the last point: east, then north
+ *   @25<45                distance<angle: a CAD project's angle from east, counter-clockwise; a CBS
+ *                         project's semt from north, clockwise; in the project's angle unit
  *   18.4                  distance along the cursor direction
  * `metres` turns a typed length or coordinate into metres: a local
- * project's drawing unit (docs/adr/0165 §2); the angle stays as typed.
+ * project's drawing unit (docs/adr/0165 §2); `angles` is how a polar
+ * angle runs and its unit (§4): degrees from east, counter-clockwise, by default.
  */
 export function parsePointInput(
   text: string,
@@ -27,12 +30,13 @@ export function parsePointInput(
   cursor: Vec2 | null,
   along?: (distance: number) => Vec2 | null,
   metres: (typed: number) => number = (v) => v,
+  angles: PolarAngles = { fromNorth: false, grads: false },
 ): Vec2 | null {
   const t = text.trim();
   let m = t.match(REL);
   if (m) return last ? relativePoint(last, metres(+m[1]), metres(+m[2])) : null;
   m = t.match(POLAR);
-  if (m) return last ? polarOffset(last, metres(+m[1]), +m[2]) : null;
+  if (m) return last ? polarPointIn(last, metres(+m[1]), +m[2], angles.fromNorth, angles.grads) : null;
   m = t.match(ABS);
   if (m) return { x: metres(+m[1]), y: metres(+m[2]) };
   m = t.match(DIST);

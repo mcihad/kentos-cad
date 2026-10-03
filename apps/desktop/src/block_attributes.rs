@@ -326,7 +326,7 @@ impl App {
         let can_pick = w.via.is_ok();
         let sheet = grid::view_with(
             Sheet,
-            &COLUMNS,
+            table::columns(&self.format()),
             w,
             |_, _| String::new(),
             1,

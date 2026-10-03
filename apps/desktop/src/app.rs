@@ -826,6 +826,16 @@ impl App {
         }
     }
 
+    /// How the open drawing's numbers read (its units and its type's axes);
+    /// a new project's without a drawing.
+    pub(crate) fn format(&self) -> kentos_interaction::Format {
+        self.document
+            .as_ref()
+            .map_or_else(kentos_interaction::Format::default, |d| {
+                kentos_interaction::Format::of(d.settings())
+            })
+    }
+
     pub fn theme(&self) -> Theme {
         theme::theme(self.mode, self.accent)
     }

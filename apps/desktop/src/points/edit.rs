@@ -43,11 +43,12 @@ impl EditColumn {
         })
     }
 
-    /// What its value is called in a message: Y, X, Z.
-    fn word(self) -> &'static str {
+    /// What its value is called in a message: Y, X, Z, east and north as
+    /// the project's type names them (docs/adr/0165 §4).
+    fn word(self, format: &kentos_interaction::Format) -> &'static str {
         match self {
-            Self::East => "Y",
-            Self::North => "X",
+            Self::East => format.east_label(),
+            Self::North => format.north_label(),
             _ => "Z",
         }
     }
@@ -283,7 +284,10 @@ pub fn write_cell(
             Some(v) => Some(metres(v)),
             None => {
                 return Outcome {
-                    said: vec![format!("{PREFIX}{} bir sayı olmalı.", col.word())],
+                    said: vec![format!(
+                        "{PREFIX}{} bir sayı olmalı.",
+                        col.word(&kentos_interaction::Format::of(doc.settings()))
+                    )],
                     step: None,
                     stay: true,
                 };

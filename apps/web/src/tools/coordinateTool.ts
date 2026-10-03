@@ -60,9 +60,11 @@ export class CoordinateReadTool implements Tool {
     const { doc, format, log } = this.ctx;
     const snapped = snappedId !== undefined ? doc.get(snappedId) : undefined;
     const z = snapped?.kind === 'point' ? snapped.z : snapped ? (elevationAt(snapped, at) ?? undefined) : undefined;
-    const text = `Y=${format.coord(at.x)}, X=${format.coord(at.y)}${z !== undefined ? `, Z=${format.length(z, false)}` : ''}`;
+    // East and north as the project's type names them (docs/adr/0165 §4).
+    const [e, n] = [format.eastLabel, format.northLabel];
+    const text = `${e}=${format.coord(at.x)}, ${n}=${format.coord(at.y)}${z !== undefined ? `, Z=${format.length(z, false)}` : ''}`;
     log.info(text);
-    this.read = { at, lines: [`Y ${format.coord(at.x)}`, `X ${format.coord(at.y)}`, ...(z !== undefined ? [`Z ${format.length(z, false)}`] : [])] };
+    this.read = { at, lines: [`${e} ${format.coord(at.x)}`, `${n} ${format.coord(at.y)}`, ...(z !== undefined ? [`Z ${format.length(z, false)}`] : [])] };
     this.ctx.view.requestOverlay();
   }
 

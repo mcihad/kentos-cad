@@ -4,6 +4,7 @@
 //! cannot drift (docs/adr/0021).
 
 use kentos_geometry_core::Vec2;
+use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
 use kentos_geometry_core::tools::point_text::{
     looks_like_coordinate, parse_number, point_from_text_in, point_name,
 };
@@ -37,12 +38,26 @@ fn every_shared_case_reads_as_the_web_reads_it() {
                     Some("mm") => 1000.0,
                     Some(other) => panic!("{name}: bilinmeyen birim {other}"),
                 };
+                // A polar angle in the project's way and unit (docs/adr/0165 §4); CAD's and degrees by default.
+                let angles = Angles {
+                    from: match case["convention"].as_str() {
+                        None | Some("cad") => AngleFrom::East,
+                        Some("gis") => AngleFrom::North,
+                        Some(other) => panic!("{name}: bilinmeyen düzen {other}"),
+                    },
+                    grads: match case["angleUnit"].as_str() {
+                        None | Some("deg") => false,
+                        Some("grad") => true,
+                        Some(other) => panic!("{name}: bilinmeyen açı birimi {other}"),
+                    },
+                };
                 let got = point_from_text_in(
                     text,
                     point(&case["last"]),
                     point(&case["cursor"]),
                     |_| None,
                     |v| v / per_metre,
+                    angles,
                 );
                 let want = point(&case["expect"]);
                 let same = match (got, want) {

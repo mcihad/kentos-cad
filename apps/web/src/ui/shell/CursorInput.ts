@@ -16,6 +16,8 @@ import { namedPoint } from '../../tools/namedPoint';
 export class CursorInput extends Component {
   readonly el: HTMLElement;
   private readonly input: HTMLInputElement;
+  /** What can be typed, in the project's axes (docs/adr/0165 §4). */
+  private readonly hint: HTMLElement;
   private readonly ctx: AppContext;
   private open = false;
   /** The field's size, measured when it opens. */
@@ -25,12 +27,8 @@ export class CursorInput extends Component {
     super();
     this.ctx = ctx;
     this.input = h('input', { class: 'cursor-input__field', type: 'text', spellcheck: 'false', autocomplete: 'off', 'aria-label': 'Değer ya da koordinat' });
-    this.el = h(
-      'div',
-      { class: 'cursor-input', hidden: true },
-      this.input,
-      h('div', { class: 'cursor-input__hint' }, 'mesafe · Y,X · @dY,dX · @mesafe<açı'),
-    );
+    this.hint = h('div', { class: 'cursor-input__hint' }, ctx.format.inputHint);
+    this.el = h('div', { class: 'cursor-input', hidden: true }, this.input, this.hint);
     host.append(this.el);
     this.d.add(
       listen<KeyboardEvent>(this.input, 'keydown', (e) => {
@@ -62,6 +60,7 @@ export class CursorInput extends Component {
   /** Opens the field holding the character that opened it. */
   show(first: string): void {
     this.open = true;
+    this.hint.textContent = this.ctx.format.inputHint;
     this.input.value = first;
     this.el.hidden = false;
     this.size = { w: this.el.offsetWidth, h: this.el.offsetHeight };
@@ -88,7 +87,8 @@ export class CursorInput extends Component {
     ctx.log.command(echo(text));
     // #ad: a point's place by its name (docs/adr/0152 §4).
     if (namedPoint(ctx, text)) return;
-    if (!ctx.tools.active.input?.(text)) ctx.log.warn(`“${text}” anlaşılamadı. Mesafe, Y,X, @dY,dX ya da @mesafe<açı yazın.`);
+    const f = ctx.format;
+    if (!ctx.tools.active.input?.(text)) ctx.log.warn(`“${text}” anlaşılamadı. Mesafe, ${f.pairLabel}, ${f.relativeLabel} ya da ${f.polarLabel} yazın.`);
   }
 
   private close(refocus = true): void {

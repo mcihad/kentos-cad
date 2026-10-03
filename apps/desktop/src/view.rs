@@ -634,7 +634,9 @@ impl App {
                     &self.viewport.camera,
                     marks,
                     self.session.preview(&format),
-                    self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
+                    self.field
+                        .as_ref()
+                        .map(|f| (f.text.as_str(), f.at, format.input_hint())),
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
@@ -858,9 +860,11 @@ impl App {
         (self.session.is_running() || self.session.grip_active())
             .then(|| {
                 let p = self.session.prompt();
-                // The notes after the step in brackets, as the web's command line reads them.
+                // The notes after the step in brackets, as the web's command line reads them;
+                // the axes as the project's type names them (docs/adr/0165 §4).
                 p.options.iter().fold(
-                    LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
+                    LinePrompt::new(self.format().axes_text(&p.step_with_notes()))
+                        .command(p.tool.unwrap_or("")),
                     |prompt, o| {
                         // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
                         let name = match &o.value {
@@ -955,10 +959,21 @@ impl App {
         });
         let coordinates = match (&self.document, cursor) {
             (Some(doc), Some(p)) => {
-                // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
-                // first, rounded as the web's toFixed rounds.
+                // Display only (CLAUDE.md §5): the project's length decimals, east
+                // first, named as its type names them (docs/adr/0165 §4), rounded as
+                // the web's toFixed rounds.
                 let f = Format::of(doc.settings());
-                format!("Y {}   X {}", f.coord(p.x), f.coord(p.y))
+                format!(
+                    "{} {}   {} {}",
+                    f.east_label(),
+                    f.coord(p.x),
+                    f.north_label(),
+                    f.coord(p.y)
+                )
+            }
+            (Some(doc), None) => {
+                let f = Format::of(doc.settings());
+                format!("{} —   {} —", f.east_label(), f.north_label())
             }
             _ => "Y —   X —".to_owned(),
         };

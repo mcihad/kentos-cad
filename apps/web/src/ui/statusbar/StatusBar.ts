@@ -33,14 +33,10 @@ export class StatusBar extends Component {
     this.ctx = ctx;
     const y = h('span', { class: 'status__value num' });
     const x = h('span', { class: 'status__value num' });
-    const coords = h(
-      'div',
-      { class: 'status__coords', 'aria-live': 'off' },
-      h('span', { class: 'status__axis' }, 'Y'),
-      y,
-      h('span', { class: 'status__axis' }, 'X'),
-      x,
-    );
+    // East and north as the project's type names them (docs/adr/0165 §4).
+    const east = h('span', { class: 'status__axis' }, 'Y');
+    const north = h('span', { class: 'status__axis' }, 'X');
+    const coords = h('div', { class: 'status__coords', 'aria-live': 'off' }, east, y, north, x);
     const flash = h('div', { class: 'status__flash', 'aria-live': 'polite' });
     const selCount = h('span', { class: 'status__cell status__sel num' });
 
@@ -148,6 +144,12 @@ export class StatusBar extends Component {
       ctx.view.cursorWorld.subscribe((p) => {
         y.textContent = p ? ctx.format.coord(p.x) : '—';
         x.textContent = p ? ctx.format.coord(p.y) : '—';
+      }, true),
+    );
+    this.d.add(
+      ctx.doc.settings.workspace.subscribe(() => {
+        east.textContent = ctx.format.eastLabel;
+        north.textContent = ctx.format.northLabel;
       }, true),
     );
     this.d.add(ctx.view.camera.changed.subscribe(() => (zoom.textContent = `Ekran 1:${fmtScale(screenScale(ctx.view.camera.scale))}`), true));

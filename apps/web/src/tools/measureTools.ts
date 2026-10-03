@@ -86,7 +86,7 @@ export class DistanceTool extends PathTool {
   /** A reading as the tag and the log give it: the distance and the bearing, in the project's formats. */
   private reading(from: Vec2, to: Vec2): string {
     const f = this.ctx.format;
-    return `${f.length(dist(from, to))}, semt ${f.bearing(bearingGrad(from, to))}`;
+    return `${f.length(dist(from, to))}, ${f.directionName.toLocaleLowerCase('tr-TR')} ${f.direction(bearingGrad(from, to))}`;
   }
 
   /** Sabit ilk nokta's rays are no path to snap to (docs/adr/0163 §3). */
@@ -113,7 +113,7 @@ export class DistanceTool extends PathTool {
     const at = this.hover;
     if (at && dist(first, at) > 1e-9) {
       strokePath(g, view, [first, at], { color: pal.accent, dash: [4, 3] });
-      drawTag(g, view.worldToScreen(at), [f.length(dist(first, at)), `Semt ${f.bearing(bearingGrad(first, at))}`], pal.accent, pal.labelHalo);
+      drawTag(g, view.worldToScreen(at), [f.length(dist(first, at)), `${f.directionName} ${f.direction(bearingGrad(first, at))}`], pal.accent, pal.labelHalo);
     }
     this.drawTracking(g, view);
   }

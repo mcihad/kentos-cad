@@ -347,11 +347,16 @@ impl App {
             .document
             .as_ref()
             .map_or_else(Format::default, |d| Format::of(d.settings()));
-        let number = |heading: &'static str| {
+        let number = |heading: String| {
             TableColumn::new(heading)
                 .width(Length::FillPortion(2))
                 .align_right()
         };
+        // East and north as the project's type names them (docs/adr/0165 §4).
+        let (east, north) = (
+            format!("{} (sağa)", format.east_label()),
+            format!("{} (yukarı)", format.north_label()),
+        );
         let (table, footer) = match self.listing() {
             Listing::Empty => {
                 return container(label::muted(
@@ -364,9 +369,9 @@ impl App {
                 let count = points.len();
                 let table = Table::new([
                     TableColumn::new("Nokta").width(Length::FillPortion(2)),
-                    number("Y (sağa)"),
-                    number("X (yukarı)"),
-                    number("Z (kot)"),
+                    number(east),
+                    number(north),
+                    number("Z (kot)".to_owned()),
                     TableColumn::new("Katman").width(Length::FillPortion(2)),
                 ])
                 .virtualized(count, move |i| {
@@ -389,10 +394,14 @@ impl App {
                         TableColumn::new("Köşe")
                             .width(Length::FillPortion(1))
                             .align_right(),
-                        number("Y (sağa)"),
-                        number("X (yukarı)"),
-                        number("Kenar (m)"),
-                        TableColumn::new(format!("Semt ({})", format.angle_unit_label()))
+                        number(east),
+                        number(north),
+                        number(format!("Kenar ({})", format.length_unit_label())),
+                        TableColumn::new(format!(
+                            "{} ({})",
+                            format.direction_name(),
+                            format.angle_unit_label()
+                        ))
                             .width(Length::FillPortion(2))
                             .align_right(),
                     ])
@@ -408,7 +417,7 @@ impl App {
                             )
                             .into(),
                             label::mono(next.map_or_else(String::new, |n| {
-                                format.bearing_bare(bearing_grad(p, n))
+                                format.direction_bare(bearing_grad(p, n))
                             }))
                             .into(),
                         ])

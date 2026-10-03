@@ -310,7 +310,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 ### 7.4.2 Fare yardımcıları
 
-- **İmleç yanında değer girişi:** imlecin sağ üstünde, amber çerçeveli küçük bir kart; içinde eş aralıklı yazıyla (`--font-mono`) değer alanı ve altında kabul edilen biçimler (`mesafe · Y,X · @dY,dX · @mesafe<açı`, `--fs-2xs`, üçüncül renk). Aracın kendi ölçü etiketi imlecin sağ altında kalır; ikisi çakışmaz. Çizim alanının sağ kenarında imlecin soluna geçer, üst kenarda aşağı kayar; alanın dışına çıkmaz.
+- **İmleç yanında değer girişi:** imlecin sağ üstünde, amber çerçeveli küçük bir kart; içinde eş aralıklı yazıyla (`--font-mono`) değer alanı ve altında kabul edilen biçimler (CBS'de `mesafe · Y,X · @dY,dX · @mesafe<semt`, CAD'de `mesafe · X,Y · @dX,dY · @mesafe<açı`; `--fs-2xs`, üçüncül renk). Aracın kendi ölçü etiketi imlecin sağ altında kalır; ikisi çakışmaz. Çizim alanının sağ kenarında imlecin soluna geçer, üst kenarda aşağı kayar; alanın dışına çıkmaz.
 - **Bilgi kartı:** imlecin sağ altında, panel zemininde; başlıkta tür ya da "Parsel 7" (600) ve sağda katman örneği ile adı; altında ince çizgiyle ayrılmış iki sütunlu değerler (etiket üçüncül, değer sağa yaslı). Fareyle etkileşmez (`pointer-events: none`). En çok 280 px × yazı ölçeği genişliğindedir, çizim alanından 16 px dar; uzun ad ve metin bu genişlikte, gerekirse kelime içinden satır atlar. Katman adı türün yanına sığmazsa altına iner ve orada satır atlar (örneği ilk satırda). Yer: imlecin 18 px sağı, 20 px altı; sağa sığmazsa aynı uzaklıkta soluna, alta sığmazsa üstüne geçer; sonra çizim alanının kenarından 8 px içeride tutulur (`ui/widgets/placeBeside.ts`).
 - **Tek seferlik kenet etiketi:** komut şeridinde yumuşak amber zeminli "Sonraki tık: Orta nokta" ve × düğmesi.
 - **Kenet simgeleri:** kenet türünün çizimdeki işareti (kare, üçgen, daire, eşkenar dörtgen, çarpı, dik açı, teğet, kum saati) düz çizgiyle, üzerinde durduğu geometri kesikli çizilir. Menülerde 16 px'tir.
@@ -343,7 +343,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 - **Komut satırı her zaman görünür.** Solunda istem durur: kalın araç adı ve ardından ne beklendiği, ör. "**Çizgi**: sonraki noktayı belirtin [Kapat (K) / Bitir (Enter)]".
 - Girdi mono yazıyla gösterilir. Odaklanınca solda 2 px amber çubuk belirir.
 - Yazarken öneri listesi çıkar: simge, başlık, takma ad (mono) ve kısayol.
-- **Alt panel isteğe bağlıdır** (F2). Sekmeleri: Komut geçmişi (zaman, simge, metin), Koordinat listesi (Köşe, Y (sağa), X (yukarı), Kenar, Semt; dipte alan ve çevre), Noktalar, Uyarılar (okunmamış sayısı rozetle).
+- **Alt panel isteğe bağlıdır** (F2). Sekmeleri: Komut geçmişi (zaman, simge, metin), Koordinat listesi (Köşe, Y (sağa), X (yukarı), Kenar, Semt; CAD projesinde X (sağa), Y (yukarı) ve Açı; dipte alan ve çevre), Noktalar, Uyarılar (okunmamış sayısı rozetle).
 - **Noktalar** (nokta editörü, [ADR 0153](docs/adr/0153-point-editor.md)): üstte iki gruplu araç çubuğu. Solda arama kutusu (200 px), katman seçici (170 px; "Bütün katmanlar" ve nokta taşıyan katmanlar sayılarıyla), "Yalnız seçililer" ve "Bağlı çizgiler izler" (açık). Sağda sayaç (`128 / 1204 nokta`, ikincil renk), İşlemler ▾, Satır ekle, Sil ve Göster: simgeli ikincil düğmeler, seçim yokken Sil ve Göster sönük. Dar panelde sağ grup ikinci satıra geçer ve sağa dayanır; düğme kesilmez. Altında yapışkan başlıklı tablo: Sıra (üçüncül), Ad (yarı kalın), Y (sağa), X (yukarı), Z (kot), Kod, Katman; sayılar sağa dayalı ve tabular. Başlık tıklanınca sıralar, sıralı sütunun başlığında vurgu renginde ok. Seçili satır vurgu tonunda zemin ve solda 2 px vurgu çubuğuyla gösterilir (masaüstünde vurgu zemini).
   - Düzenlenen hücre (çift tık) kendi içinde 22 px'lik alan olur: vurgu çizgili çerçeve, sayılarda sağa dayalı tabular yazı; açılınca değer seçilidir.
   - Satır ekle'nin taslak satırı tablonun en altındadır: vurgu tonunda zemin, Sıra hücresinde vurgu renginde yarı kalın "Yeni".
@@ -609,7 +609,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 
 | Terim | Kullanım |
 |---|---|
-| Y (sağa) / X (yukarı) | Koordinat eksenleri. Her zaman Y önce yazılır. |
+| Y (sağa) / X (yukarı) | CBS projesinin koordinat eksenleri; her zaman doğu (Y) önce yazılır. CAD projesinde X sağa, Y yukarıdır, yine doğu (X) önce ([ADR 0165](docs/adr/0165-project-types-cad-gis.md) §4). |
 | Semt | Kuzeyden saat yönünde doğrultu açısı (grad) |
 | Ada / parsel | "1244 ada 7 parsel", etiketlerde "1244 ada" ve "7" |
 | Pafta | Harita paftası; çerçeve ve adı |

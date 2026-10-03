@@ -129,6 +129,8 @@ export function summary(d: WizardDraft): [string, string][] {
     ['Tür', d.type === 'cad' ? 'CAD, teknik çizim' : 'CBS, coğrafi bilgi sistemi'],
     ['Koordinatlar', local ? 'Yerel: koordinat sistemi yok, çizim 0,0’dan başlar' : crs ? crsTitle(crs) : `EPSG:${draftSrid(d)}`],
     ['Birim', (UNITS.find((u) => u.id === draftUnit(d))?.name ?? 'Metre').toLocaleLowerCase('tr-TR')],
+    // The type's axes and angles (docs/adr/0165 §4).
+    ['Eksenler', d.type === 'cad' ? 'X sağa, Y yukarı; açı derece, doğudan saat yönünün tersine' : 'Y doğuya, X kuzeye; semt grad, kuzeyden saat yönünde'],
   ];
   if (!local && p) lines.push(['İl', p.name]);
   lines.push(['Ölçek', scaleText(draftScale(d))], ['Katmanlar', LAYERS[d.type]]);

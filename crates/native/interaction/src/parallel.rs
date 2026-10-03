@@ -422,7 +422,11 @@ impl Tool for Parallel {
                 at: h,
                 lines: vec![
                     format.length(dist(last, h)),
-                    format!("Semt {}", format.bearing(bearing_grad(last, h))),
+                    format!(
+                        "{} {}",
+                        format.direction_name(),
+                        format.direction(bearing_grad(last, h))
+                    ),
                 ],
             });
         }

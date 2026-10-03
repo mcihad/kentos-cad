@@ -680,8 +680,8 @@ impl IntersectPoint {
         }
         if let (Some(m), Some(h)) = (near, hover) {
             let mut lines = out.tag.take().map(|t| t.lines).unwrap_or_default();
-            lines.push(format!("Y {}", f.coord(m.x)));
-            lines.push(format!("X {}", f.coord(m.y)));
+            lines.push(format!("{} {}", f.east_label(), f.coord(m.x)));
+            lines.push(format!("{} {}", f.north_label(), f.coord(m.y)));
             out.tag = Some(Tag { at: h, lines });
         }
         out

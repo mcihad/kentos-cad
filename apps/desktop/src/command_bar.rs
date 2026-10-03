@@ -129,8 +129,9 @@ impl App {
             }
         });
         // The step and its notes (a current value, a hint), as the web's `cmdbar__note`: smaller, muted.
+        // The axes as the project's type names them (docs/adr/0165 §4).
         let step = p.notes.iter().fold(
-            row![label::body(p.step.clone().into_owned())]
+            row![label::body(self.format().axes_text(&p.step))]
                 .spacing(8)
                 .align_y(Center),
             |step, note| step.push(label::caption(note.clone())),

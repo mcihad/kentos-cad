@@ -367,7 +367,7 @@
           "lengthDecimals": 3,
           "areaDecimals": 2,
           "areaUnit": "m2",
-          "angleUnit": "grad",
+          "angleUnit": "deg",
           "plotScale": 500,
           "workspace": "cad",
           "drawingFont": "arimo"
@@ -1536,7 +1536,7 @@
           "lengthDecimals": 3,
           "areaDecimals": 2,
           "areaUnit": "m2",
-          "angleUnit": "grad",
+          "angleUnit": "deg",
           "plotScale": 50,
           "workspace": "cad",
           "drawingFont": "barlow"
@@ -3403,7 +3403,7 @@
           "lengthDecimals": 3,
           "areaDecimals": 2,
           "areaUnit": "m2",
-          "angleUnit": "grad",
+          "angleUnit": "deg",
           "plotScale": 1,
           "workspace": "cad",
           "drawingFont": "barlow",

@@ -342,7 +342,7 @@ export class IntersectPointTool extends PointInputTool {
     const meets = this.cands.length ? this.cands : this.meetings(hover);
     const near = hover ? nearest(meets, hover) : null;
     for (const m of meets) (near === m ? plusMark : ringMark)(g, view, m, pal.accent, near === m ? 7 : 6);
-    if (near && hover) tag = [...tag, `Y ${f.coord(near.x)}`, `X ${f.coord(near.y)}`];
+    if (near && hover) tag = [...tag, `${f.eastLabel} ${f.coord(near.x)}`, `${f.northLabel} ${f.coord(near.y)}`];
     if (tag.length && hover) drawTag(g, view.worldToScreen(hover), tag, pal.accent, pal.labelHalo);
     this.drawTracking(g, view);
   }

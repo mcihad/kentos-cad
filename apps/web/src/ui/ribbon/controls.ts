@@ -43,7 +43,8 @@ export function commandTip(ctx: AppContext, id: string): TooltipContent {
       title: tool.label,
       shortcut: tool.id === 'select' ? 'Esc' : ctx.keymap.chordFor(id),
       description: tool.description,
-      steps: tool.ready ? tool.steps : undefined,
+      // The axes as the project's type names them (docs/adr/0165 §4).
+      steps: tool.ready ? tool.steps?.map((step) => ctx.format.axesText(step)) : undefined,
       note: tool.ready ? undefined : 'Geliştirme aşamasında',
     };
   }

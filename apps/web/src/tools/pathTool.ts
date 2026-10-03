@@ -569,7 +569,7 @@ export class PathTool extends PointInputTool {
       ? [f.length(way.length), `İzle: ${way.pts.length - 2} köşe`]
       : arc
         ? [`Yay r ${f.length(arc.r)}`, `Yay boyu ${f.length(arc.r * Math.abs(arc.sweep))}`]
-        : [f.length(dist(last, end)), `Semt ${f.bearing(bearingGrad(last, end))}`];
+        : [f.length(dist(last, end)), `${f.directionName} ${f.direction(bearingGrad(last, end))}`];
     if (this.measureOnly && !this.closed) lines.push(`Toplam ${f.length(bulgePathLength(pts, bulges, false))}`);
     if (this.closed && pts.length >= 3) lines.push(`Alan ${f.area(Math.abs(bulgeRingArea(pts, bulges)))}`);
     lines.push(...this.extraTag(pts, bulges));

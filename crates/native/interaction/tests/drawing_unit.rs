@@ -5,14 +5,17 @@
 mod common;
 
 use common::Bench;
-use kentos_contracts::{DrawingUnit, Entity, ProjectSettings};
+use kentos_contracts::{AngleUnit, DrawingUnit, Entity, ProjectSettings, Workspace};
 
-/// `tool` running on the empty drawing made local, in `unit`.
+/// `tool` running on the empty drawing made a local CAD project in `unit`,
+/// its angles in degrees, as a new one is (docs/adr/0165 §2, §4).
 fn local(tool: &str, unit: DrawingUnit) -> Bench {
     let mut b = Bench::new(tool);
     let settings = ProjectSettings {
         srid: 0,
         drawing_unit: Some(unit),
+        workspace: Some(Workspace::Cad),
+        angle_unit: AngleUnit::Deg,
         ..b.doc.settings().clone()
     };
     b.doc.set_settings(settings);

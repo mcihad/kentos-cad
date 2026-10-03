@@ -3,7 +3,8 @@
 //! §23.2): nothing here rounds a coordinate that is kept. The decimal
 //! separator is the point, as typed input takes it.
 
-use kentos_contracts::{AngleUnit, AreaUnit, DrawingUnit, ProjectSettings};
+use kentos_contracts::{AngleUnit, AreaUnit, DrawingUnit, ProjectSettings, Workspace};
+use kentos_geometry_core::tools::point_input::{AngleFrom, Angles};
 
 use crate::Vec2;
 
@@ -20,6 +21,19 @@ pub struct Format {
     /// The unit lengths are typed and read in: metres, or a local project's
     /// drawing unit (docs/adr/0165 §2). Geometry stays in metres.
     pub unit: DrawingUnit,
+    /// The project's axes and the way its angles run (docs/adr/0165 §4).
+    pub axes: Axes,
+}
+
+/// A project's axes and the way its angles run (docs/adr/0165 §4): a CBS
+/// project's Y east and X north, its directions bearings (semt) from north,
+/// clockwise; a CAD project's X east and Y north, its angles from east,
+/// counter-clockwise. A project not asked its type is shown as CBS.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Axes {
+    #[default]
+    Gis,
+    Cad,
 }
 
 impl Default for Format {
@@ -31,6 +45,7 @@ impl Default for Format {
             area_unit: AreaUnit::M2,
             angle_unit: AngleUnit::Grad,
             unit: DrawingUnit::M,
+            axes: Axes::Gis,
         }
     }
 }
@@ -43,16 +58,95 @@ impl Format {
             area_unit: settings.area_unit,
             angle_unit: settings.angle_unit,
             unit: settings.unit(),
+            axes: if settings.project_type() == Some(Workspace::Cad) {
+                Axes::Cad
+            } else {
+                Axes::Gis
+            },
         }
     }
 
-    /// The same settings in metres: the Hesap windows' (surveying, whose field
-    /// measurements are metres whatever a local project's unit; docs/adr/0165 §2).
+    /// How a typed polar angle runs and its unit: the project's type and
+    /// angle unit (docs/adr/0165 §4).
+    pub fn angles(&self) -> Angles {
+        Angles {
+            from: match self.axes {
+                Axes::Cad => AngleFrom::East,
+                Axes::Gis => AngleFrom::North,
+            },
+            grads: self.angle_unit == AngleUnit::Grad,
+        }
+    }
+
+    /// The same settings in the surveyor's terms: the Hesap windows' (field
+    /// measurements are metres whatever a local project's unit, read as Y, X
+    /// and semt whatever its type; docs/adr/0165 §2, §4).
     pub fn metric(self) -> Self {
         Self {
             unit: DrawingUnit::M,
+            axes: Axes::Gis,
             ..self
         }
+    }
+
+    /// The east axis's name: Y in a CBS project, X in a CAD one (docs/adr/0165 §4).
+    pub fn east_label(&self) -> &'static str {
+        match self.axes {
+            Axes::Gis => "Y",
+            Axes::Cad => "X",
+        }
+    }
+
+    /// The north axis's name: X in a CBS project, Y in a CAD one.
+    pub fn north_label(&self) -> &'static str {
+        match self.axes {
+            Axes::Gis => "X",
+            Axes::Cad => "Y",
+        }
+    }
+
+    /// A point as it is typed: `Y,X` in a CBS project, `X,Y` in a CAD one;
+    /// east first in both.
+    pub fn pair_label(&self) -> String {
+        format!("{},{}", self.east_label(), self.north_label())
+    }
+
+    /// A relative point as it is typed: `@dY,dX` or `@dX,dY`.
+    pub fn relative_label(&self) -> String {
+        format!("@d{},d{}", self.east_label(), self.north_label())
+    }
+
+    /// A polar point as it is typed: a CBS project's `@mesafe<semt`, a CAD
+    /// project's `@mesafe<açı`.
+    pub fn polar_label(&self) -> &'static str {
+        match self.axes {
+            Axes::Gis => "@mesafe<semt",
+            Axes::Cad => "@mesafe<açı",
+        }
+    }
+
+    /// The value field's hint (the web's `CursorInput`): “mesafe · Y,X ·
+    /// @dY,dX · @mesafe<semt” in the project's axes.
+    pub fn input_hint(&self) -> String {
+        format!(
+            "mesafe · {} · {} · {}",
+            self.pair_label(),
+            self.relative_label(),
+            self.polar_label()
+        )
+    }
+
+    /// Words written in a CBS project's terms (`Y,X`, `@dY,dX`, `Y (sağa)`,
+    /// `X (yukarı)`) in the project's axes: a tool's steps, a column's
+    /// heading (the web's `axesText`).
+    pub fn axes_text(&self, text: &str) -> String {
+        if self.axes == Axes::Gis {
+            return text.to_owned();
+        }
+        text.replace("dY,dX", "dX,dY")
+            .replace("Y,X", "X,Y")
+            .replace("Y (sağa)", "X (sağa)")
+            .replace("X (yukarı)", "Y (yukarı)")
     }
 
     /// A length or coordinate typed in the unit, in metres (what the geometry keeps).
@@ -169,6 +263,41 @@ impl Format {
         }
     }
 
+    /// A direction's reading's name: a CBS project's `Semt`, a CAD project's
+    /// `Açı` (docs/adr/0165 §4).
+    pub fn direction_name(&self) -> &'static str {
+        match self.axes {
+            Axes::Gis => "Semt",
+            Axes::Cad => "Açı",
+        }
+    }
+
+    /// A direction given as its semt in grads, as the project's type reads
+    /// it: the semt, or a CAD project's angle from east, counter-clockwise
+    /// (100 − semt grads), in the project's angle unit (the web's `direction`).
+    pub fn direction(&self, semt_grad: f64) -> String {
+        self.bearing(self.direction_grads(semt_grad))
+    }
+
+    /// The same without its unit, for a column whose heading names it.
+    pub fn direction_bare(&self, semt_grad: f64) -> String {
+        self.bearing_bare(self.direction_grads(semt_grad))
+    }
+
+    fn direction_grads(&self, semt_grad: f64) -> f64 {
+        if self.axes == Axes::Gis {
+            return semt_grad;
+        }
+        let mut g = 100.0 - semt_grad;
+        if g < 0.0 {
+            g += 400.0;
+        }
+        if g >= 400.0 {
+            g -= 400.0;
+        }
+        g
+    }
+
     /// The angle unit's mark (the web's `angleUnitLabel`): `°` or `g`.
     pub fn angle_unit_label(&self) -> &'static str {
         match self.angle_unit {
@@ -222,9 +351,16 @@ impl Format {
         }
     }
 
-    /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5).
+    /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5), a CAD
+    /// project's `X 120.000  Y 45.500` (docs/adr/0165 §4).
     pub fn point(&self, p: Vec2) -> String {
-        format!("Y {}  X {}", self.coord(p.x), self.coord(p.y))
+        format!(
+            "{} {}  {} {}",
+            self.east_label(),
+            self.coord(p.x),
+            self.north_label(),
+            self.coord(p.y)
+        )
     }
 }
 
@@ -293,6 +429,70 @@ mod tests {
         };
         assert_eq!(other.area(1500.0), "1.50 dönüm");
         assert_eq!(other.bearing(100.0), "90.0000°");
+    }
+
+    /// The type's axes (docs/adr/0165 §4): a CAD project names east X and
+    /// north Y, its polar angles from east; a CBS project and one not asked
+    /// its type the surveyor's Y and X and semt. The Hesap windows' stay the
+    /// surveyor's.
+    #[test]
+    fn a_projects_type_names_its_axes() {
+        let mut settings = ProjectSettings {
+            srid: 5256,
+            length_decimals: 3,
+            area_decimals: 2,
+            area_unit: AreaUnit::M2,
+            angle_unit: AngleUnit::Deg,
+            plot_scale: 1000.0,
+            workspace: Some(Workspace::Cad),
+            drawing_font: None,
+            drawing_unit: None,
+        };
+        let cad = Format::of(&settings);
+        assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
+        assert_eq!(cad.input_hint(), "mesafe · X,Y · @dX,dY · @mesafe<açı");
+        assert_eq!(
+            cad.axes_text(
+                "Taban noktasına tıklayın ya da Y,X yazın; aralık dY,dX. Y (sağa), X (yukarı)"
+            ),
+            "Taban noktasına tıklayın ya da X,Y yazın; aralık dX,dY. X (sağa), Y (yukarı)"
+        );
+        assert_eq!(
+            cad.angles(),
+            Angles {
+                from: AngleFrom::East,
+                grads: false
+            }
+        );
+        assert_eq!(cad.metric().pair_label(), "Y,X", "the surveyor's");
+        // A direction from east, counter-clockwise: semt 0 g (north) is 90°, 300 g (west) 180°.
+        assert_eq!(
+            (
+                cad.direction_name(),
+                cad.direction(0.0),
+                cad.direction(300.0)
+            ),
+            ("Açı", "90.0000°".to_owned(), "180.0000°".to_owned())
+        );
+        assert_eq!(cad.direction_bare(100.0), "0.0000");
+        settings.workspace = Some(Workspace::Gis);
+        settings.angle_unit = AngleUnit::Grad;
+        let gis = Format::of(&settings);
+        assert_eq!(
+            (gis.direction_name(), gis.direction(300.0)),
+            ("Semt", "300.0000 g".to_owned())
+        );
+        assert_eq!(gis.input_hint(), "mesafe · Y,X · @dY,dX · @mesafe<semt");
+        assert_eq!(gis.axes_text("Y,X"), "Y,X");
+        assert_eq!(
+            gis.angles(),
+            Angles {
+                from: AngleFrom::North,
+                grads: true
+            }
+        );
+        settings.workspace = Some(Workspace::LegacyHybrid);
+        assert_eq!(Format::of(&settings).axes, Axes::Gis, "not asked: CBS");
     }
 
     /// A local project's drawing unit (docs/adr/0165 §2): lengths, coordinates

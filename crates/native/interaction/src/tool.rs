@@ -760,7 +760,7 @@ impl Context<'_> {
     /// Typed point text (the web's `pointFromText`): an absolute, relative or
     /// polar point, or a distance along the tracking line or toward
     /// `cursor`; its lengths and coordinates typed in the project's unit
-    /// (docs/adr/0165 §2).
+    /// (docs/adr/0165 §2), a polar angle in its type's way and angle unit (§4).
     pub fn typed_point(
         &self,
         text: &str,
@@ -774,6 +774,7 @@ impl Context<'_> {
             cursor,
             |d| self.track_along(d),
             |v| format.to_metres(v),
+            format.angles(),
         )
     }
 

@@ -25,7 +25,8 @@ export type EditColumn = 'name' | 'east' | 'north' | 'z' | 'code';
 /** The editor's own messages start so; the commands' refusals are said as they are. */
 export const PREFIX = 'Nokta editörü: ';
 export const STEP = 'Nokta düzenle';
-const WORD = { east: 'Y', north: 'X', z: 'Z' } as const;
+/** What a cell's value is called in a message: east and north as the project's type names them (docs/adr/0165 §4). */
+const word = (doc: CadDocument, col: 'east' | 'north' | 'z') => (col === 'z' ? 'Z' : doc.settings.workspace.value === 'cad' ? { east: 'X', north: 'Y' }[col] : { east: 'Y', north: 'X' }[col]);
 export const FOLLOW_LOCKED = `${PREFIX}Bağlı çizgilerden biri kilitli katmanda; katmanın kilidini açın ya da Bağlı çizgiler izler'i kapatın.`;
 
 /** What came of a write: what to say (warnings), the undo step written (null: none), and whether the cell stays open. */
@@ -123,7 +124,7 @@ export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, tex
   }
   const blank = text.trim() === '';
   const typed = col === 'z' && blank ? null : parseNumber(text);
-  if (typed === null && !(col === 'z' && blank)) return { said: [`${PREFIX}${WORD[col]} bir sayı olmalı.`], step: null, stay: true };
+  if (typed === null && !(col === 'z' && blank)) return { said: [`${PREFIX}${word(doc, col)} bir sayı olmalı.`], step: null, stay: true };
   const v = typed === null ? null : metres(typed);
   const from = e.p;
   const to: Vec2 = col === 'east' ? { x: v as number, y: from.y } : col === 'north' ? { x: from.x, y: v as number } : from;

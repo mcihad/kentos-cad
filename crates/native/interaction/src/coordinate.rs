@@ -77,7 +77,13 @@ impl Tool for CrsQuery {
         let f = cx.format();
         self.format = f;
         let z = Self::elevation(p.snap, cx);
-        let mut text = format!("Y={}, X={}", f.coord(p.world.x), f.coord(p.world.y));
+        let mut text = format!(
+            "{}={}, {}={}",
+            f.east_label(),
+            f.coord(p.world.x),
+            f.north_label(),
+            f.coord(p.world.y)
+        );
         if let Some(z) = z {
             text.push_str(&format!(", Z={}", f.length_bare(z)));
         }
@@ -110,9 +116,10 @@ impl Tool for CrsQuery {
                 .into_iter()
                 .collect(),
             tag: self.hover.map(|(at, z)| {
+                // East and north as the project's type names them (docs/adr/0165 §4).
                 let mut lines = vec![
-                    format!("Y {}", f.coord(at.x)),
-                    format!("X {}", f.coord(at.y)),
+                    format!("{} {}", f.east_label(), f.coord(at.x)),
+                    format!("{} {}", f.north_label(), f.coord(at.y)),
                 ];
                 if let Some(z) = z {
                     lines.push(format!("Z {}", f.length_bare(z)));

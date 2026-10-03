@@ -579,11 +579,13 @@ impl Path {
         self.pts.push(p);
         self.bulges.push(0.0);
         let f = cx.format();
+        // The direction as the project's type reads it: a semt, or a CAD project's angle (docs/adr/0165 §4).
         let text = format!(
-            "{}: {}, semt {}",
+            "{}: {}, {} {}",
             self.pts.len() - 1,
             f.length(dist(first, p)),
-            f.bearing(bearing_grad(first, p))
+            f.direction_name().to_lowercase(),
+            f.direction(bearing_grad(first, p))
         );
         cx.say(Level::Info, text);
     }
@@ -1146,7 +1148,11 @@ impl Path {
                 at: hover,
                 lines: vec![
                     format.length(dist(first, hover)),
-                    format!("Semt {}", format.bearing(bearing_grad(first, hover))),
+                    format!(
+                        "{} {}",
+                        format.direction_name(),
+                        format.direction(bearing_grad(first, hover))
+                    ),
                 ],
             });
             preview.tracking = self.tracking;

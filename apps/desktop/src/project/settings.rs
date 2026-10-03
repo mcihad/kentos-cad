@@ -375,11 +375,17 @@ impl App {
                     .push(setting(
                         "Yerel çizim orijini",
                         Some("Büyük TM koordinatları ekran kartında bu noktaya göre çizilir; hassasiyet kaybını önler."),
-                        label::mono(format!(
-                            "Y {}  X {}",
-                            kentos_interaction::fixed(origin.x, 0),
-                            kentos_interaction::fixed(origin.y, 0)
-                        )),
+                        label::mono({
+                            // East and north as the project's type names them (docs/adr/0165 §4).
+                            let f = kentos_interaction::Format::of(doc.settings());
+                            format!(
+                                "{} {}  {} {}",
+                                f.east_label(),
+                                kentos_interaction::fixed(origin.x, 0),
+                                f.north_label(),
+                                kentos_interaction::fixed(origin.y, 0)
+                            )
+                        }),
                     )),
             ))
             .into()

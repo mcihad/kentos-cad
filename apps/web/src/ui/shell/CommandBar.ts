@@ -82,7 +82,8 @@ export class CommandBar extends Component {
     if (this.el.hidden) return;
     const d = this.ctx.tools.activeDescriptor;
     replaceChildren(this.tool, d ? icon(d.icon, 16) : null, h('b', null, p.tool));
-    replaceChildren(this.step, p.step, ...p.notes.map((n) => h('span', { class: 'cmdbar__note' }, n)));
+    // The axes as the project's type names them (docs/adr/0165 §4).
+    replaceChildren(this.step, this.ctx.format.axesText(p.step), ...p.notes.map((n) => h('span', { class: 'cmdbar__note' }, n)));
     replaceChildren(this.opts, ...optionButtons(this.ctx, p.options, 'cmdbar__opt'));
     this.calc.hidden = !canCalcPoint(this.ctx);
   }
