@@ -70,3 +70,21 @@ export function standardLayers(plotScale: number): LayerInit[] {
     },
   ];
 }
+
+/** The layer a CAD project's new objects go to at first. */
+export const CAD_ACTIVE_LAYER = 'cizim';
+
+/**
+ * The technical drawing layers a CAD project starts with (docs/adr/0165 §3): drawn edges in the drawing's ink, then
+ * dimensions, texts, hatches, construction and centre lines, AutoCAD's usual set. A fresh copy each call.
+ */
+export function cadLayers(): LayerInit[] {
+  return [
+    { id: 'cizim', name: 'Çizim', style: { color: 'ink', lineWeight: 0.35 } },
+    { id: 'olcu', name: 'Ölçü', style: { color: '#56B6C2', lineWeight: 0.18 } },
+    { id: 'yazi', name: 'Yazı', style: { color: 'fg' } },
+    { id: 'tarama', name: 'Tarama', style: { color: '#8C9AAA', lineWeight: 0.13 } },
+    { id: 'yardimci', name: 'Yardımcı', style: { color: 'fg-dim', lineType: 'dashed', lineWeight: 0.13 } },
+    { id: 'eksen', name: 'Eksen', style: { color: '#E06C75', lineType: 'dashdot', lineWeight: 0.18 } },
+  ];
+}

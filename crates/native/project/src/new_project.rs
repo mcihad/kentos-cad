@@ -1,7 +1,8 @@
 //! The drawing a new project starts as (the web's `model/newProject.ts` and
-//! `model/standardLayers.ts`): an empty drawing with the standard layer tree
-//! of a cadastral sheet, the chosen coordinate system, plot scale, mode and
-//! typeface, and the default units. Its anchor is the zone's work-area
+//! `model/standardLayers.ts`): an empty drawing with a CAD project's
+//! technical drawing layers or the standard layer tree of a cadastral sheet,
+//! the chosen coordinate system, plot scale, type and typeface, and the
+//! default units. Its anchor is the zone's work-area
 //! centre (the web's `workAreaCentre`), since no object exists yet to anchor
 //! it. It opens on its start view, which stays its home view (`start_view`,
 //! docs/adr/0165 §3).
@@ -26,6 +27,8 @@ use crate::provinces::{Province, province};
 pub const NEW_PROJECT_NAME: &str = "Yeni proje";
 /// The layer new objects go to at first.
 pub const STANDARD_ACTIVE_LAYER: &str = "taslak";
+/// The layer a CAD project's new objects go to at first.
+pub const CAD_ACTIVE_LAYER: &str = "cizim";
 /// Plot scales offered (the web's `PLOT_SCALES`).
 pub const PLOT_SCALES: [f64; 5] = [500.0, 1000.0, 2000.0, 5000.0, 25_000.0];
 
@@ -73,6 +76,7 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         )
     })?;
     let name = o.name.trim();
+    let cad = o.workspace == Workspace::Cad;
     Ok(DocumentSnapshotV1 {
         format: DOCUMENT_FORMAT.to_owned(),
         version: DOCUMENT_VERSION,
@@ -94,8 +98,19 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         },
         origin: work_area_centre(crs),
         home_view: Some(start_view(crs, o.plot_scale, o.province.and_then(province))),
-        layers: standard_layers(o.plot_scale),
-        active_layer: STANDARD_ACTIVE_LAYER.to_owned(),
+        // A CAD project starts with technical drawing layers, any other with a
+        // cadastral sheet's (docs/adr/0165 §3).
+        layers: if cad {
+            cad_layers()
+        } else {
+            standard_layers(o.plot_scale)
+        },
+        active_layer: if cad {
+            CAD_ACTIVE_LAYER
+        } else {
+            STANDARD_ACTIVE_LAYER
+        }
+        .to_owned(),
         entities: Vec::new(),
         styles: ProjectStyles::default(),
         blocks: Vec::new(),
@@ -228,6 +243,28 @@ fn group(id: &str, name: &str, children: Vec<LayerNode>) -> LayerNode {
         children,
         ..node(id, name, default_style())
     }
+}
+
+/// The technical drawing layers a CAD project starts with (docs/adr/0165
+/// §3): drawn edges in the drawing's ink, then dimensions, texts, hatches,
+/// construction and centre lines, AutoCAD's usual set (the web's `cadLayers`).
+pub fn cad_layers() -> Vec<LayerNode> {
+    let lined = |line_type, color: &str, weight| LayerStyle {
+        line_type,
+        ..style(color, Some(weight))
+    };
+    vec![
+        node("cizim", "Çizim", style("ink", Some(0.35))),
+        node("olcu", "Ölçü", style("#56B6C2", Some(0.18))),
+        node("yazi", "Yazı", style("fg", None)),
+        node("tarama", "Tarama", style("#8C9AAA", Some(0.13))),
+        node(
+            "yardimci",
+            "Yardımcı",
+            lined(LineType::Dashed, "fg-dim", 0.13),
+        ),
+        node("eksen", "Eksen", lined(LineType::Dashdot, "#E06C75", 0.18)),
+    ]
 }
 
 /// The standard layer tree of a cadastral sheet: what a new project starts

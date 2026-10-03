@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[test]
-    fn a_new_project_replaces_a_clean_drawing_with_the_standard_layers() {
+    fn a_new_project_replaces_a_clean_drawing_with_its_types_layers() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("file.new"));
         assert_eq!(app.dialog, Some(Dialog::Project));
@@ -315,7 +315,8 @@ mod tests {
         assert_eq!(doc.settings().workspace, Some(Workspace::Cad));
         assert_eq!(doc.settings().drawing_font, Some(DrawingFont::Barlow));
         assert_eq!(doc.entity_count(), 0);
-        assert_eq!(doc.model.layers().active(), "taslak");
+        // A CAD project starts with technical drawing layers, Çizim active (docs/adr/0165 §3).
+        assert_eq!(doc.model.layers().active(), "cizim");
         assert!(doc.path.is_none() && !doc.dirty());
         assert!(
             last_said(&app)

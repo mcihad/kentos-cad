@@ -4,10 +4,11 @@ import type { DocumentContent } from './document';
 import { tmForward } from './geom/geodesy';
 import type { Bounds, Vec2 } from './geometry';
 import { PROJECT_SETTINGS_DEFAULTS, type DrawingFont, type DrawingUnit, type Workspace } from './projectSettings';
-import { STANDARD_ACTIVE_LAYER, standardLayers } from './standardLayers';
+import { CAD_ACTIVE_LAYER, cadLayers, STANDARD_ACTIVE_LAYER, standardLayers } from './standardLayers';
 
 /**
- * An empty project (Dosya → Yeni proje): the standard layer tree, the chosen
+ * An empty project (Dosya → Yeni proje): a CAD project's technical drawing
+ * layers or the standard layer tree of a cadastral sheet, the chosen
  * coordinate system and plot scale, and the default units. Its local origin
  * is the zone's work-area centre (geo/crs.ts), since no object exists yet to
  * anchor it. It opens on its start view, which stays its home view
@@ -47,8 +48,9 @@ export function newProjectContent(o: NewProjectOptions): DocumentContent {
     },
     origin: workAreaCentre(crs),
     homeView: startView(crs, o.plotScale, o.province === undefined ? null : (provinceByCode(o.province) ?? null)),
-    layers: standardLayers(o.plotScale),
-    activeLayer: STANDARD_ACTIVE_LAYER,
+    // A CAD project starts with technical drawing layers, any other with a cadastral sheet's (docs/adr/0165 §3).
+    layers: o.workspace === 'cad' ? cadLayers() : standardLayers(o.plotScale),
+    activeLayer: o.workspace === 'cad' ? CAD_ACTIVE_LAYER : STANDARD_ACTIVE_LAYER,
     entities: [],
     styles: { items: [], categories: [] },
   };

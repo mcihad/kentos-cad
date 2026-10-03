@@ -71,6 +71,14 @@ describe('new project', () => {
   });
 });
 
+describe('a new CAD project (docs/adr/0165 §3)', () => {
+  it('starts with technical drawing layers, Çizim active; any other with a cadastral sheet’s', () => {
+    const c = newProjectContent({ name: 'x', srid: 0, plotScale: 1, workspace: 'cad' });
+    expect([c.activeLayer, c.layers.map((n) => n.name)]).toEqual(['cizim', ['Çizim', 'Ölçü', 'Yazı', 'Tarama', 'Yardımcı', 'Eksen']]);
+    expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, workspace: 'gis' }).activeLayer).toBe('taslak');
+  });
+});
+
 describe('a new project’s start view (docs/adr/0165 §3)', () => {
   const sys = (srid: number) => crsBySrid(srid)!;
   it('is an A3 landscape sheet from 0,0 at the scale for a local project', () => {
