@@ -69,6 +69,8 @@ const MIGRATED: PreferencesData = {
   defaultSrid: 5254,
   defaultWorkspace: 'cad',
   defaultDrawingFont: 'arimo',
+  // Newer than the old store (docs/adr/0165 §2): the schema's default.
+  defaultDrawingUnit: 'm',
   snapAperture: 14,
   pickAperture: 6,
   snapEndpoint: true,

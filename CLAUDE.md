@@ -600,8 +600,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `typed_length`, `point_from_text_in`; Hesap pencereleri ve İşlemler metrede) bitti; DXF iki yönde birimiyle (2c,
   `formats::units`) bitti. 3. adımdan ileri TM izdüşümü (`geodesy::tm_forward`, PROJ başvurusuyla), 81 il, ana görünüm, CAD'in
   katman şablonu ve web'in sihirbazı (`ui/settings/NewProjectWizard.ts`, kuralları `model/newProjectWizard.ts`, ortak
-  `fixtures/project/v1/wizard.json`) ve masaüstünün sihirbazı (`project/wizard/`, kuralları `kentos_project::wizard`, KentOS UI
-  `Wizard::rail`) bitti. Sıradaki: 3d (Uygulama ayarları → Yeni projeler'de tür ve birim), sonra eksenler, sahne, her türün şeridi.
+  `fixtures/project/v1/wizard.json`), masaüstünün sihirbazı (`project/wizard/`, kuralları `kentos_project::wizard`, KentOS UI
+  `Wizard::rail`) ve yeni projelerin birimi (`newProjects.drawingUnit`) bitti; 3. adım tamam. Sıradaki: 4. adım (eksen ve açı
+  düzeni: CAD X,Y ve derece, CBS Y,X ve semt; `fixtures/point-input/v1`'in `convention`'ı), sonra sahne, her türün şeridi.
 
 - Bitti (30 Eylül): yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7),
   1–5. adımlar iki platformda: sözleşme ve şema 7; çekirdek ve çizim; komutlar; araçlar ve arayüz (Yazı'nın

@@ -1,7 +1,7 @@
 import '../../styles/wizard.css';
 import type { AppContext } from '../../app/context';
 import { newProjectContent } from '../../model/newProject';
-import { blocked, initialDraft, optionsOf, STEP_NAMES, stepNote, WIZARD_STEPS, type WizardDraft, type WizardStep } from '../../model/newProjectWizard';
+import { blocked, initialDraft, isLocalDraft, optionsOf, STEP_NAMES, stepNote, WIZARD_STEPS, type WizardDraft, type WizardStep } from '../../model/newProjectWizard';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { note } from '../widgets/controls';
@@ -13,7 +13,7 @@ import { coordsStep, detailsStep, typeStep, type StepApi } from './wizardSteps';
  * Dosya → Yeni proje as a wizard (docs/adr/0165 §3, DESIGN.md §7.10): the project's type, its coordinates, its scale
  * and details, one page at a time beside a rail of the steps and what was chosen in each. Nothing changes until
  * Oluştur; unsaved changes of the open drawing are asked about then, over the wizard, whose Vazgeç comes back here.
- * The type chosen is remembered for the next wizard (Uygulama ayarları → Yeni projeler).
+ * The type chosen, and a local project's unit, are remembered for the next wizard (Uygulama ayarları → Yeni projeler).
  */
 export function openNewProjectWizard(ctx: AppContext): void {
   new NewProjectWizard(ctx);
@@ -35,7 +35,12 @@ class NewProjectWizard {
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
-    this.draft = initialDraft({ type: ctx.prefs.defaultWorkspace.value, fallbackSrid: ctx.prefs.defaultSrid.value, font: ctx.prefs.defaultDrawingFont.value });
+    this.draft = initialDraft({
+      type: ctx.prefs.defaultWorkspace.value,
+      fallbackSrid: ctx.prefs.defaultSrid.value,
+      font: ctx.prefs.defaultDrawingFont.value,
+      unit: ctx.prefs.defaultDrawingUnit.value,
+    });
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     this.dialog = new Dialog({
       title: 'Yeni proje',
@@ -118,8 +123,8 @@ class NewProjectWizard {
     this.creating = false;
     this.forward.disabled = false;
     if (!done) return;
-    // The next wizard starts on this type.
-    ctx.settingsStore.choose({ 'newProjects.workspace': this.draft.type });
+    // The next wizard starts on this type, and a local project's unit.
+    ctx.settingsStore.choose({ 'newProjects.workspace': this.draft.type, ...(isLocalDraft(this.draft) ? { 'newProjects.drawingUnit': this.draft.unit } : {}) });
     this.dialog.close();
   }
 

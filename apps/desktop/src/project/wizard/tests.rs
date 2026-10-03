@@ -98,9 +98,47 @@ fn a_local_cad_project_is_drawn_in_its_unit_from_one_to_one() {
         "{}",
         last_said(&app)
     );
-    // The type chosen starts the next wizard.
+    // The type chosen, and a local project's unit, start the next wizard.
+    assert_eq!(
+        app.settings.effective("newProjects.drawingUnit"),
+        serde_json::Value::from("mm")
+    );
     open(&mut app);
-    assert_eq!(state(&app).draft.kind, Kind::Cad);
+    assert_eq!(
+        (state(&app).draft.kind, state(&app).draft.unit),
+        (Kind::Cad, DrawingUnit::Mm)
+    );
+}
+
+#[test]
+fn a_new_local_project_starts_in_the_unit_of_the_apps_settings() {
+    let mut app = app_with_drawing();
+    let _ = app.settings.choose(&[
+        ("newProjects.drawingUnit", serde_json::Value::from("cm")),
+        ("newProjects.workspace", serde_json::Value::from("cad")),
+    ]);
+    open(&mut app);
+    assert_eq!(
+        (state(&app).draft.kind, state(&app).draft.unit),
+        (Kind::Cad, DrawingUnit::Cm)
+    );
+    // A project with a system keeps the unit asked for before.
+    send(&mut app, Event::Go(1));
+    send(&mut app, Event::Coords(Coords::Real));
+    send(&mut app, Event::Go(2));
+    send(&mut app, Event::Next);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .settings()
+            .drawing_unit,
+        None
+    );
+    assert_eq!(
+        app.settings.effective("newProjects.drawingUnit"),
+        serde_json::Value::from("cm")
+    );
 }
 
 #[test]

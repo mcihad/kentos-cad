@@ -9,6 +9,7 @@ import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/c
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { workspaceById } from '../../app/workspaces';
+import { UNITS } from '../../model/newProjectWizard';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 import { engine } from './engineSection';
 import { settingsFile, type FileDraft, type FileState } from './settingsFileSection';
@@ -73,8 +74,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Yeni projeler',
       icon: 'fileNew',
       title: 'Yeni proje varsayılanları',
-      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim yazı tipi ve koordinat sistemi.',
-      keys: ['defaultSrid', 'defaultWorkspace', 'defaultDrawingFont'],
+      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim birimi, çizim yazı tipi ve koordinat sistemi.',
+      keys: ['defaultSrid', 'defaultWorkspace', 'defaultDrawingUnit', 'defaultDrawingFont'],
       render: (api) => {
         const current = ctx.doc.crs.value;
         const openProject = h('button', { class: 'btn btn--small', type: 'button' }, 'Proje ayarlarını aç');
@@ -83,6 +84,19 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
           group(
             'Proje türü',
             workspacePicker({ value: api.draft.defaultWorkspace, compact: true, onChange: (id) => api.set('defaultWorkspace', id, false) }),
+          ),
+          group(
+            'Çizim birimi',
+            settingRow(
+              'Yerel CAD projeleri',
+              'Koordinat sistemi olmayan yeni CAD projesinin uzunlukları, koordinatları ve alanları bu birimle yazılır; proje kendi birimini saklar.',
+              segmented({
+                label: 'Çizim birimi',
+                value: api.draft.defaultDrawingUnit,
+                options: UNITS.map((u) => ({ value: u.id, label: u.name, hint: u.note })),
+                onChange: (v) => api.set('defaultDrawingUnit', v),
+              }),
+            ),
           ),
           group('Çizim yazı tipi', drawingFontPicker({ value: api.draft.defaultDrawingFont, onChange: (id) => api.set('defaultDrawingFont', id) })),
           crsPicker({
@@ -147,6 +161,10 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       }
       if (draft.defaultWorkspace !== init.defaultWorkspace) {
         ctx.log.info(`Yeni projeler “${workspaceById(draft.defaultWorkspace).label}” türüyle önerilecek. Açık projenin türü değişmedi.`);
+      }
+      if (draft.defaultDrawingUnit !== init.defaultDrawingUnit) {
+        const unit = UNITS.find((u) => u.id === draft.defaultDrawingUnit)?.name.toLocaleLowerCase('tr-TR') ?? draft.defaultDrawingUnit;
+        ctx.log.info(`Yeni yerel CAD projeleri ${unit} biriminde başlayacak. Açık projenin birimi değişmedi.`);
       }
       ctx.log.success('Uygulama ayarları kaydedildi.');
     },

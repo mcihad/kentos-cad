@@ -6,8 +6,8 @@
 //! Nothing changes until Oluştur. Unsaved changes of the drawing on screen
 //! are asked about then, over the wizard, so Vazgeç there comes back here;
 //! an open cloud project is left first (its changes are sent or kept on
-//! this device). The type chosen starts the next wizard (Uygulama ayarları
-//! → Yeni projeler).
+//! this device). The type chosen, and a local project's unit, start the
+//! next wizard (Uygulama ayarları → Yeni projeler).
 
 mod art;
 mod pages;
@@ -17,6 +17,7 @@ mod tests;
 
 use std::fmt;
 
+use iced::widget::{Id, operation};
 use iced::{Element, Task};
 use kentos_contracts::{
     DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit, Workspace,
@@ -132,12 +133,13 @@ impl State {
         let s = &app.settings;
         let font = serde_json::from_value(s.effective("newProjects.drawingFont"))
             .unwrap_or(DrawingFont::Barlow);
+        let unit = serde_json::from_value(s.effective("newProjects.drawingUnit")).ok();
         Self {
             draft: Draft::initial(
                 default_type(app),
                 s.number("newProjects.srid") as u32,
                 font,
-                None,
+                unit,
             ),
             step: Step::Type,
             query: String::new(),
@@ -204,6 +206,24 @@ pub fn new_document(o: &NewProject) -> Result<Document, String> {
     )
 }
 
+/// The text fields the wizard gives the keyboard to.
+pub(super) const SEARCH: &str = "yeni-proje-il";
+pub(super) const NAME: &str = "yeni-proje-adi";
+
+/// A page shown: the keyboard to its field, as on the web: the province's
+/// search on a page with places, the name on the last, its text chosen, so
+/// that typing replaces it.
+fn focus(s: &State) -> Task<Message> {
+    match s.step {
+        Step::Coords if !s.draft.is_local() => operation::focus(Id::new(SEARCH)),
+        Step::Details => Task::batch([
+            operation::focus(Id::new(NAME)),
+            operation::select_all(Id::new(NAME)),
+        ]),
+        _ => Task::none(),
+    }
+}
+
 /// A scale typed as 1:N: N a whole number over 0, dots and spaces between its digits allowed.
 fn typed_scale(text: &str) -> Option<f64> {
     let digits: String = text
@@ -240,6 +260,8 @@ impl App {
                 d.coords = c;
                 d.plot_scale = None;
                 s.own.clear();
+                s.status = None;
+                return focus(s);
             }
             Event::Unit(u) => d.unit = u,
             Event::Province(code) => {
@@ -269,11 +291,11 @@ impl App {
             Event::Font(font) => d.font = font,
             Event::Go(index) => {
                 s.go(index);
-                return Task::none();
+                return focus(s);
             }
             Event::Back => {
                 s.go(s.step.index().saturating_sub(1));
-                return Task::none();
+                return focus(s);
             }
             Event::Next => return self.new_project_next(),
         }
@@ -293,7 +315,7 @@ impl App {
         let at = s.step.index();
         if at + 1 < STEPS.len() {
             s.go(at + 1);
-            return Task::none();
+            return focus(s);
         }
         match new_document(&s.draft.options()) {
             Err(e) => {
@@ -316,17 +338,24 @@ impl App {
         let Some(doc) = s.pending.take() else {
             return Task::none();
         };
-        let kind = s.draft.kind;
+        let (kind, unit) = (s.draft.kind, s.draft.is_local().then_some(s.draft.unit));
         self.close_project_window();
         let settings = doc.settings().clone();
         let name = doc.name().to_owned();
         // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
-        // The next wizard starts on this type.
-        let _ = self.settings.choose(&[(
+        // The next wizard starts on this type, and a local project's unit.
+        let mut remembered = vec![(
             "newProjects.workspace",
             serde_json::to_value(kind.workspace()).unwrap_or_default(),
-        )]);
+        )];
+        if let Some(unit) = unit {
+            remembered.push((
+                "newProjects.drawingUnit",
+                serde_json::to_value(unit).unwrap_or_default(),
+            ));
+        }
+        let _ = self.settings.choose(&remembered);
         let system = crs::title_of(settings.srid);
         self.say(
             Level::Success,

@@ -5,7 +5,7 @@
 //! Türkiye's longitudes); its scale, name, typeface and a summary.
 
 use iced::widget::{
-    Column, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
+    Column, Id, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
     text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Theme};
@@ -432,6 +432,7 @@ fn place(s: &State) -> Vec<Element<'_, Message>> {
     let list_height = typography::from_default(206.0);
     let search = kentos_ui::widget::focus_ring(
         text_input("İl adı ya da plaka kodu", &s.query)
+            .id(Id::new(super::SEARCH))
             .on_input(|q| event(Event::Search(q)))
             .on_submit(event(Event::SearchFirst))
             .padding(metrics::padding(metrics::control(), 8.0))
@@ -598,6 +599,7 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
     let d = &s.draft;
     let name = kentos_ui::widget::focus_ring(
         text_input("Proje adı", &d.name)
+            .id(Id::new(super::NAME))
             .on_input(|t| event(Event::Name(t)))
             .on_submit(event(Event::Next))
             .padding(metrics::padding(metrics::control(), 8.0))

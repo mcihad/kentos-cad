@@ -1,5 +1,5 @@
 import type { AccentId, CornersId, ShadowsId, ThemeId, UiFontId } from './appearance';
-import type { DrawingFont, Workspace } from '../model/projectSettings';
+import type { DrawingFont, DrawingUnit, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
 import { settingDefault } from '../core/settings/schema';
 import type { LineType } from '../model/layers';
@@ -148,6 +148,8 @@ export interface PreferencesData {
   defaultWorkspace: Workspace;
   /** Drawing typeface for new projects (the project keeps its own, ProjectSettings.drawingFont). */
   defaultDrawingFont: DrawingFont;
+  /** The unit a new local CAD project is drawn in (the project keeps its own, ProjectSettings.drawingUnit; docs/adr/0165 §2). */
+  defaultDrawingUnit: DrawingUnit;
   /** Object snap and pick apertures in CSS px. */
   snapAperture: number;
   pickAperture: number;
@@ -223,6 +225,7 @@ export const PREF_KEYS = {
   defaultSrid: 'newProjects.srid',
   defaultWorkspace: 'newProjects.workspace',
   defaultDrawingFont: 'newProjects.drawingFont',
+  defaultDrawingUnit: 'newProjects.drawingUnit',
   snapAperture: 'drafting.snapAperture',
   pickAperture: 'drafting.pickAperture',
   snapEndpoint: 'snap.endpoint',

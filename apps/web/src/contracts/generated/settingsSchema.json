@@ -953,6 +953,36 @@
       "apply": "live"
     },
     {
+      "key": "newProjects.drawingUnit",
+      "type": "enum",
+      "default": "m",
+      "choices": [
+        {
+          "value": "mm",
+          "label": "Milimetre"
+        },
+        {
+          "value": "cm",
+          "label": "Santimetre"
+        },
+        {
+          "value": "m",
+          "label": "Metre"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "newProjects",
+      "title": "Çizim birimi",
+      "description": "Koordinat sistemi olmayan yeni CAD projesinin birimi; proje kendi birimini saklar (ADR 0165).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "newProjects.drawingFont",
       "type": "enum",
       "default": "barlow",

@@ -99,8 +99,13 @@ Başlangıç görünümü:
    - 3a. Çekirdek ve veri: ileri TM izdüşümü (geometri çekirdeği `geodesy::tm_forward`, Krüger serisi 6. derece; PROJ'un değerleriyle `fixtures/geodesy/v1/tm-forward.json`, `scripts/fixtures/tm_cases.py --check`; web WASM'dan), 81 il (web'in `geo/provinces.ts`'i, iki platformun okuduğu `fixtures/crs/v1/provinces.json`), TUREF dilim önerisi masaüstünde de (kayıt defterinin `zoneSuggestions`'ı), başlangıç görünümü (CBS: ilin merkezi ya da dilimin çalışma alanı, ölçekte bir pafta; CAD: A3 yatay kâğıt, 0,0 sol altta) iki platformda aynı kuralla.
    - CAD'in katman şablonu (web `cadLayers`, masaüstü `cad_layers`) ve ana görünümün projeye yazılması 3a'nın ardından yapıldı; `fixtures/project/v1/new-project.json` ikisini de tutar.
    - 3b. Web'in sihirbazı: kuralları `model/newProjectWizard.ts` (adımlar, taslak, önerilen sistem, türün ölçekleri, adımların notları, özet, ilerlemeyi durduran neden), pencere `ui/settings/NewProjectWizard.ts`, sayfalar `wizardSteps.ts`, dilim şeridi `zoneStrip.ts`, kartların resimleri `ui/settings/art/*.svg`; kuralların yanıtları masaüstü için `fixtures/project/v1/wizard.json`.
-   - 3c. Masaüstünün sihirbazı: aynı adımlar, kartlar (aynı SVG resimleri) ve dilim şeridi; kuralları `kentos_project::wizard`, `wizard.json`'u geçer. 3d. Uygulama ayarları → Yeni projeler'de tür ve birim, masaüstünde görünümün boyut beklemesi.
+   - 3c. Masaüstünün sihirbazı: aynı adımlar, kartlar (aynı SVG resimleri) ve dilim şeridi; kuralları `kentos_project::wizard`, `wizard.json`'u geçer; çerçevesi KentOS UI'ın raylı sihirbazı (`Wizard::rail`).
+   - 3d. Uygulama ayarları → Yeni projeler'de tür ve yerel projenin birimi (`newProjects.drawingUnit`); sihirbaz oluşturduğu projenin türünü ve yerelse birimini sonraki sihirbaz için saklar. Masaüstünde görünümün boyut beklemesi 3a'yla yapıldı.
 4. **Eksen ve açı düzeni:** okumalar, yazma ve kutupsal giriş (fixture'ıyla), açı varsayılanları.
+   - 4a. Çekirdek: yazılan noktanın kutupsal açısı türün düzeniyle ve projenin açı biriminde (CAD: doğudan saat yönünün tersine; CBS: kuzeyden saat yönünde, semt); `fixtures/point-input/v1` durumları `convention` ve `angleUnit` taşır, iki okuyucu ikisini de geçer; yeni CAD projesinin açı birimi derece (`new-project.json`).
+   - 4b. Eksen adları: biçimlendiricide türün eksenleri (doğunun ve kuzeyin adı: CAD'de X ve Y, CBS'de Y ve X); durum çubuğu, Öznitelikler, üzerine gelme kartı, Koordinat oku, koordinat listesi, Noktalar, istemler, değer alanının ipucu ve araçların adımları.
+   - 4c. Doğrultu okumaları: CAD'de doğrultu açısı (doğudan, saat yönünün tersine) “Açı”, CBS'de “Semt”; Öznitelikler, Mesafe ölç ve koordinat listesi.
+   - Hesap pencereleri ölçme işidir: metrede kaldıkları gibi (§2) Y,X ve semtle de kalırlar.
 5. **Sahne:** koordinat ekseni simgesi, türe göre zemin, ölçek seçici.
 6. **Her türün kendi şeridi.**
 

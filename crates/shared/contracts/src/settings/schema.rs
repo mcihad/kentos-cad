@@ -457,6 +457,16 @@ fn settings() -> Vec<SettingDescriptor> {
             "Proje türü",
             "Yeni proje sihirbazında önce seçili gelen tür; proje kendi türünü saklar (ADR 0165).",
         ),
+        choice(
+            "newProjects.drawingUnit",
+            "m",
+            &[("mm", "Milimetre"), ("cm", "Santimetre"), ("m", "Metre")],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Çizim birimi",
+            "Koordinat sistemi olmayan yeni CAD projesinin birimi; proje kendi birimini saklar (ADR 0165).",
+        ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
             .hosts(&[Web, Desktop])
             .text(

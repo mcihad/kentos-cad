@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 74,
-      "implemented": 74,
+      "total": 75,
+      "implemented": 75,
       "partial": 0,
       "pending": 0
     },
@@ -145,8 +145,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 74,
-        "implemented": 71,
+        "total": 75,
+        "implemented": 72,
         "partial": 0,
         "pending": 0,
         "none": 2,
@@ -12404,6 +12404,20 @@
       "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "barlow",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "user.defaultDrawingUnit",
+      "key": "defaultDrawingUnit",
+      "setting": "newProjects.drawingUnit",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "m",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

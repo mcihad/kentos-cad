@@ -83,7 +83,7 @@ impl Section {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
             }
             Self::NewProjects => {
-                "Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim yazı tipi ve koordinat sistemi."
+                "Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim birimi, çizim yazı tipi ve koordinat sistemi."
             }
             Self::Engine => {
                 "Çizim alanını ekran kartında çizerken kenar yumuşatma, çözünürlük, sembol boyutu ve çizgi kalınlığı. Bu cihaza özgüdür; menüler, paneller ve pencereler her zaman tam kalitede çizilir."
@@ -139,6 +139,7 @@ impl Section {
             ],
             Self::NewProjects => &[
                 "newProjects.workspace",
+                "newProjects.drawingUnit",
                 "newProjects.drawingFont",
                 "newProjects.srid",
             ],
@@ -429,6 +430,14 @@ impl App {
                 choices("newProjects.workspace", &f.value("newProjects.workspace")),
             )
             .help(Fields::help("newProjects.workspace"))
+            .field(
+                Fields::title("newProjects.drawingUnit"),
+                choices(
+                    "newProjects.drawingUnit",
+                    &f.value("newProjects.drawingUnit"),
+                ),
+            )
+            .help(Fields::help("newProjects.drawingUnit"))
             .field(
                 Fields::title("newProjects.drawingFont"),
                 listed(

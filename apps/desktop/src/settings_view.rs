@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 43] = [
+pub const KEYS: [&str; 44] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -67,6 +67,7 @@ pub const KEYS: [&str; 43] = [
     "appearance.startScreen",
     "newProjects.srid",
     "newProjects.workspace",
+    "newProjects.drawingUnit",
     "newProjects.drawingFont",
 ];
 
@@ -415,6 +416,20 @@ impl App {
                     format!(
                         "Yeni projeler “{}” türüyle önerilecek. Açık projenin türü değişmedi.",
                         crate::catalog::mode_of(Some(w))
+                    )
+                }),
+                "newProjects.drawingUnit" => serde_json::from_value::<kentos_contracts::DrawingUnit>(
+                    value.clone(),
+                )
+                .ok()
+                .map(|u| {
+                    let name = match u {
+                        kentos_contracts::DrawingUnit::Mm => "milimetre",
+                        kentos_contracts::DrawingUnit::Cm => "santimetre",
+                        kentos_contracts::DrawingUnit::M => "metre",
+                    };
+                    format!(
+                        "Yeni yerel CAD projeleri {name} biriminde başlayacak. Açık projenin birimi değişmedi."
                     )
                 }),
                 _ => None,
