@@ -42,6 +42,8 @@ export class CommandLine extends Component {
   private chips: HTMLElement[] = [];
   private options: readonly PromptOption[] = [];
   private folded = 0;
+  /** The step's words: the last to give way when the options and a state's chip do not fit. */
+  private stepText: HTMLElement | null = null;
   private readonly more: HTMLElement;
 
   constructor(ctx: AppContext) {
@@ -147,6 +149,7 @@ export class CommandLine extends Component {
     // Options are buttons here too; typing their letter still works. The axes as the project's type names them
     // (docs/adr/0165 §4).
     const text = h('span', { class: 'cmdline__text' }, h('b', null, p.tool), this.ctx.format.axesText(`: ${p.step}${notes}`));
+    this.stepText = text;
     this.chips = optionButtons(this.ctx, p.options, 'cmdline__chip');
     this.options = p.options;
     replaceChildren(this.prompt, text, ...this.chips, this.more, ...this.stripParts(), ...this.lockParts());
@@ -169,8 +172,11 @@ export class CommandLine extends Component {
       this.chips.forEach((chip, i) => (chip.hidden = i >= n - folded));
       this.more.hidden = folded === 0;
       this.folded = folded;
-      if (folded === n || this.prompt.scrollWidth <= this.prompt.clientWidth + 1) return;
+      if (this.prompt.scrollWidth <= this.prompt.clientWidth + 1) return;
     }
+    // Every option is in Diğer and the line is still too narrow: the step's words give way to their ellipsis, so that a
+    // state's chip after them (the locks, the one-shot snap) keeps its × in view, as the desktop's pinned chips do.
+    if (this.stepText) this.stepText.style.minWidth = '0px';
   }
 
   /** The options in “Diğer”, as the right button's menu offers them. */
