@@ -109,7 +109,8 @@ export function registerProcessingCommands(ctx: AppContext, hooks: ProcessingHoo
       title: 'Yeni model…',
       category: cat,
       icon: 'modelNew',
-      aliases: ['MODEL', 'YENIMODEL'],
+      // MODEL is the sheet mode's: back to the model space, as in AutoCAD (docs/adr/0164).
+      aliases: ['YENIMODEL'],
       description: 'İşlem araçlarını birbirine bağlayan bir akış (model) tasarlar.',
       run: (id) => hooks.design(typeof id === 'string' ? id : undefined),
     },
