@@ -29,6 +29,7 @@ use std::f64::consts::PI;
 use serde_json::json;
 
 use crate::app::{App, Message};
+use crate::files_testing::make_cad;
 use kentos_ui::widget::docking;
 use crate::tools_scenes::{Objects, click, forget, hover, method, open, typed};
 use crate::tools_screens::{Pointed, Scene, open_split};
@@ -309,12 +310,16 @@ pub(crate) fn scenes() -> Vec<Scene> {
     ]
 }
 
-/// Ölçülendirme ▾: its methods, each with its own icon, and the family's
-/// tools; the button large, its panel's lead (DESIGN.md §7.3.1).
+/// Ölçülendirme ▾ on a CAD project's Açıklama tab: its methods, each with
+/// its own icon, and the family's tools; the button large, its panel's lead
+/// (DESIGN.md §7.3.1).
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![(
         "olcu-yontemleri",
-        |app| app.tab = "draw",
+        |app| {
+            make_cad(app);
+            app.tab = "annotate";
+        },
         |s, app| open_split(s, app, "dimension"),
     )]
 }
@@ -322,7 +327,8 @@ pub(crate) fn pointed() -> Vec<Pointed> {
 /// Ölçülendirme with Açı chosen from its list: the button's face shows
 /// Açı's icon; the tool stopped again.
 pub(crate) fn chosen(app: &mut App) {
-    app.tab = "draw";
+    make_cad(app);
+    app.tab = "annotate";
     let _ = app.update(Message::SplitChosen {
         key: "dimension",
         id: "tool.dimension",

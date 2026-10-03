@@ -109,10 +109,10 @@ fn pointed_scenes() -> Vec<Pointed> {
             |app| app.tab = "home",
             |s, app| open_split(s, app, "select"),
         ),
-        // docs/adr/0142: Kot ver's three ways, the list of its split button.
+        // docs/adr/0142: Kot ver's three ways, the list of its split button (Düzenle, a CBS project's).
         (
             "kot-ver-yontemler",
-            |app| app.tab = "modify",
+            |app| app.tab = "edit",
             |s, app| open_split(s, app, "setElevation"),
         ),
     ];
@@ -120,11 +120,15 @@ fn pointed_scenes() -> Vec<Pointed> {
     all
 }
 
-/// The ribbon tabs the new tools sit in.
+/// The ribbon tabs the new tools sit in: a CAD project's Değiştir, a CBS
+/// project's Düzenle and Harita.
 fn ribbon_scenes() -> Vec<Scene> {
     vec![
-        ("serit-cizim", |app| app.tab = "draw"),
-        ("serit-degistir", |app| app.tab = "modify"),
+        ("serit-degistir", |app| {
+            crate::files_testing::make_cad(app);
+            app.tab = "modify";
+        }),
+        ("serit-duzenle", |app| app.tab = "edit"),
         ("serit-harita", |app| app.tab = "map"),
         // docs/adr/0141: two zooms in and a step back, so that Önceki and Sonraki görünüm are both on.
         ("serit-gorunum", |app| {

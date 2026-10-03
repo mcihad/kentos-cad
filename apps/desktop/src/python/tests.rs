@@ -602,8 +602,8 @@ fn screens() {
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
                 if name == "serit" {
-                    // Opened from Araçlar › Komut › Python konsolu.
-                    app.tab = "tools";
+                    // Opened from Analiz › Komut › Python konsolu (a CBS project's ribbon).
+                    app.tab = "analysis";
                     let _ = app.update(Message::Run(crate::catalog::PYTHON_CONSOLE));
                 } else {
                     let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::Python));

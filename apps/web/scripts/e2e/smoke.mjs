@@ -1760,9 +1760,9 @@ try {
       await sleep(150);
     };
     await b.eval(`(() => { const k = window.kentos; k.selection.set(k.doc.byLayer('parsel').filter((e) => e.kind === 'polygon').slice(0, 4).map((e) => e.id)); })()`);
-    await press('.ribbon__tab', 'İşlemler');
+    await press('.ribbon__tab', 'Analiz');
     await press('.ribbon__strip .rbtn', 'Köşe noktalarını numarala');
-    check('processing: dialog opens from the ribbon’s İşlemler tab', !!(await center('.dialog--ptool')));
+    check('processing: dialog opens from the ribbon’s Analiz tab', !!(await center('.dialog--ptool')));
     const count = await b.eval(`document.querySelector('.pfield__count')?.textContent ?? ''`);
     check('processing: input shows what it will read', /^4 kapalı alan; seçili nesneler/.test(count), count);
     await b.eval(`(() => { const i = document.querySelector('[data-param="prefix"] input'); i.focus(); i.select(); })()`);
@@ -2527,20 +2527,19 @@ try {
     await b.eval(`(() => { window.kentos.files.picker = window.__files.original; window.kentos.files.handle = null; })()`);
     await b.shot('newproject-drawn');
 
-    // CAD mode: no processing tab on the ribbon, and what is left of the map tab is measuring (Ölçme), without the
-    // parcel tool; the parcel command still runs by name.
+    // A CAD project's own ribbon (docs/adr/0165 §6): AutoCAD's drafting tabs, measuring on Giriş, no parcel tool; the
+    // parcel command still runs by name.
     const ui = () =>
-      b.eval(`({ tabs: [...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab), map: document.querySelector('.ribbon__tab[data-tab="map"]')?.textContent.trim() ?? null, status: document.querySelector('.status__mode').textContent, mode: window.kentos.doc.settings.workspace.value, dirty: window.kentos.doc.dirty.value })`);
+      b.eval(`({ tabs: [...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab), status: document.querySelector('.status__mode').textContent, mode: window.kentos.doc.settings.workspace.value, dirty: window.kentos.doc.dirty.value })`);
     const cadUi = await ui();
-    await press('.ribbon__tab', 'Ölçme');
-    const measuring = await b.eval(`({ commands: document.querySelectorAll('.ribbon__strip [data-command]').length, parcel: !!document.querySelector('.ribbon__strip [data-command="tool.parcel"]') })`);
     await press('.ribbon__tab', 'Giriş');
+    const measuring = await b.eval(`({ commands: document.querySelectorAll('.ribbon__strip [data-command="tool.measure"], .ribbon__strip [data-command="tool.area"]').length, parcel: !!document.querySelector('.ribbon__strip [data-command="tool.parcel"]') })`);
     await cmd('PARSEL');
     const byName = await b.eval('window.kentos.tools.activeId.value');
     await key('Escape');
     check(
-      'CAD mode hides the ribbon’s processing tab and keeps measuring on the map tab (Ölçme), without the parcel tool; the parcel command still runs by name',
-      !cadUi.tabs.includes('processing') && cadUi.tabs.includes('draw') && cadUi.map === 'Ölçme' && measuring.commands > 0 && !measuring.parcel && cadUi.status === 'CAD' && byName === 'parcel',
+      'a CAD project shows its own tabs (Ekle, Açıklama, Yönet, Çıktı; no processing, map or drawing tab), measuring on Giriş without the parcel tool; the parcel command still runs by name',
+      ['file', 'home', 'insert', 'annotate', 'modify', 'view', 'manage', 'output'].every((t) => cadUi.tabs.includes(t)) && !cadUi.tabs.includes('processing') && !cadUi.tabs.includes('map') && !cadUi.tabs.includes('draw') && measuring.commands === 2 && !measuring.parcel && cadUi.status === 'CAD' && byName === 'parcel',
       JSON.stringify({ ...cadUi, measuring, byName }),
     );
     // To CBS from the status bar's type cell; no Hibrit (docs/adr/0165), the announced types are listed with Yakında.
@@ -2551,7 +2550,7 @@ try {
     const gisUi = await ui();
     check(
       'the status bar switches the project type to CBS (the project is unsaved); no Hibrit; 3D Plan and Afet Analizi say Yakında',
-      gisUi.mode === 'gis' && gisUi.tabs.includes('map') && gisUi.tabs.includes('processing') && gisUi.status === 'CBS' && gisUi.dirty && !modeMenu.some((t) => t.includes('Hibrit')) && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
+      gisUi.mode === 'gis' && ['map', 'data', 'edit', 'analysis', 'survey', 'output'].every((t) => gisUi.tabs.includes(t)) && gisUi.status === 'CBS' && gisUi.dirty && !modeMenu.some((t) => t.includes('Hibrit')) && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
       JSON.stringify({ ...gisUi, modeMenu }),
     );
   }
@@ -2597,10 +2596,10 @@ try {
     check('every tool of the catalog is on a project type’s ribbon (a button, a split button or a panel’s ▾), and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
 
     // A tool button runs its tool (filled amber); Giriş, which also offers it, carries the running-tool dot.
-    await tab('draw');
-    await click('.ribbon__strip [data-command="tool.circle"]');
-    const running = await b.eval(`({ tool: window.kentos.tools.activeId.value, pressed: document.querySelector('.ribbon__strip [data-command="tool.circle"]').getAttribute('aria-pressed'), dot: document.querySelector('.ribbon__tab[data-tab="home"]').hasAttribute('data-active-tool') })`);
-    check('Daire on the ribbon runs the circle tool, marks its button and puts a dot on Giriş', running.tool === 'circle' && running.pressed === 'true' && running.dot, JSON.stringify(running));
+    await tab('annotate');
+    await click('.ribbon__strip [data-command="tool.text"]');
+    const running = await b.eval(`({ tool: window.kentos.tools.activeId.value, pressed: document.querySelector('.ribbon__strip [data-command="tool.text"]').getAttribute('aria-pressed'), dot: document.querySelector('.ribbon__tab[data-tab="home"]').hasAttribute('data-active-tool') })`);
+    check('Yazı on the Açıklama tab runs the text tool, marks its button and puts a dot on Giriş', running.tool === 'text' && running.pressed === 'true' && running.dot, JSON.stringify(running));
     await key('Escape');
 
     // Daire ▾ lists its methods: 3 nokta starts the tool with that method, and the button remembers it.
@@ -2621,14 +2620,14 @@ try {
       listed.length === 5 && method.tool === 'circle' && /ilk noktayı/.test(method.prompt) && /ilk noktayı/.test(again),
       `${listed.length} · ${method.prompt} · ${again}`,
     );
-    // A seldom used tool waits under its panel's ▾.
-    await tab('draw');
-    await click('.ribbon__strip .rpanel[data-panel="Eğri"] .rpanel__more');
+    // The other drawing tools wait under Giriş › Çizim's ▾, AutoCAD's panel expander (a CAD project has no drawing tab).
+    await tab('home');
+    await click('.ribbon__strip .rpanel[data-panel="Çizim"] .rpanel__more');
     await b.click(...(await menuItem('Halka')));
     await sleep(150);
     const donut = await b.eval(`window.kentos.tools.activeId.value`);
     await key('Escape');
-    check('Halka is under the Eğri panel’s ▾ and runs from there', donut === 'donut', donut);
+    check('Halka is under Giriş › Çizim’s ▾ and runs from there', donut === 'donut', donut);
 
     // Narrow window: panels step down (labels, then icons) instead of being cut off.
     const fits = async () => {
@@ -2735,7 +2734,7 @@ try {
     };
     const fixedRows = await rightAt('.ribbon__qat [data-command="file.save"]');
     await key('Escape');
-    const tabRows = await rightAt('.ribbon__tab[data-tab="draw"]');
+    const tabRows = await rightAt('.ribbon__tab[data-tab="annotate"]');
     await key('Escape');
     const addedRows = await rightAt('.ribbon__qat [data-command="view.zoomExtents"]');
     await click('.menu .menu__item');

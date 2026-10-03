@@ -127,26 +127,26 @@ fn line_type_weight_and_scale_are_the_webs_fields() {
 #[test]
 fn the_seçim_tab_shows_with_a_selection_and_gives_the_ribbon_back_when_it_empties() {
     let mut app = app_with_drawing();
-    app.tab = "draw";
-    assert_eq!(app.shown_tab(), "draw");
+    app.tab = "edit";
+    assert_eq!(app.shown_tab(), "edit");
     // Nothing selected: the contextual tab is not there to open.
     let _ = app.update(Message::RibbonTab("selection"));
-    assert_eq!(app.shown_tab(), "draw");
+    assert_eq!(app.shown_tab(), "edit");
     app.selection.set(vec![Slot(1), Slot(4)]);
     let _ = app.update(Message::RibbonTab("selection"));
     assert_eq!(app.shown_tab(), "selection");
     // The summary: how many, of which kinds, the most first.
     assert_eq!(app.selection_kinds().len(), 2);
     // Another tab keeps the selection; Seçim again, then the selection goes.
-    let _ = app.update(Message::RibbonTab("modify"));
-    assert_eq!(app.shown_tab(), "modify");
+    let _ = app.update(Message::RibbonTab("map"));
+    assert_eq!(app.shown_tab(), "map");
     let _ = app.update(Message::RibbonTab("selection"));
     let _ = app.update(Message::Run("edit.deselect"));
-    assert_eq!(app.shown_tab(), "modify", "back to the tab before it");
+    assert_eq!(app.shown_tab(), "map", "back to the tab before it");
     // A new selection does not open it by itself (the web's).
     app.selection.set(vec![Slot(1)]);
     let _ = app.update(Message::RibbonPanel(Event::Color(None)));
-    assert_eq!(app.shown_tab(), "modify");
+    assert_eq!(app.shown_tab(), "map");
 }
 
 #[test]

@@ -589,7 +589,7 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 
 İşi devralan için kalınan yer; bir sonraki devirde bu bölümü yenileyin.
 
-- Sürmekte (3 Ekim, sahibin isteği: “hibrit mod iptal … sahne kurma CAD ve gis için ayrı … proje oluşturma sihirbazla … menüleri bu
+- Bitti (3 Ekim, sahibin isteği: “hibrit mod iptal … sahne kurma CAD ve gis için ayrı … proje oluşturma sihirbazla … menüleri bu
   yapılara göre düzenleyelim”): proje türleri ([ADR 0165](docs/adr/0165-project-types-cad-gis.md), TODOS.md `PRJ-01`). 1. adım
   (Hibrit kalkar) iki platformda: sözleşmede `hybrid` yalnız okunur (`Workspace::LegacyHybrid`, `ProjectSettings::project_type`),
   belge ve v1 göçü onu yazmaz; türsüz proje CBS gösterilir ve kullanıcının açtığında bir kez sorulur (web `ProjectTypeDialog.ts`,
@@ -605,8 +605,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   kutupsal giriş türün düzeniyle (`point_input::polar_point_in`, `fixtures/point-input/v1`'in `convention`'ı), eksen adları ve
   doğrultular biçimlendiricide (`Format::axes`, `Formatter.axes`), yeni CAD projesi derece. 5. adım (sahne) bitti: CAD'de koordinat
   ekseni simgesi (`map_marks.rs`, `drawUcsIcon`) ve koyu zemin (“Türe göre”, web'de `data-canvas`), durum çubuğunda ölçek seçici
-  (`screen_scale.rs`, `scaleSelector.ts`). Sıradaki: 6. adım (her türün kendi şeridi: CAD Dosya, Giriş, Ekle, Açıklama, Değiştir,
-  Görünüm, Yönet, Çıktı; CBS Dosya, Giriş, Harita, Veri, Düzenle, Analiz, Ölçme, Görünüm, Çıktı; ADR 0165 §6).
+  (`screen_scale.rs`, `scaleSelector.ts`). 6. adım (her türün kendi şeridi) bitti: CAD Dosya, Giriş, Ekle, Açıklama, Değiştir,
+  Görünüm, Yönet, Çıktı; CBS Dosya, Giriş, Harita, Veri, Düzenle, Analiz, Ölçme, Görünüm, Çıktı (web `app/ribbon.ts`'in
+  `CAD_RIBBON_TABS`, `GIS_RIBBON_TABS`; envanterin `ribbonByMode`'u; ortak `fixtures/shell/v1/ribbon.json`). Resimlerde türü olan
+  sahne `make_cad` (masaüstü testleri) ya da `shots.mjs`'in `type` alanıyla kurulur; web'in resim grubu `types`.
 
 - Bitti (30 Eylül): yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7),
   1–5. adımlar iki platformda: sözleşme ve şema 7; çekirdek ve çizim; komutlar; araçlar ve arayüz (Yazı'nın

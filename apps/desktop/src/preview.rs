@@ -487,10 +487,12 @@ fn screens() {
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
+                // A CBS project's ribbon (the drawings are not asked their type): Harita
+                // holds the measuring, Düzenle the drawing tools.
                 app.tab = if name.starts_with("harita-") {
                     "map"
                 } else {
-                    "draw"
+                    "edit"
                 };
                 let trace = Trace::by_id(id).expect("the trace");
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");

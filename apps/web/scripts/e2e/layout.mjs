@@ -53,13 +53,29 @@ const LONGEST_TEXT = `(k) => {
   return best && { x: best.p.x + 2, y: best.p.y + best.height * 0.4 };
 }`;
 
+/** Each project type's ribbon tabs (docs/adr/0165 §6), as the web shows them: the file tab is the app menu, Seçim needs a selection. */
+const TYPE_TABS = Object.fromEntries(
+  Object.entries(JSON.parse(readFileSync(new URL('../../../../fixtures/shell/v1/ribbon.json', import.meta.url), 'utf8')).tabs).map(([type, tabs]) => [
+    type,
+    tabs.filter((t) => !t.contextual && t.id !== 'file').map((t) => t.id),
+  ]),
+);
+/** The demo drawing made a project of `type` (null: not asked its type, shown as CBS). */
+const typeSet = (type) => `window.kentos.doc.settings.workspace.set(${JSON.stringify(type)})`;
+
 /** What each item opens, and how. `b` is the page; `ui` the helpers below. `must`: what has to be showing. */
 const ITEMS = [
   // The shell itself: the ribbon (the only chrome, docs/adr/0155) and the bars at this width.
   { id: 'shell', open: async () => {} },
   { id: 'appmenu', open: (ui) => ui.click('.brand') },
-  // Every tab of the ribbon of a project not asked its type, CBS's (fixtures/shell/v1/ribbon.json), the file tab being the app menu.
-  ...['home', 'draw', 'modify', 'map', 'view', 'processing', 'tools'].map((t) => ({ id: `tab-${t}`, open: (ui) => ui.click(`.ribbon__tab[data-tab="${t}"]`), close: (ui) => ui.click('.ribbon__tab[data-tab="home"]') })),
+  // Every tab of each project type's ribbon (fixtures/shell/v1/ribbon.json): the demo drawing's, a project not asked its
+  // type, is CBS's; a CAD project's with the type set and put back after.
+  ...TYPE_TABS.gis.map((t) => ({ id: `tab-${t}`, open: (ui) => ui.click(`.ribbon__tab[data-tab="${t}"]`), close: (ui) => ui.click('.ribbon__tab[data-tab="home"]') })),
+  ...TYPE_TABS.cad.map((t) => ({
+    id: `tab-cad-${t}`,
+    open: async (ui) => (await ui.eval(typeSet('cad')), await sleep(300), await ui.click(`.ribbon__tab[data-tab="${t}"]`)),
+    close: async (ui) => (await ui.click('.ribbon__tab[data-tab="home"]'), await ui.eval(typeSet(null)), await sleep(300)),
+  })),
   { id: 'ribbon-layer', open: (ui) => ui.click('.ribbon__strip .dropdown--layer') },
   // The Özellikler panel's colour list: in the panel, or under the panel's button when the window folds it (1100 wide).
   {

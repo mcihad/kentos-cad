@@ -512,6 +512,10 @@
 .rbtn__caret .icon {
   color: inherit;
 }
+/* A folded panel's last word and its caret break together. */
+.rbtn__last {
+  white-space: nowrap;
+}
 
 /* Large: icon over a label of up to two lines. */
 .rbtn--large {

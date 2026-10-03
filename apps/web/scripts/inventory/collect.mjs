@@ -43,17 +43,21 @@ export async function collectInPage() {
   };
   for (const m of menus.MAIN_MENU) walkMenu(m.items, [m.label], menuPaths);
 
-  // Ribbon places, as “Sekme › Panel”; a drop-down button's items count as its panel's.
+  // Ribbon places, as “Tür › Sekme › Panel” in each project type's own ribbon (docs/adr/0165 §6);
+  // a drop-down button's items and a panel's ▾ list count as its panel's.
   const ribbonPlaces = {};
   // A panel's icon follows its first command's, as the live ribbon's (ui/ribbon/Ribbon.ts): the desktop
   // draws a folded panel with it.
   const iconOf = (id) => k.commands.get(id)?.icon;
-  const tabs = ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf });
-  for (const tab of tabs) {
-    for (const panel of tab.panels) {
-      const place = `${tab.label} › ${panel.label}`;
-      for (const id of ribbon.panelCommands(panel)) push(ribbonPlaces, id, place);
-      for (const item of panel.items) if (item.kind === 'menu') walkMenu(item.menu.items, [], ribbonPlaces, place);
+  const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, label: w.label, filter: workspaces.workspaceFilter(w, tools) }));
+  const tabsOf = (m) => ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf, filter: m.filter });
+  for (const m of modes) {
+    for (const tab of tabsOf(m)) {
+      for (const panel of tab.panels) {
+        const place = `${m.label} › ${tab.label} › ${panel.label}`;
+        for (const id of ribbon.panelCommands(panel)) push(ribbonPlaces, id, place);
+        for (const item of panel.items) if (item.kind === 'menu') walkMenu(item.menu.items, [], ribbonPlaces, place);
+      }
     }
   }
 
@@ -88,8 +92,7 @@ export async function collectInPage() {
         launcher: p.launcher ? { ...p.launcher, args: p.launcher.args === undefined ? undefined : JSON.stringify(p.launcher.args) } : undefined,
       })),
     }));
-  const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
-  const ribbonOf = (m) => ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf, filter: m.filter }));
+  const ribbonOf = (m) => ribbonLayout(tabsOf(m));
   const layout = {
     menus: menus.MAIN_MENU.map((m) => ({ id: m.id, label: m.label, blocks: menuLayout(m.items) })),
     // The ribbon a project shows while its type is not asked: the CBS type's (docs/adr/0165 §1).

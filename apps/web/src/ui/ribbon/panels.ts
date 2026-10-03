@@ -60,11 +60,14 @@ export class PanelView {
       );
       d.add(tooltip(launch, () => ({ title: launcher.title })));
     }
+    // The caret keeps to the name's last word: a two-word name (Çizim yardımcıları) takes two lines, not a cut third.
+    const words = model.label.split(' ');
+    const last = words.pop() ?? '';
     this.collapsedButton = h(
       'button',
       { class: 'rbtn rbtn--large rpanel__collapsed', type: 'button', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-label': model.label },
       icon(model.icon, 20),
-      h('span', { class: 'rbtn__label' }, model.label, h('span', { class: 'rbtn__caret' }, icon('chevronDown', 12))),
+      h('span', { class: 'rbtn__label' }, words.length ? `${words.join(' ')} ` : '', h('span', { class: 'rbtn__last' }, last, h('span', { class: 'rbtn__caret' }, icon('chevronDown', 12)))),
     );
     d.add(listen(this.collapsedButton, 'click', () => host.openCollapsed(this)));
     d.add(tooltip(this.collapsedButton, () => ({ title: model.label, description: 'Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca açılır.' })));

@@ -20,7 +20,8 @@
 // built-in model's copy, an input, a step and a source list, a wire dragged and its menu, a step with problems, a chain,
 // a number input, the tools searched and one carried, the unsaved question); ribbon (the key tips on the tabs, on
 // Giriş and narrowed, the quick access bar's menu, right clicks on a command, an added one, a fixed one and a tab, a
-// tool's methods and a family under their split buttons, the folded ribbon open); tools (docs/adr/0140: the tabs of
+// tool's methods and a family under their split buttons, the folded ribbon open); types (docs/adr/0165 §6: every tab
+// of a CAD and of a CBS project's ribbon); tools (docs/adr/0140: the tabs of
 // the new drawing and editing tools, their split buttons, each tool at work); blocks (docs/adr/0144: DXF içe aktar
 // over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel).
 import { mkdirSync, readFileSync } from 'node:fs';
@@ -710,7 +711,7 @@ async function ribbonSettled(ui) {
   await ui.waitFor(`!!document.querySelector('.ribbon__strip .rpanel') || !!document.querySelector('.ribbon[data-collapsed]')`, 10000);
   await ui.sleep(500);
 }
-const RIBBON_KEPT = { ribbonTab: 'draw', ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonSplits: { circle: 'tool.circle|3N', rectangle: 'tool.regularPolygon|' } };
+const RIBBON_KEPT = { ribbonTab: 'home', ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonSplits: { circle: 'tool.circle|3N', rectangle: 'tool.regularPolygon|' } };
 SCENES.layout = [
   {
     id: 'kept',
@@ -729,6 +730,8 @@ SCENES.layout = [
   {
     id: 'ribbon-kept',
     open: async (ui) => {
+      // A CAD project's Giriş, whose Çizim shows both kept choices (Daire's 3 nokta, Düzgün çokgen).
+      await ui.eval(typeSet('cad'));
       await ui.eval(layoutSet(RIBBON_KEPT));
       await ribbonSettled(ui);
     },
@@ -736,11 +739,12 @@ SCENES.layout = [
   {
     id: 'ribbon-collapsed',
     open: async (ui) => {
+      await ui.eval(typeSet('cad'));
       await ui.eval(layoutSet({ ...RIBBON_KEPT, ribbonCollapsed: true }));
       await ribbonSettled(ui);
     },
   },
-].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.sleep(300)), ...s }));
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.eval(TYPE_BACK), await ui.sleep(300)), ...s }));
 
 // The model designer (ui/processing/model, docs/specs/model-designer.md): a new model; the built-in model's copy with
 // an input, a step and a source list; a wire in the middle of its drag and the menu it opens; a step with problems; a
@@ -891,13 +895,27 @@ SCENES.modeldesigner = [
 // buttons; the folded ribbon open over the drawing. Each scene starts from a bar with two added commands and puts
 // the layout back after.
 const RIBBON_BAR = { ribbonQuickAccess: ['view.zoomExtents', 'tool.line'], ribbonTab: 'home', ribbonCollapsed: false };
-async function ribbonOn(ui, fields = {}) {
+/**
+ * The open drawing made a project of `type` for a scene: each type has its own ribbon (docs/adr/0165 §6), a CAD
+ * project's Değiştir and Açıklama, a CBS project's Harita and Düzenle. The demo drawing is not asked its type (shown
+ * as CBS); TYPE_BACK puts its type back after the scene.
+ */
+const typeSet = (type) => `(() => { const w = window.kentos.doc.settings.workspace; if (!('__shotType' in window)) window.__shotType = w.value; w.set(${JSON.stringify(type)}); })()`;
+const TYPE_BACK = `(() => { if ('__shotType' in window) { window.kentos.doc.settings.workspace.set(window.__shotType); delete window.__shotType; } })()`;
+async function ribbonOn(ui, { type, ...fields } = {}) {
+  if (type) await ui.eval(typeSet(type));
   await ui.eval(layoutSet({ ...RIBBON_BAR, ...fields }));
   await ribbonSettled(ui);
+  // The live ribbon reads its kept tab once, when it is built: a scene's own tab is clicked open, as a user opens it.
+  if (fields.ribbonTab && !fields.ribbonCollapsed) {
+    await ui.clickSel(`.ribbon__tab[data-tab="${fields.ribbonTab}"]`);
+    await ribbonSettled(ui);
+  }
 }
 async function ribbonOff(ui) {
   await ui.escapeAll(3);
   await ui.eval(LAYOUT_BACK);
+  await ui.eval(TYPE_BACK);
   await ui.sleep(200);
 }
 /** The key tips shown (F6), then the letters typed one by one. */
@@ -924,14 +942,14 @@ SCENES.ribbon = [
   { id: 'menu-add', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__strip [data-command="tool.polyline"]')) },
   { id: 'menu-remove', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__qat [data-command="tool.line"]')) },
   { id: 'menu-fixed', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__qat [data-command="file.save"]')) },
-  { id: 'menu-elsewhere', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__tab[data-tab="draw"]')) },
+  { id: 'menu-elsewhere', open: async (ui) => (await ribbonOn(ui), await rightClick(ui, '.ribbon__tab[data-tab="map"]')) },
   {
     id: 'split-methods',
     open: async (ui) => (await ribbonOn(ui), await ui.clickSel('.ribbon__strip [data-split="circle"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
   {
     id: 'split-family',
-    open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="rectangle"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+    open: async (ui) => (await ribbonOn(ui, { type: 'cad' }), await ui.clickSel('.ribbon__strip [data-split="rectangle"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
   {
     id: 'folded-open',
@@ -1009,7 +1027,7 @@ async function hoverMid(ui) {
 }
 
 function toolScenes() {
-  const ribbon = (ui) => ribbonOn(ui, { ribbonTab: 'modify' });
+  const ribbon = (ui) => ribbonOn(ui, { ribbonTab: 'edit' });
   const lastOf = (kind) => `[...window.kentos.doc.all()].filter((e) => e.kind === '${kind}').slice(-1).map((e) => e.id)`;
   /** A wiggly open polyline of many vertices along a gentle curve, for Sadeleştir and Yönü çevir. */
   const WIGGLE = SCRATCH(`
@@ -1055,7 +1073,7 @@ function toolScenes() {
   const MATCH_TARGET_2 = SCRATCH(`return [c.x + 2.1 * w, c.y + 0.7 * w];`);
   const BELOW = SCRATCH(`return [c.x, c.y - 1.5 * w];`);
   const bare = async (ui, scratch, fields = {}) => {
-    await ribbonOn(ui, { ribbonTab: 'modify', ...fields });
+    await ribbonOn(ui, { ribbonTab: 'edit', ...fields });
     await ui.eval(CLEAR_VIEW);
     await ui.sleep(300);
     await ui.eval(scratch);
@@ -1326,16 +1344,17 @@ function faz3Scenes(bare, clickWorld) {
     { id: 'offset-erase-result', open: async (ui) => (await offsetOn(ui, 'I', 'S'), await clickWorld(ui, AT(-1, -0.4)), await ui.move(2, 2)) },
     { id: 'arraypath-preview', open: async (ui) => (await pathArray(ui), await hoverFrac(ui, 0, -0.2)) },
     { id: 'arraypath-result', open: async (ui) => (await pathArray(ui), await pressEnter(ui), await ui.move(2, 2)) },
+    // Dizi and Ölçülendirme are a CAD project's (a CBS project leaves them out of its ribbon).
     ...[
-      ['split-trim-methods', 'modify', 'trim'],
-      ['split-array', 'modify', 'array'],
-      ['split-dimension', 'draw', 'dimension'],
-      ['split-points-between', 'draw', 'pointsBetween'],
-      ['split-intersect-point', 'draw', 'intersectPoint'],
-    ].map(([id, tab, key]) => ({
+      ['split-trim-methods', 'edit', 'trim'],
+      ['split-array', 'modify', 'array', 'cad'],
+      ['split-dimension', 'annotate', 'dimension', 'cad'],
+      ['split-points-between', 'edit', 'pointsBetween'],
+      ['split-intersect-point', 'edit', 'intersectPoint'],
+    ].map(([id, tab, key, type]) => ({
       id,
       open: async (ui) => (
-        await ribbonOn(ui, { ribbonTab: tab }),
+        await ribbonOn(ui, { ribbonTab: tab, type }),
         await ui.clickSel(`.ribbon__strip [data-split="${key}"] .rsplit__arrow`),
         await ui.waitFor(`!!document.querySelector('.menu')`),
         await ui.sleep(300)
@@ -1582,7 +1601,7 @@ function adr0142Scenes(bare, clickWorld) {
   const selectNames = (...names) => `(() => { const k = window.kentos; const o = window.__elev; k.selection.set([${names.map((n) => `o.${n}`).join(', ')}]); })()`;
   /** The tool started on the objects (some selected), the log open under the drawing. */
   const started = async (ui, names, options = []) => {
-    await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
+    await bare(ui, OBJECTS, { ribbonTab: 'edit', ...LOGGED });
     await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await startTool(ui, 'setElevation');
@@ -1598,7 +1617,7 @@ function adr0142Scenes(bare, clickWorld) {
   };
   /** Öznitelikler over the dock (the layer tree at its least) with Genel folded, so Geometri shows whole at 1100×650. */
   const props = async (ui, names) => {
-    await bare(ui, OBJECTS, { ribbonTab: 'modify', layersFraction: 0.15 });
+    await bare(ui, OBJECTS, { ribbonTab: 'edit', layersFraction: 0.15 });
     await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await ui.move(2, 2);
@@ -1610,7 +1629,7 @@ function adr0142Scenes(bare, clickWorld) {
   const propsClose = async (ui) => (await section(ui, 'Genel', true), await ui.eval(UNDO_ALL), await ribbonOff(ui));
   /** The objects on bare ground with some selected, the select tool active. */
   const selected = async (ui, names) => {
-    await bare(ui, OBJECTS, { ribbonTab: 'modify' });
+    await bare(ui, OBJECTS, { ribbonTab: 'edit' });
     await ui.eval(QUIET);
     await ui.eval(selectNames(...names));
     await ui.sleep(300);
@@ -1650,7 +1669,7 @@ function adr0142Scenes(bare, clickWorld) {
     {
       id: 'coord-read-vertex',
       open: async (ui) => {
-        await bare(ui, OBJECTS, { ribbonTab: 'modify', ...LOGGED });
+        await bare(ui, OBJECTS, { ribbonTab: 'edit', ...LOGGED });
         await ui.eval(QUIET);
         await ui.eval(`window.kentos.commands.execute('crs.query')`);
         await ui.sleep(300);
@@ -1677,13 +1696,13 @@ function adr0142Scenes(bare, clickWorld) {
 // tool at work is added here as it is built. Same layout helpers as the ribbon group.
 SCENES.tools = [
   ...[
-    ['ribbon-draw', 'draw'],
-    ['ribbon-modify', 'modify'],
+    ['ribbon-modify', 'modify', 'cad'],
+    ['ribbon-edit', 'edit'],
     ['ribbon-map', 'map'],
-  ].map(([id, tab]) => ({ id, open: async (ui) => (await ribbonOn(ui, { ribbonTab: tab }), await ui.sleep(400)) })),
+  ].map(([id, tab, type]) => ({ id, open: async (ui) => (await ribbonOn(ui, { ribbonTab: tab, type }), await ui.sleep(400)) })),
   {
     id: 'split-corner',
-    open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+    open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify', type: 'cad' }), await ui.clickSel('.ribbon__strip [data-split="corner"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
   },
   ...toolScenes(),
 ].map((s) => ({ close: async (ui) => (await ui.eval(UNDO_ALL), await ribbonOff(ui)), ...s }));
@@ -2876,7 +2895,7 @@ function topologyScenes() {
   const N = 4420000;
   /** The drawing open and the tool at 0.05 m with Köşeler on, as the trace leaves it before Enter; the view at `look` (east, north, px a metre) if given. */
   const found = async (ui, look) => {
-    await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
+    await ribbonOn(ui, { ribbonTab: 'edit', ...LOGGED });
     // Close up, the lines as hairlines: at 2 500 px a metre a 0.25 mm weight at 1:1000 would be 625 px wide.
     const view = look
       ? `c.center = { x: ${E + look[0]}, y: ${N + look[1]} }; c.scale = ${look[2]}; if (k.prefs.lineWeights.value) k.commands.execute('view.lineWeights');`
@@ -2905,7 +2924,7 @@ function topologyScenes() {
   };
   const CLOSE = 2500;
   return [
-    { id: 'topology-list', open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'modify' }), await ui.clickSel('.rpanel__more[data-commands~="tool.topology"]'), await ui.sleep(400)), close: async (ui) => (await ui.escapeAll(2), await ribbonOff(ui)) },
+    { id: 'topology-list', open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'edit' }), await ui.clickSel('.rpanel__more[data-commands~="tool.topology"]'), await ui.sleep(400)), close: async (ui) => (await ui.escapeAll(2), await ribbonOff(ui)) },
     { id: 'topology-preview', open: async (ui) => (await found(ui), await at(ui, -4, -14)), close: restore },
     { id: 'topology-node', open: async (ui) => (await found(ui, [0.01, 0, CLOSE]), await at(ui, -0.11, -0.05)), close: restore },
     { id: 'topology-trim', open: async (ui) => (await found(ui, [-10, 15, CLOSE]), await at(ui, -10.12, 14.95)), close: restore },
@@ -2964,7 +2983,7 @@ function dimensionToolScenes() {
   ];
   /** Hızlı ölçü over the three, all selected, the cursor 4 m over the parcels' north edge (the desktop's `quick`). */
   const quick = async (ui) => {
-    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ribbonOn(ui, { ribbonTab: 'annotate', ...LOGGED });
     await ui.eval(`(async () => {
       const k = window.kentos;
       k.files.ask = async () => 'drop';
@@ -2989,7 +3008,7 @@ function dimensionToolScenes() {
   const clickAt = async (ui, x, y) => (await ui.clickAt(...(await pageAt(ui, x, y))), await ui.sleep(200));
   /** The ground opened, Ölçülendirme started with a method's option, as Ölçülendirme ▾ starts it. */
   const start = async (ui, option, drawing = GROUND) => {
-    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ribbonOn(ui, { ribbonTab: 'annotate', ...LOGGED });
     await ui.eval(`(async () => {
       const k = window.kentos;
       k.files.ask = async () => 'drop';
@@ -3021,7 +3040,7 @@ function dimensionToolScenes() {
   };
   /** Öznitelikler over `ids` of the measured ground, the layer tree at its least and Genel folded (the desktop's `props`). */
   const propsOf = async (ui, ids) => {
-    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED, layersFraction: 0.15 });
+    await ribbonOn(ui, { ribbonTab: 'annotate', ...LOGGED, layersFraction: 0.15 });
     await ui.eval(`(async () => {
       const k = window.kentos;
       k.files.ask = async () => 'drop';
@@ -3123,12 +3142,12 @@ function dimensionToolScenes() {
     { id: 'dimension-properties-many', open: async (ui) => propsOf(ui, [7, 8]), close: propsClose },
     {
       id: 'dimension-methods',
-      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad' }), await ui.clickSel('.ribbon__strip [data-split="dimension"] .rsplit__arrow'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
     },
     // Açı chosen from Ölçülendirme ▾: the large button's face shows its icon (the desktop's `olcu-dugme-aci`).
     {
       id: 'dimension-chosen',
-      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'draw', ribbonSplits: { dimension: 'tool.dimension|A' } }), await ui.move(2, 2), await ui.sleep(300)),
+      open: async (ui) => (await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad', ribbonSplits: { dimension: 'tool.dimension|A' } }), await ui.move(2, 2), await ui.sleep(300)),
       close: async (ui) => ribbonOff(ui),
     },
   ];
@@ -3258,7 +3277,7 @@ function leaderToolScenes() {
   const typeNote = async (ui, text) => (await ui.waitFor(`!!document.querySelector('${field}')`), await ui.clickSel(field), await ui.type(text), await ui.sleep(200));
   const keep = async (ui) => (await ui.key('Enter'), await ui.sleep(250));
   const tool = async (ui) => {
-    await ribbonOn(ui, { ribbonTab: 'draw', ...LOGGED });
+    await ribbonOn(ui, { ribbonTab: 'annotate', ...LOGGED });
     await ui.eval(`(async () => {
       const k = window.kentos;
       k.files.ask = async () => 'drop';
@@ -3492,6 +3511,20 @@ SCENES.scene = [
   },
 ];
 
+// Each project type's own ribbon (docs/adr/0165 §6), every tab, over the demo drawing: a CAD project's AutoCAD drafting
+// tabs and a CBS project's map work's (the desktop's are ribbon_tests::screens, serit-cad-* and serit-cbs-*).
+const TYPE_TABS = {
+  cad: ['file', 'home', 'insert', 'annotate', 'modify', 'view', 'manage', 'output'],
+  gis: ['file', 'home', 'map', 'data', 'edit', 'analysis', 'survey', 'view', 'output'],
+};
+SCENES.types = Object.entries(TYPE_TABS).flatMap(([type, tabs]) =>
+  tabs.map((tab) => ({
+    id: `ribbon-${type === 'gis' ? 'cbs' : type}-${tab}`,
+    open: async (ui) => (await ribbonOn(ui, { type, ribbonTab: tab }), await ui.move(2, 2), await ui.sleep(300)),
+    close: (ui) => ribbonOff(ui),
+  })),
+);
+
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;
 SCENES.texts = [
@@ -3555,7 +3588,7 @@ function textToolScenes() {
     window.__texts = { a: first.id, b: second.id };`);
   const choose = (...names) => `(() => { const k = window.kentos; const o = window.__texts; k.selection.set([${names.map((n) => `o.${n}`).join(', ')}]); })()`;
   const ground = async (ui, fields) => {
-    await ribbonOn(ui, { ribbonTab: 'draw', ...fields });
+    await ribbonOn(ui, { ribbonTab: 'edit', ...fields });
     await ui.eval(CLEAR_VIEW);
     await ui.sleep(300);
     await ui.eval(TEXTS);
@@ -3640,7 +3673,7 @@ function textToolScenes() {
   // (the desktop's `text_scenes` puts it there too).
   const FILE_AT = FIT(`return [c.x - 1.6 * u, c.y + 13.5];`);
   const upside = async (ui) => {
-    await ribbonOn(ui, { ribbonTab: 'modify', ...LOGGED });
+    await ribbonOn(ui, { ribbonTab: 'edit', ...LOGGED });
     await ui.eval(CLEAR_VIEW);
     await ui.sleep(300);
     await ui.eval(UPSIDE);
@@ -3714,6 +3747,7 @@ for (const [w, hgt] of sizes) {
           failed.push(`${name}: ${String(e.message ?? e).slice(0, 200)}`);
         }
         await (scene.close ?? ((u) => u.escapeAll(3)))(ui);
+        await b.eval(TYPE_BACK);
         await b.eval(`(() => { const k = window.kentos; k.selection.clear(); k.tools.activate('select'); })()`);
       }
     } finally {

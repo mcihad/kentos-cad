@@ -169,16 +169,25 @@ fn screens() {
         println!("{}", file.display());
     };
     let picture = |app: &mut App, name: &str, width: f32| sized(app, name, width, 900.0);
+    // Every tab of each project type's ribbon (docs/adr/0165 §6).
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
-        let mut app = app_with_drawing();
-        let _ = app
-            .settings
-            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
-        app.apply_settings();
-        for tab in ["home", "draw", "modify", "view"] {
-            app.tab = tab;
-            for width in [1440.0, 1100.0] {
-                picture(&mut app, &format!("serit-{tab}-{width}{suffix}"), width);
+        for (kind, command) in [("cad", "workspace.cad"), ("cbs", "workspace.gis")] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let _ = app.update(Message::Run(command));
+            let tabs: Vec<&'static str> = app.ribbon_tabs().map(|t| t.id).collect();
+            for tab in tabs {
+                app.tab = tab;
+                for width in [1440.0, 1100.0] {
+                    picture(
+                        &mut app,
+                        &format!("serit-{kind}-{tab}-{width}{suffix}"),
+                        width,
+                    );
+                }
             }
         }
     }
@@ -209,14 +218,6 @@ fn screens() {
     app.tab = "view";
     picture(&mut app, "serit-view-1440-buyuk-yazi", 1440.0);
     typography::set(Typography::DEFAULT);
-    // The work modes: CAD's Ölçme tab and CBS's Giriş, the mode in the status bar.
-    let mut app = app_with_drawing();
-    let _ = app.update(Message::Run("workspace.cad"));
-    app.tab = "map";
-    picture(&mut app, "serit-cad-olcme-1440", 1440.0);
-    let _ = app.update(Message::Run("workspace.gis"));
-    app.tab = "home";
-    picture(&mut app, "serit-cbs-giris-1440", 1440.0);
     // Every other window at a low window size: nothing cut off (the owner's rule).
     for (id, name) in [
         ("file.start", "baslangic"),
@@ -268,6 +269,7 @@ fn tip_screens() {
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut app = app_with_drawing();
+    crate::files_testing::make_cad(&mut app);
     app.tab = "modify";
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     let mut update = |app: &mut App, message| {

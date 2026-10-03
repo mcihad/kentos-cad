@@ -110,6 +110,11 @@ Başlangıç görünümü:
    - Web'de çizim zemini ayarı yoktur: CAD projesinin çizimi her temada arduvazdır (`data-canvas='slate'`); masaüstünde “Türe göre” varsayılandır, kullanıcı başka zemin seçebilir.
    - Ölçek seçicinin listesi türün ölçekleridir (yeni proje sihirbazınınki; CBS'de 1:100.000 da); yakınlaşma bir gezinme adımıdır.
 6. **Her türün kendi şeridi.**
+   - Web'de türlerin sekmeleri `app/ribbon.ts`'tedir (`CAD_RIBBON_TABS`, `GIS_RIBBON_TABS`, `ribbonSpecs`): şerit yine menülerin bloklarından ve araç kataloğundan kurulur, tür yalnız hangi bloğun hangi sekmede durduğunu söyler. Envanter iki türün şeridini yazar (`layout.ribbonByMode`), masaüstü onu okur; komutların şerit yerleri “Tür › Sekme › Panel”dir.
+   - CAD'in Giriş'i AutoCAD'inki gibidir: Çizim sekmesi yoktur; Çizim panelinde gündelik araçlarla Elips, Eğri ve Nokta görünür, öbür çizim araçları panelin ▾'sindedir (panel genişleticisi); Ölçme panelinin ▾'sinde hesap pencereleri; Açıklama ve Blok panelleri (Blok ekle büyük, ana araç). Açıklama sekmesinde her tür bir paneldir (Yazı, Ölçü, Kılavuz, Tarama, İşaretleme), AutoCAD'in Annotate'i gibi; menünün Açıklama bloğuna sonradan giren araç kendi panelinde çıkar. CBS'nin Giriş'inde Harita paneli vardır; CBS'de blok paneli Veri'dedir (çizimin kitaplığı), Düzenle nesne oluşturmaya ve değiştirmeye kalır. Blok ekle iki türde de panelinin başındadır. Panelin ▾'si seyrek araçların yanında türün seçtiği komutları da taşır (`rest`, `under`); türün seçtiği panel adını verdiği seyrek aracı da gösterir (Yönet › Temizlik).
+   - Giriş'in panellerindeki “Tüm araçlar” açıcısı aynı türün sekmesine gider (CAD: Değiştir, Açıklama, Ekle; CBS: Düzenle, Harita).
+   - Masaüstünün Python konsolu Komut satırına git'in yanındadır: CAD'de Yönet › Komut, CBS'de Analiz › Komut.
+   - Hiçbir komut kaybolmaz: bir türün menülerinde gösterdiği her komut o türün şeridindedir (`workspaces.test.ts`), kataloğun her aracı bir türün şeridindedir (duman testi); iki türün her sekmesi 1100 px'e sığar ve 3000 px'te tam boyutundadır (masaüstünde `ribbon_tests`, web'de `e2e:layout`). Web'de katlanmış panelin ▾'si adın son sözcüğüyle birlikte kırılır (“Çizim yardımcıları ▾” iki satır).
 
 ## Bu ADR'de olmayanlar
 

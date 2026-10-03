@@ -101,7 +101,7 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 109,
+    "commandsWithoutTests": 108,
     "commandsOnDesktop": 209,
     "desktop": {
       "commands": {
@@ -197,7 +197,7 @@
         "Analiz › Arazi analizi"
       ],
       "ribbon": [
-        "Harita › Arazi analizi"
+        "CBS › Analiz › Arazi analizi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -224,7 +224,7 @@
         "Analiz › Arazi analizi"
       ],
       "ribbon": [
-        "Harita › Arazi analizi"
+        "CBS › Analiz › Arazi analizi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -256,7 +256,8 @@
         "Çizim › Blok"
       ],
       "ribbon": [
-        "Çizim › Blok"
+        "CAD › Ekle › Blok",
+        "CBS › Veri › Blok"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -288,7 +289,9 @@
         "Çizim › Blok"
       ],
       "ribbon": [
-        "Çizim › Blok"
+        "CAD › Giriş › Blok",
+        "CAD › Ekle › Blok",
+        "CBS › Veri › Blok"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -318,7 +321,9 @@
         "Çizim › Blok"
       ],
       "ribbon": [
-        "Çizim › Blok"
+        "CAD › Ekle › Blok",
+        "CAD › Yönet › Temizlik",
+        "CBS › Veri › Blok"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -331,6 +336,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/usage-blocks.json"
       ]
     },
@@ -352,7 +358,8 @@
         "Hesap › Kestirme"
       ],
       "ribbon": [
-        "Harita › Kestirme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Kestirme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -385,7 +392,8 @@
         "Hesap › Nokta alımı"
       ],
       "ribbon": [
-        "Harita › Nokta alımı"
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Nokta alımı"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -419,7 +427,8 @@
         "Hesap › Kestirme"
       ],
       "ribbon": [
-        "Harita › Kestirme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Kestirme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -453,7 +462,8 @@
         "Hesap › Nokta alımı"
       ],
       "ribbon": [
-        "Harita › Nokta alımı"
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Nokta alımı"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -487,7 +497,8 @@
         "Hesap › Poligon"
       ],
       "ribbon": [
-        "Harita › Poligon"
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Poligon"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -517,7 +528,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -549,7 +561,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -608,7 +621,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -671,7 +685,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -703,7 +718,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -794,7 +810,8 @@
         "Dosya › Bulut"
       ],
       "ribbon": [
-        "Dosya › Bulut"
+        "CAD › Dosya › Bulut",
+        "CBS › Dosya › Bulut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -854,7 +871,8 @@
         "Araçlar › Komut"
       ],
       "ribbon": [
-        "Araçlar › Komut"
+        "CAD › Yönet › Komut",
+        "CBS › Analiz › Komut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -885,7 +903,7 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar"
+        "CBS › Veri › Koordinatlar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -916,7 +934,8 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar"
+        "CAD › Giriş › Ölçme",
+        "CBS › Veri › Koordinatlar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -945,7 +964,7 @@
         "Koordinat › Koordinat sistemi"
       ],
       "ribbon": [
-        "Harita › Koordinat sistemi"
+        "CBS › Harita › Koordinat sistemi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -978,7 +997,7 @@
         "Koordinat › Koordinat sistemi"
       ],
       "ribbon": [
-        "Harita › Koordinat sistemi"
+        "CBS › Harita › Koordinat sistemi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1008,7 +1027,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1040,7 +1060,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1072,7 +1093,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1101,7 +1123,8 @@
         "Araçlar › Komut › Çakışma"
       ],
       "ribbon": [
-        "Araçlar › Komut"
+        "CAD › Yönet › Komut",
+        "CBS › Analiz › Komut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1131,7 +1154,8 @@
         "Araçlar › Komut › Çakışma"
       ],
       "ribbon": [
-        "Araçlar › Komut"
+        "CAD › Yönet › Komut",
+        "CBS › Analiz › Komut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1161,7 +1185,8 @@
         "Araçlar › Komut › Çakışma"
       ],
       "ribbon": [
-        "Araçlar › Komut"
+        "CAD › Yönet › Komut",
+        "CBS › Analiz › Komut"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1199,7 +1224,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1232,7 +1258,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1604,7 +1631,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1637,7 +1665,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1671,7 +1700,8 @@
         "Araçlar › Komut › Çizim yardımcıları"
       ],
       "ribbon": [
-        "Araçlar › Çizim yardımcıları"
+        "CAD › Yönet › Çizim yardımcıları",
+        "CBS › Düzenle › Çizim yardımcıları"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1700,8 +1730,10 @@
         "Düzen › Pano"
       ],
       "ribbon": [
-        "Giriş › Pano",
-        "Seçim › Pano"
+        "CAD › Giriş › Pano",
+        "CAD › Seçim › Pano",
+        "CBS › Giriş › Pano",
+        "CBS › Seçim › Pano"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1732,8 +1764,10 @@
         "Düzen › Pano"
       ],
       "ribbon": [
-        "Giriş › Pano",
-        "Seçim › Pano"
+        "CAD › Giriş › Pano",
+        "CAD › Seçim › Pano",
+        "CBS › Giriş › Pano",
+        "CBS › Seçim › Pano"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1759,7 +1793,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1786,7 +1821,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1817,8 +1853,10 @@
         "Düzen › Pano"
       ],
       "ribbon": [
-        "Giriş › Pano",
-        "Seçim › Pano"
+        "CAD › Giriş › Pano",
+        "CAD › Seçim › Pano",
+        "CBS › Giriş › Pano",
+        "CBS › Seçim › Pano"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1854,8 +1892,10 @@
         "Düzen › Pano"
       ],
       "ribbon": [
-        "Giriş › Pano",
-        "Seçim › Pano"
+        "CAD › Giriş › Pano",
+        "CAD › Seçim › Pano",
+        "CBS › Giriş › Pano",
+        "CBS › Seçim › Pano"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1912,7 +1952,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -1973,7 +2014,11 @@
         "Dosya › Dosya alışverişi › Dışa aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2007,7 +2052,11 @@
         "Dosya › Dosya alışverişi › Dışa aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2041,7 +2090,11 @@
         "Dosya › Dosya alışverişi › Dışa aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2070,7 +2123,11 @@
         "Dosya › Dosya alışverişi › Dışa aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Çıktı › Dışa aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi",
+        "CBS › Çıktı › Dışa aktar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2102,7 +2159,10 @@
         "Dosya › Dosya alışverişi › İçe aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2137,7 +2197,10 @@
         "Dosya › Dosya alışverişi › İçe aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2172,7 +2235,10 @@
         "Dosya › Dosya alışverişi › İçe aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2206,7 +2272,10 @@
         "Dosya › Dosya alışverişi › İçe aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2237,7 +2306,10 @@
         "Dosya › Dosya alışverişi › İçe aktar"
       ],
       "ribbon": [
-        "Dosya › Dosya alışverişi"
+        "CAD › Dosya › Dosya alışverişi",
+        "CAD › Ekle › İçe aktar",
+        "CBS › Dosya › Dosya alışverişi",
+        "CBS › Veri › Dosya alışverişi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2275,7 +2347,8 @@
         "Dosya › Proje"
       ],
       "ribbon": [
-        "Dosya › Proje"
+        "CAD › Dosya › Proje",
+        "CBS › Dosya › Proje"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2314,7 +2387,8 @@
         "Dosya › Proje"
       ],
       "ribbon": [
-        "Dosya › Proje"
+        "CAD › Dosya › Proje",
+        "CBS › Dosya › Proje"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2349,7 +2423,10 @@
         "Dosya › Çıktı"
       ],
       "ribbon": [
-        "Dosya › Çıktı"
+        "CAD › Dosya › Çıktı",
+        "CAD › Çıktı › Çıktı",
+        "CBS › Dosya › Çıktı",
+        "CBS › Çıktı › Çıktı"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2387,7 +2464,8 @@
         "Dosya › Kaydet"
       ],
       "ribbon": [
-        "Dosya › Kaydet"
+        "CAD › Dosya › Kaydet",
+        "CBS › Dosya › Kaydet"
       ],
       "quickAccess": true,
       "hiddenIn": [],
@@ -2428,7 +2506,8 @@
         "Dosya › Kaydet"
       ],
       "ribbon": [
-        "Dosya › Kaydet"
+        "CAD › Dosya › Kaydet",
+        "CBS › Dosya › Kaydet"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2461,7 +2540,8 @@
         "Dosya › Ayarlar"
       ],
       "ribbon": [
-        "Dosya › Ayarlar"
+        "CAD › Dosya › Ayarlar",
+        "CBS › Dosya › Ayarlar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2497,7 +2577,8 @@
         "Dosya › Proje"
       ],
       "ribbon": [
-        "Dosya › Proje"
+        "CAD › Dosya › Proje",
+        "CBS › Dosya › Proje"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2525,7 +2606,8 @@
         "Yardım"
       ],
       "ribbon": [
-        "Araçlar › Yardım"
+        "CAD › Yönet › Yardım",
+        "CBS › Görünüm › Yardım"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2562,7 +2644,8 @@
         "Yardım"
       ],
       "ribbon": [
-        "Araçlar › Uygulama"
+        "CAD › Yönet › Uygulama",
+        "CBS › Görünüm › Uygulama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2588,7 +2671,9 @@
       "kind": "action",
       "shortcuts": [],
       "menus": [],
-      "ribbon": [],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [
@@ -2614,7 +2699,9 @@
       "kind": "action",
       "shortcuts": [],
       "menus": [],
-      "ribbon": [],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [
@@ -2640,7 +2727,9 @@
       "kind": "action",
       "shortcuts": [],
       "menus": [],
-      "ribbon": [],
+      "ribbon": [
+        "CBS › Veri › Katman"
+      ],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [
@@ -2665,7 +2754,7 @@
         "Harita › Arazi"
       ],
       "ribbon": [
-        "Harita › Arazi"
+        "CBS › Analiz › Arazi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2695,7 +2784,7 @@
         "Harita › Parsel"
       ],
       "ribbon": [
-        "Harita › Parsel"
+        "CBS › Harita › Parsel"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2723,7 +2812,7 @@
         "Harita › Parsel"
       ],
       "ribbon": [
-        "Harita › Parsel"
+        "CBS › Harita › Parsel"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2750,7 +2839,7 @@
         "Harita › Arazi"
       ],
       "ribbon": [
-        "Harita › Arazi"
+        "CBS › Analiz › Arazi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2775,7 +2864,7 @@
         "Harita › Pafta"
       ],
       "ribbon": [
-        "Harita › Pafta"
+        "CBS › Çıktı › Pafta"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2806,7 +2895,8 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar"
+        "CBS › Veri › Koordinatlar",
+        "CBS › Ölçme › Noktalar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2831,7 +2921,7 @@
         "İşlemler › İşlemler"
       ],
       "ribbon": [
-        "İşlemler › İşlemler"
+        "CBS › Analiz › İşlemler"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2858,7 +2948,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Modeller"
+        "CBS › Analiz › Modeller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2887,7 +2977,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Modeller"
+        "CBS › Analiz › Modeller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2923,7 +3013,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Yazı ve etiket"
+        "CBS › Analiz › Yazı ve etiket"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2951,7 +3041,8 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Öznitelik"
+        "CBS › Veri › Öznitelik",
+        "CBS › Analiz › Öznitelik"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -2980,7 +3071,7 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Nokta işlemleri"
+        "CBS › Analiz › Nokta işlemleri"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -3008,7 +3099,8 @@
         "İşlemler › Modeller"
       ],
       "ribbon": [
-        "İşlemler › Seçim"
+        "CBS › Veri › Öznitelik",
+        "CBS › Analiz › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -3041,7 +3133,7 @@
         "İşlemler › İşlemler"
       ],
       "ribbon": [
-        "İşlemler › İşlemler"
+        "CBS › Analiz › İşlemler"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -3072,7 +3164,8 @@
         "Araçlar › Uygulama"
       ],
       "ribbon": [
-        "Araçlar › Uygulama"
+        "CAD › Yönet › Uygulama",
+        "CBS › Görünüm › Uygulama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -3614,7 +3707,10 @@
       "kind": "action",
       "shortcuts": [],
       "menus": [],
-      "ribbon": [],
+      "ribbon": [
+        "CAD › Çıktı › Pafta",
+        "CBS › Çıktı › Pafta"
+      ],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [
@@ -3879,7 +3975,10 @@
       "kind": "action",
       "shortcuts": [],
       "menus": [],
-      "ribbon": [],
+      "ribbon": [
+        "CAD › Çıktı › Pafta",
+        "CBS › Çıktı › Pafta"
+      ],
       "quickAccess": false,
       "hiddenIn": [],
       "uiSources": [
@@ -4522,8 +4621,10 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil",
-        "Seçim › Sembol"
+        "CAD › Yönet › Stil",
+        "CAD › Seçim › Sembol",
+        "CBS › Harita › Stil",
+        "CBS › Seçim › Sembol"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4556,8 +4657,10 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil",
-        "Seçim › Sembol"
+        "CAD › Yönet › Stil",
+        "CAD › Seçim › Sembol",
+        "CBS › Harita › Stil",
+        "CBS › Seçim › Sembol"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4589,7 +4692,8 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil"
+        "CAD › Yönet › Stil",
+        "CBS › Harita › Stil"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4623,7 +4727,9 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil"
+        "CAD › Yönet › Stil",
+        "CBS › Harita › Stil",
+        "CBS › Çıktı › Lejant"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4655,7 +4761,8 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil"
+        "CAD › Yönet › Stil",
+        "CBS › Harita › Stil"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4688,7 +4795,8 @@
         "Araçlar › Stil"
       ],
       "ribbon": [
-        "Araçlar › Stil"
+        "CAD › Yönet › Stil",
+        "CBS › Harita › Stil"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4720,7 +4828,8 @@
         "Düzen › Bul"
       ],
       "ribbon": [
-        "Giriş › Açıklama"
+        "CAD › Açıklama › Yazı",
+        "CBS › Giriş › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4751,8 +4860,9 @@
         "Çizim › Çizgi"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Çizgi"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Çizgi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4785,8 +4895,10 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4819,8 +4931,9 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Eğri"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4854,7 +4967,9 @@
         "Analiz › Ölçme"
       ],
       "ribbon": [
-        "Harita › Ölçme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Giriş › Harita",
+        "CBS › Harita › Ölçme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4867,6 +4982,7 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
@@ -4889,8 +5005,10 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4920,8 +5038,10 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4954,8 +5074,10 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -4989,8 +5111,11 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Giriş › Harita",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5024,8 +5149,8 @@
         "Değiştir › Dizi"
       ],
       "ribbon": [
-        "Değiştir › Dizi",
-        "Seçim › Dizi"
+        "CAD › Değiştir › Dizi",
+        "CAD › Seçim › Dizi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5058,8 +5183,8 @@
         "Değiştir › Dizi"
       ],
       "ribbon": [
-        "Değiştir › Dizi",
-        "Seçim › Dizi"
+        "CAD › Değiştir › Dizi",
+        "CAD › Seçim › Dizi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5091,8 +5216,8 @@
         "Değiştir › Dizi"
       ],
       "ribbon": [
-        "Değiştir › Dizi",
-        "Seçim › Dizi"
+        "CAD › Değiştir › Dizi",
+        "CAD › Seçim › Dizi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5126,7 +5251,9 @@
         "Çizim › Blok"
       ],
       "ribbon": [
-        "Çizim › Blok"
+        "CAD › Giriş › Blok",
+        "CAD › Ekle › Blok",
+        "CBS › Veri › Blok"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5160,7 +5287,9 @@
         "Çizim › Blok"
       ],
       "ribbon": [
-        "Çizim › Blok"
+        "CAD › Giriş › Blok",
+        "CAD › Ekle › Blok",
+        "CBS › Veri › Blok"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5200,8 +5329,11 @@
         "Değiştir › Alan işlemleri › Oluştur ve çevir"
       ],
       "ribbon": [
-        "Değiştir › Oluştur ve çevir",
-        "Seçim › Oluştur ve çevir"
+        "CAD › Değiştir › Oluştur ve çevir",
+        "CAD › Seçim › Oluştur ve çevir",
+        "CBS › Giriş › Harita",
+        "CBS › Düzenle › Oluştur ve çevir",
+        "CBS › Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5235,7 +5367,8 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Değiştir › Kenar"
+        "CAD › Değiştir › Kenar",
+        "CBS › Düzenle › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5295,8 +5428,8 @@
         "Değiştir › Köşe"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Köşe"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Köşe"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5329,8 +5462,8 @@
         "Değiştir › Köşe"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Köşe"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Köşe"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5363,8 +5496,9 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Eğri"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5375,7 +5509,6 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/circle-methods.json",
         "fixtures/interaction/v1/usage-blocks.json"
@@ -5398,8 +5531,11 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Yönet › Temizlik",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5409,7 +5545,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "tool.confirm",
@@ -5462,9 +5600,12 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5498,8 +5639,9 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Ölçü",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5528,8 +5670,9 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Ölçü",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5587,8 +5730,8 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Ölçü"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5630,7 +5773,8 @@
         "Çizim › Nokta"
       ],
       "ribbon": [
-        "Çizim › Nokta"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Nokta"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5641,6 +5785,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/spot-divide.json"
       ]
     },
@@ -5661,7 +5806,7 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5675,6 +5820,7 @@
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
@@ -5697,7 +5843,7 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5710,6 +5856,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
     },
@@ -5733,9 +5880,12 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Giriş › Pano",
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Giriş › Pano",
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Giriş › Pano",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5772,8 +5922,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5813,8 +5965,10 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Kenar"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Kenar",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5848,8 +6002,8 @@
         "Değiştir › Köşe"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Köşe"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Köşe"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5884,8 +6038,8 @@
         "Değiştir › Köşe"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Köşe"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Köşe"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5918,8 +6072,8 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Tarama"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -5953,7 +6107,8 @@
         "Çizim › Nokta"
       ],
       "ribbon": [
-        "Çizim › Nokta"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Nokta"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -5984,8 +6139,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6020,7 +6177,9 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Kılavuz",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6053,7 +6212,7 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Değiştir › Kenar"
+        "CAD › Değiştir › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6088,8 +6247,9 @@
         "Çizim › Çizgi"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Çizgi"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Çizgi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6134,8 +6294,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6170,7 +6332,9 @@
         "Analiz › Ölçme"
       ],
       "ribbon": [
-        "Harita › Ölçme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Giriş › Harita",
+        "CBS › Harita › Ölçme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6183,6 +6347,7 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/trace-draw.json"
       ]
@@ -6205,7 +6370,8 @@
         "Analiz › Ölçme"
       ],
       "ribbon": [
-        "Harita › Ölçme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Harita › Ölçme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6215,9 +6381,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": [
-        "apps/web/src/app/workspaces.test.ts"
-      ]
+      "tests": []
     },
     {
       "id": "tool.mirror",
@@ -6238,9 +6402,12 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6274,9 +6441,12 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6313,8 +6483,10 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Kenar"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Kenar",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6346,8 +6518,11 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Giriş › Seçim",
-        "Görünüm › Yakınlaştır"
+        "CAD › Giriş › Seçim",
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Giriş › Seçim",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6386,7 +6561,7 @@
         "Çizim › Çizgi"
       ],
       "ribbon": [
-        "Çizim › Çizgi"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6419,7 +6594,8 @@
         "Harita › Parsel"
       ],
       "ribbon": [
-        "Harita › Parsel"
+        "CBS › Giriş › Harita",
+        "CBS › Harita › Parsel"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6457,8 +6633,10 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6488,8 +6666,10 @@
         "Değiştir › Alan işlemleri › Birleştir ve böl"
       ],
       "ribbon": [
-        "Değiştir › Birleştir ve böl",
-        "Seçim › Birleştir ve böl"
+        "CAD › Değiştir › Birleştir ve böl",
+        "CAD › Seçim › Birleştir ve böl",
+        "CBS › Düzenle › Birleştir ve böl",
+        "CBS › Seçim › Birleştir ve böl"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6521,7 +6701,7 @@
         "Çizim › Yardımcı"
       ],
       "ribbon": [
-        "Çizim › Yardımcı"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6554,7 +6734,7 @@
         "Çizim › Yardımcı"
       ],
       "ribbon": [
-        "Çizim › Yardımcı"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6587,7 +6767,9 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Çizim › Açıklama"
+        "CAD › Ekle › Metin",
+        "CAD › Açıklama › Yazı",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6620,7 +6802,9 @@
         "Çizim › Nokta"
       ],
       "ribbon": [
-        "Çizim › Nokta"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Nokta",
+        "CBS › Ölçme › Noktalar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6631,6 +6815,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json",
         "fixtures/interaction/v1/survey-points.json",
@@ -6652,7 +6837,8 @@
         "Çizim › Nokta"
       ],
       "ribbon": [
-        "Çizim › Nokta"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Nokta"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6662,7 +6848,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "tool.polygon",
@@ -6683,8 +6871,9 @@
         "Çizim › Çizgi"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Çizgi"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Çizgi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6727,8 +6916,10 @@
         "Değiştir › Alan işlemleri › Oluştur ve çevir"
       ],
       "ribbon": [
-        "Değiştir › Oluştur ve çevir",
-        "Seçim › Oluştur ve çevir"
+        "CAD › Değiştir › Oluştur ve çevir",
+        "CAD › Seçim › Oluştur ve çevir",
+        "CBS › Düzenle › Oluştur ve çevir",
+        "CBS › Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6762,8 +6953,9 @@
         "Çizim › Çizgi"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Çizgi"
+        "CAD › Giriş › Çizim",
+        "CBS › Giriş › Çizim",
+        "CBS › Düzenle › Çizgi"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6801,8 +6993,9 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Ölçü",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6834,7 +7027,7 @@
         "Çizim › Yardımcı"
       ],
       "ribbon": [
-        "Çizim › Yardımcı"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6867,8 +7060,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -6902,8 +7097,7 @@
         "Çizim › Şekil"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Şekil"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6941,8 +7135,7 @@
         "Çizim › Şekil"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Şekil"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -6978,8 +7171,7 @@
         "Çizim › Şekil"
       ],
       "ribbon": [
-        "Giriş › Çizim",
-        "Çizim › Şekil"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7036,7 +7228,7 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Çizim › Açıklama"
+        "CAD › Açıklama › İşaretleme"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7049,6 +7241,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
@@ -7069,8 +7262,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7101,9 +7296,12 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7137,9 +7335,12 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Dönüştür",
+        "CBS › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7171,7 +7372,8 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Eğri"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7197,7 +7399,8 @@
       "shortcuts": [],
       "menus": [],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7230,7 +7433,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7261,7 +7465,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7292,7 +7497,8 @@
         "Düzen › Seçim"
       ],
       "ribbon": [
-        "Giriş › Seçim"
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7324,7 +7530,8 @@
         "Değiştir › Kot"
       ],
       "ribbon": [
-        "Değiştir › Kot"
+        "CAD › Değiştir › Kot",
+        "CBS › Düzenle › Kot"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7352,8 +7559,10 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7384,7 +7593,7 @@
         "Çizim › Eğri"
       ],
       "ribbon": [
-        "Çizim › Eğri"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7397,6 +7606,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
     },
@@ -7417,7 +7627,8 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Değiştir › Kenar"
+        "CAD › Değiştir › Kenar",
+        "CBS › Düzenle › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7448,7 +7659,7 @@
         "Harita › Arazi"
       ],
       "ribbon": [
-        "Harita › Arazi"
+        "CBS › Analiz › Arazi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7482,7 +7693,7 @@
         "Harita › Arazi"
       ],
       "ribbon": [
-        "Harita › Arazi"
+        "CBS › Analiz › Arazi"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7515,7 +7726,8 @@
         "Analiz › Ölçme"
       ],
       "ribbon": [
-        "Harita › Ölçme"
+        "CAD › Giriş › Ölçme",
+        "CBS › Harita › Ölçme"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7526,8 +7738,7 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/netcadNames.test.ts",
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/netcadNames.test.ts"
       ]
     },
     {
@@ -7549,8 +7760,8 @@
         "Değiştir › Dönüştür"
       ],
       "ribbon": [
-        "Değiştir › Dönüştür",
-        "Seçim › Dönüştür"
+        "CAD › Değiştir › Dönüştür",
+        "CAD › Seçim › Dönüştür"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7585,7 +7796,7 @@
         "Harita › Parsel"
       ],
       "ribbon": [
-        "Harita › Parsel"
+        "CBS › Harita › Parsel"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7621,8 +7832,10 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "Giriş › Açıklama",
-        "Çizim › Açıklama"
+        "CAD › Giriş › Açıklama",
+        "CAD › Açıklama › Yazı",
+        "CBS › Giriş › Açıklama",
+        "CBS › Düzenle › Açıklama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7633,6 +7846,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/text-options.json"
       ]
     },
@@ -7655,8 +7869,10 @@
         "Değiştir › Alan işlemleri › Oluştur ve çevir"
       ],
       "ribbon": [
-        "Değiştir › Oluştur ve çevir",
-        "Seçim › Oluştur ve çevir"
+        "CAD › Değiştir › Oluştur ve çevir",
+        "CAD › Seçim › Oluştur ve çevir",
+        "CBS › Düzenle › Oluştur ve çevir",
+        "CBS › Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7684,8 +7900,10 @@
         "Değiştir › Alan işlemleri › Oluştur ve çevir"
       ],
       "ribbon": [
-        "Değiştir › Oluştur ve çevir",
-        "Seçim › Oluştur ve çevir"
+        "CAD › Değiştir › Oluştur ve çevir",
+        "CAD › Seçim › Oluştur ve çevir",
+        "CBS › Düzenle › Oluştur ve çevir",
+        "CBS › Seçim › Oluştur ve çevir"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7716,8 +7934,11 @@
         "Değiştir › Nesne"
       ],
       "ribbon": [
-        "Değiştir › Nesne",
-        "Seçim › Nesne"
+        "CAD › Değiştir › Nesne",
+        "CAD › Yönet › Temizlik",
+        "CAD › Seçim › Nesne",
+        "CBS › Düzenle › Nesne",
+        "CBS › Seçim › Nesne"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7728,6 +7949,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/topology.json"
       ]
     },
@@ -7750,8 +7972,10 @@
         "Değiştir › Kenar"
       ],
       "ribbon": [
-        "Giriş › Değiştir",
-        "Değiştir › Kenar"
+        "CAD › Giriş › Değiştir",
+        "CAD › Değiştir › Kenar",
+        "CBS › Giriş › Değiştir",
+        "CBS › Düzenle › Kenar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7783,7 +8007,7 @@
         "Değiştir › Köşe"
       ],
       "ribbon": [
-        "Değiştir › Köşe"
+        "CAD › Değiştir › Köşe"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7816,7 +8040,9 @@
         "Çizim › Nokta"
       ],
       "ribbon": [
-        "Çizim › Nokta"
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Nokta",
+        "CBS › Ölçme › Noktalar"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7849,7 +8075,7 @@
         "Çizim › Yardımcı"
       ],
       "ribbon": [
-        "Çizim › Yardımcı"
+        "CAD › Giriş › Çizim"
       ],
       "quickAccess": false,
       "hiddenIn": [
@@ -7886,8 +8112,11 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Giriş › Seçim",
-        "Görünüm › Yakınlaştır"
+        "CAD › Giriş › Seçim",
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Giriş › Seçim",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7925,7 +8154,8 @@
         "Araçlar › Uygulama"
       ],
       "ribbon": [
-        "Araçlar › Uygulama"
+        "CAD › Yönet › Uygulama",
+        "CBS › Görünüm › Uygulama"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -7968,7 +8198,8 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar"
+        "CBS › Veri › Koordinatlar",
+        "CBS › Ölçme › Oturtma"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8004,7 +8235,8 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar"
+        "CBS › Veri › Koordinatlar",
+        "CBS › Ölçme › Oturtma"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8036,7 +8268,8 @@
         "Görünüm › Paneller"
       ],
       "ribbon": [
-        "Görünüm › Paneller"
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8073,7 +8306,8 @@
         "Yardım"
       ],
       "ribbon": [
-        "Araçlar › Yardım"
+        "CAD › Yönet › Yardım",
+        "CBS › Görünüm › Yardım"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8100,8 +8334,9 @@
         "Koordinat › Koordinatlar"
       ],
       "ribbon": [
-        "Harita › Koordinatlar",
-        "Görünüm › Paneller"
+        "CAD › Görünüm › Paneller",
+        "CBS › Veri › Koordinatlar",
+        "CBS › Görünüm › Paneller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8132,7 +8367,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8162,7 +8399,8 @@
         "Görünüm › Paneller"
       ],
       "ribbon": [
-        "Görünüm › Paneller"
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8200,7 +8438,8 @@
         "Görünüm › Paneller"
       ],
       "ribbon": [
-        "Görünüm › Paneller"
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8230,7 +8469,8 @@
         "Görünüm › Görünüş"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8261,7 +8501,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8292,7 +8534,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8321,7 +8565,8 @@
         "Görünüm › Görünüş › Çizim motoru"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8353,7 +8598,8 @@
         "Görünüm › Görünüş › Çizim motoru"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8419,7 +8665,8 @@
         "Görünüm › Paneller"
       ],
       "ribbon": [
-        "Görünüm › Paneller"
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8450,7 +8697,8 @@
         "Görünüm › Görünüş › Sembol boyutu"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8477,7 +8725,8 @@
         "Görünüm › Görünüş › Sembol boyutu"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8501,7 +8750,8 @@
         "Görünüm › Görünüş › Tema"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8529,7 +8779,8 @@
         "Görünüm › Görünüş › Tema"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8587,7 +8838,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8621,7 +8874,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8647,7 +8902,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8673,7 +8930,9 @@
         "Görünüm › Yakınlaştır"
       ],
       "ribbon": [
-        "Görünüm › Yakınlaştır"
+        "CAD › Görünüm › Yakınlaştır",
+        "CBS › Harita › Yakınlaştır",
+        "CBS › Görünüm › Yakınlaştır"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8706,7 +8965,8 @@
         "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8734,7 +8994,8 @@
         "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8762,7 +9023,8 @@
         "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8790,7 +9052,8 @@
         "Görünüm › Görünüş › Proje türü"
       ],
       "ribbon": [
-        "Görünüm › Görünüş"
+        "CAD › Görünüm › Görünüş",
+        "CBS › Görünüm › Görünüş"
       ],
       "quickAccess": false,
       "hiddenIn": [],
@@ -8916,6 +9179,7 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
@@ -9144,7 +9408,7 @@
         "BLOKEKLE",
         "SEMBOLEKLE"
       ],
-      "primary": false,
+      "primary": true,
       "rare": false,
       "methods": [],
       "steps": 3,
@@ -9302,7 +9566,6 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/block-define.json",
         "fixtures/interaction/v1/circle-methods.json",
         "fixtures/interaction/v1/usage-blocks.json"
@@ -9330,7 +9593,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "copy",
@@ -9504,6 +9769,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/spot-divide.json"
       ]
     },
@@ -9531,6 +9797,7 @@
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
@@ -9558,6 +9825,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
     },
@@ -9940,6 +10208,7 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/trace-draw.json"
       ]
@@ -9965,9 +10234,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": [
-        "apps/web/src/app/workspaces.test.ts"
-      ]
+      "tests": []
     },
     {
       "id": "mirror",
@@ -10290,6 +10557,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json",
         "fixtures/interaction/v1/survey-points.json",
@@ -10320,7 +10588,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "polygon",
@@ -10613,6 +10883,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
@@ -10900,6 +11171,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/ellipse-spline.json"
       ]
     },
@@ -11005,8 +11277,7 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/netcadNames.test.ts",
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/netcadNames.test.ts"
       ]
     },
     {
@@ -11087,6 +11358,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/text-options.json"
       ]
     },
@@ -11163,6 +11435,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/topology.json"
       ]
     },
@@ -18502,8 +18775,8 @@
             "overflow": [],
             "keep": true,
             "launcher": {
-              "tab": "draw",
-              "title": "Tüm araçlar: Çizim sekmesi"
+              "tab": "edit",
+              "title": "Tüm araçlar: Düzenle sekmesi"
             }
           },
           {
@@ -18576,8 +18849,8 @@
             "overflow": [],
             "keep": true,
             "launcher": {
-              "tab": "modify",
-              "title": "Tüm araçlar: Değiştir sekmesi"
+              "tab": "edit",
+              "title": "Tüm araçlar: Düzenle sekmesi"
             }
           },
           {
@@ -18596,8 +18869,8 @@
             "overflow": [],
             "keep": false,
             "launcher": {
-              "tab": "draw",
-              "title": "Tüm araçlar: Çizim sekmesi"
+              "tab": "edit",
+              "title": "Tüm araçlar: Düzenle sekmesi"
             }
           },
           {
@@ -18665,8 +18938,309 @@
         ]
       },
       {
-        "id": "draw",
-        "label": "Çizim",
+        "id": "map",
+        "label": "Harita",
+        "panels": [
+          {
+            "label": "Yakınlaştır",
+            "icon": "zoomExtents",
+            "items": [
+              {
+                "command": "view.zoomExtents",
+                "size": "large"
+              },
+              {
+                "command": "tool.zoomWindow",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomSelection",
+                "size": "small"
+              },
+              {
+                "command": "view.previous",
+                "size": "small"
+              },
+              {
+                "command": "view.next",
+                "size": "small"
+              },
+              {
+                "command": "view.extentCheck",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomIn",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomOut",
+                "size": "small"
+              },
+              {
+                "command": "tool.pan",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Koordinat sistemi",
+            "icon": "crs",
+            "items": [
+              {
+                "command": "crs.set",
+                "size": "large"
+              },
+              {
+                "command": "crs.transform",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "crs.set",
+              "title": "Proje ayarları: koordinat sistemi"
+            }
+          },
+          {
+            "label": "Parsel",
+            "icon": "parcel",
+            "items": [
+              {
+                "command": "tool.parcel",
+                "size": "large"
+              },
+              {
+                "command": "tool.subdivide",
+                "size": "small"
+              },
+              {
+                "command": "map.parcelReport",
+                "size": "small"
+              },
+              {
+                "command": "map.edgeLengths",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Ölçme",
+            "icon": "measure",
+            "items": [
+              {
+                "command": "tool.measure",
+                "size": "small"
+              },
+              {
+                "command": "tool.area",
+                "size": "small"
+              },
+              {
+                "command": "tool.measureAngle",
+                "size": "small"
+              },
+              {
+                "command": "tool.stationOffset",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Stil",
+            "icon": "styles",
+            "items": [
+              {
+                "command": "style.manager",
+                "size": "large"
+              },
+              {
+                "command": "style.svgEditor",
+                "size": "large"
+              },
+              {
+                "command": "style.layerStyle",
+                "size": "small"
+              },
+              {
+                "command": "style.legend",
+                "size": "small"
+              },
+              {
+                "command": "style.assign",
+                "size": "small"
+              },
+              {
+                "command": "style.clearSymbol",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "data",
+        "label": "Veri",
+        "panels": [
+          {
+            "label": "Katman",
+            "icon": "layerAdd",
+            "items": [
+              {
+                "command": "layer.new",
+                "size": "small"
+              },
+              {
+                "command": "layer.newGroup",
+                "size": "small"
+              },
+              {
+                "command": "layer.showAll",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Dosya alışverişi",
+            "icon": "import",
+            "items": [
+              {
+                "menu": "İçe aktar",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.dxf",
+                      "file.import.ncz",
+                      "file.import.shp",
+                      "file.import.geojson"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.ncn"
+                    ]
+                  }
+                ]
+              },
+              {
+                "menu": "Dışa aktar",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.dxf",
+                      "file.export.geojson",
+                      "file.export.pdf"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.ncn"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Koordinatlar",
+            "icon": "crsQuery",
+            "items": [
+              {
+                "command": "crs.query",
+                "size": "small"
+              },
+              {
+                "command": "crs.points",
+                "size": "small"
+              },
+              {
+                "command": "view.coords",
+                "size": "small"
+              },
+              {
+                "command": "point.editor",
+                "size": "small"
+              },
+              {
+                "command": "transform.fit",
+                "size": "small"
+              },
+              {
+                "command": "transform.edgematch",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Öznitelik",
+            "icon": "fieldCalc",
+            "items": [
+              {
+                "command": "processing.run.attributes.calculate",
+                "size": "large"
+              },
+              {
+                "command": "processing.run.selection.byExpression",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Blok",
+            "icon": "blockInsert",
+            "items": [
+              {
+                "command": "tool.blockInsert",
+                "size": "large"
+              },
+              {
+                "command": "tool.blockDefine",
+                "size": "small"
+              },
+              {
+                "command": "block.panel",
+                "size": "small"
+              },
+              {
+                "command": "block.attributes",
+                "size": "small"
+              },
+              {
+                "command": "block.purge",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "edit",
+        "label": "Düzenle",
         "panels": [
           {
             "label": "Çizgi",
@@ -18889,40 +19463,6 @@
             "overflow": [],
             "keep": false
           },
-          {
-            "label": "Blok",
-            "icon": "blockDefine",
-            "items": [
-              {
-                "command": "tool.blockDefine",
-                "size": "small"
-              },
-              {
-                "command": "tool.blockInsert",
-                "size": "small"
-              },
-              {
-                "command": "block.panel",
-                "size": "small"
-              },
-              {
-                "command": "block.attributes",
-                "size": "small"
-              },
-              {
-                "command": "block.purge",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          }
-        ]
-      },
-      {
-        "id": "modify",
-        "label": "Değiştir",
-        "panels": [
           {
             "label": "Dönüştür",
             "icon": "move",
@@ -19160,32 +19700,133 @@
             ],
             "overflow": [],
             "keep": false
+          },
+          {
+            "label": "Çizim yardımcıları",
+            "icon": "snap",
+            "items": [
+              {
+                "command": "draft.snap",
+                "size": "small"
+              },
+              {
+                "command": "draft.grid",
+                "size": "small"
+              },
+              {
+                "command": "draft.ortho",
+                "size": "small"
+              },
+              {
+                "command": "draft.polar",
+                "size": "small"
+              },
+              {
+                "command": "draft.tracking",
+                "size": "small"
+              },
+              {
+                "command": "draft.topology",
+                "size": "small"
+              },
+              {
+                "command": "draft.topologyPoints",
+                "size": "small"
+              },
+              {
+                "command": "draft.overlap",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "tools.options",
+              "args": "\"snap\"",
+              "title": "Uygulama ayarları: kenetleme"
+            }
           }
         ]
       },
       {
-        "id": "map",
-        "label": "Harita",
+        "id": "analysis",
+        "label": "Analiz",
         "panels": [
           {
-            "label": "Parsel",
-            "icon": "parcel",
+            "label": "İşlemler",
+            "icon": "processing",
             "items": [
               {
-                "command": "tool.parcel",
+                "command": "processing.toolbox",
                 "size": "large"
               },
               {
-                "command": "tool.subdivide",
+                "command": "processing.history",
                 "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Modeller",
+            "icon": "modelNew",
+            "items": [
+              {
+                "command": "processing.newModel",
+                "size": "large"
               },
               {
-                "command": "map.parcelReport",
-                "size": "small"
-              },
+                "command": "processing.model.builtin.parcelSheet",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Nokta işlemleri",
+            "icon": "numberVertices",
+            "items": [
               {
-                "command": "map.edgeLengths",
-                "size": "small"
+                "command": "processing.run.points.numberVertices",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Yazı ve etiket",
+            "icon": "edgeLengths",
+            "items": [
+              {
+                "command": "processing.run.annotation.edgeLengths",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Öznitelik",
+            "icon": "fieldCalc",
+            "items": [
+              {
+                "command": "processing.run.attributes.calculate",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Seçim",
+            "icon": "selectExpression",
+            "items": [
+              {
+                "command": "processing.run.selection.byExpression",
+                "size": "large"
               }
             ],
             "overflow": [],
@@ -19216,41 +19857,53 @@
             "keep": false
           },
           {
-            "label": "Ölçme",
-            "icon": "measure",
+            "label": "Arazi analizi",
+            "icon": "volume",
             "items": [
               {
-                "command": "tool.measure",
-                "size": "small"
+                "command": "analysis.volume",
+                "size": "large"
               },
               {
-                "command": "tool.area",
-                "size": "small"
-              },
-              {
-                "command": "tool.measureAngle",
-                "size": "small"
-              },
-              {
-                "command": "tool.stationOffset",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Pafta",
-            "icon": "sheet",
-            "items": [
-              {
-                "command": "map.sheet",
+                "command": "analysis.slope",
                 "size": "large"
               }
             ],
             "overflow": [],
             "keep": false
           },
+          {
+            "label": "Komut",
+            "icon": "terminal",
+            "items": [
+              {
+                "command": "commandline.focus",
+                "size": "large"
+              },
+              {
+                "menu": "Çakışma",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "draft.overlap.allow",
+                      "draft.overlap.layer",
+                      "draft.overlap.layers"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "survey",
+        "label": "Ölçme",
+        "panels": [
           {
             "label": "Poligon",
             "icon": "surveyTraverse",
@@ -19296,51 +19949,19 @@
             "keep": false
           },
           {
-            "label": "Koordinat sistemi",
-            "icon": "crs",
+            "label": "Noktalar",
+            "icon": "point",
             "items": [
               {
-                "command": "crs.set",
-                "size": "large"
-              },
-              {
-                "command": "crs.transform",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false,
-            "launcher": {
-              "command": "crs.set",
-              "title": "Proje ayarları: koordinat sistemi"
-            }
-          },
-          {
-            "label": "Koordinatlar",
-            "icon": "crsQuery",
-            "items": [
-              {
-                "command": "crs.query",
+                "command": "tool.point",
                 "size": "small"
               },
               {
-                "command": "crs.points",
-                "size": "small"
-              },
-              {
-                "command": "view.coords",
+                "command": "tool.vertexPoints",
                 "size": "small"
               },
               {
                 "command": "point.editor",
-                "size": "small"
-              },
-              {
-                "command": "transform.fit",
-                "size": "small"
-              },
-              {
-                "command": "transform.edgematch",
                 "size": "small"
               }
             ],
@@ -19348,15 +19969,15 @@
             "keep": false
           },
           {
-            "label": "Arazi analizi",
-            "icon": "volume",
+            "label": "Oturtma",
+            "icon": "vectorFit",
             "items": [
               {
-                "command": "analysis.volume",
+                "command": "transform.fit",
                 "size": "large"
               },
               {
-                "command": "analysis.slope",
+                "command": "transform.edgematch",
                 "size": "large"
               }
             ],
@@ -19516,201 +20137,6 @@
               "args": "\"appearance\"",
               "title": "Uygulama ayarları: görünüm"
             }
-          }
-        ]
-      },
-      {
-        "id": "processing",
-        "label": "İşlemler",
-        "panels": [
-          {
-            "label": "İşlemler",
-            "icon": "processing",
-            "items": [
-              {
-                "command": "processing.toolbox",
-                "size": "large"
-              },
-              {
-                "command": "processing.history",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Modeller",
-            "icon": "modelNew",
-            "items": [
-              {
-                "command": "processing.newModel",
-                "size": "large"
-              },
-              {
-                "command": "processing.model.builtin.parcelSheet",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Nokta işlemleri",
-            "icon": "numberVertices",
-            "items": [
-              {
-                "command": "processing.run.points.numberVertices",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Yazı ve etiket",
-            "icon": "edgeLengths",
-            "items": [
-              {
-                "command": "processing.run.annotation.edgeLengths",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Öznitelik",
-            "icon": "fieldCalc",
-            "items": [
-              {
-                "command": "processing.run.attributes.calculate",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Seçim",
-            "icon": "selectExpression",
-            "items": [
-              {
-                "command": "processing.run.selection.byExpression",
-                "size": "large"
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          }
-        ]
-      },
-      {
-        "id": "tools",
-        "label": "Araçlar",
-        "panels": [
-          {
-            "label": "Komut",
-            "icon": "terminal",
-            "items": [
-              {
-                "command": "commandline.focus",
-                "size": "large"
-              },
-              {
-                "menu": "Çakışma",
-                "size": "large",
-                "blocks": [
-                  {
-                    "label": "",
-                    "items": [
-                      "draft.overlap.allow",
-                      "draft.overlap.layer",
-                      "draft.overlap.layers"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "overflow": [],
-            "keep": false
-          },
-          {
-            "label": "Çizim yardımcıları",
-            "icon": "snap",
-            "items": [
-              {
-                "command": "draft.snap",
-                "size": "small"
-              },
-              {
-                "command": "draft.grid",
-                "size": "small"
-              },
-              {
-                "command": "draft.ortho",
-                "size": "small"
-              },
-              {
-                "command": "draft.polar",
-                "size": "small"
-              },
-              {
-                "command": "draft.tracking",
-                "size": "small"
-              },
-              {
-                "command": "draft.topology",
-                "size": "small"
-              },
-              {
-                "command": "draft.topologyPoints",
-                "size": "small"
-              },
-              {
-                "command": "draft.overlap",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false,
-            "launcher": {
-              "command": "tools.options",
-              "args": "\"snap\"",
-              "title": "Uygulama ayarları: kenetleme"
-            }
-          },
-          {
-            "label": "Stil",
-            "icon": "styles",
-            "items": [
-              {
-                "command": "style.manager",
-                "size": "large"
-              },
-              {
-                "command": "style.svgEditor",
-                "size": "large"
-              },
-              {
-                "command": "style.layerStyle",
-                "size": "small"
-              },
-              {
-                "command": "style.legend",
-                "size": "small"
-              },
-              {
-                "command": "style.assign",
-                "size": "small"
-              },
-              {
-                "command": "style.clearSymbol",
-                "size": "small"
-              }
-            ],
-            "overflow": [],
-            "keep": false
           },
           {
             "label": "Uygulama",
@@ -19743,6 +20169,80 @@
               {
                 "command": "help.about",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          }
+        ]
+      },
+      {
+        "id": "output",
+        "label": "Çıktı",
+        "panels": [
+          {
+            "label": "Pafta",
+            "icon": "sheet",
+            "items": [
+              {
+                "command": "sheet.new",
+                "size": "small"
+              },
+              {
+                "command": "sheet.fromTemplate",
+                "size": "small"
+              },
+              {
+                "command": "map.sheet",
+                "size": "small"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Lejant",
+            "icon": "legend",
+            "items": [
+              {
+                "command": "style.legend",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Çıktı",
+            "icon": "print",
+            "items": [
+              {
+                "command": "file.print",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Dışa aktar",
+            "icon": "export",
+            "items": [
+              {
+                "command": "file.export.dxf",
+                "size": "small"
+              },
+              {
+                "command": "file.export.pdf",
+                "size": "small"
+              },
+              {
+                "command": "file.export.geojson",
+                "size": "small"
+              },
+              {
+                "command": "file.export.ncn",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -20276,14 +20776,34 @@
                   ],
                   "key": "rectangle",
                   "size": "small"
+                },
+                {
+                  "command": "tool.ellipse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.spline",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.point",
+                  "size": "small"
                 }
               ],
-              "overflow": [],
-              "keep": true,
-              "launcher": {
-                "tab": "draw",
-                "title": "Tüm araçlar: Çizim sekmesi"
-              }
+              "overflow": [
+                "tool.vertexPoints",
+                "tool.parallel",
+                "tool.xline",
+                "tool.ray",
+                "tool.donut",
+                "tool.sector",
+                "tool.perpIn",
+                "tool.perpOut",
+                "tool.divide",
+                "tool.pointsBetween",
+                "tool.intersectPoint"
+              ],
+              "keep": true
             },
             {
               "label": "Değiştir",
@@ -20543,19 +21063,19 @@
                   "size": "lead"
                 },
                 {
-                  "command": "tool.hatch",
+                  "command": "tool.leader",
                   "size": "large"
                 },
                 {
-                  "command": "text.findReplace",
-                  "size": "small"
+                  "command": "tool.hatch",
+                  "size": "large"
                 }
               ],
               "overflow": [],
               "keep": false,
               "launcher": {
-                "tab": "draw",
-                "title": "Tüm araçlar: Çizim sekmesi"
+                "tab": "annotate",
+                "title": "Tüm araçlar: Açıklama sekmesi"
               }
             },
             {
@@ -20574,6 +21094,30 @@
               }
             },
             {
+              "label": "Blok",
+              "icon": "blockInsert",
+              "items": [
+                {
+                  "command": "tool.blockInsert",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.blockDefine",
+                  "size": "small"
+                },
+                {
+                  "command": "block.panel",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "tab": "insert",
+                "title": "Tüm araçlar: Ekle sekmesi"
+              }
+            },
+            {
               "label": "Özellikler",
               "icon": "styles",
               "items": [
@@ -20587,270 +21131,69 @@
                 "command": "file.settings",
                 "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
               }
-            }
-          ]
-        },
-        {
-          "id": "draw",
-          "label": "Çizim",
-          "panels": [
-            {
-              "label": "Çizgi",
-              "icon": "line",
-              "items": [
-                {
-                  "command": "tool.line",
-                  "size": "large"
-                },
-                {
-                  "command": "tool.polyline",
-                  "size": "large"
-                },
-                {
-                  "command": "tool.polygon",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.adjoin",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.parallel",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
             },
             {
-              "label": "Eğri",
-              "icon": "circle",
+              "label": "Ölçme",
+              "icon": "measure",
               "items": [
                 {
-                  "split": [
-                    {
-                      "command": "tool.circle",
-                      "title": "Daire",
-                      "label": "Merkez, yarıçap"
-                    },
-                    {
-                      "command": "tool.circle",
-                      "option": "2N",
-                      "title": "Daire",
-                      "label": "2 nokta",
-                      "description": "Çapın iki ucundan",
-                      "icon": "circle2p"
-                    },
-                    {
-                      "command": "tool.circle",
-                      "option": "3N",
-                      "title": "Daire",
-                      "label": "3 nokta",
-                      "description": "Çember üzerindeki üç noktadan",
-                      "icon": "circle3p"
-                    },
-                    {
-                      "command": "tool.circle",
-                      "option": "TTY",
-                      "title": "Daire",
-                      "label": "Teğet, teğet, yarıçap",
-                      "description": "İki nesneye teğet, yarıçap yazılır",
-                      "icon": "circleTtr"
-                    },
-                    {
-                      "command": "tool.circle",
-                      "option": "TTT",
-                      "title": "Daire",
-                      "label": "Teğet, teğet, teğet",
-                      "description": "Üç nesneye teğet",
-                      "icon": "circleTtt"
-                    }
-                  ],
-                  "key": "circle",
-                  "size": "large"
-                },
-                {
-                  "split": [
-                    {
-                      "command": "tool.arc",
-                      "title": "Yay",
-                      "label": "3 nokta"
-                    },
-                    {
-                      "command": "tool.arc",
-                      "option": "M",
-                      "title": "Yay",
-                      "label": "Merkez, başlangıç, bitiş",
-                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş",
-                      "icon": "arcCenter"
-                    },
-                    {
-                      "command": "tool.arc",
-                      "option": "D",
-                      "title": "Yay",
-                      "label": "Devam",
-                      "description": "Son çizilen nesneye teğet devam eder",
-                      "icon": "arcContinue"
-                    }
-                  ],
-                  "key": "arc",
-                  "size": "large"
-                },
-                {
-                  "command": "tool.ellipse",
+                  "command": "tool.measure",
                   "size": "small"
                 },
                 {
-                  "command": "tool.spline",
+                  "command": "tool.area",
                   "size": "small"
                 },
                 {
-                  "command": "tool.sector",
+                  "command": "tool.measureAngle",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.stationOffset",
+                  "size": "small"
+                },
+                {
+                  "command": "crs.query",
                   "size": "small"
                 }
               ],
               "overflow": [
-                "tool.donut"
+                "calc.traverse",
+                "calc.polar",
+                "calc.stakeout",
+                "calc.forward",
+                "calc.resection"
               ],
               "keep": false
-            },
+            }
+          ]
+        },
+        {
+          "id": "insert",
+          "label": "Ekle",
+          "panels": [
             {
-              "label": "Şekil",
-              "icon": "rectangle",
+              "label": "Blok",
+              "icon": "blockInsert",
               "items": [
                 {
-                  "split": [
-                    {
-                      "command": "tool.rectangle",
-                      "title": "Dikdörtgen",
-                      "label": "Dikdörtgen"
-                    },
-                    {
-                      "command": "tool.rectangle3",
-                      "title": "Döndürülmüş dikdörtgen",
-                      "label": "Döndürülmüş dikdörtgen"
-                    },
-                    {
-                      "command": "tool.regularPolygon",
-                      "title": "Düzgün çokgen",
-                      "label": "Düzgün çokgen"
-                    }
-                  ],
-                  "key": "rectangle",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Yardımcı",
-              "icon": "xline",
-              "items": [
-                {
-                  "split": [
-                    {
-                      "command": "tool.xline",
-                      "title": "Yardımcı çizgi",
-                      "label": "Yardımcı çizgi"
-                    },
-                    {
-                      "command": "tool.ray",
-                      "title": "Işın",
-                      "label": "Işın"
-                    }
-                  ],
-                  "key": "construction",
+                  "command": "tool.blockInsert",
                   "size": "large"
                 },
                 {
-                  "split": [
-                    {
-                      "command": "tool.perpIn",
-                      "title": "Dik in",
-                      "label": "Dik in"
-                    },
-                    {
-                      "command": "tool.perpOut",
-                      "title": "Dik çık",
-                      "label": "Dik çık"
-                    }
-                  ],
-                  "key": "perpendicular",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Nokta",
-              "icon": "point",
-              "items": [
-                {
-                  "command": "tool.point",
+                  "command": "tool.blockDefine",
                   "size": "small"
                 },
                 {
-                  "command": "tool.vertexPoints",
+                  "command": "block.panel",
                   "size": "small"
                 },
                 {
-                  "command": "tool.divide",
+                  "command": "block.attributes",
                   "size": "small"
                 },
                 {
-                  "split": [
-                    {
-                      "command": "tool.pointsBetween",
-                      "title": "Ara nokta",
-                      "label": "Eşit aralık"
-                    },
-                    {
-                      "command": "tool.pointsBetween",
-                      "option": "U",
-                      "title": "Ara nokta",
-                      "label": "Uzaklıkla",
-                      "description": "İlk noktadan verilen uzaklıklarda",
-                      "icon": "pointsBetweenDistance"
-                    },
-                    {
-                      "command": "tool.pointsBetween",
-                      "option": "O",
-                      "title": "Ara nokta",
-                      "label": "Oranla",
-                      "description": "İki nokta arasının oranında (0 ile 1 arası)",
-                      "icon": "pointsBetweenRatio"
-                    }
-                  ],
-                  "key": "pointsBetween",
-                  "size": "small"
-                },
-                {
-                  "split": [
-                    {
-                      "command": "tool.intersectPoint",
-                      "title": "Kesişim noktası",
-                      "label": "İki uzaklık"
-                    },
-                    {
-                      "command": "tool.intersectPoint",
-                      "option": "D",
-                      "title": "Kesişim noktası",
-                      "label": "İki doğrultu",
-                      "description": "İki noktadan okunan doğrultular",
-                      "icon": "intersectDirections"
-                    },
-                    {
-                      "command": "tool.intersectPoint",
-                      "option": "L",
-                      "title": "Kesişim noktası",
-                      "label": "İki doğru",
-                      "description": "İki noktayla verilen iki doğru",
-                      "icon": "intersectLines"
-                    }
-                  ],
-                  "key": "intersectPoint",
+                  "command": "block.purge",
                   "size": "small"
                 }
               ],
@@ -20858,7 +21201,53 @@
               "keep": false
             },
             {
-              "label": "Açıklama",
+              "label": "İçe aktar",
+              "icon": "import",
+              "items": [
+                {
+                  "command": "file.import.dxf",
+                  "size": "small"
+                },
+                {
+                  "command": "file.import.ncz",
+                  "size": "small"
+                },
+                {
+                  "command": "file.import.shp",
+                  "size": "small"
+                },
+                {
+                  "command": "file.import.geojson",
+                  "size": "small"
+                },
+                {
+                  "command": "file.import.ncn",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Metin",
+              "icon": "textFile",
+              "items": [
+                {
+                  "command": "tool.placeTextFile",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "annotate",
+          "label": "Açıklama",
+          "panels": [
+            {
+              "label": "Yazı",
               "icon": "text",
               "items": [
                 {
@@ -20866,13 +21255,21 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.leader",
-                  "size": "large"
-                },
-                {
                   "command": "tool.placeTextFile",
                   "size": "small"
                 },
+                {
+                  "command": "text.findReplace",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ölçü",
+              "icon": "dimension",
+              "items": [
                 {
                   "split": [
                     {
@@ -21021,40 +21418,42 @@
                   ],
                   "key": "dimension",
                   "size": "lead"
-                },
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kılavuz",
+              "icon": "leader",
+              "items": [
+                {
+                  "command": "tool.leader",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Tarama",
+              "icon": "hatch",
+              "items": [
                 {
                   "command": "tool.hatch",
                   "size": "large"
                 }
               ],
-              "overflow": [
-                "tool.revcloud"
-              ],
+              "overflow": [],
               "keep": false
             },
             {
-              "label": "Blok",
-              "icon": "blockDefine",
+              "label": "İşaretleme",
+              "icon": "revcloud",
               "items": [
                 {
-                  "command": "tool.blockDefine",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.blockInsert",
-                  "size": "small"
-                },
-                {
-                  "command": "block.panel",
-                  "size": "small"
-                },
-                {
-                  "command": "block.attributes",
-                  "size": "small"
-                },
-                {
-                  "command": "block.purge",
-                  "size": "small"
+                  "command": "tool.revcloud",
+                  "size": "large"
                 }
               ],
               "overflow": [],
@@ -21378,80 +21777,6 @@
           ]
         },
         {
-          "id": "map",
-          "label": "Ölçme",
-          "panels": [
-            {
-              "label": "Poligon",
-              "icon": "surveyTraverse",
-              "items": [
-                {
-                  "command": "calc.traverse",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Nokta alımı",
-              "icon": "surveyPolar",
-              "items": [
-                {
-                  "command": "calc.polar",
-                  "size": "large"
-                },
-                {
-                  "command": "calc.stakeout",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Kestirme",
-              "icon": "surveyForward",
-              "items": [
-                {
-                  "command": "calc.forward",
-                  "size": "large"
-                },
-                {
-                  "command": "calc.resection",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Ölçme",
-              "icon": "measure",
-              "items": [
-                {
-                  "command": "tool.measure",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.area",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.measureAngle",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.stationOffset",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            }
-          ]
-        },
-        {
           "id": "view",
           "label": "Görünüm",
           "panels": [
@@ -21606,9 +21931,29 @@
           ]
         },
         {
-          "id": "tools",
-          "label": "Araçlar",
+          "id": "manage",
+          "label": "Yönet",
           "panels": [
+            {
+              "label": "Temizlik",
+              "icon": "cleanup",
+              "items": [
+                {
+                  "command": "tool.cleanup",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.topology",
+                  "size": "small"
+                },
+                {
+                  "command": "block.purge",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
             {
               "label": "Komut",
               "icon": "terminal",
@@ -21743,6 +22088,64 @@
                 {
                   "command": "help.about",
                   "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "output",
+          "label": "Çıktı",
+          "panels": [
+            {
+              "label": "Pafta",
+              "icon": "sheet",
+              "items": [
+                {
+                  "command": "sheet.new",
+                  "size": "large"
+                },
+                {
+                  "command": "sheet.fromTemplate",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çıktı",
+              "icon": "print",
+              "items": [
+                {
+                  "command": "file.print",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dışa aktar",
+              "icon": "export",
+              "items": [
+                {
+                  "command": "file.export.dxf",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.pdf",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.geojson",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.ncn",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -22292,8 +22695,8 @@
               "overflow": [],
               "keep": true,
               "launcher": {
-                "tab": "draw",
-                "title": "Tüm araçlar: Çizim sekmesi"
+                "tab": "edit",
+                "title": "Tüm araçlar: Düzenle sekmesi"
               }
             },
             {
@@ -22366,8 +22769,8 @@
               "overflow": [],
               "keep": true,
               "launcher": {
-                "tab": "modify",
-                "title": "Tüm araçlar: Değiştir sekmesi"
+                "tab": "edit",
+                "title": "Tüm araçlar: Düzenle sekmesi"
               }
             },
             {
@@ -22386,8 +22789,8 @@
               "overflow": [],
               "keep": false,
               "launcher": {
-                "tab": "draw",
-                "title": "Tüm araçlar: Çizim sekmesi"
+                "tab": "edit",
+                "title": "Tüm araçlar: Düzenle sekmesi"
               }
             },
             {
@@ -22455,8 +22858,309 @@
           ]
         },
         {
-          "id": "draw",
-          "label": "Çizim",
+          "id": "map",
+          "label": "Harita",
+          "panels": [
+            {
+              "label": "Yakınlaştır",
+              "icon": "zoomExtents",
+              "items": [
+                {
+                  "command": "view.zoomExtents",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.zoomWindow",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "view.previous",
+                  "size": "small"
+                },
+                {
+                  "command": "view.next",
+                  "size": "small"
+                },
+                {
+                  "command": "view.extentCheck",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomIn",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomOut",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.pan",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Koordinat sistemi",
+              "icon": "crs",
+              "items": [
+                {
+                  "command": "crs.set",
+                  "size": "large"
+                },
+                {
+                  "command": "crs.transform",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "crs.set",
+                "title": "Proje ayarları: koordinat sistemi"
+              }
+            },
+            {
+              "label": "Parsel",
+              "icon": "parcel",
+              "items": [
+                {
+                  "command": "tool.parcel",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.subdivide",
+                  "size": "small"
+                },
+                {
+                  "command": "map.parcelReport",
+                  "size": "small"
+                },
+                {
+                  "command": "map.edgeLengths",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ölçme",
+              "icon": "measure",
+              "items": [
+                {
+                  "command": "tool.measure",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.area",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.measureAngle",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.stationOffset",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Stil",
+              "icon": "styles",
+              "items": [
+                {
+                  "command": "style.manager",
+                  "size": "large"
+                },
+                {
+                  "command": "style.svgEditor",
+                  "size": "large"
+                },
+                {
+                  "command": "style.layerStyle",
+                  "size": "small"
+                },
+                {
+                  "command": "style.legend",
+                  "size": "small"
+                },
+                {
+                  "command": "style.assign",
+                  "size": "small"
+                },
+                {
+                  "command": "style.clearSymbol",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "data",
+          "label": "Veri",
+          "panels": [
+            {
+              "label": "Katman",
+              "icon": "layerAdd",
+              "items": [
+                {
+                  "command": "layer.new",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.newGroup",
+                  "size": "small"
+                },
+                {
+                  "command": "layer.showAll",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dosya alışverişi",
+              "icon": "import",
+              "items": [
+                {
+                  "menu": "İçe aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.dxf",
+                        "file.import.ncz",
+                        "file.import.shp",
+                        "file.import.geojson"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.ncn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Dışa aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.dxf",
+                        "file.export.geojson",
+                        "file.export.pdf"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.ncn"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Koordinatlar",
+              "icon": "crsQuery",
+              "items": [
+                {
+                  "command": "crs.query",
+                  "size": "small"
+                },
+                {
+                  "command": "crs.points",
+                  "size": "small"
+                },
+                {
+                  "command": "view.coords",
+                  "size": "small"
+                },
+                {
+                  "command": "point.editor",
+                  "size": "small"
+                },
+                {
+                  "command": "transform.fit",
+                  "size": "small"
+                },
+                {
+                  "command": "transform.edgematch",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Öznitelik",
+              "icon": "fieldCalc",
+              "items": [
+                {
+                  "command": "processing.run.attributes.calculate",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.run.selection.byExpression",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Blok",
+              "icon": "blockInsert",
+              "items": [
+                {
+                  "command": "tool.blockInsert",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.blockDefine",
+                  "size": "small"
+                },
+                {
+                  "command": "block.panel",
+                  "size": "small"
+                },
+                {
+                  "command": "block.attributes",
+                  "size": "small"
+                },
+                {
+                  "command": "block.purge",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "edit",
+          "label": "Düzenle",
           "panels": [
             {
               "label": "Çizgi",
@@ -22679,40 +23383,6 @@
               "overflow": [],
               "keep": false
             },
-            {
-              "label": "Blok",
-              "icon": "blockDefine",
-              "items": [
-                {
-                  "command": "tool.blockDefine",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.blockInsert",
-                  "size": "small"
-                },
-                {
-                  "command": "block.panel",
-                  "size": "small"
-                },
-                {
-                  "command": "block.attributes",
-                  "size": "small"
-                },
-                {
-                  "command": "block.purge",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            }
-          ]
-        },
-        {
-          "id": "modify",
-          "label": "Değiştir",
-          "panels": [
             {
               "label": "Dönüştür",
               "icon": "move",
@@ -22950,32 +23620,133 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Çizim yardımcıları",
+              "icon": "snap",
+              "items": [
+                {
+                  "command": "draft.snap",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.grid",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.ortho",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.polar",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.tracking",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.topology",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.topologyPoints",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.overlap",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "tools.options",
+                "args": "\"snap\"",
+                "title": "Uygulama ayarları: kenetleme"
+              }
             }
           ]
         },
         {
-          "id": "map",
-          "label": "Harita",
+          "id": "analysis",
+          "label": "Analiz",
           "panels": [
             {
-              "label": "Parsel",
-              "icon": "parcel",
+              "label": "İşlemler",
+              "icon": "processing",
               "items": [
                 {
-                  "command": "tool.parcel",
+                  "command": "processing.toolbox",
                   "size": "large"
                 },
                 {
-                  "command": "tool.subdivide",
+                  "command": "processing.history",
                   "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Modeller",
+              "icon": "modelNew",
+              "items": [
+                {
+                  "command": "processing.newModel",
+                  "size": "large"
                 },
                 {
-                  "command": "map.parcelReport",
-                  "size": "small"
-                },
+                  "command": "processing.model.builtin.parcelSheet",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta işlemleri",
+              "icon": "numberVertices",
+              "items": [
                 {
-                  "command": "map.edgeLengths",
-                  "size": "small"
+                  "command": "processing.run.points.numberVertices",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yazı ve etiket",
+              "icon": "edgeLengths",
+              "items": [
+                {
+                  "command": "processing.run.annotation.edgeLengths",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Öznitelik",
+              "icon": "fieldCalc",
+              "items": [
+                {
+                  "command": "processing.run.attributes.calculate",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Seçim",
+              "icon": "selectExpression",
+              "items": [
+                {
+                  "command": "processing.run.selection.byExpression",
+                  "size": "large"
                 }
               ],
               "overflow": [],
@@ -23006,41 +23777,53 @@
               "keep": false
             },
             {
-              "label": "Ölçme",
-              "icon": "measure",
+              "label": "Arazi analizi",
+              "icon": "volume",
               "items": [
                 {
-                  "command": "tool.measure",
-                  "size": "small"
+                  "command": "analysis.volume",
+                  "size": "large"
                 },
                 {
-                  "command": "tool.area",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.measureAngle",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.stationOffset",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Pafta",
-              "icon": "sheet",
-              "items": [
-                {
-                  "command": "map.sheet",
+                  "command": "analysis.slope",
                   "size": "large"
                 }
               ],
               "overflow": [],
               "keep": false
             },
+            {
+              "label": "Komut",
+              "icon": "terminal",
+              "items": [
+                {
+                  "command": "commandline.focus",
+                  "size": "large"
+                },
+                {
+                  "menu": "Çakışma",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "draft.overlap.allow",
+                        "draft.overlap.layer",
+                        "draft.overlap.layers"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "survey",
+          "label": "Ölçme",
+          "panels": [
             {
               "label": "Poligon",
               "icon": "surveyTraverse",
@@ -23086,51 +23869,19 @@
               "keep": false
             },
             {
-              "label": "Koordinat sistemi",
-              "icon": "crs",
+              "label": "Noktalar",
+              "icon": "point",
               "items": [
                 {
-                  "command": "crs.set",
-                  "size": "large"
-                },
-                {
-                  "command": "crs.transform",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false,
-              "launcher": {
-                "command": "crs.set",
-                "title": "Proje ayarları: koordinat sistemi"
-              }
-            },
-            {
-              "label": "Koordinatlar",
-              "icon": "crsQuery",
-              "items": [
-                {
-                  "command": "crs.query",
+                  "command": "tool.point",
                   "size": "small"
                 },
                 {
-                  "command": "crs.points",
-                  "size": "small"
-                },
-                {
-                  "command": "view.coords",
+                  "command": "tool.vertexPoints",
                   "size": "small"
                 },
                 {
                   "command": "point.editor",
-                  "size": "small"
-                },
-                {
-                  "command": "transform.fit",
-                  "size": "small"
-                },
-                {
-                  "command": "transform.edgematch",
                   "size": "small"
                 }
               ],
@@ -23138,15 +23889,15 @@
               "keep": false
             },
             {
-              "label": "Arazi analizi",
-              "icon": "volume",
+              "label": "Oturtma",
+              "icon": "vectorFit",
               "items": [
                 {
-                  "command": "analysis.volume",
+                  "command": "transform.fit",
                   "size": "large"
                 },
                 {
-                  "command": "analysis.slope",
+                  "command": "transform.edgematch",
                   "size": "large"
                 }
               ],
@@ -23306,201 +24057,6 @@
                 "args": "\"appearance\"",
                 "title": "Uygulama ayarları: görünüm"
               }
-            }
-          ]
-        },
-        {
-          "id": "processing",
-          "label": "İşlemler",
-          "panels": [
-            {
-              "label": "İşlemler",
-              "icon": "processing",
-              "items": [
-                {
-                  "command": "processing.toolbox",
-                  "size": "large"
-                },
-                {
-                  "command": "processing.history",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Modeller",
-              "icon": "modelNew",
-              "items": [
-                {
-                  "command": "processing.newModel",
-                  "size": "large"
-                },
-                {
-                  "command": "processing.model.builtin.parcelSheet",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Nokta işlemleri",
-              "icon": "numberVertices",
-              "items": [
-                {
-                  "command": "processing.run.points.numberVertices",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Yazı ve etiket",
-              "icon": "edgeLengths",
-              "items": [
-                {
-                  "command": "processing.run.annotation.edgeLengths",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Öznitelik",
-              "icon": "fieldCalc",
-              "items": [
-                {
-                  "command": "processing.run.attributes.calculate",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Seçim",
-              "icon": "selectExpression",
-              "items": [
-                {
-                  "command": "processing.run.selection.byExpression",
-                  "size": "large"
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            }
-          ]
-        },
-        {
-          "id": "tools",
-          "label": "Araçlar",
-          "panels": [
-            {
-              "label": "Komut",
-              "icon": "terminal",
-              "items": [
-                {
-                  "command": "commandline.focus",
-                  "size": "large"
-                },
-                {
-                  "menu": "Çakışma",
-                  "size": "large",
-                  "blocks": [
-                    {
-                      "label": "",
-                      "items": [
-                        "draft.overlap.allow",
-                        "draft.overlap.layer",
-                        "draft.overlap.layers"
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "overflow": [],
-              "keep": false
-            },
-            {
-              "label": "Çizim yardımcıları",
-              "icon": "snap",
-              "items": [
-                {
-                  "command": "draft.snap",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.grid",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.ortho",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.polar",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.tracking",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.topology",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.topologyPoints",
-                  "size": "small"
-                },
-                {
-                  "command": "draft.overlap",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false,
-              "launcher": {
-                "command": "tools.options",
-                "args": "\"snap\"",
-                "title": "Uygulama ayarları: kenetleme"
-              }
-            },
-            {
-              "label": "Stil",
-              "icon": "styles",
-              "items": [
-                {
-                  "command": "style.manager",
-                  "size": "large"
-                },
-                {
-                  "command": "style.svgEditor",
-                  "size": "large"
-                },
-                {
-                  "command": "style.layerStyle",
-                  "size": "small"
-                },
-                {
-                  "command": "style.legend",
-                  "size": "small"
-                },
-                {
-                  "command": "style.assign",
-                  "size": "small"
-                },
-                {
-                  "command": "style.clearSymbol",
-                  "size": "small"
-                }
-              ],
-              "overflow": [],
-              "keep": false
             },
             {
               "label": "Uygulama",
@@ -23533,6 +24089,80 @@
                 {
                   "command": "help.about",
                   "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "output",
+          "label": "Çıktı",
+          "panels": [
+            {
+              "label": "Pafta",
+              "icon": "sheet",
+              "items": [
+                {
+                  "command": "sheet.new",
+                  "size": "small"
+                },
+                {
+                  "command": "sheet.fromTemplate",
+                  "size": "small"
+                },
+                {
+                  "command": "map.sheet",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Lejant",
+              "icon": "legend",
+              "items": [
+                {
+                  "command": "style.legend",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çıktı",
+              "icon": "print",
+              "items": [
+                {
+                  "command": "file.print",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dışa aktar",
+              "icon": "export",
+              "items": [
+                {
+                  "command": "file.export.dxf",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.pdf",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.geojson",
+                  "size": "small"
+                },
+                {
+                  "command": "file.export.ncn",
+                  "size": "small"
                 }
               ],
               "overflow": [],

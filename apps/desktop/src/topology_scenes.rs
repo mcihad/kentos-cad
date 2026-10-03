@@ -78,11 +78,12 @@ pub(crate) fn scenes() -> Vec<Scene> {
     ]
 }
 
-/// Değiştir › Nesne ▾: the panel's seldom used tools, Topolojik temizlik beside Çizimi temizle.
+/// Düzenle › Nesne ▾ (a CBS project's; a CAD project's Değiştir): the panel's seldom used
+/// tools, Topolojik temizlik beside Çizimi temizle.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![(
         "topoloji-liste",
-        |app| app.tab = "modify",
+        |app| app.tab = "edit",
         |s, app| {
             use iced::futures::StreamExt as _;
             let task: iced::Task<Message> =

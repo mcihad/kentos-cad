@@ -66,24 +66,28 @@
     "label": "Giriş"
    },
    {
-    "id": "draw",
-    "label": "Çizim"
+    "id": "insert",
+    "label": "Ekle"
+   },
+   {
+    "id": "annotate",
+    "label": "Açıklama"
    },
    {
     "id": "modify",
     "label": "Değiştir"
    },
    {
-    "id": "map",
-    "label": "Ölçme"
-   },
-   {
     "id": "view",
     "label": "Görünüm"
    },
    {
-    "id": "tools",
-    "label": "Araçlar"
+    "id": "manage",
+    "label": "Yönet"
+   },
+   {
+    "id": "output",
+    "label": "Çıktı"
    },
    {
     "id": "selection",
@@ -101,28 +105,32 @@
     "label": "Giriş"
    },
    {
-    "id": "draw",
-    "label": "Çizim"
-   },
-   {
-    "id": "modify",
-    "label": "Değiştir"
-   },
-   {
     "id": "map",
     "label": "Harita"
+   },
+   {
+    "id": "data",
+    "label": "Veri"
+   },
+   {
+    "id": "edit",
+    "label": "Düzenle"
+   },
+   {
+    "id": "analysis",
+    "label": "Analiz"
+   },
+   {
+    "id": "survey",
+    "label": "Ölçme"
    },
    {
     "id": "view",
     "label": "Görünüm"
    },
    {
-    "id": "processing",
-    "label": "İşlemler"
-   },
-   {
-    "id": "tools",
-    "label": "Araçlar"
+    "id": "output",
+    "label": "Çıktı"
    },
    {
     "id": "selection",
@@ -184,23 +192,25 @@
     "labels": [
      "Dosya",
      "Giriş",
-     "Çizim",
-     "Değiştir",
      "Harita",
+     "Veri",
+     "Düzenle",
+     "Analiz",
+     "Ölçme",
      "Görünüm",
-     "İşlemler",
-     "Araçlar"
+     "Çıktı"
     ],
     "reserved": [],
     "tips": [
      "DO",
      "GI",
-     "C",
-     "DE",
      "H",
+     "V",
+     "DU",
+     "A",
+     "O",
      "GO",
-     "I",
-     "A"
+     "C"
     ]
    },
    {
@@ -380,12 +390,13 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
-     "Değiştir",
      "Harita",
+     "Veri",
+     "Düzenle",
+     "Analiz",
+     "Ölçme",
      "Görünüm",
-     "İşlemler",
-     "Araçlar"
+     "Çıktı"
     ],
     "tips": {
      "quickAccess": [
@@ -397,12 +408,13 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
-      "DE",
       "H",
+      "V",
+      "DU",
+      "A",
+      "O",
       "GO",
-      "I",
-      "A"
+      "C"
      ]
     }
    },
@@ -413,12 +425,13 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
-     "Değiştir",
      "Harita",
+     "Veri",
+     "Düzenle",
+     "Analiz",
+     "Ölçme",
      "Görünüm",
-     "İşlemler",
-     "Araçlar",
+     "Çıktı",
      "Seçim"
     ],
     "tips": {
@@ -432,12 +445,13 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
-      "DE",
       "H",
-      "GO",
-      "I",
+      "V",
+      "DU",
       "A",
+      "O",
+      "GO",
+      "C",
       "S"
      ]
     }
@@ -449,11 +463,12 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
+     "Ekle",
+     "Açıklama",
      "Değiştir",
-     "Ölçme",
      "Görünüm",
-     "Araçlar"
+     "Yönet",
+     "Çıktı"
     ],
     "tips": {
      "quickAccess": [
@@ -464,11 +479,12 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
+      "E",
+      "A",
       "DE",
-      "O",
       "GO",
-      "A"
+      "Y",
+      "C"
      ]
     }
    },
@@ -479,12 +495,13 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
-     "Değiştir",
      "Harita",
+     "Veri",
+     "Düzenle",
+     "Analiz",
+     "Ölçme",
      "Görünüm",
-     "İşlemler",
-     "Araçlar"
+     "Çıktı"
     ],
     "tips": {
      "quickAccess": [
@@ -495,12 +512,13 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
-      "DE",
       "H",
+      "V",
+      "DU",
+      "A",
+      "O",
       "GO",
-      "I",
-      "A"
+      "C"
      ]
     }
    },
@@ -511,12 +529,13 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
-     "Değiştir",
      "Harita",
+     "Veri",
+     "Düzenle",
+     "Analiz",
+     "Ölçme",
      "Görünüm",
-     "İşlemler",
-     "Araçlar"
+     "Çıktı"
     ],
     "tips": {
      "quickAccess": [
@@ -533,12 +552,13 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
-      "DE",
       "H",
+      "V",
+      "DU",
+      "A",
+      "O",
       "GO",
-      "I",
-      "A"
+      "C"
      ]
     }
    },
@@ -549,11 +569,12 @@
     "tabLabels": [
      "Dosya",
      "Giriş",
-     "Çizim",
+     "Ekle",
+     "Açıklama",
      "Değiştir",
-     "Ölçme",
      "Görünüm",
-     "Araçlar",
+     "Yönet",
+     "Çıktı",
      "Seçim"
     ],
     "tips": {
@@ -561,11 +582,12 @@
      "tabs": [
       "DO",
       "GI",
-      "C",
-      "DE",
-      "O",
-      "GO",
+      "E",
       "A",
+      "DE",
+      "GO",
+      "Y",
+      "C",
       "S"
      ]
     }

@@ -223,19 +223,43 @@ mod tests {
     }
 
     #[test]
-    fn the_ribbon_follows_the_mode_and_a_hidden_tab_gives_way_to_giris() {
+    fn the_ribbon_follows_the_type_and_a_tab_it_lacks_gives_way_to_giris() {
         let mut app = app_with_drawing();
+        // Each type its own ribbon, the web's (the inventory carries them; docs/adr/0165 §6).
         let gis: Vec<&str> = app.ribbon_tabs().map(|t| t.label).collect();
-        assert!(gis.contains(&"Harita") && gis.contains(&"İşlemler"));
+        assert_eq!(
+            gis,
+            [
+                "Dosya",
+                "Giriş",
+                "Harita",
+                "Veri",
+                "Düzenle",
+                "Analiz",
+                "Ölçme",
+                "Görünüm",
+                "Çıktı"
+            ]
+        );
         run(&mut app, "workspace.cad");
-        // The web's CAD ribbon (the inventory carries it): no İşlemler, Harita is Ölçme.
         let cad: Vec<&str> = app.ribbon_tabs().map(|t| t.label).collect();
-        assert!(cad.contains(&"Ölçme"), "{cad:?}");
-        assert!(!cad.contains(&"İşlemler"), "{cad:?}");
+        assert_eq!(
+            cad,
+            [
+                "Dosya",
+                "Giriş",
+                "Ekle",
+                "Açıklama",
+                "Değiştir",
+                "Görünüm",
+                "Yönet",
+                "Çıktı"
+            ]
+        );
         // CBS hides the advanced drawing tools and shows Giriş's Harita panel.
         run(&mut app, "workspace.gis");
-        let draw = app.ribbon_tabs().find(|t| t.id == "draw").expect("Çizim");
-        let ids: Vec<&str> = draw
+        let edit = app.ribbon_tabs().find(|t| t.id == "edit").expect("Düzenle");
+        let ids: Vec<&str> = edit
             .panels
             .iter()
             .flat_map(|p| p.items.iter())
@@ -247,13 +271,13 @@ mod tests {
         assert!(!ids.contains(&"tool.ellipse"), "{ids:?}");
         let home = app.ribbon_tabs().find(|t| t.id == "home").expect("Giriş");
         assert!(home.panels.iter().any(|p| p.label == "Harita"));
-        // A tab the type hides gives way to Giriş.
-        app.tab = "processing";
+        // A tab the other type lacks gives way to Giriş.
+        app.tab = "analysis";
         run(&mut app, "workspace.cad");
         assert_eq!(app.shown_tab(), "home");
-        // A tab the mode keeps stays open.
-        app.tab = "modify";
+        // A tab both have stays open.
+        app.tab = "output";
         run(&mut app, "workspace.gis");
-        assert_eq!(app.shown_tab(), "modify");
+        assert_eq!(app.shown_tab(), "output");
     }
 }

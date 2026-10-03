@@ -400,7 +400,7 @@ mod tests {
                     .registry
                     .save_model(model)
                     .expect("a user's model");
-                app.choose_tab("processing");
+                app.choose_tab("analysis");
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);

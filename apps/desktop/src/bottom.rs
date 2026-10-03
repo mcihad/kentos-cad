@@ -461,32 +461,26 @@ mod tests {
         assert_eq!(app.bottom_tab, BottomTab::Coords);
     }
 
-    /// Araçlar › Komut's Python konsolu opens the panel on the Python tab,
-    /// from any other tab, and closes it from there.
+    /// The Komut panel's Python konsolu (a CAD project's Yönet, a CBS
+    /// project's Analiz) opens the panel on the Python tab, from any other
+    /// tab, and closes it from there.
     #[test]
     fn python_konsolu_is_in_the_ribbon_and_opens_the_python_tab() {
         use crate::catalog::{Item, PYTHON_CONSOLE, catalog};
-        let komut = catalog()
-            .tabs()
-            .find(|tab| tab.id == "tools")
-            .and_then(|tab| tab.panels.iter().find(|p| p.label == "Komut"))
-            .expect("Araçlar › Komut");
-        assert!(
-            komut
-                .items
-                .iter()
-                .any(|i| matches!(i, Item::Command { id, size: crate::catalog::Size::Large } if *id == PYTHON_CONSOLE))
-        );
-        for mode in [
-            kentos_contracts::Workspace::Cad,
-            kentos_contracts::Workspace::Gis,
+        for (mode, tab) in [
+            (kentos_contracts::Workspace::Cad, "manage"),
+            (kentos_contracts::Workspace::Gis, "analysis"),
         ] {
+            let komut = catalog()
+                .tabs_in(mode)
+                .find(|t| t.id == tab)
+                .and_then(|t| t.panels.iter().find(|p| p.label == "Komut"))
+                .unwrap_or_else(|| panic!("{mode:?}: {tab} › Komut"));
             assert!(
-                catalog()
-                    .tabs_in(mode)
-                    .flat_map(|t| t.panels.iter())
-                    .flat_map(|p| p.items.iter())
-                    .any(|i| matches!(i, Item::Command { id, .. } if *id == PYTHON_CONSOLE)),
+                komut
+                    .items
+                    .iter()
+                    .any(|i| matches!(i, Item::Command { id, size: crate::catalog::Size::Large } if *id == PYTHON_CONSOLE)),
                 "{mode:?}"
             );
         }

@@ -357,8 +357,9 @@ fn screens() {
                         );
                         Task::none()
                     }
+                    // Görünüm › Uygulama's Sunucuyu denetle (a CBS project's ribbon).
                     _ => {
-                        app.tab = "tools";
+                        app.tab = "view";
                         app.output("Sunucuya soruluyor: http://127.0.0.1:8787…");
                         app.server_checked(Ok(Health {
                             status: "ok".into(),

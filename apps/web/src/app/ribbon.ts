@@ -12,6 +12,12 @@ import type { Workspace } from '../model/projectSettings';
  * commands one by one, so anything added there shows up here by itself.
  * Only the Giriş tab hand-picks the everyday tools (each also lives in its
  * own tab) and the quick access bar starts with save, undo and redo.
+ *
+ * Each project type has its own ribbon (docs/adr/0165 §6): a CAD project
+ * AutoCAD's 2D drafting tabs (CAD_RIBBON_TABS), a CBS project the map
+ * work's (GIS_RIBBON_TABS). RIBBON_TABS is the ribbon with no type, every
+ * menu as a tab: what the composition rules are tested on (ribbon.test.ts)
+ * and where the contextual Seçim tab is defined; no project shows it.
  */
 export type RibbonSource =
   /** The titled blocks of a main menu, one panel each (optionally only the named ones). */
@@ -21,7 +27,9 @@ export type RibbonSource =
   /**
    * A hand-picked panel; `more` names the tab that holds the whole family,
    * `compact` draws every button small (AutoCAD's Modify panel), and
-   * `workspaces` shows it only in those work modes.
+   * `workspaces` shows it only in those work modes. `rest` puts the other
+   * tools of a group (`draw`) or a group's section (`map/measure`) under the
+   * panel's ▾, as AutoCAD's panel expander; `under` puts commands there.
    */
   | {
       readonly pick: string;
@@ -30,6 +38,8 @@ export type RibbonSource =
       readonly more?: string;
       readonly compact?: boolean;
       readonly workspaces?: readonly Workspace[];
+      readonly rest?: string;
+      readonly under?: readonly string[];
     }
   /** Panels with live fields rather than commands. */
   | { readonly builtin: BuiltinPanel };
@@ -141,6 +151,183 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
   },
 ];
 
+/** Giriş's clipboard and selection panels, the same in every ribbon. */
+const CLIPBOARD_AND_SELECTION: readonly RibbonSource[] = [{ menu: 'edit', sections: ['Pano'] }, { tools: 'select' }, { menu: 'edit', sections: ['Seçim'] }];
+/** The everyday drawing and modifying tools of Giriş. */
+const EVERYDAY_DRAW = ['tool.line', 'tool.polyline', 'tool.circle', 'tool.arc', 'tool.polygon', 'tool.adjoin', 'tool.rectangle'];
+/** A CAD project's Giriş has no drawing tab beside it: Elips, Eğri and Nokta show too (AutoCAD's Draw panel). */
+const CAD_DRAW = [...EVERYDAY_DRAW, 'tool.ellipse', 'tool.spline', 'tool.point'];
+const EVERYDAY_MODIFY = ['tool.move', 'tool.copy', 'tool.rotate', 'tool.mirror', 'tool.scale', 'tool.offset', 'tool.trim', 'tool.extend', 'tool.fillet'];
+const HOME_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = {
+  Katmanlar: { command: 'style.layerStyle', title: 'Katman stili…' },
+  Özellikler: { command: 'file.settings', title: 'Proje ayarları: birimler, hassasiyet ve çizim ölçeği' },
+};
+const VIEW_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = { Görünüş: { command: 'tools.options', args: 'appearance', title: 'Uygulama ayarları: görünüm' } };
+const AIDS_LAUNCHER: Readonly<Record<string, RibbonLauncher>> = { 'Çizim yardımcıları': { command: 'tools.options', args: 'snap', title: 'Uygulama ayarları: kenetleme' } };
+const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.ncn'];
+const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'file.export.ncn'];
+const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
+const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
+
+/**
+ * A CAD project's ribbon (docs/adr/0165 §6), AutoCAD's 2D drafting tabs: Giriş with drawing, modifying, annotation,
+ * layers, blocks, properties and measuring (the other drawing tools and the survey computations under their panels'
+ * ▾); Ekle with blocks and imports; Açıklama with text, dimensions, leaders, hatches and markup; Yönet with cleaning,
+ * styles and the commands; Çıktı with sheets, printing and exports.
+ */
+export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
+  { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
+  {
+    id: 'home',
+    label: 'Giriş',
+    sources: [
+      ...CLIPBOARD_AND_SELECTION,
+      { pick: 'Çizim', icon: 'line', commands: CAD_DRAW, rest: 'draw' },
+      { pick: 'Değiştir', icon: 'move', commands: EVERYDAY_MODIFY, more: 'modify', compact: true },
+      { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.leader', 'tool.hatch'], more: 'annotate' },
+      { builtin: 'layers' },
+      { pick: 'Blok', icon: 'blockInsert', commands: ['tool.blockInsert', 'tool.blockDefine', 'block.panel'], more: 'insert' },
+      { builtin: 'properties' },
+      { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'] },
+    ],
+    lead: ['edit.paste'],
+    keep: ['Çizim', 'Değiştir'],
+    launchers: HOME_LAUNCHERS,
+  },
+  {
+    id: 'insert',
+    label: 'Ekle',
+    sources: [
+      { menu: 'draw', sections: ['Blok'] },
+      { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
+      { pick: 'Metin', icon: 'textFile', commands: ['tool.placeTextFile'] },
+    ],
+    // Blok ekle leads its panel, as AutoCAD's Insert.
+    lead: ['tool.blockInsert'],
+  },
+  {
+    id: 'annotate',
+    label: 'Açıklama',
+    // AutoCAD's Annotate tab, a panel a kind; a tool the draw menu's Açıklama block gains later shows in a panel of its own.
+    sources: [
+      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.placeTextFile', 'text.findReplace'] },
+      { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension'] },
+      { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
+      { pick: 'Tarama', icon: 'hatch', commands: ['tool.hatch'] },
+      { pick: 'İşaretleme', icon: 'revcloud', commands: ['tool.revcloud'] },
+      { menu: 'draw', sections: ['Açıklama'] },
+      { menu: 'edit', sections: ['Bul'] },
+    ],
+  },
+  { id: 'modify', label: 'Değiştir', sources: [{ menu: 'modify' }] },
+  { id: 'view', label: 'Görünüm', sources: [{ menu: 'view' }], launchers: VIEW_LAUNCHERS },
+  {
+    id: 'manage',
+    label: 'Yönet',
+    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge'] }, { menu: 'tools' }, { menu: 'help' }],
+    launchers: AIDS_LAUNCHER,
+  },
+  {
+    id: 'output',
+    label: 'Çıktı',
+    sources: [
+      { pick: 'Pafta', icon: 'sheet', commands: SHEET_LAYOUTS },
+      { menu: 'file', sections: ['Çıktı'] },
+      { pick: 'Dışa aktar', icon: 'export', commands: EXPORTS },
+    ],
+  },
+  SELECTION_TAB,
+];
+
+/**
+ * A CBS project's ribbon (docs/adr/0165 §6), after ArcGIS Pro, QGIS and Netcad: Harita with navigation, the
+ * coordinate system, measuring, parcels and styles; Veri with layers, imports and exports, coordinates, attributes and
+ * blocks;
+ * Düzenle with creating and modifying objects and the editing aids; Analiz with the processing tools, models, terrain
+ * analysis and the command line; Ölçme with the survey computations and points; Çıktı with sheets, the legend and exports.
+ */
+export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
+  { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
+  {
+    id: 'home',
+    label: 'Giriş',
+    sources: [
+      ...CLIPBOARD_AND_SELECTION,
+      { pick: 'Çizim', icon: 'line', commands: EVERYDAY_DRAW, more: 'edit' },
+      { pick: 'Değiştir', icon: 'move', commands: EVERYDAY_MODIFY, more: 'edit', compact: true },
+      { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'text.findReplace'], more: 'edit' },
+      { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map' },
+      { builtin: 'layers' },
+      { builtin: 'properties' },
+    ],
+    lead: ['edit.paste'],
+    keep: ['Çizim', 'Değiştir'],
+    launchers: HOME_LAUNCHERS,
+  },
+  {
+    id: 'map',
+    label: 'Harita',
+    sources: [
+      { menu: 'view', sections: ['Yakınlaştır'] },
+      { menu: 'crs', sections: ['Koordinat sistemi'] },
+      { menu: 'map', sections: ['Parsel', 'Ölçme'] },
+      { menu: 'tools', sections: ['Stil'] },
+    ],
+    launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
+  },
+  {
+    id: 'data',
+    label: 'Veri',
+    sources: [
+      { pick: 'Katman', icon: 'layerAdd', commands: ['layer.new', 'layer.newGroup', 'layer.showAll'] },
+      { menu: 'file', sections: ['Dosya alışverişi'] },
+      { menu: 'crs', sections: ['Koordinatlar'] },
+      { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
+      // The drawing's block definitions are its library, as its layers and attributes are.
+      { menu: 'draw', sections: ['Blok'] },
+    ],
+    lead: ['tool.blockInsert'],
+  },
+  {
+    id: 'edit',
+    label: 'Düzenle',
+    sources: [
+      { menu: 'draw', sections: ['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Açıklama'] },
+      { menu: 'modify' },
+      { menu: 'tools', sections: ['Çizim yardımcıları'] },
+    ],
+    launchers: AIDS_LAUNCHER,
+  },
+  { id: 'analysis', label: 'Analiz', sources: [{ menu: 'processing' }, { menu: 'map', sections: ['Arazi'] }, { menu: 'analysis', sections: ['Arazi analizi'] }, { menu: 'tools', sections: ['Komut'] }] },
+  {
+    id: 'survey',
+    label: 'Ölçme',
+    sources: [
+      { menu: 'calc' },
+      { pick: 'Noktalar', icon: 'point', commands: ['tool.point', 'tool.vertexPoints', 'point.editor'] },
+      { pick: 'Oturtma', icon: 'vectorFit', commands: ['transform.fit', 'transform.edgematch'] },
+    ],
+  },
+  { id: 'view', label: 'Görünüm', sources: [{ menu: 'view' }, { menu: 'tools', sections: ['Uygulama'] }, { menu: 'help' }], launchers: VIEW_LAUNCHERS },
+  {
+    id: 'output',
+    label: 'Çıktı',
+    sources: [
+      { pick: 'Pafta', icon: 'sheet', commands: SHEET_LAYOUTS },
+      { menu: 'map', sections: ['Pafta'] },
+      { pick: 'Lejant', icon: 'legend', commands: ['style.legend'] },
+      { menu: 'file', sections: ['Çıktı'] },
+      { pick: 'Dışa aktar', icon: 'export', commands: EXPORTS },
+    ],
+  },
+  SELECTION_TAB,
+];
+
+/** A project type's ribbon; none: the ribbon with no type (RIBBON_TABS). */
+export function ribbonSpecs(type: Workspace | null | undefined): readonly RibbonTabSpec[] {
+  return type === 'cad' ? CAD_RIBBON_TABS : type === 'gis' ? GIS_RIBBON_TABS : RIBBON_TABS;
+}
+
 /** Always on the quick access bar; the user may add more (and remove what they added). */
 export const QUICK_ACCESS: readonly string[] = ['file.save', 'edit.undo', 'edit.redo'];
 
@@ -223,7 +410,7 @@ export interface RibbonInputs {
 }
 
 type Entry = { kind: 'command'; id: string } | { kind: 'menu'; menu: SubmenuSpec } | { kind: 'builtin'; name: BuiltinPanel };
-type Draft = { label: string; icon?: string; entries: Entry[]; more?: string; compact?: boolean };
+type Draft = { label: string; icon?: string; entries: Entry[]; more?: string; compact?: boolean; under: string[]; picked: Set<string> };
 
 const BUILTIN_LABEL: Record<BuiltinPanel, { label: string; icon: string }> = {
   layers: { label: 'Katmanlar', icon: 'layers' },
@@ -244,7 +431,7 @@ const BUILTIN_LABEL: Record<BuiltinPanel, { label: string; icon: string }> = {
  * button, and so is a tool with `methods`; `rare` tools go under the
  * panel's ▾. The work mode (`inputs.filter`) leaves out what it hides.
  */
-export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[] = RIBBON_TABS): RibbonTab[] {
+export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[] = ribbonSpecs(inputs.filter?.id)): RibbonTab[] {
   const filter = inputs.filter ?? SHOW_ALL;
   const tools = inputs.tools.filter((t) => filter.tool(t));
   const toolOf = new Map(tools.map((t) => [`tool.${t.id}`, t]));
@@ -255,7 +442,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
     const panel = (label: string, icon?: string, more?: string, compact?: boolean): Draft => {
       const found = drafts.find((d) => d.label === label);
       if (found) return found;
-      const d: Draft = { label, icon, entries: [], more, compact };
+      const d: Draft = { label, icon, entries: [], more, compact, under: [], picked: new Set() };
       drafts.push(d);
       return d;
     };
@@ -278,7 +465,17 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
         // A type's own panel: left out where no type filters (the inventory's places).
         if (src.workspaces && (filter.id === null || !src.workspaces.includes(filter.id))) continue;
         const d = panel(src.pick, src.icon, src.more, src.compact);
-        for (const id of src.commands) command(d, id);
+        for (const id of src.commands) {
+          d.picked.add(id);
+          command(d, id);
+        }
+        // Under the ▾: the group's other tools (AutoCAD's panel expander) and the commands named.
+        const rest = src.rest ? tools.filter((t) => t.group === src.rest || `${t.group}/${t.section ?? ''}` === src.rest).map((t) => `tool.${t.id}`) : [];
+        for (const id of [...rest, ...(src.under ?? [])]) {
+          if (seen.has(id) || !filter.command(id)) continue;
+          seen.add(id);
+          d.under.push(id);
+        }
       } else if ('tools' in src) {
         for (const s of toolSections(tools, src.tools)) {
           const d = panel(s.label);
@@ -301,12 +498,13 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
     const lead = new Set(spec.lead ?? []);
     const leads = (e: Entry) => e.kind === 'command' && lead.has(e.id);
     const panels = drafts
-      .filter((d) => d.entries.length)
+      .filter((d) => d.entries.length || d.under.length)
       .map((d): RibbonPanel => {
         const ordered = [...d.entries.filter(leads), ...d.entries.filter((e) => !leads(e))];
-        const rare = (e: Entry) => e.kind === 'command' && !!toolOf.get(e.id)?.rare;
-        // Rare tools go under the ▾, unless nothing would be left on the panel.
-        const overflow = ordered.every(rare) ? [] : ordered.filter(rare).map((e) => (e.kind === 'command' ? e.id : ''));
+        // A pick shows what it names, seldom used or not (Yönet's Temizlik, Açıklama's İşaretleme).
+        const rare = (e: Entry) => e.kind === 'command' && !d.picked.has(e.id) && !!toolOf.get(e.id)?.rare;
+        // Rare tools go under the ▾, unless nothing would be left on the panel; and what the pick put there.
+        const overflow = [...(ordered.every(rare) ? [] : ordered.filter(rare).map((e) => (e.kind === 'command' ? e.id : ''))), ...d.under];
         const shown = groupSplits(ordered.filter((e) => !overflow.includes(e.kind === 'command' ? e.id : '')), toolOf);
         const primary = (x: Pre) =>
           x.kind === 'command' ? !!toolOf.get(x.id)?.primary || PRIMARY_COMMANDS.has(x.id) : x.kind === 'split' ? x.members.some((m) => m.primary) : x.kind === 'menu' ? !!x.menu.primary : false;
@@ -320,7 +518,7 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
           if (x.kind === 'menu') return { kind: 'menu', menu: x.menu, size };
           return { kind: 'split', key: x.key, entries: x.entries, size };
         });
-        const first = ordered[0];
+        const first: Entry = ordered[0] ?? { kind: 'command', id: d.under[0] };
         const icon = d.icon ?? (first.kind === 'command' ? inputs.iconOf(first.id) : first.kind === 'menu' ? first.menu.icon : undefined) ?? 'more';
         const launcher = spec.launchers?.[d.label] ?? (d.more ? { tab: d.more, title: `Tüm araçlar: ${specs.find((s) => s.id === d.more)?.label ?? d.more} sekmesi` } : undefined);
         return { label: d.label, icon, items, launcher, overflow: overflow.length ? overflow : undefined, keep: spec.keep?.includes(d.label) || undefined };

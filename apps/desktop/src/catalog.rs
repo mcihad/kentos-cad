@@ -374,11 +374,12 @@ fn desktop_commands() -> Vec<Command> {
 }
 
 /// Puts the desktop's own commands in the ribbon: Python konsolu after
-/// Komut satırına git, in Araçlar › Komut.
+/// Komut satırına git, in the Komut panel (a CAD project's Yönet, a CBS
+/// project's Analiz; docs/adr/0165 §6).
 fn place_desktop_commands(tabs: &mut [Tab]) {
     let komut = tabs
         .iter_mut()
-        .filter(|tab| tab.id == "tools")
+        .filter(|tab| !tab.contextual)
         .flat_map(|tab| tab.panels.iter_mut())
         .filter(|panel| {
             panel.items.iter().any(|item| {

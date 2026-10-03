@@ -82,10 +82,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
             hover(app, [44.0, 8.0]);
             app.hover_card_due(app.selection.hover_version());
         }),
-        // Değiştir's Parçaları birleştir on the parcel and its neighbour: one area of four parts.
+        // Düzenle's Parçaları birleştir on the parcel and its neighbour: one area of four parts.
         ("parcalari-birlestir", |app| {
             open(app, parts_ground());
-            app.tab = "modify";
+            app.tab = "edit";
             app.selection.set([PARCEL, NEIGHBOUR]);
             run(app, "tool.partsJoin");
             panel_room(app);

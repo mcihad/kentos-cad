@@ -531,8 +531,10 @@ mod tests {
         // Kaydet is the only usable one of the fixed three (nothing to undo yet).
         assert_eq!(tip(&app, TipKey::Quick("file.save")), Some("1".into()));
         assert_eq!(tip(&app, TipKey::Quick("edit.undo")), None);
+        // A drawing not asked its type shows the CBS type's ribbon.
         assert_eq!(tip(&app, TipKey::Tab("home")), Some("GI".into()));
-        assert_eq!(tip(&app, TipKey::Tab("draw")), Some("C".into()));
+        assert_eq!(tip(&app, TipKey::Tab("edit")), Some("DU".into()));
+        assert_eq!(tip(&app, TipKey::Tab("output")), Some("C".into()));
         assert_eq!(tip(&app, TipKey::Tab("view")), Some("GO".into()));
         // F6 again: away.
         let _ = app.update(Message::Run("view.keyTips"));
@@ -543,8 +545,9 @@ mod tests {
     fn a_tab_s_letters_open_it_and_its_controls_get_letters_that_run_them() {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("view.keyTips"));
-        letter(&mut app, "ç");
-        assert_eq!(app.shown_tab(), "draw", "Çizim opens (ç folds to C)");
+        letter(&mut app, "d");
+        letter(&mut app, "ü");
+        assert_eq!(app.shown_tab(), "edit", "Düzenle opens (ü folds to U)");
         assert_eq!(
             app.key_tips.as_ref().map(|t| t.level),
             Some(Level::Controls)
@@ -565,7 +568,7 @@ mod tests {
         let _ = app.update(Message::Run("view.keyTips"));
         letter(&mut app, "g");
         assert_eq!(app.key_tips.as_ref().map(|t| t.typed.as_str()), Some("G"));
-        let dim = app.key_tip(&TipKey::Tab("draw")).expect("Çizim's tip");
+        let dim = app.key_tip(&TipKey::Tab("edit")).expect("Düzenle's tip");
         assert!(dim.dim, "what does not start with G dims");
         named(&mut app, Named::Backspace);
         assert_eq!(app.key_tips.as_ref().map(|t| t.typed.as_str()), Some(""));
@@ -606,18 +609,18 @@ mod tests {
         let mut app = app_with_drawing();
         let _ = app.update(Message::Run("view.ribbonCollapse"));
         assert!(app.ribbon_collapsed);
-        let _ = app.update(Message::RibbonTab("draw"));
+        let _ = app.update(Message::RibbonTab("edit"));
         assert!(app.ribbon_peek, "the tab opens over the drawing");
-        assert_eq!(app.shown_tab(), "draw");
-        let _ = app.update(Message::RibbonTab("draw"));
+        assert_eq!(app.shown_tab(), "edit");
+        let _ = app.update(Message::RibbonTab("edit"));
         assert!(!app.ribbon_peek, "the same tab closes it");
-        let _ = app.update(Message::RibbonTab("modify"));
+        let _ = app.update(Message::RibbonTab("map"));
         let _ = app.update(Message::Run("tool.line"));
         assert!(!app.ribbon_peek, "a command closes it");
-        let _ = app.update(Message::RibbonTab("modify"));
+        let _ = app.update(Message::RibbonTab("map"));
         named(&mut app, Named::Escape);
         assert!(!app.ribbon_peek, "Esc closes it");
-        let _ = app.update(Message::RibbonTab("modify"));
+        let _ = app.update(Message::RibbonTab("map"));
         let _ = app.update(Message::RibbonPeekAway);
         assert!(!app.ribbon_peek, "a press outside closes it");
         // The key tips open a folded ribbon's tab over the drawing too.
@@ -700,7 +703,7 @@ mod screens {
                         }
                         "katli-acik" => {
                             let _ = app.update(Message::Run("view.ribbonCollapse"));
-                            let _ = app.update(Message::RibbonTab("draw"));
+                            let _ = app.update(Message::RibbonTab("edit"));
                         }
                         _ => {
                             let _ = app.update(Message::Run("view.ribbonCollapse"));

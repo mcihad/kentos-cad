@@ -80,7 +80,7 @@ fn upside(app: &mut App) {
     o.text("cizim", [24.0, 5.0], "Park", 1.6, 30.0);
     open(app, o);
     app.selection.set([Slot(2), Slot(3), Slot(4)]);
-    app.tab = "modify";
+    app.tab = "edit";
     forget(app);
 }
 

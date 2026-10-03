@@ -4,6 +4,7 @@ import { BUILTIN_MODELS } from '../processing/builtin/models';
 import { ProcessingRegistry } from '../processing/registry';
 import { WORKSPACE_IDS } from '../model/projectSettings';
 import { TOOL_CATALOG } from '../tools/catalog';
+import { ICONS } from '../ui/icons';
 import { menuBlocks, visibleMenus, type MenuSpec } from './menus';
 import { panelCommands, RIBBON_TABS, ribbonTabs } from './ribbon';
 import { effectiveWorkspace, SHOW_ALL, WORKSPACES, workspaceById, workspaceFilter, type WorkspaceFilter } from './workspaces';
@@ -70,17 +71,62 @@ describe('project types (docs/adr/0165)', () => {
     }
   });
 
-  it('CAD leaves out the map, coordinate and processing menus; what is left of the map tab is measuring', () => {
+  it('gives CAD AutoCAD’s drafting tabs, measuring on Giriş with the survey computations under its ▾ (docs/adr/0165 §6)', () => {
     const cad = filterFor('cad');
     // Survey computations (Hesap) are measuring: CAD keeps them.
     expect(visibleMenus(cad).map((m) => m.id)).toEqual(['file', 'edit', 'view', 'draw', 'modify', 'calc', 'analysis', 'tools', 'help']);
     const tabs = tabsIn(cad);
-    expect(tabs.some((t) => t.id === 'processing')).toBe(false);
-    const map = tabs.find((t) => t.id === 'map')!;
-    expect(map.label).toBe('Ölçme');
-    expect(map.panels.flatMap(panelCommands)).toEqual(['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset']);
+    expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Ekle', 'Açıklama', 'Değiştir', 'Görünüm', 'Yönet', 'Çıktı']);
+    expect(tabs.filter((t) => t.contextual).map((t) => t.label)).toEqual(['Seçim']);
+    const home = tabs.find((t) => t.id === 'home')!;
+    expect(home.panels.map((p) => p.label)).toEqual(['Pano', 'Seçim', 'Çizim', 'Değiştir', 'Açıklama', 'Katmanlar', 'Blok', 'Özellikler', 'Ölçme']);
+    const ölçme = home.panels.find((p) => p.label === 'Ölçme')!;
+    expect(ölçme.overflow).toEqual(['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection']);
+    // The other drawing tools under Çizim's ▾: there is no drawing tab. Elips, Eğri and Nokta show.
+    const çizim = home.panels.find((p) => p.label === 'Çizim')!;
+    expect(çizim.overflow).toEqual(expect.arrayContaining(['tool.xline', 'tool.donut', 'tool.divide', 'tool.pointsBetween']));
+    expect(panelCommands(çizim)).toEqual(expect.arrayContaining(['tool.ellipse', 'tool.spline', 'tool.point']));
+    expect(çizim.overflow).not.toContain('tool.ellipse');
+    // Açıklama a panel a kind, as AutoCAD's Annotate; a pick shows what it names, seldom used or not.
+    const panel = (tab: string, label: string) => tabs.find((t) => t.id === tab)!.panels.find((p) => p.label === label)!;
+    expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Kılavuz', 'Tarama', 'İşaretleme']);
+    expect(panelCommands(panel('annotate', 'İşaretleme'))).toEqual(['tool.revcloud']);
+    expect(panel('manage', 'Temizlik').overflow).toBeUndefined();
+    expect(panelCommands(panel('manage', 'Temizlik'))).toEqual(['tool.cleanup', 'tool.topology', 'block.purge']);
     expect(cad.command('tool.parcel')).toBe(false);
     expect(cad.command('tool.hatch')).toBe(true);
+  });
+
+  it('gives CBS the map work’s tabs: Harita, Veri, Düzenle, Analiz, Ölçme (docs/adr/0165 §6)', () => {
+    const tabs = tabsIn(filterFor('gis'));
+    expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Harita', 'Veri', 'Düzenle', 'Analiz', 'Ölçme', 'Görünüm', 'Çıktı']);
+    const panels = (id: string) => tabs.find((t) => t.id === id)!.panels.map((p) => p.label);
+    expect(panels('survey')).toEqual(expect.arrayContaining(['Poligon', 'Nokta alımı', 'Kestirme', 'Noktalar']));
+    expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi analizi']));
+    expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
+    // Blocks are the drawing's library, on Veri: Düzenle keeps to creating and changing objects.
+    expect(panels('data')).toEqual(['Katman', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok']);
+    expect(panels('edit')).not.toContain('Blok');
+  });
+
+  it('gives each type’s panels a title once a tab, a command once a tab and an icon that is drawn', () => {
+    for (const id of ['cad', 'gis'] as const) {
+      for (const t of tabsIn(filterFor(id))) {
+        const labels = t.panels.map((p) => p.label);
+        expect(new Set(labels).size, `${id} ${t.id}`).toBe(labels.length);
+        const ids = t.panels.flatMap(panelCommands);
+        expect(new Set(ids).size, `${id} ${t.id}`).toBe(ids.length);
+        for (const p of t.panels) expect(ICONS, `${id} ${t.id} › ${p.label}`).toHaveProperty(p.icon);
+      }
+    }
+  });
+
+  it('points every “Tüm araçlar” of a type’s Giriş at a tab of that type', () => {
+    for (const id of ['cad', 'gis'] as const) {
+      const tabs = tabsIn(filterFor(id));
+      for (const t of tabs)
+        for (const p of t.panels) if (p.launcher && 'tab' in p.launcher) expect(tabs.some((x) => x.id === (p.launcher as { tab: string }).tab), `${id} ${t.id} › ${p.label}`).toBe(true);
+    }
   });
 
   it('GIS keeps the map work in front and leaves out drafting-only tools', () => {

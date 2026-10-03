@@ -96,6 +96,15 @@ pub fn app_with_drawing() -> App {
     app
 }
 
+/// Makes the open drawing a CAD project (its ribbon, axes and ground) as the
+/// wizard makes one, without a word on the command line.
+pub fn make_cad(app: &mut App) {
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_contracts::Workspace::Cad);
+    doc.model.set_settings(settings);
+}
+
 /// What the command line said last.
 pub fn last_said(app: &App) -> String {
     app.log.last().map(|l| l.text.clone()).unwrap_or_default()
