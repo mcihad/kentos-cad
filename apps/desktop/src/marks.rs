@@ -83,7 +83,21 @@ pub struct Marks {
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
     pub crosshair: Option<Crosshair>,
+    /// The digitizing locks' guides (docs/adr/0166 §6).
+    pub locks: Option<LockMarks>,
     pub colors: MarkColors,
+}
+
+/// The digitizing locks over the drawing (docs/adr/0166 §6; the web's
+/// `drawLocks`), in the snap colour as the other guides.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LockMarks {
+    /// The point the locks are measured from.
+    pub reference: Vec2,
+    /// The locked direction's unit vector, and whether it runs both ways.
+    pub direction: Option<(Vec2, bool)>,
+    /// The locked length, metres.
+    pub length: Option<f64>,
 }
 
 /// How long the crosshair's arms are (`appearance.crosshair`, the web's `CROSSHAIR_ARM`).
@@ -157,6 +171,7 @@ impl Marks {
             && self.grips.is_empty()
             && self.tracking.is_none()
             && self.crosshair.is_none()
+            && self.locks.is_none()
     }
 }
 
@@ -176,6 +191,9 @@ impl<Message> canvas::Program<Message> for Marks {
         grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
+        }
+        if let Some(l) = &self.locks {
+            locks(&mut frame, l, &self.camera, &self.colors);
         }
         if let Some(t) = &self.tracking {
             tracking(&mut frame, t, &self.camera, &self.colors);
@@ -315,6 +333,44 @@ fn select_box(frame: &mut canvas::Frame, b: SelectBox, colors: &MarkColors) {
             ..Stroke::default().with_color(color).with_width(1.0)
         },
     );
+}
+
+/// The web's `drawLocks`: the locked direction a dashed line from the
+/// reference (a ray when it runs one way), the locked length a dashed circle
+/// round it; dashed 3/4 at 85 %, as the tracking guides.
+fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &MarkColors) {
+    let dashed = Stroke {
+        line_dash: LineDash {
+            segments: &[3.0, 4.0],
+            offset: 0,
+        },
+        ..Stroke::default()
+            .with_color(iced::Color {
+                a: colors.snap.a * 0.85,
+                ..colors.snap
+            })
+            .with_width(1.0)
+    };
+    let [ox, oy] = camera.world_to_screen(l.reference);
+    let o = Point::new(ox as f32, oy as f32);
+    if let Some((u, both)) = l.direction {
+        let (dx, dy) = (u.x as f32 * 1e4, -u.y as f32 * 1e4);
+        let back = if both { 1.0 } else { 0.0 };
+        frame.stroke(
+            &Path::line(
+                o - Vector::new(dx * back, dy * back),
+                o + Vector::new(dx, dy),
+            ),
+            dashed,
+        );
+    }
+    if let Some(length) = l.length {
+        let r = (length * camera.scale) as f32;
+        // A circle that is a dot, or wider than any screen, says nothing.
+        if r > 1.0 && r < 1e5 {
+            frame.stroke(&Path::circle(o, r), dashed);
+        }
+    }
 }
 
 /// The web's `drawSnap`: the kind's glyph and its name above-right.

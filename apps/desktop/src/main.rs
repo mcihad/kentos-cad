@@ -50,6 +50,7 @@ mod layout_plan;
 mod layout_plan_tests;
 #[cfg(test)]
 mod layout_tests;
+mod locks;
 mod log_plan;
 #[cfg(test)]
 mod log_plan_tests;

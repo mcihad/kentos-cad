@@ -5,6 +5,7 @@ import { settingDefault } from '../core/settings/schema';
 import type { LineType } from '../model/layers';
 import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './layoutPlan';
 import type { SettingsStore } from './settings/store';
+import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 
@@ -33,6 +34,12 @@ export class DraftingSettings {
   readonly overlapLast = new Signal<Exclude<OverlapMode, 'allow'>>('layer');
   /** Seçili katmanlarda önle's layers, by id: the session's, not a setting (settings hold no lists). */
   readonly overlapLayers = new Signal<ReadonlySet<string>>(new Set());
+  /** The digitizing locks (docs/adr/0166): what holds the next point; a new command starts with none. */
+  readonly locks = new Signal<LockState>(NO_LOCKS);
+  /** What the value card asks for after a lock was chosen from the menu (Uzunluk…, Açı…, Sapma…). */
+  readonly lockAsk = new Signal<LockAsk | null>(null);
+  /** The value card is open beside the cursor: its chips say the locks, so the drawing's lock tag gives way. */
+  readonly valueCard = new Signal(false);
   /** Current properties for new entities; null = katmana göre. */
   readonly color = new Signal<string | null>(null);
   readonly lineType = new Signal<LineType | null>(null);

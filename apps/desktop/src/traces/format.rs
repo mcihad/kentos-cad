@@ -159,6 +159,9 @@ pub struct Expect {
     /// The open window's title; `null` (none) and absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) dialog: Option<Option<String>>,
+    /// The digitizing locks holding the next point, as their chips and
+    /// the command line say them, in order (docs/adr/0166 §6); `[]` for none.
+    pub(super) locks: Option<Vec<String>>,
 }
 
 /// The expected lock: its point (within `clickTolerance`) and its lines in

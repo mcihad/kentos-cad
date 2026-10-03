@@ -1208,6 +1208,16 @@ impl Tool for Path {
         self.base()
     }
 
+    /// The tangent at the last corner (docs/adr/0166 §1); Sabit ilk nokta's
+    /// rays travel nowhere.
+    fn travel(&self) -> Option<Vec2> {
+        if self.fixed() {
+            return None;
+        }
+        self.tangent()
+            .and_then(|t| kentos_geometry_core::tools::locks::unit(Vec2::new(0.0, 0.0), t))
+    }
+
     /// The path so far, for snapping to it (the web's `draftPath`,
     /// docs/adr/0163 §3); Sabit ilk nokta's rays are no path, and İçine
     /// tıkla has no points.

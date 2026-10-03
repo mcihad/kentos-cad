@@ -235,7 +235,7 @@ pub fn value_start(press: &KeyPress) -> Option<char> {
     }
     press
         .character()
-        .filter(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#'))
+        .filter(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#' | '<'))
 }
 
 /// An option letter of the running command: a plain letter, upper-cased the

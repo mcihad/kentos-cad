@@ -4,6 +4,7 @@
 //! product command's answer reaches the user.
 
 use kentos_contracts::CommandResult;
+use kentos_geometry_core::tools::locks::constrain_locked;
 use kentos_geometry_core::tools::point_input::{Tracking, constrain_cursor};
 use kentos_native_application::codes;
 
@@ -20,7 +21,9 @@ pub(crate) const SAME: f64 = 1e-9;
 /// it over) and polar tracking, by the shared core; with the tracking ray it
 /// locked onto. The pointer's own point when there is no point yet, and an
 /// object snap's point exactly: ortho and polar never move it (the web's
-/// `constrainPoint`, docs/adr/0029).
+/// `constrainPoint`, docs/adr/0029). The digitizing locks hold it
+/// (docs/adr/0166 §2): a locked direction projects even a snapped point; a
+/// length alone with the cursor on `from` leaves it there.
 pub(crate) fn constrain(
     from: Option<Vec2>,
     p: &Pointer,
@@ -29,14 +32,25 @@ pub(crate) fn constrain(
     let Some(from) = from else {
         return (p.world, None);
     };
-    let c = constrain_cursor(
-        Some(from),
-        p.world,
-        p.snap.is_some() || p.tracked,
-        cx.draft.ortho != p.shift,
-        cx.draft.polar,
-        cx.view.world_length(CAPTURE_PX),
-    );
+    let exact = p.snap.is_some() || p.tracked;
+    let ortho = cx.draft.ortho != p.shift;
+    let tol = cx.view.world_length(CAPTURE_PX);
+    if cx.locks.any() {
+        let locks = cx.locks.locks(cx.format().angles());
+        return match constrain_locked(
+            Some(from),
+            p.world,
+            exact,
+            ortho,
+            cx.draft.polar,
+            tol,
+            locks,
+        ) {
+            Some(c) => (c.point, c.tracking),
+            None => (from, None),
+        };
+    }
+    let c = constrain_cursor(Some(from), p.world, exact, ortho, cx.draft.polar, tol);
     (c.point, c.tracking)
 }
 

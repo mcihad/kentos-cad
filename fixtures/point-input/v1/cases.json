@@ -82,6 +82,7 @@
     { "name": "nokta", "fn": "looksLikeCoordinate", "text": ".5", "expect": true },
     { "name": "artı", "fn": "looksLikeCoordinate", "text": "+", "expect": true },
     { "name": "eksi ve harf", "fn": "looksLikeCoordinate", "text": "-x", "expect": true },
+    { "name": "küçüktür: doğrultu kilidi (docs/adr/0166 §6)", "fn": "looksLikeCoordinate", "text": "<45", "expect": true },
     { "name": "baştaki boşluk kırpılır", "fn": "looksLikeCoordinate", "text": " 5", "expect": true },
     { "name": "baştaki bölünmez boşluk kırpılır", "fn": "looksLikeCoordinate", "text": " @", "expect": true },
     { "name": "harfle başlayan", "fn": "looksLikeCoordinate", "text": "a1", "expect": false },

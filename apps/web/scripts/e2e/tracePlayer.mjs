@@ -462,6 +462,7 @@ const observe = (mark) =>
   b.eval(`(async () => {
     const k = window.kentos;
     const { parsePrompt } = await import('/src/ui/promptOptions.ts');
+    const { lockWords } = await import('/src/tools/locks.ts');
     const field = document.querySelector('.cursor-input');
     let newest = null;
     for (const e of k.doc.all()) if (!newest || e.id > newest.id) newest = e;
@@ -506,6 +507,8 @@ const observe = (mark) =>
       options: parsePrompt(k.tools.prompt.value).options.map((o) => o.key),
       prompt: k.tools.prompt.value,
       dynamicInput: field && !field.hidden ? field.querySelector('input').value : null,
+      // The digitizing locks holding the next point, as their chips say them (docs/adr/0166 §6).
+      locks: lockWords(k),
       commandLine: document.querySelector('.cmdline__input')?.value ?? null,
       entities: k.doc.size,
       newest: newest && shape(newest),

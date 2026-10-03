@@ -1343,6 +1343,8 @@ export class ViewportController {
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);
     const d0 = import.meta.env.DEV ? performance.now() : 0;
     this.ctx.tools.active.draw?.(g, cam);
+    // The digitizing locks over the tool's preview (docs/adr/0166 §6).
+    this.ctx.tools.drawLocks(g, cam, pal, this.panFrom ? null : this.screenCursor);
     if (import.meta.env.DEV && this.probe) this.probe.overlay = { labels: l1 - l0, tool: performance.now() - d0 };
     // Tracking and the snap additions' guides under the snap marker, as the desktop draws them.
     const guides = this.snapGuides();

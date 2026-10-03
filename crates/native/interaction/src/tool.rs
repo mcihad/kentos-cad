@@ -743,6 +743,10 @@ pub struct Context<'a> {
     /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
     /// session's, not a setting (settings hold no lists).
     pub overlap_layers: &'a [String],
+    /// The digitizing locks (docs/adr/0166): what holds the next point. The
+    /// session lets one-shot locks go when the tool's reference moves; the
+    /// tools read them through [`crate::points`]'s cursor rule.
+    pub locks: &'a mut crate::locks::LockState,
 }
 
 impl Context<'_> {
@@ -977,6 +981,13 @@ pub trait Tool {
     /// cursor) as an open path: snapped to as one more object while
     /// `snap.self` is on (the web's `draftPath`, docs/adr/0163 §3).
     fn draft_path(&self) -> Option<GeomShape> {
+        None
+    }
+    /// The unit direction the object being drawn travels at its last point
+    /// (its last edge's; a path's tangent there): Sapma turns from it and
+    /// Dik açı keeps square to it (docs/adr/0166 §1, §4; the web's
+    /// `travelDirection`). None before the first edge.
+    fn travel(&self) -> Option<Vec2> {
         None
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>);

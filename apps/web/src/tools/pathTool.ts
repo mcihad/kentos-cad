@@ -167,6 +167,11 @@ export class PathTool extends PointInputTool {
     return this.pts.length ? { pts: this.pts, ...(hasBulges(this.bulges) && { bulges: this.bulges }) } : null;
   }
 
+  /** The tangent at the last vertex: Sapma turns from it (docs/adr/0166 §1). */
+  override travelDirection(): Vec2 | null {
+    return this.tangent();
+  }
+
   /** Travel direction at the last vertex (end tangent of the last segment). */
   private tangent(): Vec2 | null {
     const n = this.pts.length;

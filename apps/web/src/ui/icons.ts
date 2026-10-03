@@ -3,6 +3,9 @@
  * icon shows where its clicks go. Stroke = currentColor, 1.4 px.
  */
 const grip = (x: number, y: number) => `<rect x="${x - 1.5}" y="${y - 1.5}" width="3" height="3" fill="currentColor" stroke="none"/>`;
+/** A small padlock in a digitizing lock's corner (docs/adr/0166): its body's top left at (x, y), 5.6 × 4.2. */
+const padlock = (x: number, y: number) =>
+  `<rect x="${x}" y="${y}" width="5.6" height="4.2" rx=".7" fill="currentColor" fill-opacity=".25" stroke-width="1.1"/><path d="M${x + 1.3} ${y}v-1.2a1.5 1.5 0 0 1 3 0V${y}" stroke-width="1.1"/>`;
 /**
  * A text's alignment (docs/adr/0145 §6): the text's box, dashed, its baseline and, filled, the point `p` is. Left,
  * centre and right are x 3, 10 and 17; top, middle, baseline and bottom y 4.5, 8.5, 12.5 and 15.5.
@@ -277,6 +280,13 @@ export const ICONS = {
   eyeOff: '<path d="M4.2 6.3C2.6 7.8 1.8 10 1.8 10S5 15.4 10 15.4c1.4 0 2.6-.4 3.7-1M8 4.8c.6-.1 1.3-.2 2-.2 5 0 8.2 5.4 8.2 5.4s-.7 1.3-2 2.6M3 3l14 14"/>',
   lock: '<rect x="4.5" y="9" width="11" height="8" rx="1.2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/>',
   unlock: '<rect x="4.5" y="9" width="11" height="8" rx="1.2"/><path d="M7 9V6.5a3 3 0 0 1 5.8-1.1"/>',
+  // The digitizing locks (docs/adr/0166): what is held, a padlock in the corner.
+  lockLength: `<path d="M2.5 8h11M2.5 5.5v5M13.5 5.5v5"/><path d="m5 6.5-1.5 1.5L5 9.5M11 6.5l1.5 1.5L11 9.5" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
+  lockAngle: `<path d="M2.5 15.5h8.5M2.5 15.5 10.5 5"/><path d="M7.5 15.5a5 5 0 0 0-1.9-3.9"/>${padlock(12.4, 13.3)}`,
+  lockDeflection: `<path d="M2.5 15 8.5 9h6.5"/><path d="M8.5 9 12 5.5" stroke-dasharray="1.5 1.4" stroke-width="1.1"/><path d="M10.6 6.9a3 3 0 0 1 .9 2.1" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
+  // Kalıcı: the padlock and a turning arrow, it stays for the next points.
+  lockKeep:
+    '<rect x="3" y="9.5" width="8.5" height="7" rx="1.1"/><path d="M5 9.5V7.6a2.25 2.25 0 0 1 4.5 0v1.9"/><path d="M14.2 7.2a3.8 3.8 0 1 1-.6 6.4"/><path d="m14.6 4.6-.4 2.7 2.7.3" stroke-width="1.2"/>',
   // A layer's own snapping (docs/adr/0163 §4): a horseshoe magnet, its poles marked; struck through when off.
   magnet: '<path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/><path d="M4.5 6.8h3.3M12.2 6.8h3.3"/>',
   magnetOff: '<path d="M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z"/><path d="M4.5 6.8h3.3M12.2 6.8h3.3M3 3l14 14"/>',

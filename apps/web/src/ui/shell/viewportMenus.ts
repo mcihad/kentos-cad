@@ -3,6 +3,7 @@ import type { AppContext } from '../../app/context';
 import type { Disposable } from '../../core/disposable';
 import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
 import { canCalcPoint } from '../../tools/pointCalc';
+import { lockReference } from '../../tools/locks';
 import { calcMenuItems } from './calcMenu';
 import { gripItems } from './gripMenu';
 import { choiceItems, parsePrompt, runPromptOption } from '../promptOptions';
@@ -76,6 +77,8 @@ function commandItems(ctx: AppContext): MenuItem[] {
       ? [{ label: 'Nokta hesapla', icon: 'calc', items: () => calcMenuItems(ctx) }]
       : []),
     { label: 'Tek seferlik kenet', icon: 'snap', items: () => snapItems(ctx, false) },
+    // The digitizing locks (docs/adr/0166 §6), while a point is expected after another.
+    ...(lockReference(ctx) ? [{ label: 'Kilit', icon: 'lock', items: () => lockItems(ctx) }] : []),
     commandItem(ctx, 'draft.snap'),
     commandItem(ctx, 'draft.ortho'),
     commandItem(ctx, 'draft.polar'),
@@ -83,6 +86,18 @@ function commandItems(ctx: AppContext): MenuItem[] {
     commandItem(ctx, 'draft.topology'),
     { kind: 'separator' },
     commandItem(ctx, 'view.zoomExtents'),
+  ];
+}
+
+/** Kilit ▸: the locks for the next point; Açı is a CBS project's Semt. */
+function lockItems(ctx: AppContext): MenuItem[] {
+  return [
+    commandItem(ctx, 'draft.lock.length'),
+    commandItem(ctx, 'draft.lock.angle', { label: `${ctx.format.directionName} kilidi…` }),
+    commandItem(ctx, 'draft.lock.deflection'),
+    { kind: 'separator' },
+    commandItem(ctx, 'draft.lock.keep'),
+    commandItem(ctx, 'draft.lock.clear'),
   ];
 }
 

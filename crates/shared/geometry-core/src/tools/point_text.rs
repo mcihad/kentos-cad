@@ -115,13 +115,13 @@ pub fn parse_plain_number(text: &str) -> Option<f64> {
 }
 
 /// Whether text starts like a number or a coordinate: a digit, `.`, `@`,
-/// `+`, `-`, or `#` (a point's name, docs/adr/0152 §4; the web's
-/// `looksLikeCoordinate`).
+/// `+`, `-`, `#` (a point's name, docs/adr/0152 §4) or `<` (a direction
+/// lock, docs/adr/0166 §6; the web's `looksLikeCoordinate`).
 pub fn looks_like_coordinate(text: &str) -> bool {
     js_trim(text)
         .chars()
         .next()
-        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#'))
+        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#' | '<'))
 }
 
 /// `#ad`: a point's name typed for its place (docs/adr/0152 §4), the name

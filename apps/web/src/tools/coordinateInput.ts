@@ -63,7 +63,7 @@ export function parseLength(format: { toMetres(typed: number): number }, text: s
   return n === null ? null : format.toMetres(n);
 }
 
-export const looksLikeCoordinate = (text: string) => /^[@\d.+#-]/.test(text.trim());
+export const looksLikeCoordinate = (text: string) => /^[@\d.+#<-]/.test(text.trim());
 
 /**
  * `#ad`: a point's name typed for its place (docs/adr/0152 §4), the name after the `#` without the spaces round it;

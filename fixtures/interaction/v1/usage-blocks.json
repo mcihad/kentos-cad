@@ -65,8 +65,9 @@
     { "key": "Ctrl+Z", "note": "Patlatma tek adımda geri alınır.", "expect": { "entities": 15 } },
     { "key": "Esc" },
     { "run": "block.purge", "note": "Her blok bir yerde kullanılıyor.", "expect": { "logged": ["Kullanılmayan blok yok."], "entities": 15 } },
-    { "saveAndReopen": true, "note": "Bloklar ve yerleştirmeler dosyayla kalır.", "expect": { "entities": 15, "dirty": false } },
-    { "move": [3, -9] },
+    { "saveAndReopen": true, "note": "Bloklar ve yerleştirmeler dosyayla kalır. Açılış çizimi sığdırır.", "expect": { "entities": 15, "dirty": false } },
+    { "dialog": "Proje türü", "press": "Sonra", "note": "Türü seçilmemiş (eski Hibrit) dosyanın türü açılışta sorulur; Sonra soruyu bırakır (ADR 0165 §1).", "expect": { "dialog": null } },
+    { "move": [3, -4], "note": "Sığdırılan kutunun içinde (README: görünüm değişince)." },
     { "shot": "yeniden-acildi" }
   ]
 }

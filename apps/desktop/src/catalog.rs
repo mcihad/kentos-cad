@@ -275,6 +275,12 @@ pub const PORTED: &[&str] = &[
     // Topolojik düzenleme and its Noktalar da (docs/adr/0160).
     "draft.topology",
     "draft.topologyPoints",
+    // The digitizing locks (docs/adr/0166).
+    "draft.lock.length",
+    "draft.lock.angle",
+    "draft.lock.deflection",
+    "draft.lock.keep",
+    "draft.lock.clear",
     // Çakışma denetimi and its modes (docs/adr/0162).
     "draft.overlap",
     "draft.overlap.allow",

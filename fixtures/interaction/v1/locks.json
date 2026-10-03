@@ -1,0 +1,264 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "locks",
+ "title": "Sayısallaştırma kilitleri: Çoklu çizgi'de 12 yazıp Tab uzunluğu kilitler, tık imlecin doğrultusunda 12 m'de köşe koyar ve kilit kalkar; <100 semti kilitler, yalın 15 kilitli doğrultudadır; Sapma… önceki kenardan 100 grad sağa döndürür; Kilitler kalıcı açıkken 5 m sonraki noktalarda da durur; Esc önce kilitleri kaldırır; Enter yazar",
+ "source": "Web'in tools/locks.ts'i ve ui/shell/CursorInput.ts'i, masaüstünün kentos_interaction::locks'u ve input.rs'i, ADR 0166 §1–§6",
+ "covers": [
+  "UX-04",
+  "UX-05"
+ ],
+ "document": "empty.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.polyline"
+  },
+  {
+   "click": [
+    0,
+    0
+   ],
+   "expect": {
+    "points": 1,
+    "locks": []
+   }
+  },
+  {
+   "move": [
+    24,
+    32
+   ]
+  },
+  {
+   "text": "12",
+   "expect": {
+    "dynamicInput": "12"
+   }
+  },
+  {
+   "key": "Tab",
+   "note": "Tab uzunluğu kilitler; alan doğrultuya (CBS'de semte) geçer ve boşalır.",
+   "expect": {
+    "dynamicInput": "",
+    "locks": [
+     "Uzunluk 12.000 m"
+    ],
+    "logged": [
+     "Kilit: Uzunluk 12.000 m."
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Alan kapanır; kilit durur.",
+   "expect": {
+    "dynamicInput": null,
+    "locks": [
+     "Uzunluk 12.000 m"
+    ]
+   }
+  },
+  {
+   "click": [
+    24,
+    32
+   ],
+   "note": "İmleç doğrultuyu seçer: (3, 4) yönünde 12 m, (7,2; 9,6). Tek seferlik kilit noktayla kalkar.",
+   "expect": {
+    "points": 2,
+    "locks": []
+   }
+  },
+  {
+   "text": "<100",
+   "note": "< değer alanını açar; CBS projesinde semt grad: 100 doğu.",
+   "expect": {
+    "dynamicInput": "<100"
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "dynamicInput": null,
+    "locks": [
+     "Semt 100.0000 g"
+    ],
+    "logged": [
+     "Kilit: Semt 100.0000 g."
+    ]
+   }
+  },
+  {
+   "move": [
+    40,
+    20
+   ],
+   "note": "İmleç doğuya giden ışına izdüşer."
+  },
+  {
+   "text": "15"
+  },
+  {
+   "key": "Enter",
+   "note": "Yalın mesafe kilitli doğrultuda: (22,2; 9,6).",
+   "expect": {
+    "points": 3,
+    "locks": []
+   }
+  },
+  {
+   "run": "draft.lock.deflection",
+   "note": "Sapma… değer alanını kendi adıyla, boş açar.",
+   "expect": {
+    "dynamicInput": ""
+   }
+  },
+  {
+   "text": "100"
+  },
+  {
+   "key": "Enter",
+   "note": "Uzunluk yok: kilit konur, nokta konmaz.",
+   "expect": {
+    "dynamicInput": null,
+    "points": 3,
+    "locks": [
+     "Sapma 100.0000 g"
+    ],
+    "logged": [
+     "Kilit: Sapma 100.0000 g."
+    ]
+   }
+  },
+  {
+   "click": [
+    30,
+    -10
+   ],
+   "note": "CBS'de sapma saat yönünde: doğudan 100 grad sağa güney; (22,2; −10).",
+   "expect": {
+    "points": 4,
+    "locks": []
+   }
+  },
+  {
+   "run": "draft.lock.keep",
+   "expect": {
+    "logged": [
+     "Kilitler kalıcı: sonraki noktalarda da durur."
+    ]
+   }
+  },
+  {
+   "text": "5"
+  },
+  {
+   "key": "Tab",
+   "expect": {
+    "locks": [
+     "Uzunluk 5.000 m",
+     "Kalıcı"
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "dynamicInput": null
+   }
+  },
+  {
+   "click": [
+    22.2,
+    -30
+   ],
+   "note": "Kalıcı kilit: (22,2; −15).",
+   "expect": {
+    "points": 5,
+    "locks": [
+     "Uzunluk 5.000 m",
+     "Kalıcı"
+    ]
+   }
+  },
+  {
+   "click": [
+    40,
+    -15
+   ],
+   "note": "Kilit durur: (27,2; −15).",
+   "expect": {
+    "points": 6,
+    "locks": [
+     "Uzunluk 5.000 m",
+     "Kalıcı"
+    ]
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc önce kilitleri kaldırır; komut sürer.",
+   "expect": {
+    "tool": "polyline",
+    "points": 6,
+    "locks": [],
+    "logged": [
+     "Kilitler kaldırıldı."
+    ]
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1,
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       7.2,
+       9.6
+      ],
+      [
+       22.2,
+       9.6
+      ],
+      [
+       22.2,
+       -10
+      ],
+      [
+       22.2,
+       -15
+      ],
+      [
+       27.2,
+       -15
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

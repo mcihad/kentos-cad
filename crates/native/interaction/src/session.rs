@@ -18,6 +18,7 @@
 //! ([`Session::run`]: Yapıştır), as on the web (docs/adr/0056).
 
 use kentos_geometry_core::store::snap::{SnapExtras, SnapHit, SnapKind};
+use kentos_geometry_core::tools::locks::{LockText, parse_lock_text};
 use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
@@ -32,6 +33,7 @@ use crate::erase::{self, Erase};
 use crate::format::Format;
 use crate::lengthen::{self, Lengthen};
 use crate::line::{self, Line};
+use crate::locks::Toward;
 use crate::log::Level;
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
@@ -191,6 +193,17 @@ pub struct Session {
 /// What the web says when the command takes no point at its step.
 pub const NO_POINT_NOW: &str =
     "Çalışan araç şu adımda nokta beklemiyor; hesaplanan nokta kullanılmadı.";
+
+/// A lock asked for with no point to measure it from (docs/adr/0166 §1; the web's words).
+pub const NO_LOCK_REFERENCE: &str =
+    "Kilit için önce bir nokta verin: uzunluk ve doğrultu son noktadan ölçülür.";
+
+/// Sapma asked for with no edge to turn from.
+pub const NO_TRAVEL: &str =
+    "Sapma için önce bir kenar çizin: sapma önceki kenarın doğrultusundan ölçülür.";
+
+/// What Esc and Kilitleri kaldır say.
+pub const LOCKS_GONE: &str = "Kilitler kaldırıldı.";
 
 impl Session {
     pub fn new() -> Self {
@@ -390,6 +403,8 @@ impl Session {
     /// and the new tool may act at once (the erase tool deletes a selection
     /// and leaves; the web's `activate`).
     pub fn activate(&mut self, cx: &mut Context<'_>) {
+        // A new command starts with nothing locked (docs/adr/0166 §1).
+        cx.locks.reset();
         cx.selection.set_hover(None);
         if let Some(tool) = &mut self.tool
             && tool.activate(cx) == Flow::Exit
@@ -408,6 +423,12 @@ impl Session {
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
     /// edge tool drops the object it picked); otherwise it is left. Whether it stays.
     pub fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        // Esc lets the locks go first (docs/adr/0166 §1): one step back.
+        if cx.locks.any() && self.lock_reference().is_some() {
+            cx.locks.clear();
+            cx.say(Level::Info, LOCKS_GONE.to_owned());
+            return true;
+        }
         // No command: Esc leaves a grip being moved where it was.
         if self.tool.is_none() {
             return self.select.cancel();
@@ -576,14 +597,18 @@ impl Session {
     }
 
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        cx.locks.travel = self.travel();
         match &mut self.tool {
             Some(tool) => tool.pointer_move(p, cx),
             None => self.select.pointer_move(p, cx),
         }
+        // Akış leaves corners as the cursor moves: the locks follow them too.
+        self.follow_locks(cx);
     }
 
     /// The left button went down on the drawing.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        cx.locks.travel = self.travel();
         match &mut self.tool {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p, cx),
@@ -593,11 +618,113 @@ impl Session {
 
     /// The left button came up (on the drawing, or wherever a press on it ended).
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        cx.locks.travel = self.travel();
         match &mut self.tool {
             Some(tool) => tool.pointer_up(p, cx),
             None => self.select.pointer_up(p, cx),
         }
         self.settle(cx);
+    }
+
+    /// The point the locks are measured from (docs/adr/0166 §1): the running
+    /// command's last point, or where a grip being moved was; none when no
+    /// point is expected after another.
+    pub fn lock_reference(&self) -> Option<Vec2> {
+        match &self.tool {
+            Some(_) => self.snap_from(),
+            None if self.select.grip_active() => self.select.snap_from(),
+            None => None,
+        }
+    }
+
+    /// The unit direction the object being drawn travels at its last point:
+    /// Sapma turns from it (docs/adr/0166 §1).
+    pub fn travel(&self) -> Option<Vec2> {
+        self.tool.as_ref().and_then(|t| t.travel())
+    }
+
+    /// Locks the next point's length (metres) at the lock reference, said
+    /// on the command line; false (and why) without a reference.
+    pub fn lock_length(&self, metres: f64, cx: &mut Context<'_>) -> bool {
+        let Some(at) = self.lock_reference() else {
+            cx.say(Level::Warn, NO_LOCK_REFERENCE.to_owned());
+            return false;
+        };
+        cx.locks.lock_length(metres, at);
+        self.say_locks(cx);
+        true
+    }
+
+    /// Locks the next point's direction at the lock reference; a deflection
+    /// needs an edge to turn from. False (and why) when it cannot.
+    pub fn lock_toward(&self, toward: Toward, cx: &mut Context<'_>) -> bool {
+        let Some(at) = self.lock_reference() else {
+            cx.say(Level::Warn, NO_LOCK_REFERENCE.to_owned());
+            return false;
+        };
+        if matches!(toward, Toward::Deflection(_)) && self.travel().is_none() {
+            cx.say(Level::Warn, NO_TRAVEL.to_owned());
+            return false;
+        }
+        cx.locks.travel = self.travel();
+        cx.locks.lock_toward(toward, at);
+        self.say_locks(cx);
+        true
+    }
+
+    /// A point computed elsewhere (the locks' Enter in the value field,
+    /// docs/adr/0166 §6), given to the running tool as if clicked, or to a
+    /// grip being moved; false when the step takes none.
+    pub fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        cx.locks.travel = self.travel();
+        let taken = match &mut self.tool {
+            Some(tool) => tool.accepts_points() && tool.accept_point(p, cx),
+            None => self.select.accept_point(p, cx),
+        };
+        if !taken {
+            cx.say(Level::Warn, NO_POINT_NOW.to_owned());
+        }
+        self.settle(cx);
+        taken
+    }
+
+    /// Kalıcı on or off for the running command (docs/adr/0166 §1).
+    pub fn keep_locks(&self, keep: bool, cx: &mut Context<'_>) {
+        cx.locks.keep = keep;
+        cx.say(
+            Level::Info,
+            if keep {
+                "Kilitler kalıcı: sonraki noktalarda da durur."
+            } else {
+                "Kilitler tek seferlik: nokta konunca kalkar."
+            }
+            .to_owned(),
+        );
+    }
+
+    /// Kilitleri kaldır.
+    pub fn clear_locks(&self, cx: &mut Context<'_>) {
+        if cx.locks.any() {
+            cx.locks.clear();
+            cx.say(Level::Info, LOCKS_GONE.to_owned());
+        }
+    }
+
+    /// What is locked now, on the command line: “Kilit: Uzunluk 12.500 m · Semt 100.0000 g.”
+    fn say_locks(&self, cx: &mut Context<'_>) {
+        let words = cx.locks.words(&cx.format());
+        cx.say(Level::Info, format!("Kilit: {}.", words.join(" · ")));
+    }
+
+    /// After an event: the locks follow the reference (one-shot ones go when
+    /// a point was placed); with no command and no grip, nothing is locked.
+    fn follow_locks(&self, cx: &mut Context<'_>) {
+        if self.tool.is_none() && !self.select.grip_active() {
+            cx.locks.reset();
+            return;
+        }
+        cx.locks.travel = self.travel();
+        cx.locks.follow(self.lock_reference());
     }
 
     /// The selection box being drawn: the select tool's while no command
@@ -638,6 +765,14 @@ impl Session {
             self.settle(cx);
             return true;
         }
+        // `<45`: the next point's direction locked at that angle (docs/adr/0166 §6).
+        if let Some(LockText::Angle(a)) = parse_lock_text(text)
+            && (self.tool.is_some() || self.select.grip_active())
+        {
+            self.lock_toward(Toward::Angle(a), cx);
+            return true;
+        }
+        cx.locks.travel = self.travel();
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),
             // A typed point places a grip being moved.
@@ -728,6 +863,7 @@ impl Session {
                 self.tool = None;
             }
         }
+        self.follow_locks(cx);
     }
 
     /// Enter, Space or a quick right click while a tool runs: it commits what
@@ -749,6 +885,7 @@ impl Session {
                 self.select.confirm(cx);
             }
         }
+        self.follow_locks(cx);
     }
 
     /// Ctrl+Z while a tool runs: its newest step goes first. False when it

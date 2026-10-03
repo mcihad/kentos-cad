@@ -14,9 +14,15 @@ use kentos_ui::label;
 use kentos_ui::widget::{Dialog, overlay};
 
 use super::{Event as ProjectEvent, Window, message, modes};
-use crate::app::{App, Message};
+use crate::app::{App, Dialog as AppDialog, Message};
 use crate::catalog::mode_command;
 use crate::exchange::words;
+use crate::traces::Control;
+
+/// The question's title, as the window shows it and a trace names it.
+pub(crate) const TYPE_TITLE: &str = "Proje türü";
+const LATER: &str = "Sonra";
+const PICK: &str = "Seç";
 
 #[derive(Debug)]
 pub struct State {
@@ -75,6 +81,26 @@ impl App {
         }
     }
 
+    /// Whether the type question is the window on top.
+    pub(crate) fn asking_type(&self) -> bool {
+        self.dialog == Some(AppDialog::Project) && matches!(self.project, Some(Window::Type(_)))
+    }
+
+    /// The message a control of the question sends (traces/answers.rs):
+    /// its two buttons, and a card by its type's name.
+    pub(crate) fn project_type_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
+        Ok(Some(match control {
+            Control::Press(LATER) => event(Event::Later),
+            Control::Press(PICK) => event(Event::Pick),
+            Control::Press("CAD") => event(Event::Choose(Workspace::Cad)),
+            Control::Press("CBS") => event(Event::Choose(Workspace::Gis)),
+            other => return Err(format!("“{TYPE_TITLE}” penceresinde {other} yok")),
+        }))
+    }
+
     /// Sonra, Esc or ×: the project stays without a type, shown as CBS.
     pub(super) fn type_left_unasked(&mut self, name: &str) {
         self.output(format!(
@@ -92,10 +118,10 @@ impl App {
         ]
         .spacing(14);
         overlay::blocking(
-            Dialog::new("Proje türü")
+            Dialog::new(TYPE_TITLE)
                 .push(body)
-                .action(words::secondary("Sonra", Some(event(Event::Later))))
-                .action(words::primary("Seç", Some(event(Event::Pick))))
+                .action(words::secondary(LATER, Some(event(Event::Later))))
+                .action(words::primary(PICK, Some(event(Event::Pick))))
                 .width(640.0),
         )
     }

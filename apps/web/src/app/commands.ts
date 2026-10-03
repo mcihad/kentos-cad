@@ -14,6 +14,7 @@ import { PREF_KEYS, type OverlapMode } from './state';
 import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
+import { lockCommands } from './lockCommands';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -658,6 +659,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     overlapMode(ctx, 'allow', 'Serbest', 'overlapAllow', 'Yeni alan komşularıyla örtüşebilir; olduğu gibi yazılır.'),
     overlapMode(ctx, 'layer', 'Kendi katmanında önle', 'overlapLayer', 'Yeni alan, yazılacağı katmandaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.'),
     overlapMode(ctx, 'layers', 'Seçili katmanlarda önle', 'overlapLayers', 'Yeni alan, seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır; katmanlar Çakışma hücresinin menüsünden seçilir.'),
+    // The digitizing locks (docs/adr/0166 §6): on the running command, without ending it.
+    ...lockCommands(ctx),
 
     // Harita / Koordinat / Analiz
     pending(ctx, 'map.contours', 'Eşyükselti üret…', M, 'contours'),

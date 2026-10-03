@@ -351,6 +351,63 @@
   font-size: var(--fs-2xs);
   white-space: nowrap;
 }
+.cursor-input__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+/* The lock the number is for (docs/adr/0166 §6): Uzunluk, Açı or Semt, Sapma. */
+.cursor-input__label {
+  padding: 0 2px 0 4px;
+  color: var(--c-accent);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cursor-input__label[hidden],
+.cursor-input__locks[hidden] {
+  display: none;
+}
+/* The locks held, as chips in the snap colour; each × lets its lock go. */
+.cursor-input__locks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: calc(260px * var(--ui-scale));
+  padding: 5px 2px 0;
+}
+.cursor-input__lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: calc(20px * var(--ui-scale));
+  padding: 0 2px 0 6px;
+  border: 1px solid var(--canvas-snap);
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  font: 500 var(--fs-xs) / 1 var(--font-mono);
+  white-space: nowrap;
+}
+.cursor-input__lock > .icon:first-child {
+  color: var(--canvas-snap);
+}
+.cursor-input__drop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(16px * var(--ui-scale));
+  height: calc(16px * var(--ui-scale));
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-text-3);
+  cursor: pointer;
+}
+.cursor-input__drop:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
 .hover-card {
   /* Long names and texts wrap at this width, even inside a word; the card is never wider than the drawing
      (DESIGN.md §7.4.2). Where it goes near the drawing's edges: placeBeside.ts. */

@@ -425,10 +425,10 @@ fn axes_screens() {
         let _ = app.update(Message::Viewport(Pointer::Moved(Point::new(
             x as f32, y as f32,
         ))));
-        app.field = Some(crate::input::Field {
-            text: "@100<30".into(),
-            at: camera.screen_to_world(x, y),
-        });
+        app.field = Some(crate::input::Field::point(
+            "@100<30".into(),
+            camera.screen_to_world(x, y),
+        ));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("eksenler-{name}.png"));
         snapshot

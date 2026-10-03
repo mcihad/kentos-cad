@@ -59,6 +59,14 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    if let Some(want) = &expect.locks {
+        check(
+            "locks",
+            &got.locks == want,
+            format!("{:?}", got.locks),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.command_line {
         check(
             "commandLine",

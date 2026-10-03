@@ -16,6 +16,7 @@ import { calcMenuItems } from '../shell/calcMenu';
 import { SNAP_LABEL } from '../../viewport/picking';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { namedPoint } from '../../tools/namedPoint';
+import { clearLocks, hasLocks, lockReference, lockWords, typedLock } from '../../tools/locks';
 
 /** The least of the step's words kept before an option gives way to “Diğer”, CSS px at type scale 1 (the desktop's `STEP_MIN`). */
 const STEP_MIN = 120;
@@ -79,7 +80,7 @@ export class CommandLine extends Component {
     const resize = new ResizeObserver(() => this.fit());
     resize.observe(this.el);
     this.d.add(() => resize.disconnect());
-    this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId, ctx.prefs.commandBar, ctx.view.snapOverride], () => this.setPrompt(ctx.tools.prompt.value)));
+    this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId, ctx.prefs.commandBar, ctx.view.snapOverride, ctx.settings.locks], () => this.setPrompt(ctx.tools.prompt.value)));
     this.setPrompt(ctx.tools.prompt.value);
     this.d.add(listen(this.input, 'input', () => this.suggest()));
     this.d.add(listen<KeyboardEvent>(this.input, 'keydown', (e) => this.onKey(e)));
@@ -99,8 +100,8 @@ export class CommandLine extends Component {
       if ((e.ctrlKey || e.altKey) && !isAltGrText(e)) return;
       if (isTextInput(document.activeElement)) return;
       e.preventDefault();
-      // # starts a point's name (docs/adr/0152 §4).
-      if (/[\d@.+#-]/.test(e.key) && this.direct?.accepts()) this.direct.show(e.key);
+      // # starts a point's name (docs/adr/0152 §4), < a direction lock (docs/adr/0166 §6).
+      if (/[\d@.+#<-]/.test(e.key) && this.direct?.accepts()) this.direct.show(e.key);
       else this.typeFirst(e.key);
     };
     this.d.add(() => (ctx.keymap.fallback = null));
@@ -148,7 +149,7 @@ export class CommandLine extends Component {
     const text = h('span', { class: 'cmdline__text' }, h('b', null, p.tool), this.ctx.format.axesText(`: ${p.step}${notes}`));
     this.chips = optionButtons(this.ctx, p.options, 'cmdline__chip');
     this.options = p.options;
-    replaceChildren(this.prompt, text, ...this.chips, this.more, ...this.stripParts());
+    replaceChildren(this.prompt, text, ...this.chips, this.more, ...this.stripParts(), ...this.lockParts());
     // The step keeps its first letters however many options there are.
     if (this.chips.length) {
       const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
@@ -203,6 +204,16 @@ export class CommandLine extends Component {
       parts.push(h('span', { class: 'cmdbar__snap cmdline__snap' }, icon('snap', 14), `Sonraki tık: ${SNAP_LABEL[kind]}`, clear));
     }
     return parts;
+  }
+
+  /** The locks holding the next point (docs/adr/0166 §6), with Kilitleri kaldır's ×. */
+  private lockParts(): HTMLElement[] {
+    const { ctx } = this;
+    if (!hasLocks(ctx.settings.locks.value) || !lockReference(ctx)) return [];
+    const clear = h('button', { class: 'cmdbar__snap-clear', type: 'button', 'aria-label': 'Kilitleri kaldır' }, icon('close', 12));
+    clear.addEventListener('pointerdown', (e) => e.preventDefault());
+    clear.addEventListener('click', () => clearLocks(ctx));
+    return [h('span', { class: 'cmdbar__snap cmdline__snap cmdline__locks' }, icon('lock', 14), `Kilit: ${lockWords(ctx).join(' · ')}`, clear)];
   }
 
   private suggest(): void {
@@ -273,6 +284,8 @@ export class CommandLine extends Component {
       this.input.value = '';
       // #ad: a point's place by its name (docs/adr/0152 §4).
       if (namedPoint(this.ctx, text)) return;
+      // <45: the next point's direction locked (docs/adr/0166 §6).
+      if (typedLock(this.ctx, text)) return;
       if (tool.input(text)) return;
       // Point calculator by its alias (YAN, KKES, DKES, HAT, AM, ORTA) while a point is expected.
       const calc = CALC_KINDS.find((k) => k.alias === text.toLocaleUpperCase('tr-TR'));

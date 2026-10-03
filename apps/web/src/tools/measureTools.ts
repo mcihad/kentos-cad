@@ -90,6 +90,11 @@ export class DistanceTool extends PathTool {
   }
 
   /** Sabit ilk nokta's rays are no path to snap to (docs/adr/0163 §3). */
+  /** Sabit ilk nokta's rays travel nowhere: Sapma has no edge to turn from. */
+  override travelDirection(): Vec2 | null {
+    return this.fixed ? null : super.travelDirection();
+  }
+
   override draftPath(): ReturnType<PathTool['draftPath']> {
     return this.fixed ? null : super.draftPath();
   }

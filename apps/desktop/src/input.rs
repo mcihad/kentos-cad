@@ -24,7 +24,8 @@ use iced::keyboard::key::Named;
 use iced::widget::operation as widget_operation;
 
 use kentos_interaction::{
-    Context, Draft, Level, Pointer, Session, SnapKind, Vec2, View, ViewChange, js_trim,
+    Context, Draft, Level, LockAsk, Pointer, Session, SnapKind, Toward, Vec2, View, ViewChange,
+    js_trim,
 };
 use kentos_render_wgpu::Camera;
 
@@ -42,6 +43,30 @@ pub struct Field {
     pub text: String,
     /// The world point it sits beside: the pointer's, as it moves.
     pub at: Vec2,
+    /// What the text is: a point, or a lock's value (docs/adr/0166 §6).
+    pub mode: Option<LockAsk>,
+}
+
+impl Field {
+    /// The field for a point, holding what was typed.
+    pub fn point(text: String, at: Vec2) -> Self {
+        Self {
+            text,
+            at,
+            mode: None,
+        }
+    }
+}
+
+/// A plain typed number: what Tab locks as a length (the web's `PLAIN_NUMBER`).
+fn plain_number(text: &str) -> bool {
+    let t = text.strip_prefix(['-', '+']).unwrap_or(text);
+    let mut parts = t.splitn(2, ['.', ',']);
+    let whole = parts.next().unwrap_or("");
+    let fraction = parts.next();
+    !whole.is_empty()
+        && whole.bytes().all(|b| b.is_ascii_digit())
+        && fraction.is_none_or(|f| !f.is_empty() && f.bytes().all(|b| b.is_ascii_digit()))
 }
 
 /// The drawing area's camera as the session sees it.
@@ -90,6 +115,7 @@ impl App {
                 tracking: &self.tracking,
                 shift: self.modifiers.shift(),
                 overlap_layers: &self.overlap_layers,
+                locks: &mut self.locks,
             },
         );
         for change in changes {
@@ -587,10 +613,7 @@ impl App {
         // 5. A character that starts a value.
         if let Some(first) = keys::value_start(&press) {
             if let Some(at) = self.field_place() {
-                self.field = Some(Field {
-                    text: first.to_string(),
-                    at,
-                });
+                self.field = Some(Field::point(first.to_string(), at));
                 return Task::none();
             }
             return self.type_into_line(&first.to_string());
@@ -632,8 +655,8 @@ impl App {
                     field.text.pop();
                 }
             }
-            // One field for now: Tab keeps the typed value and moves nothing.
-            Some(Named::Tab) => {}
+            // Tab never loses the typed value: it locks it (docs/adr/0166 §6).
+            Some(Named::Tab) => self.tab_field(),
             _ => match keys::typed(&press) {
                 Some(text) => {
                     if let Some(field) = &mut self.field {
@@ -655,12 +678,147 @@ impl App {
         }
     }
 
+    /// A lock chosen from the menu (Uzunluk…, Açı…, Sapma…): the value
+    /// field opens under its name, empty (the web's `CursorInput.ask`).
+    pub(crate) fn ask_lock(&mut self, kind: LockAsk) {
+        let Some(at) = self.session.lock_reference() else {
+            self.warn(kentos_interaction::NO_LOCK_REFERENCE.to_owned());
+            return;
+        };
+        if kind == LockAsk::Deflection && self.session.travel().is_none() {
+            self.warn(kentos_interaction::NO_TRAVEL.to_owned());
+            return;
+        }
+        self.field = Some(Field {
+            text: String::new(),
+            at: self.viewport.cursor.unwrap_or(at),
+            mode: Some(kind),
+        });
+    }
+
+    /// Tab in the value field: the typed number locks its value and the
+    /// field turns to the other one (length ↔ direction; the web's
+    /// `CursorInput.tab`).
+    fn tab_field(&mut self) {
+        let Some(field) = self.field.clone() else {
+            return;
+        };
+        let text = js_trim(&field.text).to_owned();
+        let next = match field.mode {
+            None => {
+                if let Some(kentos_geometry_core::tools::locks::LockText::Angle(a)) =
+                    kentos_geometry_core::tools::locks::parse_lock_text(&text)
+                {
+                    if self.with_tool(|s, cx| s.lock_toward(Toward::Angle(a), cx)) == Some(true) {
+                        self.turn_field(LockAsk::Length);
+                    }
+                    return;
+                }
+                if !plain_number(&text) {
+                    return;
+                }
+                let locked = self.with_tool(|s, cx| match cx.typed_length(&text) {
+                    Some(m) => s.lock_length(m, cx),
+                    None => false,
+                });
+                if locked == Some(true) {
+                    LockAsk::Angle
+                } else {
+                    return;
+                }
+            }
+            Some(mode) => {
+                if !self.lock_typed(mode, &text) {
+                    return;
+                }
+                if mode == LockAsk::Length {
+                    LockAsk::Angle
+                } else {
+                    LockAsk::Length
+                }
+            }
+        };
+        self.turn_field(next);
+    }
+
+    /// The field turns to another lock's value, empty.
+    fn turn_field(&mut self, mode: LockAsk) {
+        if let Some(field) = &mut self.field {
+            field.mode = Some(mode);
+            field.text.clear();
+        }
+    }
+
+    /// The number typed in a lock's field locks that; false (and why, when
+    /// it is not a number) when nothing was locked.
+    fn lock_typed(&mut self, mode: LockAsk, text: &str) -> bool {
+        let Some(n) = kentos_geometry_core::tools::point_text::parse_number(text) else {
+            if !text.is_empty() {
+                let name = self.lock_name(mode).to_lowercase();
+                self.warn(format!("“{text}” bir sayı değil; {name} için sayı yazın."));
+            }
+            return false;
+        };
+        self.with_tool(|s, cx| match mode {
+            LockAsk::Length => s.lock_length(cx.format().to_metres(n), cx),
+            LockAsk::Angle => s.lock_toward(Toward::Angle(n), cx),
+            LockAsk::Deflection => s.lock_toward(Toward::Deflection(n), cx),
+        }) == Some(true)
+    }
+
+    /// A lock's name in the field: Uzunluk, the project's Açı or Semt, Sapma.
+    pub(crate) fn lock_name(&self, mode: LockAsk) -> &'static str {
+        match mode {
+            LockAsk::Length => "Uzunluk",
+            LockAsk::Angle => self.format().direction_name(),
+            LockAsk::Deflection => "Sapma",
+        }
+    }
+
+    /// The point the locks hold, given to the tool as if clicked; the
+    /// cursor gives what is not locked (the web's `placeLocked`).
+    fn place_locked(&mut self) {
+        if !self.locks.any() {
+            return;
+        }
+        let angles = self.format().angles();
+        let cursor = self.viewport.cursor;
+        let mut locks = self.locks.clone();
+        locks.travel = self.session.travel();
+        let point = self.session.lock_reference().and_then(|from| {
+            let held = locks.locks(angles);
+            kentos_geometry_core::tools::locks::lock_point(
+                from,
+                cursor.unwrap_or(from),
+                held.length,
+                held.direction,
+            )
+        });
+        if let Some(p) = point {
+            self.with_tool(|s, cx| s.accept_point(p, cx));
+        }
+    }
+
     /// Enter or Space in the value field (the web's `CursorInput.submit`).
     fn submit_field(&mut self) -> Task<Message> {
         let Some(field) = self.field.take() else {
             return Task::none();
         };
         let text = js_trim(&field.text).to_owned();
+        if let Some(mode) = field.mode {
+            // A lock's field: its number locks it, and the point is placed
+            // once its length and direction are both held; left empty, the
+            // point the locks hold is placed, the cursor giving what is not
+            // locked (AutoCAD's Enter).
+            if text.is_empty() {
+                self.place_locked();
+            } else if !self.lock_typed(mode, &text) {
+                self.field = Some(field);
+            } else if self.locks.length.is_some() && self.locks.toward.is_some() {
+                self.place_locked();
+            }
+            return Task::none();
+        }
         if text.is_empty() {
             return self.run("tool.confirm");
         }

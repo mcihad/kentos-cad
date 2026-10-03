@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 282,
-      "implemented": 269,
+      "total": 287,
+      "implemented": 274,
       "partial": 0,
       "pending": 13
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 75,
-      "implemented": 75,
+      "total": 78,
+      "implemented": 78,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 108,
-    "commandsOnDesktop": 209,
+    "commandsWithoutTests": 111,
+    "commandsOnDesktop": 214,
     "desktop": {
       "commands": {
-        "total": 282,
-        "implemented": 209,
+        "total": 287,
+        "implemented": 214,
         "partial": 0,
         "pending": 13,
         "none": 58,
@@ -145,8 +145,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 75,
-        "implemented": 72,
+        "total": 78,
+        "implemented": 75,
         "partial": 0,
         "pending": 0,
         "none": 2,
@@ -1034,6 +1034,131 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "draft.lock.angle",
+      "title": "Açı kilidi…",
+      "short": "Açı",
+      "category": "Çizim yardımcıları",
+      "icon": "lockAngle",
+      "description": "Sonraki noktanın doğrultusunu kilitler: CAD projesinde doğudan saat yönünün tersine açı, CBS projesinde kuzeyden saat yönünde semt, projenin açı biriminde. Değer kutusuna <45 yazmak da kilitler.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "draft.lock.clear",
+      "title": "Kilitleri kaldır",
+      "short": "Kaldır",
+      "category": "Çizim yardımcıları",
+      "icon": "unlock",
+      "description": "Sonraki noktayı tutan uzunluk ve doğrultu kilitlerini kaldırır; Esc de önce kilitleri kaldırır.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "draft.lock.deflection",
+      "title": "Sapma kilidi…",
+      "short": "Sapma",
+      "category": "Çizim yardımcıları",
+      "icon": "lockDeflection",
+      "description": "Sonraki kenarın önceki kenarın doğrultusundan dönüşünü kilitler: CAD projesinde sola (saat yönünün tersine), CBS projesinde sağa (saat yönünde) artıdır.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/locks.json",
+        "fixtures/interaction/v1/usage-locks.json"
+      ]
+    },
+    {
+      "id": "draft.lock.keep",
+      "title": "Kilitler kalıcı",
+      "short": "Kalıcı",
+      "category": "Çizim yardımcıları",
+      "icon": "lockKeep",
+      "description": "Açıkken kilitler nokta konunca kalkmaz; komut bitene dek sonraki noktalarda da durur.",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/locks.json"
+      ]
+    },
+    {
+      "id": "draft.lock.length",
+      "title": "Uzunluk kilidi…",
+      "short": "Uzunluk",
+      "category": "Çizim yardımcıları",
+      "icon": "lockLength",
+      "description": "Sonraki noktanın son noktadan uzaklığını kilitler: değeri imleç yanındaki kutuya yazın, doğrultuyu imleç seçer. Değer kutusunda bir sayıdan sonra Tab da kilitler.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -6968,10 +7093,13 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/locks.json",
         "fixtures/interaction/v1/polyline-arc.json",
         "fixtures/interaction/v1/snap-acquire.json",
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-locks.json",
         "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
@@ -10685,10 +10813,13 @@
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
+        "fixtures/interaction/v1/locks.json",
         "fixtures/interaction/v1/polyline-arc.json",
         "fixtures/interaction/v1/snap-acquire.json",
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-locks.json",
         "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
         "fixtures/interaction/v1/usage-trace-draw.json"
@@ -12474,6 +12605,39 @@
       "desktopWhere": "Şerit › Giriş › Özellikler: Kalınlık (ribbon_panels.rs, ADR 0089)"
     },
     {
+      "id": "session.lockAsk",
+      "key": "lockAsk",
+      "scope": "session",
+      "persistence": "none",
+      "type": "null",
+      "default": null,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Değer alanının kilit kipi: input.rs Field::mode (Uzunluk…, Açı…, Sapma…; ADR 0166 §6)"
+    },
+    {
+      "id": "session.locks",
+      "key": "locks",
+      "scope": "session",
+      "persistence": "none",
+      "type": "object",
+      "default": {
+        "length": null,
+        "toward": null,
+        "keep": false,
+        "at": null
+      },
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Oturumun kilitleri: App::locks, kentos_interaction::LockState (locks.rs, ADR 0166)"
+    },
+    {
       "id": "session.ortho",
       "key": "ortho",
       "scope": "session",
@@ -12596,6 +12760,20 @@
         "web": "implemented",
         "desktop": "implemented"
       }
+    },
+    {
+      "id": "session.valueCard",
+      "key": "valueCard",
+      "scope": "session",
+      "persistence": "none",
+      "type": "boolean",
+      "default": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Değer alanı açık: App::field (input.rs); kilit etiketi o sırada çizilmez (locks.rs, ADR 0166 §6)"
     },
     {
       "id": "user.accent",
@@ -24545,6 +24723,10 @@
     "eyeOff": "<path d=\"M4.2 6.3C2.6 7.8 1.8 10 1.8 10S5 15.4 10 15.4c1.4 0 2.6-.4 3.7-1M8 4.8c.6-.1 1.3-.2 2-.2 5 0 8.2 5.4 8.2 5.4s-.7 1.3-2 2.6M3 3l14 14\"/>",
     "lock": "<rect x=\"4.5\" y=\"9\" width=\"11\" height=\"8\" rx=\"1.2\"/><path d=\"M7 9V6.5a3 3 0 0 1 6 0V9\"/>",
     "unlock": "<rect x=\"4.5\" y=\"9\" width=\"11\" height=\"8\" rx=\"1.2\"/><path d=\"M7 9V6.5a3 3 0 0 1 5.8-1.1\"/>",
+    "lockLength": "<path d=\"M2.5 8h11M2.5 5.5v5M13.5 5.5v5\"/><path d=\"m5 6.5-1.5 1.5L5 9.5M11 6.5l1.5 1.5L11 9.5\" stroke-width=\"1.1\"/><rect x=\"12.4\" y=\"13.3\" width=\"5.6\" height=\"4.2\" rx=\".7\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M13.700000000000001 13.3v-1.2a1.5 1.5 0 0 1 3 0V13.3\" stroke-width=\"1.1\"/>",
+    "lockAngle": "<path d=\"M2.5 15.5h8.5M2.5 15.5 10.5 5\"/><path d=\"M7.5 15.5a5 5 0 0 0-1.9-3.9\"/><rect x=\"12.4\" y=\"13.3\" width=\"5.6\" height=\"4.2\" rx=\".7\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M13.700000000000001 13.3v-1.2a1.5 1.5 0 0 1 3 0V13.3\" stroke-width=\"1.1\"/>",
+    "lockDeflection": "<path d=\"M2.5 15 8.5 9h6.5\"/><path d=\"M8.5 9 12 5.5\" stroke-dasharray=\"1.5 1.4\" stroke-width=\"1.1\"/><path d=\"M10.6 6.9a3 3 0 0 1 .9 2.1\" stroke-width=\"1.1\"/><rect x=\"12.4\" y=\"13.3\" width=\"5.6\" height=\"4.2\" rx=\".7\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M13.700000000000001 13.3v-1.2a1.5 1.5 0 0 1 3 0V13.3\" stroke-width=\"1.1\"/>",
+    "lockKeep": "<rect x=\"3\" y=\"9.5\" width=\"8.5\" height=\"7\" rx=\"1.1\"/><path d=\"M5 9.5V7.6a2.25 2.25 0 0 1 4.5 0v1.9\"/><path d=\"M14.2 7.2a3.8 3.8 0 1 1-.6 6.4\"/><path d=\"m14.6 4.6-.4 2.7 2.7.3\" stroke-width=\"1.2\"/>",
     "magnet": "<path d=\"M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z\"/><path d=\"M4.5 6.8h3.3M12.2 6.8h3.3\"/>",
     "magnetOff": "<path d=\"M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z\"/><path d=\"M4.5 6.8h3.3M12.2 6.8h3.3M3 3l14 14\"/>",
     "magnetKinds": "<g stroke-dasharray=\"2.2 1.6\"><path d=\"M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z\"/></g><path d=\"M4.5 6.8h3.3M12.2 6.8h3.3\"/>",

@@ -22,6 +22,7 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::{label, style};
 
+pub(crate) use ask_type::TYPE_TITLE;
 pub use content::PLOT_SCALES;
 
 use crate::app::{App, Dialog, Message};

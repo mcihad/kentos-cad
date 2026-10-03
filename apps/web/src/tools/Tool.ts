@@ -78,6 +78,11 @@ export interface Tool {
   /** Reference point for perpendicular snaps (usually the last picked point). */
   snapFrom?(): Vec2 | null;
   /**
+   * The unit direction the object being drawn travels at its last point (its last edge's, a path's tangent there):
+   * Sapma turns from it (docs/adr/0166 §1). Null before the first edge.
+   */
+  travelDirection?(): Vec2 | null;
+  /**
    * The object being drawn, its points so far (not the segment to the cursor) as an open path, one bulge per segment:
    * snapped to as one more object while `snap.self` is on (docs/adr/0163 §3).
    */

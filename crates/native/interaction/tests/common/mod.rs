@@ -10,8 +10,8 @@ use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
 use kentos_interaction::object_tracking::ObjectTracking;
 use kentos_interaction::{
-    Context, Draft, Level, Line, Memory, Pointer, Selection, Session, Spatial, Vec2, View,
-    ViewChange,
+    Context, Draft, Level, Line, LockState, Memory, Pointer, Selection, Session, Spatial, Vec2,
+    View, ViewChange,
 };
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
@@ -57,6 +57,8 @@ pub struct Bench {
     pub tracking: ObjectTracking,
     /// Seçili katmanlarda önle's layers (docs/adr/0162 §1).
     pub overlap_layers: Vec<String>,
+    /// The digitizing locks (docs/adr/0166).
+    pub locks: LockState,
 }
 
 impl Bench {
@@ -84,6 +86,7 @@ impl Bench {
             overlap_layers: Vec::new(),
             views: Vec::new(),
             tracking: ObjectTracking::new(),
+            locks: LockState::default(),
         }
     }
 
@@ -107,6 +110,7 @@ impl Bench {
             tracking: &self.tracking,
             shift: self.shift,
             overlap_layers: &self.overlap_layers,
+            locks: &mut self.locks,
         };
         act(&mut self.session, &mut cx)
     }

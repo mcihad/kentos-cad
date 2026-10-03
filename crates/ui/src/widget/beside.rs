@@ -49,6 +49,26 @@ pub fn beside_pointer(at: Point, card: Size, area: Size, offset: Vector) -> Poin
     )
 }
 
+/// `card` boyutundaki kartın sol üst köşesi: `at`'ın sol üstünde, `gap`
+/// kadar uzakta (sağ alt köşesi `at − gap`'te). Sola sığmazsa aynı uzaklıkta
+/// imlecin sağına, üste sığmazsa altına geçer; sonra alanın içinde tutulur
+/// (web'in kilit etiketi, `tools/lockGuides.ts`).
+pub fn above_left(at: Point, card: Size, area: Size, gap: Vector) -> Point {
+    let mut x = at.x - gap.x - card.width;
+    if x < EDGE_MARGIN {
+        x = at.x + gap.x;
+    }
+    let mut y = at.y - gap.y - card.height;
+    if y < EDGE_MARGIN {
+        y = at.y + gap.y;
+    }
+    let hold = |v: f32, low: f32, high: f32| v.min(high).max(low);
+    Point::new(
+        hold(x, EDGE_MARGIN, area.width - EDGE_MARGIN - card.width).round(),
+        hold(y, EDGE_MARGIN, area.height - EDGE_MARGIN - card.height).round(),
+    )
+}
+
 /// `content`, `at`'ın yanında (bkz. modül). `at` bileşenin kendi sol üst
 /// köşesine göredir.
 pub fn beside<'a, Message: 'a>(
@@ -60,6 +80,22 @@ pub fn beside<'a, Message: 'a>(
         content: content.into(),
         at,
         offset,
+        place: beside_pointer,
+    })
+}
+
+/// `content`, `at`'ın sol üstünde ([`above_left`]): imlecin sağ üstündeki
+/// değer alanıyla ve sağ altındaki ölçü etiketiyle çakışmaz.
+pub fn beside_above_left<'a, Message: 'a>(
+    content: impl Into<Element<'a, Message>>,
+    at: Point,
+    gap: Vector,
+) -> Element<'a, Message> {
+    Element::new(Beside {
+        content: content.into(),
+        at,
+        offset: gap,
+        place: above_left,
     })
 }
 
@@ -67,6 +103,8 @@ struct Beside<'a, Message> {
     content: Element<'a, Message>,
     at: Point,
     offset: Vector,
+    /// Where the card goes: [`beside_pointer`] or [`above_left`].
+    place: fn(Point, Size, Size, Vector) -> Point,
 }
 
 impl<Message> Widget<Message, Theme, Renderer> for Beside<'_, Message> {
@@ -91,7 +129,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Beside<'_, Message> {
             renderer,
             &layout::Limits::new(Size::ZERO, room),
         );
-        let at = beside_pointer(self.at, card.size(), area, self.offset);
+        let at = (self.place)(self.at, card.size(), area, self.offset);
         Node::with_children(area, vec![card.move_to(at)])
     }
 
@@ -184,7 +222,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Beside<'_, Message> {
 mod tests {
     use iced::{Point, Size, Vector};
 
-    use super::{EDGE_MARGIN, beside_pointer};
+    use super::{EDGE_MARGIN, above_left, beside_pointer};
 
     const AREA: Size = Size::new(800.0, 600.0);
     const CARD: Size = Size::new(280.0, 120.0);
@@ -237,6 +275,20 @@ mod tests {
             beside_pointer(at(50.0, 50.0), big, small, BELOW),
             at(EDGE_MARGIN, EDGE_MARGIN)
         );
+    }
+
+    /// The lock tag above-left of the pointer; right of it near the left
+    /// edge, below it near the top.
+    #[test]
+    fn above_left_of_the_pointer_else_its_other_side() {
+        let gap = Vector::new(16.0, 16.0);
+        let tag = Size::new(150.0, 20.0);
+        assert_eq!(
+            above_left(at(400.0, 300.0), tag, AREA, gap),
+            at(400.0 - 16.0 - 150.0, 300.0 - 16.0 - 20.0)
+        );
+        assert_eq!(above_left(at(60.0, 300.0), tag, AREA, gap), at(76.0, 264.0));
+        assert_eq!(above_left(at(400.0, 20.0), tag, AREA, gap), at(234.0, 36.0));
     }
 
     /// The value field, 58 px above the cursor: never flips up or down; near

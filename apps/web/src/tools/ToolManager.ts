@@ -2,6 +2,10 @@ import type { AppContext } from '../app/context';
 import type { Disposable } from '../core/disposable';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
+import { clearLocks, lockReference, NO_LOCKS } from './locks';
+import { drawLocks } from './lockGuides';
+import type { CanvasPalette } from '../render/color';
+import type { Camera } from '../viewport/Camera';
 import type { Tool, ToolDescriptor, ToolGroup } from './Tool';
 
 export class ToolManager {
@@ -59,6 +63,8 @@ export class ToolManager {
     this.dropNested();
     this.current?.deactivate?.();
     this.promptSub?.();
+    // A new command starts with nothing locked (docs/adr/0166 §1).
+    this.ctx.settings.locks.set(NO_LOCKS);
     this.current = d.create(this.ctx);
     if (id !== 'select' && id !== 'pan') this.lastRepeatable = id;
     this.promptSub = this.current.prompt.subscribe((p) => this.prompt.set(p), true);
@@ -79,6 +85,7 @@ export class ToolManager {
     this.dropNested();
     this.current?.deactivate?.();
     this.promptSub?.();
+    this.ctx.settings.locks.set(NO_LOCKS);
     this.current = tool;
     this.promptSub = tool.prompt.subscribe((p) => this.prompt.set(p), true);
     this.ctx.log.command(label);
@@ -128,8 +135,9 @@ export class ToolManager {
     this.parents = [];
   }
 
-  /** Esc: leave the running tool and return to selection. */
+  /** Esc: leave the running tool and return to selection; the locks go first (docs/adr/0166 §1). */
   exit(): void {
+    if (lockReference(this.ctx) && clearLocks(this.ctx)) return;
     if (this.current?.cancel?.()) return;
     if (this.parents.length) return this.unnest(null);
     if (this.activeId.value === 'select') {
@@ -137,6 +145,11 @@ export class ToolManager {
       return;
     }
     this.activate('select');
+  }
+
+  /** The digitizing locks' guides and tag over the drawing (docs/adr/0166 §6); the viewport calls it after the tool's preview. */
+  drawLocks(g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette, cursor: Vec2 | null): void {
+    drawLocks(this.ctx, g, cam, pal, cursor);
   }
 
   repeatLast(): void {

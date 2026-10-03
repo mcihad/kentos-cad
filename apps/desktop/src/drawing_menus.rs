@@ -311,9 +311,15 @@ impl App {
                 .submenu("Nokta hesapla", crate::point_calc::calc_menu())
                 .icon(crate::icons::from_web(Some("calc")));
         }
-        let menu = menu
+        let mut menu = menu
             .submenu("Tek seferlik kenet", self.snap_menu(Menu::new()))
             .icon(crate::icons::from_web(Some("snap")));
+        // The digitizing locks (docs/adr/0166 §6), while a point is expected after another.
+        if self.session.lock_reference().is_some() {
+            menu = menu
+                .submenu("Kilit", self.lock_menu())
+                .icon(crate::icons::from_web(Some("lock")));
+        }
         [
             "draft.snap",
             "draft.ortho",
@@ -328,6 +334,22 @@ impl App {
             "-" => menu.separator(),
             id => self.command_item(menu, id),
         })
+    }
+
+    /// Kilit ▸ (the web's `lockItems`): the locks for the next point; Açı
+    /// is a CBS project's Semt.
+    fn lock_menu(&self) -> Menu<Message> {
+        let mut menu = self.command_item(Menu::new(), "draft.lock.length");
+        let angle = format!("{} kilidi…", self.format().direction_name());
+        let on_press = self
+            .available("draft.lock.angle")
+            .then_some(Message::Run("draft.lock.angle"));
+        if let Some(command) = catalog().get("draft.lock.angle") {
+            menu = menu.item(angle, on_press).icon(command.icon);
+        }
+        let menu = self.command_item(menu, "draft.lock.deflection").separator();
+        let menu = self.command_item(menu, "draft.lock.keep");
+        self.command_item(menu, "draft.lock.clear")
     }
 
     /// The one-shot snaps (the web's `snapItems`), after `menu`'s header.
@@ -459,8 +481,9 @@ mod tests {
 }
 
 /// Pictures for the owner: the idle menu, the command menu (Çizgi running),
-/// the one-shot snap menu and its chip in the command line, and the grip
-/// menu over the selected parcel's first corner and its first edge's middle;
+/// the one-shot snap menu and its chip in the command line, the grip menu
+/// over the selected parcel's first corner and its first edge's middle, and
+/// Kilit ▸ (Çoklu çizgi after its first point, docs/adr/0166 §6);
 /// `.run/shots/sag-tik-*`.
 /// `cargo test -p kentos-desktop drawing_menus::screens -- --ignored --nocapture`
 #[cfg(test)]
@@ -481,6 +504,7 @@ fn screens() {
                 "sonraki-tik",
                 "tutamac-kose",
                 "tutamac-kenar",
+                "kilit",
             ] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
@@ -505,6 +529,38 @@ fn screens() {
                     "komut" => {
                         let _ = app.update(Message::Run("tool.line"));
                         app.right_held(at);
+                    }
+                    "kilit" => {
+                        // Çoklu çizgi with its first point, so that the locks
+                        // can be had; the command menu held open and Kilit
+                        // reached from its foot with the keys (Zoom extents,
+                        // the five drafting aids, then Kilit) and opened.
+                        let _ = app.update(Message::Run("tool.polyline"));
+                        let first = Point::new(at.x - 160.0, at.y + 80.0);
+                        for event in [
+                            crate::viewport::Event::Moved(first),
+                            crate::viewport::Event::Pressed(first),
+                            crate::viewport::Event::Released(first),
+                        ] {
+                            let _ = app.update(Message::Viewport(event));
+                        }
+                        app.right_held(at);
+                        snapshot.settle(&mut app, App::view, &mut update);
+                        use iced::keyboard::key::Named;
+                        for _ in 0..7 {
+                            snapshot.input(
+                                &mut app,
+                                App::view,
+                                &mut update,
+                                Input::Key(Named::ArrowUp),
+                            );
+                        }
+                        snapshot.input(
+                            &mut app,
+                            App::view,
+                            &mut update,
+                            Input::Key(Named::ArrowRight),
+                        );
                     }
                     "kenet" => {
                         let _ = app.update(Message::Run("tool.line"));

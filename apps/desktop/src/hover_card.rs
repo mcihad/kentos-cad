@@ -576,10 +576,10 @@ fn screens() {
                     };
                     let at = Point::new(x as f32, y as f32);
                     let _ = app.update(Message::Viewport(Event::Moved(at)));
-                    app.field = Some(crate::input::Field {
-                        text: "@25.50<45".into(),
-                        at: camera.screen_to_world(x, y),
-                    });
+                    app.field = Some(crate::input::Field::point(
+                        "@25.50<45".into(),
+                        camera.screen_to_world(x, y),
+                    ));
                 } else {
                     if name != "uzerine-gelme" {
                         let doc = app.document.as_mut().expect("open");

@@ -22,6 +22,7 @@ import { bulgeRingArea } from '../model/geom/bulge';
 import type { Area } from '../model/geom/overlay';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { joinCorners, sayJoined, withJoined, type Joining } from './junctions';
+import { followLocks } from './locks';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -57,6 +58,16 @@ export abstract class PointInputTool implements Tool {
 
   snapFrom(): Vec2 | null {
     return this.last;
+  }
+
+  /** The last edge's direction (docs/adr/0166 §1): Sapma turns from it. Null before the first edge. */
+  travelDirection(): Vec2 | null {
+    const n = this.pts.length;
+    if (n < 2) return null;
+    const a = this.pts[n - 2];
+    const b = this.pts[n - 1];
+    const l = dist(a, b);
+    return l < 1e-9 ? null : { x: (b.x - a.x) / l, y: (b.y - a.y) / l };
   }
 
   protected abstract promptFor(count: number): string;
@@ -109,6 +120,8 @@ export abstract class PointInputTool implements Tool {
   protected reset(): void {
     this.pts = [];
     this.made = [];
+    // No reference now: the locks go (Kalıcı stays with the command).
+    followLocks(this.ctx);
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
   }
@@ -160,6 +173,8 @@ export abstract class PointInputTool implements Tool {
     // A first point starts a new object: what was written before is the drawing's to undo.
     if (!this.pts.length) this.made = [];
     this.onPoint(p);
+    // A one-shot lock goes with its point; a kept one follows it (docs/adr/0166 §1).
+    followLocks(this.ctx);
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
   }

@@ -205,6 +205,14 @@ impl Tool for Line {
         self.last()
     }
 
+    /// The chain's last line's direction (docs/adr/0166 §1).
+    fn travel(&self) -> Option<Vec2> {
+        let n = self.pts.len();
+        (n >= 2)
+            .then(|| kentos_geometry_core::tools::locks::unit(self.pts[n - 2], self.pts[n - 1]))
+            .flatten()
+    }
+
     fn label(&self) -> &'static str {
         LABEL
     }

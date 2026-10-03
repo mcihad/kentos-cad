@@ -628,15 +628,25 @@ impl App {
                     hot: self.session.active_grip(),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
+                    locks: self.lock_marks(&format),
                     colors: mark_colors(self.canvas()),
                 };
                 let over = preview::layer(
                     &self.viewport.camera,
                     marks,
                     self.session.preview(&format),
-                    self.field
-                        .as_ref()
-                        .map(|f| (f.text.as_str(), f.at, format.input_hint())),
+                    self.field.as_ref().map(|f| preview::FieldView {
+                        text: f.text.as_str(),
+                        at: f.at,
+                        hint: match f.mode {
+                            Some(_) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
+                            None => format.input_hint(),
+                        },
+                        label: f.mode.map(|m| self.lock_name(m)),
+                        locks: self.lock_chips(&format),
+                        length_first: self.locks.length.is_some(),
+                    }),
+                    self.lock_tag(&format),
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
@@ -912,6 +922,20 @@ impl App {
                     )
                     .key("×"),
                 None => prompt,
+            })
+            // The locks holding the next point; the × lets them go (docs/adr/0166 §6).
+            .map(|prompt| {
+                if self.locks.any() && self.session.lock_reference().is_some() {
+                    let words = self.locks.words(&self.format());
+                    prompt
+                        .option(
+                            format!("Kilit: {}", words.join(" · ")),
+                            Message::Run("draft.lock.clear"),
+                        )
+                        .key("×")
+                } else {
+                    prompt
+                }
             })
     }
 

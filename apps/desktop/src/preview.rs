@@ -23,15 +23,30 @@ use kentos_ui::widget::beside;
 use crate::app::Message;
 use crate::marks::Marks;
 
+/// The value field as it shows: what is typed, where, what can be typed,
+/// the lock the number is for and the locks held (docs/adr/0166 §6).
+pub struct FieldView<'a> {
+    pub text: &'a str,
+    pub at: Vec2,
+    pub hint: String,
+    /// Uzunluk, Açı or Semt, Sapma: the lock the number is for; none for a point.
+    pub label: Option<&'static str>,
+    /// The locks held, as the chips say them; the first is the length's when `length_first`.
+    pub locks: Vec<String>,
+    pub length_first: bool,
+}
+
 /// The layer over the drawing area: the selection box and the snap marker
-/// (marks.rs, docs/adr/0029), the draft, the tag and the value field.
+/// (marks.rs, docs/adr/0029), the draft, the tag and the value field, and
+/// the digitizing locks' tag above-left of the cursor (docs/adr/0166 §6).
 /// Always present, empty when there is nothing to show, so the drawing
 /// area keeps its place in the widget tree (and its gesture state).
 pub fn layer<'a>(
     camera: &Camera,
     marks: Marks,
     preview: Option<Preview>,
-    field: Option<(&'a str, Vec2, String)>,
+    field: Option<FieldView<'a>>,
+    lock_tag: Option<(String, Vec2)>,
 ) -> Element<'a, Message> {
     let screen = |p: Vec2| {
         let [x, y] = camera.world_to_screen(p);
@@ -67,13 +82,22 @@ pub fn layer<'a>(
             ));
         }
     }
-    if let Some((value, at, hint)) = field {
+    if let Some((label, at)) = lock_tag {
+        // Above left of the cursor: the value field is above right of it, the tool's tag below right.
+        let at = screen(at);
+        layers.push(kentos_ui::widget::beside_above_left(
+            measurement(vec![label], Tone::Snap, snap),
+            Point::new(at.x.round(), at.y.round()),
+            Vector::new(16.0, 16.0),
+        ));
+    }
+    if let Some(field) = field {
         // Above right of the cursor, clear of the tag below right of it;
         // left of it near the drawing's right edge, lower near its top, never
         // outside it (the web's `besidePointer`, DESIGN.md §7.4.2).
-        let at = screen(at);
+        let at = screen(field.at);
         layers.push(beside(
-            value_field(value, hint),
+            value_field(field, snap),
             Point::new(at.x.round(), at.y.round()),
             Vector::new(18.0, -58.0),
         ));
@@ -118,8 +142,18 @@ fn measurement<'a>(lines: Vec<String>, tone: Tone, snap: Color) -> Element<'a, M
 }
 
 /// The value field (the web's `CursorInput`): what is typed so far with a
-/// caret, and what can be typed (`hint`, in the project's axes).
-fn value_field<'a>(value: &'a str, hint: String) -> Element<'a, Message> {
+/// caret, and what can be typed (`hint`, in the project's axes); in a
+/// lock's field its name before it, and the locks held as chips under it,
+/// each with its × (docs/adr/0166 §6).
+fn value_field<'a>(field: FieldView<'a>, snap: Color) -> Element<'a, Message> {
+    let FieldView {
+        text: value,
+        hint,
+        label,
+        locks,
+        length_first,
+        ..
+    } = field;
     let caret =
         container(Space::new().width(1).height(typography::body() + 2.0)).style(|theme: &Theme| {
             container::Style {
@@ -157,7 +191,39 @@ fn value_field<'a>(value: &'a str, hint: String) -> Element<'a, Message> {
         .style(|theme: &Theme| text::Style {
             color: Some(Tokens::of(theme).muted),
         });
-    container(column![input, container(hint).padding([2, 2])].spacing(2))
+    let input: Element<'a, Message> = match label {
+        Some(name) => row![
+            container(
+                text(name)
+                    .font(typography::ui_strong())
+                    .size(typography::caption())
+                    .style(|theme: &Theme| text::Style {
+                        color: Some(Tokens::of(theme).accent),
+                    })
+            )
+            .padding([0, 2]),
+            input
+        ]
+        .spacing(4)
+        .align_y(iced::Center)
+        .into(),
+        None => input.into(),
+    };
+    let chips = (!locks.is_empty()).then(|| {
+        iced::widget::Row::with_children(
+            locks
+                .into_iter()
+                .enumerate()
+                .map(|(i, words)| lock_chip(words, i == 0 && length_first, snap)),
+        )
+        .spacing(4)
+        .wrap()
+    });
+    let mut body = column![input].spacing(2);
+    if let Some(chips) = chips {
+        body = body.push(container(chips).padding([3, 0]));
+    }
+    container(body.push(container(hint).padding([2, 2])))
         .padding(4)
         .style(|theme: &Theme| {
             let t = Tokens::of(theme);
@@ -175,6 +241,43 @@ fn value_field<'a>(value: &'a str, hint: String) -> Element<'a, Message> {
             }
         })
         .into()
+}
+
+/// A lock held, as a chip in the snap colour: the lock, its words, and a ×
+/// that lets it go (the length's or the direction's).
+fn lock_chip<'a>(words: String, length: bool, snap: Color) -> Element<'a, Message> {
+    let drop = iced::widget::button(
+        kentos_ui::icon::icon(kentos_ui::icon::Icon::Close)
+            .size(11.0)
+            .tone(kentos_ui::icon::Tone::Muted),
+    )
+    .padding(2)
+    .style(kentos_ui::style::button::ghost)
+    .on_press(Message::DropLock(length));
+    container(
+        row![
+            kentos_ui::icon::icon(crate::icons::from_web(Some("lock")))
+                .size(11.0)
+                .color(snap),
+            text(words)
+                .font(typography::mono())
+                .size(typography::caption()),
+            drop
+        ]
+        .spacing(4)
+        .align_y(iced::Center),
+    )
+    .padding([0, 2])
+    .height(typography::scaled(20.0))
+    .align_y(iced::Center)
+    .style(move |theme: &Theme| container::Style {
+        text_color: Some(Tokens::of(theme).text),
+        border: border::rounded(kentos_ui::theme::shape::radius(3.0))
+            .width(1)
+            .color(snap),
+        ..container::Style::default()
+    })
+    .into()
 }
 
 /// The draft's lines, in the accent colour (the web's `PathTool.draw`), and

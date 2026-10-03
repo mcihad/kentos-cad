@@ -1,5 +1,8 @@
+import type { AppContext } from '../app/context';
+import type { PolarAngles } from '../app/format';
 import type { Vec2 } from '../model/geometry';
 import { op } from '../wasm/core';
+import { takesTypedInput } from './Tool';
 import type { Tracking } from './tracking';
 
 /**
@@ -49,4 +52,147 @@ const LOCK_TEXT = /^<\s*([-+]?\d+(?:\.\d+)?)$/;
 export function parseLockText(text: string): number | null {
   const m = text.trim().match(LOCK_TEXT);
   return m ? +m[1] : null;
+}
+
+// ── The session's locks (docs/adr/0166 §1), the desktop's kentos_interaction::locks ─────────────────────────────────
+
+/** Where a locked direction comes from: an angle typed in the project's way (Açı, CBS's Semt), a turn from the previous edge (Sapma), a picked edge (Nesneye paralel, dik). */
+export type Toward =
+  | { readonly kind: 'angle'; readonly value: number }
+  | { readonly kind: 'deflection'; readonly value: number }
+  | { readonly kind: 'parallel'; readonly u: Vec2 }
+  | { readonly kind: 'perpendicular'; readonly u: Vec2 };
+
+/** What the value card asks for when a lock is chosen from the menu: its typed number locks that. */
+export type LockAsk = 'length' | 'angle' | 'deflection';
+
+/** What holds the next point; the session's, never saved, a new command starts with none. */
+export interface LockState {
+  /** Metres from the reference. */
+  readonly length: number | null;
+  readonly toward: Toward | null;
+  /** Kalıcı: the locks stay for the points after the next, until the command ends. */
+  readonly keep: boolean;
+  /** The reference the locks were made at: when it moves (a point was placed), one-shot locks go and kept ones follow. */
+  readonly at: Vec2 | null;
+}
+
+export const NO_LOCKS: LockState = { length: null, toward: null, keep: false, at: null };
+
+/** A lock asked for with no point to measure it from (the desktop's words). */
+export const NO_LOCK_REFERENCE = 'Kilit için önce bir nokta verin: uzunluk ve doğrultu son noktadan ölçülür.';
+/** Sapma asked for with no edge to turn from. */
+export const NO_TRAVEL = 'Sapma için önce bir kenar çizin: sapma önceki kenarın doğrultusundan ölçülür.';
+/** What Esc and Kilitleri kaldır say. */
+export const LOCKS_GONE = 'Kilitler kaldırıldı.';
+
+export const hasLocks = (s: LockState): boolean => s.length !== null || s.toward !== null;
+
+const samePoint = (a: Vec2 | null, b: Vec2 | null): boolean => (a === null || b === null ? a === b : a.x === b.x && a.y === b.y);
+
+/** The locks after the reference moved to `from`: one-shot ones go, kept ones follow it. */
+export function followed(s: LockState, from: Vec2 | null): LockState {
+  if (!hasLocks(s) || samePoint(from, s.at)) return s;
+  if (from && s.keep) return { ...s, at: from };
+  return { ...s, length: null, toward: null, at: null };
+}
+
+/** The direction locked for the next point, as the core takes it (none for a deflection with no edge to turn from). */
+export function lockedDirection(s: LockState, travel: Vec2 | null, angles: PolarAngles): LockDirection | null {
+  const t = s.toward;
+  if (!t) return null;
+  switch (t.kind) {
+    case 'angle':
+      return { u: lockDirection(t.value, angles.fromNorth, angles.grads), both: false };
+    case 'deflection': {
+      const u = travel && lockDeflected({ x: 0, y: 0 }, travel, t.value, angles.fromNorth, angles.grads);
+      return u ? { u, both: false } : null;
+    }
+    case 'parallel':
+      return { u: t.u, both: true };
+    case 'perpendicular':
+      return { u: { x: -t.u.y, y: t.u.x }, both: true };
+  }
+}
+
+/** The locks as the value card's chips and the cursor's tag say them (“Uzunluk 12.500 m”, “Semt 100.0000 g” …). */
+export function lockWords(ctx: AppContext, s: LockState = ctx.settings.locks.value): string[] {
+  const f = ctx.format;
+  const out: string[] = [];
+  if (s.length !== null) out.push(`Uzunluk ${f.length(s.length)}`);
+  const t = s.toward;
+  if (t?.kind === 'angle') out.push(`${f.directionName} ${f.angle(f.angleFromTyped(t.value))}`);
+  else if (t?.kind === 'deflection') out.push(`Sapma ${f.angle(f.angleFromTyped(t.value))}`);
+  else if (t?.kind === 'parallel') out.push('Paralel');
+  else if (t?.kind === 'perpendicular') out.push('Dik');
+  if (s.keep && hasLocks(s)) out.push('Kalıcı');
+  return out;
+}
+
+/** The point the locks are measured from: the running command's last point, or where a grip being moved was. */
+export function lockReference(ctx: AppContext): Vec2 | null {
+  const tool = ctx.tools.active;
+  if (!takesTypedInput(ctx.tools.activeId.value, tool) || tool.snaps === false) return null;
+  return tool.snapFrom?.() ?? null;
+}
+
+/** The direction the object being drawn travels at its last point (Sapma turns from it). */
+export const lockTravel = (ctx: AppContext): Vec2 | null => ctx.tools.active.travelDirection?.() ?? null;
+
+/** After an event: the locks follow the reference; one-shot ones go once their point is placed. */
+export function followLocks(ctx: AppContext): void {
+  // A context without locks (a tool's unit test) has nothing to follow.
+  const s = ctx.settings.locks?.value;
+  if (!s || !hasLocks(s)) return;
+  const next = followed(s, lockReference(ctx));
+  if (next !== s) ctx.settings.locks.set(next);
+}
+
+function sayLocks(ctx: AppContext): void {
+  ctx.log.info(`Kilit: ${lockWords(ctx).join(' · ')}.`);
+}
+
+/** Locks the next point's length (metres) at the lock reference; false (and why) without one. */
+export function lockLength(ctx: AppContext, metres: number): boolean {
+  const at = lockReference(ctx);
+  if (!at) return void ctx.log.warn(NO_LOCK_REFERENCE), false;
+  ctx.settings.locks.set({ ...followed(ctx.settings.locks.value, at), length: metres, at });
+  sayLocks(ctx);
+  ctx.view.requestOverlay();
+  return true;
+}
+
+/** Locks the next point's direction at the lock reference; a deflection needs an edge to turn from. */
+export function lockToward(ctx: AppContext, toward: Toward): boolean {
+  const at = lockReference(ctx);
+  if (!at) return void ctx.log.warn(NO_LOCK_REFERENCE), false;
+  if (toward.kind === 'deflection' && !lockTravel(ctx)) return void ctx.log.warn(NO_TRAVEL), false;
+  ctx.settings.locks.set({ ...followed(ctx.settings.locks.value, at), toward, at });
+  sayLocks(ctx);
+  ctx.view.requestOverlay();
+  return true;
+}
+
+/** Kalıcı on or off for the running command. */
+export function keepLocks(ctx: AppContext, keep: boolean): void {
+  ctx.settings.locks.set({ ...ctx.settings.locks.value, keep });
+  ctx.log.info(keep ? 'Kilitler kalıcı: sonraki noktalarda da durur.' : 'Kilitler tek seferlik: nokta konunca kalkar.');
+}
+
+/** Kilitleri kaldır (and Esc's first step): every lock goes, Kalıcı stays with the command. Whether there were any. */
+export function clearLocks(ctx: AppContext): boolean {
+  const s = ctx.settings.locks.value;
+  if (!hasLocks(s)) return false;
+  ctx.settings.locks.set({ ...s, length: null, toward: null, at: null });
+  ctx.log.info(LOCKS_GONE);
+  ctx.view.requestOverlay();
+  return true;
+}
+
+/** `<45` typed where a point is expected: the next point's direction locked at that angle (§6). Whether it was lock text. */
+export function typedLock(ctx: AppContext, text: string): boolean {
+  const a = parseLockText(text);
+  if (a === null || !takesTypedInput(ctx.tools.activeId.value, ctx.tools.active)) return false;
+  lockToward(ctx, { kind: 'angle', value: a });
+  return true;
 }

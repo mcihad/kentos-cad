@@ -255,6 +255,8 @@ pub enum Message {
     Layer(crate::layering::Event),
     /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
     DrawingMenu(crate::drawing_menus::Event),
+    /// A lock chip's × in the value field: the length's (true) or the direction's (locks.rs).
+    DropLock(bool),
     /// The text field over the drawing (text_field.rs).
     TextField(crate::text_field::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
@@ -534,6 +536,9 @@ pub struct App {
     /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
     /// session's, not a setting; the tools see them in their context.
     pub(crate) overlap_layers: Vec<String>,
+    /// The digitizing locks (docs/adr/0166): what holds the next point; the
+    /// session's, the tools see them in their context.
+    pub locks: kentos_interaction::LockState,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
@@ -743,6 +748,7 @@ impl App {
             calc: crate::calc::Calc::default(),
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
             overlap_layers: Vec::new(),
+            locks: kentos_interaction::LockState::default(),
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
@@ -1074,6 +1080,7 @@ impl App {
             Message::RibbonModelFlashEnd(id) => self.search_model_flash_end(&id),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
+            Message::DropLock(length) => self.drop_lock(length),
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
             Message::Blocks(event) => self.blocks_event(event),
@@ -1508,6 +1515,17 @@ impl App {
                 "Topolojik düzenlemede noktalar da",
             ),
             "draft.overlap" => self.toggle_overlap(),
+            // The digitizing locks (docs/adr/0166 §6), on the running command.
+            "draft.lock.length" => self.ask_lock(kentos_interaction::LockAsk::Length),
+            "draft.lock.angle" => self.ask_lock(kentos_interaction::LockAsk::Angle),
+            "draft.lock.deflection" => self.ask_lock(kentos_interaction::LockAsk::Deflection),
+            "draft.lock.keep" => {
+                let keep = !self.locks.keep;
+                self.with_tool(|s, cx| s.keep_locks(keep, cx));
+            }
+            "draft.lock.clear" => {
+                self.with_tool(|s, cx| s.clear_locks(cx));
+            }
             "draft.overlap.allow" => self.choose_overlap(kentos_interaction::Overlap::Allow),
             "draft.overlap.layer" => self.choose_overlap(kentos_interaction::Overlap::Layer),
             "draft.overlap.layers" => self.choose_overlap(kentos_interaction::Overlap::Layers),
@@ -1622,6 +1640,7 @@ impl App {
             "draft.topology" => self.draft.topology,
             "draft.topologyPoints" => self.draft.topology_points,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
+            "draft.lock.keep" => self.locks.keep,
             "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,
             "draft.overlap.layer" => self.draft.overlap == kentos_interaction::Overlap::Layer,
             "draft.overlap.layers" => self.draft.overlap == kentos_interaction::Overlap::Layers,
@@ -1652,6 +1671,14 @@ impl App {
                     || (self.session.is_running() && self.session.point_count() > 0)
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
+            // The locks work while a point is expected after another (docs/adr/0166 §6).
+            "draft.lock.length" | "draft.lock.angle" | "draft.lock.keep" => {
+                self.session.lock_reference().is_some()
+            }
+            "draft.lock.deflection" => {
+                self.session.lock_reference().is_some() && self.session.travel().is_some()
+            }
+            "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),

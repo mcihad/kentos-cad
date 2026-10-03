@@ -122,6 +122,12 @@ const ITEMS = [
   { id: 'viewport-idle', open: (ui) => ui.viewportRight({}) },
   { id: 'viewport-snap', open: (ui) => ui.viewportRight({ shift: true }) },
   { id: 'viewport-command', open: (ui) => ui.viewportRight({ tool: 'tool.line', hold: true }), close: (ui) => ui.escapeAll(3) },
+  // Kilit ▸ (docs/adr/0166 §6): Çoklu çizgi has its first point, so the locks can be had.
+  {
+    id: 'viewport-command-locks',
+    open: async (ui) => (await ui.viewportRight({ tool: 'tool.polyline', hold: true }), await ui.clickText('.menu__item', 'Kilit')),
+    close: (ui) => ui.escapeAll(4),
+  },
   { id: 'ribbon-qat', open: (ui) => ui.click('.ribbon__qat-more'), close: (ui) => ui.escapeAll(2) },
   { id: 'ribbon-help', open: (ui) => ui.click('.ribbon__icon[aria-label="Yardım"]'), close: (ui) => ui.escapeAll(2) },
   { id: 'shortcuts', open: (ui) => ui.run('help.shortcuts') },

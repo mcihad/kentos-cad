@@ -93,7 +93,7 @@ pub use ai::{
 };
 pub use app_menu::AppMenu;
 pub use assets::AssetBrowser;
-pub use beside::{beside, beside_pointer};
+pub use beside::{above_left, beside, beside_above_left, beside_pointer};
 pub use brand::brand_mark;
 pub use chips::ChipInput;
 pub use class_scale::ClassScale;

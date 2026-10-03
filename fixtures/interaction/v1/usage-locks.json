@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-locks",
+  "title": "Kullanım: sayısallaştırma kilitleri; Çoklu çizgi'de 12 ve Tab uzunluğu, 60 ve Tab semti kilitler, boş Enter kilitlerin noktasını koyar; Sapma… önceki kenardan 100 g sağa döndürür, tık ışının üstüne iner",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0166 §6",
+  "covers": ["HYB-10"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.1 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.1,
+  "steps": [
+    { "run": "tool.polyline", "note": "Çoklu çizgi." },
+    { "click": [-15, -8], "expect": { "points": 1 } },
+    { "move": [-6, -2] },
+    { "text": "12", "expect": { "dynamicInput": "12" } },
+    { "key": "Tab", "note": "12 ve Tab uzunluğu kilitler: kart semti sorar, kilit kartın altında çip; başvurunun çevresinde 12 m'lik kesikli daire.", "expect": { "dynamicInput": "", "locks": ["Uzunluk 12.000 m"] } },
+    { "shot": "uzunluk" },
+    { "text": "60" },
+    { "key": "Tab", "note": "60 ve Tab semti kilitler, kart yeniden uzunluğu sorar: kesikli ışın semt 60 g'de, nokta daireyi kestiği yerde.", "expect": { "dynamicInput": "", "locks": ["Uzunluk 12.000 m", "Semt 60.0000 g"] } },
+    { "shot": "uzunluk-semt" },
+    { "key": "Enter", "note": "Boş Enter kilitlerin tuttuğu noktayı koyar; tek seferlik kilitler kalkar.", "expect": { "dynamicInput": null, "points": 2, "locks": [] } },
+    { "run": "draft.lock.deflection", "note": "Sağ tık Kilit ▸ Sapma…: kart sapmayı sorar.", "expect": { "dynamicInput": "" } },
+    { "text": "100" },
+    { "key": "Enter", "note": "Sapma önceki kenardan 100 g sağa (CBS'de saat yönünde); uzunluk kilitli olmadığından nokta konmaz.", "expect": { "dynamicInput": null, "points": 2, "locks": ["Sapma 100.0000 g"] } },
+    { "move": [8, -9] },
+    { "shot": "sapma", "note": "Kesikli ışın önceki kenara dik; imleç onun üstüne iner, sol üstünde “Kilit: Sapma 100.0000 g”, komut satırında aynı söz ve ×." },
+    { "click": [8, -9], "expect": { "points": 3, "locks": [] } },
+    { "key": "Enter", "note": "Çoklu çizgi yazılır: ikinci köşe 12 m'de, semt 60 g'de; üçüncüsü ilk kenara dik.", "expect": { "entities": 1, "newest": { "kind": "polyline", "points": [[-15, -8], [-5.2918, -0.9466], [3.1300, -12.5382]] } } },
+    { "shot": "cizgi" }
+  ]
+}

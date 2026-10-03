@@ -238,6 +238,8 @@ pub struct Observation {
     pub track: Option<TrackSeen>,
     /// The open window's title (answers.rs).
     pub dialog: Option<String>,
+    /// The digitizing locks' words (docs/adr/0166 §6).
+    pub locks: Vec<String>,
 }
 
 /// Object tracking's lock as a step sees it: the point and each line's origin and angle.
@@ -776,6 +778,7 @@ impl<'a> Player<'a> {
                 .map(str::to_owned)
                 .collect(),
             dynamic_input: app.field.as_ref().map(|f| f.text.clone()),
+            locks: app.locks.words(&app.format()),
             command_line: app.command_input.clone(),
             entities: doc.map_or(0, Document::entity_count),
             newest,

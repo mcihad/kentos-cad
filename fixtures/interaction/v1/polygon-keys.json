@@ -33,8 +33,8 @@
     { "move": [-5, -10] },
     { "text": "125", "expect": { "dynamicInput": "125" } },
     { "key": "Backspace", "expect": { "dynamicInput": "12" } },
-    { "key": "Tab", "note": "Tab değeri silmez, alanı kapatmaz.", "expect": { "dynamicInput": "12" } },
-    { "key": "Space", "note": "Boşluk, Enter gibi değeri uygular.", "expect": { "dynamicInput": null, "points": 2 } },
+    { "key": "Tab", "note": "Tab değeri kaybetmez, alanı kapatmaz: yazılan uzunluğu kilitler, alan doğrultuya geçer (docs/adr/0166 §6).", "expect": { "dynamicInput": "", "locks": ["Uzunluk 12.000 m"] } },
+    { "key": "Space", "note": "Boşluk, Enter gibi uygular: boş doğrultu alanında imlecin doğrultusu alınır, nokta kilitli uzunlukta konur; tek seferlik kilit kalkar.", "expect": { "dynamicInput": null, "points": 2, "locks": [] } },
     { "text": "7", "expect": { "dynamicInput": "7" } },
     { "key": "Esc", "note": "İlk Esc yalnız değer alanını kapatır; komut ve noktaları sürer.", "expect": { "dynamicInput": null, "points": 2, "tool": "polygon" } },
 

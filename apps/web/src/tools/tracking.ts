@@ -6,6 +6,7 @@ import { parsePointInput } from './coordinateInput';
 import { drawTag } from './preview';
 import type { ToolPointer } from './Tool';
 import { fixed } from '../core/displayNumber';
+import { constrainLocked, followLocks, hasLocks, lockedDirection, lockTravel, NO_LOCKS } from './locks';
 
 /** A polar-tracking ray the cursor is currently locked to. */
 export interface Tracking {
@@ -28,14 +29,25 @@ export const constrainCursor =
 /**
  * Resolves the effective cursor for point input: object snap wins, then
  * ortho (Shift inverts it), then polar tracking to the nearest increment
- * within 10 px.
+ * within 10 px. The digitizing locks hold it (docs/adr/0166 §2): a locked
+ * direction projects even a snapped point; a length alone with the cursor
+ * on `from` leaves it there.
  */
 export function constrainPoint(ctx: AppContext, from: Vec2 | null, p: ToolPointer): { point: Vec2; tracking: Tracking | null } {
+  if (from) followLocks(ctx);
+  // A context without locks (a tool's unit test) has none.
+  const locks = ctx.settings.locks?.value ?? NO_LOCKS;
+  const polarStep = ctx.settings.polar.value ? ctx.prefs.polarIncrement.value : null;
+  const ortho = ctx.settings.ortho.value !== p.shift;
+  if (from && hasLocks(locks)) {
+    const dir = lockedDirection(locks, lockTravel(ctx), ctx.format.angles);
+    const r = constrainLocked(from, p.world, !!(p.snap || p.track), ortho, polarStep, ctx.view.worldTolerance(CAPTURE_PX), locks.length, dir?.u ?? null, dir?.both ?? false);
+    return r ?? { point: from, tracking: null };
+  }
   // Object snaps and object tracking are exact; ortho and polar never move them (the core
   // answers the same; this saves the call on every snapped move).
   if (!from || p.snap || p.track) return { point: p.world, tracking: null };
-  const polarStep = ctx.settings.polar.value ? ctx.prefs.polarIncrement.value : null;
-  return constrainCursor(from, p.world, false, ctx.settings.ortho.value !== p.shift, polarStep, ctx.view.worldTolerance(CAPTURE_PX));
+  return constrainCursor(from, p.world, false, ortho, polarStep, ctx.view.worldTolerance(CAPTURE_PX));
 }
 
 /** Dashed tracking ray across the viewport plus a small angle tag. */
