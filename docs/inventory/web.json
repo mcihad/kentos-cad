@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 224,
-      "implemented": 211,
+      "total": 283,
+      "implemented": 270,
       "partial": 0,
       "pending": 13
     },
@@ -67,21 +67,49 @@
       "pending": 0
     },
     "screens": {
-      "total": 71,
-      "implemented": 71,
+      "total": 85,
+      "implemented": 85,
       "partial": 0,
       "pending": 0
     },
-    "commandsWithoutPlace": [],
-    "commandsWithoutTests": 68,
+    "commandsWithoutPlace": [
+      "sheet.align.bottom",
+      "sheet.align.center",
+      "sheet.align.left",
+      "sheet.align.middle",
+      "sheet.align.right",
+      "sheet.align.top",
+      "sheet.alignTo.margins",
+      "sheet.alignTo.page",
+      "sheet.alignTo.selection",
+      "sheet.distribute.hCenters",
+      "sheet.distribute.hGaps",
+      "sheet.distribute.vCenters",
+      "sheet.distribute.vGaps",
+      "sheet.escape",
+      "sheet.export.kpafta",
+      "sheet.export.pdf",
+      "sheet.export.png",
+      "sheet.export.svg",
+      "sheet.matchSize.height",
+      "sheet.matchSize.width",
+      "sheet.model",
+      "sheet.nudge",
+      "sheet.print",
+      "sheet.redo",
+      "sheet.tool.hand",
+      "sheet.tool.select",
+      "sheet.undo"
+    ],
+    "commandsWithoutTests": 110,
     "commandsOnDesktop": 209,
     "desktop": {
       "commands": {
-        "total": 224,
+        "total": 283,
         "implemented": 209,
         "partial": 0,
         "pending": 13,
-        "none": 0,
+        "none": 59,
         "n/a": 2
       },
       "tools": {
@@ -141,11 +169,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 71,
+        "total": 85,
         "implemented": 68,
         "partial": 2,
         "pending": 0,
-        "none": 0,
+        "none": 14,
         "n/a": 1
       }
     },
@@ -596,6 +624,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/cloud.mjs"
       ],
       "note": "Kurum (tenant) projelerini açar. Kişisel çalışma alanı, proje düzeyinde yetki ve paylaşım henüz yok (ADR 0012, TODOS.md §12)."
@@ -922,6 +951,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/sheet/inspector/preflightTab.ts",
         "apps/web/src/ui/statusbar/StatusBar.ts"
       ],
       "status": "implemented",
@@ -1216,6 +1246,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/layout.mjs"
       ]
     },
@@ -1683,6 +1714,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "fixtures/interaction/v1/clipboard.json"
       ]
     },
@@ -1861,6 +1893,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -1918,6 +1951,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -2326,7 +2360,9 @@
         "web": "pending",
         "desktop": "pending"
       },
-      "tests": [],
+      "tests": [
+        "apps/web/scripts/e2e/sheet-pdf.mjs"
+      ],
       "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
     },
     {
@@ -2364,6 +2400,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/cloud.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ],
@@ -2537,6 +2574,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/layout.mjs"
       ]
     },
@@ -2840,7 +2878,6 @@
       "icon": "modelNew",
       "description": "İşlem araçlarını birbirine bağlayan bir akış (model) tasarlar.",
       "aliases": [
-        "MODEL",
         "YENIMODEL"
       ],
       "kind": "action",
@@ -3050,6 +3087,1422 @@
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
       ]
+    },
+    {
+      "id": "sheet.align.bottom",
+      "title": "Alta hizala",
+      "category": "Pafta",
+      "icon": "sheetAlignBottom",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.align.center",
+      "title": "Yatayda ortala",
+      "category": "Pafta",
+      "icon": "sheetAlignCenter",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.align.left",
+      "title": "Sola hizala",
+      "category": "Pafta",
+      "icon": "sheetAlignLeft",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.align.middle",
+      "title": "Düşeyde ortala",
+      "category": "Pafta",
+      "icon": "sheetAlignMiddle",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.align.right",
+      "title": "Sağa hizala",
+      "category": "Pafta",
+      "icon": "sheetAlignRight",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.align.top",
+      "title": "Üste hizala",
+      "category": "Pafta",
+      "icon": "sheetAlignTop",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.alignTo.margins",
+      "title": "Kenar boşluklarına göre",
+      "category": "Pafta",
+      "icon": "sheetAlignLeft",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.alignTo.page",
+      "title": "Sayfaya göre",
+      "category": "Pafta",
+      "icon": "sheetAlignLeft",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.alignTo.selection",
+      "title": "Seçime göre",
+      "category": "Pafta",
+      "icon": "sheetAlignLeft",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.atlas",
+      "title": "Atlas",
+      "category": "Pafta",
+      "icon": "sheetAtlas",
+      "description": "Kapsam katmanının her nesnesi için bir sayfa (pafta bölümleme).",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/preflightTab.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.delete",
+      "title": "Paftayı sil…",
+      "short": "Sil",
+      "category": "Pafta",
+      "icon": "trash",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.deleteItems",
+      "title": "Sil",
+      "category": "Pafta",
+      "icon": "trash",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Delete"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/ItemTree.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.distribute.hCenters",
+      "title": "Yatayda ortaları eşit dağıt",
+      "category": "Pafta",
+      "icon": "sheetDistributeH",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.distribute.hGaps",
+      "title": "Yatayda aralıkları eşitle",
+      "category": "Pafta",
+      "icon": "sheetDistributeH",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.distribute.vCenters",
+      "title": "Düşeyde ortaları eşit dağıt",
+      "category": "Pafta",
+      "icon": "sheetDistributeV",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.distribute.vGaps",
+      "title": "Düşeyde aralıkları eşitle",
+      "category": "Pafta",
+      "icon": "sheetDistributeV",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.duplicate",
+      "title": "Paftayı çoğalt",
+      "short": "Çoğalt",
+      "category": "Pafta",
+      "icon": "copy",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.duplicateItems",
+      "title": "Çoğalt",
+      "category": "Pafta",
+      "icon": "copy",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+D"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.escape",
+      "title": "Seçimi bırak",
+      "category": "Pafta",
+      "icon": "deselect",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Esc"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.export.kpafta",
+      "title": ".kpafta dosyası olarak…",
+      "category": "Pafta",
+      "icon": "export",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.export.pdf",
+      "title": "PDF olarak…",
+      "category": "Pafta",
+      "icon": "export",
+      "description": "Seçilen paftalar tek PDF’te, her biri bir sayfa: yazılar seçilebilir, haritalar vektör, konumlu haritalar GeoPDF.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/sheet-a11y.mjs",
+        "apps/web/scripts/e2e/sheet-pdf.mjs"
+      ]
+    },
+    {
+      "id": "sheet.export.png",
+      "title": "PNG olarak…",
+      "category": "Pafta",
+      "icon": "export",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.export.svg",
+      "title": "SVG olarak…",
+      "category": "Pafta",
+      "icon": "export",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.fromTemplate",
+      "title": "Şablondan pafta…",
+      "short": "Şablondan",
+      "category": "Pafta",
+      "icon": "sheetTemplate",
+      "description": "Pafta şablonları: sistemin, sizin, kurumunuzun ve sizinle paylaşılanlar; kipinize ve proje türünüze göre sıralı.",
+      "aliases": [
+        "SABLON",
+        "PAFTASABLONU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts",
+        "apps/web/src/ui/sheet/statusCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/sheet-a11y.mjs",
+        "apps/web/scripts/e2e/sheet-cloud.mjs"
+      ]
+    },
+    {
+      "id": "sheet.grid",
+      "title": "Karelaj",
+      "category": "Pafta",
+      "icon": "sheetGrid",
+      "description": "Seçili haritaya koordinat karelajı ekler: aralık ölçekten seçilir, yazılar çerçevenin yazı bandına yazılır.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/mapSection.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.group",
+      "title": "Grupla",
+      "category": "Pafta",
+      "icon": "sheetGroup",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+G"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.hideItems",
+      "title": "Gizle ya da göster",
+      "category": "Pafta",
+      "icon": "eyeOff",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.importKpafta",
+      "title": ".kpafta dosyasından…",
+      "category": "Pafta",
+      "icon": "import",
+      "description": "Bir .kpafta dosyasındaki paftaları ve resimlerini bu projeye alır.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.lockItems",
+      "title": "Kilitle ya da aç",
+      "category": "Pafta",
+      "icon": "lock",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.matchSize.height",
+      "title": "Aynı yükseklik",
+      "category": "Pafta",
+      "icon": "sheetAlignMiddle",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.matchSize.width",
+      "title": "Aynı genişlik",
+      "category": "Pafta",
+      "icon": "sheetAlignCenter",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.model",
+      "title": "Modele dön",
+      "short": "Model",
+      "category": "Pafta",
+      "icon": "polyline",
+      "description": "Çizim alanına döner; paftalar sekmelerinde kalır.",
+      "aliases": [
+        "MODEL",
+        "MODELE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.moveLeft",
+      "title": "Sola taşı",
+      "category": "Pafta",
+      "icon": "sheetMoveLeft",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.moveRight",
+      "title": "Sağa taşı",
+      "category": "Pafta",
+      "icon": "sheetMoveRight",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.new",
+      "title": "Yeni pafta",
+      "category": "Pafta",
+      "icon": "sheetNew",
+      "description": "Çalışma modunun varsayılan şablonundan yeni bir pafta açar.",
+      "aliases": [
+        "YENIPAFTA",
+        "YP"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.nudge",
+      "title": "Kaydır",
+      "category": "Pafta",
+      "icon": "move",
+      "description": "Ok tuşları 1 mm, Shift 10 mm, Alt 0.1 mm.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.open",
+      "title": "Paftayı aç",
+      "category": "Pafta",
+      "icon": "sheetLayout",
+      "description": "Bir paftayı öne getirir (verilmezse ilk paftayı).",
+      "aliases": [
+        "PAFTA",
+        "PAFTALAR",
+        "LAYOUT"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.order.back",
+      "title": "Arkaya gönder",
+      "category": "Pafta",
+      "icon": "sheetBack",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+Shift+["
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.order.backward",
+      "title": "Bir arkaya",
+      "category": "Pafta",
+      "icon": "sheetBackward",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+["
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.order.forward",
+      "title": "Bir öne",
+      "category": "Pafta",
+      "icon": "sheetForward",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+]"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.order.front",
+      "title": "Öne getir",
+      "category": "Pafta",
+      "icon": "sheetFront",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+Shift+]"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.pageSetup",
+      "title": "Sayfa ayarları…",
+      "short": "Sayfa",
+      "category": "Pafta",
+      "icon": "sheetPage",
+      "description": "Kâğıt, yön, boy ve kenar boşlukları; öğeler kısıtlarıyla yeniden yerleşir.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/pageTab.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.preflight",
+      "title": "Ön denetim",
+      "category": "Pafta",
+      "icon": "sheetPreflight",
+      "description": "Dışa aktarmadan önce: sayfa dışında kalan, örtülen, bağı kopuk öğeler, sığmayan yazılar, düşük çözünürlük …",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/statusCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.print",
+      "title": "Yazdır…",
+      "short": "Yazdır",
+      "category": "Pafta",
+      "icon": "print",
+      "description": "Paftayı PDF olarak hazırlar ve tarayıcının yazdırma penceresinde açar.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+P"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.redo",
+      "title": "Yinele (pafta)",
+      "category": "Pafta",
+      "icon": "redo",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+Y",
+        "Ctrl+Shift+Z"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.rename",
+      "title": "Paftaya ad ver…",
+      "short": "Ad ver",
+      "category": "Pafta",
+      "icon": "edit",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/SheetTabs.ts",
+        "apps/web/src/ui/sheet/SheetsPanel.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.renameItem",
+      "title": "Öğeye ad ver",
+      "short": "Ad ver",
+      "category": "Pafta",
+      "icon": "edit",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "F2"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/ItemTree.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.saveTemplate",
+      "title": "Şablon olarak kaydet",
+      "short": "Şablon olarak kaydet",
+      "category": "Pafta",
+      "icon": "sheetSaveTemplate",
+      "description": "Paftadan bir şablon çıkarır: haritaların yeri atılır, ölçeği kalır; önce bu cihazda saklanır.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/pageTab.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.selectAll",
+      "title": "Tümünü seç",
+      "category": "Pafta",
+      "icon": "selectAll",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+A"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.tool.hand",
+      "title": "El",
+      "category": "Pafta",
+      "icon": "pan",
+      "description": "Kâğıdı kaydırır. Boşluk basılıyken her araçta geçici olarak el olur.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "toggle",
+      "shortcuts": [
+        "H"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.tool.select",
+      "title": "Seç",
+      "category": "Pafta",
+      "icon": "select",
+      "description": "Öğeleri seçer, taşır, boyutlandırır, döndürür: tıklama, Shift ile ekleme, Ctrl ile çıkarma, sürükleyerek kutu.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "toggle",
+      "shortcuts": [
+        "V"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.undo",
+      "title": "Geri al (pafta)",
+      "category": "Pafta",
+      "icon": "undo",
+      "description": "Pafta kipinin kendi geri alma yığını: model alanından ayrıdır.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+Z"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.ungroup",
+      "title": "Grubu çöz",
+      "category": "Pafta",
+      "icon": "sheetUngroup",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+Shift+G"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.variables",
+      "title": "Değişkenler…",
+      "short": "Değişkenler",
+      "category": "Pafta",
+      "icon": "sheetVariables",
+      "description": "Paftanın ve projenin değişkenleri (ada, parsel, mahalle …): metinlerde ve antette [% @ad %] olarak yazılır.",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/inspector/northSection.ts",
+        "apps/web/src/ui/sheet/inspector/pageTab.ts",
+        "apps/web/src/ui/sheet/inspector/preflightTab.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/north.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.zoomIn",
+      "title": "Yakınlaştır",
+      "category": "Pafta",
+      "icon": "zoomIn",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "+"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/SheetStage.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.zoomOut",
+      "title": "Uzaklaştır",
+      "category": "Pafta",
+      "icon": "zoomOut",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "-"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/SheetStage.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.zoomPage",
+      "title": "Sayfayı sığdır",
+      "short": "Sığdır",
+      "category": "Pafta",
+      "icon": "sheetZoomPage",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+0",
+        "Home"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/SheetStage.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
+    },
+    {
+      "id": "sheet.zoomReal",
+      "title": "Gerçek boyut",
+      "short": "Gerçek",
+      "category": "Pafta",
+      "icon": "sheetZoomReal",
+      "description": "%100: kâğıdın bir milimetresi ekranda bir milimetre (96 dpi).",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+1"
+      ],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/SheetStage.ts",
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
+      "id": "sheet.zoomSelection",
+      "title": "Seçime yakınlaş",
+      "short": "Seçim",
+      "category": "Pafta",
+      "icon": "zoomSelection",
+      "aliases": [],
+      "pendingNote": "pafta açık değil",
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/sheet/menus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "style.assign",
@@ -3817,7 +5270,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
     },
     {
       "id": "tool.chamfer",
@@ -3981,6 +5436,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "fixtures/interaction/v1/navigation.json"
       ]
     },
@@ -4641,6 +6097,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
@@ -6482,6 +7939,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs",
         "apps/web/scripts/e2e/visual.mjs"
@@ -6586,7 +8044,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
     },
     {
       "id": "view.commandSearch",
@@ -6619,7 +8079,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
     },
     {
       "id": "view.coords",
@@ -6929,7 +8391,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
     },
     {
       "id": "view.rightPanel",
@@ -6961,7 +8425,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts"
+      ]
     },
     {
       "id": "view.symbols.plot",
@@ -7039,6 +8505,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/cloud.mjs",
+        "apps/web/scripts/e2e/sheet-cloud.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -7066,6 +8533,9 @@
       },
       "tests": [
         "apps/web/scripts/e2e/cloud.mjs",
+        "apps/web/scripts/e2e/sheet-a11y.mjs",
+        "apps/web/scripts/e2e/sheet-cloud.mjs",
+        "apps/web/scripts/e2e/sheet-north.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -7123,6 +8593,7 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
@@ -8418,6 +9889,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
@@ -15711,6 +17183,160 @@
       "desktopWhere": "apps/desktop/src/project/settings.rs (ADR 0049)"
     },
     {
+      "id": "apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog",
+      "name": "openExportDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/ExportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/ExpressionDialog.ts#openExpressionDialog",
+      "name": "openExpressionDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/ExpressionDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/ItemTree.ts#ItemTree",
+      "name": "ItemTree",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/ItemTree.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/PageSetupDialog.ts#openPageSetup",
+      "name": "openPageSetup",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/PageSetupDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/PublishTemplateDialog.ts#openPublishDialog",
+      "name": "openPublishDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/PublishTemplateDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SaveTemplateDialog.ts#openSaveTemplate",
+      "name": "openSaveTemplate",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/SaveTemplateDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/ShareTemplateDialog.ts#openShareTemplateDialog",
+      "name": "openShareTemplateDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/ShareTemplateDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SheetInspector.ts#SheetInspector",
+      "name": "SheetInspector",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/SheetInspector.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SheetStage.ts#SheetStage",
+      "name": "SheetStage",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/SheetStage.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SheetTabs.ts#SheetTabs",
+      "name": "SheetTabs",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/SheetTabs.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SheetWorkspace.ts#SheetWorkspace",
+      "name": "SheetWorkspace",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/SheetWorkspace.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/SheetsPanel.ts#SheetsPanel",
+      "name": "SheetsPanel",
+      "role": "panel",
+      "source": "apps/web/src/ui/sheet/SheetsPanel.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/TemplateGallery.ts#openTemplateGallery",
+      "name": "openTemplateGallery",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/TemplateGallery.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/sheet/VariablesDialog.ts#openVariables",
+      "name": "openVariables",
+      "role": "window",
+      "source": "apps/web/src/ui/sheet/VariablesDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/shell/AppShell.ts#AppShell",
       "name": "AppShell",
       "role": "panel",
@@ -22777,6 +24403,48 @@
     "textAlignBottomRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"15.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
     "textAlignBaselineLeft": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"3\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
     "textAlignBaselineCenter": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"10\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
-    "textAlignBaselineRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>"
+    "textAlignBaselineRight": "<rect x=\"3\" y=\"4.5\" width=\"14\" height=\"11\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><path d=\"M3 12.5h14\" stroke-width=\"1\"/><circle cx=\"17\" cy=\"12.5\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "sheetLayout": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"1\"/><rect x=\"5.5\" y=\"4.5\" width=\"9\" height=\"6.5\"/><path d=\"M5.5 13h9v2.5h-9zM10.5 13v2.5\"/>",
+    "sheetNew": "<path d=\"M11 2.5H4.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9\"/><path d=\"M14.5 1.8v5.4M11.8 4.5h5.4\"/>",
+    "sheetTemplate": "<rect x=\"6.5\" y=\"2.5\" width=\"10\" height=\"12\" rx=\"1\"/><path d=\"M4 5.5v11a1 1 0 0 0 1 1h8.5\"/><path d=\"M8.7 5.5h5.6M8.7 8h5.6M8.7 10.5h3.4\"/>",
+    "sheetSaveTemplate": "<path d=\"M11.5 2.5h-7a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-6.5\"/><path d=\"m14.4 1.8 1 2 2.2.3-1.6 1.6.4 2.2-2-1-2 1 .4-2.2-1.6-1.6 2.2-.3z\"/>",
+    "sheetPage": "<rect x=\"6\" y=\"5\" width=\"10.5\" height=\"12.5\" rx=\".6\"/><path d=\"M6 2.5h10.5M3.5 5v12.5\" stroke-width=\"1.1\"/><path d=\"m7.2 1.6-1.2.9 1.2.9M15.3 1.6l1.2.9-1.2.9M2.6 6.2l.9-1.2.9 1.2M2.6 16.3l.9 1.2.9-1.2\" stroke-width=\"1.1\"/>",
+    "sheetPreflight": "<path d=\"M7 3.5H5.5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-12a1 1 0 0 0-1-1H13\"/><rect x=\"7\" y=\"2.3\" width=\"6\" height=\"2.6\" rx=\".6\"/><path d=\"m7 10.3 1.7 1.7 3.6-3.8M7.5 14.6h5\"/>",
+    "sheetZoomPage": "<rect x=\"6\" y=\"5\" width=\"8\" height=\"10\" rx=\".5\"/><path d=\"M2.5 6V2.5H6M14 2.5h3.5V6M17.5 14v3.5H14M6 17.5H2.5V14\"/>",
+    "sheetZoomReal": "<path d=\"M4.3 6.4 6 5v10M13.7 6.4 15.4 5v10\"/><path d=\"M10 8.2v.1M10 11.8v.1\" stroke-width=\"2\"/>",
+    "sheetMap": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".6\"/><path d=\"m2.5 13.3 4-3.4 3 2.1 4.3-4.8 3.7 2.7\"/><path d=\"M9.3 3.5 7.6 9.4\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sheetScaleBar": "<rect x=\"2.5\" y=\"8.5\" width=\"15\" height=\"3\"/><path d=\"M6.25 8.5v3M10 8.5v3M13.75 8.5v3\"/><path d=\"M2.5 8.5h3.75v3H2.5zM10 8.5h3.75v3H10z\" fill=\"currentColor\" fill-opacity=\".35\" stroke=\"none\"/><path d=\"M2.5 14v1.6M10 14v1.6M17.5 14v1.6\"/>",
+    "sheetNorth": "<path d=\"M10 7.2 13.6 17.3 10 15 6.4 17.3z\"/><path d=\"M10 7.2V15l-3.6 2.3z\" fill=\"currentColor\" fill-opacity=\".35\" stroke=\"none\"/><path d=\"M8.6 1.8v3.8M8.6 3.9l2.6-2.1M9.4 3.3l1.8 2.3\"/>",
+    "sheetCoordinates": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15M7.5 3.5v13M12.5 3.5v13\"/><path d=\"M4 10h2M4 13h2M9 10h2M9 13h2M14 10h2M14 13h2\" stroke-width=\"1.2\"/>",
+    "sheetTitleBlock": "<rect x=\"2.5\" y=\"5\" width=\"15\" height=\"10.5\" rx=\".5\"/><path d=\"M2.5 8.8h15M2.5 12.2h15M9.5 8.8v6.7M13.5 12.2v3.3\"/><path d=\"M4.5 6.9h6\" stroke-width=\"1.2\"/>",
+    "sheetPicture": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><circle cx=\"7\" cy=\"8\" r=\"1.6\"/><path d=\"m2.5 14.5 4.5-4 3 2.5 3-3 4.5 4\"/>",
+    "sheetShape": "<rect x=\"2.5\" y=\"7.5\" width=\"9\" height=\"9\" rx=\".5\"/><circle cx=\"12.5\" cy=\"7.5\" r=\"4.6\"/>",
+    "sheetRect": "<rect x=\"3\" y=\"5\" width=\"14\" height=\"10\" rx=\"1\"/>",
+    "sheetEllipse": "<ellipse cx=\"10\" cy=\"10\" rx=\"7\" ry=\"5\"/>",
+    "sheetTriangle": "<path d=\"M10 3.5 17 16H3z\"/>",
+    "sheetPolygon": "<path d=\"m10 3 6.6 4.8-2.5 7.7H5.9L3.4 7.8z\"/>",
+    "sheetLine": "<path d=\"M3.5 15.5 16.5 4.5\"/><path d=\"m12.4 4.6 4.1-.1-.1 4.1\"/>",
+    "sheetArrow": "<path d=\"M3 10h13\"/><path d=\"m12 6 4.5 4-4.5 4\"/>",
+    "sheetBorder": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".4\"/><rect x=\"5\" y=\"6\" width=\"10\" height=\"8\" rx=\".3\"/><path d=\"M10 3.5V6M10 14v2.5M2.5 10H5M15 10h2.5\" stroke-width=\"1.1\"/>",
+    "sheetGrid": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\".6\"/><path d=\"M7.5 6v3M6 7.5h3M12.5 6v3M11 7.5h3M7.5 11v3M6 12.5h3M12.5 11v3M11 12.5h3\" stroke-width=\"1.2\"/>",
+    "sheetAtlas": "<rect x=\"6\" y=\"2.5\" width=\"11.5\" height=\"12.5\" rx=\".8\"/><path d=\"M4 5v11.5a1 1 0 0 0 1 1h9.5\"/><path d=\"m8 12 2.5-2.5 2 1.5 3-3\" stroke-width=\"1.2\"/>",
+    "sheetOverview": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".6\"/><rect x=\"9\" y=\"7\" width=\"5\" height=\"4\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"m2.5 14 4-3.5 3 2\"/>",
+    "sheetVariables": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1.5\"/><circle cx=\"10\" cy=\"10\" r=\"2.2\"/><path d=\"M12.2 10v1.2a1.5 1.5 0 0 0 3 0V10a5.2 5.2 0 1 0-2 4.1\"/>",
+    "sheetGroup": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1\" stroke-dasharray=\"2 1.6\"/><rect x=\"5\" y=\"5\" width=\"5.5\" height=\"5.5\" rx=\".5\"/><rect x=\"9.5\" y=\"9.5\" width=\"5.5\" height=\"5.5\" rx=\".5\"/>",
+    "sheetUngroup": "<rect x=\"2.5\" y=\"2.5\" width=\"6.5\" height=\"6.5\" rx=\".5\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\".5\"/><path d=\"M11.5 5.5h3v3M8.5 14.5h-3v-3\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sheetAlignLeft": "<path d=\"M3.5 2.5v15\"/><rect x=\"5.5\" y=\"5\" width=\"10\" height=\"3.5\" rx=\".5\"/><rect x=\"5.5\" y=\"11.5\" width=\"6\" height=\"3.5\" rx=\".5\"/>",
+    "sheetAlignCenter": "<path d=\"M10 2.5v15\"/><rect x=\"4\" y=\"5\" width=\"12\" height=\"3.5\" rx=\".5\"/><rect x=\"6.5\" y=\"11.5\" width=\"7\" height=\"3.5\" rx=\".5\"/>",
+    "sheetAlignRight": "<path d=\"M16.5 2.5v15\"/><rect x=\"4.5\" y=\"5\" width=\"10\" height=\"3.5\" rx=\".5\"/><rect x=\"8.5\" y=\"11.5\" width=\"6\" height=\"3.5\" rx=\".5\"/>",
+    "sheetAlignTop": "<path d=\"M2.5 3.5h15\"/><rect x=\"5\" y=\"5.5\" width=\"3.5\" height=\"10\" rx=\".5\"/><rect x=\"11.5\" y=\"5.5\" width=\"3.5\" height=\"6\" rx=\".5\"/>",
+    "sheetAlignMiddle": "<path d=\"M2.5 10h15\"/><rect x=\"5\" y=\"4\" width=\"3.5\" height=\"12\" rx=\".5\"/><rect x=\"11.5\" y=\"6.5\" width=\"3.5\" height=\"7\" rx=\".5\"/>",
+    "sheetAlignBottom": "<path d=\"M2.5 16.5h15\"/><rect x=\"5\" y=\"4.5\" width=\"3.5\" height=\"10\" rx=\".5\"/><rect x=\"11.5\" y=\"8.5\" width=\"3.5\" height=\"6\" rx=\".5\"/>",
+    "sheetDistributeH": "<rect x=\"2.5\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><rect x=\"8.25\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><rect x=\"14\" y=\"6\" width=\"3.5\" height=\"8\" rx=\".5\"/><path d=\"M2.5 3h15\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sheetDistributeV": "<rect x=\"6\" y=\"2.5\" width=\"8\" height=\"3.5\" rx=\".5\"/><rect x=\"6\" y=\"8.25\" width=\"8\" height=\"3.5\" rx=\".5\"/><rect x=\"6\" y=\"14\" width=\"8\" height=\"3.5\" rx=\".5\"/><path d=\"M3 2.5v15\" stroke-dasharray=\"1.6 1.4\"/>",
+    "sheetMoveLeft": "<path d=\"M16 10H4.5M8.5 6l-4 4 4 4\"/>",
+    "sheetMoveRight": "<path d=\"M4 10h11.5M11.5 6l4 4-4 4\"/>",
+    "sheetFront": "<rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\".5\"/><rect x=\"8\" y=\"8\" width=\"9\" height=\"9\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\"/>",
+    "sheetBack": "<rect x=\"8\" y=\"8\" width=\"9\" height=\"9\" rx=\".5\" fill=\"currentColor\" fill-opacity=\".3\" stroke-dasharray=\"2 1.5\"/><rect x=\"3\" y=\"3\" width=\"9\" height=\"9\" rx=\".5\"/>",
+    "sheetForward": "<rect x=\"3.5\" y=\"8.5\" width=\"9\" height=\"8\" rx=\".5\"/><path d=\"M15 11.5V3.5m-2.5 2.5L15 3.5l2.5 2.5\"/>",
+    "sheetBackward": "<rect x=\"3.5\" y=\"3.5\" width=\"9\" height=\"8\" rx=\".5\"/><path d=\"M15 8.5v8m-2.5-2.5L15 16.5l2.5-2.5\"/>"
   }
 }

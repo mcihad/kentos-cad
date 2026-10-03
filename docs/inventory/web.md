@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 224 | 211 | 0 | 13 |
+| Komutlar | 283 | 270 | 0 | 13 |
 | Araçlar | 89 | 87 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 74 | 74 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 265 | 265 | 0 | 0 |
-| Pencereler ve paneller | 71 | 71 | 0 | 0 |
+| Pencereler ve paneller | 85 | 85 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -38,11 +38,11 @@ Yok.
 - Çalışma modları: `disaster` Afet ve risk analizi
 - Çalışma modları: `plan3d` İmar planından 3D kent tasarımı
 
-## Arayüzde yeri görünmeyen komutlar (0)
+## Arayüzde yeri görünmeyen komutlar (27)
 
 Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
-Yok.
+`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.model`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`
 
 ## Masaüstü
 
@@ -50,7 +50,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 209 | 0 | 0 | 13 | 2 | 224 |
+| Komutlar | 209 | 0 | 59 | 13 | 2 | 283 |
 | Araçlar | 87 | 0 | 0 | 2 | 0 | 89 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -58,7 +58,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 71 | 0 | 2 | 0 | 1 | 74 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 265 | 0 | 0 | 0 | 0 | 265 |
-| Pencereler ve paneller | 68 | 2 | 0 | 0 | 1 | 71 |
+| Pencereler ve paneller | 68 | 2 | 14 | 0 | 1 | 85 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,8 +77,67 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (0 / 224; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (59 / 283; ayrıca 13 iki platformda da bekliyor)
 
+- `sheet.align.bottom` Alta hizala
+- `sheet.align.center` Yatayda ortala
+- `sheet.align.left` Sola hizala
+- `sheet.align.middle` Düşeyde ortala
+- `sheet.align.right` Sağa hizala
+- `sheet.align.top` Üste hizala
+- `sheet.alignTo.margins` Kenar boşluklarına göre
+- `sheet.alignTo.page` Sayfaya göre
+- `sheet.alignTo.selection` Seçime göre
+- `sheet.atlas` Atlas
+- `sheet.delete` Paftayı sil…
+- `sheet.deleteItems` Sil
+- `sheet.distribute.hCenters` Yatayda ortaları eşit dağıt
+- `sheet.distribute.hGaps` Yatayda aralıkları eşitle
+- `sheet.distribute.vCenters` Düşeyde ortaları eşit dağıt
+- `sheet.distribute.vGaps` Düşeyde aralıkları eşitle
+- `sheet.duplicate` Paftayı çoğalt
+- `sheet.duplicateItems` Çoğalt
+- `sheet.escape` Seçimi bırak
+- `sheet.export.kpafta` .kpafta dosyası olarak…
+- `sheet.export.pdf` PDF olarak…
+- `sheet.export.png` PNG olarak…
+- `sheet.export.svg` SVG olarak…
+- `sheet.fromTemplate` Şablondan pafta…
+- `sheet.grid` Karelaj
+- `sheet.group` Grupla
+- `sheet.hideItems` Gizle ya da göster
+- `sheet.importKpafta` .kpafta dosyasından…
+- `sheet.lockItems` Kilitle ya da aç
+- `sheet.matchSize.height` Aynı yükseklik
+- `sheet.matchSize.width` Aynı genişlik
+- `sheet.model` Modele dön
+- `sheet.moveLeft` Sola taşı
+- `sheet.moveRight` Sağa taşı
+- `sheet.new` Yeni pafta
+- `sheet.nudge` Kaydır
+- `sheet.open` Paftayı aç
+- `sheet.order.back` Arkaya gönder
+- `sheet.order.backward` Bir arkaya
+- `sheet.order.forward` Bir öne
+- `sheet.order.front` Öne getir
+- `sheet.pageSetup` Sayfa ayarları…
+- `sheet.preflight` Ön denetim
+- `sheet.print` Yazdır…
+- `sheet.redo` Yinele (pafta)
+- `sheet.rename` Paftaya ad ver…
+- `sheet.renameItem` Öğeye ad ver
+- `sheet.saveTemplate` Şablon olarak kaydet
+- `sheet.selectAll` Tümünü seç
+- `sheet.tool.hand` El
+- `sheet.tool.select` Seç
+- `sheet.undo` Geri al (pafta)
+- `sheet.ungroup` Grubu çöz
+- `sheet.variables` Değişkenler…
+- `sheet.zoomIn` Yakınlaştır
+- `sheet.zoomOut` Uzaklaştır
+- `sheet.zoomPage` Sayfayı sığdır
+- `sheet.zoomReal` Gerçek boyut
+- `sheet.zoomSelection` Seçime yakınlaş
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -124,11 +183,25 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (2 / 71)
+#### Pencereler ve paneller (16 / 85)
 
+- `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
+- `apps/web/src/ui/sheet/ExpressionDialog.ts#openExpressionDialog` openExpressionDialog
+- `apps/web/src/ui/sheet/ItemTree.ts#ItemTree` ItemTree
+- `apps/web/src/ui/sheet/PageSetupDialog.ts#openPageSetup` openPageSetup
+- `apps/web/src/ui/sheet/PublishTemplateDialog.ts#openPublishDialog` openPublishDialog
+- `apps/web/src/ui/sheet/SaveTemplateDialog.ts#openSaveTemplate` openSaveTemplate
+- `apps/web/src/ui/sheet/ShareTemplateDialog.ts#openShareTemplateDialog` openShareTemplateDialog
+- `apps/web/src/ui/sheet/SheetInspector.ts#SheetInspector` SheetInspector
+- `apps/web/src/ui/sheet/SheetStage.ts#SheetStage` SheetStage
+- `apps/web/src/ui/sheet/SheetTabs.ts#SheetTabs` SheetTabs
+- `apps/web/src/ui/sheet/SheetWorkspace.ts#SheetWorkspace` SheetWorkspace
+- `apps/web/src/ui/sheet/SheetsPanel.ts#SheetsPanel` SheetsPanel
+- `apps/web/src/ui/sheet/TemplateGallery.ts#openTemplateGallery` openTemplateGallery
+- `apps/web/src/ui/sheet/VariablesDialog.ts#openVariables` openVariables
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 
-68 / 224 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+110 / 283 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
