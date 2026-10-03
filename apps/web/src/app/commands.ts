@@ -172,6 +172,9 @@ export function applyTheme(ctx: AppContext, theme: ThemeId): void {
  */
 export function showTheme(ctx: AppContext): void {
   document.documentElement.dataset.theme = ctx.prefs.theme.value;
+  // A CAD project's drawing is on slate whatever the theme (docs/adr/0165 §5).
+  if (ctx.format.axes === 'cad') document.documentElement.dataset.canvas = 'slate';
+  else delete document.documentElement.dataset.canvas;
   ctx.view.refreshPalette();
 }
 

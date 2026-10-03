@@ -184,6 +184,23 @@
 }
 
 /*
+ * A CAD project's drawing is on slate whatever the interface's theme
+ * (docs/adr/0165 §5; the desktop's “Türe göre” drawing background): the dark
+ * theme's canvas. accents.css gives the selection its dark-ground tone.
+ */
+:root[data-canvas='slate'] {
+  --canvas-bg: #141a21;
+  --canvas-fg: #e4eaf0;
+  --canvas-ink: #ffffff;
+  --canvas-fg-dim: #a3afbc;
+  --canvas-grid-minor: #ffffff0a;
+  --canvas-grid-major: #ffffff17;
+  --canvas-label: #c4cdd7;
+  --canvas-accent: #f2b632;
+  --canvas-snap: #6fd08c;
+}
+
+/*
  * Köşeler and Gölgeler (Uygulama ayarları → Görünüm → Biçim; docs/adr/0127),
  * the same settings as the desktop's: every radius together (sharp as the
  * classic CAD programs, round), and the shadow of what floats (menus,

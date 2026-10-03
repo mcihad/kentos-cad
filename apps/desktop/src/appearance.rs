@@ -8,7 +8,7 @@
 
 use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Border, Center, Color, Element, Fill, Font, Task, Theme};
-use kentos_ui::icon::Icon;
+use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::shape::{self, Corners, Shadows, Shape};
 use kentos_ui::theme::typography::{self, Family, Mono, Typography};
 use kentos_ui::theme::{Accent, Mode, Tokens};
@@ -23,8 +23,11 @@ use crate::viewport::Canvas;
 /// The drawing area's background, whatever the interface's theme.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Backdrop {
-    /// The theme's own: slate, paper, night or black.
+    /// The project's type's (docs/adr/0165 §5): a CAD project's dark, slate
+    /// on a light theme; a CBS project's the theme's own.
     #[default]
+    ByType,
+    /// The theme's own: slate, paper, night or black.
     Theme,
     Slate,
     Black,
@@ -32,7 +35,8 @@ pub enum Backdrop {
 }
 
 impl Backdrop {
-    pub const ALL: [Backdrop; 4] = [
+    pub const ALL: [Backdrop; 5] = [
+        Backdrop::ByType,
         Backdrop::Theme,
         Backdrop::Slate,
         Backdrop::Black,
@@ -42,6 +46,7 @@ impl Backdrop {
     /// The setting's value.
     pub fn key(self) -> &'static str {
         match self {
+            Backdrop::ByType => "mode",
             Backdrop::Theme => "theme",
             Backdrop::Slate => "slate",
             Backdrop::Black => "black",
@@ -58,6 +63,7 @@ impl Backdrop {
 
     pub fn name(self) -> &'static str {
         match self {
+            Backdrop::ByType => "Türe göre",
             Backdrop::Theme => "Temaya uy",
             Backdrop::Slate => "Arduvaz",
             Backdrop::Black => "Siyah",
@@ -67,6 +73,9 @@ impl Backdrop {
 
     fn note(self) -> &'static str {
         match self {
+            Backdrop::ByType => {
+                "Projenin türüne göre: CAD projesinde koyu (açık temada arduvaz), CBS projesinde temaya uyar."
+            }
             Backdrop::Theme => {
                 "Temaya uyar: koyu temada arduvaz, aydınlıkta kâğıt, gecede kısık gece zemini, yüksek karşıtlıkta siyah."
             }
@@ -253,7 +262,14 @@ impl App {
     /// What the drawing area is drawn on.
     pub(crate) fn canvas(&self) -> Canvas {
         match self.backdrop {
-            Backdrop::Theme => Canvas::from(self.mode),
+            // A CAD project's drawing is dark whatever the theme (docs/adr/0165 §5).
+            Backdrop::ByType
+                if self.work_mode() == kentos_contracts::Workspace::Cad
+                    && self.mode == Mode::Light =>
+            {
+                Canvas::Slate
+            }
+            Backdrop::ByType | Backdrop::Theme => Canvas::from(self.mode),
             Backdrop::Slate => Canvas::Slate,
             Backdrop::Black => Canvas::Black,
             Backdrop::Paper => Canvas::Paper,
@@ -343,12 +359,17 @@ impl App {
         let view = move || -> Element<'static, Message> {
             let tile = |b: Backdrop| backdrop_tile(b, b == current);
             column![
-                row![tile(Backdrop::Theme), tile(Backdrop::Slate)].spacing(2),
+                row![
+                    tile(Backdrop::ByType),
+                    tile(Backdrop::Theme),
+                    tile(Backdrop::Slate)
+                ]
+                .spacing(2),
                 row![tile(Backdrop::Black), tile(Backdrop::Paper)].spacing(2),
                 label::caption(current.name()),
             ]
             .spacing(2)
-            .width(typography::scaled(72.0))
+            .width(typography::scaled(108.0))
             .align_x(Center)
             .into()
         };
@@ -361,7 +382,7 @@ impl App {
         };
         Group::new("Çizim zemini")
             .icon(Icon::Layout)
-            .custom(typography::scaled(72.0), view, menu)
+            .custom(typography::scaled(108.0), view, menu)
     }
 
     fn typeface_group(&self) -> Group<'static, Message> {
@@ -591,6 +612,29 @@ fn backdrop_tile(backdrop: Backdrop, selected: bool) -> Element<'static, Message
             })
     };
     let preview: Element<'static, Message> = match backdrop {
+        // The types' marks on their grounds: CAD on slate, CBS on the theme's.
+        Backdrop::ByType => {
+            let mark = |glyph: &'static str, canvas: Canvas| {
+                let c = crate::viewport::palette(canvas);
+                let (bg, fg) = (c.background.0, c.fg.0);
+                container(
+                    icon(crate::icons::from_web(Some(glyph)))
+                        .size(10.0)
+                        .color(Color::from_rgb8(fg[0], fg[1], fg[2])),
+                )
+                .center_x(13)
+                .center_y(16)
+                .style(move |_: &Theme| container::Style {
+                    background: Some(Color::from_rgb8(bg[0], bg[1], bg[2]).into()),
+                    ..container::Style::default()
+                })
+            };
+            row![
+                mark("modeCad", Canvas::Slate),
+                mark("modeGis", Canvas::Paper)
+            ]
+            .into()
+        }
         Backdrop::Theme => row![fill(Canvas::Slate, 13.0), fill(Canvas::Paper, 13.0)].into(),
         Backdrop::Slate => fill(Canvas::Slate, 26.0).into(),
         Backdrop::Black => fill(Canvas::Black, 26.0).into(),
@@ -707,6 +751,31 @@ pub(crate) mod tests {
         look(&mut app, Event::Size(Step::Default));
         look(&mut app, Event::Family(Family::PlusJakartaSans));
         assert_eq!(typography::current(), Typography::DEFAULT);
+    }
+
+    /// “Türe göre”, the default (docs/adr/0165 §5): a CAD project's drawing is
+    /// dark whatever the theme, a CBS project's the theme's own.
+    #[test]
+    fn the_drawing_ground_follows_the_projects_type() {
+        let mut app = app_with_drawing();
+        assert_eq!(app.backdrop, Backdrop::ByType);
+        look(&mut app, Event::Theme(Mode::Light));
+        assert_eq!(app.canvas(), Canvas::Paper, "a CBS project: the theme's");
+        app.choose_mode("workspace.cad");
+        assert_eq!(
+            app.canvas(),
+            Canvas::Slate,
+            "a CAD project: slate on a light theme"
+        );
+        look(&mut app, Event::Theme(Mode::Night));
+        assert_eq!(app.canvas(), Canvas::Night, "and a dark theme's own");
+        look(&mut app, Event::Theme(Mode::Light));
+        look(&mut app, Event::Backdrop(Backdrop::Theme));
+        assert_eq!(
+            app.canvas(),
+            Canvas::Paper,
+            "Temaya uy: the theme's whatever the type"
+        );
     }
 
     #[test]

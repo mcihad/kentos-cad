@@ -19,7 +19,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, GRIP_HIT_PX, midGripVisible } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { symbolScaleOf } from './symbolScale';
@@ -667,6 +667,8 @@ export class ViewportController {
         this.requestRender();
       }),
     );
+    // The scene's marks follow the project's type (docs/adr/0165 §5).
+    d.add(doc.settings.workspace.subscribe(() => this.requestOverlay()));
     d.add(
       this.ctx.styles.library.version.subscribe(() => {
         this.allDirty = true;
@@ -1341,8 +1343,12 @@ export class ViewportController {
     const edges = this.acquired.flatMap((a) => (a.kind === 'edge' ? [{ at: a.at, dir: a.dir }] : []));
     drawObjectTracking(g, { points: this.trackPoints, edges, paths: guides.paths, lines: guides.lines }, this.snap ? null : this.track, cam, pal, (m) => this.ctx.format.length(m));
     if (this.snap) drawSnap(g, this.snap, cam, pal, guides.label ?? undefined);
-    drawNorthArrow(g, cam, pal);
-    drawScaleBar(g, cam, pal);
+    // A CBS project's grid north and scale bar, a CAD project's coordinate axes (docs/adr/0165 §5).
+    if (this.ctx.format.axes === 'cad') drawUcsIcon(g, cam, pal);
+    else {
+      drawNorthArrow(g, cam, pal);
+      drawScaleBar(g, cam, pal);
+    }
     if (this.screenCursor && !this.panFrom) drawCrosshair(g, this.screenCursor, this.ctx.tools.active.cursor, pal, this.ctx.prefs.crosshair.value);
   }
 }

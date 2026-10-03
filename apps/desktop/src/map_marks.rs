@@ -8,14 +8,20 @@
 //!   whichever is nearest 120 px on screen, in four alternating parts, “0”
 //!   and its length above its ends.
 //!
-//! Both depend only on the view's size and scale, so they are kept with the
-//! text's cached picture.
+//! A CAD project has neither: its scene shows the coordinate axes' icon
+//! instead (docs/adr/0165 §5; the web's `drawUcsIcon`), X to the right and
+//! Y up from a small square, at the bottom left, or on the origin when 0,0
+//! is on screen with room for it, as AutoCAD's UCS icon.
+//!
+//! They depend only on the view, so they are kept with the text's cached
+//! picture.
 
 use iced::alignment::Vertical;
 use iced::widget::canvas::{Frame, Path, Stroke, Text};
 use iced::widget::text;
 use iced::{Color, Font, Pixels, Point, Size, Vector};
-use kentos_render_wgpu::Camera;
+use kentos_interaction::Axes;
+use kentos_render_wgpu::{Camera, Vec2};
 use kentos_ui::theme::typography;
 
 use crate::labels::Colors;
@@ -25,11 +31,104 @@ const TARGET: f64 = 120.0;
 /// The halo's width each side, as the text's (labels.rs).
 const HALO: f32 = 1.5;
 
-/// Draws grid north and the scale bar over the drawing.
-pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors) {
+/// The coordinate axes' icon: how far from the drawing area's left and
+/// bottom edges it stands, and its arms' length, pixels.
+const UCS_MARGIN: f32 = 30.0;
+const UCS_ARM: f32 = 38.0;
+
+/// Draws a CBS project's grid north and scale bar over the drawing, or a CAD
+/// project's coordinate axes (docs/adr/0165 §5).
+pub fn paint(frame: &mut Frame, camera: &Camera, colors: &Colors, axes: Axes) {
     let size = frame.size();
-    north_arrow(frame, size, colors);
-    scale_bar(frame, camera.scale, size, colors);
+    match axes {
+        Axes::Gis => {
+            north_arrow(frame, size, colors);
+            scale_bar(frame, camera.scale, size, colors);
+        }
+        Axes::Cad => ucs_icon(frame, ucs_at(camera, size), colors),
+    }
+}
+
+/// Where the coordinate axes' icon stands: on the origin when 0,0 is on
+/// screen with room for the arms and their names, else at the bottom left.
+pub fn ucs_at(camera: &Camera, size: Size) -> Point {
+    let [x, y] = camera.world_to_screen(Vec2::new(0.0, 0.0));
+    let (x, y) = (x as f32, y as f32);
+    let room = UCS_ARM + 16.0;
+    let on = x.is_finite()
+        && y.is_finite()
+        && x >= UCS_MARGIN
+        && x + room <= size.width
+        && y <= size.height - UCS_MARGIN
+        && y - room >= 0.0;
+    if on {
+        Point::new(x, y)
+    } else {
+        Point::new(UCS_MARGIN, size.height - UCS_MARGIN)
+    }
+}
+
+/// X to the right and Y up from a small square, each arm with its arrow and
+/// name, in the drawing's ink.
+fn ucs_icon(frame: &mut Frame, o: Point, colors: &Colors) {
+    let ink = Stroke::default().with_color(colors.fg).with_width(1.5);
+    let x_tip = Point::new(o.x + UCS_ARM, o.y);
+    let y_tip = Point::new(o.x, o.y - UCS_ARM);
+    frame.stroke(&Path::line(o, x_tip), ink);
+    frame.stroke(&Path::line(o, y_tip), ink);
+    let head = |a: Point, b: Point, c: Point| {
+        Path::new(|p| {
+            p.move_to(a);
+            p.line_to(b);
+            p.line_to(c);
+            p.close();
+        })
+    };
+    frame.fill(
+        &head(
+            Point::new(x_tip.x + 2.0, x_tip.y),
+            Point::new(x_tip.x - 6.0, x_tip.y - 3.5),
+            Point::new(x_tip.x - 6.0, x_tip.y + 3.5),
+        ),
+        colors.fg,
+    );
+    frame.fill(
+        &head(
+            Point::new(y_tip.x, y_tip.y - 2.0),
+            Point::new(y_tip.x - 3.5, y_tip.y + 6.0),
+            Point::new(y_tip.x + 3.5, y_tip.y + 6.0),
+        ),
+        colors.fg,
+    );
+    frame.stroke(
+        &Path::rectangle(Point::new(o.x - 3.0, o.y - 3.0), Size::new(6.0, 6.0)),
+        Stroke::default().with_color(colors.fg).with_width(1.0),
+    );
+    for (name, at, align) in [
+        (
+            "X",
+            Point::new(x_tip.x + 6.0, x_tip.y + 6.0),
+            text::Alignment::Left,
+        ),
+        (
+            "Y",
+            Point::new(y_tip.x, y_tip.y - 5.0),
+            text::Alignment::Center,
+        ),
+    ] {
+        haloed(
+            frame,
+            Mark {
+                text: name,
+                at,
+                size: 11.0,
+                font: typography::ui_strong(),
+                align,
+                color: colors.fg,
+            },
+            colors.halo,
+        );
+    }
 }
 
 /// The scale bar's length in metres and what its right end says, for a view

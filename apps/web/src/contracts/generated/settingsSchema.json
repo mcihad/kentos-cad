@@ -832,8 +832,12 @@
     {
       "key": "appearance.drawingBackground",
       "type": "enum",
-      "default": "theme",
+      "default": "mode",
       "choices": [
+        {
+          "value": "mode",
+          "label": "Türe göre"
+        },
         {
           "value": "theme",
           "label": "Temaya uy"
@@ -858,7 +862,7 @@
       "version": 1,
       "group": "appearance",
       "title": "Çizim zemini",
-      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
+      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema; ADR 0165), temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
       "sensitive": false,
       "apply": "live"
     },

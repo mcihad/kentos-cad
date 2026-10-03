@@ -105,6 +105,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   // The theme and the text size follow their settings however they change:
   // the settings window, a command, an imported file, a reset.
   prefs.theme.subscribe(() => showTheme(ctx));
+  // So does the project's type: a CAD project's drawing is on slate (docs/adr/0165 §5).
+  doc.settings.workspace.subscribe(() => showTheme(ctx), true);
   prefs.textSize.subscribe((px) => applyTextSize(px));
   const shape = () => applyShape(prefs.corners.value, prefs.shadows.value);
   prefs.corners.subscribe(shape);

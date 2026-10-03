@@ -315,8 +315,8 @@ trait Ink {
     /// The picture's size (a frame's own; a fenced map's is the camera's).
     fn size(&self) -> Size;
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
-    /// Grid north and the scale bar.
-    fn marks(&mut self, camera: &Camera, colors: &Colors);
+    /// Grid north and the scale bar, or a CAD project's coordinate axes.
+    fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes);
 }
 
 impl Ink for Frame {
@@ -328,8 +328,8 @@ impl Ink for Frame {
         draw(self, piece, halo);
     }
 
-    fn marks(&mut self, camera: &Camera, colors: &Colors) {
-        crate::map_marks::paint(self, camera, colors);
+    fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes) {
+        crate::map_marks::paint(self, camera, colors, axes);
     }
 }
 
@@ -407,7 +407,7 @@ impl Ink for Collect<'_> {
         });
     }
 
-    fn marks(&mut self, _camera: &Camera, _colors: &Colors) {}
+    fn marks(&mut self, _camera: &Camera, _colors: &Colors, _axes: kentos_interaction::Axes) {}
 }
 
 #[derive(Default)]
@@ -713,10 +713,10 @@ impl Labels<'_> {
                 }
             }
         }
-        // Grid north and the scale bar over the text, as the web's overlay (map_marks.rs);
-        // a sheet's map has its own.
+        // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
+        // as the web's overlay (map_marks.rs); a sheet's map has its own.
         if self.fence.is_none() {
-            frame.marks(&self.camera, &self.colors);
+            frame.marks(&self.camera, &self.colors, self.format.axes);
         }
     }
 

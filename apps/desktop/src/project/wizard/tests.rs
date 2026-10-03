@@ -328,9 +328,11 @@ fn screens() {
     }
 }
 
-/// The type's axes on screen (docs/adr/0165 §4): a CAD project's X and Y and
-/// angles beside a CBS project's Y and X and semts, in the status bar, the
-/// coordinate list, Öznitelikler and the value field; `.run/shots/eksenler-*`.
+/// The type's axes and scene on screen (docs/adr/0165 §4, §5): a CAD
+/// project's X and Y, angles, coordinate axes' icon and dark ground beside a
+/// CBS project's Y and X, semts, north and scale bar, in the status bar, the
+/// coordinate list, Öznitelikler and the value field, dark and light;
+/// `.run/shots/eksenler-*`.
 ///
 /// ```text
 /// cargo test -p kentos-desktop project::wizard::tests::axes_screens -- --ignored --nocapture
@@ -347,8 +349,17 @@ fn axes_screens() {
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (kind, name) in [(Workspace::Cad, "cad"), (Workspace::Gis, "cbs")] {
+    for (kind, mode, name) in [
+        (Workspace::Cad, "dark", "cad"),
+        (Workspace::Gis, "dark", "cbs"),
+        (Workspace::Cad, "light", "cad-acik"),
+        (Workspace::Gis, "light", "cbs-acik"),
+    ] {
         let mut app = app_with_drawing();
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
         open(&mut app);
         send(&mut app, Event::Type(kind));
         send(&mut app, Event::Next);
@@ -425,5 +436,18 @@ fn axes_screens() {
             .save(&file)
             .expect("writes the picture");
         println!("{}", file.display());
+        if name == "cad-acik" {
+            // The ribbon's Görünüm tab: the drawing's ground, “Türe göre” first.
+            let _ = app.update(Message::Run("tool.cancel"));
+            app.field = None;
+            let _ = app.update(Message::RibbonTab("view"));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join("eksenler-gorunum-acik.png");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
     }
 }

@@ -492,6 +492,51 @@ export function drawNorthArrow(g: CanvasRenderingContext2D, cam: Camera, pal: Ca
   g.restore();
 }
 
+/** The coordinate axes' icon: how far from the drawing area's left and bottom edges it stands, and its arms' length. */
+const UCS_MARGIN = 30;
+const UCS_ARM = 38;
+
+/**
+ * A CAD project's coordinate axes (docs/adr/0165 §5) in place of grid north and the scale bar: X to the right and Y
+ * up from a small square, at the bottom left, or on the origin when 0,0 is on screen with room for the arms and their
+ * names, as AutoCAD's UCS icon (the desktop's map_marks.rs).
+ */
+export function drawUcsIcon(g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette): void {
+  const s = cam.worldToScreen({ x: 0, y: 0 });
+  const room = UCS_ARM + 16;
+  const on = Number.isFinite(s.x) && Number.isFinite(s.y) && s.x >= UCS_MARGIN && s.x + room <= cam.width && s.y <= cam.height - UCS_MARGIN && s.y - room >= 0;
+  const o = on ? s : { x: UCS_MARGIN, y: cam.height - UCS_MARGIN };
+  g.save();
+  g.strokeStyle = pal.fg;
+  g.fillStyle = pal.fg;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(o.x, o.y);
+  g.lineTo(o.x + UCS_ARM, o.y);
+  g.moveTo(o.x, o.y);
+  g.lineTo(o.x, o.y - UCS_ARM);
+  g.stroke();
+  const head = (a: Vec2, b: Vec2, c: Vec2) => {
+    g.beginPath();
+    g.moveTo(a.x, a.y);
+    g.lineTo(b.x, b.y);
+    g.lineTo(c.x, c.y);
+    g.closePath();
+    g.fill();
+  };
+  head({ x: o.x + UCS_ARM + 2, y: o.y }, { x: o.x + UCS_ARM - 6, y: o.y - 3.5 }, { x: o.x + UCS_ARM - 6, y: o.y + 3.5 });
+  head({ x: o.x, y: o.y - UCS_ARM - 2 }, { x: o.x - 3.5, y: o.y - UCS_ARM + 6 }, { x: o.x + 3.5, y: o.y - UCS_ARM + 6 });
+  g.lineWidth = 1;
+  g.strokeRect(o.x - 3, o.y - 3, 6, 6);
+  g.font = `600 11px ${pal.font}`;
+  g.textBaseline = 'bottom';
+  g.textAlign = 'left';
+  haloText(g, 'X', o.x + UCS_ARM + 6, o.y + 6, pal.fg, pal.labelHalo);
+  g.textAlign = 'center';
+  haloText(g, 'Y', o.x, o.y - UCS_ARM - 5, pal.fg, pal.labelHalo);
+  g.restore();
+}
+
 /** How near (CSS px) the pointer must be to take a grip, and to be said to rest on one (the select tool's tag). */
 export const GRIP_HIT_PX = 6;
 

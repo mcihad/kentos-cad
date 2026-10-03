@@ -71,3 +71,14 @@
   --c-tooltip-accent: #f08ea1;
   --canvas-accent: #b3243f;
 }
+
+/* A CAD project's slate drawing (tokens.css, docs/adr/0165 §5): the selection in each accent's dark-ground tone. */
+:root[data-canvas='slate'][data-accent='navy'] {
+  --canvas-accent: #6f9bff;
+}
+:root[data-canvas='slate'][data-accent='teal'] {
+  --canvas-accent: #3fd0c2;
+}
+:root[data-canvas='slate'][data-accent='bordeaux'] {
+  --canvas-accent: #ff7d97;
+}

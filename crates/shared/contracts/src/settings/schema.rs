@@ -409,8 +409,9 @@ fn settings() -> Vec<SettingDescriptor> {
         ),
         choice(
             "appearance.drawingBackground",
-            "theme",
+            "mode",
             &[
+                ("mode", "Türe göre"),
                 ("theme", "Temaya uy"),
                 ("slate", "Arduvaz"),
                 ("black", "Siyah"),
@@ -420,7 +421,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Desktop])
         .text(
             "Çizim zemini",
-            "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
+            "Çizim alanının zemini, arayüzün temasından bağımsız: projenin türüne göre (CAD'de arduvaz, CBS'de tema; ADR 0165), temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
         ),
         choice(
             "appearance.crosshair",
