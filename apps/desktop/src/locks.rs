@@ -48,6 +48,22 @@ impl App {
         ))
     }
 
+    /// The locks changed with the pointer still (a key in the value field,
+    /// a chip's ×, the menu): the running tool sees the pointer again, so
+    /// its preview and its measure show the point the locks hold now (the
+    /// web's `ViewportController.repoint`).
+    pub(crate) fn repoint(&mut self) {
+        if self.panning {
+            return;
+        }
+        let Some(world) = self.viewport.cursor else {
+            return;
+        };
+        let [x, y] = self.viewport.camera.world_to_screen(world);
+        let p = self.pointer_at(iced::Point::new(x as f32, y as f32));
+        self.with_tool(|s, cx| s.pointer_move(&p, cx));
+    }
+
     /// A chip's ×: that lock goes (the length's, or the direction's).
     pub(crate) fn drop_lock(&mut self, length: bool) {
         if length {

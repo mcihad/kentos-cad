@@ -166,9 +166,10 @@ export class CursorInput extends Component {
     const w = this.ctx.view.cursorWorld.value ?? lockReference(this.ctx);
     if (!w) return;
     const camera = this.ctx.view.camera;
-    // Above-right of the cursor: the tool's own measurement tag sits below-right. Near the right edge it goes
-    // left of the cursor, near the top it slides down; it never leaves the drawing (placeBeside.ts).
-    const at = besidePointer(camera.worldToScreen(w), this.size, { w: camera.width, h: camera.height }, { x: 18, y: -58 });
+    // Above-right of the cursor, its foot 8 px above it however many locks it lists: the tool's own measurement tag
+    // sits below-right. Near the right edge it goes left of the cursor, near the top it slides down; it never leaves
+    // the drawing (placeBeside.ts; the desktop's `above_right`).
+    const at = besidePointer(camera.worldToScreen(w), this.size, { w: camera.width, h: camera.height }, { x: 18, y: -(this.size.h + 8) });
     this.el.style.transform = `translate(${at.x}px, ${at.y}px)`;
   }
 

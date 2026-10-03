@@ -175,6 +175,8 @@ export class ViewportController {
   private baseDirty = true;
 
   private screenCursor: Vec2 | null = null;
+  /** The keys held at the last pointer move: the tool sees them again when it is given the pointer again (`repoint`). */
+  private moveKeys = { shift: false, ctrl: false, alt: false };
   /** Entity whose text is being edited inline (hidden from the overlay). */
   private editingId: number | null = null;
   private snap: SnapHit | null = null;
@@ -721,6 +723,8 @@ export class ViewportController {
       );
     d.add(settings.grid.subscribe(() => this.requestRender()));
     d.add(this.ctx.prefs.crosshair.subscribe(() => this.requestOverlay()));
+    // A lock that changes with the pointer still shows at once (docs/adr/0166 §6).
+    d.add(settings.locks.subscribe(() => this.repoint()));
     d.add(
       tools.activeId.subscribe(() => {
         this.snap = null;
@@ -734,6 +738,20 @@ export class ViewportController {
       }),
     );
     this.overlay.dataset.cursor = 'pick';
+  }
+
+  /**
+   * The locks changed with the pointer still (a key in the value card, a chip's ×, the menu): the running tool sees
+   * the pointer again, so its preview and its measure show the point the locks hold now (the desktop's `repoint`).
+   */
+  private repoint(): void {
+    const screen = this.screenCursor;
+    if (!screen || this.panFrom) return;
+    this.updateSnap(screen);
+    const raw = this.camera.screenToWorld(screen);
+    const track = this.snap ? null : this.track;
+    this.ctx.tools.active.pointerMove?.({ world: this.snap?.point ?? track?.point ?? raw, raw, screen, snap: this.snap, track, button: 0, ...this.moveKeys });
+    this.requestOverlay();
   }
 
   private screenOf(e: PointerEvent | MouseEvent): Vec2 {
@@ -1007,6 +1025,7 @@ export class ViewportController {
         }
         const r = el.getBoundingClientRect();
         this.screenCursor = { x: e.clientX - r.left, y: e.clientY - r.top };
+        this.moveKeys = { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey, alt: e.altKey };
         const s0 = import.meta.env.DEV ? performance.now() : 0;
         this.updateSnap(this.screenCursor);
         const s1 = import.meta.env.DEV ? performance.now() : 0;

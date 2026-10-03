@@ -92,14 +92,15 @@ pub fn layer<'a>(
         ));
     }
     if let Some(field) = field {
-        // Above right of the cursor, clear of the tag below right of it;
-        // left of it near the drawing's right edge, lower near its top, never
-        // outside it (the web's `besidePointer`, DESIGN.md §7.4.2).
+        // Above right of the cursor, its foot clear of the tag below right of
+        // it however many locks it lists; left of it near the drawing's right
+        // edge, lower near its top, never outside it (the web's
+        // `besidePointer`, DESIGN.md §7.4.2).
         let at = screen(field.at);
-        layers.push(beside(
+        layers.push(kentos_ui::widget::beside_above_right(
             value_field(field, snap),
             Point::new(at.x.round(), at.y.round()),
-            Vector::new(18.0, -58.0),
+            Vector::new(18.0, 8.0),
         ));
     }
     if layers.is_empty() {

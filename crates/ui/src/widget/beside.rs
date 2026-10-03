@@ -69,6 +69,24 @@ pub fn above_left(at: Point, card: Size, area: Size, gap: Vector) -> Point {
     )
 }
 
+/// `card` boyutundaki kartın sol üst köşesi: `at`'ın sağ üstünde, alt
+/// kenarı `at`'ın `gap.y` üstünde, `gap.x` sağında; büyüdükçe yukarı uzar.
+/// Sağa sığmazsa aynı uzaklıkta imlecin soluna geçer; üst kenarda alanın
+/// içinde tutulur (web'in `besidePointer`'ı, eksi yüksekliğiyle: değer
+/// alanı, `CursorInput.place`).
+pub fn above_right(at: Point, card: Size, area: Size, gap: Vector) -> Point {
+    let mut x = at.x + gap.x;
+    if x + card.width > area.width - EDGE_MARGIN {
+        x = at.x - gap.x - card.width;
+    }
+    let y = at.y - gap.y - card.height;
+    let hold = |v: f32, low: f32, high: f32| v.min(high).max(low);
+    Point::new(
+        hold(x, EDGE_MARGIN, area.width - EDGE_MARGIN - card.width).round(),
+        hold(y, EDGE_MARGIN, area.height - EDGE_MARGIN - card.height).round(),
+    )
+}
+
 /// `content`, `at`'ın yanında (bkz. modül). `at` bileşenin kendi sol üst
 /// köşesine göredir.
 pub fn beside<'a, Message: 'a>(
@@ -81,6 +99,21 @@ pub fn beside<'a, Message: 'a>(
         at,
         offset,
         place: beside_pointer,
+    })
+}
+
+/// `content`, `at`'ın sağ üstünde ([`above_right`]): imlecin sağ altındaki
+/// ölçü etiketini, kart büyüse de örtmez.
+pub fn beside_above_right<'a, Message: 'a>(
+    content: impl Into<Element<'a, Message>>,
+    at: Point,
+    gap: Vector,
+) -> Element<'a, Message> {
+    Element::new(Beside {
+        content: content.into(),
+        at,
+        offset: gap,
+        place: above_right,
     })
 }
 
@@ -103,7 +136,7 @@ struct Beside<'a, Message> {
     content: Element<'a, Message>,
     at: Point,
     offset: Vector,
-    /// Where the card goes: [`beside_pointer`] or [`above_left`].
+    /// Where the card goes: [`beside_pointer`], [`above_right`] or [`above_left`].
     place: fn(Point, Size, Size, Vector) -> Point,
 }
 
@@ -222,7 +255,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Beside<'_, Message> {
 mod tests {
     use iced::{Point, Size, Vector};
 
-    use super::{EDGE_MARGIN, above_left, beside_pointer};
+    use super::{EDGE_MARGIN, above_left, above_right, beside_pointer};
 
     const AREA: Size = Size::new(800.0, 600.0);
     const CARD: Size = Size::new(280.0, 120.0);
@@ -230,6 +263,30 @@ mod tests {
 
     fn at(x: f32, y: f32) -> Point {
         Point::new(x, y)
+    }
+
+    /// The value field: its foot 8 above the pointer however tall it grows;
+    /// left of the pointer at the right edge; held in at the top.
+    #[test]
+    fn above_right_keeps_its_foot_above_the_pointer() {
+        let gap = Vector::new(18.0, 8.0);
+        assert_eq!(
+            above_right(at(100.0, 300.0), CARD, AREA, gap),
+            at(118.0, 300.0 - 8.0 - 120.0)
+        );
+        let taller = Size::new(280.0, 160.0);
+        assert_eq!(
+            above_right(at(100.0, 300.0), taller, AREA, gap),
+            at(118.0, 300.0 - 8.0 - 160.0)
+        );
+        assert_eq!(
+            above_right(at(700.0, 300.0), CARD, AREA, gap),
+            at(700.0 - 18.0 - 280.0, 300.0 - 8.0 - 120.0)
+        );
+        assert_eq!(
+            above_right(at(100.0, 40.0), CARD, AREA, gap),
+            at(118.0, EDGE_MARGIN)
+        );
     }
 
     /// The web's cases (placeBeside.test.ts), with its numbers.

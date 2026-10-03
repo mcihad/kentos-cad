@@ -911,7 +911,14 @@ impl App {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        // A lock that changes with the pointer still shows at once (locks.rs);
+        // the drawing area's own events move the pointer themselves.
+        let locks = (!matches!(message, Message::Viewport(_)))
+            .then_some((self.locks.length, self.locks.toward));
         let task = self.handle(message);
+        if locks.is_some_and(|l| l != (self.locks.length, self.locks.toward)) {
+            self.repoint();
+        }
         self.follow_document();
         // The sheets follow the project and the drawing (sheets.rs).
         self.follow_sheets();

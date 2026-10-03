@@ -368,12 +368,10 @@
 .cursor-input__locks[hidden] {
   display: none;
 }
-/* The locks held, as chips in the snap colour; each × lets its lock go. */
+/* The locks held, as chips in the snap colour on one row, as the desktop's; each × lets its lock go. */
 .cursor-input__locks {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
-  max-width: calc(260px * var(--ui-scale));
   padding: 5px 2px 0;
 }
 .cursor-input__lock {

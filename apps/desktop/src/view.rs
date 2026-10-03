@@ -920,7 +920,8 @@ impl App {
                         format!("Sonraki tık: {}", crate::drawing_menus::snap_label(kind)),
                         Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
                     )
-                    .key("×"),
+                    .key("×")
+                    .pinned(),
                 None => prompt,
             })
             // The locks holding the next point; the × lets them go (docs/adr/0166 §6).
@@ -933,6 +934,7 @@ impl App {
                             Message::Run("draft.lock.clear"),
                         )
                         .key("×")
+                        .pinned()
                 } else {
                     prompt
                 }

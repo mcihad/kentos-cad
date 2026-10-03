@@ -299,6 +299,9 @@ struct Keyword<'a, Message> {
     /// The values it chooses between (Yazı's Hiza): a click opens them
     /// above it instead of sending `message`; typing still chooses it.
     choices: Option<Choices<Message>>,
+    /// A state's chip (the locks, the one-shot snap): it stays on the line
+    /// when the options do not fit, never in Diğer ([`Prompt::pinned`]).
+    pinned: bool,
 }
 
 struct Choices<Message> {
@@ -358,7 +361,17 @@ impl<'a, Message> Prompt<'a, Message> {
             description: None,
             message,
             choices: None,
+            pinned: false,
         });
+        self
+    }
+
+    /// Son eklenen seçenek bir durumu söyler (kilitler, tek seferlik kenet):
+    /// satıra sığmayan seçenekler Diğer'e giderken o satırda kalır.
+    pub fn pinned(mut self) -> Self {
+        if let Some(option) = self.options.last_mut() {
+            option.pinned = true;
+        }
         self
     }
 
@@ -376,7 +389,8 @@ impl<'a, Message> Prompt<'a, Message> {
     /// last one back, into a “Diğer” chip's menu at the head of the menu
     /// chips: the step's words keep at least their first letters, the field
     /// its least width, and every option stays a click away (one that
-    /// offers values, as a submenu). A prompt that fits is left as it is.
+    /// offers values, as a submenu). A pinned chip stays on the line. A
+    /// prompt that fits is left as it is.
     pub fn fit(mut self, width: f32) -> Self
     where
         Message: Clone,
@@ -402,8 +416,11 @@ impl<'a, Message> Prompt<'a, Message> {
             let frame = 2.0 * 7.0 + 2.0;
             ASK_SPACING + frame + 14.0 + 5.0 + typography::measured_width(MORE, typography::body(), false)
         };
-        while !self.options.is_empty() && chips_width(&self.options, &self.menus) + more > room {
-            self.hidden.extend(self.options.pop());
+        while chips_width(&self.options, &self.menus) + more > room {
+            let Some(last) = self.options.iter().rposition(|o| !o.pinned) else {
+                break;
+            };
+            self.hidden.push(self.options.remove(last));
         }
         self.hidden.reverse();
         let menu = self
@@ -2555,6 +2572,19 @@ mod tests {
             - typography::from_default(STEP_MIN)
             - (typography::mono_width("Yazı", typography::caption()) + 12.0 + ASK_SPACING);
         assert!(chips_width(&narrow.options, &narrow.menus) <= room);
+        // A state's chip after them stays on the line; the options go before it.
+        let pinned = six()
+            .option("Kilit: Uzunluk 12.000 m", 7)
+            .key("×")
+            .pinned()
+            .fit(760.0);
+        let shown: Vec<String> = pinned.options.iter().map(|o| o.label.to_string()).collect();
+        assert_eq!(
+            shown.last().map(String::as_str),
+            Some("Kilit: Uzunluk 12.000 m")
+        );
+        assert!(pinned.hidden.iter().all(|o| !o.pinned));
+        assert!(pinned.hidden.len() > hidden.len(), "{shown:?}");
     }
 
     #[test]

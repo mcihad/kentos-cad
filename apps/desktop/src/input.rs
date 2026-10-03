@@ -355,7 +355,7 @@ impl App {
     /// world point under it, on the object snap when the running tool snaps
     /// and snapping is on (the web's `updateSnap` and `pointer`). The snap is
     /// kept for its marker.
-    fn pointer_at(&mut self, at: iced::Point) -> Pointer {
+    pub(crate) fn pointer_at(&mut self, at: iced::Point) -> Pointer {
         let raw = self.viewport.world(at);
         // A one-shot snap works even with running snaps off (F3), and only
         // for its own kind (the web's `updateSnap`, drawing_menus.rs).
