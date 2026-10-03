@@ -1,0 +1,252 @@
+{
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parca",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0.12,
+          "y": 0
+        },
+        {
+          "x": 0.12,
+          "y": 0.08
+        },
+        {
+          "x": 0,
+          "y": 0.08
+        }
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 0.05,
+              "y": 0.03
+            },
+            {
+              "x": 0.07,
+              "y": 0.03
+            },
+            {
+              "x": 0.07,
+              "y": 0.05
+            },
+            {
+              "x": 0.05,
+              "y": 0.05
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "eksen",
+      "attrs": {},
+      "a": {
+        "x": -0.01,
+        "y": 0.04
+      },
+      "b": {
+        "x": 0.13,
+        "y": 0.04
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "parca",
+      "attrs": {
+        "NO": "1"
+      },
+      "block": "018f3a2b-0000-7000-8000-0000000000a1",
+      "p": {
+        "x": 0.02,
+        "y": 0.02
+      },
+      "scale": 1,
+      "rotation": 0
+    },
+    {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "parca",
+      "attrs": {
+        "NO": "2"
+      },
+      "block": "018f3a2b-0000-7000-8000-0000000000a1",
+      "p": {
+        "x": 0.1,
+        "y": 0.06
+      },
+      "scale": 1.5,
+      "rotation": 0.5
+    },
+    {
+      "kind": "text",
+      "id": 5,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 0.002,
+        "y": 0.0855
+      },
+      "text": "Mil plakası",
+      "height": 0.0035,
+      "rotation": 0
+    },
+    {
+      "kind": "dimension",
+      "id": 6,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 0,
+        "y": 0
+      },
+      "b": {
+        "x": 0.12,
+        "y": 0
+      },
+      "offset": -0.012,
+      "height": 0.0025
+    },
+    {
+      "kind": "leader",
+      "id": 7,
+      "layerId": "olcu",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.07,
+          "y": 0.05
+        },
+        {
+          "x": 0.085,
+          "y": 0.07
+        }
+      ],
+      "height": 0.0025,
+      "rotation": 0,
+      "text": "20 × 20 kare"
+    },
+    {
+      "kind": "circle",
+      "id": 8,
+      "layerId": "parca",
+      "attrs": {},
+      "c": {
+        "x": 0.1,
+        "y": 0.02
+      },
+      "r": 0.0055
+    }
+  ],
+  "layers": [
+    {
+      "id": "parca",
+      "name": "Parça",
+      "path": [],
+      "color": "fg",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    },
+    {
+      "id": "eksen",
+      "name": "Eksen",
+      "path": [],
+      "color": "#E5484D",
+      "visible": true,
+      "locked": false,
+      "lineType": "dashdot",
+      "lineWeight": 0.18
+    },
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "path": [],
+      "color": "fg",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "path": [],
+      "color": "#7FB2E5",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.18
+    }
+  ],
+  "scale": 1,
+  "lengthDecimals": 3,
+  "grads": false,
+  "dimensionValues": {
+    "6": "120.000"
+  },
+  "blocks": [
+    {
+      "id": "018f3a2b-0000-7000-8000-0000000000a1",
+      "name": "Pim",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+            "x": 0,
+            "y": 0
+          },
+          "r": 0.004
+        },
+        {
+          "kind": "line",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": -0.006,
+            "y": 0
+          },
+          "b": {
+            "x": 0.006,
+            "y": 0
+          }
+        }
+      ],
+      "attributes": [
+        {
+          "tag": "NO",
+          "prompt": "Pim numarası",
+          "value": "?",
+          "p": {
+            "x": 0.005,
+            "y": 0.005
+          },
+          "height": 0.0025,
+          "rotation": 0
+        }
+      ]
+    }
+  ],
+  "unit": "mm"
+}

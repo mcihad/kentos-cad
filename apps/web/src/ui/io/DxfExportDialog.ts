@@ -236,6 +236,8 @@ class DxfExportDialog {
       dimensionValues,
       // The writer takes those the objects place (docs/adr/0144 §5).
       blocks: [...ctx.doc.blocks.value],
+      // A local project's drawing goes out in its unit (docs/adr/0165 §2).
+      ...(settings.crs.value.kind === 'local' ? { unit: settings.unit } : {}),
     };
     this.writing = true;
     this.primary.disabled = true;

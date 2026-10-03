@@ -9,8 +9,8 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     ArcEntity, BlockDefinition, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
-    DimensionStyle, DxfReadOptions, DxfWriteInput, DxfWriteLayer, EllipseEntity, Entity,
-    EntityBase, ExportReport, HatchEntity, HatchPattern, HatchPatternType, ImportResult,
+    DimensionStyle, DrawingUnit, DxfReadOptions, DxfWriteInput, DxfWriteLayer, EllipseEntity,
+    Entity, EntityBase, ExportReport, HatchEntity, HatchPattern, HatchPatternType, ImportResult,
     InsertEntity, LineEntity, LineType, PathEntity, PointEntity, RingGeometry, SplineEntity,
     TextEntity, Vec2,
 };
@@ -448,6 +448,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         grads: true,
         dimension_values,
         blocks: Vec::new(),
+        unit: None,
     }
 }
 
@@ -940,6 +941,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         grads: false,
         dimension_values: BTreeMap::new(),
         blocks: Vec::new(),
+        unit: None,
     });
     let r = read(&text);
     // Long values came in pieces and control characters in caret notation: the attributes are back as they were.
@@ -993,6 +995,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         grads: false,
         dimension_values: BTreeMap::new(),
         blocks: Vec::new(),
+        unit: None,
     });
     let r = read(&text);
     assert!(r.entities.is_empty() && r.layers.is_empty());
@@ -1903,6 +1906,106 @@ fn written_as_committed(name: &str) -> ExportReport {
         "the writer's bytes differ from {name}.dxf (KENTOS_WRITE_DXF=1 rewrites it; read the difference first)"
     );
     report
+}
+
+/// Whether two objects are the same, each number within a few float64 steps
+/// of the other: a value ×1000 and ÷1000 again may land a step away.
+fn same_within(a: &Entity, b: &Entity) -> bool {
+    fn near(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+        use serde_json::Value;
+        match (a, b) {
+            (Value::Number(x), Value::Number(y)) => {
+                let (x, y) = (
+                    x.as_f64().unwrap_or(f64::NAN),
+                    y.as_f64().unwrap_or(f64::NAN),
+                );
+                (x - y).abs() <= 4.0 * f64::EPSILON * x.abs().max(y.abs())
+            }
+            (Value::Array(x), Value::Array(y)) => {
+                x.len() == y.len() && x.iter().zip(y).all(|(x, y)| near(x, y))
+            }
+            (Value::Object(x), Value::Object(y)) => {
+                x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| near(v, w)))
+            }
+            _ => a == b,
+        }
+    }
+    near(
+        &serde_json::to_value(a).expect("JSON"),
+        &serde_json::to_value(b).expect("JSON"),
+    )
+}
+
+/// A local project's drawing in millimetres (docs/adr/0165 §2): $INSUNITS 4,
+/// every coordinate and length a thousand times its metres, the paper sizes
+/// in millimetres too; read back into the same project it is the same
+/// drawing in metres, and nothing is said of the unit.
+#[test]
+fn a_local_project_is_written_in_its_unit_and_read_back_in_metres() {
+    let objects = objects();
+    let mut mm = input(objects.clone());
+    mm.unit = Some(DrawingUnit::Mm);
+    let (text, report) = write(&mm);
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+    let (metres, _) = write(&input(objects.clone()));
+    let (p, q) = (pairs(&text), pairs(&metres));
+    let header = |p: &[(i32, &str)], name: &str, code: i32| -> f64 {
+        let i = p.iter().position(|&x| x == (9, name)).expect(name);
+        p[i..]
+            .iter()
+            .find(|x| x.0 == code)
+            .map(|x| x.1.parse().expect("number"))
+            .expect("value")
+    };
+    assert_eq!(
+        (header(&p, "$INSUNITS", 70), header(&q, "$INSUNITS", 70)),
+        (4.0, 6.0)
+    );
+    assert_eq!(
+        header(&p, "$EXTMIN", 10),
+        header(&q, "$EXTMIN", 10) * 1000.0
+    );
+    // The first line's start, and a circle's radius, a thousand times the metres.
+    // The first of a kind that has the group.
+    let value = |p: &[(i32, &str)], kind: &str, code: i32| -> f64 {
+        entities_of(p, kind)
+            .iter()
+            .find_map(|e| e.iter().find(|x| x.0 == code))
+            .map(|x| x.1.parse().expect("number"))
+            .expect("value")
+    };
+    assert_eq!(value(&p, "LINE", 10), value(&q, "LINE", 10) * 1000.0);
+    assert_eq!(value(&p, "CIRCLE", 40), value(&q, "CIRCLE", 40) * 1000.0);
+    // A line type's dashes: millimetres on paper at 1:1000, in the drawing's millimetres.
+    assert_eq!(value(&p, "LTYPE", 49), value(&q, "LTYPE", 49) * 1000.0);
+    let r = dxf::read(
+        text.as_bytes(),
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::Mm),
+            ..DxfReadOptions::default()
+        },
+    )
+    .expect("reads");
+    assert!(
+        r.report.notes.iter().all(|n| n.what != "Birim"),
+        "{:?}",
+        r.report.notes
+    );
+    let want: Vec<Entity> = objects.iter().map(|e| expected(e, &layer_name)).collect();
+    assert_eq!(r.entities.len(), want.len());
+    for (got, want) in r.entities.iter().zip(&want) {
+        assert!(same_within(got, want), "{got:?}\n{want:?}");
+    }
+}
+
+/// The millimetre fixture (`fixtures/formats/v1/dxf-write/units.input.json`,
+/// docs/adr/0165 §2) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code:
+/// $INSUNITS 4 and every coordinate and length in millimetres.
+#[test]
+fn the_units_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("units");
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
 }
 
 /// The texts' fixture (`fixtures/formats/v1/dxf-write/texts.input.json`,

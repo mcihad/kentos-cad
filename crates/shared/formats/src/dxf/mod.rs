@@ -34,10 +34,12 @@ pub use writer::{WriteInput, input_from_json, write};
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LineType};
+use kentos_contracts::{DrawingUnit, DxfReadOptions, ImportLayer, ImportResult, LineType};
 
 use crate::num::{parse_int, parse_real};
+use crate::report::Report;
 use crate::text::Encoding;
+use crate::units::{self, Scale};
 use crate::watch::{Quiet, STOPPED, Watch};
 use emit::{Block, Ctx, Emitter, Library, Out};
 use entity::P3;
@@ -95,13 +97,50 @@ fn version_name(v: &str) -> String {
 fn units_name(u: i64) -> &'static str {
     match u {
         0 => "birimsiz",
-        1 => "inç",
-        2 => "fit",
-        4 => "milimetre",
-        5 => "santimetre",
-        6 => "metre",
-        7 => "kilometre",
-        _ => "başka bir birim",
+        _ => crate::units::insunits(u).map_or("başka bir birim", |(_, name)| name),
+    }
+}
+
+/// The scale from the file's values to metres, and what the report says of
+/// it (docs/adr/0165 §2). A project with a coordinate system (`project`
+/// none) takes the values as metres and is told of another declared unit;
+/// a local project takes them in the unit the file declares, or in its own
+/// when the file declares none.
+fn units_in(declared: Option<i64>, project: Option<DrawingUnit>, report: &mut Report) -> Scale {
+    if let Some(u) = declared {
+        report.fact("Birim ($INSUNITS)", units_name(u));
+    }
+    let Some(project) = project else {
+        if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
+            report.about(
+                "Birim",
+                &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)),
+            );
+        }
+        return Scale::ONE;
+    };
+    let own = units::name_of(project);
+    match declared.and_then(units::insunits) {
+        Some((scale, name)) => {
+            if name != own {
+                report.about(
+                    "Birim",
+                    &format!("dosya {name} biriminde; değerler çizimin birimine, {own}ye çevrildi"),
+                );
+            }
+            scale
+        }
+        None => {
+            let why = match declared {
+                Some(0) | None => "dosya birim bildirmiyor".to_owned(),
+                Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
+            };
+            report.about(
+                "Birim",
+                &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
+            );
+            units::from_unit(project)
+        }
     }
 }
 
@@ -594,10 +633,18 @@ fn read_once(
     }
     out.report.fact("Sürüm", version_name(&rd.version));
     out.report.fact("Karakter kodlaması", rd.dec.enc.label());
-    if let Some(u) = rd.units {
-        out.report.fact("Birim ($INSUNITS)", units_name(u));
-        if u != 0 && u != 6 {
-            out.report.note("Birim", &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)), 0);
+    let scale = units_in(rd.units, opts.unit, &mut out.report);
+    let mut blocks = blocks;
+    if !scale.is_one() {
+        // The drawing in metres: every object, every definition, the extent (docs/adr/0165 §2).
+        for e in &mut out.entities {
+            units::entity(e, scale);
+        }
+        for b in &mut blocks {
+            units::block(b, scale);
+        }
+        if let Some(b) = &mut out.bounds {
+            units::bounds(b, scale);
         }
     }
     let mut result = ImportResult {

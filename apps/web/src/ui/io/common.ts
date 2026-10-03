@@ -58,9 +58,9 @@ export function summaryLine(kind: 'ok' | 'warn' | 'info' | 'error', ...content: 
   return h('div', { class: 'io-summary__line', dataset: { kind } }, icon(glyph, 14), h('div', null, content));
 }
 
-/** A report item as a sentence ("IMAGE: 2, raster görüntüler alınmaz (satır 120, 488)."). */
+/** A report item as a sentence ("IMAGE: 2, raster görüntüler alınmaz (satır 120, 488)."); one about the whole file has no count ("Birim: …"). */
 export const reportText = (i: ReportItem): string =>
-  `${i.what}: ${i.count}, ${i.reason}${i.lines.length ? ` (satır ${i.lines.join(', ')}${i.count > i.lines.length ? ' …' : ''})` : ''}.`;
+  `${i.what}: ${i.count ? `${i.count}, ` : ''}${i.reason}${i.lines.length ? ` (satır ${i.lines.join(', ')}${i.count > i.lines.length ? ' …' : ''})` : ''}.`;
 
 /** Object counts by kind, largest first, without plurals (Turkish counts take none: "12 çizgi, 3 yay"; "187.202 çizgi"). */
 export function kindCounts(counts: ReadonlyMap<string, number>): string {
@@ -249,7 +249,7 @@ export class CrsQuestion {
         ),
       );
     } else if (this.matches) {
-      lines.push(h('p', { class: 'io-field__hint' }, `Projenin sistemi (${project.name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz.`));
+      lines.push(h('p', { class: 'io-field__hint' }, `Projenin sistemi (${project.name}). Koordinat sistemi dönüştürülmez; değerler yuvarlanmaz.`));
     } else {
       const what =
         source.datum !== project.datum

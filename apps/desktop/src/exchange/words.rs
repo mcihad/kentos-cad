@@ -118,7 +118,8 @@ pub fn check<'a, Message: Clone + 'a>(
         .into()
 }
 
-/// A report item as a sentence (“IMAGE: 2, raster görüntüler alınmaz (satır 120, 488).”).
+/// A report item as a sentence (“IMAGE: 2, raster görüntüler alınmaz (satır
+/// 120, 488).”); one about the whole file has no count (“Birim: …”).
 pub fn report_text(i: &ReportItem) -> String {
     let lines = if i.lines.is_empty() {
         String::new()
@@ -131,7 +132,12 @@ pub fn report_text(i: &ReportItem) -> String {
         };
         format!(" (satır {}{more})", listed.join(", "))
     };
-    format!("{}: {}, {}{lines}.", i.what, i.count, i.reason)
+    let count = if i.count > 0 {
+        format!("{}, ", i.count)
+    } else {
+        String::new()
+    };
+    format!("{}: {count}{}{lines}.", i.what, i.reason)
 }
 
 /// Report items as summary lines, at most `max` and a line for the rest.
@@ -273,6 +279,17 @@ mod tests {
             ..item
         };
         assert_eq!(report_text(&plain), "IMAGE: 1, raster görüntüler alınmaz.");
+        // One about the whole file (its unit, docs/adr/0165 §2) has no count.
+        let about = ReportItem {
+            what: "Birim".into(),
+            count: 0,
+            reason: "dosya inç biriminde; değerler çizimin birimine, milimetreye çevrildi".into(),
+            lines: Vec::new(),
+        };
+        assert_eq!(
+            report_text(&about),
+            "Birim: dosya inç biriminde; değerler çizimin birimine, milimetreye çevrildi."
+        );
     }
 
     #[test]

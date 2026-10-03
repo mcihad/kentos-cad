@@ -6,7 +6,8 @@
 //! LibreCAD and ezdxf read it. The file has what AutoCAD needs of an
 //! AutoCAD 2000+ drawing (handles, owners, the symbol tables, the model
 //! and paper space blocks, the root dictionary and layouts) and units in
-//! metres ($INSUNITS 6).
+//! metres ($INSUNITS 6), or in a local project's unit (4 millimetres,
+//! 5 centimetres; docs/adr/0165 §2), every coordinate and length scaled.
 //!
 //! Coordinates are written as the shortest decimal that reads back to the
 //! same float64 (`num::dxf_real`): this crate's reader gets every
@@ -34,11 +35,14 @@ pub use input::{WriteInput, input_from_json};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 
-use kentos_contracts::{BlockId, Bounds, DxfWriteInput, ExportReport, TextAlign, Vec2};
+use kentos_contracts::{
+    BlockId, Bounds, DrawingUnit, DxfWriteInput, ExportReport, TextAlign, Vec2,
+};
 
 use super::justify;
 use crate::num::dxf_real;
 use crate::report::Report;
+use crate::units;
 use blocks::Written;
 use entities::Writer;
 use layers::Layers;
@@ -186,6 +190,8 @@ struct Header<'a> {
     grads: bool,
     /// Size of point marks in drawing units, when the drawing has points.
     point_size: Option<f64>,
+    /// $INSUNITS: metres, or a local project's unit (docs/adr/0165 §2).
+    insunits: i64,
 }
 
 fn header(out: &mut Out, h: &Header) {
@@ -266,7 +272,7 @@ fn header(out: &mut Out, h: &Header) {
     var(out, "$LWDISPLAY");
     out.int(290, 0);
     var(out, "$INSUNITS");
-    out.int(70, 6);
+    out.int(70, h.insunits);
     var(out, "$PSTYLEMODE");
     out.int(290, 1);
     var(out, "$EXTNAMES");
@@ -277,6 +283,16 @@ fn header(out: &mut Out, h: &Header) {
 /// Writes the objects and their layers as an AutoCAD 2007 DXF, with what
 /// was written by kind and what changed on the way (Turkish, for the user).
 pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
+    // A local project's drawing is written in its unit (docs/adr/0165 §2).
+    let unit = input.unit.unwrap_or(DrawingUnit::M);
+    let to = units::to_unit(unit);
+    let scaled;
+    let input = if to.is_one() {
+        input
+    } else {
+        scaled = in_unit(input, to);
+        &scaled
+    };
     let mut report = Report::default();
     let scale = if input.scale.is_finite() && input.scale > 0.0 {
         input.scale
@@ -302,6 +318,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut defined: HashMap<BlockId, Written> = HashMap::new();
     let mut points = false;
     let no_values = BTreeMap::new();
+    // The dimensions' own blocks are numbered on their own: *D1, *D2 … after the drawing's.
+    let mut dimensions = 0usize;
     // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
     let placing = crate::blocks::Placing::with_attributes(&input.blocks);
     for def in order {
@@ -315,6 +333,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 out: &mut objects,
                 blocks: &mut blocks,
                 records: &mut records,
+                dimensions: &mut dimensions,
                 values: &no_values,
                 decimals: input.length_decimals,
                 grads: input.grads,
@@ -360,6 +379,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             out: &mut body,
             blocks: &mut blocks,
             records: &mut records,
+            dimensions: &mut dimensions,
             values: &input.dimension_values,
             decimals: input.length_decimals,
             grads: input.grads,
@@ -384,7 +404,9 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     tables.section("TABLES");
     let (centre, height) = view(extent.as_ref());
     template::vport_table(&mut tables, centre, height);
-    layers.ltype_table(&mut tables, &mut handles, scale);
+    // Sizes on paper (line type patterns, point marks) in drawing units: metres at the plot scale, in the unit.
+    let paper = scale * unit.per_metre();
+    layers.ltype_table(&mut tables, &mut handles, paper);
     layers.layer_table(&mut tables, &mut handles);
     template::style_view_ucs(&mut tables);
     template::appid_table(&mut tables);
@@ -401,7 +423,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             extent: extent.as_ref(),
             decimals: input.length_decimals,
             grads: input.grads,
-            point_size: points.then_some(1.5 * scale / 1000.0),
+            point_size: points.then_some(1.5 * paper / 1000.0),
+            insunits: units::insunits_of(unit),
         },
     );
     template::classes(&mut out);
@@ -413,4 +436,17 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     template::objects(&mut out);
     out.str(0, "EOF");
     (out.s.into_bytes(), report.export())
+}
+
+/// The objects and definitions to write in a local project's unit: every
+/// coordinate and length scaled, the rest as it is.
+fn in_unit(input: &DxfWriteInput, to: units::Scale) -> DxfWriteInput {
+    let mut scaled = input.clone();
+    for e in &mut scaled.entities {
+        units::entity(e, to);
+    }
+    for b in &mut scaled.blocks {
+        units::block(b, to);
+    }
+    scaled
 }

@@ -246,6 +246,14 @@ impl App {
             .unwrap_or_default()
     }
 
+    /// A local project's unit, for the DXF reader (docs/adr/0165 §2): a
+    /// file's declared unit is turned into metres, one that declares none is
+    /// in the project's; a project with a coordinate system reads metres.
+    fn dxf_unit(&self) -> Option<kentos_contracts::DrawingUnit> {
+        let settings = self.document.as_ref()?.settings();
+        (settings.srid == crate::crs::LOCAL_SRID).then(|| settings.unit())
+    }
+
     /// Opens the window on `file` and reads it on a thread of its own.
     pub(super) fn drawing_import_picked(&mut self, source: Source, file: Picked) -> Task<Message> {
         let srid = self.project_srid();
@@ -279,6 +287,7 @@ impl App {
     /// read under way stops, and its late answer is dropped.
     fn read_drawing(&mut self) -> Task<Message> {
         let font = self.drawing_font_id();
+        let unit = self.dxf_unit();
         let Some(Window::DrawingImport(s)) = &mut self.exchange else {
             return Task::none();
         };
@@ -316,6 +325,7 @@ impl App {
                         &DxfReadOptions {
                             max_entities: 0,
                             explode_blocks: explode,
+                            unit,
                         },
                         &mut watch,
                     ),

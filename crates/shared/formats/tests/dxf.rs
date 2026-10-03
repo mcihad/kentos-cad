@@ -809,6 +809,7 @@ fn nested_blocks_that_draw_nothing_cannot_stall_the_reader() {
     let opts = DxfReadOptions {
         max_entities: 1000,
         explode_blocks: true,
+        unit: None,
     };
     let r = dxf::read(&bytes, &opts).expect("read");
     assert!(t0.elapsed().as_secs() < 5);

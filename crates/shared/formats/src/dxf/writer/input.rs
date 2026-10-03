@@ -402,6 +402,8 @@ struct Input {
     dimension_values: BTreeMap<u32, String>,
     #[serde(default)]
     blocks: Definitions,
+    #[serde(default)]
+    unit: Option<kentos_contracts::DrawingUnit>,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -421,6 +423,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             grads: i.grads,
             dimension_values: i.dimension_values,
             blocks: i.blocks.0,
+            unit: i.unit,
         }))
     }
 }

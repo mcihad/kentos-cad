@@ -190,6 +190,8 @@ pub(super) struct Writer<'a> {
     /// The dimensions' own blocks (BLOCKS section), and their block records.
     pub blocks: &'a mut Out,
     pub records: &'a mut Vec<(u64, String)>,
+    /// The dimensions' blocks written so far: the next is *D and one more.
+    pub dimensions: &'a mut usize,
     /// What a dimension without a text of its own shows, by object id.
     pub values: &'a BTreeMap<u32, String>,
     /// The project's length decimals and angle unit (a redrawn dimension's text).
@@ -977,7 +979,8 @@ impl Writer<'_> {
 
         // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
         let record = self.handles.take();
-        let name = format!("*D{}", self.records.len() + 1);
+        *self.dimensions += 1;
+        let name = format!("*D{}", *self.dimensions);
         self.records.push((record, name.clone()));
         self.block_begin(record, &name);
         let arc = match l.pick.first() {

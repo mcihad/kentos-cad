@@ -179,7 +179,7 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı ve kılavuz örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
@@ -596,8 +596,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   her türün; pafta profillerinde hibrit satırı yok; arayüzde “Çalışma modu” yerine “Proje türü”, bulut kataloğunun etiketi “İş
   türü”. 2. adımın yerel sistemi (SRID 0, “Yerel (koordinat sistemi yok)”) ve çizim birimi (`settings.drawingUnit`, `.kcad`
   şema 11; geometri metrede, birim yalnız okuma ve yazmada: `Formatter.toMetres`, `Format::to_metres`, `Context::typed_point`,
-  `typed_length`, `point_from_text_in`; Hesap pencereleri ve İşlemler metrede) bitti. Sıradaki: 2c (DXF `$INSUNITS`), sonra
-  sihirbaz, eksenler, sahne, her türün şeridi.
+  `typed_length`, `point_from_text_in`; Hesap pencereleri ve İşlemler metrede) bitti; DXF iki yönde birimiyle (2c,
+  `formats::units`) bitti. Sıradaki: 3. adım (sihirbaz; yerel CAD'in varsayılan ölçeği 1:1), sonra eksenler, sahne, her türün şeridi.
 
 - Bitti (30 Eylül): yazı ekleri ([ADR 0145](docs/adr/0145-text-extras.md), TODOS.md `CAD-15`, `.kcad` şema 7),
   1–5. adımlar iki platformda: sözleşme ve şema 7; çekirdek ve çizim; komutlar; araçlar ve arayüz (Yazı'nın

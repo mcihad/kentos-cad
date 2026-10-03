@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { FileKind, PickedFile } from '../../app/fileIO';
 import type { Bounds } from '../../contracts/generated/Bounds';
+import type { DrawingUnit } from '../../contracts/generated/DrawingUnit';
 import type { ImportLayer } from '../../contracts/generated/ImportLayer';
 import type { ReportItem } from '../../contracts/generated/ReportItem';
 import type { ImportResult } from '../../contracts/generated/ImportResult';
@@ -178,7 +179,7 @@ class DrawingImportDialog {
       const d =
         this.source === 'ncz'
           ? await formats().readNcz(this.file.bytes, { maxEntities: 0, drawingFont: this.ctx.doc.settings.drawingFont.value }, progress)
-          : await formats().readDxf(this.file.bytes.slice(), { maxEntities: 0, explodeBlocks: this.explode }, progress);
+          : await formats().readDxf(this.file.bytes.slice(), { maxEntities: 0, explodeBlocks: this.explode, ...this.dxfUnit() }, progress);
       if (gen !== this.generation || this.closed) return;
       this.drawing = d;
       // An NCZ says what its coordinates are in (its projection blocks); a DXF says nothing.
@@ -195,6 +196,15 @@ class DrawingImportDialog {
       if (gen === this.generation) this.reading = null;
     }
     this.render();
+  }
+
+  /**
+   * A local project's unit, for the DXF reader (docs/adr/0165 §2): a file's declared unit is turned into metres and
+   * one that declares none is in the project's. A project with a coordinate system reads in metres as before.
+   */
+  private dxfUnit(): { unit?: DrawingUnit } {
+    const s = this.ctx.doc.settings;
+    return s.crs.value.kind === 'local' ? { unit: s.unit } : {};
   }
 
   private async pickAnother(): Promise<void> {

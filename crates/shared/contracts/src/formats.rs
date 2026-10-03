@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::document::Bounds;
+use crate::document::{Bounds, DrawingUnit};
 use crate::entity::{BlockDefinition, Entity, Vec2};
 use crate::layer::LineType;
 
@@ -390,6 +390,13 @@ pub struct DxfReadOptions {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub explode_blocks: bool,
+    /// A local project's drawing unit (docs/adr/0165 §2): the file's values
+    /// are taken in the unit its $INSUNITS names and turned into metres, a
+    /// file that names none is in this unit. None: a project with a
+    /// coordinate system, whose files are read in metres as they are.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<DrawingUnit>,
 }
 
 /// A layer as the DXF writer receives it. DXF layers are flat and their
@@ -443,6 +450,11 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
+    /// A local project's drawing unit (docs/adr/0165 §2): coordinates and
+    /// lengths are written in it and $INSUNITS names it. None: metres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<DrawingUnit>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

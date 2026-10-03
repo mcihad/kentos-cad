@@ -71,6 +71,12 @@ impl Report {
         }
     }
 
+    /// Something about the file as a whole the user should know (its unit):
+    /// no count, shown without one (`what: reason`).
+    pub fn about(&mut self, what: &str, reason: &str) {
+        self.notes.add(what, reason, 0, 0);
+    }
+
     /// Something at `line` was read with a change the user should know about.
     pub fn note(&mut self, what: &str, reason: &str, line: u32) {
         self.notes.add(what, reason, line, 1);

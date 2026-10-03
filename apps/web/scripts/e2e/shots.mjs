@@ -3386,6 +3386,19 @@ SCENES.drawingunit = [
       await ui.sleep(600);
     },
   },
+  // DXF içe aktar of a file in inches (fixtures/formats/v1/units.dxf): the window says its unit and that its values
+  // come in the project's. The desktop's are `exchange::tests::unit_screens` (aktar-*-22).
+  {
+    id: 'unit-dxf-import',
+    open: async (ui) => {
+      const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/units.dxf', import.meta.url)).toString('base64');
+      const file = `{ name: 'units.dxf', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }`;
+      await ui.eval(`${LOCAL_MM}.then(() => import('/src/ui/io/DrawingImportDialog.ts')).then((m) => m.openDxfImport(window.kentos, ${file}, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`);
+      await ui.waitFor(DXF_READ, 15000);
+      await ui.sleep(400);
+    },
+    close: async (ui) => await ui.escapeAll(1),
+  },
 ];
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */

@@ -232,7 +232,7 @@ impl CrsQuestion {
                 notes.push(Note::Info("Koordinatların hangi sistemde olduğunu seçin; içe aktarma ancak seçilen sistem projeninki olunca açılır.".to_owned()));
             } else {
                 notes.push(Note::Hint(format!(
-                    "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
+                    "Projenin sistemi ({project_name}). Koordinat sistemi dönüştürülmez; değerler yuvarlanmaz."
                 )));
             }
             return notes;
@@ -253,7 +253,7 @@ impl CrsQuestion {
                 title(source)
             ))),
             _ if self.matches(project) => notes.push(Note::Hint(format!(
-                "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
+                "Projenin sistemi ({project_name}). Koordinat sistemi dönüştürülmez; değerler yuvarlanmaz."
             ))),
             None => notes.push(Note::Warn(format!(
                 "Proje EPSG:{project} sisteminde; bu sistem bu sürümde tanımlı değil. Koordinatlar dönüştürülemez, bu yüzden içe aktarma kapalı."

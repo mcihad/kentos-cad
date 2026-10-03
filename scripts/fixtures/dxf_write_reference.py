@@ -78,6 +78,13 @@ library and no KentOS code:
   masked one has KentOS's "mask" item, DIMTFILL 1 in its overrides and its
   block's MTEXT over the background (90 3), no other has; its block's MTEXT
   says the value the input gives it;
+- a local project's drawing (docs/adr/0165 §2; the input's `unit`, mm or
+  cm) is written in its unit: $INSUNITS 4 or 5 (6 in metres), every
+  coordinate and length of the input (points, vertices, radii, heights,
+  offsets, elevations, hatch spacings, block bases and attribute
+  definitions) a thousand or a hundred times its metres, and the checks
+  above are made against the input so scaled; angles, turns, ratios and an
+  insert's own scale stay;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -132,6 +139,41 @@ def split(p: list[tuple[int, str]]) -> list[list[tuple[int, str]]]:
 
 def group(e: list[tuple[int, str]], code: int) -> str | None:
     return next((v for c, v in e if c == code), None)
+
+
+# A local project's unit: how many make a metre, and the $INSUNITS code naming it (docs/adr/0165 §2).
+UNITS = {"mm": (1000.0, "4"), "cm": (100.0, "5"), "m": (1.0, "6")}
+POINT_KEYS = {"p", "a", "b", "c", "base", "major"}
+LENGTH_KEYS = {"r", "height", "offset", "z", "za", "zb"}
+
+
+def scaled(o, k: float):
+    """The input with every coordinate and length times `k`; angles, ratios and an insert's own scale as they are."""
+    if isinstance(o, list):
+        return [scaled(x, k) for x in o]
+    if not isinstance(o, dict):
+        return o
+    xy = lambda q: {"x": q["x"] * k, "y": q["y"] * k}
+    out = {}
+    for key, v in o.items():
+        if key in POINT_KEYS and isinstance(v, dict):
+            out[key] = xy(v)
+        elif key in ("pts", "ring"):
+            out[key] = [xy(q) for q in v]
+        elif key in LENGTH_KEYS and isinstance(v, (int, float)) and not isinstance(v, bool):
+            out[key] = v * k
+        elif key == "zs":
+            out[key] = [None if z is None else z * k for z in v]
+        elif key == "holes":
+            # A polygon's rings ({pts, bulges, zs}) or a hatch's islands (lists of points).
+            out[key] = [scaled(h, k) if isinstance(h, dict) else [xy(q) for q in h] for h in v]
+        elif key == "pattern":
+            out[key] = {**v, "spacing": v["spacing"] * k}
+        elif key in ("entities", "blocks", "attributes", "parts"):
+            out[key] = scaled(v, k)
+        else:
+            out[key] = v
+    return out
 
 
 def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
@@ -600,10 +642,18 @@ def check_dimension(o: list[tuple[int, str]], e: dict, value: str | None, blocks
 def check(name: str) -> list[str]:
     spec = json.loads((DIR / f"{name}.input.json").read_text(encoding="utf-8"))
     p = pairs((DIR / f"{name}.dxf").read_bytes())
+    # The drawing in the file's unit: a local project's (docs/adr/0165 §2), else metres.
+    unit = spec.get("unit") or "m"
+    per_metre, code = UNITS[unit]
+    head = section(p, "HEADER")
+    at = head.index((9, "$INSUNITS"))
+    ensure(head[at + 1] == (70, code), f"$INSUNITS {code} ({unit})")
+    if per_metre != 1.0:
+        spec = scaled(spec, per_metre)
     layers = {l["id"]: l["name"] for l in spec["layers"]}
     order = walk(spec["blocks"], spec["entities"])
     names = dxf_names(order)
-    said = []
+    said = [f"birim {unit} ($INSUNITS {code})"] if unit != "m" else []
     widths: dict = {}
 
     # Records and BLOCKs, in the walk's order after model and paper space.

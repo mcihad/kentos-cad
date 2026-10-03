@@ -8,7 +8,9 @@
 //! Rules:
 //! - coordinates are the float64 nearest to what the file wrote, never
 //!   rounded, rescaled or reprojected (§5, §23); writers write the shortest
-//!   decimal that reads back to the same float64;
+//!   decimal that reads back to the same float64. The one rescaling is a
+//!   local project's unit: a DXF's declared one in, the project's out
+//!   (`units`, docs/adr/0165 §2);
 //! - nothing a file holds may crash a reader: bad lines and unknown objects
 //!   are counted and reported in Turkish with their line numbers;
 //! - one pass over the input, no quadratic behaviour on large files.
@@ -35,6 +37,7 @@ pub mod nurbs;
 pub mod report;
 pub mod shp;
 pub mod text;
+pub mod units;
 pub mod watch;
 pub mod zip;
 

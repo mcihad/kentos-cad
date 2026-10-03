@@ -203,6 +203,64 @@ fn a_dxf_export_writes_what_the_reader_reads_back() {
     );
 }
 
+/// A local project's DXF (docs/adr/0165 §2): a file in inches comes in in
+/// metres, its unit said; the drawing goes out in the project's millimetres
+/// ($INSUNITS 4) and reads back the same.
+#[test]
+fn a_local_projects_dxf_goes_in_and_out_in_its_unit() {
+    let mut app = app_with_drawing();
+    {
+        let model = &mut app.document.as_mut().expect("open").model;
+        let settings = kentos_contracts::ProjectSettings {
+            srid: 0,
+            drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+            ..model.settings().clone()
+        };
+        model.set_settings(settings);
+    }
+    app.picker = Picker::File(fixture("units.dxf"));
+    run(&mut app, "file.import.dxf");
+    send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
+    let line = |app: &App| {
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .entities()
+            .find_map(|e| match e {
+                Entity::Line(l) if l.za == Some(0.0508) => Some((l.a, l.b)),
+                _ => None,
+            })
+    };
+    let (a, b) = line(&app).expect("the inch line, in metres");
+    assert_eq!((a.x, a.y, b.x, b.y), (0.0, 0.0, 0.254, 0.0));
+
+    let dir = scratch("export-dxf-mm");
+    let path = dir.join("plaka.dxf");
+    app.picker = Picker::File(path.clone());
+    run(&mut app, "file.export.dxf");
+    send(
+        &mut app,
+        Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
+    );
+    send(&mut app, Event::DxfExport(dxf_export::Event::Run));
+    let bytes = std::fs::read(&path).expect("written");
+    let text = String::from_utf8_lossy(&bytes);
+    assert!(text.contains("$INSUNITS\r\n 70\r\n4\r\n"), "millimetres");
+    let back = kentos_formats::dxf::read(
+        &bytes,
+        &kentos_contracts::DxfReadOptions {
+            unit: Some(kentos_contracts::DrawingUnit::Mm),
+            ..Default::default()
+        },
+    )
+    .expect("reads");
+    assert!(back.entities.iter().any(|e| matches!(
+        e,
+        Entity::Line(l) if l.b.x == 0.254 && l.za == Some(0.0508)
+    )));
+}
+
 /// A DXF's blocks go out as they came in (docs/adr/0144 §5): imported, the
 /// drawing written as a DXF, and that file imported again gives the same
 /// definitions and inserts; the window said how the blocks are written.
@@ -571,6 +629,42 @@ fn leader_screens() {
                 Event::DxfExport(dxf_export::Event::Scope(dxf_export::Scope::All)),
             );
             shot(&mut app, &out, &format!("aktar-{mode}-21-dxf-ver-kilavuzlar"), size);
+        }
+    }
+}
+
+/// A local project's DXF (docs/adr/0165 §2): a file in inches read into a
+/// project in millimetres, the window saying the file's unit and that its
+/// values come in the project's. The web's are `shots.mjs drawingunit`
+/// (unit-dxf-import).
+///
+/// ```text
+/// cargo test -p kentos-desktop exchange::tests::unit_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn unit_screens() {
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for size in [(1440.0, 900.0), (1100.0, 650.0)] {
+        for mode in ["dark", "light"] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            {
+                let model = &mut app.document.as_mut().expect("open").model;
+                let settings = kentos_contracts::ProjectSettings {
+                    srid: 0,
+                    drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+                    ..model.settings().clone()
+                };
+                model.set_settings(settings);
+            }
+            app.picker = Picker::File(fixture("units.dxf"));
+            run(&mut app, "file.import.dxf");
+            shot(&mut app, &out, &format!("aktar-{mode}-22-dxf-birim"), size);
         }
     }
 }

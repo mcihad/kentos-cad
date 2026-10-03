@@ -252,6 +252,24 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(etiket?.attributes?.map((a) => [a.tag, a.p, a.align, a.widthFactor])).toEqual([['NO', { x: 1.5, y: 0 }, 'middleCenter', 0.9]]);
   });
 
+  // docs/adr/0165 §2: a file in inches read into a local project in millimetres comes in metres, the insert keeping its
+  // own scale; read into a project with a coordinate system, as it is (crates/shared/formats/tests/dxf_units.rs has more).
+  it('turns a declared unit into metres for a local project', async () => {
+    const w = await load();
+    const local = imported(w.readDxf(fixture('units.dxf'), JSON.stringify({ maxEntities: 0, unit: 'mm' }), quiet));
+    const line = local.entities.find((e) => e.kind === 'line');
+    expect(line?.kind === 'line' && [line.b, line.za]).toEqual([{ x: 0.254, y: 0 }, 0.0508]);
+    const circle = local.entities.find((e) => e.kind === 'circle');
+    expect(circle?.kind === 'circle' && [circle.c, circle.r]).toEqual([{ x: 0.127, y: 0.1016 }, 0.0508]);
+    const insert = local.entities.find((e) => e.kind === 'insert');
+    expect(insert?.kind === 'insert' && [insert.p, insert.scale]).toEqual([{ x: 0.0762, y: 0.1016 }, 2]);
+    expect(local.blocks?.[0]?.base).toEqual({ x: 0.0254, y: 0.0254 });
+    expect(local.report.notes.find((n) => n.what === 'Birim')?.reason).toBe('dosya inç biriminde; değerler çizimin birimine, milimetreye çevrildi');
+    const placed = imported(w.readDxf(fixture('units.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    const asIs = placed.entities.find((e) => e.kind === 'line');
+    expect(asIs?.kind === 'line' && asIs.b).toEqual({ x: 10, y: 0 });
+  });
+
   // docs/adr/0146 §8: a LEADER and its MTEXT, in either order, cross the columns as one leader; a MULTILEADER too
   // (crates/shared/formats/tests/dxf.rs has the whole file).
   it('reads leaders with their notes, arrowheads and heights', async () => {
