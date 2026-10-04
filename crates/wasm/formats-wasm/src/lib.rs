@@ -81,6 +81,19 @@ pub fn read_gnss(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::gnss::read(bytes))
 }
 
+/// Writes points as an instrument's coordinate file (docs/adr/0169 §4):
+/// `points` a `FieldPoint` list and `options` `FieldWriteOptions` (JSON);
+/// the result `FieldWrite` (JSON bytes): the file's text, how many went in,
+/// those that did not with why.
+#[wasm_bindgen(js_name = writeField)]
+pub fn write_field(points: &str, options: &str) -> Result<Vec<u8>, JsError> {
+    let points: Vec<kentos_contracts::FieldPoint> =
+        serde_json::from_str(points).map_err(|e| bad_input("Gönderilecek noktalar", &e))?;
+    let options: kentos_contracts::FieldWriteOptions =
+        serde_json::from_str(options).map_err(|e| bad_input("Alete gönderme seçenekleri", &e))?;
+    to_json(&kentos_formats::field::write::write(&points, &options))
+}
+
 /// Writes a coordinate list from `CoordWriteInput` (JSON).
 #[wasm_bindgen(js_name = writeCoords)]
 pub fn write_coords(input: &str) -> Result<Written, JsError> {

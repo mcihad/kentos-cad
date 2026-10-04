@@ -17,6 +17,7 @@ pub mod gts7;
 pub mod jobxml;
 pub mod nikon;
 pub mod sdr;
+pub mod write;
 
 /// What is said of a line not read; `{line}`, `{what}`, `{text}` and `{target}` are filled in.
 pub const ROW: &str = "Satır {line}: {what} “{text}” sayı değil; satır okunmadı.";

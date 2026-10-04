@@ -5,6 +5,9 @@ import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { FieldBookRead } from '../contracts/generated/FieldBookRead';
+import type { FieldPoint } from '../contracts/generated/FieldPoint';
+import type { FieldWrite } from '../contracts/generated/FieldWrite';
+import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions';
 import type { FieldStation } from '../contracts/generated/FieldStation';
 import type { GnssPoint } from '../contracts/generated/GnssPoint';
 import type { GnssRead } from '../contracts/generated/GnssRead';
@@ -25,6 +28,7 @@ interface Formats {
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
   readFieldBook(bytes: Uint8Array, options: string): Uint8Array;
   readGnss(bytes: Uint8Array): Uint8Array;
+  writeField(points: string, options: string): Uint8Array;
 }
 
 const glue = import.meta.glob<Formats>('./pkg/kentos_formats_wasm.js');
@@ -172,6 +176,37 @@ describe.skipIf(!loader)('formats WASM module', () => {
       expect(got.format, c.name).toBe(format);
       expect(got.points, c.name).toEqual(c.expect.points);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+    }
+  });
+
+  it('writes instrument coordinate files as the reference does (fixtures/field/v1/write.json, docs/adr/0169 §4)', async () => {
+    const w = await load();
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/write.json', import.meta.url)))) as {
+      cases: {
+        name: string;
+        points: FieldPoint[];
+        options: FieldWriteOptions;
+        expect: { text?: string; written?: number; skipped?: { index: number; name: string; problem: string }[]; error?: string };
+      }[];
+    };
+    expect(file.cases.length).toBeGreaterThanOrEqual(14);
+    for (const c of file.cases) {
+      // The reference writes an absent elevation or code as null: the contract leaves them out.
+      const points = c.points.map((p) => ({
+        name: p.name,
+        east: p.east,
+        north: p.north,
+        ...(p.elevation != null ? { elevation: p.elevation } : {}),
+        ...(p.code != null ? { code: p.code } : {}),
+      }));
+      const got = JSON.parse(new TextDecoder().decode(w.writeField(JSON.stringify(points), JSON.stringify(c.options)))) as FieldWrite;
+      if (c.expect.error !== undefined) {
+        expect(got.error, c.name).toBe(c.expect.error);
+        continue;
+      }
+      expect(got.text, c.name).toBe(c.expect.text);
+      expect(got.written, c.name).toBe(c.expect.written);
+      expect(got.skipped, c.name).toEqual(c.expect.skipped);
     }
   });
 

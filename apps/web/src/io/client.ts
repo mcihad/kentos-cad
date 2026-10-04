@@ -5,6 +5,9 @@ import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { FieldBookRead } from '../contracts/generated/FieldBookRead';
 import type { FieldCsvOptions } from '../contracts/generated/FieldCsvOptions';
+import type { FieldPoint } from '../contracts/generated/FieldPoint';
+import type { FieldWrite } from '../contracts/generated/FieldWrite';
+import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { GnssRead } from '../contracts/generated/GnssRead';
@@ -101,6 +104,14 @@ export class FormatsClient {
   async readGnss(bytes: Uint8Array): Promise<GnssRead> {
     const copy = bytes.slice().buffer;
     return json<GnssRead>(await this.request({ op: 'readGnss', bytes: copy }, [copy]));
+  }
+
+  /**
+   * Writes points as an instrument's coordinate file (docs/adr/0169 §4): the file's text, how many points went in and
+   * those the format cannot carry, with why; or why nothing was written (the job's name).
+   */
+  async writeField(points: readonly FieldPoint[], options: FieldWriteOptions): Promise<FieldWrite> {
+    return json<FieldWrite>(await this.request({ op: 'writeField', points, options }, []));
   }
 
   /**

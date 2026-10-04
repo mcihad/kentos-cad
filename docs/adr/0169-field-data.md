@@ -237,7 +237,27 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    komutuna ayrı işlem eklenmedi. Koordinat sistemi olmayan projede (yerel ya da dönüşümde kullanılamayan tanım) nedeni yazılır,
    İçe aktar kapalıdır. Örnekler `gnss_samples.py` (örnek çizimin parsel köşeleri, PROJ ile WGS 84'e); resimler `gnss-*` (masaüstü),
    `shots.mjs gnss` (web). Kapsam satırı iki platformda projenin türünün eksen adlarıyla yazılır (CAD'de “X (sağa)”).
-7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
+7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV. İki parçada: 7a yazıcılar (biçim çekirdeğinde, iki platformda),
+   7b pencere (Aplikasyon, Nokta editörü ve seçili noktalar).
+
+   Plan (4 Ekim). Yazıcı `formats::field::write` (web'e `writeField`): noktalar (ad, doğu, kuzey, kot, kod) sırasıyla, biçimin kaydıyla;
+   değerler milimetreye, gösterim kuralıyla (ADR 0149) yuvarlanır, bu pencerede bir kez söylenir. Biçimler ve kayıtları (kaynaklar
+   okuyucularınkiyle aynı): Leica GSI-16 ve GSI-8 (blok başına WI 11 nokta, 81 doğu, 82 kuzey, 83 kot, 71 kod; birim hanesi 0, metre
+   ve milimetre; GSI-16 satırı `*` ile başlar); Sokkia SDR33 (00 başlığı, metre; 10 iş kaydı; 08KI koordinat kaydı: nokta 5–20, kuzey
+   21–36, doğu 37–52, kot 53–68, kod 69–84); Topcon GTS-7 nokta biçimi (Topcon Link'in Ek C'si: `ad,doğu,kuzey,kot,kod`); Trimble
+   JobXML 5.3 (FieldBook'ta Method KeyedIn PointRecord'lar, Grid North, East, Elevation); Nikon RAW V2.00 (CO birim kayıtları, `UP,ad,,kuzey,doğu,kot,kod`);
+   CSV (`ad,Y,X,Z,kod`: doğu, kuzey). Biçimin taşıyamadığı nokta yazılmaz, satırıyla söylenir, kırpılmaz: boş ad; uzunluk (GSI-16 16,
+   GSI-8 8, SDR33 nokta 14 ve kod 16 karakter); ayırıcı (GTS-7, Nikon ve CSV'de virgül, GSI'de boşluk), satır sonu; ASCII dışı karakter
+   (GSI, SDR, GTS-7, Nikon; JobXML ve CSV UTF-8'dir); GSI'de sıfırla başlayan ad ya da kod (biçim baştaki sıfırları atar); alana sığmayan
+   değer (GSI-8'de 99 999,999 m'den büyük). Bağımsız başvuru biçimlerin belgelerinden, KentOS kodu olmadan; yazılanlar okuyucularımızla
+   (koordinat kaydı okuyanlarda) geri okunur.
+
+   *(4 Ekim: 7a tamam, SDR33 dışında.)* Yazıcı `formats::field::write` (web'e biçim işçisiyle `writeField`; sözleşmeler `FieldPoint`,
+   `FieldWriteFormat`, `FieldWriteOptions`, `FieldWrite`, `FieldSkip`; `FORMATS_VERSION` 27): Leica GSI-16 ve GSI-8, Topcon GTS-7 noktaları,
+   Trimble JobXML, Nikon RAW ve CSV, yukarıdaki kurallarla. Bağımsız başvuru `field_write_cases.py` (`write.json`, 14 durum: her biçimde
+   örnek çizimin aplikasyon noktaları ve taşınamayan adlar, kodlar ve değerler; iş adının reddi) ve 4000 rastgele durumda Rust ile birebir.
+   Sokkia SDR33 bekliyor: iş kaydının (10) seçenek kodları (nokta adı türü: sayısal 4 ya da harfli 14, kot) eldeki belgelerde
+   doğrulanamadı; tahminle yazılmaz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

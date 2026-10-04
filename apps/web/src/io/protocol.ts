@@ -3,6 +3,8 @@ import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { FieldCsvOptions } from '../contracts/generated/FieldCsvOptions';
+import type { FieldPoint } from '../contracts/generated/FieldPoint';
+import type { FieldWriteOptions } from '../contracts/generated/FieldWriteOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
@@ -29,6 +31,8 @@ export type FormatsRequest =
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   /** A GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; WGS 84 positions as written. */
   | { id: number; op: 'readGnss'; bytes: ArrayBuffer }
+  /** Points as an instrument's coordinate file (docs/adr/0169 §4): Leica GSI, Topcon GTS-7, Trimble JobXML, Nikon RAW or CSV. */
+  | { id: number; op: 'writeField'; points: readonly FieldPoint[]; options: FieldWriteOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }

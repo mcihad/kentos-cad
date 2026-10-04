@@ -1,0 +1,1357 @@
+{
+  "format": "kentos.field-write",
+  "version": 1,
+  "source": "scripts/fixtures/field_write_cases.py (docs/adr/0169 §4; the formats' descriptions)",
+  "texts": {
+    "empty": "{index}. noktanın adı yok; yazılmadı.",
+    "control": "“{name}” adında denetim karakteri var; yazılmadı.",
+    "blank": "“{name}” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı.",
+    "chars": "“{name}” adındaki {chars} {format} dosyasında taşınamaz; yazılmadı.",
+    "long": "“{name}” adı {length} karakter; {format} en çok {limit} karakter alır; yazılmadı.",
+    "zeros": "“{name}” adı sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı.",
+    "codeControl": "“{name}” noktasının kodunda denetim karakteri var; yazılmadı.",
+    "codeBlank": "“{name}” noktasının kodunun başında ya da sonunda boşluk var; okunurken atılır; yazılmadı.",
+    "codeChars": "“{name}” noktasının kodundaki {chars} {format} dosyasında taşınamaz; yazılmadı.",
+    "codeLong": "“{name}” noktasının kodu {length} karakter; {format} en çok {limit} karakter alır; yazılmadı.",
+    "codeZeros": "“{name}” noktasının kodu sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı.",
+    "value": "“{name}” noktasının {what} değeri sayı değil; yazılmadı.",
+    "range": "“{name}” noktasının {what} değeri {value} m; {format} sözcüğüne sığmıyor; yazılmadı.",
+    "job": "İş adı “{job}” {format} dosyasında taşınamaz; dosya yazılmadı."
+  },
+  "cases": [
+    {
+      "name": "Leica GSI-16: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "gsi16",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "*110001+000000000101/7-1 81..10+0000000486512352 82..10+0000004420187531 83..10+0000000001098158 71....+00000000000SINIR \r\n*110002+000000000101/7-2 81..10+0000000486535749 82..10+0000004420188715 83..10+0000000001098776 71....+00000000000SINIR \r\n*110003+0000000000000P12 81..10+0000000486538233 82..10+0000004420218977 \r\n*110004+0000000000000K-5 81..10-0000000000012001 82..10+0000000000000000 83..10-0000000000001250 71....+000000000000AGAC \r\n",
+        "written": 4,
+        "skipped": []
+      }
+    },
+    {
+      "name": "Leica GSI-16: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "gsi16",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "*110001+0000000000000A,1 81..10+0000000000001000 82..10+0000000000002000 \r\n*110002+0000000000000000 81..10+0000000000001000 82..10+0000000000002000 71....+0000000000000000 \r\n*110003+00000000AD-12345 81..10+0000000000001000 82..10+0000000000002000 71....+000000KOD-UZUN-9 \r\n*110004+00000000000000D4 81..10+0000000000001000 82..10+0000000000002000 71....+000000000SINIR,2 \r\n*110005+00000000000000G7 81..10+0000000100000000 82..10+0000000000002000 \r\n*110006+00000000000000H8 81..10+0000000099999999 82..10+0000000000002000 \r\n*110007+0000000000I<9>&\" 81..10+0000000000001000 82..10+0000000000002000 71....+0000000000000a&b \r\n",
+        "written": 7,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 2,
+            "name": "ŞEHİR-1",
+            "problem": "“ŞEHİR-1” adındaki “Ş”, “İ” Leica GSI-16 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 3,
+            "name": "A 1",
+            "problem": "“A 1” adındaki boşluk Leica GSI-16 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          },
+          {
+            "index": 7,
+            "name": "007",
+            "problem": "“007” adı sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı."
+          },
+          {
+            "index": 9,
+            "name": "UZUN-AD-123456789",
+            "problem": "“UZUN-AD-123456789” adı 17 karakter; Leica GSI-16 en çok 16 karakter alır; yazılmadı."
+          },
+          {
+            "index": 12,
+            "name": "E5",
+            "problem": "“E5” noktasının kodundaki “Ç”, “İ” Leica GSI-16 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 13,
+            "name": "F6",
+            "problem": "“F6” noktasının kodu sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Leica GSI-8: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "gsi8",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "110001+00000K-5 81..10-00012001 82..10+00000000 83..10-00001250 71....+0000AGAC \r\n",
+        "written": 1,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "101/7-1",
+            "problem": "“101/7-1” noktasının doğu değeri 486512.352 m; Leica GSI-8 sözcüğüne sığmıyor; yazılmadı."
+          },
+          {
+            "index": 2,
+            "name": "101/7-2",
+            "problem": "“101/7-2” noktasının doğu değeri 486535.749 m; Leica GSI-8 sözcüğüne sığmıyor; yazılmadı."
+          },
+          {
+            "index": 3,
+            "name": "P12",
+            "problem": "“P12” noktasının doğu değeri 486538.233 m; Leica GSI-8 sözcüğüne sığmıyor; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Leica GSI-8: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "gsi8",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "110001+00000A,1 81..10+00001000 82..10+00002000 \r\n110002+00000000 81..10+00001000 82..10+00002000 71....+00000000 \r\n110003+000000D4 81..10+00001000 82..10+00002000 71....+0SINIR,2 \r\n110004+000000H8 81..10+99999999 82..10+00002000 \r\n110005+00I<9>&\" 81..10+00001000 82..10+00002000 71....+00000a&b \r\n",
+        "written": 5,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 2,
+            "name": "ŞEHİR-1",
+            "problem": "“ŞEHİR-1” adındaki “Ş”, “İ” Leica GSI-8 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 3,
+            "name": "A 1",
+            "problem": "“A 1” adındaki boşluk Leica GSI-8 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          },
+          {
+            "index": 7,
+            "name": "007",
+            "problem": "“007” adı sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı."
+          },
+          {
+            "index": 9,
+            "name": "UZUN-AD-123456789",
+            "problem": "“UZUN-AD-123456789” adı 17 karakter; Leica GSI-8 en çok 8 karakter alır; yazılmadı."
+          },
+          {
+            "index": 10,
+            "name": "AD-12345",
+            "problem": "“AD-12345” noktasının kodu 10 karakter; Leica GSI-8 en çok 8 karakter alır; yazılmadı."
+          },
+          {
+            "index": 12,
+            "name": "E5",
+            "problem": "“E5” noktasının kodundaki “Ç”, “İ” Leica GSI-8 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 13,
+            "name": "F6",
+            "problem": "“F6” noktasının kodu sıfırla başlıyor; GSI baştaki sıfırları atar; yazılmadı."
+          },
+          {
+            "index": 14,
+            "name": "G7",
+            "problem": "“G7” noktasının doğu değeri 100000.000 m; Leica GSI-8 sözcüğüne sığmıyor; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Topcon GTS-7: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "gts7",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "101/7-1,486512.352,4420187.531,1098.158,SINIR\r\n101/7-2,486535.749,4420188.715,1098.776,SINIR\r\nP12,486538.233,4420218.977,,\r\nK-5,-12.001,0.000,-1.250,AGAC\r\n",
+        "written": 4,
+        "skipped": []
+      }
+    },
+    {
+      "name": "Topcon GTS-7: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "gts7",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "A 1,1.000,2.000,,\r\n007,1.000,2.000,,\r\n0,1.000,2.000,,0\r\nUZUN-AD-123456789,1.000,2.000,,\r\nAD-12345,1.000,2.000,,KOD-UZUN-9\r\nF6,1.000,2.000,,07\r\nG7,100000.000,2.000,,\r\nH8,99999.999,2.000,,\r\nI<9>&\",1.000,2.000,,a&b\r\n",
+        "written": 9,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 2,
+            "name": "ŞEHİR-1",
+            "problem": "“ŞEHİR-1” adındaki “Ş”, “İ” Topcon GTS-7 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 4,
+            "name": "A,1",
+            "problem": "“A,1” adındaki “,” Topcon GTS-7 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          },
+          {
+            "index": 11,
+            "name": "D4",
+            "problem": "“D4” noktasının kodundaki “,” Topcon GTS-7 dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 12,
+            "name": "E5",
+            "problem": "“E5” noktasının kodundaki “Ç”, “İ” Topcon GTS-7 dosyasında taşınamaz; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Trimble JobXML: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "jobxml",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<JOBFile jobName=\"Ada 1244\" version=\"5.3\" product=\"KentOS CAD\" TimeStamp=\"2026-10-04T10:15:00\">\r\n  <FieldBook>\r\n    <PointRecord ID=\"00000001\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>101/7-1</Name>\r\n      <Code>SINIR</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>4420187.531</North>\r\n        <East>486512.352</East>\r\n        <Elevation>1098.158</Elevation>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000002\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>101/7-2</Name>\r\n      <Code>SINIR</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>4420188.715</North>\r\n        <East>486535.749</East>\r\n        <Elevation>1098.776</Elevation>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000003\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>P12</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>4420218.977</North>\r\n        <East>486538.233</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000004\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>K-5</Name>\r\n      <Code>AGAC</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>0.000</North>\r\n        <East>-12.001</East>\r\n        <Elevation>-1.250</Elevation>\r\n      </Grid>\r\n    </PointRecord>\r\n  </FieldBook>\r\n</JOBFile>\r\n",
+        "written": 4,
+        "skipped": []
+      }
+    },
+    {
+      "name": "Trimble JobXML: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "jobxml",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<JOBFile jobName=\"Ada 1244\" version=\"5.3\" product=\"KentOS CAD\" TimeStamp=\"2026-10-04T10:15:00\">\r\n  <FieldBook>\r\n    <PointRecord ID=\"00000001\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>ŞEHİR-1</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000002\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>A 1</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000003\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>A,1</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000004\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>007</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000005\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>0</Name>\r\n      <Code>0</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000006\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>UZUN-AD-123456789</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000007\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>AD-12345</Name>\r\n      <Code>KOD-UZUN-9</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000008\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>D4</Name>\r\n      <Code>SINIR,2</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"00000009\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>E5</Name>\r\n      <Code>Çİ</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"0000000A\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>F6</Name>\r\n      <Code>07</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"0000000B\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>G7</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>100000.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"0000000C\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>H8</Name>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>99999.999</East>\r\n      </Grid>\r\n    </PointRecord>\r\n    <PointRecord ID=\"0000000D\" TimeStamp=\"2026-10-04T10:15:00\">\r\n      <Name>I&lt;9&gt;&amp;&quot;</Name>\r\n      <Code>a&amp;b</Code>\r\n      <Method>KeyedIn</Method>\r\n      <Classification>Normal</Classification>\r\n      <Deleted>false</Deleted>\r\n      <Grid>\r\n        <North>2.000</North>\r\n        <East>1.000</East>\r\n      </Grid>\r\n    </PointRecord>\r\n  </FieldBook>\r\n</JOBFile>\r\n",
+        "written": 13,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Nikon RAW: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "nikon",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "CO,Nikon RAW data format V2.00\r\nCO,Ada 1244\r\nCO,Dist Units: Metres\r\nUP,101/7-1,,4420187.531,486512.352,1098.158,SINIR\r\nUP,101/7-2,,4420188.715,486535.749,1098.776,SINIR\r\nUP,P12,,4420218.977,486538.233,,\r\nUP,K-5,,0.000,-12.001,-1.250,AGAC\r\n",
+        "written": 4,
+        "skipped": []
+      }
+    },
+    {
+      "name": "Nikon RAW: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "nikon",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "CO,Nikon RAW data format V2.00\r\nCO,Ada 1244\r\nCO,Dist Units: Metres\r\nUP,A 1,,2.000,1.000,,\r\nUP,007,,2.000,1.000,,\r\nUP,0,,2.000,1.000,,0\r\nUP,UZUN-AD-123456789,,2.000,1.000,,\r\nUP,AD-12345,,2.000,1.000,,KOD-UZUN-9\r\nUP,F6,,2.000,1.000,,07\r\nUP,G7,,2.000,100000.000,,\r\nUP,H8,,2.000,99999.999,,\r\nUP,I<9>&\",,2.000,1.000,,a&b\r\n",
+        "written": 9,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 2,
+            "name": "ŞEHİR-1",
+            "problem": "“ŞEHİR-1” adındaki “Ş”, “İ” Nikon RAW dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 4,
+            "name": "A,1",
+            "problem": "“A,1” adındaki “,” Nikon RAW dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          },
+          {
+            "index": 11,
+            "name": "D4",
+            "problem": "“D4” noktasının kodundaki “,” Nikon RAW dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 12,
+            "name": "E5",
+            "problem": "“E5” noktasının kodundaki “Ç”, “İ” Nikon RAW dosyasında taşınamaz; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "CSV: örnek çizimin aplikasyon noktaları",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "csv",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "101/7-1,486512.352,4420187.531,1098.158,SINIR\r\n101/7-2,486535.749,4420188.715,1098.776,SINIR\r\nP12,486538.233,4420218.977,,\r\nK-5,-12.001,0.000,-1.250,AGAC\r\n",
+        "written": 4,
+        "skipped": []
+      }
+    },
+    {
+      "name": "CSV: taşınamayan adlar, kodlar ve değerler",
+      "points": [
+        {
+          "name": "",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "ŞEHİR-1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A 1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "A,1",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": " B2",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "C\t3",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "007",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "0",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "0"
+        },
+        {
+          "name": "UZUN-AD-123456789",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "AD-12345",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "KOD-UZUN-9"
+        },
+        {
+          "name": "D4",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "SINIR,2"
+        },
+        {
+          "name": "E5",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "Çİ"
+        },
+        {
+          "name": "F6",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "07"
+        },
+        {
+          "name": "G7",
+          "east": 100000.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "H8",
+          "east": 99999.9994,
+          "north": 2.0,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "I<9>&\"",
+          "east": 1.0,
+          "north": 2.0,
+          "elevation": null,
+          "code": "a&b"
+        }
+      ],
+      "options": {
+        "format": "csv",
+        "job": "Ada 1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "text": "ŞEHİR-1,1.000,2.000,,\r\nA 1,1.000,2.000,,\r\n007,1.000,2.000,,\r\n0,1.000,2.000,,0\r\nUZUN-AD-123456789,1.000,2.000,,\r\nAD-12345,1.000,2.000,,KOD-UZUN-9\r\nE5,1.000,2.000,,Çİ\r\nF6,1.000,2.000,,07\r\nG7,100000.000,2.000,,\r\nH8,99999.999,2.000,,\r\nI<9>&\",1.000,2.000,,a&b\r\n",
+        "written": 11,
+        "skipped": [
+          {
+            "index": 1,
+            "name": "",
+            "problem": "1. noktanın adı yok; yazılmadı."
+          },
+          {
+            "index": 4,
+            "name": "A,1",
+            "problem": "“A,1” adındaki “,” CSV dosyasında taşınamaz; yazılmadı."
+          },
+          {
+            "index": 5,
+            "name": " B2",
+            "problem": "“ B2” adının başında ya da sonunda boşluk var; okunurken atılır; yazılmadı."
+          },
+          {
+            "index": 6,
+            "name": "C\t3",
+            "problem": "“C\t3” adında denetim karakteri var; yazılmadı."
+          },
+          {
+            "index": 11,
+            "name": "D4",
+            "problem": "“D4” noktasının kodundaki “,” CSV dosyasında taşınamaz; yazılmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Nikon RAW: ASCII olmayan iş adı",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "nikon",
+        "job": "Şantiye",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "error": "İş adı “Şantiye” Nikon RAW dosyasında taşınamaz; dosya yazılmadı."
+      }
+    },
+    {
+      "name": "Trimble JobXML: iş adında denetim karakteri",
+      "points": [
+        {
+          "name": "101/7-1",
+          "east": 486512.352,
+          "north": 4420187.531,
+          "elevation": 1098.158,
+          "code": "SINIR"
+        },
+        {
+          "name": "101/7-2",
+          "east": 486535.749,
+          "north": 4420188.715,
+          "elevation": 1098.776,
+          "code": "SINIR"
+        },
+        {
+          "name": "P12",
+          "east": 486538.2334,
+          "north": 4420218.9765,
+          "elevation": null,
+          "code": null
+        },
+        {
+          "name": "K-5",
+          "east": -12.0005,
+          "north": 0.0004,
+          "elevation": -1.25,
+          "code": "AGAC"
+        }
+      ],
+      "options": {
+        "format": "jobxml",
+        "job": "Ada\n1244",
+        "stamp": "2026-10-04T10:15:00"
+      },
+      "expect": {
+        "error": "İş adı “Ada\n1244” Trimble JobXML dosyasında taşınamaz; dosya yazılmadı."
+      }
+    }
+  ]
+}

@@ -57,7 +57,9 @@ use crate::layer::LineType;
 /// 24: Nikon RAW field books (`nikon`).
 /// 25: Trimble JobXML field books (`jobxml`), XML read by roxmltree.
 /// 26: GNSS files, GPX 1.1 and NMEA 0183 (`readGnss` → `GnssRead`).
-pub const FORMATS_VERSION: u32 = 26;
+/// 27: instrument coordinate files written (`writeField`: `FieldPoint`s and
+///    `FieldWriteOptions` → `FieldWrite`).
+pub const FORMATS_VERSION: u32 = 27;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -461,6 +463,85 @@ pub struct GnssRead {
     pub encoding: String,
     pub points: Vec<GnssPoint>,
     pub problems: Vec<LineError>,
+}
+
+/// A point sent to an instrument (docs/adr/0169 §4): its name, east, north
+/// (metres), elevation and code when it has them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldPoint {
+    pub name: String,
+    pub east: f64,
+    pub north: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub elevation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
+}
+
+/// An instrument's coordinate file (docs/adr/0169 §4): Leica GSI-16 and
+/// GSI-8, Topcon GTS-7 points, Trimble JobXML, Nikon RAW, CSV.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FieldWriteFormat {
+    Gsi16,
+    Gsi8,
+    Gts7,
+    Jobxml,
+    Nikon,
+    Csv,
+}
+
+/// How the points are written: the format, the job's name (JobXML's
+/// jobName, Nikon RAW's comment) and the time stamp JobXML carries
+/// (`2026-10-04T10:15:00`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldWriteOptions {
+    pub format: FieldWriteFormat,
+    pub job: String,
+    pub stamp: String,
+}
+
+/// A point the format cannot carry: its place among the points (from 1),
+/// its name and why it is not written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldSkip {
+    pub index: u32,
+    pub name: String,
+    pub problem: String,
+}
+
+/// An instrument's coordinate file written: its text, how many points went
+/// in, and those that did not with why; or why nothing was written (the
+/// job's name).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldWrite {
+    pub text: String,
+    pub written: u32,
+    pub skipped: Vec<FieldSkip>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub error: Option<String>,
 }
 
 /// A coordinate list read with the given options, and what the reader found.
