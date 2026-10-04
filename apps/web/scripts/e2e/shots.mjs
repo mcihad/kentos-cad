@@ -25,7 +25,9 @@
 // the new drawing and editing tools, their split buttons, each tool at work); blocks (docs/adr/0144: DXF içe aktar
 // over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel);
 // secondcrs (docs/adr/0167: the second system's values in the status bar, the coordinate system's menu, Koordinat oku,
-// Proje ayarları' field); convert (Koordinat dönüştür: a point to the second system and to WGS 84, the systems, a list).
+// Proje ayarları' field); convert (Koordinat dönüştür: a point to the second system and to WGS 84, the systems, a list);
+// customcrs (docs/adr/0168: a second system the project defines, its menu; a project whose system is its own
+// definition, its second system by the project's datum choice, Koordinat oku).
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -3563,6 +3565,55 @@ SCENES.secondcrs = [
       await ui.sleep(300);
     },
     close: secondClose,
+  },
+];
+
+/**
+ * The project's own definitions (docs/adr/0168) over the demo drawing (TUREF TM36): a second system the project defines
+ * (a municipality's local system) in the status bar and in İkinci sistem; a project whose system is its own definition,
+ * its second system ED50 TM36 by the project's datum choice, and Koordinat oku. The desktop's are
+ * `second_crs::tests::custom_screens` (ozel-sistem-*), with the same definitions.
+ */
+const CUSTOM_SECOND = { name: 'Belediye sistemi', system: { kind: 'local', base: { srid: 5256 }, plane: { kind: 'similarity', east: 486000, north: 4419800, rotation: -15, scale: 1 } } };
+const CUSTOM_OWN = { name: 'Şantiye', system: { kind: 'local', base: { srid: 5256 }, plane: { kind: 'similarity', east: 120, north: -80, rotation: 0, scale: 1 } } };
+// Seven parameters for ED50–TUREF, made up for the pictures.
+const CUSTOM_CHOICE = {
+  from: 'ED50',
+  to: 'TUREF',
+  name: 'ED50 → TUREF: örnek parametreler',
+  helmert: { translation: [-84.1, -101.8, -129.7], rotation: [0, 0, 0.468], scale: 1.05, convention: 'positionVector', accuracy: 0.3 },
+};
+const settle = `document.querySelector('.status__flash')?.removeAttribute('data-show')`;
+const customSecond = `(() => { window.kentos.doc.settings.assign({ secondCustomCrs: ${JSON.stringify(CUSTOM_SECOND)} }); ${settle}; })()`;
+const customOwn = `(() => { window.kentos.doc.settings.assign({ srid: 0, customCrs: ${JSON.stringify(CUSTOM_OWN)}, secondSrid: 2322, datumTransforms: [${JSON.stringify(CUSTOM_CHOICE)}] }); ${settle}; })()`;
+const customClose = async (ui) => (
+  await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256, customCrs: null, secondSrid: null, secondCustomCrs: null, datumTransforms: [] })`)
+);
+SCENES.customcrs = [
+  { id: 'custom-second', open: async (ui) => (await ui.eval(customSecond), await overDrawing(ui)), close: customClose },
+  {
+    id: 'custom-second-menu',
+    open: async (ui) => {
+      await ui.eval(customSecond);
+      const at = await ui.eval(`(() => { const r = document.querySelector('.ribbon__crs').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      await ui.contextClick(...at);
+      await ui.hoverText('.menu__item', 'İkinci sistem');
+    },
+    close: customClose,
+  },
+  { id: 'custom-own', open: async (ui) => (await ui.eval(customOwn), await overDrawing(ui)), close: customClose },
+  {
+    id: 'custom-own-read',
+    open: async (ui) => {
+      await ui.eval(customOwn);
+      await ui.eval(`window.kentos.commands.execute('crs.query')`);
+      const [w, h] = await ui.eval(`[innerWidth, innerHeight]`);
+      await ui.clickAt(Math.round(w * 0.42), Math.round(h * 0.48));
+      await ui.sleep(300);
+      await ui.eval(settle);
+      await ui.sleep(200);
+    },
+    close: customClose,
   },
 ];
 

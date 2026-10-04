@@ -251,7 +251,7 @@ impl App {
     /// in the project's; a project with a coordinate system reads metres.
     fn dxf_unit(&self) -> Option<kentos_contracts::DrawingUnit> {
         let settings = self.document.as_ref()?.settings();
-        (settings.srid == crate::crs::LOCAL_SRID).then(|| settings.unit())
+        (!settings.has_system()).then(|| settings.unit())
     }
 
     /// Opens the window on `file` and reads it on a thread of its own.
@@ -456,7 +456,7 @@ impl App {
             && s.result.is_some()
             && s.unusable.is_none()
             && !self.drawing_included(s).is_empty()
-            && s.crs.matches(self.project_srid())
+            && s.crs.matches(&self.project_system())
     }
 
     fn run_drawing_import(&mut self) -> Task<Message> {
@@ -724,7 +724,7 @@ impl App {
     }
 
     pub(super) fn drawing_import_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let srid = self.project_srid();
+        let project = self.project_system();
         let r = s.result.as_deref();
         let meta = match (r, &s.failed) {
             (Some(r), _) => words::facts(&r.report.source),
@@ -744,10 +744,9 @@ impl App {
         body = body
             .push(self.drawing_layers(s))
             .push(self.drawing_summary(s))
-            .push(
-                s.crs
-                    .view(srid, &self.number_format(), |srid| event(Event::Crs(srid))),
-            );
+            .push(s.crs.view(&project, &self.number_format(), |srid| {
+                event(Event::Crs(srid))
+            }));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -949,6 +948,13 @@ impl App {
     /// The open drawing's coordinate system.
     pub(super) fn project_srid(&self) -> u32 {
         self.document.as_ref().map_or(5256, |d| d.settings().srid)
+    }
+
+    /// The project's system as the coordinate system question sees it.
+    pub(super) fn project_system(&self) -> crate::crs::Project {
+        self.document
+            .as_ref()
+            .map_or_else(|| 5256.into(), |d| crate::crs::Project::of(d.settings()))
     }
 
     pub(super) fn layer_name(&self, id: &str) -> String {

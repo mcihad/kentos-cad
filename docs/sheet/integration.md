@@ -262,6 +262,10 @@ Dalda bilerek yapılmayanlar. `main`'in merkezi biçimlerine dokundukları için
    var olan paftaya uygulama.
 8. **Uzman incelemesi:** sistem şablonları bir harita mühendisi ve bir şehir plancısı tarafından
    incelenmeli; mevzuata bağlanacak olanlar veri sürümü olarak gelmeli.
+9. **Projenin kendi koordinat sistemi (ADR 0168):** tanımlı proje pafta için konumludur, adı paftaya
+   gider; ama GeoPDF'i ve meridyen yakınsaması yalnız kayıttaki TM sistemlerinde vardır. Tanımın TM'si
+   (özel datumlu da) çekirdeğin WKT yazıcısıyla (`crs::text::write_wkt`) ve yakınsamasıyla verilebilir;
+   yerel sistemin (düzlem dönüşümü) GeoPDF'i WKT 1 ile anlatılamaz, ayrı karardır.
 
 ### `main`'de bulunan, bu dalla ilgisi olmayan sorunlar
 

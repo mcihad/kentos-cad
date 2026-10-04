@@ -5,7 +5,7 @@ import { panelCommands, quickAccessOf, ribbonTabs, startTab, type RibbonTab } fr
 import { filterOf } from '../../app/workspaces';
 import { fullscreenButton } from '../shell/fullscreenButton';
 import { DisposableStore, listen, type Disposable } from '../../core/disposable';
-import type { ReadonlySignal } from '../../core/signal';
+import { watchAll, type ReadonlySignal } from '../../core/signal';
 import { Component } from '../Component';
 import { h, overlayRoot } from '../dom';
 import { icon } from '../icons';
@@ -17,7 +17,7 @@ import { KeyTips } from './keytips';
 import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { commandMenu, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, withQuickAccess, type RibbonRow } from './ribbonPlan';
 import { RibbonSearch } from './search';
-import { crsTitle } from '../../geo/crs';
+import { projectCrsName, projectCrsTitle } from '../../model/projectCrs';
 import { crsMenu } from '../statusbar/secondMenu';
 
 /**
@@ -146,7 +146,10 @@ export class Ribbon extends Component {
     // Document name, unsaved dot and the project's coordinate system.
     this.d.add(ctx.doc.name.subscribe((n) => (docName.textContent = n), true));
     this.d.add(ctx.doc.dirty.subscribe((v) => dirty.toggleAttribute('hidden', !v), true));
-    this.d.add(ctx.doc.crs.subscribe((c) => (crs.querySelector('.ribbon__crs-name')!.textContent = c.name), true));
+    // The registry's system or the project's own definition (docs/adr/0168 §1).
+    const showCrs = () => (crs.querySelector('.ribbon__crs-name')!.textContent = projectCrsName(ctx.doc.settings));
+    this.d.add(watchAll([ctx.doc.crs, ctx.doc.settings.customCrs], showCrs));
+    showCrs();
     this.d.add(listen(crs, 'click', () => ctx.commands.execute('crs.set')));
     // The second system on its right-click menu, as on the status bar's cell (docs/adr/0167 §1).
     this.d.add(
@@ -155,7 +158,7 @@ export class Ribbon extends Component {
         PopupMenu.open(crsMenu(ctx), { x: e.clientX, y: e.clientY }, { placement: 'point' });
       }),
     );
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.` })));
+    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${projectCrsTitle(ctx.doc.settings)}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.` })));
     this.d.add(
       listen<PointerEvent>(help, 'pointerdown', (e) => {
         if (e.button !== 0) return;

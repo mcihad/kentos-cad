@@ -21,7 +21,7 @@ mod dimension;
 
 pub(super) use dimension::is_y_axis;
 use crate::app::Message;
-use crate::document::{Document, crs_name};
+use crate::document::Document;
 use crate::selecting::kind_title;
 
 /// The colours the panel offers (the web's `DRAW_COLORS`, fields.ts).
@@ -254,11 +254,8 @@ fn document_section(doc: &Document) -> Section {
         title: "Çizim".into(),
         rows: vec![
             Row::text("Dosya", doc.name()),
-            Row::text(
-                "Koordinat sistemi",
-                crs_name(s.srid).map_or_else(|| format!("EPSG:{}", s.srid), str::to_owned),
-            ),
-            Row::figure("SRID", crate::crs::code_of(s.srid)),
+            Row::text("Koordinat sistemi", crate::crs::project_name(s)),
+            Row::figure("SRID", crate::crs::project_code(s)),
             Row::figure("Çizim ölçeği", format!("1:{}", s.plot_scale)),
             Row::figure("Nesne sayısı", doc.entity_count().to_string()),
             Row::text("Etkin katman", active),

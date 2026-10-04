@@ -12,6 +12,7 @@ import { exportName, field, kindCounts, reportText, summaryLine } from './common
 import { saveExport } from './save';
 import { SCOPE_LABEL, scopeEntities, type ExportScope } from './scope';
 import { isLocal, LOCAL_SRID } from '../../geo/crs';
+import { projectCrsName } from '../../model/projectCrs';
 
 /**
  * GeoJSON dışa aktar (docs/adr/0046): the objects of the selection, of the
@@ -154,12 +155,20 @@ class GeoJsonExportDialog {
     const styled = list.filter((e) => e.color || e.symbol).length;
     const crs = ctx.doc.crs.value;
     const rfc = crs.srid === 4326;
+    // The project's own definition (docs/adr/0168 §1): no EPSG code to name it by.
+    const defined = ctx.doc.settings.hasSystem && isLocal(crs);
     replaceChildren(
       this.summary,
       written.length
         ? summaryLine('ok', `${written.length} nesne yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON\'a yazılmaz.'),
-      isLocal(crs)
+      defined
+        ? summaryLine(
+            'warn',
+            h('strong', null, 'Dosya bir koordinat sistemi adlandırmayacak. '),
+            `Projenin sistemi kendi tanımı (${projectCrsName(ctx.doc.settings)}) ve EPSG kodu yok: koordinatlar dönüştürülmeden projenin sisteminde yazılır, crs üyesi yazılmaz. Dosyayı okuyan programa sistemi siz söyleyin; RFC 7946'yı bilen programlar koordinatları WGS 84 boylam, enlem sayar ve yanlış yere koyar.`,
+          )
+        : isLocal(crs)
         ? summaryLine(
             'warn',
             h('strong', null, 'Dosya bir koordinat sistemi adlandırmayacak. '),
@@ -211,7 +220,10 @@ class GeoJsonExportDialog {
         return;
       }
       const count = Object.values(out.report.counts).reduce((s, n) => s + (n ?? 0), 0);
-      ctx.log.success(`“${name}” yazıldı: ${count} nesne (GeoJSON${input.srid === 4326 ? ', RFC 7946' : input.srid === LOCAL_SRID ? ', koordinat sistemi yok' : `, EPSG:${input.srid}`}).`);
+      // SRID 0 with a system: the project's own definition (docs/adr/0168 §1).
+      const system =
+        input.srid === 4326 ? ', RFC 7946' : input.srid !== LOCAL_SRID ? `, EPSG:${input.srid}` : ctx.doc.settings.hasSystem ? ', projenin kendi sistemi, crs üyesi yok' : ', koordinat sistemi yok';
+      ctx.log.success(`“${name}” yazıldı: ${count} nesne (GeoJSON${system}).`);
       for (const item of out.report.notes) ctx.log.info(reportText(item));
       if (out.report.skipped.length) ctx.log.warn(`“${name}” içine yazılmayanlar: ${out.report.skipped.map(reportText).join(' ')}`);
       this.dialog.close();

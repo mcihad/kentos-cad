@@ -7,6 +7,7 @@ import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { note } from '../widgets/controls';
+import { definitionTitle } from '../../model/projectCrs';
 
 /**
  * Parts the import and export windows share: the picked file, the source
@@ -134,10 +135,17 @@ export class CrsQuestion {
   /**
    * Whether the file can be imported: its system is the project's, or the
    * project is local (no coordinate system), which takes any file's
-   * coordinates as they are (docs/adr/0165 §2).
+   * coordinates as they are (docs/adr/0165 §2). A project whose system is its
+   * own definition takes only coordinates said to be in it (docs/adr/0168 §1).
    */
   get matches(): boolean {
-    return this.srid !== null && (this.srid === this.ctx.doc.crs.value.srid || isLocal(this.ctx.doc.crs.value));
+    return this.srid !== null && (this.srid === this.ctx.doc.crs.value.srid || !this.ctx.doc.settings.hasSystem);
+  }
+
+  /** The project's own definition's title, when its system is one (SRID 0 then stands for it). */
+  private get defined(): string | null {
+    const d = isLocal(this.ctx.doc.crs.value) ? this.ctx.doc.settings.customCrs.value : null;
+    return d ? definitionTitle(d) : null;
   }
 
   /**
@@ -158,6 +166,7 @@ export class CrsQuestion {
 
   private select(): HTMLSelectElement {
     const project = this.ctx.doc.crs.value.srid;
+    const defined = this.defined;
     const s = h(
       'select',
       { class: 'field', 'aria-label': 'Bu koordinatlar hangi sistemde?' },
@@ -170,7 +179,8 @@ export class CrsQuestion {
             h(
               'option',
               { value: String(c.srid), selected: c.srid === this.srid },
-              `${crsTitle(c)}${c.srid === project ? ', projenin sistemi' : ''}${this.statement?.srid === c.srid && this.statement.source !== 'none' ? ', dosyanın dediği' : ''}`,
+              // SRID 0 is the project's own definition when it has one.
+              `${isLocal(c) && defined ? defined : crsTitle(c)}${c.srid === project ? ', projenin sistemi' : ''}${this.statement?.srid === c.srid && this.statement.source !== 'none' ? ', dosyanın dediği' : ''}`,
             ),
           ),
         ),
@@ -241,7 +251,8 @@ export class CrsQuestion {
           `Dosya EPSG:${st.srid} diyor; koordinatlar ${source.name} (EPSG:${source.srid}) sayılacak, dönüştürülmeden. Yalnız dosyanın gerçekte bu sistemde olduğunu biliyorsanız seçin.`,
         ),
       );
-    if (isLocal(project) && source.srid !== project.srid) {
+    const defined = this.defined;
+    if (!this.ctx.doc.settings.hasSystem && source.srid !== project.srid) {
       lines.push(
         note(
           'info',
@@ -249,7 +260,16 @@ export class CrsQuestion {
         ),
       );
     } else if (this.matches) {
-      lines.push(h('p', { class: 'io-field__hint' }, `Projenin sistemi (${project.name}). Koordinat sistemi dönüştürülmez; değerler yuvarlanmaz.`));
+      lines.push(h('p', { class: 'io-field__hint' }, `Projenin sistemi (${defined ?? project.name}). Koordinat sistemi dönüştürülmez; değerler yuvarlanmaz.`));
+    } else if (defined) {
+      // The project's own definition (docs/adr/0168 §1): no file's EPSG code is it.
+      lines.push(
+        note(
+          'warn',
+          h('strong', null, 'Koordinatlar dönüştürülemez. '),
+          `Projenin sistemi kendi tanımı: ${defined}. ${source.name} koordinatları içe aktarılırken bu sisteme dönüştürülmez; bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse listede onu seçin.`,
+        ),
+      );
     } else {
       const what =
         source.datum !== project.datum

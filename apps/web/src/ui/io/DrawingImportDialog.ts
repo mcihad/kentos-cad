@@ -204,7 +204,7 @@ class DrawingImportDialog {
    */
   private dxfUnit(): { unit?: DrawingUnit } {
     const s = this.ctx.doc.settings;
-    return s.crs.value.kind === 'local' ? { unit: s.unit } : {};
+    return !s.hasSystem ? { unit: s.unit } : {};
   }
 
   private async pickAnother(): Promise<void> {

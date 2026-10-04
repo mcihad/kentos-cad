@@ -36,7 +36,7 @@ use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
 use crate::catalog::{
     Command, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Size, Standing, catalog,
 };
-use crate::document::{Document, crs_name};
+use crate::document::Document;
 use crate::marks::Marks;
 use crate::preview;
 use crate::ribbon_bar::rows_menu;
@@ -270,7 +270,10 @@ impl App {
             (
                 format!("{place}{}", doc.name()),
                 doc.dirty(),
-                doc.settings().srid,
+                (
+                    crate::crs::project_name(doc.settings()),
+                    crate::crs::project_title(doc.settings()),
+                ),
             )
         });
         // Built now, as the ribbon's elements own what they show.
@@ -292,11 +295,10 @@ impl App {
             let name = title
                 .as_ref()
                 .map_or_else(|| "Açık çizim yok".to_owned(), |(name, ..)| name.clone());
-            let crs = title.as_ref().map(|(_, _, srid)| {
-                let srid = *srid;
+            let crs = title.as_ref().map(|(_, _, (name, crs_title))| {
                 (
-                    srid,
-                    crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned),
+                    crs_title.clone(),
+                    name.clone(),
                 )
             });
             // The widths the row needs, from the caption size: an estimate
@@ -357,11 +359,11 @@ impl App {
             .width(Fill)
             .spacing(4)
             .align_y(iced::Center);
-            if let Some((srid, crs)) = crs {
+            if let Some((crs_title, crs)) = crs {
                 // The second system on its right-click menu, as on the status bar's cell.
                 let menu = crs_menu.clone();
                 row = row.push(ContextMenu::new(
-                    crs_button(srid, crs, crs_named),
+                    crs_button(crs_title, crs, crs_named),
                     move |_| menu.clone(),
                 ));
             }
@@ -1058,7 +1060,7 @@ impl App {
             bar = bar.push(self.status_aid(id, name, fit >= 6));
         }
         if let Some(doc) = &self.document {
-            let srid = doc.settings().srid;
+            let settings = doc.settings();
             if fit < 3 {
                 // The scale selector (screen_scale.rs, docs/adr/0165 §5): chosen from its menu or typed.
                 let cell: Element<'_, Message> = match self.scale_field_view() {
@@ -1079,12 +1081,12 @@ impl App {
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
                 // system on its right-click menu (docs/adr/0167 §1).
-                let cell = Readout::new(label::muted(crs_label(srid)))
+                let cell = Readout::new(label::muted(crate::crs::project_name(settings)))
                     .icon(crate::icons::from_web(Some("crs")))
                     .on_press(Message::Run("crs.set"))
                     .tip(Tip::new("Koordinat sistemi").body(format!(
                         "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.",
-                        crate::crs::title_of(srid),
+                        crate::crs::project_title(settings),
                         f.east_label(),
                         f.north_label()
                     )));
@@ -1238,7 +1240,6 @@ impl App {
                 .map(|(_, name)| text(name) + 14.0 + pad)
                 .sum::<f32>();
         if let Some(doc) = &self.document {
-            let srid = doc.settings().srid;
             if fit < 3 {
                 let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
                 width += SEPARATOR + cell(&zoom, false);
@@ -1247,7 +1248,7 @@ impl App {
             // Its icon, its name and the menu's chevron.
             width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
             if fit < 2 {
-                width += SEPARATOR + cell(&crs_label(srid), true);
+                width += SEPARATOR + cell(&crate::crs::project_name(doc.settings()), true);
             }
         }
         width += self.cloud_cells_width(fit < 4, size);
@@ -1299,7 +1300,7 @@ impl App {
             Asking::About => {
                 let crs = self.document.as_ref().map_or_else(
                     || "Açık çizim yok".to_owned(),
-                    |doc| crate::crs::title_of(doc.settings().srid),
+                    |doc| crate::crs::project_title(doc.settings()),
                 );
                 let rows = kentos_ui::widget::PropertySheet::new()
                     .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
@@ -1561,11 +1562,6 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
     }
 }
 
-/// The coordinate system's cell: its name, as the web's (`EPSG:n` when it has none).
-fn crs_label(srid: u32) -> String {
-    crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned)
-}
-
 /// A whole number with Turkish digit grouping (12.345), as the web's `toLocaleString('tr-TR')`.
 pub(crate) fn thousands(value: f64) -> String {
     if !value.is_finite() {
@@ -1612,7 +1608,7 @@ fn document_title(name: &str, dirty: bool) -> Element<'static, Message> {
 
 /// The project's coordinate system in the tab row (the web's `ribbon__crs`):
 /// its icon and, with room, its name; a click opens Koordinat sistemi.
-fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message> {
+fn crs_button(title: String, name: String, named: bool) -> Element<'static, Message> {
     let mut face = row![kentos_ui::icon::icon(crate::icons::from_web(Some("crs"))).size(14.0)]
         .spacing(6)
         .align_y(iced::Center);
@@ -1625,8 +1621,7 @@ fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message>
             .padding([4, 8])
             .style(style::button::flat),
         Tip::new("Koordinat sistemi").body(format!(
-            "{}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.",
-            crate::crs::title_of(srid)
+            "{title}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde."
         )),
         iced::widget::tooltip::Position::Bottom,
     )

@@ -86,6 +86,26 @@ pub fn datum_label(datum: &str) -> &str {
 /// The local system's SRID: not an EPSG code; PostGIS reads 0 as “unknown” (docs/adr/0165 §2).
 pub const LOCAL_SRID: u32 = 0;
 
+/// A system as a sentence names it (the web's `crsTitle`): “TUREF / TM36
+/// (EPSG:5256)”, the local one “Yerel (koordinat sistemi yok)”.
+pub fn title(s: &System) -> String {
+    if s.is_local() {
+        "Yerel (koordinat sistemi yok)".to_owned()
+    } else {
+        format!("{} (EPSG:{})", s.name, s.srid)
+    }
+}
+
+/// A system's code as a value or a chip shows it (the web's `crsCode`):
+/// “EPSG:5256”; the local one is no EPSG code: “SRID 0”.
+pub fn code(s: &System) -> String {
+    if s.is_local() {
+        format!("SRID {}", s.srid)
+    } else {
+        format!("EPSG:{}", s.srid)
+    }
+}
+
 impl System {
     /// Whether this is the local system: no coordinate system, coordinates bound to no place.
     pub fn is_local(&self) -> bool {

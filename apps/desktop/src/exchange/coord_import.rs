@@ -384,7 +384,7 @@ impl App {
         !s.importing
             && !s.reading
             && s.read.as_ref().is_some_and(|r| r.points > 0)
-            && s.crs.matches(self.project_srid())
+            && s.crs.matches(&self.project_system())
             && self.coord_target(s).is_some()
             && self.coord_locked(s).is_none()
     }
@@ -518,7 +518,7 @@ impl App {
     }
 
     pub(super) fn coord_import_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let srid = self.project_srid();
+        let project = self.project_system();
         let r = s.read.as_deref();
         let meta = match r {
             Some(r) => format!(
@@ -539,10 +539,9 @@ impl App {
             .push(self.coord_options(s))
             .push(self.coord_table(s))
             .push(self.coord_summary(s))
-            .push(
-                s.crs
-                    .view(srid, &self.number_format(), |srid| event(Event::Crs(srid))),
-            )
+            .push(s.crs.view(&project, &self.number_format(), |srid| {
+                event(Event::Crs(srid))
+            }))
             .push(self.coord_layer(s));
         let status = self
             .coord_locked(s)

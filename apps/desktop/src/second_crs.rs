@@ -4,7 +4,8 @@
 //!
 //! - the status bar's cell: the system's short name and the cursor's values
 //!   in it; its tip says how sure they are; a click opens İkinci sistem;
-//! - İkinci sistem: Yok and the registry's systems but the project's own,
+//! - İkinci sistem: Yok, the project's second definition when it has one
+//!   (docs/adr/0168 §1), and the registry's systems but the project's own,
 //!   grouped by datum, and how geographic values are written
 //!   (`display.geographic`);
 //! - the coordinate system cell's right-click menu: Koordinat sistemi… and
@@ -15,7 +16,7 @@
 
 use iced::Element;
 use iced::widget::row;
-use kentos_interaction::second::{Notation, Second};
+use kentos_interaction::second::{Notation, Second, cursor_unreached};
 use kentos_interaction::{Format, Level, Vec2};
 use kentos_ui::label;
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
@@ -71,16 +72,19 @@ impl App {
         }
     }
 
-    /// The project's second system set, or taken away (Yok).
+    /// The project's second system set, or taken away (Yok): a system of the
+    /// registry takes the place of a second definition (docs/adr/0168 §1).
     fn choose_second(&mut self, srid: Option<u32>) {
         let Some(doc) = &mut self.document else {
             return;
         };
         let mut settings = doc.settings().clone();
-        if settings.second_srid == srid {
+        if settings.second_srid == srid && (srid.is_some() || settings.second_custom_crs.is_none())
+        {
             return;
         }
         settings.second_srid = srid;
+        settings.second_custom_crs = None;
         doc.model.set_settings(settings);
         self.say(
             Level::Success,
@@ -101,15 +105,23 @@ impl App {
             return Menu::new();
         };
         let settings = doc.settings();
-        if settings.srid == crs::LOCAL_SRID {
+        if !settings.has_system() {
             return Menu::new().item("Yerel projenin ikinci sistemi olmaz", None);
         }
         let current = settings.second();
+        let custom = settings
+            .second_custom_crs
+            .as_ref()
+            .filter(|_| current.is_none());
         let mut menu = Menu::new().header("İkinci koordinat sistemi").radio(
             "Yok",
-            current.is_none(),
+            current.is_none() && custom.is_none(),
             message(Event::Choose(None)),
         );
+        // The project's own definition, chosen; another system takes its place.
+        if let Some(d) = custom {
+            menu = menu.radio(d.name.clone(), true, None).hint("Özel sistem");
+        }
         // A datum each, the one chosen beside its name: the list stays short, Coğrafi
         // değerler in view.
         for (datum, systems) in choices(settings.srid) {
@@ -171,7 +183,7 @@ impl App {
             return String::new();
         };
         let f = Format::of(doc.settings());
-        let point = cursor.and_then(|p| second.point(p));
+        let point = cursor.and_then(|p| second.point(p).ok());
         match point {
             Some(t) => {
                 let [a, b] = second.values(t.point, &f, self.draft.geographic);
@@ -198,19 +210,19 @@ impl App {
         .spacing(8)
         .align_y(iced::Center);
         let sure = match cursor.map(|p| second.point(p)) {
-            Some(Some(t)) => format!("{}.", second.accuracy(&t)),
-            Some(None) => "İmleç bu sistemin ulaştığı yerin dışında; değer yazılmadı.".to_owned(),
+            Some(Ok(t)) => format!("{}.", second.accuracy(&t)),
+            Some(Err(why)) => cursor_unreached(why).to_owned(),
             None => String::new(),
         };
         let body = format!(
             "{} değerleri, projeninkilerden dönüştürülerek. {sure} Sistemi değiştirmek ya da kaldırmak için tıklayın.",
-            crs::title(second.system)
+            second.title
         );
         Some(tip(
             MenuButton::new(iced::widget::container(face).padding([0, 8]), move || {
                 self.second_menu()
             }),
-            Tip::new(format!("İkinci koordinat sistemi: {}", second.system.name)).body(body),
+            Tip::new(format!("İkinci koordinat sistemi: {}", second.name)).body(body),
             iced::widget::tooltip::Position::Top,
         ))
     }
@@ -387,4 +399,121 @@ mod tests {
             save(&mut snapshot, &app, "proje-ayarlari");
         }
     }
+
+    /// The project's own definitions in the status bar (docs/adr/0168): a
+    /// second system the project defines (a municipality's local system)
+    /// and İkinci sistem with it; a project whose system is its own
+    /// definition, its second system by the project's datum choice, the
+    /// cell's tip and Koordinat oku. Light at 1440 × 900, dark at 1100 ×
+    /// 650; `.run/shots/ozel-sistem-*` (the web's: `node
+    /// apps/web/scripts/e2e/shots.mjs customcrs`):
+    ///
+    /// ```text
+    /// cargo test -p kentos-desktop second_crs::tests::custom_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn custom_screens() {
+        use iced::{Point, Size};
+        use kentos_contracts::{CrsDefinition, DatumTransform, ProjectSettings};
+        use kentos_ui::snapshot::{Input, Snapshot};
+
+        let municipal: CrsDefinition = serde_json::from_str(CUSTOM_SECOND).expect("a definition");
+        let site: CrsDefinition = serde_json::from_str(CUSTOM_OWN).expect("a definition");
+        let choice: DatumTransform = serde_json::from_str(CUSTOM_CHOICE).expect("a choice");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
+            let mut app = app_with_drawing();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let set = |app: &mut App, f: &dyn Fn(ProjectSettings) -> ProjectSettings| {
+                let doc = app.document.as_mut().expect("a drawing");
+                let settings = f(doc.settings().clone());
+                doc.model.set_settings(settings);
+            };
+            set(&mut app, &|s| ProjectSettings {
+                second_custom_crs: Some(municipal.clone()),
+                ..s
+            });
+            let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let tag = format!("{theme}-{w}");
+            let save = |snapshot: &mut Snapshot, app: &App, name: &str| {
+                let file = out.join(format!("ozel-sistem-{name}-{tag}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            };
+            let over = Point::new(w * 0.42, h * 0.48);
+            // The opening's message out: the second system's values take its room.
+            app.follow.flash = None;
+            snapshot.input(&mut app, App::view, &mut update, Input::Move(over));
+            save(&mut snapshot, &app, "ikinci");
+            if w > 1400.0
+                && let Some(cell) = find_text(&mut snapshot, &app, "TUREF / TM36")
+            {
+                snapshot.input(
+                    &mut app,
+                    App::view,
+                    &mut update,
+                    Input::RightClick(cell.center()),
+                );
+                let item = Point::new(cell.center().x - 100.0, cell.center().y + 49.0);
+                snapshot.input(&mut app, App::view, &mut update, Input::Move(item));
+                save(&mut snapshot, &app, "ikinci-menu");
+                for _ in 0..2 {
+                    snapshot.input(
+                        &mut app,
+                        App::view,
+                        &mut update,
+                        Input::Key(iced::keyboard::key::Named::Escape),
+                    );
+                }
+            }
+            // The project's own definition, its second system by the project's datum choice.
+            set(&mut app, &|s| ProjectSettings {
+                srid: 0,
+                custom_crs: Some(site.clone()),
+                second_srid: Some(2322),
+                second_custom_crs: None,
+                datum_transforms: vec![choice.clone()],
+                ..s
+            });
+            app.follow.flash = None;
+            snapshot.settle(&mut app, App::view, &mut update);
+            snapshot.input(&mut app, App::view, &mut update, Input::Move(over));
+            save(&mut snapshot, &app, "proje");
+            if let Some(cell) = find_text(&mut snapshot, &app, "ED50 TM36") {
+                snapshot.input(&mut app, App::view, &mut update, Input::Move(over));
+                snapshot.input(&mut app, App::view, &mut update, Input::Move(cell.center()));
+                save(&mut snapshot, &app, "proje-ipucu");
+            }
+            let _ = app.update(Message::Run("crs.query"));
+            snapshot.settle(&mut app, App::view, &mut update);
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(over));
+            snapshot.input(&mut app, App::view, &mut update, Input::Move(over));
+            app.follow.flash = None;
+            snapshot.settle(&mut app, App::view, &mut update);
+            save(&mut snapshot, &app, "proje-oku");
+        }
+    }
+
+    /// A municipality's local system on TUREF TM36 (the web's pictures use the same).
+    const CUSTOM_SECOND: &str = r#"{"name":"Belediye sistemi","system":{"kind":"local","base":{"srid":5256},
+        "plane":{"kind":"similarity","east":486000.0,"north":4419800.0,"rotation":-15.0,"scale":1.0}}}"#;
+    /// A site system shifted off TUREF TM36.
+    const CUSTOM_OWN: &str = r#"{"name":"Şantiye","system":{"kind":"local","base":{"srid":5256},
+        "plane":{"kind":"similarity","east":120.0,"north":-80.0,"rotation":0.0,"scale":1.0}}}"#;
+    /// Seven parameters for ED50–TUREF, made up for the pictures.
+    const CUSTOM_CHOICE: &str = r#"{"from":"ED50","to":"TUREF","name":"ED50 → TUREF: örnek parametreler",
+        "helmert":{"translation":[-84.1,-101.8,-129.7],"rotation":[0.0,0.0,0.468],"scale":1.05,
+        "convention":"positionVector","accuracy":0.3}}"#;
 }

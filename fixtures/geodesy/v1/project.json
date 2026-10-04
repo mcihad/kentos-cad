@@ -1,0 +1,638 @@
+{
+ "format": "kentos.project-crs",
+ "version": 1,
+ "cases": [
+  {
+   "name": "kayıttaki proje, kayıttaki ikinci sistem",
+   "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "secondSrid": 2320
+   },
+   "own": {
+    "name": "TUREF / TM30",
+    "title": "TUREF / TM30 (EPSG:5254)",
+    "code": "EPSG:5254",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "second": {
+    "name": "ED50 / TM30",
+    "title": "ED50 / TM30 (EPSG:2320)",
+    "code": "EPSG:2320",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 30,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "choices": []
+  },
+  {
+   "name": "koordinat sistemi olmayan proje",
+   "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000
+   },
+   "own": null,
+   "second": null,
+   "choices": []
+  },
+  {
+   "name": "yerel sistem (benzerlik, TM33 tabanlı), ikinci sistem tabanı, iki datum seçimi",
+   "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "customCrs": {
+     "name": "Şantiye",
+     "system": {
+      "kind": "local",
+      "base": {
+       "srid": 5255
+      },
+      "plane": {
+       "kind": "similarity",
+       "east": 492345.678,
+       "north": 4422345.678,
+       "rotation": 12.5,
+       "scale": 1.000012
+      }
+     }
+    },
+    "secondSrid": 5255,
+    "datumTransforms": [
+     {
+      "from": "ED50",
+      "to": "TUREF",
+      "name": "ED50 → TUREF: Bölge 7",
+      "helmert": {
+       "translation": [
+        -158.785,
+        -109.965,
+        -50.768
+       ],
+       "rotation": [
+        1.4275,
+        -3.0873,
+        0.5505
+       ],
+       "scale": -5.1814,
+       "convention": "coordinateFrame",
+       "accuracy": 0.3
+      }
+     },
+     {
+      "from": "ED50",
+      "to": "WGS84",
+      "name": "ED50 → WGS 84: ızgara",
+      "grid": {
+       "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+       "file": "tr.gsb",
+       "size": 37952,
+       "accuracy": 0.5
+      }
+     }
+    ]
+   },
+   "own": {
+    "name": "Şantiye",
+    "title": "Şantiye (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "tm",
+      "datum": "TUREF",
+      "centralMeridian": 33,
+      "scaleFactor": 1,
+      "falseEasting": 500000,
+      "falseNorthing": 0
+     },
+     "plane": {
+      "kind": "similarity",
+      "east": 492345.678,
+      "north": 4422345.678,
+      "rotation": 12.5,
+      "scale": 1.000012
+     }
+    }
+   },
+   "second": {
+    "name": "TUREF / TM33",
+    "title": "TUREF / TM33 (EPSG:5255)",
+    "code": "EPSG:5255",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame",
+      "accuracy": 0.3
+     }
+    },
+    {
+     "from": "ED50",
+     "to": "WGS84",
+     "name": "ED50 → WGS 84: ızgara",
+     "grid": {
+      "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+      "accuracy": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıttaki projenin ikinci sistemi yerel (afin), tabanı Bessel datumlu özel TM",
+   "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "secondCustomCrs": {
+     "name": "Belediye sistemi",
+     "system": {
+      "kind": "local",
+      "base": {
+       "definition": {
+        "name": "Bessel TM",
+        "system": {
+         "kind": "tm",
+         "customDatum": {
+          "name": "Bessel datumu",
+          "ellipsoid": {
+           "name": "Bessel 1841",
+           "semiMajor": 6377397.155,
+           "inverseFlattening": 299.1528128
+          },
+          "toWgs84": {
+           "translation": [
+            598.1,
+            73.7,
+            418.2
+           ],
+           "rotation": [
+            0.202,
+            0.045,
+            -2.455
+           ],
+           "scale": 6.7,
+           "convention": "positionVector",
+           "accuracy": 1.5
+          }
+         },
+         "latitudeOfOrigin": 36.0,
+         "centralMeridian": 34.5,
+         "scaleFactor": 0.9999,
+         "falseEasting": 200000.0,
+         "falseNorthing": 100000.0
+        }
+       }
+      },
+      "plane": {
+       "kind": "affine",
+       "a": 1.00002,
+       "b": -0.0003,
+       "c": 1250.0,
+       "d": 0.00025,
+       "e": 0.99998,
+       "f": -830.5
+      }
+     }
+    }
+   },
+   "own": {
+    "name": "TUREF / TM30",
+    "title": "TUREF / TM30 (EPSG:5254)",
+    "code": "EPSG:5254",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "second": {
+    "name": "Belediye sistemi",
+    "title": "Belediye sistemi (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "tm",
+      "datum": {
+       "name": "Bessel datumu",
+       "ellipsoid": {
+        "name": "Bessel 1841",
+        "semiMajor": 6377397.155,
+        "inverseFlattening": 299.1528128
+       },
+       "toWgs84": {
+        "translation": [
+         598.1,
+         73.7,
+         418.2
+        ],
+        "rotation": [
+         0.202,
+         0.045,
+         -2.455
+        ],
+        "scale": 6.7,
+        "convention": "positionVector",
+        "accuracy": 1.5
+       }
+      },
+      "latitudeOfOrigin": 36.0,
+      "centralMeridian": 34.5,
+      "scaleFactor": 0.9999,
+      "falseEasting": 200000.0,
+      "falseNorthing": 100000.0
+     },
+     "plane": {
+      "kind": "affine",
+      "a": 1.00002,
+      "b": -0.0003,
+      "c": 1250.0,
+      "d": 0.00025,
+      "e": 0.99998,
+      "f": -830.5
+     }
+    }
+   },
+   "choices": []
+  },
+  {
+   "name": "bağsız datumlu coğrafi proje, ikinci sistem ED50'de özel TM",
+   "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "customCrs": {
+     "name": "Eski coğrafi",
+     "system": {
+      "kind": "geographic",
+      "customDatum": {
+       "name": "Bağsız datum",
+       "ellipsoid": {
+        "name": "Clarke 1880 (RGS)",
+        "semiMajor": 6378249.145,
+        "inverseFlattening": 293.465
+       }
+      }
+     }
+    },
+    "secondCustomCrs": {
+     "name": "ED50 TM33 k=0.9999",
+     "system": {
+      "kind": "tm",
+      "datum": "ED50",
+      "centralMeridian": 33.0,
+      "scaleFactor": 0.9999,
+      "falseEasting": 500000.0,
+      "falseNorthing": 0.0
+     }
+    }
+   },
+   "own": {
+    "name": "Eski coğrafi",
+    "title": "Eski coğrafi (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "geographic",
+     "datum": {
+      "name": "Bağsız datum",
+      "ellipsoid": {
+       "name": "Clarke 1880 (RGS)",
+       "semiMajor": 6378249.145,
+       "inverseFlattening": 293.465
+      }
+     }
+    }
+   },
+   "second": {
+    "name": "ED50 TM33 k=0.9999",
+    "title": "ED50 TM33 k=0.9999 (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 0.9999,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "choices": []
+  },
+  {
+   "name": "Krasovski datumlu özel TM (koordinat çerçevesi kuralı), ikinci sistem WGS 84, doğruluğu yazılmamış ızgara",
+   "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "customCrs": {
+     "name": "Krasovski TM",
+     "system": {
+      "kind": "tm",
+      "customDatum": {
+       "name": "Krasovski datumu",
+       "ellipsoid": {
+        "name": "Krasovski 1940",
+        "semiMajor": 6378245.0,
+        "inverseFlattening": 298.3
+       },
+       "toWgs84": {
+        "translation": [
+         23.92,
+         -141.27,
+         -80.9
+        ],
+        "rotation": [
+         0.0,
+         -0.35,
+         -0.82
+        ],
+        "scale": -0.12,
+        "convention": "coordinateFrame"
+       }
+      },
+      "centralMeridian": 39.0,
+      "scaleFactor": 1.0,
+      "falseEasting": 500000.0,
+      "falseNorthing": 0.0
+     }
+    },
+    "secondSrid": 4326,
+    "datumTransforms": [
+     {
+      "from": "TUREF",
+      "to": "WGS84",
+      "name": "TUREF → WGS 84: ızgara",
+      "grid": {
+       "id": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
+       "file": "turef.gsb",
+       "size": 1024
+      }
+     }
+    ]
+   },
+   "own": {
+    "name": "Krasovski TM",
+    "title": "Krasovski TM (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Krasovski datumu",
+      "ellipsoid": {
+       "name": "Krasovski 1940",
+       "semiMajor": 6378245.0,
+       "inverseFlattening": 298.3
+      },
+      "toWgs84": {
+       "translation": [
+        23.92,
+        -141.27,
+        -80.9
+       ],
+       "rotation": [
+        0.0,
+        -0.35,
+        -0.82
+       ],
+       "scale": -0.12,
+       "convention": "coordinateFrame"
+      }
+     },
+     "centralMeridian": 39.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "second": {
+    "name": "WGS 84",
+    "title": "WGS 84 (EPSG:4326)",
+    "code": "EPSG:4326",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    }
+   },
+   "choices": [
+    {
+     "from": "TUREF",
+     "to": "WGS84",
+     "name": "TUREF → WGS 84: ızgara",
+     "grid": {
+      "id": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıttaki coğrafi proje, ikinci sistem Pseudo-Mercator tabanlı yerel sistem",
+   "settings": {
+    "srid": 4326,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "secondCustomCrs": {
+     "name": "Web yerel",
+     "system": {
+      "kind": "local",
+      "base": {
+       "srid": 3857
+      },
+      "plane": {
+       "kind": "similarity",
+       "east": 492345.678,
+       "north": 4422345.678,
+       "rotation": 12.5,
+       "scale": 1.000012
+      }
+     }
+    }
+   },
+   "own": {
+    "name": "WGS 84",
+    "title": "WGS 84 (EPSG:4326)",
+    "code": "EPSG:4326",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    }
+   },
+   "second": {
+    "name": "Web yerel",
+    "title": "Web yerel (özel sistem)",
+    "code": "Özel sistem",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "mercator"
+     },
+     "plane": {
+      "kind": "similarity",
+      "east": 492345.678,
+      "north": 4422345.678,
+      "rotation": 12.5,
+      "scale": 1.000012
+     }
+    }
+   },
+   "choices": []
+  },
+  {
+   "name": "tabanı kayıtta olmayan yerel sistem: adı var, sistemi yok",
+   "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "customCrs": {
+     "name": "Bilinmeyen taban",
+     "system": {
+      "kind": "local",
+      "base": {
+       "srid": 99999
+      },
+      "plane": {
+       "kind": "similarity",
+       "east": 492345.678,
+       "north": 4422345.678,
+       "rotation": 12.5,
+       "scale": 1.000012
+      }
+     }
+    },
+    "secondSrid": 5254
+   },
+   "own": {
+    "name": "Bilinmeyen taban",
+    "title": "Bilinmeyen taban (özel sistem)",
+    "code": "Özel sistem",
+    "system": null
+   },
+   "second": {
+    "name": "TUREF / TM30",
+    "title": "TUREF / TM30 (EPSG:5254)",
+    "code": "EPSG:5254",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "choices": []
+  },
+  {
+   "name": "tabanı coğrafi olan yerel sistem: adı var, sistemi yok",
+   "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "secondCustomCrs": {
+     "name": "Coğrafi taban",
+     "system": {
+      "kind": "local",
+      "base": {
+       "srid": 4326
+      },
+      "plane": {
+       "kind": "affine",
+       "a": 1.00002,
+       "b": -0.0003,
+       "c": 1250.0,
+       "d": 0.00025,
+       "e": 0.99998,
+       "f": -830.5
+      }
+     }
+    }
+   },
+   "own": {
+    "name": "TUREF / TM30",
+    "title": "TUREF / TM30 (EPSG:5254)",
+    "code": "EPSG:5254",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    }
+   },
+   "second": {
+    "name": "Coğrafi taban",
+    "title": "Coğrafi taban (özel sistem)",
+    "code": "Özel sistem",
+    "system": null
+   },
+   "choices": []
+  }
+ ]
+}

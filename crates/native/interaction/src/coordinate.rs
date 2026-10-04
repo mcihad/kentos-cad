@@ -15,7 +15,7 @@ use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
-use crate::second::Second;
+use crate::second::{Second, point_unreached};
 use crate::tool::{Context, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
 use kentos_geometry_core::store::snap::SnapHit;
 
@@ -56,7 +56,7 @@ impl CrsQuery {
         let Some(second) = Second::of(cx.doc.settings()) else {
             return Vec::new();
         };
-        let Some(t) = second.point(p) else {
+        let Ok(t) = second.point(p) else {
             return Vec::new();
         };
         let f = cx.format();
@@ -118,7 +118,7 @@ impl Tool for CrsQuery {
         // The second coordinate system's values, and how sure they are (docs/adr/0167 §2, §5).
         if let Some(second) = Second::of(cx.doc.settings()) {
             match second.point(p.world) {
-                Some(t) => {
+                Ok(t) => {
                     let reading = second.reading(t.point, &f, cx.draft.geographic);
                     let sure = second.accuracy(&t);
                     cx.say(
@@ -126,12 +126,9 @@ impl Tool for CrsQuery {
                         format!("{}: {reading} ({sure})", second.short()),
                     );
                 }
-                None => cx.say(
+                Err(why) => cx.say(
                     Level::Warn,
-                    format!(
-                        "{}: nokta bu sistemin ulaştığı yerin dışında; değeri yazılmadı.",
-                        second.short()
-                    ),
+                    format!("{}: {}", second.short(), point_unreached(why)),
                 ),
             }
         }

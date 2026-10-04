@@ -3,6 +3,7 @@ import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
+import { definitionTitle, DEFINITION_CODE } from '../../model/projectCrs';
 import { secondChoices, secondTitle } from '../../model/secondCrs';
 import { h, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
@@ -122,53 +123,72 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       if (name !== init.name) doc.name.set(name);
       const { name: _n, ...settings } = draft;
       // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres. The second
-      // system is the draft's, none when it has none (docs/adr/0167 §1); the settings drop one that is not another system.
+      // system is the draft's, none when it has none (docs/adr/0167 §1, 0168 §1); the settings drop one that is not
+      // another system.
       doc.settings.assign({
         ...settings,
-        drawingUnit: settings.srid === LOCAL_SRID ? (settings.drawingUnit ?? 'm') : 'm',
+        drawingUnit: settings.srid === LOCAL_SRID && !settings.customCrs ? (settings.drawingUnit ?? 'm') : 'm',
         secondSrid: settings.secondSrid ?? null,
+        secondCustomCrs: settings.secondCustomCrs ?? null,
       });
       if (draft.srid !== init.srid) {
         const c = crsBySrid(draft.srid)!;
         ctx.log.success(`Proje koordinat sistemi ${crsTitle(c)} olarak atandı. Koordinat değerleri değiştirilmedi.`);
       }
       const second = doc.settings.secondSrid.value;
-      if (second !== (init.secondSrid ?? null))
-        ctx.log.success(second === null ? 'İkinci koordinat sistemi kaldırıldı.' : `İkinci koordinat sistemi: ${secondTitle(second)}. Çizim dönüştürülmedi.`);
+      const defined = doc.settings.secondCustomCrs.value;
+      if (second !== (init.secondSrid ?? null) || JSON.stringify(defined) !== JSON.stringify(init.secondCustomCrs ?? null))
+        ctx.log.success(
+          second !== null
+            ? `İkinci koordinat sistemi: ${secondTitle(second)}. Çizim dönüştürülmedi.`
+            : defined
+              ? `İkinci koordinat sistemi: ${definitionTitle(defined)}. Çizim dönüştürülmedi.`
+              : 'İkinci koordinat sistemi kaldırıldı.',
+        );
       ctx.log.success('Proje ayarları kaydedildi. Proje dosyasıyla birlikte saklanacak.');
     },
   });
 }
 
 /**
- * İkinci koordinat sistemi (docs/adr/0167 §1): the systems of the registry but the project's own, grouped by datum, and
- * Yok. Its values show beside the project's in the status bar and Koordinat oku; the drawing is not transformed.
+ * İkinci koordinat sistemi (docs/adr/0167 §1): the project's second definition when it has one (docs/adr/0168 §1), the
+ * systems of the registry but the project's own, grouped by datum, and Yok. Its values show beside the project's in the
+ * status bar and Koordinat oku; the drawing is not transformed.
  */
 function secondGroup(api: DraftApi<ProjectDraft>): Child {
   const project = crsBySrid(api.draft.srid);
+  const custom = !!api.draft.customCrs && api.draft.srid === LOCAL_SRID;
   const what = 'Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.';
-  if (!project || project.kind === 'local')
+  if (!project || (project.kind === 'local' && !custom))
     return group('İkinci koordinat sistemi', settingRow('İkinci sistem', 'Yerel projenin ikinci sistemi olmaz; önce projeye bir koordinat sistemi atayın.', h('span', { class: 'srow__value' }, 'Yok')));
-  const shown = secondAllowed(project, api.draft.secondSrid) ? api.draft.secondSrid : null;
+  const shown = secondAllowed(project, api.draft.secondSrid, custom) ? api.draft.secondSrid : null;
+  const defined = shown === null ? (api.draft.secondCustomCrs ?? null) : null;
+  // A system of the registry, or Yok, takes the place of a second definition.
+  const choose = (srid: number | undefined) => {
+    api.set('secondCustomCrs', undefined, false);
+    api.set('secondSrid', srid);
+  };
   const pick = new Dropdown({
     ariaLabel: 'İkinci koordinat sistemi',
     width: 260,
     items: (): MenuItem[] => [
-      { label: 'Yok', radio: true, checked: shown === null, run: () => api.set('secondSrid', undefined) },
+      { label: 'Yok', radio: true, checked: shown === null && defined === null, run: () => choose(undefined) },
+      ...(defined ? [{ label: defined.name, hint: DEFINITION_CODE, radio: true, checked: true, run: () => {} } satisfies MenuItem] : []),
       ...secondChoices(project).flatMap(({ datum, systems }): MenuItem[] => [
         { kind: 'header', label: datum },
-        ...systems.map((c) => ({ label: c.name, hint: `EPSG:${c.srid}`, radio: true, checked: c.srid === shown, run: () => api.set('secondSrid', c.srid) })),
+        ...systems.map((c) => ({ label: c.name, hint: `EPSG:${c.srid}`, radio: true, checked: c.srid === shown, run: () => choose(c.srid) })),
       ]),
     ],
   });
-  pick.set(shown === null ? 'Yok' : secondTitle(shown));
+  pick.set(shown !== null ? secondTitle(shown) : defined ? definitionTitle(defined) : 'Yok');
   return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, pick.el));
 }
 
 function unitsSection(api: DraftApi<ProjectDraft>): Child {
   const d = api.draft;
-  // A local project's unit (docs/adr/0165 §2); a project with a coordinate system is in its system's metres.
-  const local = d.srid === LOCAL_SRID;
+  // A local project's unit (docs/adr/0165 §2); a project with a coordinate system, its own definition too, is in its
+  // system's metres.
+  const local = d.srid === LOCAL_SRID && !d.customCrs;
   const f = new Formatter({
     lengthDecimals: new Signal(d.lengthDecimals),
     areaDecimals: new Signal(d.areaDecimals),

@@ -43,7 +43,7 @@ fn warnings(app: &App) -> String {
     let format = kentos_interaction::Format::default();
     window(app)
         .crs
-        .notes(5256, &format)
+        .notes(&5256.into(), &format)
         .into_iter()
         .filter_map(|n| match n {
             Note::Warn(w) => Some(w),
@@ -128,7 +128,7 @@ fn a_shapefile_is_its_files_chosen_together() {
     let s = window(&app);
     assert!(s.result.is_some(), "{:?}", s.failed);
     // The .prj says TUREF / TM36.
-    assert!(s.crs.matches(5256));
+    assert!(s.crs.matches(&5256.into()));
     let Source::Shapefile(files) = &s.source else {
         panic!("a layer's files")
     };
@@ -166,7 +166,7 @@ fn a_zipped_shapefile_offers_its_layers_one_at_a_time() {
     assert_eq!(read.layers[0].name, "yollar");
     let roads = read.entities.len();
     // ED50 / TM30: said by its .prj, refused until the user answers otherwise.
-    assert!(!s.crs.matches(5256));
+    assert!(!s.crs.matches(&5256.into()));
     send(&mut app, Event::GisImport(gis_import::Event::Crs(5256)));
     import(&mut app);
     assert_eq!(count(&app) - before, roads);

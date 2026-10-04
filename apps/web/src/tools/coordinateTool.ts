@@ -1,5 +1,5 @@
 import type { AppContext } from '../app/context';
-import { SecondCrs } from '../model/secondCrs';
+import { pointUnreached, SecondCrs } from '../model/secondCrs';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
 import { elevationAt } from '../product/elevationValues';
@@ -77,8 +77,8 @@ export class CoordinateReadTool implements Tool {
     const second = SecondCrs.of(doc.settings);
     if (!second) return [];
     const t = second.point(at);
-    if (!t) {
-      log.warn(`${second.short}: nokta bu sistemin ulaştığı yerin dışında; değeri yazılmadı.`);
+    if ('error' in t) {
+      log.warn(`${second.short}: ${pointUnreached(t.error)}`);
       return [];
     }
     log.info(`${second.short}: ${second.reading(t.point, format, prefs.geographic.value)} (${second.accuracy(t)})`);

@@ -13,12 +13,14 @@ import type { AppContext } from '../context';
 export function fakeApp(o: { account?: { id: string; name: string } } = {}) {
   const events = new Emitter<{ reset: undefined; touched: unknown }>();
   const layerEvents = new Emitter<{ state: unknown; structure: unknown }>();
+  const crs = new Signal({ srid: 5256, name: 'TUREF / TM36', datum: 'TUREF', projection: 'Transverse Mercator', centralMeridian: 36, scaleFactor: 1, falseEasting: 500_000, falseNorthing: 0, ellipsoid: 'GRS80' });
   const doc = {
     events,
     projectId: null as string | null,
     name: new Signal('Yeni çizim'),
-    crs: new Signal({ srid: 5256, name: 'TUREF / TM36', datum: 'TUREF', projection: 'Transverse Mercator', centralMeridian: 36, scaleFactor: 1, falseEasting: 500_000, falseNorthing: 0, ellipsoid: 'GRS80' }),
-    settings: { workspace: new Signal('cad'), plotScale: new Signal(1000), drawingFont: new Signal('barlow') },
+    crs,
+    // As the project's settings: the same system, no definition of its own (docs/adr/0168 §1).
+    settings: { crs, customCrs: new Signal(null), hasSystem: true, workspace: new Signal('cad'), plotScale: new Signal(1000), drawingFont: new Signal('barlow') },
     revision: 1,
     layers: { events: layerEvents, leaves: () => [], get: () => undefined, isVisible: () => true, parentOf: () => null },
     byLayer: () => [],

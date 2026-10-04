@@ -1,6 +1,7 @@
 import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid, crsTitle } from '../geo/crs';
+import { projectCrsName } from '../model/projectCrs';
 import { DOCUMENT_EXTENSION, DOCUMENT_MIME } from '../model/snapshot';
 import type { OpeningView } from '../ui/io/OpeningDialog';
 import { h } from '../ui/dom';
@@ -571,7 +572,7 @@ export class DocumentFiles {
   /** Puts the file first in the recent list, with what it holds now. */
   private remember(handle: DrawingFileHandle): void {
     const doc = this.ctx.doc;
-    void this.recent.add(handle, `${doc.size.toLocaleString('tr-TR')} nesne · ${doc.crs.value.name}`);
+    void this.recent.add(handle, `${doc.size.toLocaleString('tr-TR')} nesne · ${projectCrsName(doc.settings)}`);
   }
 
   /** Unsaved changes that replacing the drawing would lose: local ones, or edits a cloud project does not keep (a viewer's). */

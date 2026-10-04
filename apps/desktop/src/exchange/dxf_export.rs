@@ -287,7 +287,7 @@ impl App {
             // The writer takes those the objects place (docs/adr/0144 §5).
             blocks: doc.model.blocks().iter().map(|b| (**b).clone()).collect(),
             // A local project's drawing goes out in its unit (docs/adr/0165 §2).
-            unit: (settings.srid == crate::crs::LOCAL_SRID).then(|| settings.unit()),
+            unit: (!settings.has_system()).then(|| settings.unit()),
         };
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;

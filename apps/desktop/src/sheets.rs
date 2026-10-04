@@ -29,7 +29,7 @@ use kentos_sheet_ui::painter::{clip_polygon, clip_segment};
 use kentos_sheet_ui::{Context, Effect, ExportKind, MapPainter, MapRequest, Painter, Say, Store};
 
 use crate::app::{App, Message};
-use crate::document::{Document, crs_name};
+use crate::document::Document;
 use crate::viewport::{Canvas, palette};
 
 /// The Pafta tab's id in the ribbon (the web's `SHEET_TAB_ID`).
@@ -885,8 +885,11 @@ impl App {
         let doc = self.document.as_ref();
         let settings = doc.map(Document::settings);
         let srid = settings.map_or(0, |s| s.srid);
-        let crs = (srid != 0)
-            .then(|| crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned));
+        // The registry's system or the project's own definition (docs/adr/0168 §1); the
+        // latter without the registry's transverse Mercator values.
+        let crs = settings
+            .filter(|s| s.has_system())
+            .map(crate::crs::project_name);
         let c = self.viewport.camera.center;
         Context {
             // The type the interface shows: a project not asked its type is CBS (docs/adr/0165).
@@ -894,7 +897,7 @@ impl App {
             // The project's type is the catalog's; the opened drawing does not carry it yet.
             project_type: None,
             capabilities: Capabilities {
-                georeferenced: srid != 0,
+                georeferenced: crs.is_some(),
                 attribute_layers: self.sheet_attributes.get(),
                 plot_scale: settings
                     .map(|s| s.plot_scale.round())
@@ -911,7 +914,9 @@ impl App {
             },
             // With its transverse Mercator parameters: the core works out the meridian convergence.
             crs: crs.map(|name| {
-                crate::sheet_inputs::crs_info(srid).unwrap_or(CrsInfo { name, tm: None })
+                crate::sheet_inputs::crs_info(srid)
+                    .filter(|_| srid != crate::crs::LOCAL_SRID)
+                    .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
         }

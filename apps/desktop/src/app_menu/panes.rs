@@ -236,8 +236,7 @@ impl App {
             ),
             (None, None) => "Bir dosyaya bağlı değil; ilk kayıtta yer sorulur".to_owned(),
         };
-        let system =
-            crate::crs::system(s.srid).map_or(format!("EPSG:{}", s.srid), |c| c.name.clone());
+        let system = crate::crs::project_name(s);
         let mode = crate::catalog::mode_of(s.workspace);
         let font = crate::project::font_label(s.drawing_font);
         let chips = row![

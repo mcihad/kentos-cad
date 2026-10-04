@@ -17,10 +17,10 @@ import { hideTooltip, tooltip } from '../widgets/tooltip';
 import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
-import { crsTitle } from '../../geo/crs';
 import { scaleText } from '../../model/newProjectWizard';
 import { offeredScales, typedScale } from './scaleSelector';
-import { SecondCrs } from '../../model/secondCrs';
+import { projectCrsName, projectCrsTitle } from '../../model/projectCrs';
+import { cursorUnreached, SecondCrs } from '../../model/secondCrs';
 import { crsMenu, secondMenu } from './secondMenu';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
@@ -231,7 +231,8 @@ export class StatusBar extends Component {
 
     // The second system, taken again when the project's settings change; its values follow the cursor.
     const showSecond = (p = ctx.view.cursorWorld.value) => {
-      const t = p && secondCrs ? secondCrs.point(p) : null;
+      const moved = p && secondCrs ? secondCrs.point(p) : null;
+      const t = moved && !('error' in moved) ? moved : null;
       if (!secondCrs) return;
       const values = t ? secondCrs.values(t.point, ctx.format, ctx.prefs.geographic.value) : null;
       const named = !secondCrs.geographic;
@@ -263,10 +264,10 @@ export class StatusBar extends Component {
           if (!secondCrs) return { title: 'İkinci koordinat sistemi' };
           const p = ctx.view.cursorWorld.value;
           const t = p ? secondCrs.point(p) : null;
-          const sure = t ? `${secondCrs.accuracy(t)}.` : p ? 'İmleç bu sistemin ulaştığı yerin dışında; değer yazılmadı.' : '';
+          const sure = !t ? '' : 'error' in t ? cursorUnreached(t.error) : `${secondCrs.accuracy(t)}.`;
           return {
-            title: `İkinci koordinat sistemi: ${secondCrs.system.name}`,
-            description: `${secondCrs.system.name} (EPSG:${secondCrs.system.srid}) değerleri, projeninkilerden dönüştürülerek. ${sure} Sistemi değiştirmek ya da kaldırmak için tıklayın.`,
+            title: `İkinci koordinat sistemi: ${secondCrs.name}`,
+            description: `${secondCrs.title} değerleri, projeninkilerden dönüştürülerek. ${sure} Sistemi değiştirmek ya da kaldırmak için tıklayın.`,
           };
         },
         'top',
@@ -288,18 +289,19 @@ export class StatusBar extends Component {
     );
     this.d.add(ctx.view.camera.changed.subscribe(() => (zoomText.textContent = `Ekran 1:${fmtScale(screenScale(ctx.view.camera.scale))}`), true));
     this.d.add(tooltip(zoom, () => ({ title: 'Ekran ölçeği', description: 'Görünümün 96 dpi ekrandaki yaklaşık ölçeği; tıklayın, listeden seçin ya da yazın. Çizim ölçeği şeritten seçilir.' }), 'top'));
-    this.d.add(
-      ctx.doc.crs.subscribe((c) => {
-        crs.querySelector('span')!.textContent = c.name;
-        this.refit();
-      }, true),
-    );
+    // The registry's system or the project's own definition (docs/adr/0168 §1).
+    const showCrs = () => {
+      crs.querySelector('span')!.textContent = projectCrsName(ctx.doc.settings);
+      this.refit();
+    };
+    this.d.add(watchAll([ctx.doc.crs, ctx.doc.settings.customCrs], showCrs));
+    showCrs();
     this.d.add(
       tooltip(
         crs,
         () => ({
           title: 'Koordinat sistemi',
-          description: `${crsTitle(ctx.doc.crs.value)}. ${ctx.format.eastLabel} sağa, ${ctx.format.northLabel} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.`,
+          description: `${projectCrsTitle(ctx.doc.settings)}. ${ctx.format.eastLabel} sağa, ${ctx.format.northLabel} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.`,
         }),
         'top',
       ),

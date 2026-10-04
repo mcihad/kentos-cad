@@ -114,8 +114,7 @@ impl App {
     pub(crate) fn remember_file(&mut self) {
         let Some(doc) = &self.document else { return };
         let Some(path) = doc.path.clone() else { return };
-        let system = crate::crs::system(doc.settings().srid)
-            .map_or(format!("EPSG:{}", doc.settings().srid), |s| s.name.clone());
+        let system = crate::crs::project_name(doc.settings());
         let info = format!(
             "{} nesne · {system}",
             crate::crs::grouped(doc.entity_count() as f64)

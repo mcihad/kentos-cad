@@ -1,7 +1,9 @@
 //! The project's second coordinate system (docs/adr/0167 §1–§2, §5): a
 //! point of the drawing in it, written as the user reads it, with how sure
 //! the values are. The status bar and Koordinat oku read it; the web's
-//! `app/secondCrs.ts` writes the same.
+//! `model/secondCrs.ts` writes the same. Either system may be one of the
+//! registry's or a definition of the project's, and the project's datum
+//! choices are taken where they apply (docs/adr/0168; `kentos_project::systems`).
 //!
 //! A projected second system is written as the project's points are: east
 //! first, named as the project's type names its axes, with its length
@@ -10,9 +12,11 @@
 //! `40°45′12.3456″K, 29°55′01.2345″D` or `40.7534293°K, 29.9170096°D`.
 
 use kentos_contracts::ProjectSettings;
-use kentos_geometry_core::crs::measure::{NoPlane, PlaneMeasures, Ring, plane_measures};
-use kentos_geometry_core::crs::{self as core, Transformed, format_dd, format_dms};
-use kentos_project::crs;
+use kentos_geometry_core::crs::measure::{NoPlane, PlaneMeasures, Ring, plane_measures_in};
+use kentos_geometry_core::crs::{
+    self as core, Transformed, Unreached, format_dd, format_dms, transform_in,
+};
+use kentos_project::systems;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -45,29 +49,36 @@ impl Notation {
 /// The project's second system, ready to take the drawing's points into.
 #[derive(Clone, Debug)]
 pub struct Second {
-    /// Its registry entry.
-    pub system: &'static crs::System,
+    /// Its name: “ED50 / TM30”, “Belediye sistemi”.
+    pub name: String,
+    /// As a sentence names it: “ED50 / TM30 (EPSG:2320)”, “Belediye sistemi
+    /// (özel sistem)”.
+    pub title: String,
     from: core::System,
     to: core::System,
+    /// The project's datum choices (docs/adr/0168 §3).
+    choices: Vec<core::Choice>,
 }
 
 impl Second {
-    /// The second system of a project that has one the registry knows; none
-    /// for a project without one, a local project, and a system the
-    /// transforms do not read.
+    /// The second system of a project that has one; none for a project
+    /// without one, a project without a system, and a system the transforms
+    /// do not read.
     pub fn of(settings: &ProjectSettings) -> Option<Self> {
-        let system = crs::system(settings.second()?)?;
-        let project = crs::system(settings.srid)?;
+        let own = systems::own(settings)?;
+        let second = systems::second(settings)?;
         Some(Self {
-            system,
-            from: project.transform_system()?,
-            to: system.transform_system()?,
+            name: second.name,
+            title: second.title,
+            from: own.system?,
+            to: second.system?,
+            choices: systems::choices(settings),
         })
     }
 
     /// Its name without the slash: “ED50 TM30”, “WGS 84 UTM 35N”, “TUREF”.
     pub fn short(&self) -> String {
-        self.system.name.replace(" / ", " ")
+        self.name.replace(" / ", " ")
     }
 
     /// Whether its values are a latitude and a longitude.
@@ -75,10 +86,10 @@ impl Second {
         matches!(self.to, core::System::Geographic { .. })
     }
 
-    /// `p`, a point of the drawing, in the second system; none where the
-    /// projection does not reach.
-    pub fn point(&self, p: Vec2) -> Option<Transformed> {
-        core::transform(&self.from, &self.to, p)
+    /// `p`, a point of the drawing, in the second system; or why it has no
+    /// value there.
+    pub fn point(&self, p: Vec2) -> Result<Transformed, Unreached> {
+        transform_in(&self.from, &self.to, p, &self.choices)
     }
 
     /// The two values of `q` (a point in the second system) with their
@@ -114,7 +125,7 @@ impl Second {
     /// (docs/adr/0167 §2): none in a geographic system or the
     /// Pseudo-Mercator, or where it does not reach.
     pub fn measure(&self, rings: &[Ring], closed: bool) -> Result<PlaneMeasures, NoPlane> {
-        plane_measures(&self.from, &self.to, rings, closed)
+        plane_measures_in(&self.from, &self.to, rings, closed, &self.choices)
     }
 
     /// The line Mesafe ölç and Alan hesapla say after their own: the length,
@@ -155,6 +166,28 @@ impl Second {
     }
 }
 
+/// Why the cursor has no value in the second system, as the status bar's
+/// tip says it (the web's `cursorUnreached`).
+pub fn cursor_unreached(why: Unreached) -> &'static str {
+    match why {
+        Unreached::Outside => "İmleç bu sistemin ulaştığı yerin dışında; değer yazılmadı.",
+        Unreached::OutsideGrid => "İmleç datum dönüşümünün ızgarasının dışında; değer yazılmadı.",
+        Unreached::NoLink => "Datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.",
+        Unreached::NoGrid => "Datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.",
+    }
+}
+
+/// Why a point has no value in the second system, as Koordinat oku says it
+/// after the system's name (the web's `pointUnreached`).
+pub fn point_unreached(why: Unreached) -> &'static str {
+    match why {
+        Unreached::Outside => "nokta bu sistemin ulaştığı yerin dışında; değeri yazılmadı.",
+        Unreached::OutsideGrid => "nokta datum dönüşümünün ızgarasının dışında; değeri yazılmadı.",
+        Unreached::NoLink => "datumlardan birinin WGS 84'e dönüşümü yok; değeri yazılmadı.",
+        Unreached::NoGrid => "datum dönüşümünün ızgarası bu cihazda yok; değeri yazılmadı.",
+    }
+}
+
 /// How sure a point moved between two systems is: “±2.1 m, EPSG:1783 +
 /// EPSG:5260; resmî dönüşüm değil” (an EPSG operation of ED50 was used,
 /// docs/adr/0167 §5), “±1 m, EPSG:5261”, “doğruluğu bilinmiyor, Bölge 7”
@@ -177,7 +210,11 @@ pub fn accuracy_text(t: &Transformed) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_contracts::{AngleUnit, AreaUnit, Workspace};
+    use kentos_contracts::{
+        AngleUnit, AreaUnit, Convention, CrsBase, CrsDefinition, CrsPlane, CrsSystem,
+        DatumTransform, GridChoice, Helmert, LocalDefinition, RegistryDatum, Workspace,
+    };
+    use kentos_geometry_core::crs::Plane;
 
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
@@ -260,6 +297,146 @@ mod tests {
                 .measures_line(&[ring], false, &f)
                 .starts_with("WGS 84 coğrafi bir sistem")
         );
+    }
+
+    /// A local system bound to TUREF TM33 (docs/adr/0168 §1).
+    fn site() -> CrsDefinition {
+        CrsDefinition {
+            name: "Şantiye".to_owned(),
+            system: CrsSystem::Local(LocalDefinition {
+                base: CrsBase {
+                    srid: Some(5255),
+                    definition: None,
+                },
+                plane: CrsPlane::Similarity {
+                    east: 492_345.678,
+                    north: 4_422_345.678,
+                    rotation: 12.5,
+                    scale: 1.000_012,
+                },
+            }),
+        }
+    }
+
+    /// The project's choice for ED50–TUREF: seven parameters, or a grid.
+    fn region(helmert: bool) -> DatumTransform {
+        DatumTransform {
+            from: RegistryDatum::Ed50,
+            to: RegistryDatum::Turef,
+            name: "ED50 → TUREF: Bölge 7".to_owned(),
+            helmert: helmert.then_some(Helmert {
+                translation: [-158.785, -109.965, -50.768],
+                rotation: [1.4275, -3.0873, 0.5505],
+                scale: -5.1814,
+                convention: Convention::CoordinateFrame,
+                accuracy: Some(0.3),
+            }),
+            grid: (!helmert).then(|| GridChoice {
+                id: "ab".repeat(32),
+                file: "bolge7.gsb".to_owned(),
+                size: 1024,
+                accuracy: None,
+            }),
+        }
+    }
+
+    /// The project's own definition takes the drawing's points to the second
+    /// system: its plane to its base, then the datum by the project's choice;
+    /// a grid this process does not have leaves no value and says so
+    /// (docs/adr/0168 §1, §3–§4).
+    #[test]
+    fn the_projects_own_system_and_choices_reach_the_second() {
+        let own = ProjectSettings {
+            custom_crs: Some(site()),
+            ..settings(0, Some(5255))
+        };
+        let second = Second::of(&own).expect("TUREF TM33");
+        assert_eq!(
+            (second.name.as_str(), second.title.as_str()),
+            ("TUREF / TM33", "TUREF / TM33 (EPSG:5255)")
+        );
+        // The second system is the base: only the plane moves the point.
+        let p = Vec2::new(1_000.0, 2_000.0);
+        let t = second.point(p).expect("in the zone");
+        let want = Plane::Similarity {
+            east: 492_345.678,
+            north: 4_422_345.678,
+            rotation: 12.5,
+            scale: 1.000_012,
+        }
+        .forward(p);
+        assert!(
+            (t.point.x - want.x).abs() < 1e-6 && (t.point.y - want.y).abs() < 1e-6,
+            "{:?}",
+            t.point
+        );
+        assert_eq!(second.accuracy(&t), "kesin, yalnız projeksiyon");
+        // ED50 TM33 by the project's seven parameters.
+        let ed50 = ProjectSettings {
+            custom_crs: Some(site()),
+            datum_transforms: vec![region(true)],
+            ..settings(0, Some(2321))
+        };
+        let second = Second::of(&ed50).expect("ED50 TM33");
+        let t = second.point(p).expect("in the zone");
+        assert_eq!(second.accuracy(&t), "±0.3 m, ED50 → TUREF: Bölge 7");
+        // The same pair by a grid not loaded here.
+        let grid = ProjectSettings {
+            datum_transforms: vec![region(false)],
+            ..ed50
+        };
+        let second = Second::of(&grid).expect("ED50 TM33");
+        assert_eq!(second.point(p).map(|t| t.point), Err(Unreached::NoGrid));
+        assert_eq!(
+            second.measures_line(
+                &[Ring {
+                    pts: vec![p, Vec2::new(1_010.0, 2_000.0)],
+                    bulges: None,
+                }],
+                false,
+                &Format::of(&grid)
+            ),
+            "ED50 TM33: datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı."
+        );
+        assert_eq!(
+            (
+                cursor_unreached(Unreached::NoGrid),
+                point_unreached(Unreached::OutsideGrid)
+            ),
+            (
+                "Datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.",
+                "nokta datum dönüşümünün ızgarasının dışında; değeri yazılmadı."
+            )
+        );
+    }
+
+    /// A second system the project defines is named by its definition, and
+    /// takes the base's points through its plane's inverse.
+    #[test]
+    fn a_second_definition_is_named_by_its_name() {
+        let s = ProjectSettings {
+            second_custom_crs: Some(site()),
+            ..settings(5255, None)
+        };
+        let second = Second::of(&s).expect("a second system");
+        assert_eq!(
+            (second.short(), second.title.as_str()),
+            ("Şantiye".to_owned(), "Şantiye (özel sistem)")
+        );
+        let t = second
+            .point(Vec2::new(492_345.678, 4_422_345.678))
+            .expect("the site's origin");
+        assert!(
+            t.point.x.abs() < 1e-6 && t.point.y.abs() < 1e-6,
+            "{:?}",
+            t.point
+        );
+        // A project without a system has no second, whatever it says.
+        let local = ProjectSettings {
+            second_custom_crs: Some(site()),
+            ..settings(0, None)
+        };
+        assert!(Second::of(&local).is_none());
     }
 
     #[test]

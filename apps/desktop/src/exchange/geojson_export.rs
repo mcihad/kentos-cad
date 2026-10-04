@@ -216,8 +216,15 @@ impl App {
             Some(Ok(name)) => {
                 let (report, srid) = s.written.take().unwrap_or_default();
                 let written: u32 = report.counts.values().sum();
+                // SRID 0 with a system: the project's own definition (docs/adr/0168 §1).
+                let defined = srid == 0
+                    && self
+                        .document
+                        .as_ref()
+                        .is_some_and(|d| d.settings().has_system());
                 let system = match srid {
                     4326 => ", RFC 7946".to_owned(),
+                    0 if defined => ", projenin kendi sistemi, crs üyesi yok".to_owned(),
                     0 => ", koordinat sistemi yok".to_owned(),
                     _ => format!(", EPSG:{srid}"),
                 };
@@ -393,8 +400,9 @@ impl App {
             .filter(|e| e.base().color.is_some() || e.base().symbol.is_some())
             .count();
         let srid = doc.settings().srid;
-        let system =
-            crate::crs::system(srid).map_or_else(|| format!("EPSG:{srid}"), |s| s.name.clone());
+        let system = crate::crs::project_name(doc.settings());
+        // The project's own definition (docs/adr/0168 §1): no EPSG code to name it by.
+        let defined = doc.settings().has_system() && srid == crate::crs::LOCAL_SRID;
         let mut lines = vec![if written > 0 {
             words::text_line(
                 Line::Ok,
@@ -406,7 +414,12 @@ impl App {
                 "Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin; yazı, ölçü ve sonsuz doğrular GeoJSON'a yazılmaz.",
             )
         }];
-        lines.push(if srid == 0 {
+        lines.push(if defined {
+            words::text_line(
+                Line::Warn,
+                format!("Dosya bir koordinat sistemi adlandırmayacak. Projenin sistemi kendi tanımı ({system}) ve EPSG kodu yok: koordinatlar dönüştürülmeden projenin sisteminde yazılır, crs üyesi yazılmaz. Dosyayı okuyan programa sistemi siz söyleyin; RFC 7946'yı bilen programlar koordinatları WGS 84 boylam, enlem sayar ve yanlış yere koyar."),
+            )
+        } else if srid == 0 {
             // A local project (docs/adr/0165 §2): its coordinates are bound to no place.
             words::text_line(
                 Line::Warn,

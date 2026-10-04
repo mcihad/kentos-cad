@@ -10,7 +10,6 @@
 //! and the other way round. Every change goes through the document, with the
 //! web's rules: undo, the dirty flag and the saved revision.
 
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
@@ -229,35 +228,6 @@ pub fn write(snapshot: &DocumentSnapshotV2, path: &Path) -> Result<(), String> {
         SaveError::Failed(why) => why,
         SaveError::Stopped => format!("{}: kayıt durduruldu.", path.display()),
     })
-}
-
-/// The name of an EPSG code, from the shared CRS registry the web also reads
-/// (fixtures/crs/v1/registry.json).
-pub fn crs_name(srid: u32) -> Option<&'static str> {
-    use std::sync::OnceLock;
-    static NAMES: OnceLock<HashMap<u32, &'static str>> = OnceLock::new();
-    NAMES
-        .get_or_init(|| {
-            #[derive(serde::Deserialize)]
-            struct Registry {
-                systems: Vec<System>,
-            }
-            #[derive(serde::Deserialize)]
-            struct System {
-                srid: u32,
-                name: String,
-            }
-            serde_json::from_str::<Registry>(include_str!("../../../fixtures/crs/v1/registry.json"))
-                .map(|r| {
-                    r.systems
-                        .into_iter()
-                        .map(|s| (s.srid, &*Box::leak(s.name.into_boxed_str())))
-                        .collect()
-                })
-                .unwrap_or_default()
-        })
-        .get(&srid)
-        .copied()
 }
 
 #[cfg(test)]
@@ -572,10 +542,5 @@ mod tests {
         let current = doc.model.revision();
         doc.saved(PathBuf::from("cizim.kcad"), current);
         assert!(!doc.dirty());
-    }
-
-    #[test]
-    fn the_default_system_has_a_name() {
-        assert_eq!(crs_name(5256), Some("TUREF / TM36"));
     }
 }

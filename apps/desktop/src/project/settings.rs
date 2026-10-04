@@ -139,8 +139,11 @@ pub enum Event {
     AngleUnit(AngleUnit),
     /// A local project's drawing unit (docs/adr/0165 §2); metres are kept as none.
     DrawingUnit(DrawingUnit),
-    /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok.
+    /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok. Either takes
+    /// the place of a second definition (docs/adr/0168 §1).
     Second(Option<u32>),
+    /// The second definition the project has, kept.
+    SecondDefined,
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -199,7 +202,11 @@ impl App {
                 }
                 s.query = query;
             }
-            Event::Second(second) => d.second_srid = second,
+            Event::Second(second) => {
+                d.second_srid = second;
+                d.second_custom_crs = None;
+            }
+            Event::SecondDefined => {}
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
@@ -226,13 +233,16 @@ impl App {
         doc.model.set_name(&name);
         let mut settings = s.settings.clone();
         // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres.
-        if settings.srid != crate::crs::LOCAL_SRID {
+        if settings.has_system() {
             settings.drawing_unit = None;
         }
         doc.model.set_settings(settings);
         let assigned = (s.settings.srid != s.initial.srid).then_some(s.settings.srid);
         let second = doc.settings().second_srid;
-        let second_changed = second != s.initial.second_srid;
+        let defined = doc.settings().second_custom_crs.as_ref();
+        let second_changed =
+            (second, defined) != (s.initial.second_srid, s.initial.second_custom_crs.as_ref());
+        let defined = defined.map(kentos_project::systems::definition_title);
         self.close_project_window();
         if let Some(srid) = assigned {
             self.say(
@@ -246,12 +256,15 @@ impl App {
         if second_changed {
             self.say(
                 Level::Success,
-                match second {
-                    None => "İkinci koordinat sistemi kaldırıldı.".to_owned(),
-                    Some(srid) => format!(
+                match (second, defined) {
+                    (None, None) => "İkinci koordinat sistemi kaldırıldı.".to_owned(),
+                    (Some(srid), _) => format!(
                         "İkinci koordinat sistemi: {}. Çizim dönüştürülmedi.",
                         crs::title_of(srid)
                     ),
+                    (None, Some(title)) => {
+                        format!("İkinci koordinat sistemi: {title}. Çizim dönüştürülmedi.")
+                    }
                 },
             );
         }
@@ -452,7 +465,7 @@ impl App {
 fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
     let d = &s.settings;
     let what = "Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.";
-    if d.srid == crate::crs::LOCAL_SRID {
+    if !d.has_system() {
         return group(
             "İkinci koordinat sistemi",
             setting(
@@ -464,14 +477,34 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
             ),
         );
     }
-    // Each row's system; none for Yok and the datums' headers.
-    let mut rows: Vec<Option<u32>> = vec![None];
+    // Each row's choice: Yok, the project's second definition (docs/adr/0168 §1), a datum's
+    // header, a system of the registry.
+    #[derive(Clone, Copy, PartialEq)]
+    enum Pick {
+        Yok,
+        Defined,
+        Header,
+        Srid(u32),
+    }
+    let defined = d
+        .second_custom_crs
+        .as_ref()
+        .filter(|_| d.second().is_none());
+    let mut rows = vec![Pick::Yok];
     let mut list = vec![Choice::new("Yok")];
+    if let Some(def) = defined {
+        rows.push(Pick::Defined);
+        list.push(
+            Choice::new(def.name.clone())
+                .detail(kentos_project::systems::DEFINITION_CODE)
+                .shown(kentos_project::systems::definition_title(def)),
+        );
+    }
     for (datum, systems) in crate::second_crs::choices(d.srid) {
-        rows.push(None);
+        rows.push(Pick::Header);
         list.push(Choice::header(datum));
         for c in systems {
-            rows.push(Some(c.srid));
+            rows.push(Pick::Srid(c.srid));
             list.push(
                 Choice::new(c.name.clone())
                     .detail(format!("EPSG:{}", c.srid))
@@ -479,10 +512,18 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
             );
         }
     }
-    let current = d.second();
+    let current = match (d.second(), defined) {
+        (Some(srid), _) => Pick::Srid(srid),
+        (None, Some(_)) => Pick::Defined,
+        (None, None) => Pick::Yok,
+    };
     let selected = rows.iter().position(|r| *r == current);
     let pick = Select::new(list, selected, move |i| {
-        event(Event::Second(rows.get(i).copied().flatten()))
+        event(match rows.get(i) {
+            Some(Pick::Srid(srid)) => Event::Second(Some(*srid)),
+            Some(Pick::Defined) => Event::SecondDefined,
+            _ => Event::Second(None),
+        })
     });
     group(
         "İkinci koordinat sistemi",
@@ -516,7 +557,7 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
         |a| event(Event::AngleUnit(a.0)),
     );
     // A local project's unit (docs/adr/0165 §2); a project with a coordinate system is in its metres.
-    let local = d.srid == crate::crs::LOCAL_SRID;
+    let local = !d.has_system();
     let unit = Segmented::new(
         [
             Unit(DrawingUnit::Mm),

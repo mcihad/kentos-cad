@@ -19,6 +19,7 @@ import type { Bounds } from '../../model/geometry';
 import type { Symbol } from '../../model/style';
 import { legendOf } from '../../style/legend';
 import type { AppContext } from '../context';
+import { projectCrsName } from '../../model/projectCrs';
 
 /**
  * What the engine needs of the project to draw a sheet (docs/sheet/design.md
@@ -140,9 +141,10 @@ export function renderInputs(ctx: AppContext, book: SheetBook, sheet: Sheet, o: 
   }
   return {
     mode: o.mode,
-    project: { name: doc.name.value, user: ctx.cloud.me.value?.user.displayName ?? '', date: today(), crsName: crs.name },
+    project: { name: doc.name.value, user: ctx.cloud.me.value?.user.displayName ?? '', date: today(), crsName: projectCrsName(doc.settings) },
     capabilities: o.capabilities,
-    crs: crsInfo(crs),
+    // The project's own definition without the registry's transverse Mercator values (docs/adr/0168 §1).
+    crs: doc.settings.customCrs.value ? { name: projectCrsName(doc.settings) } : crsInfo(crs),
     maps: [],
     legends,
     tables,

@@ -3,6 +3,7 @@ import type { AppContext } from '../../app/context';
 import { workspaceName } from '../../app/cloud/session';
 import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontById } from '../../app/appearance';
+import { projectCrsName } from '../../model/projectCrs';
 import { DisposableStore, listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { h, replaceChildren, type Child } from '../dom';
@@ -223,7 +224,7 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
         h(
           'div',
           { class: 'appmenu__chips' },
-          chip('crs', s.crs.value.name),
+          chip('crs', projectCrsName(s)),
           chip(mode.icon, mode.label),
           chip('sheet', `1:${s.plotScale.value.toLocaleString('tr-TR')}`),
           chip('text', drawingFontById(s.drawingFont.value).label),

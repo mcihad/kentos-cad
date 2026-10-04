@@ -3,6 +3,7 @@ import { accentPicker, drawingFontPicker, fontPicker } from './appearancePickers
 import type { AppContext } from '../../app/context';
 import { PREF_KEYS, PREFERENCE_DEFAULTS, type PreferencesData } from '../../app/state';
 import { crsBySrid, crsTitle } from '../../geo/crs';
+import { projectCrsTitle } from '../../model/projectCrs';
 import { settingDescriptor } from '../../core/settings/schema';
 import { h } from '../dom';
 import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
@@ -77,7 +78,6 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek proje türü, çizim birimi, çizim yazı tipi ve koordinat sistemi.',
       keys: ['defaultSrid', 'defaultWorkspace', 'defaultDrawingUnit', 'defaultDrawingFont'],
       render: (api) => {
-        const current = ctx.doc.crs.value;
         const openProject = h('button', { class: 'btn btn--small', type: 'button' }, 'Proje ayarlarını aç');
         openProject.addEventListener('click', () => ctx.commands.execute('file.settings'));
         return [
@@ -109,7 +109,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
           }),
           group(
             'Açık proje',
-            settingRow('Bu projenin sistemi', `${crsTitle(current)}. Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir.`, openProject),
+            settingRow('Bu projenin sistemi', `${projectCrsTitle(ctx.doc.settings)}. Proje ayarlarından değiştirilir ve proje dosyasına kaydedilir.`, openProject),
           ),
         ];
       },

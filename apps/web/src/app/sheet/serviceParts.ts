@@ -3,7 +3,6 @@ import type { Workspace } from '../../contracts/generated/Workspace';
 import type { ProjectTraits } from '../../product/sheet/templates';
 import type { PaintSources } from '../../render/sheet/painter';
 import type { AppContext } from '../context';
-import { isLocal } from '../../geo/crs';
 import { effectiveWorkspace } from '../workspaces';
 import type { TemplateCloudApi } from './cloudApi';
 
@@ -41,7 +40,7 @@ export class ProjectReading {
 
   capabilities(): Capabilities {
     // A local project (no coordinate system, docs/adr/0165 §2) has no place on the earth to show.
-    return { georeferenced: !isLocal(this.ctx.doc.crs.value), attributeLayers: this.hasAttributes(), plotScale: this.ctx.doc.settings.plotScale.value };
+    return { georeferenced: this.ctx.doc.settings.hasSystem, attributeLayers: this.hasAttributes(), plotScale: this.ctx.doc.settings.plotScale.value };
   }
 
   /** The project as the gallery sorts and checks templates for it (no project type yet: tasks-web.md Sapmalar 5). */

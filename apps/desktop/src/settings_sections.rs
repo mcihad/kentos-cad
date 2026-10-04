@@ -464,7 +464,7 @@ impl App {
             .help(Fields::help("newProjects.srid"));
         // The open project keeps its own system: said, with the way to it (the web's).
         if let Some(doc) = &self.document {
-            let name = crate::crs::title_of(doc.settings().srid);
+            let name = crate::crs::project_title(doc.settings());
             form = form
                 .section("Açık proje")
                 .field(

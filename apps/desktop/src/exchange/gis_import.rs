@@ -416,7 +416,7 @@ impl App {
             && s.result.is_some()
             && s.unusable.is_none()
             && !self.gis_included(s).is_empty()
-            && s.crs.matches(self.project_srid())
+            && s.crs.matches(&self.project_system())
     }
 
     fn run_gis_import(&mut self) {
@@ -498,7 +498,7 @@ impl App {
     }
 
     pub(super) fn gis_import_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let srid = self.project_srid();
+        let project = self.project_system();
         let facts = match (&s.result, &s.failed) {
             (Some(r), _) => words::facts(&r.report.source),
             (None, Some(_)) => "okunamadı".to_owned(),
@@ -535,10 +535,9 @@ impl App {
         body = body
             .push(self.gis_layers(s))
             // The system before the report: whether the file can go in at all is decided there.
-            .push(
-                s.crs
-                    .view(srid, &self.number_format(), |srid| event(Event::Crs(srid))),
-            )
+            .push(s.crs.view(&project, &self.number_format(), |srid| {
+                event(Event::Crs(srid))
+            }))
             .push(self.gis_summary(s));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
@@ -672,7 +671,7 @@ impl App {
         } else {
             words::text_line(Line::Warn, "Alınacak nesne yok; en az bir katman seçin.")
         }];
-        if !s.crs.matches(self.project_srid()) {
+        if !s.crs.matches(&self.project_system()) {
             lines.push(words::text_line(
                 Line::Warn,
                 "Koordinatların sistemi projeninki değil: içe aktarma kapalı (yukarıdaki koordinat sistemi notuna bakın).",
