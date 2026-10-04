@@ -10,10 +10,18 @@
 //! With a refraction coefficient k the height difference has the earth's
 //! curvature and refraction too, (1 − k)·D²/2R, as a field book's reduction
 //! has (docs/adr/0169 §3); without one, neither.
+//!
+//! With the project's grid (its system and mean ellipsoidal height,
+//! docs/adr/0171 §4) a measured horizontal length is on the ground: it is
+//! taken to the grid with its line's scale and height factor, which depend
+//! on where the point falls, so in two passes (the point by the length as
+//! measured, the length reduced on that line, the point again; once more).
+//! A set-out length is then given on the ground too.
 
 use super::fieldbook::curvature;
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
 use crate::api::Op;
+use crate::crs::ground::{Grid, GridFactor, grid_factor};
 use crate::jsmath::{cos, sin};
 use crate::op;
 use crate::vec2::Vec2;
@@ -50,6 +58,9 @@ pub struct PolarInput {
     /// The refraction coefficient k of the heights (the project's); none:
     /// no curvature or refraction.
     pub refraction: Option<f64>,
+    /// The project's grid: the lengths are on the ground and are taken to
+    /// it (docs/adr/0171 §4); none: they are the grid's already.
+    pub grid: Option<Grid>,
 }
 
 crate::json_struct!(PolarInput {
@@ -60,7 +71,8 @@ crate::json_struct!(PolarInput {
     station_z => "stationZ",
     instrument_height => "instrumentHeight",
     shots,
-    refraction
+    refraction,
+    grid
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -73,9 +85,36 @@ pub struct PolarPoint {
     pub horizontal: f64,
     /// Height difference station mark → point mark, when the shot has a zenith angle.
     pub dz: Option<f64>,
+    /// With the project's grid: the horizontal length on the grid, and the
+    /// line's scale and height factor that took it there.
+    pub grid: Option<f64>,
+    pub scale: Option<f64>,
+    pub height_factor: Option<f64>,
 }
 
-crate::json_struct!(out PolarPoint { p, z, bearing, horizontal, dz });
+crate::json_struct!(out PolarPoint {
+    p,
+    z,
+    bearing,
+    horizontal,
+    dz,
+    grid,
+    scale,
+    height_factor => "heightFactor"
+});
+
+/// A ground length from `station` along `t` taken to the grid: the point by
+/// the length as measured, the line's factors there, the length reduced and
+/// the point again, twice; the grid length and the last factors.
+fn to_grid(grid: &Grid, station: Vec2, t: f64, ground: f64) -> Result<(f64, GridFactor), String> {
+    let mut length = ground;
+    let mut factor = grid_factor(grid, station, from_bearing(station, t, length))?;
+    for _ in 0..2 {
+        length = ground * factor.combined();
+        factor = grid_factor(grid, station, from_bearing(station, t, length))?;
+    }
+    Ok((ground * factor.combined(), factor))
+}
 
 /// The points of a polar survey.
 pub fn polar_survey(input: &PolarInput) -> Result<Vec<PolarPoint>, String> {
@@ -111,12 +150,20 @@ pub fn polar_survey(input: &PolarInput) -> Result<Vec<PolarPoint>, String> {
             if !(horizontal > 0.0) {
                 return Err(format!("{n}. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."));
             }
+            let reduced = match &input.grid {
+                Some(g) => Some(to_grid(g, input.station, t, horizontal)?),
+                None => None,
+            };
+            let length = reduced.map_or(horizontal, |(l, _)| l);
             Ok(PolarPoint {
-                p: from_bearing(input.station, t, horizontal),
+                p: from_bearing(input.station, t, length),
                 z: dz.zip(input.station_z).map(|(d, h)| h + d),
                 bearing: unit.of(t),
                 horizontal,
                 dz,
+                grid: reduced.map(|(l, _)| l),
+                scale: reduced.map(|(_, f)| f.scale),
+                height_factor: reduced.map(|(_, f)| f.height_factor),
             })
         })
         .collect()
@@ -129,13 +176,17 @@ pub struct StakeoutInput {
     /// The back point the instrument is oriented on, if any.
     pub back: Option<Vec2>,
     pub targets: Vec<Vec2>,
+    /// The project's grid: each length is given on the ground too
+    /// (docs/adr/0171 §4).
+    pub grid: Option<Grid>,
 }
 
 crate::json_struct!(StakeoutInput {
     unit,
     station,
     back,
-    targets
+    targets,
+    grid
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -145,9 +196,21 @@ pub struct Stake {
     pub distance: f64,
     /// Angle to turn clockwise from the back point, in [0, a turn): with the back point read as 0.
     pub angle: Option<f64>,
+    /// With the project's grid: the distance on the ground to set out, and
+    /// the line's scale and height factor.
+    pub ground: Option<f64>,
+    pub scale: Option<f64>,
+    pub height_factor: Option<f64>,
 }
 
-crate::json_struct!(out Stake { bearing, distance, angle });
+crate::json_struct!(out Stake {
+    bearing,
+    distance,
+    angle,
+    ground,
+    scale,
+    height_factor => "heightFactor"
+});
 
 /// Bearings, distances and turning angles from a station to the targets.
 pub fn stakeout(input: &StakeoutInput) -> Result<Vec<Stake>, String> {
@@ -159,18 +222,26 @@ pub fn stakeout(input: &StakeoutInput) -> Result<Vec<Stake>, String> {
         }
         None => None,
     };
-    Ok(input
+    input
         .targets
         .iter()
         .map(|&p| {
             let t = bearing(input.station, p);
-            Stake {
+            let d = distance(input.station, p);
+            let factor = match &input.grid {
+                Some(g) if d > 0.0 => Some(grid_factor(g, input.station, p)?),
+                _ => None,
+            };
+            Ok(Stake {
                 bearing: unit.of(t),
-                distance: distance(input.station, p),
+                distance: d,
                 angle: orient.map(|o| unit.of(positive(t - o))),
-            }
+                ground: factor.map(|f| d / f.combined()),
+                scale: factor.map(|f| f.scale),
+                height_factor: factor.map(|f| f.height_factor),
+            })
         })
-        .collect())
+        .collect()
 }
 
 pub(crate) const POLAR_OP: Op = op!("surveyPolar", |input: PolarInput| polar_survey(&input));

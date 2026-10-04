@@ -10,9 +10,16 @@
 //! parts at every angle. The coordinate misclosure (sum of the increments −
 //! the known difference from start to end) is then taken off every leg in
 //! proportion to its length (the compass rule, "pusula kuralı").
+//!
+//! With the project's grid (its system and mean ellipsoidal height,
+//! docs/adr/0171 §4) the lengths are measured on the ground: the traverse
+//! is computed with them, each leg's scale and height factor are taken on
+//! its provisional line and it is computed again with the lengths on the
+//! grid, twice; the adjustment is the last's.
 
 use super::{Unit, bearing, distinct, finite, positive, signed};
 use crate::api::Op;
+use crate::crs::ground::{Grid, grid_factor};
 use crate::jsmath::{PI, cos, js_hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
@@ -31,6 +38,9 @@ pub struct TraverseInput {
     pub angles: Vec<f64>,
     /// Horizontal lengths of the legs, in order.
     pub distances: Vec<f64>,
+    /// The project's grid: the lengths are on the ground and are taken to
+    /// it (docs/adr/0171 §4); none: they are the grid's already.
+    pub grid: Option<Grid>,
 }
 
 crate::json_struct!(TraverseInput {
@@ -40,7 +50,8 @@ crate::json_struct!(TraverseInput {
     end,
     fore,
     angles,
-    distances
+    distances,
+    grid
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -54,9 +65,24 @@ pub struct TraverseLeg {
     /// Corrections the adjustment added to the increments.
     pub vy: f64,
     pub vx: f64,
+    /// With the project's grid: the length as measured (on the ground) and
+    /// the leg's scale and height factor; `distance` is then the grid's.
+    pub ground: Option<f64>,
+    pub scale: Option<f64>,
+    pub height_factor: Option<f64>,
 }
 
-crate::json_struct!(out TraverseLeg { bearing, distance, dy, dx, vy, vx });
+crate::json_struct!(out TraverseLeg {
+    bearing,
+    distance,
+    dy,
+    dx,
+    vy,
+    vx,
+    ground,
+    scale,
+    height_factor => "heightFactor"
+});
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TraverseResult {
@@ -85,8 +111,46 @@ crate::json_struct!(out TraverseResult {
     length
 });
 
-/// Computes and adjusts a traverse.
+/// Computes and adjusts a traverse; with the project's grid, three times:
+/// on the lengths as measured, then twice on the lengths taken to the grid
+/// with the legs' factors on the previous one's lines (the first's are off
+/// by the reduction itself, a few decimetres in a kilometre; the second's
+/// by micrometres).
 pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
+    let Some(grid) = &input.grid else {
+        return adjusted(input);
+    };
+    let mut result = adjusted(input)?;
+    let mut factors = Vec::new();
+    for _ in 0..2 {
+        let mut at = input.start;
+        factors.clear();
+        for leg in &result.legs {
+            let next = Vec2::new(at.x + leg.dy, at.y + leg.dx);
+            factors.push(grid_factor(grid, at, next)?);
+            at = next;
+        }
+        result = adjusted(&TraverseInput {
+            distances: input
+                .distances
+                .iter()
+                .zip(&factors)
+                .map(|(d, f)| d * f.combined())
+                .collect(),
+            grid: None,
+            ..input.clone()
+        })?;
+    }
+    for ((leg, f), ground) in result.legs.iter_mut().zip(&factors).zip(&input.distances) {
+        leg.ground = Some(*ground);
+        leg.scale = Some(f.scale);
+        leg.height_factor = Some(f.height_factor);
+    }
+    Ok(result)
+}
+
+/// The traverse with the lengths as given.
+fn adjusted(input: &TraverseInput) -> Result<TraverseResult, String> {
     let unit = Unit::parse(&input.unit)?;
     let legs = input.distances.len();
     if legs == 0 {
@@ -175,6 +239,9 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
             dx: dx + vx,
             vy,
             vx,
+            ground: None,
+            scale: None,
+            height_factor: None,
         });
         points.push(at);
     }

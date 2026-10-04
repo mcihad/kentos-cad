@@ -261,6 +261,7 @@ impl Form {
                 fore,
                 angles,
                 distances,
+                grid: None,
             }) {
                 Ok(r) => {
                     result = Some(r);

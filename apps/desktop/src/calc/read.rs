@@ -310,6 +310,7 @@ pub fn read_polar(
         instrument_height,
         shots,
         refraction,
+        grid: None,
     }) {
         Ok(points) => Some(points),
         Err(e) => {
@@ -397,6 +398,7 @@ pub fn read_stakeout(
         station,
         back: back_point,
         targets,
+        grid: None,
     }) {
         Ok(stakes) => out(errors, Some(stakes)),
         Err(e) => {

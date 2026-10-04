@@ -83,6 +83,52 @@ pub struct LineFactors {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Unreachable;
 
+/// The project's system and its mean ellipsoidal height (m): what the survey
+/// windows take measured lengths between the ground and the grid with
+/// (docs/adr/0171 §4).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Grid {
+    pub system: System,
+    pub height: f64,
+}
+
+crate::json_struct!(Grid { system, height });
+
+/// A line's factors from the ground to the grid: the projection's scale
+/// along it and the height's factor; a grid length is a ground length times
+/// both.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GridFactor {
+    pub scale: f64,
+    pub height_factor: f64,
+}
+
+impl GridFactor {
+    /// Ground length × this = grid length.
+    pub fn combined(&self) -> f64 {
+        self.scale * self.height_factor
+    }
+}
+
+/// Why a system takes no lengths to its grid.
+pub const NO_SCALE: &str = "Projenin sisteminde uzunluklar projeksiyona indirilemez: bu sistemde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem).";
+
+/// Why a line's factors could not be had.
+pub const BEYOND: &str = "Projenin sistemi bu çizgiye ulaşmıyor; uzunluk projeksiyona indirilemez.";
+
+/// The factors of the line from `a` to `b` on the grid (docs/adr/0171 §3).
+pub fn grid_factor(grid: &Grid, a: Vec2, b: Vec2) -> Result<GridFactor, String> {
+    let f = line_factors(&grid.system, a, b, Some(grid.height)).map_err(|_| BEYOND.to_owned())?;
+    match (f.scale, f.height_factor) {
+        (Some(scale), Some(height_factor)) => Ok(GridFactor {
+            scale,
+            height_factor,
+        }),
+        (None, _) => Err(NO_SCALE.to_owned()),
+        (_, None) => Err(BEYOND.to_owned()),
+    }
+}
+
 /// The ellipsoid's semi-major axis and flattening.
 fn ellipsoid(system: &System) -> (f64, f64) {
     let (a, inverse_flattening) = system.datum().ellipsoid();

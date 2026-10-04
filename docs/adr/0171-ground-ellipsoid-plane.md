@@ -69,6 +69,16 @@ Proje ayarları › Ölçme'de “Uzunlukları projeksiyona indir” (`reduceToG
 düzlemdeki uzunluğu zemine çevirerek verir; pencereler ve raporları çarpanları yazar. Ortalama yükseklik yoksa ayar açılamaz,
 nedeni söylenir. Kapalıyken bugünkü sonuçlar değişmez.
 
+Hesap çekirdekte, iki geçişle: hedefin yeri uzunluğa, uzunluğun çarpanı hedefin yerine bağlıdır. Kutupsal alımda nokta önce
+ölçülen uzunlukla bulunur, istasyondan ona çizginin çarpanları (§3) alınır, uzunluk indirilir ve nokta yeniden bulunur; bir
+geçiş daha yapılır (ikinci geçiş 1 km'lik uzunluğu dilim kenarında bir mikrometre kadar değiştirir, üçüncüsü ölçülemez). Poligon hesabında bütün
+poligon önce ölçülen uzunluklarla hesaplanır, her kenarın çarpanları geçici noktalarından alınır, uzunluklar indirilir ve poligon
+yeniden hesaplanır; bir kez daha (ilk geçişin noktaları indirgemenin kendisi kadar, kilometrede birkaç desimetre kayıktır;
+dengeleme son geçişte, indirilmiş uzunluklarla). Yönler düzlemdedir (bakılan bilinen noktaların doğrultusu); doğrultuya
+yay-kiriş düzeltmesi yapılmaz (1 km'lik kenarda, dilim kenarında 1″'den küçük). Aplikasyon'da her hedef için düzlemdeki uzunluğun
+yanında zemindeki verilir: düzlem ÷ (ölçek × yükseklik çarpanı). Çekirdeğin çağrılarına isteğe bağlı `grid` (projenin sistemi ve
+ortalama yükseklik) eklenir; yoksa sonuçlar bugünküdür, bit bit.
+
 ### 4a. Mesafe ölç ve Alan hesapla
 
 Projenin sistemi ve ortalama elipsoit yüksekliği varken Mesafe ölç'ün toplamından ve Alan hesapla'nın sonucundan (İçine
@@ -112,7 +122,11 @@ GeographicLib'in köşe çokgeniyle onun yuvarlama payı içinde uyuşur.
    `ground_cases.py` (`fixtures/geodesy/v1/ground.json`), dondurulmuş yanıtlar `ground-answers.json`.
 2. Mesafe ölç ve Alan hesapla'nın satırları iki platformda (§4a); `groundHeight` proje ayarı ve Ölçme'deki alanı; `.kcad` şema 16
    (`groundHeight`, `reduceToGrid`).
-3. Hesap pencereleri: `reduceToGrid`, Kutupsal alım, Poligon hesabı, Aplikasyon.
+3. Hesap pencereleri: `reduceToGrid`, Kutupsal alım, Poligon hesabı, Aplikasyon. 3a çekirdek: `crs::ground::Grid` ve
+   `grid_factor`, `survey::polar` (`PolarInput.grid`, `PolarPoint.grid`, `scale`, `heightFactor`; Aplikasyon'un `ground`'u),
+   `survey::traverse` (`TraverseInput.grid`, kenarın `ground`'u ve çarpanları); bağımsız başvuru `ground_survey_cases.py`
+   (`fixtures/geodesy/v1/ground-survey.json`: bilinen düzlem noktaları, PROJ ve GeographicLib'in çarpanlarıyla zemin uzunlukları).
+   3b: ayar ve pencereler iki platformda.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

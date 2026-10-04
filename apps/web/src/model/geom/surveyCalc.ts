@@ -1,6 +1,7 @@
 import type { Vec2 } from '../geometry';
 import type { AngleUnit } from '../projectSettings';
 import { op } from '../../wasm/core';
+import type { System } from './crsTransform';
 
 /**
  * Surveying computations of the Hesap menu (poligon, kutupsal alım,
@@ -12,6 +13,15 @@ import { op } from '../../wasm/core';
  * a value the core has not (no closure, no height) is left out, not null.
  */
 
+/**
+ * The project's system and mean ellipsoidal height (m): with it the survey windows take measured lengths from the ground
+ * to the grid, and give set-out lengths on the ground (docs/adr/0171 §4).
+ */
+export interface Grid {
+  system: System;
+  height: number;
+}
+
 export interface TraverseInput {
   unit: AngleUnit;
   start: Vec2;
@@ -21,15 +31,22 @@ export interface TraverseInput {
   /** At the start, at every new point with a leg after it and, with a fore point, at the end. */
   angles: number[];
   distances: number[];
+  /** The project's grid: the lengths are on the ground and are taken to it (docs/adr/0171 §4). */
+  grid?: Grid | null;
 }
 
 export interface TraverseLeg {
   bearing: number;
+  /** On the grid (with the project's grid, the measured length taken to it). */
   distance: number;
   dy: number;
   dx: number;
   vy: number;
   vx: number;
+  /** With the project's grid: the length as measured, the leg's scale and height factor. */
+  ground?: number;
+  scale?: number;
+  heightFactor?: number;
 }
 
 export interface TraverseResult {
@@ -66,6 +83,8 @@ export interface PolarInput {
   shots: Shot[];
   /** The refraction coefficient k of the heights (the project's, docs/adr/0169 §3); null: no curvature or refraction. */
   refraction?: number | null;
+  /** The project's grid: the lengths are on the ground and are taken to it (docs/adr/0171 §4). */
+  grid?: Grid | null;
 }
 
 export interface PolarPoint {
@@ -74,6 +93,10 @@ export interface PolarPoint {
   bearing: number;
   horizontal: number;
   dz?: number;
+  /** With the project's grid: the horizontal length on the grid, the line's scale and height factor. */
+  grid?: number;
+  scale?: number;
+  heightFactor?: number;
 }
 
 /** Kutupsal alım: points from direction readings on a station oriented on a back point. */
@@ -84,10 +107,15 @@ export interface Stake {
   distance: number;
   /** Clockwise from the back point (read as 0), when there is one. */
   angle?: number;
+  /** With the project's grid: the distance on the ground to set out, the line's scale and height factor. */
+  ground?: number;
+  scale?: number;
+  heightFactor?: number;
 }
 
-/** Aplikasyon: bearing, distance and turning angle from a station to each target. */
-export const surveyStakeout = op<(input: { unit: AngleUnit; station: Vec2; back: Vec2 | null; targets: Vec2[] }) => Stake[]>('surveyStakeout');
+/** Aplikasyon: bearing, distance and turning angle from a station to each target; with the grid, the ground distance too. */
+export const surveyStakeout =
+  op<(input: { unit: AngleUnit; station: Vec2; back: Vec2 | null; targets: Vec2[]; grid?: Grid | null }) => Stake[]>('surveyStakeout');
 
 /** Önden kestirme: α at A clockwise from B to P, β at B clockwise from P to A (P right of A → B). */
 export const surveyForward = op<(unit: AngleUnit, a: Vec2, b: Vec2, alpha: number, beta: number) => Vec2>('surveyForward');

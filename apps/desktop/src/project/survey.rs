@@ -293,6 +293,7 @@ mod tests {
                     target_height: Some(1.7),
                 }],
                 refraction,
+                grid: None,
             })
             .expect("the core computes")
         };

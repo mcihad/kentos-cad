@@ -320,3 +320,152 @@ fn the_answers_are_frozen_for_every_target() {
         );
     }
 }
+
+/// The survey windows with the project's grid (docs/adr/0171 §4) against
+/// `fixtures/geodesy/v1/ground-survey.json` (`scripts/fixtures/
+/// ground_survey_cases.py`: known points on the grid, their ground lengths
+/// from PROJ's and GeographicLib's factors): Kutupsal alım places the points
+/// where they are, Aplikasyon gives their ground distances, Poligon hesabı
+/// gives its points back with no misclosure; lengths within 1e-6 m, factors
+/// within 1e-10.
+mod survey {
+    use super::*;
+    use kentos_geometry_core::survey::polar::{PolarInput, StakeoutInput, polar_survey, stakeout};
+    use kentos_geometry_core::survey::traverse::{TraverseInput, traverse};
+
+    fn file() -> Value {
+        let path = format!(
+            "{}/../../../fixtures/geodesy/v1/ground-survey.json",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let file: Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("fixture file"))
+                .expect("fixture JSON");
+        assert_eq!(file["format"], "kentos.ground-survey");
+        file
+    }
+
+    fn parse<T: FromJson>(v: &Value) -> T {
+        T::from_json(&Json::parse(&v.to_string()).expect("JSON")).expect("an input")
+    }
+
+    fn near(got: f64, want: &Value, tolerance: f64, what: &str) {
+        let want = num(want);
+        assert!((got - want).abs() <= tolerance, "{what}: {got} ≠ {want}");
+    }
+
+    #[test]
+    fn kutupsal_alim_places_the_points_where_they_are() {
+        for case in file()["polar"].as_array().expect("cases") {
+            let name = case["name"].as_str().expect("name");
+            let input: PolarInput = parse(&case["input"]);
+            let points = polar_survey(&input).unwrap_or_else(|e| panic!("{name}: {e}"));
+            for (i, (p, want)) in points
+                .iter()
+                .zip(case["expect"].as_array().expect("expect"))
+                .enumerate()
+            {
+                let what = format!("{name} {}", i + 1);
+                near(p.p.x, &want["p"][0], 1e-6, &what);
+                near(p.p.y, &want["p"][1], 1e-6, &what);
+                near(p.grid.expect("a grid length"), &want["grid"], 1e-6, &what);
+                near(p.scale.expect("a scale"), &want["scale"], 1e-10, &what);
+                near(
+                    p.height_factor.expect("a factor"),
+                    &want["heightFactor"],
+                    1e-10,
+                    &what,
+                );
+            }
+            // Through the call table too, as the web calls it.
+            let op: Value = serde_json::from_str(
+                &run_named("surveyPolar", &json!([case["input"]]).to_string())
+                    .expect("the op runs"),
+            )
+            .expect("op JSON");
+            assert_eq!(op[0]["grid"].as_f64(), points[0].grid, "{name}: the op");
+        }
+    }
+
+    #[test]
+    fn aplikasyon_gives_the_ground_distances() {
+        for case in file()["stakeout"].as_array().expect("cases") {
+            let name = case["name"].as_str().expect("name");
+            let input: StakeoutInput = parse(&case["input"]);
+            let stakes = stakeout(&input).unwrap_or_else(|e| panic!("{name}: {e}"));
+            for (i, (s, want)) in stakes
+                .iter()
+                .zip(case["expect"].as_array().expect("expect"))
+                .enumerate()
+            {
+                let what = format!("{name} {}", i + 1);
+                near(s.distance, &want["distance"], 1e-6, &what);
+                near(
+                    s.ground.expect("a ground distance"),
+                    &want["ground"],
+                    1e-6,
+                    &what,
+                );
+                near(s.scale.expect("a scale"), &want["scale"], 1e-10, &what);
+                near(
+                    s.height_factor.expect("a factor"),
+                    &want["heightFactor"],
+                    1e-10,
+                    &what,
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn poligon_hesabi_gives_its_points_back() {
+        for case in file()["traverse"].as_array().expect("cases") {
+            let name = case["name"].as_str().expect("name");
+            let input: TraverseInput = parse(&case["input"]);
+            let r = traverse(&input).unwrap_or_else(|e| panic!("{name}: {e}"));
+            let want = &case["expect"];
+            for (i, (p, w)) in r
+                .points
+                .iter()
+                .zip(want["points"].as_array().expect("points"))
+                .enumerate()
+            {
+                let what = format!("{name} P{}", i + 1);
+                near(p.x, &w["x"], 1e-6, &what);
+                near(p.y, &w["y"], 1e-6, &what);
+            }
+            let closure = r.linear_misclosure.expect("a misclosure");
+            assert!(closure <= 1e-6, "{name}: misclosure {closure}");
+            for (i, (leg, w)) in r
+                .legs
+                .iter()
+                .zip(want["legs"].as_array().expect("legs"))
+                .enumerate()
+            {
+                let what = format!("{name} kenar {}", i + 1);
+                near(leg.distance, &w["distance"], 1e-6, &what);
+                near(leg.scale.expect("a scale"), &w["scale"], 1e-10, &what);
+                near(
+                    leg.height_factor.expect("a factor"),
+                    &w["heightFactor"],
+                    1e-10,
+                    &what,
+                );
+                assert!(leg.ground.is_some(), "{what}: the measured length");
+            }
+        }
+    }
+
+    #[test]
+    fn without_the_grid_the_lengths_are_the_grids_already() {
+        // The same inputs without a grid: the ground lengths placed as they are.
+        let case = &file()["polar"][0];
+        let mut input: PolarInput = parse(&case["input"]);
+        input.grid = None;
+        let points = polar_survey(&input).expect("computes");
+        assert!(points.iter().all(|p| p.grid.is_none() && p.scale.is_none()));
+        let first = &case["expect"][0];
+        // 1.00005 off at the zone's edge at 850 m: some 2 cm on 361 m.
+        assert!((points[0].p.x - num(&first["p"][0])).abs() > 1e-3);
+    }
+}

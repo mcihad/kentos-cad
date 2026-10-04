@@ -85,6 +85,7 @@ fn a_connected_traverse_gives_back_its_points() {
             fore: Some(fore),
             angles,
             distances,
+            grid: None,
         })
         .unwrap();
         assert_eq!(r.points.len(), pts.len() - 2);
@@ -117,6 +118,7 @@ fn misclosures_are_the_errors_put_in() {
         fore: Some(fore),
         angles,
         distances,
+        grid: None,
     };
     let r = traverse(&input(angles.clone(), distances.clone())).unwrap();
     assert!((r.angle_misclosure.unwrap() - 0.003).abs() < 1e-9, "{r:?}");
@@ -165,6 +167,7 @@ fn closed_and_open_traverses() {
         fore: Some(back),
         angles,
         distances,
+        grid: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 3);
@@ -182,6 +185,7 @@ fn closed_and_open_traverses() {
         fore: None,
         angles,
         distances,
+        grid: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 3);
@@ -197,6 +201,7 @@ fn closed_and_open_traverses() {
         fore: None,
         angles: angles[..3].to_vec(),
         distances,
+        grid: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 2);
@@ -214,6 +219,7 @@ fn traverse_input_is_checked() {
             fore,
             angles,
             distances,
+            grid: None,
         })
     };
     assert!(
@@ -249,7 +255,8 @@ fn traverse_input_is_checked() {
             end: None,
             fore: None,
             angles: vec![1.0],
-            distances: vec![1.0]
+            distances: vec![1.0],
+            grid: None,
         })
         .unwrap_err()
         .contains("birimi")
@@ -263,7 +270,8 @@ fn traverse_input_is_checked() {
             end: None,
             fore: None,
             angles: vec![1.0],
-            distances: vec![1.0]
+            distances: vec![1.0],
+            grid: None,
         })
         .unwrap_err(),
         "Başlangıç noktası ile başlangıçta bakılan nokta aynı yerde; doğrultu tanımsız."
@@ -298,6 +306,7 @@ fn polar_survey_and_stakeout_are_inverse() {
             station,
             back: Some(back),
             targets: targets.clone(),
+            grid: None,
         })
         .unwrap();
         // Readings: the instrument's zero lies anywhere; the back point reads `zero`.
@@ -337,6 +346,7 @@ fn polar_survey_and_stakeout_are_inverse() {
             instrument_height: Some(ih),
             shots: shots.clone(),
             refraction: None,
+            grid: None,
         })
         .unwrap();
         for (k, (got, want)) in pts.iter().zip(&targets).enumerate() {
@@ -365,6 +375,7 @@ fn polar_survey_and_stakeout_are_inverse() {
         station: TM,
         back: None,
         targets: vec![Vec2::new(TM.x + 10.0, TM.y)],
+        grid: None,
     })
     .unwrap();
     assert!(
