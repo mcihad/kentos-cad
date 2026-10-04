@@ -1,0 +1,180 @@
+{
+  "format": "kentos.field-gsi",
+  "version": 1,
+  "source": "scripts/fixtures/field_gsi_cases.py (docs/adr/0169 §1; Leica GSI ONLINE, 2003)",
+  "texts": {
+    "word": "Satır {line}: “{word}” GSI sözcüğü değil; satır okunmadı.",
+    "unit": "Satır {line}: WI {wi} sözcüğünün birimi ({unit}) okunmuyor; yalnız metre, gon ve derece; satır okunmadı.",
+    "value": "Satır {line}: WI {wi} sözcüğünün değeri “{data}” okunamadı; satır okunmadı.",
+    "turn": "Satır {line}: WI {wi} sözcüğünün açısı “{data}” bir tam dönüşten büyük; satır okunmadı.",
+    "target": "Satır {line}: ölçünün nokta numarası (WI 11) yok; satır okunmadı.",
+    "horizontal": "Satır {line}: {target} noktasının eğik uzunluğu yok (yalnız WI 32 yatay uzunluk); nokta doğrultu olarak okundu."
+  },
+  "cases": [
+    {
+      "name": "GSI-8, istasyon ve iki durum (gon, mm)",
+      "text": "110001+00000ST1 84..10+12345678 85..10+45678901 86..10+00105200 88..10+00001552\n110002+000000P2 21.322+00000120 22.322+09987650 31..00+00245678 87..10+00001700\n110003+00000101 21.322+08743210 22.322+10123450 31..00+00063214 71....+0000BINA\n110004+00000101 21.322+28743370 22.322+29876710 31..00+00063216\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "ST1",
+            "instrumentHeight": 1.552,
+            "east": 12345.678,
+            "north": 45678.901,
+            "height": 105.2,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 0.0012,
+                "zenith": 99.8765,
+                "slope": 245.678,
+                "targetHeight": 1.7,
+                "line": 2
+              },
+              {
+                "target": "101",
+                "hz": 87.4321,
+                "zenith": 101.2345,
+                "slope": 63.214,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 3
+              },
+              {
+                "target": "101",
+                "hz": 287.4337,
+                "zenith": 298.7671,
+                "slope": 63.216,
+                "targetHeight": 1.7,
+                "line": 4
+              }
+            ]
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "GSI-16, karışık birimler (derece, DMS ve gon; 1/100 mm ve 1/10 mm)",
+      "text": "*110001+00000000000000S1 88..18+0000000000160000\r\n*110002+000000000000000A 21.024+0000000004512340 22.024+0000000008930000 31..08+0000000051234567 87..18+0000000000200000\r\n*110003+000000000000000B 21.023+0000000004512345 22.023+0000000008950000 31..06+0000000005123456\r\n*110004+000000000000000C 21.022+0000000005000000 22.022+0000000010000000\r\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "S1",
+            "instrumentHeight": 1.6,
+            "observations": [
+              {
+                "target": "A",
+                "hz": 45.20944444444444,
+                "zenith": 89.5,
+                "slope": 512.34567,
+                "targetHeight": 2.0,
+                "line": 2
+              },
+              {
+                "target": "B",
+                "hz": 45.12345,
+                "zenith": 89.5,
+                "slope": 512.3456,
+                "targetHeight": 2.0,
+                "line": 3
+              },
+              {
+                "target": "C",
+                "hz": 45.0,
+                "zenith": 90.0,
+                "targetHeight": 2.0,
+                "line": 4
+              }
+            ]
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "ayak birimi",
+      "text": "110001+00000ST1 88..11+00005000\n",
+      "expect": {
+        "unit": null,
+        "stations": [],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: WI 88 sözcüğünün birimi (1) okunmuyor; yalnız metre, gon ve derece; satır okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "bozuk sözcük, numarasız ölçü, mil, yalnız yatay uzunluk, kod bloğu, tam dönüşten büyük açı, eksi değerler",
+      "text": "110001+000000P1 21.322+00000000 22.324\n21.322+00000000 22.322+10000000\n110003+000000P3 21.325+00001000\n110004+000000P4 21.322+00002000 22.322+10000000 32..00+00012345\n410005+00000013 42....+000TREES\n110006+000000P6 21.324+01275000\n110007+000000P7 21.322+50000000\n110008+000000P8 22.324+36100000\n160009+000000S9 86..10-00001000 88..10+00001500\n110010+00000P10 21.322-00500000 22.322+10000000 31..00+00010000\n110011+00000P11 21.322+0012345A\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "",
+            "observations": [
+              {
+                "target": "P4",
+                "hz": 0.02,
+                "zenith": 100.0,
+                "line": 4
+              }
+            ]
+          },
+          {
+            "station": "S9",
+            "instrumentHeight": 1.5,
+            "height": -1.0,
+            "observations": [
+              {
+                "target": "P10",
+                "hz": -5.0,
+                "zenith": 100.0,
+                "slope": 10.0,
+                "line": 10
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: “22.324” GSI sözcüğü değil; satır okunmadı."
+          },
+          {
+            "line": 2,
+            "problem": "Satır 2: ölçünün nokta numarası (WI 11) yok; satır okunmadı."
+          },
+          {
+            "line": 3,
+            "problem": "Satır 3: WI 21 sözcüğünün birimi (5) okunmuyor; yalnız metre, gon ve derece; satır okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: P4 noktasının eğik uzunluğu yok (yalnız WI 32 yatay uzunluk); nokta doğrultu olarak okundu."
+          },
+          {
+            "line": 6,
+            "problem": "Satır 6: WI 21 sözcüğünün değeri “01275000” okunamadı; satır okunmadı."
+          },
+          {
+            "line": 7,
+            "problem": "Satır 7: WI 21 sözcüğünün açısı “50000000” bir tam dönüşten büyük; satır okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: WI 22 sözcüğünün açısı “36100000” bir tam dönüşten büyük; satır okunmadı."
+          },
+          {
+            "line": 11,
+            "problem": "Satır 11: WI 21 sözcüğünün değeri “0012345A” okunamadı; satır okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -59,6 +59,20 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
 
    *(4 Ekim: tamam.)* İndirgeme çekirdekte `survey::fieldbook::reduce` (web'e `fieldReduce`, `model/geom/surveyCalc.ts`): yüzler başucu açısından (yarım turdan küçük I, büyük II; 0, yarım ve tam tur gözlem değildir, söylenir), aynı hedefin ilk eşlenmemiş I. ve II. durumu sırayla çift olur; çiftte II. durum okuması yarım tur döndürülür, fark (−yarım, yarım] aralığına sarılır, ortalama I − fark/2; indeks hatası (I + II − tam tur)/2, ortalama başucu I − indeks; eğik uzunluk ikisinin ortalaması (farkıyla), prizma yüksekliği I. durumunki; tek II. durum I'e çevrilir; başucu açısı olmayan gözlem yalnız doğrultudur (geri bakış), çift olmaz, uzunluğa çevrilmez; yatay uzunluk S·sin Z, kot farkı S·cos Z + (1 − k)·D²/2R + alet − prizma, R = 6 371 000 m. Bağımsız başvuru `scripts/fixtures/field_reduce_cases.py` (`fixtures/field/v1/reduce.json`, 10 durum, mpmath 50 basamak; açı 1e-11, metre 1e-9). Okuyucu `kentos_formats::field::read_csv` (web'e biçim işçisiyle `readFieldCsv`, sözleşmeler `FieldCsvOptions`, `FieldBookRead`, `FieldStation`, `FieldObservation`; `FORMATS_VERSION` 19): kodlama koordinat listesindeki gibi sezilir; ayırıcı ilk satırın en sık sekme, noktalı virgül ya da virgülü; sayılar Hesap pencerelerinin okuyuşuyla (ayırıcı virgül değilse ilk virgül nokta); istasyon sütunu yeni istasyonu başlatır, prizma yüksekliği boşsa istasyonun sonuncusu; bozuk alet yüksekliği satırı, gözlemin bozuk değeri yalnız noktayı dışarıda bırakır, yatay açısız nokta okunmaz, hepsi satırıyla söylenir. Bağımsız başvuru `scripts/fixtures/field_csv_cases.py` (`fixtures/field/v1/csv.json`, 5 durum: noktalı virgül ve virgüllü ondalık, virgül, sekme, istasyonsuz, bozuk değerler). İki platform aynı dosyaları geçer (`geometry-core/tests/field_reduce.rs`, `formats/tests/field_csv.rs`; web `wasm/fieldReduce.wasm.test.ts`, `io/formats.wasm.test.ts`).
 2. Leica GSI-8 ve GSI-16 okuyucusu; başvuru ve örnek dosyalar.
+
+   *(4 Ekim: tamam.)* Okuyucu `kentos_formats::field::gsi::read` (web'e biçim işçisiyle `readFieldGsi`; `FieldBookRead`'in `unit`'i
+   karnenin açı birimi, ilk açınınki; `FieldStation`'ın `east`, `north`, `height`'ı istasyonun koordinatları; `FORMATS_VERSION` 20).
+   Her dolu satır bir bloktur, `*` ile başlayan GSI-16; sözcüğün ilk iki karakteri numarası, altıncısı birimi, yedincisi işareti,
+   kalanı değeridir; sekiz karakterden kısa ya da işaretsiz sözcük bloğu okutmaz. Açılar 2 (gon) ve 3 (ondalık derece) beş ondalıkla,
+   4 derece, dakika, saniye ve saniyenin onda biri; karnenin birimi ilk açınınki, başka birimdeki açı ona çevrilir; tam dönüşten büyük
+   açı, mil ve ayak okunmaz, söylenir. Uzunluklar 0 (mm), 6 (0,1 mm) ve 8 (0,01 mm). Her değer tam ondalık ya da altmışlık değerinin
+   en yakın float64'üdür (bir kez yuvarlanır). WI 21'li blok gözlemdir: nokta WI 11 (yoksa okunmaz), başucu 22, eğik uzunluk 31,
+   prizma yüksekliği 87 (yoksa istasyonun sonuncusu), kod 71; eğik uzunluk yok da WI 32 varsa söylenir, gözlem doğrultudur. WI 21'siz,
+   84–86 ya da 88'li blok istasyondur (adı WI 16, yoksa 11); kod ve ayar blokları geçilir; istasyondan önceki gözlem adsız ilk
+   istasyonundur. Bağımsız başvuru `scripts/fixtures/field_gsi_cases.py` (`fixtures/field/v1/gsi.json`, Leica'nın “GSI ONLINE for Leica
+   TPS and DNA” belgesinden; 4 durum: GSI-8 istasyon ve iki durum, gon ve mm; GSI-16 derece, DMS ve gon karışık, 1/100 ve 1/10 mm, CR LF;
+   ayak; bozuk sözcük, numarasız gözlem, mil, yalnız yatay uzunluk, kod bloğu, tam dönüşten büyük açı, eksi değerler). İki platform aynı
+   dosyayı geçer (`formats/tests/field_gsi.rs`; web `io/formats.wasm.test.ts`).
 3. Karne editörü iki platformda; Kutupsal alım'a aktarma; proje ayarları (k, toleranslar).
 4. Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar).
 5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.

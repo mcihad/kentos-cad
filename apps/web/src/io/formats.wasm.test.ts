@@ -22,6 +22,7 @@ interface Formats {
   readCoords(bytes: Uint8Array, options: string): Uint8Array;
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
   readFieldCsv(bytes: Uint8Array, options: string): Uint8Array;
+  readFieldGsi(bytes: Uint8Array): Uint8Array;
 }
 
 const glue = import.meta.glob<Formats>('./pkg/kentos_formats_wasm.js');
@@ -116,6 +117,20 @@ describe.skipIf(!loader)('formats WASM module', () => {
     expect(file.cases.length).toBeGreaterThanOrEqual(5);
     for (const c of file.cases) {
       const got = JSON.parse(new TextDecoder().decode(w.readFieldCsv(new TextEncoder().encode(c.text), JSON.stringify({ ...c.mapping, header: c.header })))) as FieldBookRead;
+      expect(got.stations, c.name).toEqual(c.expect.stations);
+      expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+    }
+  });
+
+  it('reads Leica GSI-8 and GSI-16 field books as the reference does (fixtures/field/v1/gsi.json, docs/adr/0169 §1)', async () => {
+    const w = await load();
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/gsi.json', import.meta.url)))) as {
+      cases: { name: string; text: string; expect: { unit: string | null; stations: FieldStation[]; problems: { line: number; problem: string }[] } }[];
+    };
+    expect(file.cases.length).toBeGreaterThanOrEqual(4);
+    for (const c of file.cases) {
+      const got = JSON.parse(new TextDecoder().decode(w.readFieldGsi(new TextEncoder().encode(c.text)))) as FieldBookRead;
+      expect(got.unit ?? null, c.name).toBe(c.expect.unit);
       expect(got.stations, c.name).toEqual(c.expect.stations);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
     }

@@ -89,6 +89,12 @@ export class FormatsClient {
     return json<FieldBookRead>(await this.request({ op: 'readFieldCsv', bytes: copy, options }, [copy]));
   }
 
+  /** Reads a Leica GSI-8 or GSI-16 field book (docs/adr/0169 §1); the caller keeps `bytes`. */
+  async readFieldGsi(bytes: Uint8Array): Promise<FieldBookRead> {
+    const copy = bytes.slice().buffer;
+    return json<FieldBookRead>(await this.request({ op: 'readFieldGsi', bytes: copy }, [copy]));
+  }
+
   /**
    * Reads a DXF file (the DXF module, loaded the first time one is read). A
    * large file is not copied: when `bytes` spans its whole buffer, the buffer

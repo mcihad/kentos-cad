@@ -1,4 +1,5 @@
-//! Field books (docs/adr/0169 §1–§2): a plain CSV or TXT field book whose
+//! Field books (docs/adr/0169 §1–§2): an instrument's own file ([`gsi`]),
+//! or a plain CSV or TXT field book whose
 //! columns the user maps (istasyon, alet yüksekliği, nokta, yatay açı,
 //! başucu açısı, eğik uzunluk, prizma yüksekliği, kod), read into stations
 //! and observations as the instrument wrote them; every line that is not
@@ -9,6 +10,8 @@
 use kentos_contracts::{FieldBookRead, FieldCsvOptions, FieldObservation, FieldStation, LineError};
 
 use crate::text;
+
+pub mod gsi;
 
 /// What is said of a line not read; `{line}`, `{what}`, `{text}` and `{target}` are filled in.
 pub const ROW: &str = "Satır {line}: {what} “{text}” sayı değil; satır okunmadı.";
@@ -80,6 +83,7 @@ pub fn read_csv(bytes: &[u8], opts: &FieldCsvOptions) -> FieldBookRead {
     });
     let mut read = FieldBookRead {
         encoding: enc.label().to_owned(),
+        unit: None,
         first_line: Vec::new(),
         stations: Vec::new(),
         problems: Vec::new(),
@@ -141,6 +145,9 @@ pub fn read_csv(bytes: &[u8], opts: &FieldCsvOptions) -> FieldBookRead {
             read.stations.push(FieldStation {
                 station: name.to_owned(),
                 instrument_height: None,
+                east: None,
+                north: None,
+                height: None,
                 observations: Vec::new(),
             });
             current = Some(read.stations.len() - 1);

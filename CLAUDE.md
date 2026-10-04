@@ -216,6 +216,7 @@ cargo test -p kentos-desktop project::choices::tests::screens -- --ignored --noc
 python3 scripts/fixtures/crs_definition_form_cases.py --check   # Özel koordinat sistemi penceresinin form kurallarını (ad, TM'nin sayıları, projenin datumu, yerel sistemin tabanı ve düzlemi, kayıttakiyle aynı tanım) kurallardan denetle; durumlar fixtures/crs/v1/definition-form.json (ADR 0168 §9 4b)
 python3 scripts/fixtures/field_reduce_cases.py --check   # karne indirgemesini (iki durum, indeks hatası, sıfırdan geçen okuma, tek II. durum, başucusuz doğrultu, yatay uzunluk, kot farkı ve k) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/field/v1/reduce.json (ADR 0169 §3)
 python3 scripts/fixtures/field_csv_cases.py --check   # CSV/TXT karne okuyucusunu (ayırıcı, virgüllü ondalık, istasyonlar, prizma yüksekliğinin taşınması, bozuk değerler) kurallardan denetle; durumlar fixtures/field/v1/csv.json (ADR 0169 §1)
+python3 scripts/fixtures/field_gsi_cases.py --check   # Leica GSI-8 ve GSI-16 okuyucusunu (sözcükler, birim haneleri, DMS, karışık birimler, istasyon koordinatları, bozuk sözcük, mil, ayak, tam dönüşten büyük açı) Leica'nın belgesinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gsi.json (ADR 0169 §1)
 python3 scripts/fixtures/crs_definition_fit_cases.py --check   # Ortak noktalardan hesapla'nın düzlemini (benzerlik ve afin, artıklar, m0, atlanan satırlar, çözümsüzlükler) Vektör oturtma'nın kesir başvurusu ve mpmath'le denetle; durumlar fixtures/crs/v1/definition-fit.json (ADR 0168 §9 4d)
 python3 scripts/fixtures/crs_definition_text_cases.py --check   # Özel koordinat sistemi'nin WKT ve PROJ okumasını (tanım, Kayıttakini seç, ızgara notu, redlerin nedenleri) PROJ'un okuduğu sistemlerden ve kurallardan denetle; durumlar fixtures/crs/v1/definition-text.json (ADR 0168 §9 4c)
 cargo test -p kentos-desktop project::custom_crs::tests::screens -- --ignored --nocapture   # Özel koordinat sistemi penceresinin ve Proje ayarları'nda tanımın resimleri, .run/shots/ozel-crs-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs definitions))
@@ -727,8 +728,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   noktalardan hesapla: `fit_plane`, `fitPlane`, ortak durumlar `definition-fit.json`; Hesap pencerelerinin tablosuyla) tamam; `HYB-12` bitti.
   Sıradaki `HYB-13` saha verisi ([ADR 0169](docs/adr/0169-field-data.md); sahibin kararları 4 Ekim: dört total station biçimi, GPX ve
   NMEA, toleranslar proje ayarı ve değerlerini sahip verir, k = 0,13, alete okunan biçimlerle): 1. adım (çekirdek indirgeme
-  `survey::fieldbook`, CSV karne `formats::field`, iki platformda; başvurular `field_reduce_cases.py`, `field_csv_cases.py`) tamam;
-  sıradaki 2. adım Leica GSI. Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  `survey::fieldbook`, CSV karne `formats::field`, iki platformda; başvurular `field_reduce_cases.py`, `field_csv_cases.py`) ve 2. adım
+  (Leica GSI-8 ve GSI-16, `formats::field::gsi`; başvuru `field_gsi_cases.py`) tamam; sıradaki 3. adım Karne editörü, Kutupsal alım'a
+  aktarma ve proje ayarları (k, toleranslar). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

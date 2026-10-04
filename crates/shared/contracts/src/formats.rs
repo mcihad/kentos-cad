@@ -50,7 +50,8 @@ use crate::layer::LineType;
 /// 18: the new dimensions (docs/adr/0147): `.kcad` document schema 9, five more dimension styles
 ///    in the typed columns' numbering and the dimension's mask (a flag), `za` and `zb` (floats).
 /// 19: the field book (docs/adr/0169): `readFieldCsv`, `FieldCsvOptions` → `FieldBookRead`.
-pub const FORMATS_VERSION: u32 = 19;
+/// 20: Leica GSI (`readFieldGsi`); the book's angle unit, a station's coordinates.
+pub const FORMATS_VERSION: u32 = 20;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -354,7 +355,8 @@ pub struct FieldObservation {
 }
 
 /// A station of the field book: its name (empty when the file names none),
-/// the instrument's height above it, its observations in order.
+/// the instrument's height above it, its coordinates when the file gives
+/// them (east, north, height; Leica GSI's WI 84–86), its observations in order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -365,11 +367,22 @@ pub struct FieldStation {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub instrument_height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub east: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub north: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height: Option<f64>,
     pub observations: Vec<FieldObservation>,
 }
 
-/// A field book read: the text's encoding, the first line's cells (the
-/// columns' names to map), its stations, and the lines not read with why.
+/// A field book read: the text's encoding, the book's angle unit when the
+/// file says it (`grad`, `deg`; a CSV book's is the user's), the first
+/// line's cells (the columns' names to map), its stations, and the lines not
+/// read with why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -377,6 +390,9 @@ pub struct FieldStation {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldBookRead {
     pub encoding: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
     pub first_line: Vec<String>,
     pub stations: Vec<FieldStation>,
     pub problems: Vec<LineError>,

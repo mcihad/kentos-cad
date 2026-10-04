@@ -69,6 +69,12 @@ pub fn read_field_csv(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::field::read_csv(bytes, &opts))
 }
 
+/// Reads a Leica GSI-8 or GSI-16 field book: the result `FieldBookRead` (JSON bytes; docs/adr/0169 §1).
+#[wasm_bindgen(js_name = readFieldGsi)]
+pub fn read_field_gsi(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+    to_json(&kentos_formats::field::gsi::read(bytes))
+}
+
 /// Writes a coordinate list from `CoordWriteInput` (JSON).
 #[wasm_bindgen(js_name = writeCoords)]
 pub fn write_coords(input: &str) -> Result<Written, JsError> {

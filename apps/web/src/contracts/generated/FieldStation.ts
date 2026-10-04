@@ -3,6 +3,7 @@ import type { FieldObservation } from "./FieldObservation";
 
 /**
  * A station of the field book: its name (empty when the file names none),
- * the instrument's height above it, its observations in order.
+ * the instrument's height above it, its coordinates when the file gives
+ * them (east, north, height; Leica GSI's WI 84–86), its observations in order.
  */
-export type FieldStation = { station: string, instrumentHeight?: number, observations: Array<FieldObservation>, };
+export type FieldStation = { station: string, instrumentHeight?: number, east?: number, north?: number, height?: number, observations: Array<FieldObservation>, };
