@@ -111,6 +111,35 @@ impl System {
             inverse_flattening,
         })
     }
+
+    /// The system as the transforms read it (docs/adr/0167 §3; the web's
+    /// `systemOf`); none for the local one and an unknown datum.
+    pub fn transform_system(&self) -> Option<kentos_geometry_core::crs::System> {
+        use kentos_geometry_core::crs::{Datum, System as Of};
+        if self.projection.as_deref() == Some("Pseudo-Mercator") {
+            return Some(Of::Mercator {});
+        }
+        let datum = match self.datum.as_str() {
+            "TUREF" => Datum::Turef,
+            "ED50" => Datum::Ed50,
+            "WGS84" => Datum::Wgs84,
+            _ => return None,
+        };
+        match self.kind.as_str() {
+            "geographic" => Some(Of::Geographic { datum }),
+            "projected" => {
+                let tm = self.tm()?;
+                Some(Of::Tm {
+                    datum,
+                    central_meridian: tm.central_meridian,
+                    scale_factor: tm.scale_factor,
+                    false_easting: tm.false_easting,
+                    false_northing: tm.false_northing,
+                })
+            }
+            _ => None,
+        }
+    }
 }
 
 /// An ellipsoid of the registry: semi-major axis (m) and inverse flattening
@@ -165,6 +194,30 @@ pub fn turef_zone_for(lon: f64) -> Option<&'static System> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Every system of the transform reference is the registry's entry as
+    /// the transforms read it (fixtures/geodesy/v1/transform.json; the web
+    /// checks its `systemOf` against the same).
+    #[test]
+    fn the_registry_gives_the_references_systems() {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        let file: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/geodesy/v1/transform.json"
+        ))
+        .expect("the reference reads");
+        for case in file["transform"].as_array().expect("cases") {
+            for (srid, json) in [("fromSrid", "from"), ("toSrid", "to")] {
+                let srid = case[srid].as_u64().expect("an SRID") as u32;
+                let want = kentos_geometry_core::crs::System::from_json(
+                    &Json::parse(&case[json].to_string()).expect("JSON"),
+                )
+                .expect("a system");
+                let got = system(srid).and_then(System::transform_system);
+                assert_eq!(got, Some(want), "{srid}");
+            }
+        }
+        assert_eq!(system(0).and_then(System::transform_system), None);
+    }
 
     /// The registry's own cases (`zoneSuggestions`, written by the web from its `turefZoneFor`).
     #[test]

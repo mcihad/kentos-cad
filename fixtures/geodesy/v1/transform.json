@@ -1,0 +1,1596 @@
+{
+ "format": "kentos.crs-transform",
+ "version": 1,
+ "proj": "9.7.1",
+ "transform": [
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "p": [
+    414057.50597542897,
+    4541986.710810093
+   ],
+   "expect": {
+    "point": [
+     414091.86492339394,
+     4542172.86224105
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, TM30'un doğu kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "p": [
+    629022.9747331319,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     629058.2619694634,
+     4375273.463014942
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, TM30'un batı kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "p": [
+    370977.0252668686,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     371010.85405958834,
+     4375273.838710265
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "p": [
+    563578.1100176874,
+    4085306.889067485
+   ],
+   "expect": {
+    "point": [
+     563612.6712553278,
+     4085490.146263877
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "ED50 / TM30 → TUREF / TM30, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 2320,
+   "toSrid": 5254,
+   "p": [
+    414091.86492339394,
+    4542172.86224105
+   ],
+   "expect": {
+    "point": [
+     414057.50629025704,
+     4541986.711476431
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "ED50 / TM30 → TUREF / TM30, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 2320,
+   "toSrid": 5254,
+   "p": [
+    563612.6712553278,
+    4085490.146263877
+   ],
+   "expect": {
+    "point": [
+     563578.1103431871,
+     4085306.8899266105
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "p": [
+    414057.50597542897,
+    4541986.710810093
+   ],
+   "expect": {
+    "point": [
+     28.9784,
+     41.008199999999995
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84, TM30'un doğu kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "p": [
+    629022.9747331319,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     31.5,
+     39.499999999999986
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84, TM30'un batı kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "p": [
+    370977.0252668686,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     28.500000000000004,
+     39.499999999999986
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "p": [
+    563578.1100176874,
+    4085306.889067485
+   ],
+   "expect": {
+    "point": [
+     30.7133,
+     36.8969
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84 → TUREF / TM30, Van",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "p": [
+    43.3729,
+    38.5012
+   ],
+   "expect": {
+    "point": [
+     1668877.2370758718,
+     4348924.625941922
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84 → TUREF / TM30, Ankara",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "expect": {
+    "point": [
+     744455.9528009866,
+     4426051.867710871
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "p": [
+    414057.50597542897,
+    4541986.710810093
+   ],
+   "expect": {
+    "point": [
+     28.9784,
+     41.008199999999995
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, TM30'un doğu kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "p": [
+    629022.9747331319,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     31.5,
+     39.499999999999986
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, TM30'un batı kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "p": [
+    370977.0252668686,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     28.500000000000004,
+     39.499999999999986
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "p": [
+    563578.1100176874,
+    4085306.889067485
+   ],
+   "expect": {
+    "point": [
+     30.7133,
+     36.8969
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF → TUREF / TM30, Ankara",
+   "from": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5252,
+   "toSrid": 5254,
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "expect": {
+    "point": [
+     744455.9528009866,
+     4426051.867710871
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF → TUREF / TM30, Hakkari",
+   "from": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5252,
+   "toSrid": 5254,
+   "p": [
+    43.7408,
+    37.5744
+   ],
+   "expect": {
+    "point": [
+     1716769.9384895037,
+     4250212.571136213
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "ED50 / TM30 → WGS 84, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 2320,
+   "toSrid": 4326,
+   "p": [
+    414091.86492339394,
+    4542172.86224105
+   ],
+   "expect": {
+    "point": [
+     28.978395660515236,
+     41.00819733908995
+    ],
+    "accuracy": 2.0,
+    "via": "EPSG:1784"
+   }
+  },
+  {
+   "name": "ED50 / TM30 → WGS 84, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 2320,
+   "toSrid": 4326,
+   "p": [
+    563612.6712553278,
+    4085490.146263877
+   ],
+   "expect": {
+    "point": [
+     30.713295785321417,
+     36.89689737759962
+    ],
+    "accuracy": 2.0,
+    "via": "EPSG:1784"
+   }
+  },
+  {
+   "name": "WGS 84 → ED50 / TM30, Van",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 2320,
+   "p": [
+    43.3729,
+    38.5012
+   ],
+   "expect": {
+    "point": [
+     1668918.4864576035,
+     4349110.0763133
+    ],
+    "accuracy": 2.0,
+    "via": "EPSG:1784"
+   }
+  },
+  {
+   "name": "WGS 84 → ED50 / TM30, Ankara",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 2320,
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "expect": {
+    "point": [
+     744492.295948434,
+     4426237.273749718
+    ],
+    "accuracy": 2.0,
+    "via": "EPSG:1784"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "p": [
+    414057.50597542897,
+    4541986.710810093
+   ],
+   "expect": {
+    "point": [
+     666370.5050168498,
+     4541552.487190695
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, TM30'un doğu kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "p": [
+    629022.9747331319,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     886982.1106789756,
+     4381941.813414399
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, TM30'un batı kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "p": [
+    370977.0252668686,
+    4375088.525763892
+   ],
+   "expect": {
+    "point": [
+     628971.3655423815,
+     4373338.4904667465
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, Antalya",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "p": [
+    563578.1100176874,
+    4085306.889067485
+   ],
+   "expect": {
+    "point": [
+     830905.5609005142,
+     4089878.2061077734
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84 / UTM 36N → TUREF / TM30, Ankara",
+   "from": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 32636,
+   "toSrid": 5254,
+   "p": [
+    488012.40529644216,
+    4420374.733892243
+   ],
+   "expect": {
+    "point": [
+     744455.9528009866,
+     4426051.86771087
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84 / UTM 36N → TUREF / TM30, UTM 36'nın batı kenarı",
+   "from": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 32636,
+   "toSrid": 5254,
+   "p": [
+    236578.6239628854,
+    4210063.033966323
+   ],
+   "expect": {
+    "point": [
+     500000.0,
+     4207498.019043475
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "ED50 / UTM 36N → TUREF / TM36, Ankara",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 23036,
+   "toSrid": 5256,
+   "p": [
+    488040.41218527214,
+    4420558.613881631
+   ],
+   "expect": {
+    "point": [
+     231553.42200297973,
+     4426858.92927453
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / UTM 36N, Ankara",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 23036,
+   "p": [
+    231553.4217273632,
+    4426858.9286117945
+   ],
+   "expect": {
+    "point": [
+     488040.41218527214,
+     4420558.613881631
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / UTM 36N, Sinop",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 23036,
+   "p": [
+    429858.802750713,
+    4654549.713628821
+   ],
+   "expect": {
+    "point": [
+     678283.7888677012,
+     4654768.461703301
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF / TM39 → TUREF / TM36, Van",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 39,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5257,
+   "toSrid": 5256,
+   "p": [
+    881537.8139664644,
+    4272205.620560741
+   ],
+   "expect": {
+    "point": [
+     1143548.1100264974,
+     4288988.59695972
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF / TM27 → TUREF / TM30, Edirne",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 27,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5253,
+   "toSrid": 5254,
+   "p": [
+    463556.07780618535,
+    4616386.913339908
+   ],
+   "expect": {
+    "point": [
+     213749.29026971024,
+     4622008.560255172
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "TUREF / TM27 → TUREF / TM30, İstanbul",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 27,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5253,
+   "toSrid": 5254,
+   "p": [
+    666437.0798499669,
+    4543369.835009467
+   ],
+   "expect": {
+    "point": [
+     414057.5059754289,
+     4541986.710810093
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "WGS 84 → WGS 84 / Pseudo-Mercator, Van",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 4326,
+   "toSrid": 3857,
+   "p": [
+    43.3729,
+    38.5012
+   ],
+   "expect": {
+    "point": [
+     4828249.142227575,
+     4650472.528164195
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "WGS 84 → WGS 84 / Pseudo-Mercator, Ankara",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 4326,
+   "toSrid": 3857,
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "expect": {
+    "point": [
+     3657925.071619731,
+     4856268.863595545
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  },
+  {
+   "name": "WGS 84 / Pseudo-Mercator → TUREF / TM30, İstanbul",
+   "from": {
+    "kind": "mercator"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 3857,
+   "toSrid": 5254,
+   "p": [
+    3225860.7320037987,
+    5013551.237222597
+   ],
+   "expect": {
+    "point": [
+     414057.5059754284,
+     4541986.710810093
+    ],
+    "accuracy": 1.0,
+    "via": "EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF → ED50 / TM30, Ankara",
+   "from": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5252,
+   "toSrid": 2320,
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "expect": {
+    "point": [
+     744491.9261311566,
+     4426236.977184632
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "TUREF → ED50 / TM30, Hakkari",
+   "from": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5252,
+   "toSrid": 2320,
+   "p": [
+    43.7408,
+    37.5744
+   ],
+   "expect": {
+    "point": [
+     1716811.2480375592,
+     4250397.294436996
+    ],
+    "accuracy": 2.1,
+    "via": "EPSG:1783 + EPSG:5260"
+   }
+  },
+  {
+   "name": "WGS 84 / UTM 37N → WGS 84, Van",
+   "from": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 39,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 32637,
+   "toSrid": 4326,
+   "p": [
+    881385.1988384465,
+    4270496.7384241335
+   ],
+   "expect": {
+    "point": [
+     43.3729,
+     38.50119999999998
+    ],
+    "accuracy": 0.0,
+    "via": ""
+   }
+  }
+ ],
+ "parse": [
+  {
+   "text": "40 45 12.3456",
+   "expect": 40.75342933333334
+  },
+  {
+   "text": "40°45'12.3456\"",
+   "expect": 40.75342933333334
+  },
+  {
+   "text": "40°45′12.3456″K",
+   "expect": 40.75342933333334
+  },
+  {
+   "text": "40.7534293",
+   "expect": 40.7534293
+  },
+  {
+   "text": "-29.5",
+   "expect": -29.5
+  },
+  {
+   "text": "29.5 B",
+   "expect": -29.5
+  },
+  {
+   "text": "29.5W",
+   "expect": -29.5
+  },
+  {
+   "text": "40 45.5",
+   "expect": 40.75833333333333
+  },
+  {
+   "text": "40 60",
+   "expect": null
+  },
+  {
+   "text": "40.5 30",
+   "expect": null
+  },
+  {
+   "text": "",
+   "expect": null
+  },
+  {
+   "text": "abc",
+   "expect": null
+  },
+  {
+   "text": "40 45 12 3",
+   "expect": null
+  },
+  {
+   "text": "+36",
+   "expect": 36.0
+  },
+  {
+   "text": "36 00 00.05 D",
+   "expect": 36.00001388888889
+  },
+  {
+   "text": "4o 45",
+   "expect": null
+  },
+  {
+   "text": "40 45 60",
+   "expect": null
+  },
+  {
+   "text": ".5",
+   "expect": null
+  },
+  {
+   "text": "5.",
+   "expect": null
+  }
+ ],
+ "formatting": [
+  {
+   "deg": 40.7534293,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "40°45′12.35″K"
+  },
+  {
+   "deg": 40.7534293,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "40°45′12.3455″K"
+  },
+  {
+   "deg": 40.7534293,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "40.7534293°K"
+  },
+  {
+   "deg": 40.7534293,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "40°45′12.35″D"
+  },
+  {
+   "deg": 40.7534293,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "40°45′12.3455″D"
+  },
+  {
+   "deg": 40.7534293,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "40.7534293°D"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "30°00′00.00″K"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "30°00′00.0000″K"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "30.0000000°K"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "30°00′00.00″D"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "30°00′00.0000″D"
+  },
+  {
+   "deg": 29.99999999,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "30.0000000°D"
+  },
+  {
+   "deg": -0.5,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "0°30′00.00″G"
+  },
+  {
+   "deg": -0.5,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "0°30′00.0000″G"
+  },
+  {
+   "deg": -0.5,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "0.5000000°G"
+  },
+  {
+   "deg": -0.5,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "0°30′00.00″B"
+  },
+  {
+   "deg": -0.5,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "0°30′00.0000″B"
+  },
+  {
+   "deg": -0.5,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "0.5000000°B"
+  },
+  {
+   "deg": 0.0,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "0°00′00.00″K"
+  },
+  {
+   "deg": 0.0,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "0°00′00.0000″K"
+  },
+  {
+   "deg": 0.0,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "0.0000000°K"
+  },
+  {
+   "deg": 0.0,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "0°00′00.00″D"
+  },
+  {
+   "deg": 0.0,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "0°00′00.0000″D"
+  },
+  {
+   "deg": 0.0,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "0.0000000°D"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "36°00′00.05″K"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "36°00′00.0500″K"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "36.0000139°K"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "36°00′00.05″D"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "36°00′00.0500″D"
+  },
+  {
+   "deg": 36.0000138889,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "36.0000139°D"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "43°22′22.44″K"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "43°22′22.4400″K"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "43.3729000°K"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "43°22′22.44″D"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "43°22′22.4400″D"
+  },
+  {
+   "deg": 43.37290001,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "43.3729000°D"
+  },
+  {
+   "deg": -29.5,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "29°30′00.00″G"
+  },
+  {
+   "deg": -29.5,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "29°30′00.0000″G"
+  },
+  {
+   "deg": -29.5,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "29.5000000°G"
+  },
+  {
+   "deg": -29.5,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "29°30′00.00″B"
+  },
+  {
+   "deg": -29.5,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "29°30′00.0000″B"
+  },
+  {
+   "deg": -29.5,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "29.5000000°B"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": true,
+   "decimals": 2,
+   "dms": "90°00′00.00″K"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": true,
+   "decimals": 4,
+   "dms": "89°59′59.9996″K"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": true,
+   "decimals": 7,
+   "dd": "89.9999999°K"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": false,
+   "decimals": 2,
+   "dms": "90°00′00.00″D"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": false,
+   "decimals": 4,
+   "dms": "89°59′59.9996″D"
+  },
+  {
+   "deg": 89.9999999,
+   "latitude": false,
+   "decimals": 7,
+   "dd": "89.9999999°D"
+  }
+ ]
+}

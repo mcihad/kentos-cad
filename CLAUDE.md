@@ -204,6 +204,7 @@ python3 scripts/fixtures/lock_cases.py --check   # Sayısallaştırma kilitlerin
 python3 scripts/fixtures/snap_cases.py --check   # Kenet eklerinin kurallarını (ağırlık merkezi, karelaj, uzantı, paralel, öncelikler, katmanın türleri, çizilmekte olan yol) kesin kesirlerle bağımsız başvurudan denetle (ADR 0163)
 cargo test --release -p kentos-geometry-core --test adjoin -- --ignored --nocapture   # Bitişik alan'ın bir görünüm parselindeki süresi, önizleme bütçesi için (ADR 0162 §5)
 python3 scripts/fixtures/trace_cases.py --check   # İzle'nin yollarını (kesişimden dönme, düz geçme, iki yoldan kısası, eşit yollar, yaylar, delik ve parça, ortak kenar, daire) ve Zincir'i 50 basamaklı bağımsız başvurudan denetle (ADR 0161)
+python3 scripts/fixtures/crs_transform_cases.py --check   # koordinat dönüşümlerini (TM, UTM, coğrafi, Pseudo-Mercator; ED50, TUREF ve WGS 84 arası EPSG yolları) ve DMS yazılışını PROJ'la (pyproj) denetle; durumlar fixtures/geodesy/v1/transform.json (ADR 0167)
 python3 scripts/fixtures/tm_cases.py --check   # ileri TM izdüşümünün durumlarını (TUREF ve ED50 TM3, UTM; dilim kenarları) PROJ'un tmerc'iyle denetle; durumlar fixtures/geodesy/v1 (ADR 0165 §3)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
@@ -681,7 +682,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (Uzunluk, Açı ve Sapma iki platformda: oturumun kilitleri, değer kartında Tab ve `<açı`, çipler, kılavuzlar, Kilit ▸, `draft.lock.*`;
   ortak iz `locks.json`) ve 3a (Nesneye paralel ve dik: `edge_direction`, kenar bekleyişi, `draft.lock.parallel` ve `.perpendicular`; ortak iz
   `lock-edges.json`), 3b (Dik açı `drafting.rightAngle`, Dik kapat (D); ortak iz `right-angle.json`) ve 4. adım (Referans noktası, Yapım
-  kipi; ortak iz `lock-reference.json`) tamam; `HYB-10` bitti. Sıradaki `HYB-11` (ikinci koordinat sistemi). 3 Ekim:
+  kipi; ortak iz `lock-reference.json`) tamam; `HYB-10` bitti. `HYB-11` ikinci koordinat sistemi ve dönüştürücü
+  ([ADR 0167](docs/adr/0167-second-crs-and-converter.md)): 1. adım (çekirdek `crs::transform`, geri TM, DMS; PROJ başvurusu
+  `crs_transform_cases.py`) tamam; sıradaki 2. adım (proje ayarı `secondSrid`, `.kcad` şema 12, durum çubuğu, Koordinat oku). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

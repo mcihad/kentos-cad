@@ -87,6 +87,70 @@ pub fn tm_forward(p: &Tm, lat: f64, lon: f64) -> Option<Vec2> {
     (east.is_finite() && north.is_finite()).then(|| Vec2::new(east, north))
 }
 
+/// The latitude and longitude (degrees) of the grid point `east`, `north`:
+/// Karney (2011) inverse, the Krüger series to the sixth order in n (eqs. 36
+/// and 19–21: the conformal latitude's tangent solved by Newton), as PROJ's
+/// `tmerc`. None for parameters that make no projection or a point outside
+/// the grid's reach.
+pub fn tm_inverse(p: &Tm, east: f64, north: f64) -> Option<(f64, f64)> {
+    if !(p.semi_major > 0.0
+        && p.inverse_flattening > 1.0
+        && p.scale_factor > 0.0
+        && east.is_finite()
+        && north.is_finite())
+    {
+        return None;
+    }
+    let f = 1.0 / p.inverse_flattening;
+    let e2 = f * (2.0 - f);
+    let e = libm::sqrt(e2);
+    let n = f / (2.0 - f);
+    let (n2, n3) = (n * n, n * n * n);
+    let (n4, n5, n6) = (n2 * n2, n2 * n3, n3 * n3);
+    let a_big = p.semi_major / (1.0 + n) * (1.0 + n2 / 4.0 + n4 / 64.0 + n6 / 256.0);
+    let beta = [
+        n / 2.0 - 2.0 * n2 / 3.0 + 37.0 * n3 / 96.0 - n4 / 360.0 - 81.0 * n5 / 512.0
+            + 96199.0 * n6 / 604_800.0,
+        n2 / 48.0 + n3 / 15.0 - 437.0 * n4 / 1440.0 + 46.0 * n5 / 105.0
+            - 1_118_711.0 * n6 / 3_870_720.0,
+        17.0 * n3 / 480.0 - 37.0 * n4 / 840.0 - 209.0 * n5 / 4480.0 + 5569.0 * n6 / 90720.0,
+        4397.0 * n4 / 161_280.0 - 11.0 * n5 / 504.0 - 830_251.0 * n6 / 7_257_600.0,
+        4583.0 * n5 / 161_280.0 - 108_847.0 * n6 / 3_991_680.0,
+        20_648_693.0 * n6 / 638_668_800.0,
+    ];
+    let k0a = p.scale_factor * a_big;
+    let xi = (north - p.false_northing) / k0a;
+    let eta = (east - p.false_easting) / k0a;
+    let (mut xi_p, mut eta_p) = (xi, eta);
+    for (j, b) in beta.iter().enumerate() {
+        let k = 2.0 * (j as f64 + 1.0);
+        xi_p -= b * libm::sin(k * xi) * libm::cosh(k * eta);
+        eta_p -= b * libm::cos(k * xi) * libm::sinh(k * eta);
+    }
+    let sh = libm::sinh(eta_p);
+    let c = libm::cos(xi_p);
+    let r = libm::sqrt(sh * sh + c * c);
+    let tau_p = libm::sin(xi_p) / r;
+    let lambda = libm::atan2(sh, c);
+    // τ from τ′ (Karney eqs. 19–21): Newton from τ′ itself; a few steps reach the double's last bit.
+    let mut tau = tau_p;
+    for _ in 0..8 {
+        let tau1 = libm::sqrt(1.0 + tau * tau);
+        let sigma = libm::sinh(e * libm::atanh(e * tau / tau1));
+        let tau_i = tau * libm::sqrt(1.0 + sigma * sigma) - sigma * tau1;
+        let d = (tau_p - tau_i) / libm::sqrt(1.0 + tau_i * tau_i) * (1.0 + (1.0 - e2) * tau * tau)
+            / ((1.0 - e2) * tau1);
+        tau += d;
+        if !(d.abs() >= 1e-15 * libm::fmax(1.0, tau.abs())) {
+            break;
+        }
+    }
+    let deg = 180.0 / PI;
+    let lat = libm::atan(tau) * deg;
+    let lon = p.central_meridian + lambda * deg;
+    (lat.is_finite() && lon.is_finite()).then_some((lat, lon))
+}
+
 pub(crate) static OPS: &[Op] = &[crate::op!("tmForward", |p: Tm, lat: f64, lon: f64| {
     tm_forward(&p, lat, lon)
 })];
