@@ -61,7 +61,8 @@ pub enum CommandOutcome {
     Catalog(ProjectCatalogChange),
     Duplicated(ProjectDuplicated),
     Purged(ProjectPurged),
-    Created(ProjectInfo),
+    /// A new project (boxed: its settings make it the largest answer by far).
+    Created(Box<ProjectInfo>),
     /// A file project's new revision (docs/adr/0031).
     FileCommitted(FileCommitted),
     /// A checkpoint made or removed (docs/adr/0034).
@@ -239,5 +240,5 @@ pub async fn run_in_tenant(
     idempotency::check_key(&envelope)?;
     projects::create(db, access, create, Some(&envelope.idempotency_key))
         .await
-        .map(CommandOutcome::Created)
+        .map(|info| CommandOutcome::Created(Box::new(info)))
 }
