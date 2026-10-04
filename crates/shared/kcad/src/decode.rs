@@ -366,16 +366,12 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "secondCustomCrs" if has.custom_crs => {
                 second_custom_crs = Some(crs::crs_definition(r)?)
             }
-            "datumTransforms" if has.custom_crs => {
-                datum_transforms = crs::datum_transforms(r)?
-            }
+            "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
                 let second = r.uint(u64::from(u32::MAX))? as u32;
-                if second == 0
-                    || (srid == Some(0) && custom_crs.is_none())
-                    || srid == Some(second)
+                if second == 0 || (srid == Some(0) && custom_crs.is_none()) || srid == Some(second)
                 {
                     return Err(r.fail_at(
                         Code::BadValue,
