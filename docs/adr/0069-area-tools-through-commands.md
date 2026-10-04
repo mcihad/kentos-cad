@@ -73,6 +73,6 @@
 ## Doğrulama
 
 - `cargo test -p kentos-native-application`: 337 ortak durum masaüstü işleyicilerinde.
-- `crates/native/interaction/tests/area.rs`: alan araçlarının iletileri, adımları ve seçimleri komutlarla da aynı.
+- `crates/native/interaction/tests/all/area.rs`: alan araçlarının iletileri, adımları ve seçimleri komutlarla da aynı.
 - İzler (`areas`, `measure-parcel`, `polyline-arc`, `grips`) iki platformda üç varyantta.
 - `pnpm rust:test`, `pnpm rust:test:desktop`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm e2e`, `pnpm e2e:interaction`, `pnpm inventory:check`.

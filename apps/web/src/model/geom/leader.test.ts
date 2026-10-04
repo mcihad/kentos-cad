@@ -7,7 +7,7 @@ import { leaderLayout } from './leader';
 /**
  * A leader's layout (docs/adr/0146 §2) through WASM against the shared cases (fixtures/leader/v1/layout.json,
  * written from the rule alone by scripts/fixtures/leader_cases.py); natively
- * crates/shared/geometry-core/tests/leader.rs.
+ * crates/shared/geometry-core/tests/all/leader.rs.
  */
 
 interface Case {

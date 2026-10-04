@@ -5,7 +5,7 @@ import { at, toolHarness } from './toolHarness';
 
 /**
  * Yazı's options (docs/adr/0145 §6): Hiza from its menu or its name typed together, Genişlik, Zemin and Artır, kept
- * for the next texts and written with them. The desktop's are crates/native/interaction/tests/text.rs. Expected
+ * for the next texts and written with them. The desktop's are crates/native/interaction/tests/all/text.rs. Expected
  * values are worked out by hand. The tool's options are its static fields, so this file runs them in order from the
  * defaults.
  */

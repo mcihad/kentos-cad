@@ -7,7 +7,7 @@ import { crsTransformIn, type DatumChoice, type System } from '../model/geom/crs
  * scripts/fixtures/ntv2_cases.py: grids written without KentOS code, PROJ's `hgridshift` on them), through the WASM core
  * the app calls: what each grid says, the refused files' reasons, points shifted between ED50 and TUREF latitude and
  * longitude by the project's grid choice (within 1e-11 degrees), the transforms between transverse Mercator grids
- * (within 1e-6 m). The core runs the same file natively (crates/shared/geometry-core/tests/crs_ntv2.rs).
+ * (within 1e-6 m). The core runs the same file natively (crates/shared/geometry-core/tests/all/crs_ntv2.rs).
  */
 const fs = (
   globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc?: 'utf8'): string & Uint8Array } } }

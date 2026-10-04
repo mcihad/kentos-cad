@@ -10,7 +10,7 @@ import { at, canvasLog, pt, toolHarness } from './toolHarness';
 /**
  * Nokta (docs/adr/0152 §2–§4): Ad, Kod and Kot kept for the session, the name moving on by Artır, the question where a
  * point already is, Ctrl+Z giving the name back, and `#ad` giving a named point's place to the running tool. The cases
- * are worked out by hand from the ADR's rules; the desktop walks the same in crates/native/interaction/tests/survey_points.rs
+ * are worked out by hand from the ADR's rules; the desktop walks the same in crates/native/interaction/tests/all/survey_points.rs
  * and both play fixtures/interaction/v1/survey-points.json.
  */
 

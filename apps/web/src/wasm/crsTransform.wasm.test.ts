@@ -7,7 +7,7 @@ import { crsTransform, formatDd, formatDms, parseAngle, systemOf, type System } 
  * scripts/fixtures/crs_transform_cases.py from pyproj and the EPSG operations by name, not KentOS code; docs/adr/0167),
  * through the WASM core the app calls: grid points within 1e-6 m, latitudes and longitudes within 1e-11°, accuracy and
  * operations exactly; degrees, minutes and seconds written and read as the reference gives them. The core runs the same
- * file natively (crates/shared/geometry-core/tests/crs.rs).
+ * file natively (crates/shared/geometry-core/tests/all/crs.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

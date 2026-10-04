@@ -91,7 +91,7 @@ Masaüstünde `crates/native/interaction/src/standard_layer.rs` ile `kentos_proj
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/measure.rs` (6 test; değerler elle hesaplandı):
+- `crates/native/interaction/tests/all/measure.rs` (6 test; değerler elle hesaplandı):
   - Mesafe ölç'ün toplamı ve etiketi;
   - Alan hesapla'nın alanı, çevresi ve az köşe uyarısı;
   - Parsel'in katmanı, numarası, öznitelikleri, seçimi ve adımı;

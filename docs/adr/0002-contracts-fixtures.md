@@ -41,7 +41,7 @@ Tarayıcı, WASM, API ve saklanan dosyalar aynı veriyi konuşacak. Tipler iki d
 - Bağımsız referanslar (ADR 0004, §23.4): `fixtures/geometry/v1/reference.json` ve `fixtures/numeric/v1/*`. KentOS kodu olmadan, Python kesin aritmetiğiyle üretildi. Eski TypeScript sonucuna eşitlik tek doğruluk ölçütü değildir.
 - Aynı dosyayı okuyanlar:
   - TypeScript: `apps/web/src/model/geom/golden.test.ts`;
-  - yerel Rust: `crates/shared/geometry-core/tests/golden.rs`;
+  - yerel Rust: `crates/shared/geometry-core/tests/all/golden.rs`;
   - WASM: `apps/web/src/wasm/golden.wasm.test.ts`, `pnpm test:rust` ile. Bağımsız referanslar da (`reference.json`) aynı sınırlarla WASM'da sınanır.
 - **Tolerans:** `|gerçek − beklenen| ≤ 1e-9 + 1e-14·max(|gerçek|, |beklenen|)`. Sınır CRS türüne göre yazılır (§14): dosya koordinatlarının metre cinsinden bir projeksiyon düzleminde olduğunu `crs` alanında söyler; iki okuyucu da bunu denetler. Coğrafi (derece) koordinat ve jeodezik hesap ayrı dosya ve ayrı sınırla gelir.
   - Formüller ve işlem sırası iki dilde aynı olduğu için toplama ve çarpma aynı sonucu verir.
@@ -63,7 +63,7 @@ Tarayıcı, WASM, API ve saklanan dosyalar aynı veriyi konuşacak. Tipler iki d
 
 - `fixtures/crs/v1/registry.json`, `apps/web/src/geo/crs.ts`'ten üretilir (`apps/web/scripts/fixtures/record-crs.test.ts`, `GOLDEN_WRITE=1`). Kaynak TypeScript kaydı kalır (§5).
 - `apps/web/src/geo/crs.test.ts`, dosya kayıttan ayrılınca kırılır.
-- `crates/shared/contracts/tests/crs.rs` dosyayı bağımsız olarak EPSG değerlerine göre denetler: SRID ile dilim eşlemesi, elipsoit, ölçek katsayısı, başlangıç ötelemesi. TUREF dilim önerisini de aynı kuralla (en yakın orta meridyen, sınırda batı dilimi) yeniden hesaplar.
+- `crates/shared/contracts/tests/all/crs.rs` dosyayı bağımsız olarak EPSG değerlerine göre denetler: SRID ile dilim eşlemesi, elipsoit, ölçek katsayısı, başlangıç ötelemesi. TUREF dilim önerisini de aynı kuralla (en yakın orta meridyen, sınırda batı dilimi) yeniden hesaplar.
 - Dönüşüm (datum, dilim) Faz B/C'de PROJ/PostGIS ile, sabitlenmiş grid verisiyle gelir. O zaman bu dosyaya dönüşüm referans noktaları eklenir.
 
 ## Sonuçlar

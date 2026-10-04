@@ -262,6 +262,7 @@ node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da de
 cargo test -p kentos-render-wgpu --test styled_precision   # stilli çizimin uzak karolarda hassasiyeti, gölgelendiricinin float32 adımlarıyla (ADR 0157)
 (cd apps/web && node scripts/e2e/shots.mjs vectorfit --renderer webgpu)   # sahneler web'in WebGPU'suyla (SwiftShader); resimlerin adı -webgpu ile biter
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
+nice -n 10 bash scripts/perf/rebuild-times.sh [rust|wasm|all]   # gerçek bir düzenlemeden sonra yeniden derleme süreleri: test ikilileri, masaüstü, WASM'ın iki profili (ADR 0170)
 pnpm perf:interaction    # etkileşim ölçümleri
 pnpm perf:kcad           # KCAD v2 kaydet/aç ölçümü, tarayıcıda (ADR 0030; docs/perf)
 cargo test --release -p kentos-desktop perf::kcad -- --ignored --nocapture --test-threads=1   # aynı ölçüm masaüstünde
@@ -285,7 +286,12 @@ pnpm api                 # kentosd serve; varsayılan 127.0.0.1:8787
 pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
 ```
 
-- Rust araç zinciri sabittir; `.cargo/config.toml` derlemeyi 4 işle sınırlar.
+- Rust araç zinciri sabittir; `.cargo/config.toml` derlemeyi 4 işle sınırlar. Geliştirme ve test derlemeleri
+  yalnız satır tablolarıyla (bağımlılıklar hata ayıklama bilgisiz) derlenir; bir crate'in entegrasyon testleri tek
+  ikilidir (`tests/all/main.rs`, her dosya bir modül; `--test` ile ayrı çalıştırılanlar `tests/`'te kendi
+  dosyalarında); yeni test dosyası `tests/all/`'a modül olarak eklenir. WASM paketleri geliştirme sunucusunda,
+  testlerde ve e2e'de `wasm-dev` profiliyle, `pnpm build` ve perf betiklerinde gönderilen `wasm` profiliyle
+  derlenir (ADR 0170).
   `wasm-bindgen-cli` sürümü workspace bağımlılığıyla aynı olmalıdır
   (şu an `0.2.128`). `pnpm rust:wasm`, `rust:wasm:formats`, `rust:wasm:svg`
   paketleri ayrı derler; üretilen `pkg/` içeriğini elle düzenlemeyin.

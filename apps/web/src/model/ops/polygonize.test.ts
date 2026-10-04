@@ -5,7 +5,7 @@ import { polygonize, type PolyLabel, type PolyResult } from './polygonize';
 /**
  * Toplu alan (docs/adr/0151) through the WASM core, against the independent reference in
  * fixtures/polygonize/v1/cases.json (scripts/fixtures/polygonize_cases.py, exact rationals, no KentOS code), the
- * cases the core runs natively in crates/shared/geometry-core/tests/polygonize.rs: regions (rings, holes, labels,
+ * cases the core runs natively in crates/shared/geometry-core/tests/all/polygonize.rs: regions (rings, holes, labels,
  * the input area each repeats), labels on a boundary and free ends; points within 1e-8 m. Both sides are put in the
  * reference's order first (the core's is smallest region first).
  */

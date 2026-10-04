@@ -52,7 +52,7 @@ Veritabanı projesinde ekleme bugünkü yoldan gider: ağaç `project.changes` i
 ## Doğrulama
 
 - `fixtures/document-ops/v1`, iki belgede: 77 durum, yeni 11 dahil.
-- `crates/native/domain/tests/external.rs`: başka birinin nesnesi eklenen katmanın, sonradan gruba konan katmanın ve ilgisiz adımın durumu (web'in `layerAdd.test.ts`'i).
+- `crates/native/domain/tests/all/external.rs`: başka birinin nesnesi eklenen katmanın, sonradan gruba konan katmanın ve ilgisiz adımın durumu (web'in `layerAdd.test.ts`'i).
 - `crates/native/domain/tests/document.rs`: sayaç ve ret.
 - Masaüstü:
   - `layering::tests`: Yeni katman ve Yeni grup'un adımları, geri almada önceki etkin katman;

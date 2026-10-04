@@ -89,7 +89,7 @@
   - aynı kimliği iki kez ya da boş kimliği anan değişiklik, bir de açık düzenleme sırasında gelen her değişiklik, hiçbir şey değişmeden reddedilir;
   - yeni katman ağacında kullanıcının etkin katmanı hâlâ katmansa kalır, değilse ilk katman etkin olur.
 
-  Ortak fixture'lar bu işlemi kapsam dışı sayar (`fixtures/document-ops/README.md`); web'in kuralları masaüstünün kendi testinde yazılıdır (`crates/native/domain/tests/external.rs`).
+  Ortak fixture'lar bu işlemi kapsam dışı sayar (`fixtures/document-ops/README.md`); web'in kuralları masaüstünün kendi testinde yazılıdır (`crates/native/domain/tests/all/external.rs`).
 - **Olaylar** (`ProjectSync::incoming`, `take_remote`, web'in `syncRemote.ts`'i gibi):
   - olaylar sırayla okunur; bu eşitlemenin kendi komutlarının olayları istek kimliğiyle atlanır;
   - adı geçen her nesne en yeni sürümüyle bir kez getirilir ve dışarıdan değişiklik olarak konur;

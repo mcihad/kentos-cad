@@ -3,7 +3,7 @@
 
 Writes fixtures/polygonize/v1/cases.json from the rules alone, with Python's
 standard library and no KentOS code. The geometry core
-(`ops::polygonize::polygonize`, crates/shared/geometry-core/tests/polygonize.rs)
+(`ops::polygonize::polygonize`, crates/shared/geometry-core/tests/all/polygonize.rs)
 and the web through its WASM must give the same, points within 1e-8 m.
 
 Input: the line work in the drawing's order (lines, polylines, areas with

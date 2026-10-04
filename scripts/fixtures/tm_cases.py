@@ -6,7 +6,7 @@ where PROJ puts them on the grids of the registry's transverse Mercator
 systems: TUREF's TM3 zones (GRS80, k = 1), ED50's (International 1924) and
 the UTM zones (k = 0.9996). PROJ's `tmerc` (Poder and Engsager's Krüger
 series) is the independent reference: no KentOS code. The Rust core
-(crates/shared/geometry-core/tests/geodesy.rs) and the web through the WASM
+(crates/shared/geometry-core/tests/all/geodesy.rs) and the web through the WASM
 module (apps/web/src/model/geom/geodesy.test.ts) read the same file and
 agree with it to a micrometre.
 

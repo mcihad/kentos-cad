@@ -8,7 +8,7 @@ import { VertexPointsTool } from './vertexPointsTool';
  * Köşelere nokta (docs/adr/0152 §5): selection first, the points shown with their names, Ad and Kod Nokta's, the points
  * written in one step on the active layer and Nokta's Ad moved on. The cases are worked out by hand from the rules; the
  * core itself is checked against the independent reference in model/ops/vertexPoints.test.ts. The desktop walks the
- * same in crates/native/interaction/tests/vertex_points.rs.
+ * same in crates/native/interaction/tests/all/vertex_points.rs.
  */
 
 beforeEach(() => {

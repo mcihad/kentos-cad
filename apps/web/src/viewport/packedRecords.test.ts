@@ -9,7 +9,7 @@ import { packEntities } from '../wasm/pack';
  * fixtures/store-records/v1/cases.json, read as the app reads a file and
  * packed as PickIndex packs them (../wasm/pack.ts), give the hand-written
  * records; the desktop's `kentos_interaction::spatial::record`, packed by the
- * core's Packer, gives the same (crates/native/interaction/tests/records.rs).
+ * core's Packer, gives the same (crates/native/interaction/tests/all/records.rs).
  */
 
 interface Record {

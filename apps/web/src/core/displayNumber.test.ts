@@ -4,7 +4,7 @@ import { fixed } from './displayNumber';
 /**
  * The display rule (docs/adr/0149) against the independent reference in fixtures/numeric/v1/display.json (Python
  * decimal, not KentOS code; scripts/fixtures/numeric_display.py), the cases the core's
- * crates/shared/geometry-core/tests/display.rs reads too.
+ * crates/shared/geometry-core/tests/all/display.rs reads too.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

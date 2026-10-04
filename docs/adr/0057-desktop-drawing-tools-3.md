@@ -67,7 +67,7 @@
 
 - `fixtures/commands/v1/cad.entities.create.json`: 26 durum, 64 adım. Her tür (elips, eliptik yay, açık ve kapalı eğri, yardımcı çizgi, ışın, halka, paralel yanlar ve koridor, dikler, bölme noktaları, kapalı alan, daire, yay, çoklu çizgi, yazı, ölçü), her işlemin adı, renk, öznitelik ve etiket, grubun içindeki katman, gizli katman ve gizli grup, bütün retler ve sıraları, plan ve doğrulamanın hiçbir şey yazmaması.
 - Dosyayı `scripts/fixtures/create_command_cases.py` yazar; `--check` yeniden kurup karşılaştırır. Beklenen nesne sözleşmenin kuralıyla kurulur (geometrisi, katmanı, verildiyse rengi, öznitelikleri, etiketi), bir uygulamanın çıktısından alınmaz.
-- Yalnız masaüstünde olabilenler `crates/native/application/tests/create.rs`'tedir: yuvası biten belgede sığan nesne de yazılmaz; işlem içinde yürütme işleme katılır; −0 olduğu gibi yazılır; adımların adları.
+- Yalnız masaüstünde olabilenler `crates/native/application/tests/all/create.rs`'tedir: yuvası biten belgede sığan nesne de yazılmaz; işlem içinde yürütme işleme katılır; −0 olduğu gibi yazılır; adımların adları.
 
 ### Web araçları komuttan yazar
 
@@ -109,7 +109,7 @@
 
 ## Doğrulama
 
-- `python3 scripts/fixtures/create_command_cases.py --check` (26 durum); `cargo test -p kentos-native-application` (ortak durumlar ve `tests/create.rs`); `crates/native/interaction/tests/drawing.rs`.
+- `python3 scripts/fixtures/create_command_cases.py --check` (26 durum); `cargo test -p kentos-native-application` (ortak durumlar ve `tests/create.rs`); `crates/native/interaction/tests/all/drawing.rs`.
 - Altı iz iki platformda üç varyantta: web `pnpm e2e:interaction` (30 iz × 3 varyant), masaüstü `cargo test -p kentos-desktop traces`.
 - `pnpm rust:test`, `pnpm rust:test:desktop` (clippy temiz), `pnpm typecheck`, `pnpm test` (1529), `pnpm inventory:check`.
 - Görüntüler (`preview::screens`, `.run/shots/cizim-*`), koyu ve açık, 1440×900 ve 1100×650:

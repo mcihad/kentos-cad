@@ -6,7 +6,7 @@ standard library and no KentOS code: for a selection of lines, polylines and
 areas, the cursor and an optional typed distance, the dimensions Hızlı ölçü
 writes. The geometry core (`geom::dimension::quick::quick_dimensions`) must
 give the same within 1e-9 m on both platforms
-(crates/shared/geometry-core/tests/dimensions.rs; the web through its WASM).
+(crates/shared/geometry-core/tests/all/dimensions.rs; the web through its WASM).
 
 The rules:
 

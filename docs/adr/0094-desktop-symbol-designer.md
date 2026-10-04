@@ -41,7 +41,7 @@
 - Semboller JSON olarak düzenlenir; bu sürümün bilmediği alanlar korunur.
 - Durum dosyasını web yazar (`apps/web/scripts/fixtures/record-designer.test.ts`, `GOLDEN_WRITE=1`). İki platform geçer:
   - web: `ui/style/designerFixture.test.ts`;
-  - masaüstü: `crates/native/style/tests/designer.rs`.
+  - masaüstü: `crates/native/style/tests/all/designer.rs`.
 - Masaüstü sayıları web'in yazdığı gibi yazar: tam sayı `3`'tür, `3.0` değil.
 
 ### Pencere: `apps/desktop/src/style/designer/`

@@ -8,7 +8,7 @@ import { at, toolHarness } from './toolHarness';
  * Kılavuz (docs/adr/0146 §7): the tip and the vertices clicked, the note typed in the field that opens past the
  * landing on the note's side, one step (“Kılavuz”); the empty field's Enter writes the arrow alone. Ok's menu, Zemin,
  * Geri, Yazı's shared height, Esc one step back, the locked layer. The desktop's are
- * crates/native/interaction/tests/leaders.rs. Places worked out by hand: 2.5 mm at 1:1000 is 2.5 m.
+ * crates/native/interaction/tests/all/leaders.rs. Places worked out by hand: 2.5 mm at 1:1000 is 2.5 m.
  */
 /** A run from the defaults: the options outlive a run (as Yazı's do), so each test sets them back first. */
 function started() {

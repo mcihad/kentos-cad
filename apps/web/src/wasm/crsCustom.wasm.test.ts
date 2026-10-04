@@ -7,7 +7,7 @@ import { crsTransformIn, type DatumChoice, type System } from '../model/geom/crs
  * the app calls: a transverse Mercator grid of any origin, a datum of the project's in either rotation convention, local
  * systems, the project's datum choices. Grid points within 1e-6 m, latitudes and longitudes within 1e-11 degrees; the
  * accuracy, what the values rest on and whether an EPSG operation of ED50 was used, exactly; a point with no value says
- * why. The core runs the same file natively (crates/shared/geometry-core/tests/crs_custom.rs).
+ * why. The core runs the same file natively (crates/shared/geometry-core/tests/all/crs_custom.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

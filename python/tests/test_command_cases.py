@@ -2,7 +2,7 @@
 Python layer: every step's input read into its generated type, sent by the
 wrapper, its answer read back into the generated types and written again,
 then compared with the case, as the web (apps/web/src/product/fixtures.test.ts)
-and the desktop (crates/native/application/tests/fixtures.rs) compare it.
+and the desktop (crates/native/application/tests/all/fixtures.rs) compare it.
 The format is in fixtures/commands/README.md.
 
 One difference is by design: JSON carries no NaN or ±∞, so a step whose

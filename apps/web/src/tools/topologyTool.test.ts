@@ -7,7 +7,7 @@ import { FIRST_TOLERANCE, FIRST_WORKS, geometryOf, topoObject, TopologyTool } fr
  * Topolojik temizlik (docs/adr/0148 §9): the scope taken when it starts, the finding shown first, the tolerance
  * typed and the works turned on and off, one step written. The cases are worked out by hand from the rules of
  * §4–§6; the core itself is checked against the independent reference in model/ops/topology.test.ts. The desktop
- * walks the same in crates/native/interaction/tests/topology.rs.
+ * walks the same in crates/native/interaction/tests/all/topology.rs.
  */
 
 const OPTIONS = (tolerance: string, works = 'açık / Köşeler (K): kapalı / Uzat (Z): açık / Buda (B): açık') =>

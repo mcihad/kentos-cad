@@ -3,7 +3,7 @@
 
 Writes fixtures/numeric/v1/display.json from the rule alone, with Python's
 standard library (`decimal`) and no KentOS code. The geometry core
-(`kentos_geometry_core::display::fixed`, crates/shared/geometry-core/tests/display.rs)
+(`kentos_geometry_core::display::fixed`, crates/shared/geometry-core/tests/all/display.rs)
 and the web (`apps/web/src/core/displayNumber.ts`) must write exactly the
 expected text for every case.
 

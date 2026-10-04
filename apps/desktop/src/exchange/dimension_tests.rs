@@ -3,7 +3,7 @@
 //! jogged radius come in as KentOS's dimensions, the ordinate from another
 //! origin and the aligned one by their blocks; out again, the window says
 //! how they are written. fixtures/formats/v1/dimension-kinds.dxf; the
-//! readers' own tests are crates/shared/formats/tests/dxf.rs.
+//! readers' own tests are crates/shared/formats/tests/all/dxf.rs.
 
 use std::path::PathBuf;
 

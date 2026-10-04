@@ -6,7 +6,7 @@ import { dimensionLabel, dimensionMeasure, layoutDimension, quickDimensions, typ
 
 /**
  * The dimensions of docs/adr/0147 through WASM against the shared cases (fixtures/dimension/v1/layout.json, written
- * from the rules alone by scripts/fixtures/dimension_cases.py); natively crates/shared/geometry-core/tests/dimensions.rs.
+ * from the rules alone by scripts/fixtures/dimension_cases.py); natively crates/shared/geometry-core/tests/all/dimensions.rs.
  */
 
 interface Case {

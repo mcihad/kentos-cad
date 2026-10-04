@@ -5,7 +5,7 @@ Writes fixtures/measure/v1/cases.json with 50-digit arithmetic (mpmath) and
 no KentOS code: for objects and point pairs at Transverse Mercator
 coordinates and near the origin, the exact length, area, distance, bearing,
 angle, slope and dimension value, and how the display rule writes each with
-0 to 6 decimals. The geometry core (crates/shared/geometry-core/tests/measure.rs)
+0 to 6 decimals. The geometry core (crates/shared/geometry-core/tests/all/measure.rs)
 and the web through its WASM (apps/web/src/wasm/measure.wasm.test.ts) call
 the same operations by name and must agree within each case's bound and
 write the very same text.

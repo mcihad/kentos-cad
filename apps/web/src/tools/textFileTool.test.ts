@@ -6,7 +6,7 @@ import { at, toolHarness } from './toolHarness';
 /**
  * Metin dosyası yerleştir (docs/adr/0145 §6): the file asked for as the tool starts, its lines written one under the
  * other 1.5 heights apart with Yazı's options, one step; a cancelled picker or a refused file leaving. The desktop's
- * are crates/native/interaction/tests/text_file.rs. Places worked out by hand.
+ * are crates/native/interaction/tests/all/text_file.rs. Places worked out by hand.
  */
 const flush = () => new Promise((r) => setTimeout(r, 0));
 

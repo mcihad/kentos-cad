@@ -11,7 +11,7 @@ import { findProductCommand, WEB_COMMANDS } from './registry';
  * The shared product command cases (fixtures/commands/v1/*.json, TODOS.md
  * CMD-04..07, docs/adr/0022, 0027, 0029, 0032, 0037) run against the web's handlers over
  * CadDocument. The desktop runs the same files against its own
- * (crates/native/application/tests/fixtures.rs). The format is in
+ * (crates/native/application/tests/all/fixtures.rs). The format is in
  * fixtures/commands/README.md.
  *
  * JSON carries no NaN or ±∞: a step's `nonFinite` puts them into the input

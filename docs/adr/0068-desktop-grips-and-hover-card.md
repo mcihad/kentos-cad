@@ -95,7 +95,7 @@
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/grips.rs` (8 test):
+- `crates/native/interaction/tests/all/grips.rs` (8 test):
   - sürükleme ve adımın adı;
   - sıcak tutamaç ve önizlemesi;
   - yazılan nokta;

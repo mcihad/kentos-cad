@@ -6,7 +6,7 @@ import { extensionAlong, extensionAt, extensionRecords, readExtensions, SNAP_BIT
 /**
  * The snap additions (docs/adr/0163) through the WASM core, against the independent reference in
  * fixtures/snap/v1/cases.json (scripts/fixtures/snap_cases.py: exact rationals, the arcs with 50-digit mpmath, no KentOS
- * code), the cases the core runs natively in crates/shared/geometry-core/tests/snap.rs: the kind and the object exactly,
+ * code), the cases the core runs natively in crates/shared/geometry-core/tests/all/snap.rs: the kind and the object exactly,
  * the point within 1e-9 m (a grid node bit for bit), and the acquisitions within 1e-12.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');

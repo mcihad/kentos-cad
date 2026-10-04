@@ -3,7 +3,7 @@
 
 Writes fixtures/snap/v1/cases.json from the ADR's rules alone, with Python's
 standard library (and mpmath for the arcs), no KentOS code. The geometry
-core (`Store::snap_ex`, crates/shared/geometry-core/tests/snap.rs) and the
+core (`Store::snap_ex`, crates/shared/geometry-core/tests/all/snap.rs) and the
 web through its WASM (apps/web/src/viewport/snapExtras.test.ts) must give
 the same: the kind and the object exactly, the point within 1e-9 m (a grid
 node, a vertex and a centroid of whole numbers bit for bit).

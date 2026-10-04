@@ -5,7 +5,7 @@ import { crsPlaneMeasures, type PlaneRing, type System } from '../model/geom/crs
  * Lengths and areas in the second system's plane (docs/adr/0167 §2) against PROJ (fixtures/geodesy/v1/measure.json,
  * written by scripts/fixtures/crs_measure_cases.py from pyproj and the ADR's rule, not KentOS code), through the WASM
  * core the app calls: lengths within 1e-6 m, areas within 1e-6 m² for every 100 m of their perimeter, none in a
- * geographic system or the Pseudo-Mercator. The core runs the same file natively (crates/shared/geometry-core/tests/crs_measure.rs).
+ * geographic system or the Pseudo-Mercator. The core runs the same file natively (crates/shared/geometry-core/tests/all/crs_measure.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

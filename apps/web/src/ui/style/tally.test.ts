@@ -12,7 +12,7 @@ import { categoryTally, classTally, drawable, numbersPerObject, ruleCounts, shad
  * (written by hand): what each category, class and rule takes of the drawn
  * objects, which categories are shadowed, and how a field is written in an
  * expression. The desktop's window checks the same file
- * (crates/native/style/tests/tally.rs).
+ * (crates/native/style/tests/all/tally.rs).
  */
 
 type Categories = Extract<LayerRenderer, { type: 'categorized' }>['categories'];

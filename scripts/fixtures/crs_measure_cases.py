@@ -15,7 +15,7 @@ n = max(1, ⌈|θ| / (2·acos(1 − 0.0001/r))⌉) equal pieces (one when r ≤ 
 A geographic second system has no plane: none is measured (`why`: `geographic`). Neither has the Pseudo-Mercator,
 whose scale is another at every latitude (`mercator`).
 
-The geometry core (crates/shared/geometry-core/tests/crs_measure.rs) and the web through its WASM must give the same:
+The geometry core (crates/shared/geometry-core/tests/all/crs_measure.rs) and the web through its WASM must give the same:
 lengths within 1e-6 m, areas within 1e-6 m² for every 100 m of their perimeter (the points agree with PROJ's within
 nanometres, and an area moves by its perimeter times that).
 """

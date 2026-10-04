@@ -6,7 +6,7 @@ import { fieldPolar, fieldReduce, fieldTraverse, surveyTraverseClosure, type Clo
  * fixtures/field/v1/reduce.json (scripts/fixtures/field_reduce_cases.py: mpmath, 50 digits, from the rules alone): every
  * row within the file's tolerances and the project's tolerances it is above, each observation's face, the observations
  * left out. The core runs the same file natively
- * (crates/shared/geometry-core/tests/field_reduce.rs).
+ * (crates/shared/geometry-core/tests/all/field_reduce.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

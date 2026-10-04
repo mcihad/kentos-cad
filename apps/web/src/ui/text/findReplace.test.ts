@@ -6,7 +6,7 @@ import { findMatches, replaceMatches, type FindQuery } from './findReplace';
 /**
  * Bul ve değiştir's matches and write (docs/adr/0145 §6) over a document, without a DOM: the core's rule decides
  * (fixtures/text/v1/pattern.json holds it); here the scope, the locked and emptied texts, the trimming and the one
- * step. The desktop's are crates/native/interaction/tests/find_replace.rs.
+ * step. The desktop's are crates/native/interaction/tests/all/find_replace.rs.
  */
 function scene() {
   const h = toolHarness();

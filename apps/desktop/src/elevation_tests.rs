@@ -1,7 +1,7 @@
 //! Kot ver (docs/adr/0142) through the real app: the ribbon's commands and
 //! the prompt's chips reach the tool, what it says lands in the message log,
 //! and what it writes is one named undo step. The tool's own mechanics are
-//! `crates/native/interaction/tests/elevating.rs`. Test code only.
+//! `crates/native/interaction/tests/all/elevating.rs`. Test code only.
 
 use iced::{Point, Rectangle, Size};
 use kentos_contracts::Entity;

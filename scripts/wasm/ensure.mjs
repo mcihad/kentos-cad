@@ -7,16 +7,20 @@
 // (apps/web/src/style/svg/pkg), loaded with the editor, and the sheet core
 // (apps/web/src/product/sheet/pkg), loaded when the sheet mode opens (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
-// has its own digest (the crates it is built from and the toolchain pins)
-// and stamp, so an edit to the formats never rebuilds the core and nothing
-// is built when nothing changed. Builds run niced (one heavy process at a
-// time, ADR 0001).
+// has its own digest (the crates it is built from, the toolchain pins and the
+// profile) and stamp, so an edit to the formats never rebuilds the core and
+// nothing is built when nothing changed. Builds run niced (one heavy process
+// at a time, ADR 0001). The dev server, tests and e2e take the `wasm-dev`
+// profile (no whole-program LTO, parallel code generation: a core edit costs a
+// fraction of the time); `--release` (`pnpm build`, the perf scripts) takes
+// `wasm`, the shipped one (Cargo.toml).
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const ROOT = new URL('../..', import.meta.url).pathname;
+const PROFILE = process.argv.includes('--release') ? 'wasm' : 'wasm-dev';
 const PINS = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml'];
 const PACKAGES = [
   { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'apps/web/src/wasm/pkg', lib: 'kentos_geometry_wasm', sources: ['crates/shared/geometry-core', 'crates/shared/expression', 'crates/shared/style-core', 'crates/wasm/geometry-wasm', ...PINS] },
@@ -44,6 +48,7 @@ function files(path) {
 
 function digest(sources) {
   const h = createHash('sha256');
+  h.update(`profile:${PROFILE}\0`);
   for (const f of sources.flatMap(files)) {
     h.update(relative(ROOT, f));
     h.update('\0');
@@ -61,8 +66,8 @@ for (const pkg of PACKAGES) {
   const complete = [`${pkg.lib}.js`, `${pkg.lib}.d.ts`, `${pkg.lib}_bg.wasm`].every((f) => existsSync(join(out, f)));
   if (want === have && complete) continue;
 
-  console.log(`${pkg.label} (WASM) derleniyor…`);
-  const r = spawnSync('nice', ['-n', '10', 'pnpm', '-s', pkg.script], { cwd: ROOT, stdio: 'inherit' });
+  console.log(`${pkg.label} (WASM, ${PROFILE}) derleniyor…`);
+  const r = spawnSync('nice', ['-n', '10', 'pnpm', '-s', pkg.script], { cwd: ROOT, stdio: 'inherit', env: { ...process.env, KENTOS_WASM_PROFILE: PROFILE } });
   if (r.status !== 0) {
     console.error(`${pkg.label} WASM paketi derlenemedi. Rust araç zinciri kurulu mu? (rust-toolchain.toml, wasm-bindgen-cli 0.2.128; CLAUDE.md §2)`);
     process.exit(r.status ?? 1);

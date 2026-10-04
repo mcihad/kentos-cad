@@ -6,7 +6,7 @@ import { pt, toolHarness } from './toolHarness';
 /**
  * Okunur yap (docs/adr/0145 §6) over a document and a log: the upside-down texts of the selection turn half round,
  * their boxes where they were; a text that reads, one on a locked layer and what is not a text are left; one step. The
- * desktop's are crates/native/interaction/tests/text.rs. Centred alignments turn by amounts that need no width: worked
+ * desktop's are crates/native/interaction/tests/all/text.rs. Centred alignments turn by amounts that need no width: worked
  * out by hand.
  */
 function scene() {

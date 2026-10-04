@@ -116,7 +116,7 @@
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/area.rs` (10 test; alanlar elle hesaplandı):
+- `crates/native/interaction/tests/all/area.rs` (10 test; alanlar elle hesaplandı):
   - birleştirme ve ilk alanın verisi;
   - kesiştirme, Kaynakları sil;
   - çıkarma, örtüşmeyen çıkarma;

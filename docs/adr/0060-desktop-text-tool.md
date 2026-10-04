@@ -62,7 +62,7 @@
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/text.rs`:
+- `crates/native/interaction/tests/all/text.rs`:
   - web'in istemleri;
   - tıkta istenen kutu, Enter ile yazı, tek adım ve Ctrl+Z;
   - Esc ya da boş yazı hiçbir şey yazmaz;

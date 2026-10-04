@@ -8,7 +8,7 @@ import { FIRST_ATTRIBUTE, labelValue, PolygonizeTool } from './polygonizeTool';
  * Toplu alan (docs/adr/0151 §8): the line work and labels taken when it starts, the finding shown first, Adalar and
  * the attribute's name, the areas written in one step on the active layer. The cases are worked out by hand from the
  * rules of §2–§5; the core itself is checked against the independent reference in model/ops/polygonize.test.ts. The
- * desktop walks the same in crates/native/interaction/tests/polygonize.rs.
+ * desktop walks the same in crates/native/interaction/tests/all/polygonize.rs.
  */
 
 beforeEach(() => {

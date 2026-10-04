@@ -6,7 +6,7 @@
 //   GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-designer.test.ts
 // The answers are the web's and were read when recorded; rewriting them is a deliberate change, to be read in
 // the diff. src/ui/style/designerFixture.test.ts keeps checking them; the desktop's designer
-// (crates/native/style/tests/designer.rs) checks the same file.
+// (crates/native/style/tests/all/designer.rs) checks the same file.
 // Outside src/ so the app's type check does not need Node's types.
 import { writeFileSync } from 'node:fs';
 import { it } from 'vitest';

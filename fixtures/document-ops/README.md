@@ -7,7 +7,7 @@ Aynı dosyaları iki uygulama koşar:
 | Koşucu | Belge |
 |---|---|
 | `apps/web/src/model/documentOps.test.ts` (Vitest) | web: `CadDocument` |
-| `crates/native/domain/tests/fixtures.rs` (`cargo test -p kentos-domain`) | masaüstü: `kentos_domain::Document` |
+| `crates/native/domain/tests/all/fixtures.rs` (`cargo test -p kentos-domain`) | masaüstü: `kentos_domain::Document` |
 
 İkisi de bütün senaryoları geçmelidir.
 

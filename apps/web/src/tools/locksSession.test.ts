@@ -8,7 +8,7 @@ import { at, toolHarness } from './toolHarness';
 
 /**
  * The digitizing locks with a running tool (docs/adr/0166 §1–§2, §6), on Çoklu çizgi over the harness's drawing (a CBS
- * project in grads), the desktop's crates/native/interaction/tests/locks.rs: a locked length and a typed direction hold
+ * project in grads), the desktop's crates/native/interaction/tests/all/locks.rs: a locked length and a typed direction hold
  * the next point, one-shot locks go once it is placed and kept ones follow, Sapma turns from the last edge, Kilitleri
  * kaldır lets them go.
  */

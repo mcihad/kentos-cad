@@ -2,7 +2,7 @@
 
 TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md), [ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md), [ADR 0032](../../docs/adr/0032-desktop-drawing-tools.md), [ADR 0037](../../docs/adr/0037-desktop-modify-tools.md), [ADR 0047](../../docs/adr/0047-desktop-edit-tools.md), [ADR 0057](../../docs/adr/0057-desktop-drawing-tools-3.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
 
-Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`, `cargo test -p kentos-native-application`). İkisi de bütün durumları geçmelidir. Kayıttaki her komutun bir dosyası vardır; her dosyada en az 20 durum bulunur.
+Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/all/fixtures.rs` (`kentos_domain::Document`, `cargo test -p kentos-native-application`). İkisi de bütün durumları geçmelidir. Kayıttaki her komutun bir dosyası vardır; her dosyada en az 20 durum bulunur.
 
 | Dosya | Komut | Durum |
 |---|---|---|
@@ -102,4 +102,4 @@ Yalnız yazılan alanlar denetlenir.
 - Hesap pencerelerinin “Çizime ekle”si (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) noktaları `cad.entities.create`'le yazar: adı etiket ve öznitelik (Ad, Tür, kot bulunduysa Z (m)), adım pencerenin adı.
 - Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir: alana çevrilen daire, mercek ve dairesel kesit böyledir. Taramanın halkası en az 3 köşelidir. `cad.polygon.create` en az 3 köşe ister.
 - Bir özellik değişikliğinin (`cad.entities.set`) beklenen nesnesini sözleşmenin kuralı kurar: verilen katman, renk, sembol ve etiket nesnenin kendisinin yerine geçer, null onu kaldırır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır; başka hiçbir alanı değişmez. Zaten istendiği gibi olan nesne çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Dosyayı `scripts/fixtures/set_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
-- −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/transform.rs`).
+- −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/all/transform.rs`).

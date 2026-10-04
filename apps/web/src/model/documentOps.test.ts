@@ -13,7 +13,7 @@ import { readSnapshot } from './snapshot';
  * describe: each scenario opens its setup file the way the app opens a
  * drawing (readSnapshot, replaceWith), applies the steps and compares the
  * state after each one. The desktop's native document runs the same files
- * (crates/native/domain/tests/fixtures.rs). The format is in
+ * (crates/native/domain/tests/all/fixtures.rs). The format is in
  * fixtures/document-ops/README.md.
  */
 

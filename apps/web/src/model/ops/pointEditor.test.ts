@@ -4,7 +4,7 @@ import { duplicatePoints, followPoint, naturalOrder, pointTable } from './pointE
 /**
  * Nokta editörü's computations (docs/adr/0153 §6) through the WASM core, against the independent reference in
  * fixtures/point-editor/v1/cases.json (scripts/fixtures/point_editor_cases.py, no KentOS code), the cases the core runs
- * natively in crates/shared/geometry-core/tests/point_editor.rs: numbers within 1e-9 m, a missing field null.
+ * natively in crates/shared/geometry-core/tests/all/point_editor.rs: numbers within 1e-9 m, a missing field null.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

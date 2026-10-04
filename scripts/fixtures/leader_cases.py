@@ -5,7 +5,7 @@ Writes fixtures/leader/v1/layout.json from the rule alone, with Python's
 standard library and no KentOS code: for each leader, where its arrowhead,
 its landing and its note go. The geometry core (`geom::leader::layout`)
 must give the same within 1e-9 m on both platforms
-(crates/shared/geometry-core/tests/leader.rs; the web through its WASM).
+(crates/shared/geometry-core/tests/all/leader.rs; the web through its WASM).
 
 The rule, every length in the note's height h:
 

@@ -12,7 +12,7 @@ shift by the EPSG operation the ADR names (PROJ's default for Türkiye):
   EPSG:1783 + EPSG:5260, 2.1 m;
 - the same datum: the projection alone, exact.
 
-The geometry core (crates/shared/geometry-core/tests/crs.rs) and the web
+The geometry core (crates/shared/geometry-core/tests/all/crs.rs) and the web
 through its WASM (apps/web/src/geo/transform.test.ts) must give the same:
 grid points within 1e-6 m, latitudes and longitudes within 1e-11 degrees
 (about a micrometre), the accuracy and the operations exactly.

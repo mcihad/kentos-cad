@@ -198,6 +198,16 @@ subsetter = { version = "=0.2.6", default-features = false }
 # (design §9a names it). Locked already through fontdb and cosmic-text: nothing new is downloaded.
 ttf-parser = { version = "=0.25.1", default-features = false, features = ["std"] }
 
+# Debug builds and tests keep line tables only, so a panic's backtrace still names
+# the file and line, and dependencies none: with full DWARF the desktop's test binary
+# was near 1 GB and the debug folder 125 GB, and linking and writing them was most
+# of a rebuild (the owner, 4 October 2026: test and build times too long).
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 lto = "thin"
 codegen-units = 4
@@ -209,3 +219,12 @@ inherits = "release"
 lto = "fat"
 codegen-units = 1
 panic = "abort"
+
+# The same for the dev server, tests and e2e (scripts/wasm/ensure.mjs; `pnpm build` and
+# the perf scripts take `wasm`): no whole-program LTO and parallel code generation, so
+# a core edit rebuilds the six packages in a fraction of the time. The code is the same
+# Rust with the same float semantics; only inlining across crates differs.
+[profile.wasm-dev]
+inherits = "wasm"
+lto = false
+codegen-units = 16

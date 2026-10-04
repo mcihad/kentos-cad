@@ -16,7 +16,7 @@ north, each row from east to west, longitudes positive west), and fixtures/geode
 - **broken:** files a reader must refuse, with why: too short, not NTv2, not seconds, a header not where it should be,
   an extent PROJ would refuse, a record count its extent does not allow, records missing, a shift that is not a number.
 
-The core (crates/shared/geometry-core/tests/crs_ntv2.rs) and the web through its WASM must give the same: latitudes and
+The core (crates/shared/geometry-core/tests/all/crs_ntv2.rs) and the web through its WASM must give the same: latitudes and
 longitudes within 1e-11 degrees, grid points within 1e-6 m; the reasons exactly.
 """
 

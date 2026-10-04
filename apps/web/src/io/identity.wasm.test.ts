@@ -11,7 +11,7 @@ import { formatsBuilt, v1IdentitiesInProcess } from './testFormats';
  * browser computes them: the formats WASM module on the fixture the
  * independent Python reference wrote (fixtures/document/v1/identity,
  * scripts/fixtures/v1_identity_reference.py), which the native contracts
- * reproduce too (crates/shared/contracts/tests/identity.rs). JSON.stringify
+ * reproduce too (crates/shared/contracts/tests/all/identity.rs). JSON.stringify
  * spells numbers otherwise than serde_json, so the ids cannot be computed in
  * TypeScript: the Rust contract reads the file.
  */

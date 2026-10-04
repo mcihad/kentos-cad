@@ -107,7 +107,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     ]);
     expect(kept.report.source).toContainEqual({ label: 'Blok', value: '4 tanım (1 tanesi yerleştirilmemiş)' });
     // Attribute definitions (docs/adr/0144 §7): the block's visible ones in the file's order; the insert holds the values
-    // and shows the defined ones itself (crates/shared/formats/tests/dxf.rs has the whole file).
+    // and shows the defined ones itself (crates/shared/formats/tests/all/dxf.rs has the whole file).
     const att = read('attributes.dxf');
     expect(att.blocks?.[0].attributes?.map((a) => [a.tag, a.prompt, a.value ?? null])).toEqual([
       ['NO', 'Rögar numarası', 'R-?'],
@@ -238,7 +238,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(new TextDecoder().decode(bytes)).toBe(new TextDecoder().decode(fixture(`dxf-write/${name}.dxf`)));
   });
 
-  // docs/adr/0145 §7: a text's alignment, width factor and mask cross the columns (crates/shared/formats/tests/dxf.rs has the whole file).
+  // docs/adr/0145 §7: a text's alignment, width factor and mask cross the columns (crates/shared/formats/tests/all/dxf.rs has the whole file).
   it('reads texts with their alignment, width factor and mask', async () => {
     const w = await load();
     const r = imported(w.readDxf(fixture('texts.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
@@ -253,7 +253,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // docs/adr/0165 §2: a file in inches read into a local project in millimetres comes in metres, the insert keeping its
-  // own scale; read into a project with a coordinate system, as it is (crates/shared/formats/tests/dxf_units.rs has more).
+  // own scale; read into a project with a coordinate system, as it is (crates/shared/formats/tests/all/dxf_units.rs has more).
   it('turns a declared unit into metres for a local project', async () => {
     const w = await load();
     const local = imported(w.readDxf(fixture('units.dxf'), JSON.stringify({ maxEntities: 0, unit: 'mm' }), quiet));
@@ -271,7 +271,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // docs/adr/0146 §8: a LEADER and its MTEXT, in either order, cross the columns as one leader; a MULTILEADER too
-  // (crates/shared/formats/tests/dxf.rs has the whole file).
+  // (crates/shared/formats/tests/all/dxf.rs has the whole file).
   it('reads leaders with their notes, arrowheads and heights', async () => {
     const w = await load();
     const r = imported(w.readDxf(fixture('leaders.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
@@ -287,7 +287,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // docs/adr/0147 §8: another program's ordinate, arc length and jogged radius come in as KentOS's own, with their
-  // points, heights and masks; what has no KentOS form, as its block's lines and values (crates/shared/formats/tests/dxf.rs
+  // points, heights and masks; what has no KentOS form, as its block's lines and values (crates/shared/formats/tests/all/dxf.rs
   // has the whole file).
   it('reads the new dimension kinds as KentOS dimensions', async () => {
     const w = await load();

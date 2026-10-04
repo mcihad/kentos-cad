@@ -129,7 +129,7 @@ Düzenleme `cad.entities.edit`'in var olan işlemleriyle (`grip`, `vertexRemove`
      - İleti esnetilen nesneleri sayar; komşular ayrı iletide söylenir.
    - **Kart:** kip açıkken tutamacın kartı ortak köşeyi kaç nesnenin paylaştığını söyler (“4 nesnenin köşesi”; kilitli ve, Noktalar da açıkken, noktalar dahil). Sayıyı çekirdek, yerinde kalan bir taşımayla bulur.
    - **Yardımcılar:** platformların yardımcıları birden çok düzenlenen nesneyi alır (web `neighboursOf`, `neighboursAt`, `putRight`, `cornerCount`; masaüstü `neighbours_of`, `around`, `put_right`, `corner_count`).
-   - **Sınama:** web `selectGripTopology.test.ts` ve masaüstü `crates/native/interaction/tests/topology_edit.rs` aynı elle hesaplanmış beklentilerle. Ortak ize Esnet adımları eklendi; kullanım senaryosuna kart ve Esnet resimleri.
+   - **Sınama:** web `selectGripTopology.test.ts` ve masaüstü `crates/native/interaction/tests/all/topology_edit.rs` aynı elle hesaplanmış beklentilerle. Ortak ize Esnet adımları eklendi; kullanım senaryosuna kart ve Esnet resimleri.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

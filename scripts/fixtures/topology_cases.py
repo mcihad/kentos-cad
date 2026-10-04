@@ -3,7 +3,7 @@
 
 Writes fixtures/topology/v1/clean.json from the rules alone, with Python's
 standard library and no KentOS code. The geometry core
-(`ops::topology::topology_clean`, crates/shared/geometry-core/tests/topology.rs)
+(`ops::topology::topology_clean`, crates/shared/geometry-core/tests/all/topology.rs)
 and the web through its WASM must give the same within 1e-9 m.
 
 Input: objects in the drawing's order, each a kind, whether it is fixed and

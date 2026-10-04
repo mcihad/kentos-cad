@@ -7,7 +7,7 @@ import { gnssEntities, placeGnss, type GnssOptions } from './gnssImport';
 /**
  * The GNSS import's points (docs/adr/0169 §6) against fixtures/gnss/v1/import.json (scripts/fixtures/gnss_import_cases.py,
  * from the ADR's rules and PROJ, not KentOS code): names, elevations and attributes exactly, the positions within the
- * fixture's tolerance. The desktop checks the same file (crates/native/interaction/tests/gnss.rs).
+ * fixture's tolerance. The desktop checks the same file (crates/native/interaction/tests/all/gnss.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

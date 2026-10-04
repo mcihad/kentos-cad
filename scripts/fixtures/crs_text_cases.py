@@ -23,7 +23,7 @@ Writes fixtures/geodesy/v1/text.json, no KentOS code:
   it. PROJ reads every text back to the same parameters, and a local system's points move as its plane
   transform moves them.
 
-The core (crates/shared/geometry-core/tests/crs_text.rs) and the web through its WASM must give the same, exactly.
+The core (crates/shared/geometry-core/tests/all/crs_text.rs) and the web through its WASM must give the same, exactly.
 """
 
 import argparse

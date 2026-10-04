@@ -7,7 +7,7 @@ import { WEB_COMMANDS } from './registry';
  * The web runs exactly the catalog's `web` commands (docs/adr/0013, 0022;
  * TODOS.md CMD-03): a command the catalog marks for the web without a
  * handler here, or a handler the catalog does not list for the web, fails.
- * The desktop (crates/native/application/tests/catalog.rs) and the server
+ * The desktop (crates/native/application/tests/all/catalog.rs) and the server
  * (crates/server/application/tests/catalog.rs) are held to theirs the same way.
  */
 describe('web product command registry', () => {

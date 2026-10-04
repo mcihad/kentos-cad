@@ -3,7 +3,7 @@
 
 Writes fixtures/vertex-points/v1/cases.json from the rules alone, with
 Python's standard library and no KentOS code. The geometry core
-(`ops::vertex_points::vertex_points`, crates/shared/geometry-core/tests/vertex_points.rs)
+(`ops::vertex_points::vertex_points`, crates/shared/geometry-core/tests/all/vertex_points.rs)
 and the web through its WASM must give the same, points within 1e-9 m.
 
 Input: objects in the drawing's order, each its paths ({pts, closed, zs});

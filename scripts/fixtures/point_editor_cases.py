@@ -3,7 +3,7 @@
 
 Writes fixtures/point-editor/v1/cases.json from the rules alone, with
 Python's standard library and no KentOS code. The geometry core
-(`text::natural`, `ops::point_editor`; crates/shared/geometry-core/tests/point_editor.rs)
+(`text::natural`, `ops::point_editor`; crates/shared/geometry-core/tests/all/point_editor.rs)
 and the web through its WASM must give the same: orders and groups exactly,
 places and elevations within 1e-9 m.
 

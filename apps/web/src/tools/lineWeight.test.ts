@@ -17,7 +17,7 @@ import { PathTool } from './pathTool';
  * draws with lines writes it explicitly in its command's input (CMD-07). A
  * point and a text are not drawn with lines and take none; “Katmana göre”
  * (null) writes none; 0 is the thinnest line, not “none”. The desktop's twin
- * is crates/native/interaction/tests/line_weight.rs. Typed input only, over a
+ * is crates/native/interaction/tests/all/line_weight.rs. Typed input only, over a
  * document, without a view.
  */
 function harness(weight: number | null) {

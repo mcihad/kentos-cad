@@ -4,7 +4,7 @@ import { MAX_TEXT_FILE_BYTES, textFileLines } from './textFile';
 
 /**
  * Metin dosyası yerleştir's file rule (docs/adr/0145 §6) against the shared cases (fixtures/text/v1/file.json,
- * written from the rule by scripts/fixtures/text_cases.py); natively crates/native/interaction/tests/text_file.rs.
+ * written from the rule by scripts/fixtures/text_cases.py); natively crates/native/interaction/tests/all/text_file.rs.
  */
 interface Case {
   name: string;

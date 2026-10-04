@@ -6,7 +6,7 @@ import type { System } from '../model/geom/crsTransform';
  * Coordinate systems read from WKT and PROJ strings and written as them (docs/adr/0168 §5) against
  * fixtures/geodesy/v1/text.json (scripts/fixtures/crs_text_cases.py: PROJ reads every text there, its numbers and the
  * ADR's rules give the systems; the written texts are the rules', and PROJ reads them back), through the WASM core the
- * app calls: everything exactly. The core runs the same file natively (crates/shared/geometry-core/tests/crs_text.rs).
+ * app calls: everything exactly. The core runs the same file natively (crates/shared/geometry-core/tests/all/crs_text.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

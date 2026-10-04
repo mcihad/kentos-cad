@@ -6,7 +6,7 @@ import { at, pt, toolHarness } from './toolHarness';
 /**
  * Birleştir's Zincir (docs/adr/0161 §2), on the shared trace's drawing in small (fixtures/interaction/v1/join-chain.kcad):
  * lines 1 and 2, the arc 3 and the junction's lines 4 and 5; line 6 on a locked layer at line 1's western end. Expected
- * values are worked out by hand; the desktop's are crates/native/interaction/tests/join_chain.rs. Zincir is kept for the
+ * values are worked out by hand; the desktop's are crates/native/interaction/tests/all/join_chain.rs. Zincir is kept for the
  * session (static), so each test sets it as it needs.
  */
 function scene() {

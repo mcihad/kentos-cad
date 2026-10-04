@@ -133,7 +133,7 @@ v1 dosyasında kalıcı kimlik yoktur. Göç **belirlenimlidir**: aynı dosya ka
   - Web'in kaydettiği örnek (`../sample.json`), aynı çizimin web'in yazdığı sıkışık hâli (`sample.compact.kcad`) ve başka biçimde yazılmışı (`sample.variant.kcad`: CRLF, sekme, ters alan sırası, 17 haneli üslü sayılar) aynı kimlikleri verir.
   - Bir milimetre oynatılmış çizim (`edited.kcad`) bambaşka kimlikler alır.
   - Elle yazılmış küçük çizim (`minimal.kcad`): eski ayarlar, bilinmeyen alanlar, sayı sınırları (1e-5 / 1e-6, 1e15 / 1e16, -0.0), kaçışlı metin, sıralı olmayan yerel kimlikler.
-- **Doğrulama:** Rust'ın kanonik metni referansla bayt bayt aynıdır ve kimlikler aynıdır (`crates/shared/contracts/tests/identity.rs`). Tarayıcı modülü aynı kimlikleri verir (`apps/web/src/io/identity.wasm.test.ts`), masaüstü belgesi de (`crates/native/domain/tests/identity.rs`, `v1_entity_uids`, ADR 0020).
+- **Doğrulama:** Rust'ın kanonik metni referansla bayt bayt aynıdır ve kimlikler aynıdır (`crates/shared/contracts/tests/all/identity.rs`). Tarayıcı modülü aynı kimlikleri verir (`apps/web/src/io/identity.wasm.test.ts`), masaüstü belgesi de (`crates/native/domain/tests/all/identity.rs`, `v1_entity_uids`, ADR 0020).
 - **Web açılışı** (`app/fileIO.ts`):
   - Kimlikleri dosya biçimi worker'ı hesaplar (`v1Identities`, `FORMATS_VERSION` 4), sayfa dosyayı okurken. `attachV1Identities` onları nesnelere yerel kimlikle eşler, sonra `replaceWith`.
   - Kanonik metin TypeScript'te yeniden yazılmadı: `JSON.stringify` sayıları serde_json'dan farklı yazar (`486512` / `486512.0`).

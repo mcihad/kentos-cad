@@ -83,7 +83,7 @@
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/hatch.rs` (9 test; alanlar elle hesaplandı):
+- `crates/native/interaction/tests/all/hatch.rs` (9 test; alanlar elle hesaplandı):
   - parselde yapı ada: 272 m²;
   - yapının içi: 48 m²;
   - adalar kapalı: 320 m²;

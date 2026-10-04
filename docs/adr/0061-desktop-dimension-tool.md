@@ -91,7 +91,7 @@
 
 ## Doğrulama
 
-- `crates/native/interaction/tests/dimension.rs` (10 test; beklenenler elle hesaplandı):
+- `crates/native/interaction/tests/all/dimension.rs` (10 test; beklenenler elle hesaplandı):
   - web'in istemleri ve seçenekleri;
   - hizalı ölçü ve işaretli yazılan mesafe;
   - doğrusalın imleçten ve kilitle doğrultusu;

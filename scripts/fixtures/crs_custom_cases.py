@@ -13,7 +13,7 @@ A datum of the project's reaches the others through WGS 84 (`+towgs84`'s hub); E
 they come back to latitude and longitude on the ellipsoid of the datum the last step landed on. A datum of the
 project's with no way to WGS 84 leaves the point without a value in another datum ("noLink").
 
-The core (crates/shared/geometry-core/tests/crs_custom.rs) and the web through its WASM must give the same: grid
+The core (crates/shared/geometry-core/tests/all/crs_custom.rs) and the web through its WASM must give the same: grid
 points within 1e-6 m, latitudes and longitudes within 1e-11 degrees; the accuracy (the steps' sum to the millimetre,
 none when one is unknown), what the values rest on and whether an EPSG operation of ED50 was used, exactly.
 """

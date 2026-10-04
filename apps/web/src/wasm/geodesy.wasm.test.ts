@@ -4,7 +4,7 @@ import { tmForward, type Tm } from '../model/geom/geodesy';
 /**
  * The forward transverse Mercator projection against PROJ (fixtures/geodesy/v1/tm-forward.json, written by
  * scripts/fixtures/tm_cases.py from PROJ's tmerc, not KentOS code; docs/adr/0165 §3), through the WASM core the app
- * calls: every case within a micrometre. The core runs the same file natively (crates/shared/geometry-core/tests/geodesy.rs).
+ * calls: every case within a micrometre. The core runs the same file natively (crates/shared/geometry-core/tests/all/geodesy.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

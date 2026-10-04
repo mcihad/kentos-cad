@@ -7,7 +7,7 @@ import { pt, toolHarness } from './toolHarness';
 /**
  * Alan işlemleri (docs/adr/0065) and the multi-part area (docs/adr/0143): Alan birleştir, kesiştir and çıkar take a
  * multi-part area whole; with Tek nesne (T) their result is one multi-part area; Parçaları birleştir and Parçalara
- * ayır. The same drawing and words as the desktop's (crates/native/interaction/tests/area.rs): parcels 1 and 2 of
+ * ayır. The same drawing and words as the desktop's (crates/native/interaction/tests/all/area.rs): parcels 1 and 2 of
  * 10 × 10 m overlapping 4 × 6 m, and parcel 8 of 10 × 10 m with a 4 × 4 m hole, apart from them.
  */
 const square = (x: number, y: number, side: number) => [pt(x, y), pt(x + side, y), pt(x + side, y + side), pt(x, y + side)];

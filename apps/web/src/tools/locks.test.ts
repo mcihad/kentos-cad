@@ -6,7 +6,7 @@ import { constrainLocked, lockDeflected, lockDirection, lockEdgeDirection, lockP
 /**
  * The digitizing locks (docs/adr/0166) through the WASM core and the web's lock text reader, against the independent
  * reference in fixtures/locks/v1/cases.json (scripts/fixtures/lock_cases.py: exact fractions, the angles with 50-digit
- * mpmath, no KentOS code), the cases the core runs natively in crates/shared/geometry-core/tests/locks.rs: points
+ * mpmath, no KentOS code), the cases the core runs natively in crates/shared/geometry-core/tests/all/locks.rs: points
  * within 1e-8 m, unit directions within 1e-14, none where the reference has none, lock text exactly.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');

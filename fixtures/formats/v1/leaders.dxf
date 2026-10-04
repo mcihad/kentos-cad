@@ -1,5 +1,5 @@
 999
-Leaders of docs/adr/0146 §8; crates/shared/formats/tests/dxf.rs works each out from this file.
+Leaders of docs/adr/0146 §8; crates/shared/formats/tests/all/dxf.rs works each out from this file.
 999
 Tables: block records _Open (1F), _Dot (20), _ArchTick (21); dimension styles Standard (DIMASZ 2.5, DIMSCALE 1)
 999

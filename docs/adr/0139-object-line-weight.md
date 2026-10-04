@@ -109,7 +109,7 @@ Nesneden yapılan nesneler kendi kalınlığını korur:
 
 **Testler:**
 
-- DXF'in 370'i: kendi kalınlığı, BYLAYER, BYBLOCK üyeleri, varsayılan, okunamayan değer (`crates/shared/formats/tests/dxf.rs`).
+- DXF'in 370'i: kendi kalınlığı, BYLAYER, BYBLOCK üyeleri, varsayılan, okunamayan değer (`crates/shared/formats/tests/all/dxf.rs`).
 - 370'in yazılması ve tam değerin geri gelmesi (`tests/dxf_write.rs`).
 - NCZ kaleminin nesneye geçmesi (`crates/shared/ncz/tests/fixtures.rs`).
 - KCAD örnek dosyaları üç okuyucuda: Rust, tarayıcı, Python.
@@ -128,8 +128,8 @@ Nesneden yapılan nesneler kendi kalınlığını korur:
 
 - Altı oluşturma komutunun ortak durumları (`fixtures/commands/v1/cad.*.create.json`): kendi kalınlığıyla yazılır, `0` yazılır, aralık dışı ve NaN reddedilir, denetimlerin sırası.
 - `cad.entities.edit.json`: Buda'nın, Patlat'ın ve Ötele'nin parçaları kalınlığı alır.
-- Araç çubuğu ve şerit: `apps/web/src/tools/lineWeight.test.ts` ve `crates/native/interaction/tests/line_weight.rs` aynı araçları sürer.
-- Yapıştırma: `paste.test.ts` ve `crates/native/interaction/tests/clipboard.rs`.
+- Araç çubuğu ve şerit: `apps/web/src/tools/lineWeight.test.ts` ve `crates/native/interaction/tests/all/line_weight.rs` aynı araçları sürer.
+- Yapıştırma: `paste.test.ts` ve `crates/native/interaction/tests/all/clipboard.rs`.
 
 **Taşınmayanlar:**
 

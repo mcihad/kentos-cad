@@ -6,7 +6,7 @@ import { callNamed } from './core';
  * The measures against the independent reference in fixtures/measure/v1/cases.json (docs/adr/0149 §3; 50-digit
  * mpmath, scripts/fixtures/measure_cases.py, not KentOS code), through the WASM core the app calls: every operation
  * must give the exact value within the case's bound and be written, with 0 to 6 decimals, as the exact value is
- * written by the display rule. The core runs the same cases natively (crates/shared/geometry-core/tests/measure.rs).
+ * written by the display rule. The core runs the same cases natively (crates/shared/geometry-core/tests/all/measure.rs).
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

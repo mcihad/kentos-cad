@@ -50,7 +50,7 @@
   - Kalıcı kimlik nesne karşılaştırmasına girmez: rastgeledir (v7) ya da dosyadan türetilir (v5). Kimlikler birbirleriyle karşılaştırılır (`captureUid`, `uids`).
 - Aynı dosyaları iki koşucu çalıştırır:
   - web: `apps/web/src/model/documentOps.test.ts`;
-  - masaüstü: `crates/native/domain/tests/fixtures.rs`.
+  - masaüstü: `crates/native/domain/tests/all/fixtures.rs`.
 - **Başvuru web'dir.** Beklenen değerler web'in kodundan elle yazıldı ve iki koşucuyla doğrulandı. Bozulan her beklentiyi iki koşucu da yakaladı.
 - **Sürüm sayılmaz, karşılaştırılır** (`"same"` / `"changed"`, `captureRevision` → `markSaved`).
   - Sözleşme şudur: yazılan içerik değişince sürüm değişir, ve kayıt belgeyi yalnız yazdığı sürüm hâlâ güncelse temizler.

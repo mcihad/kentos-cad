@@ -1,0 +1,56 @@
+//! The interaction crate's integration tests as one binary: every module is a test
+//! file of its own, the ones run alone (by `--test`) beside this folder.
+//! One binary links once where each file was linked on its own.
+
+mod adjoin;
+mod area;
+mod arrange;
+mod array_path;
+mod blocks;
+mod clipboard;
+mod colour;
+mod common;
+mod constructing;
+mod coordinate_z;
+mod dimension;
+mod dimension_chains;
+mod drawing;
+mod drawing_unit;
+mod edits;
+mod elevating;
+mod elevation_grips;
+mod fencing;
+mod find_replace;
+mod gnss;
+mod grips;
+mod hatch;
+mod join_chain;
+mod junctions;
+mod leaders;
+mod line;
+mod line_weight;
+mod locks;
+mod measure;
+mod modify;
+mod navigate;
+mod overlap;
+mod pick_objects;
+mod polygon;
+mod polygonize;
+mod polyline;
+mod query;
+mod quick_dimension;
+mod records;
+mod reshaping;
+mod select;
+mod select_query;
+mod shapes;
+mod snap_extras;
+mod splitting;
+mod survey_points;
+mod text;
+mod text_file;
+mod topology;
+mod topology_edit;
+mod trace_draw;
+mod vertex_points;

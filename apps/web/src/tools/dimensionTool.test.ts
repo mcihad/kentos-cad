@@ -5,7 +5,7 @@ import { at, pt, toolHarness } from './toolHarness';
 
 /**
  * Ölçülendirme's ADR 0147 §7 ways (the new kinds, Açı from an arc or a circle, Zemin, Doğrusal's typed direction), as the desktop's
- * crates/native/interaction/tests/dimension.rs walks them; values worked out by hand.
+ * crates/native/interaction/tests/all/dimension.rs walks them; values worked out by hand.
  */
 const dims = (h: ReturnType<typeof toolHarness>) => [...h.doc.all()].filter((e): e is DimensionEntity => e.kind === 'dimension');
 const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;

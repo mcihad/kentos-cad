@@ -9,7 +9,7 @@ import { at, pt, toolHarness } from './toolHarness';
  * The overlap control (docs/adr/0162 §1–§2) in the tools that draw a new area by its outline: Serbest writes it as
  * drawn; Kendi katmanında önle cuts what overlaps the visible areas of its own layer, Seçili katmanlarda önle those of
  * the chosen layers; covered, nothing is written; cut apart, one multi-part area. A neighbour square (0, 0)–(10, 10);
- * expected values worked out by hand. The desktop's are crates/native/interaction/tests/overlap.rs, the shared trace
+ * expected values worked out by hand. The desktop's are crates/native/interaction/tests/all/overlap.rs, the shared trace
  * fixtures/interaction/v1/overlap.json.
  */
 function scene() {

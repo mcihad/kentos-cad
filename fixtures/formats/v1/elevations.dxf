@@ -1,5 +1,5 @@
 999
-Heights of DXF entities read into vertex elevations (docs/adr/0142); crates/shared/formats/tests/dxf.rs works each out from this file.
+Heights of DXF entities read into vertex elevations (docs/adr/0142); crates/shared/formats/tests/all/dxf.rs works each out from this file.
 999
 ENTITIES in order: 0-2 LINE with both ends, none, one end above 0; 3-5 3D POLYLINE open with a 0 among the heights, closed, all 0;
 999

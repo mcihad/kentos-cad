@@ -4,7 +4,7 @@ import { topologyClean, type TopoObject, type TopoResult, type TopoWorks } from 
 /**
  * Topolojik temizlik (docs/adr/0148) through the WASM core, against the independent reference in
  * fixtures/topology/v1/clean.json (scripts/fixtures/topology_cases.py, no KentOS code), the cases the core runs
- * natively in crates/shared/geometry-core/tests/topology.rs: numbers within 1e-9 m, everything else exactly.
+ * natively in crates/shared/geometry-core/tests/all/topology.rs: numbers within 1e-9 m, everything else exactly.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

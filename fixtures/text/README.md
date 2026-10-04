@@ -9,4 +9,4 @@
 | `v1/readable.json` | Okunur yap: 90°'den büyük, en çok 270° dönük yazı kutusunun ortası çevresinde yarım döner; noktası w·(1 − 2a) boyuna, h·(0,92 − 2b) yukarı kayar. Genişlik (`width`) verilir. |
 | `v1/realign.json` | Hizayı değiştir (Öznitelikler'in Hiza satırı): yazı yerinde kalır, noktası w·(a′ − a) boyuna, h·(b′ − b) yukarı kayar; `to: null` sol taban çizgisidir. Genişlik (`width`) verilir. |
 
-Koşucular: çekirdek (`crates/shared/geometry-core/tests/text.rs`, çağrı tablosundan) ve web (`apps/web/src/model/textEdit.test.ts`, WASM'dan). Masaüstü aynı işlevleri doğrudan çağırır.
+Koşucular: çekirdek (`crates/shared/geometry-core/tests/all/text.rs`, çağrı tablosundan) ve web (`apps/web/src/model/textEdit.test.ts`, WASM'dan). Masaüstü aynı işlevleri doğrudan çağırır.

@@ -1,5 +1,5 @@
 999
-Texts of docs/adr/0145 §7; crates/shared/formats/tests/dxf.rs works each out from this file.
+Texts of docs/adr/0145 §7; crates/shared/formats/tests/all/dxf.rs works each out from this file.
 999
 Blocks: ETIKET (a circle and an ATTDEF NO centred in the middle, 41 0.9), YAZILI (a TEXT at 41 0.5).
 999

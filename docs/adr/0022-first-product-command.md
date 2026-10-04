@@ -126,7 +126,7 @@
 - Sürüm ve kimlik adla yazılır: `$current`, `$<ad>`, `$uid` (yazılan nesnenin kalıcı kimliği ve o yuvadaki nesnenin kimliği).
 - JSON NaN ve ±∞ taşıyamaz: `nonFinite` tablosu girdi okunduktan sonra yola değeri koyar.
 - Kapsam: başarı; yay değerleri; delikler, renk, öznitelik, grubun içindeki katman; gizli katman ve gizli grup uyarısı; kilitli katman ve kilitli grup; bilinmeyen katman (ad kimlik değildir, boş kimlik); grup; üçten az köşe (dış halka, delik); NaN ve ±∞ (köşe, delik köşesi, yay değeri, delik yay değeri); yay değeri sayısı (eksik kapanış, fazla, boş liste, delik); beklenen sürüm tutar; çakışma ve yeniden hazırlama; yazımı bozuk sürümler; denetim sırası; doğrulama ve plan yazmaz (geçmiş ve yineleme dahil); plan → sürümüyle yürütme; tek adımda geri alma ve aynı kimlikle yineleme; her yeni alan yeni kimlik.
-- Koşucular: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`).
+- Koşucular: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/all/fixtures.rs` (`kentos_domain::Document`).
 - **Kural:** beklenen değerler bu ADR'den elle yazıldı, iki koşucuyla doğrulandı; bir uygulamanın çıktısından kopyalanmadı.
 
 ### Araçlar komuttan yazar

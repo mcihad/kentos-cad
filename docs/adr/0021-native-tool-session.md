@@ -56,7 +56,7 @@
 
 - Dilbilgisi ortak Rust'tadır: `crates/shared/geometry-core/src/tools/point_text.rs`. Çözdüğü noktayı hesaplayan işlevlerin yanındadır (`relative_point`, `polar_offset`, `toward_point`). Okuduğu biçimler: mutlak `Y,X`, göreli `@dY,dX`, kutupsal `@mesafe<açı` ve yalın mesafe, web'in sırasıyla. `parse_number` ve `looks_like_coordinate` de vardır.
 - Web kendi düzenli ifadelerini korur (`coordinateInput.ts`). İki okuyucuyu ortak dosya bağlar: `fixtures/point-input/v1/cases.json`, 68 durum.
-  - Web onu `coordinateInput.test.ts`'te, Rust `geometry-core/tests/point_text.rs`'te okur.
+  - Web onu `coordinateInput.test.ts`'te, Rust `geometry-core/tests/all/point_text.rs`'te okur.
   - Durumlar çevirinin kolay yanlış yapacağı yerleri tutar: ECMAScript'in boşlukları (U+FEFF kırpılır, U+0085 kırpılmaz), yalnız ASCII rakam, `,` `;` ya da boşluktan tek ayırıcı, üs ve yalın nokta yok, en yakın double'a yuvarlama, son nokta yokken göreli ve kutupsal yazımın başka biçim denemeden “nokta yok” demesi.
 - Dilbilgisinin kendisi değişmedi. Birim, grad, ifade ve ondalık virgül `UX-05`'tir.
 

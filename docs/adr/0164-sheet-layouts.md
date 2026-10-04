@@ -913,7 +913,7 @@ masaüstü ve sunucu aynı tipleri kullanır.
 
 | Kanıt | Yer |
 |---|---|
-| İşlem, tersi, normalleştirme | `crates/shared/sheet/tests/ops.rs` |
+| İşlem, tersi, normalleştirme | `crates/shared/sheet/tests/all/ops.rs` |
 | Yapışma | `fixtures/sheet/v1/snap/*.json` (sorgu → beklenen sonuç) |
 | Yeniden yerleşim | `fixtures/sheet/v1/relayout/*.json` |
 | Çizim planı | `fixtures/sheet/v1/display/*.json` (kitap + girdiler → liste) |

@@ -6,7 +6,7 @@ import { vertexPoints, type VertexPoints } from './vertexPoints';
 /**
  * Köşelere nokta (docs/adr/0152 §5) through the WASM core, against the independent reference in
  * fixtures/vertex-points/v1/cases.json (scripts/fixtures/vertex_points_cases.py, no KentOS code), the cases the core
- * runs natively in crates/shared/geometry-core/tests/vertex_points.rs: numbers within 1e-9 m, a missing field null.
+ * runs natively in crates/shared/geometry-core/tests/all/vertex_points.rs: numbers within 1e-9 m, a missing field null.
  */
 const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'): { readFileSync(u: URL, enc: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 

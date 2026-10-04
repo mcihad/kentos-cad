@@ -9,7 +9,7 @@ import { at, canvasLog, pt, toolHarness } from './toolHarness';
  * with them is written as one area. The scene is fixtures/interaction/v1/adjoin.kcad's: parcels 101 (−30..−10) and
  * 103 (10..30) between y 0 and 24 and a 4 m transformer lot (−2..2, 10..14) between them on the active layer, a road
  * below them on Yol (y −8..0). Expected values worked out by hand; the desktop's are
- * crates/native/interaction/tests/adjoin.rs, the shared trace fixtures/interaction/v1/adjoin.json.
+ * crates/native/interaction/tests/all/adjoin.rs, the shared trace fixtures/interaction/v1/adjoin.json.
  */
 const rect = (x0: number, y0: number, x1: number, y1: number): Vec2[] => [pt(x0, y0), pt(x1, y0), pt(x1, y1), pt(x0, y1)];
 

@@ -9,7 +9,7 @@ import { at, pt, toolHarness } from './toolHarness';
  * between points on connected line work runs along it, and closing on the first corner goes back along it; not for
  * Sabit ilk nokta's rays nor İçine tıkla. Two parcels side by side: (0, 0), (100, 0), (100, 50), (0, 60) and
  * (100, 0)–(200, 50); the screen is the world, so the 8 px snap aperture reaches 8 m. Expected values are worked out
- * by hand; the desktop's are crates/native/interaction/tests/trace_draw.rs, the shared trace
+ * by hand; the desktop's are crates/native/interaction/tests/all/trace_draw.rs, the shared trace
  * fixtures/interaction/v1/trace-draw.json. İzle is kept for the session (static), so each test sets it as it needs.
  */
 function scene() {

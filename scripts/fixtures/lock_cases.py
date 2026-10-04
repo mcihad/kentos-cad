@@ -3,7 +3,7 @@
 
 Writes fixtures/locks/v1/cases.json from the ADR's rules alone, with Python's
 standard library (exact fractions) and mpmath (50 digits) for the angles, no
-KentOS code. The geometry core (crates/shared/geometry-core/tests/locks.rs)
+KentOS code. The geometry core (crates/shared/geometry-core/tests/all/locks.rs)
 and the web through its WASM (apps/web/src/tools/locks.test.ts) must give the
 same: points within 1e-8 m (a TM northing's double steps 0.93 nm), unit
 directions within 1e-14, none where the reference has none, lock text

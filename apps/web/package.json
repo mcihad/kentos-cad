@@ -6,7 +6,7 @@
   "scripts": {
     "wasm": "node ../../scripts/wasm/ensure.mjs",
     "dev": "node ../../scripts/wasm/ensure.mjs && vite",
-    "build": "node ../../scripts/wasm/ensure.mjs && tsc && vite build",
+    "build": "node ../../scripts/wasm/ensure.mjs --release && tsc && vite build",
     "preview": "vite preview",
     "test": "node ../../scripts/wasm/ensure.mjs && vitest run",
     "test:watch": "node ../../scripts/wasm/ensure.mjs && vitest",
@@ -16,8 +16,8 @@
     "e2e:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/interaction.mjs",
     "e2e:use": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/use.mjs",
     "e2e:cloud": "node ../../scripts/wasm/ensure.mjs && cargo build -q -p kentos-api --bin kentosd --example e2e_database && node scripts/e2e/cloud.mjs",
-    "perf:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/perf/interaction.mjs",
-    "perf:kcad": "node ../../scripts/wasm/ensure.mjs && node scripts/perf/kcad.mjs",
+    "perf:interaction": "node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/interaction.mjs",
+    "perf:kcad": "node ../../scripts/wasm/ensure.mjs --release && node scripts/perf/kcad.mjs",
     "inventory": "node ../../scripts/wasm/ensure.mjs && node scripts/inventory/inventory.mjs",
     "inventory:check": "node ../../scripts/wasm/ensure.mjs && node scripts/inventory/inventory.mjs --check"
   },

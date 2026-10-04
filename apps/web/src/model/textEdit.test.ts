@@ -10,7 +10,7 @@ import { textIncrement, textReadable, textRealign, textReplace } from './textEdi
 /**
  * A text's editing rules (docs/adr/0145 §3, §6) through WASM against the shared
  * cases (fixtures/text/v1, written from the rules by
- * scripts/fixtures/text_cases.py); natively crates/shared/geometry-core/tests/text.rs.
+ * scripts/fixtures/text_cases.py); natively crates/shared/geometry-core/tests/all/text.rs.
  */
 
 interface File<C> {

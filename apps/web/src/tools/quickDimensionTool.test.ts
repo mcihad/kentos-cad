@@ -5,7 +5,7 @@ import { at, pt, recorder, toolHarness } from './toolHarness';
 
 /**
  * Hızlı ölçü (docs/adr/0147 §7) through the tool: the selection first, then where the dimensions go or their distance
- * typed, all in one step; as the desktop's crates/native/interaction/tests/quick_dimension.rs walks it. Values worked
+ * typed, all in one step; as the desktop's crates/native/interaction/tests/all/quick_dimension.rs walks it. Values worked
  * out by hand; what each edge gets is the core's, checked against the independent reference in dimension.test.ts.
  */
 const dims = (h: ReturnType<typeof toolHarness>) => [...h.doc.all()].filter((e): e is DimensionEntity => e.kind === 'dimension');
