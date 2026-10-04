@@ -472,8 +472,18 @@ impl Grid {
         let mut first = true;
         field(&mut out, &mut first, "from", &self.from);
         field(&mut out, &mut first, "to", &self.to);
-        field(&mut out, &mut first, "fromAxes", &[self.from_axes.0, self.from_axes.1]);
-        field(&mut out, &mut first, "toAxes", &[self.to_axes.0, self.to_axes.1]);
+        field(
+            &mut out,
+            &mut first,
+            "fromAxes",
+            &[self.from_axes.0, self.from_axes.1],
+        );
+        field(
+            &mut out,
+            &mut first,
+            "toAxes",
+            &[self.to_axes.0, self.to_axes.1],
+        );
         field(&mut out, &mut first, "subgrids", &subgrids);
         field(&mut out, &mut first, "extent", &extent);
         out.push('}');
