@@ -84,7 +84,7 @@ export class FormatsClient {
   }
 
   /**
-   * Reads a field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI, Sokkia SDR, Topcon GTS-7) by its content, else a text
+   * Reads a field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW) by its content, else a text
    * book with the user's column mapping
    * (null: only its first line, the columns to map); the caller keeps `bytes`.
    */

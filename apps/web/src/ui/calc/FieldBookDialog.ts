@@ -16,17 +16,17 @@ import { openPolarWith } from './PolarDialog';
 import { openTraverseWith } from './TraverseDialog';
 
 /** What the window asks for before a book is open. */
-const OPEN_HINT = 'Alet dosyasını (Leica GSI, Sokkia SDR, Topcon GTS-7) ya da sütunları eşlenecek bir CSV/TXT karneyi açın.';
+const OPEN_HINT = 'Alet dosyasını (Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW) ya da sütunları eşlenecek bir CSV/TXT karneyi açın.';
 
 /** A book's format as the window names it (the desktop's `format_name`). */
 function formatName(format: string): string {
-  const names: Record<string, string> = { gsi: 'Leica GSI', sdr: 'Sokkia SDR', gts7: 'Topcon GTS-7' };
+  const names: Record<string, string> = { gsi: 'Leica GSI', sdr: 'Sokkia SDR', gts7: 'Topcon GTS-7', nikon: 'Nikon RAW' };
   return names[format] ?? 'Metin karne';
 }
 
 /**
  * Karne editörü (docs/adr/0169 §2–§3, §6; the desktop's `calc/fieldbook/`): a field book opened from an instrument's
- * file (Leica GSI, Sokkia SDR, Topcon GTS-7, told by its content) or a text book whose columns are mapped here; its stations, their observations as
+ * file (Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW, told by its content) or a text book whose columns are mapped here; its stations, their observations as
  * the file has them, which may be left out (Kullan) and renamed; the station shown reduced as the shared core reduces it
  * (`fieldReduce`) with the project's k and tolerances: the faces paired and their differences, the horizontal distances
  * and the height differences, a difference above its tolerance in the warning colour. What is opened stays while the app

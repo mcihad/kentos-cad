@@ -10,6 +10,7 @@ traverse ends oriented on. Angles in gon, lengths in metres.
 - sample.gsi: Leica GSI-16 (GSI ONLINE for Leica TPS and DNA, 2003).
 - sample.sdr: Sokkia SDR33, 14-character names (Interfacing with the SOKKIA SDR Electronic Field Book, 1999).
 - sample.gt7: Topcon GTS-7 raw (Topcon Link Reference Manual, Appendix C), gon.
+- sample-nikon.raw: Nikon RAW V2.00 (Nivo Series Instruction Manual), gon.
 """
 from pathlib import Path
 
@@ -110,7 +111,22 @@ def gts7():
     return "\r\n".join(lines) + "\r\n"
 
 
-for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr), ("sample.gt7", gts7)):
+def nikon():
+    """Nikon RAW: the download's comments (metres, gon, zeniths), the stations' coordinates (MP), per station ST and per
+    observation SS with the target height in force and its code."""
+    lines = ["CO,Nikon RAW data format V2.00", "CO,KARNE", "CO,Dist Units: Metres", "CO,Angle Units: Gons", "CO,Zero VA: Zenith"]
+    for (name, e, n, h, hi), _ in BOOK:
+        lines.append(f"MP,{name},,{n:.3f},{e:.3f},{h:.3f},")
+    for (name, e, n, h, hi), observations in BOOK:
+        lines.append(f"ST,{name},,{observations[0][0]},,{hi:.3f},0.0000,0.0000")
+        th_now = None
+        for target, hz, v, sd, th, code in observations:
+            th_now = th if th is not None else th_now
+            lines.append(f"SS,{target},{th_now:.3f},{sd:.4f},{hz:.4f},{v:.4f},10:00:00,{code or ''}")
+    return "\r\n".join(lines) + "\r\n"
+
+
+for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr), ("sample.gt7", gts7), ("sample-nikon.raw", nikon)):
     text = write()
     (DIR / name).write_text(text, encoding="ascii", newline="")
     print(DIR / name, text.count("\n"), "satır")

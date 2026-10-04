@@ -103,6 +103,15 @@ impl Exact {
         }
     }
 
+    /// A quarter turn less the value, within a turn (`quarter`, `full` whole
+    /// numbers): a zenith from a vertical angle from the horizon.
+    pub fn zenith_of_elevation(self, quarter: i128, full: i128) -> Self {
+        Self {
+            num: (quarter * self.den - self.num).rem_euclid(full * self.den),
+            den: self.den,
+        }
+    }
+
     /// The value's nearest float64: its decimal expansion, exact or to 120
     /// digits (far closer than any halfway point between two float64s the
     /// fraction could be near), read once (a negative zero is zero).
@@ -149,6 +158,10 @@ mod tests {
         assert_eq!(
             Exact::dms("10.6000").map(Exact::value),
             Err(Dms::Sexagesimal)
+        );
+        assert_eq!(
+            Exact::decimal("1.2345").map(|v| v.zenith_of_elevation(100, 400).value()),
+            Some(98.7655)
         );
         assert_eq!(
             Exact::dms("-37.26440").map(|v| v.plus(360).value()),

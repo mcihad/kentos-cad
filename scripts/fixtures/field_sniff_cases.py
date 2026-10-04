@@ -2,7 +2,7 @@
 """Independent reference of how a field book's format is told by its content (docs/adr/0169 §1, §6; steps 3b, 5).
 
 Writes fixtures/field/v1/sniff.json from the rules alone, no KentOS code: which files Karne editörü reads as Leica GSI,
-Sokkia SDR or Topcon GTS-7 and which as a text book whose columns the user maps.
+Sokkia SDR, Topcon GTS-7 or Nikon RAW and which as a text book whose columns the user maps.
 
 The rules:
 
@@ -14,8 +14,9 @@ The rules:
    (beginning with STX, hex 02, or ETX, hex 03) is an SDR header: its first seven characters "00", two capital letters
    A–Z (the derivation code) and "SDR" (records before it are said by the reader).
 4. Otherwise the book is Topcon GTS-7 when one of its first ten lines that are not blank begins with "GTS-7" (the version
-   record), or its first word (up to a blank) is UNITS or STN and the rest of the line holds a comma. Otherwise (or with
-   no line at all) the book is a text book.
+   record), or its first word (up to a blank) is UNITS or STN and the rest of the line holds a comma.
+5. Otherwise the book is Nikon RAW when one of its first ten lines that are not blank begins with "CO," (Nikon RAW's
+   comment record). Otherwise (or with no line at all) the book is a text book.
 """
 
 import argparse
@@ -48,6 +49,8 @@ def sniff(text):
         parts = line.split(None, 1)
         if line.startswith("GTS-7") or (len(parts) == 2 and parts[0] in ("UNITS", "STN") and "," in parts[1]):
             return "gts7"
+    if any(line.startswith("CO,") for line in head):
+        return "nikon"
     return None
 
 
@@ -55,6 +58,7 @@ def cases():
     gsi = json.loads((ROOT / "fixtures" / "field" / "v1" / "gsi.json").read_text(encoding="utf-8"))
     sdr = json.loads((ROOT / "fixtures" / "field" / "v1" / "sdr.json").read_text(encoding="utf-8"))
     gts7 = json.loads((ROOT / "fixtures" / "field" / "v1" / "gts7.json").read_text(encoding="utf-8"))
+    nikon = json.loads((ROOT / "fixtures" / "field" / "v1" / "nikon.json").read_text(encoding="utf-8"))
     return [
         ("GSI-8", gsi["cases"][0]["text"]),
         ("GSI-16, CR LF", gsi["cases"][1]["text"]),
@@ -82,6 +86,12 @@ def cases():
         ("virgülsüz STN satırı", "STN 1 2 3\nSS 4 5 6\n"),
         ("onuncu satırdan sonra UNITS", "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nUNITS M,D\n"),
         ("küçük harfli units", "units M,D\nSTN; 1,5\n"),
+        ("Nikon RAW, derece", nikon["cases"][0]["text"]),
+        ("Nikon RAW, gon", nikon["cases"][1]["text"]),
+        ("CO ile başlayan ama virgülsüz", "CO Nikon\nST,1\n"),
+        ("ikinci satırda CO,", "ST,1,,,,1.5\nCO,Angle Units: Gons\n"),
+        ("onuncu satırdan sonra CO,", "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nCO,Angle Units: Gons\n"),
+        ("Nikon RAW, birimlerden önce ölçü", nikon["cases"][2]["text"]),
     ]
 
 

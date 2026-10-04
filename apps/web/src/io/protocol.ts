@@ -25,7 +25,7 @@ import type { KcadProgress } from './kcad';
 
 export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
-  /** A field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI, Sokkia SDR, Topcon GTS-7) by its content, else a text book with the user's mapping (null: its first line only). */
+  /** A field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW) by its content, else a text book with the user's mapping (null: its first line only). */
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */

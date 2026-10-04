@@ -54,7 +54,8 @@ use crate::layer::LineType;
 /// 21: one entry for field books (`readFieldBook`), the book's format.
 /// 22: Sokkia SDR2x and SDR33 field books (`readFieldBook`, format `sdr`).
 /// 23: Topcon GTS-7 field books (`gts7`).
-pub const FORMATS_VERSION: u32 = 23;
+/// 24: Nikon RAW field books (`nikon`).
+pub const FORMATS_VERSION: u32 = 24;
 
 // ── Every import ────────────────────────────────────────────────────────
 

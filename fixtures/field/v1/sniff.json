@@ -132,6 +132,36 @@
       "name": "küçük harfli units",
       "text": "units M,D\nSTN; 1,5\n",
       "format": null
+    },
+    {
+      "name": "Nikon RAW, derece",
+      "text": "CO,Nikon RAW data format V2.00\r\nCO,KARNE\r\nCO,Dist Units: Metres\r\nCO,Angle Units: DDDMMSS\r\nCO,Zero azimuth: North\r\nCO,Zero VA: Zenith\r\nCO,Coord Order: NEZ\r\nMP,ST1,,4521800.000,412350.000,105.200,\r\nMP,P2,,4522045.000,412350.500,105.500,\r\nCO,Temp:20C Press:1013hPa Prism:0\r\nST,ST1,,P2,,1.552,0.0000,0.0000\r\nF1,,1.700,,0.0004,,08:27:58\r\nF1,101,1.700,63.214,78.411304,91.065660,08:28:30\r\nF2,101,1.700,63.216,258.411952,268.531030,08:29:01\r\nSS,102,2.000,82.441,108.295820,90.234560,08:30:12,BINA\r\nCP,P9,,2.000,150.000,270.0000,90.0000,08:31:00,POL\r\nSO,1003,103,2.000,55.123,189.064800,88.494400,08:32:00,\r\nST,ST2,,ST1,,1.480,0.0000,0.0000\r\nF1,ST1,2.000,83.392,0.0000,90.180036,08:40:00\r\n",
+      "format": "nikon"
+    },
+    {
+      "name": "Nikon RAW, gon",
+      "text": "CO,Dist Units: Metres\nCO,Angle Units: Gons\nCO,Zero VA: Horizon\nST,S1,,,,1.500,0.0000,0.0000\nSS,A,1.600,10.000,50.0000,1.2345,10:00:00,\nF2,A,,10.002,250.0000,198.7655,10:00:30\nSS,B,,20.000,-10.0000,398.0000,10:01:00,\n",
+      "format": "nikon"
+    },
+    {
+      "name": "CO ile başlayan ama virgülsüz",
+      "text": "CO Nikon\nST,1\n",
+      "format": null
+    },
+    {
+      "name": "ikinci satırda CO,",
+      "text": "ST,1,,,,1.5\nCO,Angle Units: Gons\n",
+      "format": "nikon"
+    },
+    {
+      "name": "onuncu satırdan sonra CO,",
+      "text": "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nCO,Angle Units: Gons\n",
+      "format": null
+    },
+    {
+      "name": "Nikon RAW, birimlerden önce ölçü",
+      "text": "SS,P0,1.6,10.0,10.0000,90.0000,09:00:00,\nCO,Dist Units: US-Feet\nCO,Angle Units: DDDMMSS\nSS,P1,1.6,10.0,10.0000,90.0000,09:00:00,\nCO,Dist Units: Metres\nSS,P2,1.6,10.0,10.0000,90.0000,09:00:00,\nSS,P3,1.6,10.0,10.6000,90.0000,09:00:00,\nSS,P4,1.6,10.0,10.0000,90.0060,09:00:00,\nSS,P5,1.6,10.0,360.0001,90.0000,09:00:00,\nSS,P6,1.6,-1.0,10.0000,90.0000,09:00:00,\nSS,P7,1.6,1e1,10.0000,90.0000,09:00:00,\nSS,,1.6,10.0,10.0000,90.0000,09:00:00,\nSS,P9,1.6,10.0,,90.0000,09:00:00,\nSS,P10,1.6,10.0,10.0000,-5.0000,09:00:00,\nCO,Angle Units: Gons\nSS,P11,1.6,10.0,10.0000,100.0000,09:00:00,\nCO,Angle Units: Mils\nSS,P12,1.6,10.0,10.0000,100.0000,09:00:00,\n",
+      "format": "nikon"
     }
   ]
 }

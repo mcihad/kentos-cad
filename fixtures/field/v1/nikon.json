@@ -1,0 +1,219 @@
+{
+  "format": "kentos.field-nikon",
+  "version": 1,
+  "source": "scripts/fixtures/field_nikon_cases.py (docs/adr/0169 §1; Nikon Nivo Series Instruction Manual, Nikon RAW V2.00)",
+  "texts": {
+    "distance": "Satır {line}: Nikon RAW uzunluk birimi “{data}” okunmuyor; yalnız metre; ölçüler okunmadı.",
+    "angles": "Satır {line}: Nikon RAW açı birimi “{data}” okunmuyor; yalnız DDDMMSS ve gon; ölçüler okunmadı.",
+    "vertical": "Satır {line}: Nikon RAW düşey açı başlangıcı “{data}” okunmuyor; yalnız Zenith ve Horizon; ölçüler okunmadı.",
+    "mixed": "Satır {line}: Nikon RAW açı birimi karnenin birimiyle aynı değil; ölçüler okunmadı.",
+    "before": "Satır {line}: Nikon RAW birimleri (CO,Dist Units ve CO,Angle Units) bu satırdan önce yazılı değil; ölçüler okunmadı.",
+    "zenith": "Satır {line}: Nikon RAW düşey açı başlangıcı (CO,Zero VA) yazılı değil; düşey açılar başucu açısı sayıldı.",
+    "value": "Satır {line}: “{data}” sayı değil; satır okunmadı.",
+    "dms": "Satır {line}: açı “{data}” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı.",
+    "turn": "Satır {line}: açı “{data}” bir tam dönüşten büyük; satır okunmadı.",
+    "below": "Satır {line}: başucu açısı “{data}” sıfırdan küçük; satır okunmadı.",
+    "negative": "Satır {line}: eğik uzunluk “{data}” sıfırdan küçük; satır okunmadı.",
+    "target": "Satır {line}: gözlemin hedef noktası yok; satır okunmadı.",
+    "horizontal": "Satır {line}: {target} gözleminin yatay açısı yok; satır okunmadı."
+  },
+  "cases": [
+    {
+      "name": "derece (DDD.MMSS), başucu: bilinen istasyon, adsız geri bakış, iki durum, kodlar, kontrol ve aplikasyon ölçüsü",
+      "text": "CO,Nikon RAW data format V2.00\r\nCO,KARNE\r\nCO,Dist Units: Metres\r\nCO,Angle Units: DDDMMSS\r\nCO,Zero azimuth: North\r\nCO,Zero VA: Zenith\r\nCO,Coord Order: NEZ\r\nMP,ST1,,4521800.000,412350.000,105.200,\r\nMP,P2,,4522045.000,412350.500,105.500,\r\nCO,Temp:20C Press:1013hPa Prism:0\r\nST,ST1,,P2,,1.552,0.0000,0.0000\r\nF1,,1.700,,0.0004,,08:27:58\r\nF1,101,1.700,63.214,78.411304,91.065660,08:28:30\r\nF2,101,1.700,63.216,258.411952,268.531030,08:29:01\r\nSS,102,2.000,82.441,108.295820,90.234560,08:30:12,BINA\r\nCP,P9,,2.000,150.000,270.0000,90.0000,08:31:00,POL\r\nSO,1003,103,2.000,55.123,189.064800,88.494400,08:32:00,\r\nST,ST2,,ST1,,1.480,0.0000,0.0000\r\nF1,ST1,2.000,83.392,0.0000,90.180036,08:40:00\r\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "ST1",
+            "instrumentHeight": 1.552,
+            "east": 412350.0,
+            "north": 4521800.0,
+            "height": 105.2,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 0.0011111111111111111,
+                "targetHeight": 1.7,
+                "line": 12
+              },
+              {
+                "target": "101",
+                "hz": 78.68695555555556,
+                "zenith": 91.11572222222222,
+                "slope": 63.214,
+                "targetHeight": 1.7,
+                "line": 13
+              },
+              {
+                "target": "101",
+                "hz": 258.68875555555553,
+                "zenith": 268.88619444444447,
+                "slope": 63.216,
+                "targetHeight": 1.7,
+                "line": 14
+              },
+              {
+                "target": "102",
+                "hz": 108.4995,
+                "zenith": 90.396,
+                "slope": 82.441,
+                "targetHeight": 2.0,
+                "code": "BINA",
+                "line": 15
+              },
+              {
+                "target": "P9",
+                "hz": 270.0,
+                "zenith": 90.0,
+                "slope": 150.0,
+                "targetHeight": 2.0,
+                "code": "POL",
+                "line": 16
+              },
+              {
+                "target": "1003",
+                "hz": 189.11333333333334,
+                "zenith": 88.82888888888888,
+                "slope": 55.123,
+                "targetHeight": 2.0,
+                "line": 17
+              }
+            ]
+          },
+          {
+            "station": "ST2",
+            "instrumentHeight": 1.48,
+            "observations": [
+              {
+                "target": "ST1",
+                "hz": 0.0,
+                "zenith": 90.3001,
+                "slope": 83.392,
+                "targetHeight": 2.0,
+                "line": 19
+              }
+            ]
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "gon, ufuktan düşey açı, taşınan prizma yüksekliği",
+      "text": "CO,Dist Units: Metres\nCO,Angle Units: Gons\nCO,Zero VA: Horizon\nST,S1,,,,1.500,0.0000,0.0000\nSS,A,1.600,10.000,50.0000,1.2345,10:00:00,\nF2,A,,10.002,250.0000,198.7655,10:00:30\nSS,B,,20.000,-10.0000,398.0000,10:01:00,\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "S1",
+            "instrumentHeight": 1.5,
+            "observations": [
+              {
+                "target": "A",
+                "hz": 50.0,
+                "zenith": 98.7655,
+                "slope": 10.0,
+                "targetHeight": 1.6,
+                "line": 5
+              },
+              {
+                "target": "A",
+                "hz": 250.0,
+                "zenith": 301.2345,
+                "slope": 10.002,
+                "targetHeight": 1.6,
+                "line": 6
+              },
+              {
+                "target": "B",
+                "hz": 390.0,
+                "zenith": 102.0,
+                "slope": 20.0,
+                "targetHeight": 1.6,
+                "line": 7
+              }
+            ]
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "birimsiz ölçü, okunmayan birimler, bozuk sayılar, hedefsiz ve yatay açısız ölçü, istasyonsuz gözlem",
+      "text": "SS,P0,1.6,10.0,10.0000,90.0000,09:00:00,\nCO,Dist Units: US-Feet\nCO,Angle Units: DDDMMSS\nSS,P1,1.6,10.0,10.0000,90.0000,09:00:00,\nCO,Dist Units: Metres\nSS,P2,1.6,10.0,10.0000,90.0000,09:00:00,\nSS,P3,1.6,10.0,10.6000,90.0000,09:00:00,\nSS,P4,1.6,10.0,10.0000,90.0060,09:00:00,\nSS,P5,1.6,10.0,360.0001,90.0000,09:00:00,\nSS,P6,1.6,-1.0,10.0000,90.0000,09:00:00,\nSS,P7,1.6,1e1,10.0000,90.0000,09:00:00,\nSS,,1.6,10.0,10.0000,90.0000,09:00:00,\nSS,P9,1.6,10.0,,90.0000,09:00:00,\nSS,P10,1.6,10.0,10.0000,-5.0000,09:00:00,\nCO,Angle Units: Gons\nSS,P11,1.6,10.0,10.0000,100.0000,09:00:00,\nCO,Angle Units: Mils\nSS,P12,1.6,10.0,10.0000,100.0000,09:00:00,\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "",
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 10.0,
+                "zenith": 90.0,
+                "slope": 10.0,
+                "targetHeight": 1.6,
+                "line": 6
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: Nikon RAW birimleri (CO,Dist Units ve CO,Angle Units) bu satırdan önce yazılı değil; ölçüler okunmadı."
+          },
+          {
+            "line": 2,
+            "problem": "Satır 2: Nikon RAW uzunluk birimi “US-Feet” okunmuyor; yalnız metre; ölçüler okunmadı."
+          },
+          {
+            "line": 6,
+            "problem": "Satır 6: Nikon RAW düşey açı başlangıcı (CO,Zero VA) yazılı değil; düşey açılar başucu açısı sayıldı."
+          },
+          {
+            "line": 7,
+            "problem": "Satır 7: açı “10.6000” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: açı “90.0060” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı."
+          },
+          {
+            "line": 9,
+            "problem": "Satır 9: açı “360.0001” bir tam dönüşten büyük; satır okunmadı."
+          },
+          {
+            "line": 10,
+            "problem": "Satır 10: eğik uzunluk “-1.0” sıfırdan küçük; satır okunmadı."
+          },
+          {
+            "line": 11,
+            "problem": "Satır 11: “1e1” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 12,
+            "problem": "Satır 12: gözlemin hedef noktası yok; satır okunmadı."
+          },
+          {
+            "line": 13,
+            "problem": "Satır 13: P9 gözleminin yatay açısı yok; satır okunmadı."
+          },
+          {
+            "line": 14,
+            "problem": "Satır 14: başucu açısı “-5.0000” sıfırdan küçük; satır okunmadı."
+          },
+          {
+            "line": 15,
+            "problem": "Satır 15: Nikon RAW açı birimi karnenin birimiyle aynı değil; ölçüler okunmadı."
+          },
+          {
+            "line": 17,
+            "problem": "Satır 17: Nikon RAW açı birimi “Mils” okunmuyor; yalnız DDDMMSS ve gon; ölçüler okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

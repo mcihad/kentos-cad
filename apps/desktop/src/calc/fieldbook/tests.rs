@@ -90,8 +90,9 @@ fn a_gsi_book_is_read_reduced_and_edited() {
 }
 
 /// The same book from other instruments (docs/adr/0169 §1, step 5): the
-/// Sokkia SDR33 and Topcon GTS-7 samples are told by their content, named
-/// so, and reduce into the GSI sample's rows, station by station.
+/// Sokkia SDR33, Topcon GTS-7 and Nikon RAW samples are told by their
+/// content, named so, and reduce into the GSI sample's rows, station by
+/// station.
 #[test]
 fn an_sdr_book_reduces_as_the_gsi_book() {
     let mut app = opened();
@@ -118,6 +119,7 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
     for (file, format, name) in [
         ("sample.sdr", "sdr", "Sokkia SDR"),
         ("sample.gt7", "gts7", "Topcon GTS-7"),
+        ("sample-nikon.raw", "nikon", "Nikon RAW"),
     ] {
         send(&mut app, Event::Picked(Some(sample_named(file))));
         let book = app.calc.fieldbook.book.as_ref().expect("read");
@@ -178,8 +180,8 @@ fn with_traverse_tolerances(app: &mut App) {
 }
 
 /// Karne editörü's pictures: the sample book in the light theme at
-/// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33 and
-/// a Topcon GTS-7 file, a text book's mapping, Kutupsal alım
+/// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33, a
+/// Topcon GTS-7 and a Nikon RAW file, a text book's mapping, Kutupsal alım
 /// filled from the first station, the traverse's leg above its two-way
 /// tolerance and Poligon hesabı filled from both stations.
 #[test]
@@ -199,7 +201,9 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "sdr", "gts7", "csv", "polar", "kenar", "poligon"] {
+        for name in [
+            "gsi", "sdr", "gts7", "nikon", "csv", "polar", "kenar", "poligon",
+        ] {
             let mut app = opened();
             let _ = app
                 .settings
@@ -224,6 +228,12 @@ fn screens() {
             }
             if name == "gts7" {
                 send(&mut app, Event::Picked(Some(sample_named("sample.gt7"))));
+            }
+            if name == "nikon" {
+                send(
+                    &mut app,
+                    Event::Picked(Some(sample_named("sample-nikon.raw"))),
+                );
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

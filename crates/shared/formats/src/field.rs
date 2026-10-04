@@ -1,5 +1,5 @@
 //! Field books (docs/adr/0169 §1–§2, §6): an instrument's own file ([`gsi`],
-//! [`sdr`], [`gts7`], told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
+//! [`sdr`], [`gts7`], [`nikon`], told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
 //! columns the user maps (istasyon, alet yüksekliği, nokta, yatay açı,
 //! başucu açısı, eğik uzunluk, prizma yüksekliği, kod), read into stations
 //! and observations as the instrument wrote them; every line that is not
@@ -14,6 +14,7 @@ use crate::text;
 mod exact;
 pub mod gsi;
 pub mod gts7;
+pub mod nikon;
 pub mod sdr;
 
 /// What is said of a line not read; `{line}`, `{what}`, `{text}` and `{target}` are filled in.
@@ -84,7 +85,9 @@ fn number(text: &str, comma: bool) -> Option<f64> {
 /// SDR header (`00`, two capital letters, `SDR`; records before it are said
 /// by the reader); `gts7` when one of its first ten lines that are not blank
 /// begins with `GTS-7` (the version record), or with `UNITS` or `STN` and
-/// blanks before fields that hold a comma; none for a text book.
+/// blanks before fields that hold a comma; `nikon` when one of its first
+/// ten lines that are not blank begins with `CO,` (Nikon RAW's comment
+/// record); none for a text book.
 pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
     let (enc, bom) = text::sniff(bytes);
     let body = text::decode(&bytes[bom..], enc);
@@ -129,17 +132,21 @@ pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
                     matches!(word, "UNITS" | "STN") && !rest.trim().is_empty() && rest.contains(',')
                 })
     });
-    gts7.then_some("gts7")
+    if gts7 {
+        return Some("gts7");
+    }
+    head.iter().any(|l| l.starts_with("CO,")).then_some("nikon")
 }
 
 /// Reads a field book: an instrument's file by its content (Leica GSI,
-/// Sokkia SDR, Topcon GTS-7); otherwise a text book with the user's column mapping, or
+/// Sokkia SDR, Topcon GTS-7, Nikon RAW); otherwise a text book with the user's column mapping, or
 /// without one only its first line's cells (the columns to map).
 pub fn read(bytes: &[u8], csv: Option<&FieldCsvOptions>) -> FieldBookRead {
     match sniff(bytes) {
         Some("gsi") => return gsi::read(bytes),
         Some("sdr") => return sdr::read(bytes),
         Some("gts7") => return gts7::read(bytes),
+        Some("nikon") => return nikon::read(bytes),
         _ => {}
     }
     match csv {

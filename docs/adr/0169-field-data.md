@@ -166,6 +166,19 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    başlıyorsa. Bağımsız başvuru `field_gts7_cases.py` (`gts7.json`, 3 durum; Topcon'un örneği dahil) ve 6000 rastgele karnede Rust
    ile birebir; örnek `sample.gt7` GSI örneğiyle aynı karne; dosya süzgecinde `.gt7`, `.raw`; resimler `karne-gts7-*`,
    `fieldbook-gts7-*`.
+
+   *(4 Ekim: 5d tamam; JobXML'den, 5c'den önce.)* Nikon RAW: kaynak Total Station Nivo Series Instruction Manual (Nikon-Trimble),
+   “Nikon raw record formats” ve “Data examples” (Nikon RAW data format V2.00). Çekirdekte `formats::field::nikon` (biçim `nikon`,
+   `FORMATS_VERSION` 24): virgülle ayrılmış kayıtlar; birimler indirmenin yorum kayıtlarından: “CO,Dist Units:” (Met… metre; başkası
+   okunmaz), “CO,Angle Units:” (DDDMMSS: DDD.MMSS derece; Gon, Gons, Grad, Grads: gon; Mils ve başkası okunmaz, tahmin edilmez),
+   “CO,Zero VA:” (Zenith; Horizon: başucu = çeyrek tur − açı, kesin; Compass ve başkası okunmaz; yazılı değilse düşey açılar başucu
+   sayılır, bir kez söylenir). Birimler yazılmadan önceki ölçüler bir kez söylenir. Koordinat kayıtları (UP, MP, CC, RE: kuzey, doğu,
+   kot) bir adın son koordinatlarıdır; ST istasyonu (alet yüksekliği, geri bakış noktası) başlatır, koordinatları adının son kaydından.
+   Gözlemler F1, F2 (nokta boşsa istasyonun geri bakışı), SS, CP, SO; prizma yüksekliği boşsa istasyonun sonuncusu, eğik uzunluk
+   boşsa yalnız doğrultu. Sayılar ve açılar GTS-7'nin kurallarıyla (`field::exact`). İçerikten tanıma: boş olmayan ilk on satırdan
+   biri `CO,` ile başlıyorsa. Bağımsız başvuru `field_nikon_cases.py` (`nikon.json`, 3 durum) ve 6000 rastgele karnede Rust ile
+   birebir; örnek `sample-nikon.raw` GSI örneğiyle aynı karne; resimler `karne-nikon-*`, `fieldbook-nikon-*`. Kılavuzun “Data
+   examples” örneği kendi içinde tutarsızdır (SS'in değerleri DDD.MMSS değil), örnek olarak alınmadı.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 
