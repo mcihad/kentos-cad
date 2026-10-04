@@ -3,9 +3,9 @@ import type { FieldStation } from "./FieldStation";
 import type { LineError } from "./LineError";
 
 /**
- * A field book read: the text's encoding, the book's angle unit when the
- * file says it (`grad`, `deg`; a CSV book's is the user's), the first
- * line's cells (the columns' names to map), its stations, and the lines not
- * read with why.
+ * A field book read: its format (`gsi`, told by the content; else `csv`, a
+ * text book), the text's encoding, the book's angle unit when the file says
+ * it (`grad`, `deg`; a CSV book's is the user's), the first line's cells
+ * (the columns' names to map), its stations, and the lines not read with why.
  */
-export type FieldBookRead = { encoding: string, unit?: string, firstLine: Array<string>, stations: Array<FieldStation>, problems: Array<LineError>, };
+export type FieldBookRead = { format: string, encoding: string, unit?: string, firstLine: Array<string>, stations: Array<FieldStation>, problems: Array<LineError>, };

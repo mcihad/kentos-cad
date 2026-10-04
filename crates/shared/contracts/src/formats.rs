@@ -51,7 +51,8 @@ use crate::layer::LineType;
 ///    in the typed columns' numbering and the dimension's mask (a flag), `za` and `zb` (floats).
 /// 19: the field book (docs/adr/0169): `readFieldCsv`, `FieldCsvOptions` → `FieldBookRead`.
 /// 20: Leica GSI (`readFieldGsi`); the book's angle unit, a station's coordinates.
-pub const FORMATS_VERSION: u32 = 20;
+/// 21: one entry for field books (`readFieldBook`), the book's format.
+pub const FORMATS_VERSION: u32 = 21;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -379,16 +380,17 @@ pub struct FieldStation {
     pub observations: Vec<FieldObservation>,
 }
 
-/// A field book read: the text's encoding, the book's angle unit when the
-/// file says it (`grad`, `deg`; a CSV book's is the user's), the first
-/// line's cells (the columns' names to map), its stations, and the lines not
-/// read with why.
+/// A field book read: its format (`gsi`, told by the content; else `csv`, a
+/// text book), the text's encoding, the book's angle unit when the file says
+/// it (`grad`, `deg`; a CSV book's is the user's), the first line's cells
+/// (the columns' names to map), its stations, and the lines not read with why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldBookRead {
+    pub format: String,
     pub encoding: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

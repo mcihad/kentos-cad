@@ -141,12 +141,9 @@ scope.onmessage = (e) => {
         }
       } else {
         const f = await formats.get();
-        if (m.op === 'readCoords' || m.op === 'readGeoJson' || m.op === 'readFieldCsv') {
-          const read = m.op === 'readCoords' ? f.readCoords : m.op === 'readFieldCsv' ? f.readFieldCsv : f.readGeoJson;
+        if (m.op === 'readCoords' || m.op === 'readGeoJson' || m.op === 'readFieldBook') {
+          const read = m.op === 'readCoords' ? f.readCoords : m.op === 'readFieldBook' ? f.readFieldBook : f.readGeoJson;
           const json = own(read(new Uint8Array(m.bytes), JSON.stringify(m.options)));
-          scope.postMessage({ id: m.id, ok: true, json }, [json]);
-        } else if (m.op === 'readFieldGsi') {
-          const json = own(f.readFieldGsi(new Uint8Array(m.bytes)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
         } else if (m.op === 'readShapefile') {
           const s = m.files;

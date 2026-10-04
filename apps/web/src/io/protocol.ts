@@ -25,10 +25,8 @@ import type { KcadProgress } from './kcad';
 
 export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
-  /** A plain-text field book with the user's column mapping (docs/adr/0169). */
-  | { id: number; op: 'readFieldCsv'; bytes: ArrayBuffer; options: FieldCsvOptions }
-  /** A Leica GSI-8 or GSI-16 field book (docs/adr/0169 §1). */
-  | { id: number; op: 'readFieldGsi'; bytes: ArrayBuffer }
+  /** A field book (docs/adr/0169 §1, §6): Leica GSI by its content, else a text book with the user's mapping (null: its first line only). */
+  | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }

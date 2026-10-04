@@ -47,6 +47,7 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": 1.7,
+            "over": [],
             "horizontal": 245.6775377149963,
             "dh": 0.33271976884498905
           },
@@ -63,11 +64,16 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": 1.7,
+            "over": [],
             "horizontal": 63.20211520732565,
             "dh": -1.373463498360078
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1,
+          1
+        ]
       }
     },
     {
@@ -124,6 +130,7 @@
             "index": 0.0007999999999839247,
             "slopeDiff": 0.0020000000000095497,
             "targetHeight": 1.7,
+            "over": [],
             "horizontal": 245.67653170838892,
             "dh": 0.3358050575489175
           },
@@ -141,11 +148,18 @@
             "index": 0.0008000000000123464,
             "slopeDiff": -0.0020000000000024443,
             "targetHeight": 1.7,
+            "over": [],
             "horizontal": 63.20313041762594,
             "dh": -1.3726886459993823
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1,
+          1,
+          2,
+          2
+        ]
       }
     },
     {
@@ -188,11 +202,16 @@
             "index": 9.999999999621423e-05,
             "slopeDiff": -0.001999999999995339,
             "targetHeight": 1.3,
+            "over": [],
             "horizontal": 120.0009997748231,
             "dh": 0.1936318334655841
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1,
+          2
+        ]
       }
     },
     {
@@ -235,11 +254,16 @@
             "index": 0.0010000000000047748,
             "slopeDiff": -0.004000000000019099,
             "targetHeight": 2.0,
+            "over": [],
             "horizontal": 512.327413284207,
             "dh": 3.9478776863895284
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1,
+          2
+        ]
       }
     },
     {
@@ -272,11 +296,15 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": null,
+            "over": [],
             "horizontal": 88.78904496437146,
             "dh": 1.3953480475941764
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          2
+        ]
       }
     },
     {
@@ -311,11 +339,15 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": 1.6,
+            "over": [],
             "horizontal": 897.2256003598152,
             "dh": 70.61318615506045
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1
+        ]
       }
     },
     {
@@ -347,11 +379,15 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": null,
+            "over": [],
             "horizontal": null,
             "dh": null
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1
+        ]
       }
     },
     {
@@ -387,6 +423,7 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": null,
+            "over": [],
             "horizontal": null,
             "dh": null
           },
@@ -403,11 +440,16 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": null,
+            "over": [],
             "horizontal": null,
             "dh": null
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          0,
+          0
+        ]
       }
     },
     {
@@ -452,6 +494,7 @@
             "index": null,
             "slopeDiff": null,
             "targetHeight": null,
+            "over": [],
             "horizontal": 9.998766324816605,
             "dh": 0.1570799992471799
           }
@@ -465,6 +508,11 @@
             "observation": 1,
             "problem": "zenith"
           }
+        ],
+        "faces": [
+          null,
+          null,
+          1
         ]
       }
     },
@@ -522,6 +570,7 @@
             "index": 0.0002000000000066393,
             "slopeDiff": -0.001999999999995339,
             "targetHeight": 1.5,
+            "over": [],
             "horizontal": 99.9886581896565,
             "dh": 1.5717441886234098
           },
@@ -539,11 +588,169 @@
             "index": -0.00010000000000331966,
             "slopeDiff": 0.0,
             "targetHeight": 1.5,
+            "over": [],
             "horizontal": 99.98867052566126,
             "dh": 1.5709588796583458
           }
         ],
-        "problems": []
+        "problems": [],
+        "faces": [
+          1,
+          2,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "toleranslar: A'nın yatay farkı ve uzunluğu aşar, indeksi aşmaz; B aşmaz (gon)",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.5,
+        "observations": [
+          {
+            "target": "A",
+            "hz": 10.0,
+            "zenith": 99.0,
+            "slope": 100.0,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "A",
+            "hz": 210.003,
+            "zenith": 301.0004,
+            "slope": 100.006,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "B",
+            "hz": 60.0,
+            "zenith": 99.0002,
+            "slope": 100.001,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "B",
+            "hz": 259.9994,
+            "zenith": 300.9996,
+            "slope": 100.001,
+            "targetHeight": 1.5
+          }
+        ]
+      },
+      "tolerances": {
+        "faceHz": 3.141592653589793e-05,
+        "index": 1.5707963267948964e-05,
+        "faceSlope": 0.005
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              0,
+              1
+            ],
+            "hz": 10.001499999999993,
+            "zenith": 98.9998,
+            "slope": 100.003,
+            "hzDiff": -0.002999999999985903,
+            "index": 0.0002000000000066393,
+            "slopeDiff": -0.006000000000000227,
+            "targetHeight": 1.5,
+            "over": [
+              "faceHz",
+              "faceSlope"
+            ],
+            "horizontal": 99.99065794282276,
+            "dh": 1.5717756368455027
+          },
+          {
+            "target": "B",
+            "faces": 2,
+            "observations": [
+              2,
+              3
+            ],
+            "hz": 59.99969999999999,
+            "zenith": 99.00030000000001,
+            "slope": 100.001,
+            "hzDiff": 0.0006000000000199179,
+            "index": -0.00010000000000331966,
+            "slopeDiff": 0.0,
+            "targetHeight": 1.5,
+            "over": [],
+            "horizontal": 99.98867052566126,
+            "dh": 1.5709588796583458
+          }
+        ],
+        "problems": [],
+        "faces": [
+          1,
+          2,
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "name": "toleranslar, derece: yalnız uzunluk",
+      "unit": "deg",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.45,
+        "observations": [
+          {
+            "target": "A",
+            "hz": 45.1234,
+            "zenith": 89.5,
+            "slope": 512.345,
+            "targetHeight": 2.0
+          },
+          {
+            "target": "A",
+            "hz": 225.1246,
+            "zenith": 270.502,
+            "slope": 512.352,
+            "targetHeight": 2.0
+          }
+        ]
+      },
+      "tolerances": {
+        "faceSlope": 0.004
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              0,
+              1
+            ],
+            "hz": 45.123999999999995,
+            "zenith": 89.499,
+            "slope": 512.3485000000001,
+            "hzDiff": -0.0011999999999900979,
+            "index": 0.0010000000000047748,
+            "slopeDiff": -0.006999999999948159,
+            "targetHeight": 2.0,
+            "over": [
+              "faceSlope"
+            ],
+            "horizontal": 512.3289132268628,
+            "dh": 3.9478909073101387
+          }
+        ],
+        "problems": [],
+        "faces": [
+          1,
+          2
+        ]
       }
     }
   ]

@@ -3,12 +3,13 @@
 //! mpmath, 50 digits, from the rules alone): every row's faces, the
 //! observations it came from, its reading and zenith in face I, the faces'
 //! differences, the horizontal distance and the height difference, within
-//! the file's tolerances; the observations left out. The web runs the same
+//! the file's tolerances, the project's tolerances it is above; each
+//! observation's face and the observations left out. The web runs the same
 //! file through WASM (`apps/web/src/wasm/fieldReduce.wasm.test.ts`).
 
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::survey::Unit;
-use kentos_geometry_core::survey::fieldbook::{Station, reduce};
+use kentos_geometry_core::survey::fieldbook::{Station, Tolerances, reduce};
 use serde_json::Value;
 
 fn near(got: Option<f64>, want: &Value, tol: f64, what: &str) {
@@ -37,7 +38,14 @@ fn the_field_book_reduces_as_the_reference_does() {
         let k = case["k"].as_f64().expect("k");
         let station = Station::from_json(&Json::parse(&case["setup"].to_string()).expect("JSON"))
             .expect("a station");
-        let got = reduce(&station, unit, k);
+        let tolerances = case
+            .get("tolerances")
+            .map(|t| {
+                Tolerances::from_json(&Json::parse(&t.to_string()).expect("JSON"))
+                    .expect("tolerances")
+            })
+            .unwrap_or_default();
+        let got = reduce(&station, unit, k, &tolerances);
         let want = &case["expect"];
         let rows = want["rows"].as_array().expect("rows");
         assert_eq!(got.rows.len(), rows.len(), "{name}: rows");
@@ -83,7 +91,21 @@ fn the_field_book_reduces_as_the_reference_does() {
                 &format!("{name}: horizontal"),
             );
             near(g.dh, &w["dh"], metres, &format!("{name}: dh"));
+            let over: Vec<&str> = w["over"]
+                .as_array()
+                .expect("over")
+                .iter()
+                .map(|v| v.as_str().expect("a tolerance"))
+                .collect();
+            assert_eq!(g.over, over, "{name}: over");
         }
+        let faces: Vec<Option<usize>> = want["faces"]
+            .as_array()
+            .expect("faces")
+            .iter()
+            .map(|v| v.as_u64().map(|f| f as usize))
+            .collect();
+        assert_eq!(got.faces, faces, "{name}: faces");
         let problems: Vec<u64> = want["problems"]
             .as_array()
             .expect("problems")

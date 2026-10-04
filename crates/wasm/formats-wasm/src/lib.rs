@@ -61,18 +61,14 @@ pub fn read_coords(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
     to_json(&kentos_formats::coords::read(bytes, &opts))
 }
 
-/// Reads a plain-text field book: `options` is `FieldCsvOptions`, the result `FieldBookRead` (JSON bytes; docs/adr/0169).
-#[wasm_bindgen(js_name = readFieldCsv)]
-pub fn read_field_csv(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
-    let opts: FieldCsvOptions =
+/// Reads a field book (docs/adr/0169 §1, §6): Leica GSI by its content, else a
+/// text book with `options` (`FieldCsvOptions`; `null`: only its first line,
+/// to map); the result `FieldBookRead` (JSON bytes).
+#[wasm_bindgen(js_name = readFieldBook)]
+pub fn read_field_book(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
+    let opts: Option<FieldCsvOptions> =
         serde_json::from_str(options).map_err(|e| bad_input("Karne seçenekleri", &e))?;
-    to_json(&kentos_formats::field::read_csv(bytes, &opts))
-}
-
-/// Reads a Leica GSI-8 or GSI-16 field book: the result `FieldBookRead` (JSON bytes; docs/adr/0169 §1).
-#[wasm_bindgen(js_name = readFieldGsi)]
-pub fn read_field_gsi(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
-    to_json(&kentos_formats::field::gsi::read(bytes))
+    to_json(&kentos_formats::field::read(bytes, opts.as_ref()))
 }
 
 /// Writes a coordinate list from `CoordWriteInput` (JSON).

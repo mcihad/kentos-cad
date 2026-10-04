@@ -21,6 +21,7 @@ The rules:
 6. A cell that should be a number and is not is named with its line. A bad instrument height leaves the whole row
    out; a bad cell of the observation's leaves out only the observation (the row's station still starts); an
    observation without a horizontal reading likewise.
+7. The first line that is not empty is said as its cells (trimmed), header or not: the columns to map.
 """
 
 import argparse
@@ -63,8 +64,9 @@ def read(text, mapping, header):
     lines = text.replace("\r\n", "\n").split("\n")
     numbered = [(i + 1, l) for i, l in enumerate(lines) if l.strip()]
     if not numbered:
-        return {"stations": [], "problems": []}
+        return {"firstLine": [], "stations": [], "problems": []}
     sep = separator(numbered[0][1])
+    first_line = [c.strip() for c in numbered[0][1].split(sep)] if sep else [numbered[0][1].strip()]
     comma = sep != ","
     if header:
         numbered = numbered[1:]
@@ -124,7 +126,7 @@ def read(text, mapping, header):
         current["observations"].append(o)
     for s in stations:
         s.pop("lastTarget", None)
-    return {"stations": stations, "problems": problems}
+    return {"firstLine": first_line, "stations": stations, "problems": problems}
 
 
 MAP_FULL = {"station": 0, "instrumentHeight": 1, "target": 2, "hz": 3, "zenith": 4, "slope": 5, "targetHeight": 6, "code": 7}

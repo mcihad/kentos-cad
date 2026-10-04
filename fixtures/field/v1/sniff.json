@@ -1,0 +1,72 @@
+{
+  "format": "kentos.field-sniff",
+  "version": 1,
+  "source": "scripts/fixtures/field_sniff_cases.py (docs/adr/0169 §1, §6)",
+  "cases": [
+    {
+      "name": "GSI-8",
+      "text": "110001+00000ST1 84..10+12345678 85..10+45678901 86..10+00105200 88..10+00001552\n110002+000000P2 21.322+00000120 22.322+09987650 31..00+00245678 87..10+00001700\n110003+00000101 21.322+08743210 22.322+10123450 31..00+00063214 71....+0000BINA\n110004+00000101 21.322+28743370 22.322+29876710 31..00+00063216\n",
+      "format": "gsi"
+    },
+    {
+      "name": "GSI-16, CR LF",
+      "text": "*110001+00000000000000S1 88..18+0000000000160000\r\n*110002+000000000000000A 21.024+0000000004512340 22.024+0000000008930000 31..08+0000000051234567 87..18+0000000000200000\r\n*110003+000000000000000B 21.023+0000000004512345 22.023+0000000008950000 31..06+0000000005123456\r\n*110004+000000000000000C 21.022+0000000005000000 22.022+0000000010000000\r\n",
+      "format": "gsi"
+    },
+    {
+      "name": "BOM ve boş satırlardan sonra GSI",
+      "text": "﻿\n\n   110001+00000P01 21.322+00000000\n",
+      "format": "gsi"
+    },
+    {
+      "name": "kod bloğuyla başlayan GSI",
+      "text": "410001+0000BINA 42....+00000001\n110002+00000P02 21.322+00000000\n",
+      "format": "gsi"
+    },
+    {
+      "name": "eksi işaretli ilk sözcük",
+      "text": "860001-00001000 88..10+00001500\n",
+      "format": "gsi"
+    },
+    {
+      "name": "CR ile biten satırlar",
+      "text": "\r\r110001+00000P01 21.322+00000000\r",
+      "format": "gsi"
+    },
+    {
+      "name": "noktalı virgüllü karne, başlıklı",
+      "text": "İstasyon;Nokta;Hz;V;SD\nS1;P1;0;100;12.3\n",
+      "format": null
+    },
+    {
+      "name": "sayılarla başlayan karne",
+      "text": "1;2;3;4;5;6;7;8\n",
+      "format": null
+    },
+    {
+      "name": "sekmeyle ayrılmış karne",
+      "text": "S1\tP1\t0.0000\t100.0000\n",
+      "format": null
+    },
+    {
+      "name": "işaretsiz on dört rakam",
+      "text": "11000100000101\n",
+      "format": null
+    },
+    {
+      "name": "kısa sözcük",
+      "text": "110001+\n",
+      "format": null
+    },
+    {
+      "name": "yalnız yıldız",
+      "text": "*\n110001+00000P01\n",
+      "format": null
+    },
+    {
+      "name": "boş dosya",
+      "text": "",
+      "format": null
+    }
+  ]
+}

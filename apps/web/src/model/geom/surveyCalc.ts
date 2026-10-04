@@ -132,13 +132,23 @@ export interface Reduced {
   targetHeight?: number;
   horizontal?: number;
   dh?: number;
+  /** The project's tolerances its differences are above. */
+  over: ('faceHz' | 'index' | 'faceSlope')[];
 }
 
-/** A station's reduction: its targets in order, the observations left out (a zenith that is no face). */
+/** The project's tolerances of a pair (docs/adr/0169 §3), radians and metres; an absent one is not checked. */
+export interface Tolerances {
+  faceHz?: number;
+  index?: number;
+  faceSlope?: number;
+}
+
+/** A station's reduction: its targets in order, the observations left out (a zenith that is no face), each observation's face (1, 2, 0 for a direction only, null for none). */
 export interface Reduction {
   rows: Reduced[];
   problems: { observation: number; problem: 'zenith' }[];
+  faces: (number | null)[];
 }
 
-/** A station's observations reduced in the unit with the refraction coefficient `k` (the core's `survey::fieldbook`). */
-export const fieldReduce = op<(station: FieldStation, unit: AngleUnit, k: number) => Reduction>('fieldReduce');
+/** A station's observations reduced in the unit with the refraction coefficient `k`, its pairs checked against the tolerances (the core's `survey::fieldbook`). */
+export const fieldReduce = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null) => Reduction>('fieldReduce');

@@ -83,16 +83,13 @@ export class FormatsClient {
     return json<CoordRead>(await this.request({ op: 'readCoords', bytes: copy, options }, [copy]));
   }
 
-  /** Reads a plain-text field book with the user's column mapping (docs/adr/0169); the caller keeps `bytes`. */
-  async readFieldCsv(bytes: Uint8Array, options: FieldCsvOptions): Promise<FieldBookRead> {
+  /**
+   * Reads a field book (docs/adr/0169 §1, §6): Leica GSI by its content, else a text book with the user's column mapping
+   * (null: only its first line, the columns to map); the caller keeps `bytes`.
+   */
+  async readFieldBook(bytes: Uint8Array, options: FieldCsvOptions | null): Promise<FieldBookRead> {
     const copy = bytes.slice().buffer;
-    return json<FieldBookRead>(await this.request({ op: 'readFieldCsv', bytes: copy, options }, [copy]));
-  }
-
-  /** Reads a Leica GSI-8 or GSI-16 field book (docs/adr/0169 §1); the caller keeps `bytes`. */
-  async readFieldGsi(bytes: Uint8Array): Promise<FieldBookRead> {
-    const copy = bytes.slice().buffer;
-    return json<FieldBookRead>(await this.request({ op: 'readFieldGsi', bytes: copy }, [copy]));
+    return json<FieldBookRead>(await this.request({ op: 'readFieldBook', bytes: copy, options }, [copy]));
   }
 
   /**

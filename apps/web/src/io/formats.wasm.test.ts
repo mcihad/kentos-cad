@@ -21,8 +21,7 @@ interface Formats {
   formatsVersion(): number;
   readCoords(bytes: Uint8Array, options: string): Uint8Array;
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
-  readFieldCsv(bytes: Uint8Array, options: string): Uint8Array;
-  readFieldGsi(bytes: Uint8Array): Uint8Array;
+  readFieldBook(bytes: Uint8Array, options: string): Uint8Array;
 }
 
 const glue = import.meta.glob<Formats>('./pkg/kentos_formats_wasm.js');
@@ -112,13 +111,17 @@ describe.skipIf(!loader)('formats WASM module', () => {
   it('reads plain-text field books as the reference does (fixtures/field/v1/csv.json, docs/adr/0169)', async () => {
     const w = await load();
     const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/csv.json', import.meta.url)))) as {
-      cases: { name: string; mapping: Record<string, number>; header: boolean; text: string; expect: { stations: FieldStation[]; problems: { line: number; problem: string }[] } }[];
+      cases: { name: string; mapping: Record<string, number>; header: boolean; text: string; expect: { firstLine: string[]; stations: FieldStation[]; problems: { line: number; problem: string }[] } }[];
     };
     expect(file.cases.length).toBeGreaterThanOrEqual(5);
     for (const c of file.cases) {
-      const got = JSON.parse(new TextDecoder().decode(w.readFieldCsv(new TextEncoder().encode(c.text), JSON.stringify({ ...c.mapping, header: c.header })))) as FieldBookRead;
+      const got = JSON.parse(new TextDecoder().decode(w.readFieldBook(new TextEncoder().encode(c.text), JSON.stringify({ ...c.mapping, header: c.header })))) as FieldBookRead;
+      expect([got.format, got.firstLine], c.name).toEqual(['csv', c.expect.firstLine]);
       expect(got.stations, c.name).toEqual(c.expect.stations);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+      // Without its mapping the book is only its first line, to map.
+      const bare = JSON.parse(new TextDecoder().decode(w.readFieldBook(new TextEncoder().encode(c.text), 'null'))) as FieldBookRead;
+      expect([bare.format, bare.firstLine, bare.stations.length], c.name).toEqual(['csv', c.expect.firstLine, 0]);
     }
   });
 
@@ -129,10 +132,22 @@ describe.skipIf(!loader)('formats WASM module', () => {
     };
     expect(file.cases.length).toBeGreaterThanOrEqual(4);
     for (const c of file.cases) {
-      const got = JSON.parse(new TextDecoder().decode(w.readFieldGsi(new TextEncoder().encode(c.text)))) as FieldBookRead;
-      expect(got.unit ?? null, c.name).toBe(c.expect.unit);
+      const got = JSON.parse(new TextDecoder().decode(w.readFieldBook(new TextEncoder().encode(c.text), 'null'))) as FieldBookRead;
+      expect([got.format, got.unit ?? null], c.name).toEqual(['gsi', c.expect.unit]);
       expect(got.stations, c.name).toEqual(c.expect.stations);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+    }
+  });
+
+  it('tells the format of a field book by its content as the reference does (fixtures/field/v1/sniff.json, docs/adr/0169 §6)', async () => {
+    const w = await load();
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/sniff.json', import.meta.url)))) as {
+      cases: { name: string; text: string; format: string | null }[];
+    };
+    expect(file.cases.length).toBeGreaterThanOrEqual(12);
+    for (const c of file.cases) {
+      const got = JSON.parse(new TextDecoder().decode(w.readFieldBook(new TextEncoder().encode(c.text), 'null'))) as FieldBookRead;
+      expect(got.format, c.name).toBe(c.format ?? 'csv');
     }
   });
 });

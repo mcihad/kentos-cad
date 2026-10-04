@@ -183,6 +183,7 @@ pub fn read(bytes: &[u8]) -> FieldBookRead {
         .replace("\r\n", "\n")
         .replace('\r', "\n");
     let mut read = FieldBookRead {
+        format: "gsi".to_owned(),
         encoding: enc.label().to_owned(),
         unit: None,
         first_line: Vec::new(),

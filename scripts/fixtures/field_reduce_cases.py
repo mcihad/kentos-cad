@@ -22,6 +22,10 @@ The rules:
    S·cos(Z) + (1 − k)·D² / (2R) + i_h − t_h, with R = 6 371 000 m and the book's k (refraction); an observation with no
    slope distance has neither.
 7. The rows come in the order of each pair's (or single's) first observation.
+8. Each observation's face is said: 1 (face I), 2 (face II), 0 (a direction only), none (no observation).
+9. Tolerances (the project's, radians and metres; each may be absent) are checked on a pair: |d| against the faces'
+   horizontal tolerance, |i| against the index error's, |S_I − S_II| against the faces' slope tolerance, each turned
+   into the book's unit (an angle × full / 2π); a value above its tolerance is said (over), one equal is not.
 """
 
 import argparse
@@ -59,21 +63,27 @@ def positive(v, full):
     return m + full if m < 0 else m
 
 
-def reduce(setup, unit, k):
+def reduce(setup, unit, k, tolerances=None):
     full = mpmath.mpf(FULL[unit])
     half = full / 2
     rad = 2 * mpmath.pi / full
     problems = []
     obs = []
+    faces = []
     for i, o in enumerate(setup["observations"]):
         z = mp(o.get("zenith"))
         if z is None:
             obs.append((i, o, 0))
+            faces.append(0)
             continue
         if not (0 < z < full) or z == half:
             problems.append({"observation": i, "problem": "zenith"})
+            faces.append(None)
             continue
         obs.append((i, o, 1 if z < half else 2))
+        faces.append(1 if z < half else 2)
+    # The tolerances in the book's unit (angles) and metres.
+    tol = {key: mp(v) / rad if key != "faceSlope" else mp(v) for key, v in (tolerances or {}).items()}
     # Pairs in order: the first unpaired face I with the first unpaired face II of the same target.
     used = set()
     rows = []
@@ -96,11 +106,12 @@ def reduce(setup, unit, k):
             slope = (s1 + s2) / 2 if s1 is not None and s2 is not None else (s1 if s1 is not None else s2)
             slope_diff = s1 - s2 if s1 is not None and s2 is not None else None
             th = first.get("targetHeight", second.get("targetHeight"))
-            row = {"target": o["target"], "faces": 2, "observations": list(one), "hz": hz, "zenith": zen, "slope": slope, "hzDiff": d, "index": index, "slopeDiff": slope_diff, "targetHeight": th}
+            over = [key for key, v in (("faceHz", d), ("index", index), ("faceSlope", slope_diff)) if key in tol and v is not None and abs(v) > tol[key]]
+            row = {"target": o["target"], "faces": 2, "observations": list(one), "hz": hz, "zenith": zen, "slope": slope, "hzDiff": d, "index": index, "slopeDiff": slope_diff, "targetHeight": th, "over": over}
         else:
             hz = mp(o["hz"]) if face != 2 else positive(mp(o["hz"]) - half, full)
             zen = None if face == 0 else mp(o["zenith"]) if face == 1 else full - mp(o["zenith"])
-            row = {"target": o["target"], "faces": 1, "observations": [i], "hz": hz, "zenith": zen, "slope": mp(o.get("slope")), "hzDiff": None, "index": None, "slopeDiff": None, "targetHeight": o.get("targetHeight")}
+            row = {"target": o["target"], "faces": 1, "observations": [i], "hz": hz, "zenith": zen, "slope": mp(o.get("slope")), "hzDiff": None, "index": None, "slopeDiff": None, "targetHeight": o.get("targetHeight"), "over": []}
         if row["slope"] is not None and row["zenith"] is not None:
             s, zr = row["slope"], row["zenith"] * rad
             hd = s * mpmath.sin(zr)
@@ -115,7 +126,7 @@ def reduce(setup, unit, k):
     out = []
     for r in rows:
         out.append({k: (float(v) if isinstance(v, mpmath.mpf) else v) for k, v in r.items()})
-    return {"rows": out, "problems": problems}
+    return {"rows": out, "problems": problems, "faces": faces}
 
 
 def obs(target, hz, zenith, slope=None, th=None):
@@ -145,13 +156,25 @@ def cases():
         ("iki set: her çift ayrı satır", "grad", 0.13, {"station": "S", "instrumentHeight": 1.5, "observations": [
             obs("A", 10.0000, 99.0, 100.0, 1.5), obs("A", 210.0010, 301.0004, 100.002, 1.5),
             obs("A", 60.0000, 99.0002, 100.001, 1.5), obs("A", 259.9994, 300.9996, 100.001, 1.5)]}),
+        ("toleranslar: A'nın yatay farkı ve uzunluğu aşar, indeksi aşmaz; B aşmaz (gon)", "grad", 0.13, {"station": "S", "instrumentHeight": 1.5, "observations": [
+            obs("A", 10.0000, 99.0, 100.0, 1.5), obs("A", 210.0030, 301.0004, 100.006, 1.5),
+            obs("B", 60.0000, 99.0002, 100.001, 1.5), obs("B", 259.9994, 300.9996, 100.001, 1.5)]},
+         {"faceHz": 20 * 3.141592653589793 / 2000000.0, "index": 10 * 3.141592653589793 / 2000000.0, "faceSlope": 0.005}),
+        ("toleranslar, derece: yalnız uzunluk", "deg", 0.13, {"station": "S", "instrumentHeight": 1.45, "observations": [
+            obs("A", 45.1234, 89.5, 512.345, 2.0), obs("A", 225.1246, 270.502, 512.352, 2.0)]},
+         {"faceSlope": 0.004}),
     ]
 
 
 def build():
     out = []
-    for name, unit, k, setup in cases():
-        out.append({"name": name, "unit": unit, "k": k, "setup": setup, "expect": reduce(setup, unit, k)})
+    for name, unit, k, setup, *more in cases():
+        tolerances = more[0] if more else None
+        case = {"name": name, "unit": unit, "k": k, "setup": setup}
+        if tolerances:
+            case["tolerances"] = tolerances
+        case["expect"] = reduce(setup, unit, k, tolerances)
+        out.append(case)
     return {
         "format": "kentos.field-reduce",
         "version": 1,

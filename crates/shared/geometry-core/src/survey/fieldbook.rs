@@ -4,8 +4,9 @@
 //! a target paired and averaged (the horizontal reading's difference, the
 //! vertical index error), the slope distance turned into the horizontal
 //! distance and the height difference with the earth's curvature and
-//! refraction (k). The independent reference is
-//! `scripts/fixtures/field_reduce_cases.py` (mpmath, 50 digits).
+//! refraction (k), each pair checked against the project's tolerances. The
+//! independent reference is `scripts/fixtures/field_reduce_cases.py`
+//! (mpmath, 50 digits).
 
 use super::Unit;
 use crate::api::Op;
@@ -60,10 +61,26 @@ crate::json_struct!(Station {
     observations
 });
 
+/// The project's tolerances of a pair (docs/adr/0169 §3), radians and
+/// metres; an absent one is not checked.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Tolerances {
+    pub face_hz: Option<f64>,
+    pub index: Option<f64>,
+    pub face_slope: Option<f64>,
+}
+
+crate::json_struct!(Tolerances {
+    face_hz => "faceHz",
+    index,
+    face_slope => "faceSlope"
+});
+
 /// A target reduced: one face or two (the observations it came from), the
 /// reading and zenith in face I, the slope distance, the faces' differences
 /// (the reading's, the index error, the distance's), the target height, the
-/// horizontal distance and the height difference station mark → target mark.
+/// horizontal distance and the height difference station mark → target mark,
+/// and the tolerances its differences are above (`faceHz`, `index`, `faceSlope`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Reduced {
     pub target: String,
@@ -78,6 +95,7 @@ pub struct Reduced {
     pub target_height: Option<f64>,
     pub horizontal: Option<f64>,
     pub dh: Option<f64>,
+    pub over: Vec<&'static str>,
 }
 
 crate::json_struct!(out Reduced {
@@ -92,7 +110,8 @@ crate::json_struct!(out Reduced {
     slope_diff => "slopeDiff",
     target_height => "targetHeight",
     horizontal,
-    dh
+    dh,
+    over
 });
 
 /// An observation that is no observation: its place and why (a zenith of
@@ -105,14 +124,21 @@ pub struct Unread {
 
 crate::json_struct!(out Unread { observation, problem });
 
-/// A station's reduction: its targets in order, the observations left out.
+/// A station's reduction: its targets in order, the observations left out,
+/// and each observation's face (1, 2, 0 for a direction only, none for no
+/// observation).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Reduction {
     pub rows: Vec<Reduced>,
     pub problems: Vec<Unread>,
+    pub faces: Vec<Option<usize>>,
 }
 
-crate::json_struct!(out Reduction { rows, problems });
+crate::json_struct!(out Reduction {
+    rows,
+    problems,
+    faces
+});
 
 /// A value into (−half, half] of a turn.
 fn wrap(v: f64, full: f64) -> f64 {
@@ -147,14 +173,17 @@ fn face(o: &Observation, full: f64) -> Option<usize> {
 }
 
 /// A station's observations reduced in `unit` with the refraction
-/// coefficient `k` (docs/adr/0169 §3).
-pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
+/// coefficient `k`, each pair checked against `tolerances` (docs/adr/0169 §3).
+pub fn reduce(station: &Station, unit: Unit, k: f64, tolerances: &Tolerances) -> Reduction {
     let full = unit.full();
     let half = full / 2.0;
     let mut problems = Vec::new();
     let mut faced = Vec::new();
+    let mut faces = Vec::with_capacity(station.observations.len());
     for (i, o) in station.observations.iter().enumerate() {
-        match face(o, full) {
+        let f = face(o, full);
+        faces.push(f);
+        match f {
             Some(f) => faced.push((i, f)),
             None => problems.push(Unread {
                 observation: i,
@@ -162,6 +191,9 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
             }),
         }
     }
+    // The angle tolerances in the book's unit.
+    let angle = |t: Option<f64>| t.map(|t| unit.of(t));
+    let (tol_hz, tol_index) = (angle(tolerances.face_hz), angle(tolerances.index));
     let obs = &station.observations;
     let mut used = vec![false; obs.len()];
     let mut rows = Vec::new();
@@ -196,6 +228,16 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
                     (Some(a), Some(b)) => (Some((a + b) / 2.0), Some(a - b)),
                     (a, b) => (a.or(b), None),
                 };
+                let checks = [
+                    ("faceHz", Some(d), tol_hz),
+                    ("index", Some(index), tol_index),
+                    ("faceSlope", slope_diff, tolerances.face_slope),
+                ];
+                let over = checks
+                    .into_iter()
+                    .filter(|(_, v, t)| matches!((v, t), (Some(v), Some(t)) if v.abs() > *t))
+                    .map(|(key, _, _)| key)
+                    .collect();
                 Reduced {
                     target: o.target.clone(),
                     faces: 2,
@@ -209,6 +251,7 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
                     target_height: one.target_height.or(two.target_height),
                     horizontal: None,
                     dh: None,
+                    over,
                 }
             }
             None => Reduced {
@@ -232,6 +275,7 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
                 target_height: o.target_height,
                 horizontal: None,
                 dh: None,
+                over: Vec::new(),
             },
         };
         if let (Some(s), Some(z)) = (row.slope, row.zenith) {
@@ -244,17 +288,32 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
         }
         rows.push(row);
     }
-    Reduction { rows, problems }
+    Reduction {
+        rows,
+        problems,
+        faces,
+    }
 }
 
-/// A station reduced in the named unit (`"grad"` or `"deg"`).
-fn reduce_named(station: &Station, unit: &str, k: f64) -> Result<Reduction, String> {
-    Ok(reduce(station, Unit::parse(unit)?, k))
+/// A station reduced in the named unit (`"grad"` or `"deg"`), its pairs
+/// checked against the tolerances (none: none checked).
+fn reduce_named(
+    station: &Station,
+    unit: &str,
+    k: f64,
+    tolerances: Option<Tolerances>,
+) -> Result<Reduction, String> {
+    Ok(reduce(
+        station,
+        Unit::parse(unit)?,
+        k,
+        &tolerances.unwrap_or_default(),
+    ))
 }
 
-pub(crate) static OPS: &[Op] =
-    &[op!("fieldReduce", |station: Station,
-                          unit: String,
-                          k: f64| {
-        reduce_named(&station, &unit, k)
-    })];
+pub(crate) static OPS: &[Op] = &[op!(
+    "fieldReduce",
+    |station: Station, unit: String, k: f64, tolerances: Option<Tolerances>| {
+        reduce_named(&station, &unit, k, tolerances)
+    }
+)];

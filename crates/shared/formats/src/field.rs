@@ -1,5 +1,5 @@
-//! Field books (docs/adr/0169 §1–§2): an instrument's own file ([`gsi`]),
-//! or a plain CSV or TXT field book whose
+//! Field books (docs/adr/0169 §1–§2, §6): an instrument's own file ([`gsi`],
+//! told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
 //! columns the user maps (istasyon, alet yüksekliği, nokta, yatay açı,
 //! başucu açısı, eğik uzunluk, prizma yüksekliği, kod), read into stations
 //! and observations as the instrument wrote them; every line that is not
@@ -73,15 +73,79 @@ fn number(text: &str, comma: bool) -> Option<f64> {
     (i == b.len()).then(|| t.parse().ok()).flatten()
 }
 
+/// A field book's format by its content (`scripts/fixtures/field_sniff_cases.py`):
+/// `gsi` when its first line that is not blank begins, without a leading
+/// `*`, with a GSI word (two ASCII digits, four digits or dots, then `+` or
+/// `-`, eight characters at least); none for a text book.
+pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
+    let (enc, bom) = text::sniff(bytes);
+    let body = text::decode(&bytes[bom..], enc);
+    let first = body
+        .split(['\n', '\r'])
+        .map(str::trim)
+        .find(|l| !l.is_empty())?;
+    let word = first
+        .strip_prefix('*')
+        .unwrap_or(first)
+        .split_whitespace()
+        .next()?;
+    let c: Vec<char> = word.chars().take(8).collect();
+    let gsi = c.len() == 8
+        && c[..2].iter().all(char::is_ascii_digit)
+        && c[2..6].iter().all(|c| c.is_ascii_digit() || *c == '.')
+        && matches!(c[6], '+' | '-');
+    gsi.then_some("gsi")
+}
+
+/// Reads a field book: Leica GSI by its content; otherwise a text book with
+/// the user's column mapping, or without one only its first line's cells
+/// (the columns to map).
+pub fn read(bytes: &[u8], csv: Option<&FieldCsvOptions>) -> FieldBookRead {
+    if sniff(bytes) == Some("gsi") {
+        return gsi::read(bytes);
+    }
+    match csv {
+        Some(opts) => read_csv(bytes, opts),
+        None => {
+            let (enc, bom) = text::sniff(bytes);
+            let body = text::decode(&bytes[bom..], enc);
+            FieldBookRead {
+                format: "csv".to_owned(),
+                encoding: enc.label().to_owned(),
+                unit: None,
+                first_line: lines(&body)
+                    .next()
+                    .map_or_else(Vec::new, |(_, l)| cells(l, separator(l))),
+                stations: Vec::new(),
+                problems: Vec::new(),
+            }
+        }
+    }
+}
+
+/// The lines that are not blank, numbered from 1, without their CR.
+fn lines(body: &str) -> impl Iterator<Item = (u32, &str)> {
+    body.split('\n').enumerate().filter_map(|(i, l)| {
+        let l = l.strip_suffix('\r').unwrap_or(l);
+        (!l.trim().is_empty()).then(|| (u32::try_from(i + 1).unwrap_or(u32::MAX), l))
+    })
+}
+
+/// A line's cells, trimmed: split at the separator, or one cell.
+fn cells(l: &str, sep: Option<char>) -> Vec<String> {
+    match sep {
+        Some(c) => l.split(c).map(|v| v.trim().to_owned()).collect(),
+        None => vec![l.trim().to_owned()],
+    }
+}
+
 /// Reads a plain-text field book with the user's column mapping.
 pub fn read_csv(bytes: &[u8], opts: &FieldCsvOptions) -> FieldBookRead {
     let (enc, bom) = text::sniff(bytes);
     let body = text::decode(&bytes[bom..], enc);
-    let mut lines = body.split('\n').enumerate().filter_map(|(i, l)| {
-        let l = l.strip_suffix('\r').unwrap_or(l);
-        (!l.trim().is_empty()).then(|| (u32::try_from(i + 1).unwrap_or(u32::MAX), l))
-    });
+    let mut lines = lines(&body);
     let mut read = FieldBookRead {
+        format: "csv".to_owned(),
         encoding: enc.label().to_owned(),
         unit: None,
         first_line: Vec::new(),
@@ -93,12 +157,7 @@ pub fn read_csv(bytes: &[u8], opts: &FieldCsvOptions) -> FieldBookRead {
     };
     let sep = separator(first.1);
     let comma = sep != Some(',');
-    let split = |l: &str| -> Vec<String> {
-        match sep {
-            Some(c) => l.split(c).map(|v| v.trim().to_owned()).collect(),
-            None => vec![l.trim().to_owned()],
-        }
-    };
+    let split = |l: &str| cells(l, sep);
     read.first_line = split(first.1);
     let rows: Box<dyn Iterator<Item = (u32, &str)>> = if opts.header {
         Box::new(lines)

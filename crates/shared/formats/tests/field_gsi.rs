@@ -56,6 +56,7 @@ fn a_gsi_book_reads_as_the_reference_does() {
         assert_eq!(got_problems, problems, "{name}");
         assert_eq!(got.encoding, "UTF-8", "{name}");
         assert!(got.first_line.is_empty(), "{name}");
+        assert_eq!(got.format, "gsi", "{name}");
     }
 }
 
