@@ -15,162 +15,7 @@ pub struct Prj {
     pub name: String,
 }
 
-/// A .prj larger than this is not a coordinate system (and is not parsed).
-const MAX_LEN: usize = 64 * 1024;
-/// Nesting of a WKT 1 definition (a projected system is three deep).
-const MAX_DEPTH: u32 = 16;
-
-#[derive(Debug)]
-enum Item {
-    Node(Node),
-    Str(String),
-    Num(f64),
-    Word,
-}
-
-#[derive(Debug)]
-struct Node {
-    name: String,
-    items: Vec<Item>,
-}
-
-impl Node {
-    fn child(&self, name: &str) -> Option<&Node> {
-        self.items.iter().find_map(|i| match i {
-            Item::Node(n) if n.name.eq_ignore_ascii_case(name) => Some(n),
-            _ => None,
-        })
-    }
-
-    fn children<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Node> {
-        self.items.iter().filter_map(move |i| match i {
-            Item::Node(n) if n.name.eq_ignore_ascii_case(name) => Some(n),
-            _ => None,
-        })
-    }
-
-    /// The first quoted text (a node's name).
-    fn text(&self) -> Option<&str> {
-        self.items.iter().find_map(|i| match i {
-            Item::Str(s) => Some(s.as_str()),
-            _ => None,
-        })
-    }
-
-    /// The first number.
-    fn number(&self) -> Option<f64> {
-        self.items.iter().find_map(|i| match i {
-            Item::Num(v) => Some(*v),
-            _ => None,
-        })
-    }
-}
-
-struct Parser<'a> {
-    b: &'a [u8],
-    i: usize,
-    depth: u32,
-}
-
-impl Parser<'_> {
-    fn ws(&mut self) {
-        while self.b.get(self.i).is_some_and(u8::is_ascii_whitespace) {
-            self.i += 1;
-        }
-    }
-
-    fn word(&mut self) -> Option<String> {
-        self.ws();
-        let start = self.i;
-        while self
-            .b
-            .get(self.i)
-            .is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'_')
-        {
-            self.i += 1;
-        }
-        (self.i > start).then(|| String::from_utf8_lossy(&self.b[start..self.i]).into_owned())
-    }
-
-    fn node(&mut self) -> Option<Node> {
-        let name = self.word()?;
-        self.ws();
-        let close = match self.b.get(self.i) {
-            Some(b'[') => b']',
-            Some(b'(') => b')',
-            _ => return None,
-        };
-        self.i += 1;
-        self.depth += 1;
-        if self.depth > MAX_DEPTH {
-            return None;
-        }
-        let mut items = Vec::new();
-        loop {
-            self.ws();
-            match *self.b.get(self.i)? {
-                c if c == close => {
-                    self.i += 1;
-                    break;
-                }
-                b',' => self.i += 1,
-                b'"' => {
-                    self.i += 1;
-                    let mut s = Vec::new();
-                    loop {
-                        match *self.b.get(self.i)? {
-                            b'"' if self.b.get(self.i + 1) == Some(&b'"') => {
-                                s.push(b'"');
-                                self.i += 2;
-                            }
-                            b'"' => {
-                                self.i += 1;
-                                break;
-                            }
-                            c => {
-                                s.push(c);
-                                self.i += 1;
-                            }
-                        }
-                    }
-                    items.push(Item::Str(String::from_utf8_lossy(&s).into_owned()));
-                }
-                b'0'..=b'9' | b'-' | b'+' | b'.' => {
-                    let start = self.i;
-                    while self.b.get(self.i).is_some_and(|c| {
-                        c.is_ascii_digit() || matches!(c, b'-' | b'+' | b'.' | b'e' | b'E')
-                    }) {
-                        self.i += 1;
-                    }
-                    let t = std::str::from_utf8(&self.b[start..self.i]).ok()?;
-                    items.push(Item::Num(t.parse().ok()?));
-                }
-                c if c.is_ascii_alphabetic() => {
-                    let back = self.i;
-                    let _ = self.word()?;
-                    self.ws();
-                    if matches!(self.b.get(self.i), Some(b'[' | b'(')) {
-                        self.i = back;
-                        items.push(Item::Node(self.node()?));
-                    } else {
-                        items.push(Item::Word);
-                    }
-                }
-                _ => return None,
-            }
-        }
-        self.depth -= 1;
-        Some(Node { name, items })
-    }
-}
-
-/// A name compared as the rules compare names: lower case, ASCII letters and digits only.
-fn key(s: &str) -> String {
-    s.chars()
-        .filter(char::is_ascii_alphanumeric)
-        .map(|c| c.to_ascii_lowercase())
-        .collect()
-}
+use kentos_geometry_core::crs::wkt::{self, Item, Node, key};
 
 #[derive(Clone, Copy, PartialEq)]
 enum Datum {
@@ -180,7 +25,7 @@ enum Datum {
 }
 
 fn datum(geogcs: &Node) -> Option<Datum> {
-    let k = key(geogcs.child("DATUM")?.text()?);
+    let k = key(geogcs.child(&["DATUM"])?.text()?);
     if [
         "turef",
         "turkishnationalreferenceframe",
@@ -205,7 +50,7 @@ fn datum(geogcs: &Node) -> Option<Datum> {
 
 /// An EPSG code named by the outermost node itself (`AUTHORITY["EPSG","5256"]`).
 fn authority(root: &Node) -> Option<u32> {
-    root.children("AUTHORITY")
+    root.children(&["AUTHORITY"])
         .find_map(|a| match a.items.as_slice() {
             [Item::Str(org), Item::Str(code)]
                 if org == "EPSG"
@@ -220,15 +65,15 @@ fn authority(root: &Node) -> Option<u32> {
 
 /// A Transverse Mercator system of the known zones.
 fn transverse_mercator(root: &Node, d: Datum) -> Option<u32> {
-    if !key(root.child("PROJECTION")?.text()?).contains("transversemercator") {
+    if !key(root.child(&["PROJECTION"])?.text()?).contains("transversemercator") {
         return None;
     }
-    if root.child("UNIT")?.number()? != 1.0 {
+    if root.child(&["UNIT"])?.number()? != 1.0 {
         return None;
     }
     // Every parameter is a name and a number; the last of a repeated name counts.
     let mut params: Vec<(String, f64)> = Vec::new();
-    for p in root.children("PARAMETER") {
+    for p in root.children(&["PARAMETER"]) {
         match p.items.as_slice() {
             [Item::Str(name), Item::Num(v), ..] => params.push((key(name), *v)),
             _ => return None,
@@ -265,31 +110,16 @@ fn transverse_mercator(root: &Node, d: Datum) -> Option<u32> {
 pub fn read(bytes: &[u8]) -> Prj {
     let text = String::from_utf8_lossy(bytes);
     let shown: String = text.trim().chars().take(80).collect();
-    if bytes.len() > MAX_LEN {
-        return Prj {
-            srid: None,
-            name: shown,
-        };
-    }
-    let mut p = Parser {
-        b: text.as_bytes(),
-        i: 0,
-        depth: 0,
-    };
-    let Some(root) = p.node() else {
+    // Too long, unclosed, or something after the definition: not one coordinate system.
+    let Some(root) = (bytes.len() <= wkt::MAX_LEN)
+        .then(|| wkt::parse(text.trim()))
+        .flatten()
+    else {
         return Prj {
             srid: None,
             name: shown,
         };
     };
-    p.ws();
-    if p.i < p.b.len() {
-        // Something after the definition: not one coordinate system.
-        return Prj {
-            srid: None,
-            name: shown,
-        };
-    }
     let name = root.text().map(str::to_string).unwrap_or(shown);
     let projected = root.name.eq_ignore_ascii_case("PROJCS");
     let geographic = root.name.eq_ignore_ascii_case("GEOGCS");
@@ -298,7 +128,7 @@ pub fn read(bytes: &[u8]) -> Prj {
     }
     let srid = authority(&root).or_else(|| {
         if projected {
-            let d = datum(root.child("GEOGCS")?)?;
+            let d = datum(root.child(&["GEOGCS"])?)?;
             transverse_mercator(&root, d)
         } else {
             match datum(&root)? {

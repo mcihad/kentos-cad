@@ -1,0 +1,756 @@
+{
+ "format": "kentos.crs-text",
+ "version": 1,
+ "proj": "9.7.1",
+ "reads": [
+  {
+   "name": "ESRI WKT 1: TUREF TM36",
+   "text": "PROJCS[\"TUREF_TM36\",GEOGCS[\"GCS_TUREF\",DATUM[\"D_Turkish_National_Reference_Frame\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",36.0],PARAMETER[\"Scale_Factor\",1.0],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]",
+   "expect": {
+    "name": "TUREF TM36",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 36.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 5256,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "ESRI WKT 1: ED50 UTM 36N",
+   "text": "PROJCS[\"ED_1950_UTM_Zone_36N\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",33.0],PARAMETER[\"Scale_Factor\",0.9996],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]",
+   "expect": {
+    "name": "ED 1950 UTM Zone 36N",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 0.9996,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 23036,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "OGC WKT 1: ED50 TM30, EPSG'nin TOWGS84'üyle",
+   "text": "PROJCS[\"ED50 / TM30\",GEOGCS[\"ED50\",DATUM[\"European_Datum_1950\",SPHEROID[\"International 1924\",6378388,297],TOWGS84[-84.1,-101.8,-129.7,0,0,0.468,1.05]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+   "expect": {
+    "name": "ED50 / TM30",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 30.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 2320,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "OGC WKT 1: ED50 TM30, başka TOWGS84'le",
+   "text": "PROJCS[\"ED50 / TM30\",GEOGCS[\"ED50\",DATUM[\"European_Datum_1950\",SPHEROID[\"International 1924\",6378388,297],TOWGS84[-87,-98,-121,0,0,0,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]",
+   "expect": {
+    "name": "ED50 / TM30",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "European Datum 1950",
+      "ellipsoid": {
+       "name": "International 1924",
+       "semiMajor": 6378388.0,
+       "inverseFlattening": 297.0
+      },
+      "toWgs84": {
+       "translation": [
+        -87.0,
+        -98.0,
+        -121.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "scale": 0.0,
+       "convention": "positionVector"
+      }
+     },
+     "centralMeridian": 30.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 2320,
+     "exact": false
+    }
+   }
+  },
+  {
+   "name": "OGC WKT 1: kodu yazılı TUREF TM30",
+   "text": "PROJCS[\"ITRF96 / TM30\",GEOGCS[\"ITRF96\",DATUM[\"International_Terrestrial_Reference_Frame_1996\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"5254\"]]",
+   "expect": {
+    "name": "ITRF96 / TM30",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "authority": 5254,
+    "registry": {
+     "srid": 5254,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "OGC WKT 1: Bessel'li şehir sistemi",
+   "text": "PROJCS[\"Şehir sistemi\",GEOGCS[\"Bessel datumu\",DATUM[\"Bessel_datumu\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",36],PARAMETER[\"central_meridian\",34.5],PARAMETER[\"scale_factor\",0.9999],PARAMETER[\"false_easting\",200000],PARAMETER[\"false_northing\",100000],UNIT[\"metre\",1]]",
+   "expect": {
+    "name": "Şehir sistemi",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Bessel datumu",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        0.202,
+        0.045,
+        -2.455
+       ],
+       "scale": 6.7,
+       "convention": "positionVector"
+      }
+     },
+     "latitudeOfOrigin": 36.0,
+     "centralMeridian": 34.5,
+     "scaleFactor": 0.9999,
+     "falseEasting": 200000.0,
+     "falseNorthing": 100000.0
+    }
+   }
+  },
+  {
+   "name": "WKT 1: derecenin uzun yazılışı",
+   "text": "GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.017453292519943295]]",
+   "expect": {
+    "name": "TUREF",
+    "system": {
+     "kind": "geographic",
+     "datum": "TUREF"
+    },
+    "registry": {
+     "srid": 5252,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "ESRI WKT 1: WGS 84 coğrafi",
+   "text": "GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]]",
+   "expect": {
+    "name": "GCS WGS 1984",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    },
+    "registry": {
+     "srid": 4326,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "WKT 2: EPSG:5254",
+   "text": "PROJCRS[\"TUREF / TM30\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",5252]],CONVERSION[\"3-degree Gauss-Kruger CM 30E\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",30,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],USAGE[SCOPE[\"Cadastre, engineering survey, topographic mapping (large scale).\"],AREA[\"Türkiye (Turkey) - between 28°30'E and 31°30'E, onshore.\"],BBOX[36.06,28.5,41.46,31.5]],ID[\"EPSG\",5254]]",
+   "expect": {
+    "name": "TUREF / TM30",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "authority": 5254,
+    "registry": {
+     "srid": 5254,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "WKT 2: EPSG:4326 (topluluk)",
+   "text": "GEOGCRS[\"WGS 84\",ENSEMBLE[\"World Geodetic System 1984 ensemble\",MEMBER[\"World Geodetic System 1984 (Transit)\"],MEMBER[\"World Geodetic System 1984 (G730)\"],MEMBER[\"World Geodetic System 1984 (G873)\"],MEMBER[\"World Geodetic System 1984 (G1150)\"],MEMBER[\"World Geodetic System 1984 (G1674)\"],MEMBER[\"World Geodetic System 1984 (G1762)\"],MEMBER[\"World Geodetic System 1984 (G2139)\"],MEMBER[\"World Geodetic System 1984 (G2296)\"],ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]],ENSEMBLEACCURACY[2.0]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"geodetic latitude (Lat)\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"geodetic longitude (Lon)\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],USAGE[SCOPE[\"Horizontal component of 3D system.\"],AREA[\"World.\"],BBOX[-90,-180,90,180]],ID[\"EPSG\",4326]]",
+   "expect": {
+    "name": "WGS 84",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    },
+    "authority": 4326,
+    "registry": {
+     "srid": 4326,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "WKT 2: EPSG:23036",
+   "text": "PROJCRS[\"ED50 / UTM zone 36N\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4230]],CONVERSION[\"UTM zone 36N\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",0.9996,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]],USAGE[SCOPE[\"Engineering survey, topographic mapping.\"],AREA[\"Europe - between 30°E and 36°E - Israel - offshore; Jordan; Norway including Svalbard - onshore and offshore; Türkiye (Turkey) - onshore and offshore.\"],BBOX[29.19,30,84.7,36]],ID[\"EPSG\",23036]]",
+   "expect": {
+    "name": "ED50 / UTM zone 36N",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 0.9996,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "authority": 23036,
+    "registry": {
+     "srid": 23036,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "WKT 2: Bessel'li TM'nin BOUNDCRS'ı",
+   "text": "BOUNDCRS[SOURCECRS[PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"Unknown based on Bessel 1841 ellipsoid using towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7\",ELLIPSOID[\"Bessel 1841\",6377397.155,299.1528128,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]],TARGETCRS[GEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"latitude\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"longitude\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4326]]],ABRIDGEDTRANSFORMATION[\"Transformation from unknown to WGS84\",METHOD[\"Position Vector transformation (geog2D domain)\",ID[\"EPSG\",9606]],PARAMETER[\"X-axis translation\",598.1,ID[\"EPSG\",8605]],PARAMETER[\"Y-axis translation\",73.7,ID[\"EPSG\",8606]],PARAMETER[\"Z-axis translation\",418.2,ID[\"EPSG\",8607]],PARAMETER[\"X-axis rotation\",0.202,ID[\"EPSG\",8608]],PARAMETER[\"Y-axis rotation\",0.045,ID[\"EPSG\",8609]],PARAMETER[\"Z-axis rotation\",-2.455,ID[\"EPSG\",8610]],PARAMETER[\"Scale difference\",1.0000067,ID[\"EPSG\",8611]]]]",
+   "expect": {
+    "name": "unknown",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Unknown based on Bessel 1841 ellipsoid using towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        0.202,
+        0.045,
+        -2.455
+       ],
+       "scale": 6.699999999915107,
+       "convention": "positionVector"
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   }
+  },
+  {
+   "name": "WKT 2: afinle türetilmiş yerel sistem",
+   "text": "DERIVEDPROJCRS[\"Şantiye\",BASEPROJCRS[\"TUREF / TM30\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM30\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",30,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]]],DERIVINGCONVERSION[\"TM30 to Şantiye\",METHOD[\"Affine parametric transformation\",ID[\"EPSG\",9624]],PARAMETER[\"A0\",-412000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8623]],PARAMETER[\"A1\",0.99,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8624]],PARAMETER[\"A2\",0.1,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8625]],PARAMETER[\"B0\",-4512000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8639]],PARAMETER[\"B1\",-0.1,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8640]],PARAMETER[\"B2\",0.99,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8641]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]",
+   "expect": {
+    "name": "Şantiye",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "tm",
+      "datum": "TUREF",
+      "centralMeridian": 30.0,
+      "scaleFactor": 1.0,
+      "falseEasting": 500000.0,
+      "falseNorthing": 0.0
+     },
+     "plane": {
+      "kind": "affine",
+      "a": 0.9998990001009999,
+      "b": -0.100999899000101,
+      "c": -43753.156246843806,
+      "d": 0.100999899000101,
+      "e": 0.9998990001009999,
+      "f": 4553156.246843753
+     }
+    }
+   }
+  },
+  {
+   "name": "PROJ: Bessel'li TM",
+   "text": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs +type=crs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Bessel 1841 datumu",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        0.202,
+        0.045,
+        -2.455
+       ],
+       "scale": 6.7,
+       "convention": "positionVector"
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   }
+  },
+  {
+   "name": "PROJ: UTM 36, International 1924",
+   "text": "+proj=utm +zone=36 +ellps=intl +towgs84=-87,-98,-121,0,0,0,0 +units=m +no_defs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "International 1924 datumu",
+      "ellipsoid": {
+       "name": "International 1924",
+       "semiMajor": 6378388.0,
+       "inverseFlattening": 297.0
+      },
+      "toWgs84": {
+       "translation": [
+        -87.0,
+        -98.0,
+        -121.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "scale": 0.0,
+       "convention": "positionVector"
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 0.9996,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 23036,
+     "exact": false
+    }
+   }
+  },
+  {
+   "name": "PROJ: güney UTM",
+   "text": "+proj=utm +zone=35 +south +datum=WGS84 +units=m +no_defs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "tm",
+     "datum": "WGS84",
+     "centralMeridian": 27.0,
+     "scaleFactor": 0.9996,
+     "falseEasting": 500000.0,
+     "falseNorthing": 10000000.0
+    }
+   }
+  },
+  {
+   "name": "PROJ: WGS 84 coğrafi",
+   "text": "+proj=longlat +datum=WGS84 +no_defs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    },
+    "registry": {
+     "srid": 4326,
+     "exact": true
+    }
+   }
+  },
+  {
+   "name": "PROJ: a ve 1/f'yle GRS80",
+   "text": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "GRS 1980 datumu",
+      "ellipsoid": {
+       "name": "GRS 1980",
+       "semiMajor": 6378137.0,
+       "inverseFlattening": 298.257222101
+      },
+      "toWgs84": {
+       "translation": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "scale": 0.0,
+       "convention": "positionVector"
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "registry": {
+     "srid": 5255,
+     "exact": false
+    }
+   }
+  },
+  {
+   "name": "PROJ: a ve 1/f'yle tanınmayan elipsoit",
+   "text": "+proj=longlat +a=6378300 +rf=297.5 +no_defs",
+   "expect": {
+    "name": "PROJ tanımı",
+    "system": {
+     "kind": "geographic",
+     "datum": {
+      "name": "a=6378300, 1/f=297.5 datumu",
+      "ellipsoid": {
+       "name": "a=6378300, 1/f=297.5",
+       "semiMajor": 6378300.0,
+       "inverseFlattening": 297.5
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "WKT 1: ABD ayağı",
+   "text": "PROJCS[\"x\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219]]",
+   "error": {
+    "kind": "unit",
+    "detail": "US survey foot"
+   }
+  },
+  {
+   "name": "WKT 1: Lambert",
+   "text": "PROJCS[\"Lambert\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Lambert_Conformal_Conic_2SP\"],PARAMETER[\"standard_parallel_1\",37],PARAMETER[\"standard_parallel_2\",41],PARAMETER[\"latitude_of_origin\",39],PARAMETER[\"central_meridian\",35],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]",
+   "error": {
+    "kind": "unsupported",
+    "detail": "Lambert_Conformal_Conic_2SP"
+   }
+  },
+  {
+   "name": "WKT 1: Paris meridyeni",
+   "text": "GEOGCS[\"NTF (Paris)\",DATUM[\"Nouvelle_Triangulation_Francaise_Paris\",SPHEROID[\"Clarke 1880 (IGN)\",6378249.2,293.4660212936269]],PRIMEM[\"Paris\",2.33722917],UNIT[\"grad\",0.01570796326794897]]",
+   "error": {
+    "kind": "meridian",
+    "detail": "Paris"
+   }
+  },
+  {
+   "name": "WKT 1: yerel sistem tanımı",
+   "text": "LOCAL_CS[\"Şantiye\",LOCAL_DATUM[\"x\",0],UNIT[\"metre\",1]]",
+   "error": {
+    "kind": "unsupported",
+    "detail": "LOCAL_CS"
+   }
+  },
+  {
+   "name": "PROJ: Lambert",
+   "text": "+proj=lcc +lat_1=37 +lat_2=41 +lat_0=39 +lon_0=35 +datum=WGS84 +units=m +no_defs",
+   "error": {
+    "kind": "unsupported",
+    "detail": "+proj=lcc"
+   }
+  },
+  {
+   "name": "PROJ: ayak",
+   "text": "+proj=tmerc +lon_0=33 +k=1 +x_0=500000 +datum=WGS84 +units=us-ft +no_defs",
+   "error": {
+    "kind": "unit",
+    "detail": "+units=us-ft"
+   }
+  },
+  {
+   "name": "PROJ: ızgaralı datum",
+   "text": "+proj=longlat +ellps=intl +nadgrids=ed50.gsb +no_defs",
+   "error": {
+    "kind": "unsupported",
+    "detail": "+nadgrids"
+   }
+  },
+  {
+   "name": "metin değil",
+   "text": "bir koordinat sistemi değil",
+   "error": {
+    "kind": "syntax",
+    "detail": ""
+   }
+  }
+ ],
+ "writes": [
+  {
+   "name": "TUREF'li şehir sistemi",
+   "definition": {
+    "name": "Şehir sistemi",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "latitudeOfOrigin": 36.0,
+     "centralMeridian": 34.5,
+     "scaleFactor": 0.9999,
+     "falseEasting": 200000.0,
+     "falseNorthing": 100000.0
+    }
+   },
+   "wkt": "PROJCS[\"Şehir sistemi\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",SPHEROID[\"GRS 1980\",6378137,298.257222101],TOWGS84[0,0,0,0,0,0,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",36],PARAMETER[\"central_meridian\",34.5],PARAMETER[\"scale_factor\",0.9999],PARAMETER[\"false_easting\",200000],PARAMETER[\"false_northing\",100000],UNIT[\"metre\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+   "proj": "+proj=tmerc +lat_0=36 +lon_0=34.5 +k=0.9999 +x_0=200000 +y_0=100000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
+  },
+  {
+   "name": "ED50'li sistem",
+   "definition": {
+    "name": "ED50 Gauss-Krüger 33",
+    "system": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 400000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "wkt": "PROJCS[\"ED50 Gauss-Krüger 33\",GEOGCS[\"ED50\",DATUM[\"European_Datum_1950\",SPHEROID[\"International 1924\",6378388,297],TOWGS84[-84.1,-101.8,-129.7,0,0,0.468,1.05]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",400000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+   "proj": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=400000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs +type=crs"
+  },
+  {
+   "name": "Bessel datumlu TM",
+   "definition": {
+    "name": "Bessel TM33",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Bessel datumu",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        0.202,
+        0.045,
+        -2.455
+       ],
+       "scale": 6.7,
+       "convention": "positionVector",
+       "accuracy": 1.5
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "wkt": "PROJCS[\"Bessel TM33\",GEOGCS[\"Bessel datumu\",DATUM[\"Bessel_datumu\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+   "proj": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs +type=crs"
+  },
+  {
+   "name": "aynısı, koordinat çerçevesi kuralıyla",
+   "definition": {
+    "name": "Bessel TM33",
+    "system": {
+     "kind": "tm",
+     "datum": {
+      "name": "Bessel datumu",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        -0.202,
+        -0.045,
+        2.455
+       ],
+       "scale": 6.7,
+       "convention": "coordinateFrame",
+       "accuracy": 1.5
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "wkt": "PROJCS[\"Bessel TM33\",GEOGCS[\"Bessel datumu\",DATUM[\"Bessel_datumu\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",33],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+   "proj": "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs +type=crs"
+  },
+  {
+   "name": "WGS 84 coğrafi",
+   "definition": {
+    "name": "WGS 84",
+    "system": {
+     "kind": "geographic",
+     "datum": "WGS84"
+    }
+   },
+   "wkt": "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]]",
+   "proj": "+proj=longlat +datum=WGS84 +no_defs +type=crs"
+  },
+  {
+   "name": "bağsız datumlu coğrafi",
+   "definition": {
+    "name": "Bağsız",
+    "system": {
+     "kind": "geographic",
+     "datum": {
+      "name": "Bağsız datum",
+      "ellipsoid": {
+       "name": "Özel elipsoit",
+       "semiMajor": 6378300.0,
+       "inverseFlattening": 297.5
+      }
+     }
+    }
+   },
+   "wkt": "GEOGCS[\"Bağsız\",DATUM[\"Bağsız_datum\",SPHEROID[\"Özel elipsoit\",6378300,297.5]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]]",
+   "proj": "+proj=longlat +a=6378300 +rf=297.5 +no_defs +type=crs"
+  },
+  {
+   "name": "TUREF TM33'e bağlı şantiye sistemi",
+   "definition": {
+    "name": "Şantiye",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "tm",
+      "datum": "TUREF",
+      "centralMeridian": 33.0,
+      "scaleFactor": 1.0,
+      "falseEasting": 500000.0,
+      "falseNorthing": 0.0
+     },
+     "plane": {
+      "kind": "similarity",
+      "east": 492345.678,
+      "north": 4422345.678,
+      "rotation": 12.5,
+      "scale": 1.000012
+     }
+    }
+   },
+   "wkt": "DERIVEDPROJCRS[\"Şantiye\",BASEPROJCRS[\"TUREF / TM33\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TUREF / TM33\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]]],DERIVINGCONVERSION[\"Şantiye\",METHOD[\"Affine parametric transformation\",ID[\"EPSG\",9624]],PARAMETER[\"A0\",-1437828.6568574323,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8623]],PARAMETER[\"A1\",0.976284291708433,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8624]],PARAMETER[\"A2\",0.21643701669390258,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8625]],PARAMETER[\"B0\",-4210904.788207623,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8639]],PARAMETER[\"B1\",-0.21643701669390258,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8640]],PARAMETER[\"B2\",0.976284291708433,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8641]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]",
+   "proj": null
+  },
+  {
+   "name": "Bessel datumlu TM'ye bağlı afin sistem",
+   "definition": {
+    "name": "Afin şantiye",
+    "system": {
+     "kind": "local",
+     "base": {
+      "kind": "tm",
+      "datum": {
+       "name": "Bessel datumu",
+       "ellipsoid": {
+        "name": "Bessel 1841",
+        "semiMajor": 6377397.155,
+        "inverseFlattening": 299.1528128
+       },
+       "toWgs84": {
+        "translation": [
+         598.1,
+         73.7,
+         418.2
+        ],
+        "rotation": [
+         0.202,
+         0.045,
+         -2.455
+        ],
+        "scale": 6.7,
+        "convention": "positionVector",
+        "accuracy": 1.5
+       }
+      },
+      "centralMeridian": 33.0,
+      "scaleFactor": 1.0,
+      "falseEasting": 500000.0,
+      "falseNorthing": 0.0
+     },
+     "plane": {
+      "kind": "affine",
+      "a": 1.00002,
+      "b": -0.0003,
+      "c": 492000.0,
+      "d": 0.00025,
+      "e": 0.99998,
+      "f": 4422500.0
+     }
+    }
+   },
+   "wkt": "BOUNDCRS[SOURCECRS[DERIVEDPROJCRS[\"Afin şantiye\",BASEPROJCRS[\"Bessel TM33\",BASEGEOGCRS[\"Bessel datumu\",DATUM[\"Bessel datumu\",ELLIPSOID[\"Bessel 1841\",6377397.155,299.1528128,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"Bessel TM33\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",33,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]]],DERIVINGCONVERSION[\"Afin şantiye\",METHOD[\"Affine parametric transformation\",ID[\"EPSG\",9624]],PARAMETER[\"A0\",-493316.87319856125,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8623]],PARAMETER[\"A1\",0.9999799254014976,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8624]],PARAMETER[\"A2\",0.0002999999776200017,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8625]],PARAMETER[\"B0\",-4422465.120084101,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8639]],PARAMETER[\"B1\",-0.0002499999813500014,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8640]],PARAMETER[\"B2\",1.0000199253985136,SCALEUNIT[\"coefficient\",1],ID[\"EPSG\",8641]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1]]]],TARGETCRS[GEOGCRS[\"WGS 84\",DATUM[\"World Geodetic System 1984\",ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],CS[ellipsoidal,2],AXIS[\"latitude\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433]],AXIS[\"longitude\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433]]]],ABRIDGEDTRANSFORMATION[\"Afin şantiye to WGS 84\",METHOD[\"Position Vector transformation (geog2D domain)\",ID[\"EPSG\",9606]],PARAMETER[\"X-axis translation\",598.1,ID[\"EPSG\",8605]],PARAMETER[\"Y-axis translation\",73.7,ID[\"EPSG\",8606]],PARAMETER[\"Z-axis translation\",418.2,ID[\"EPSG\",8607]],PARAMETER[\"X-axis rotation\",0.202,ID[\"EPSG\",8608]],PARAMETER[\"Y-axis rotation\",0.045,ID[\"EPSG\",8609]],PARAMETER[\"Z-axis rotation\",-2.455,ID[\"EPSG\",8610]],PARAMETER[\"Scale difference\",1.0000067,ID[\"EPSG\",8611]]]]",
+   "proj": null
+  }
+ ]
+}

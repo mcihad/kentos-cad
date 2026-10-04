@@ -14,6 +14,8 @@
 mod datum;
 pub mod measure;
 mod plane;
+pub mod text;
+pub mod wkt;
 
 pub use datum::{Choice, Convention, CustomDatum, Datum, Ellipsoid, Helmert, Method, NoLink};
 pub use plane::Plane;
