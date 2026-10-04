@@ -3,7 +3,7 @@ import type { AppContext } from '../../app/context';
 import type { Disposable } from '../../core/disposable';
 import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
 import { canCalcPoint } from '../../tools/pointCalc';
-import { lockReference } from '../../tools/locks';
+import { takesPoints } from '../../tools/locks';
 import { calcMenuItems } from './calcMenu';
 import { gripItems } from './gripMenu';
 import { choiceItems, parsePrompt, runPromptOption } from '../promptOptions';
@@ -77,8 +77,9 @@ function commandItems(ctx: AppContext): MenuItem[] {
       ? [{ label: 'Nokta hesapla', icon: 'calc', items: () => calcMenuItems(ctx) }]
       : []),
     { label: 'Tek seferlik kenet', icon: 'snap', items: () => snapItems(ctx, false) },
-    // The digitizing locks (docs/adr/0166 §6), while a point is expected after another.
-    ...(lockReference(ctx) ? [{ label: 'Kilit', icon: 'lock', items: () => lockItems(ctx) }] : []),
+    // The digitizing locks (docs/adr/0166 §6), while a command takes points: a reference point may come before its
+    // first corner (§5).
+    ...(takesPoints(ctx) ? [{ label: 'Kilit', icon: 'lock', items: () => lockItems(ctx) }] : []),
     commandItem(ctx, 'draft.snap'),
     commandItem(ctx, 'draft.ortho'),
     commandItem(ctx, 'draft.rightAngle'),
@@ -98,6 +99,8 @@ function lockItems(ctx: AppContext): MenuItem[] {
     commandItem(ctx, 'draft.lock.deflection'),
     commandItem(ctx, 'draft.lock.parallel'),
     commandItem(ctx, 'draft.lock.perpendicular'),
+    commandItem(ctx, 'draft.lock.reference'),
+    commandItem(ctx, 'draft.lock.construction'),
     { kind: 'separator' },
     commandItem(ctx, 'draft.lock.keep'),
     commandItem(ctx, 'draft.lock.clear'),

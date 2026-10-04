@@ -136,6 +136,15 @@ Bağımsız başvuru `scripts/fixtures/lock_cases.py` (`fixtures/locks/v1/cases.
    - **Ortak iz** `right-angle.json` (boş çizimde: serbest ilk kenar, dik kenarlar, Dik kapat, yazılan mesafe, paralel kenarların uyarısı, Çoklu çizgi'de seçeneğin olmaması), resim senaryosu `usage-right-angle.json`.
 4. Referans noktası ve yapım kipi; ortak iz; resimler.
 
+   *(4 Ekim: tamam; ADR'nin dört adımı bitti, `HYB-10` tamam.)*
+   - **Oturum:** başvuru oturumdadır (masaüstü `Session::reference`, `ask_reference`, `set_construction`; web `ToolManager.reference`, `askReference`, `setConstruction`) ve her olaydan önce imlecin kuralına verilir (`LockState::reference`). Kilitlerin başvurusu (`lock_reference`, `lockReference`) varsa odur; imlecin kuralı (Orto, kutupsal izleme, kilitler) ve yazılan göreli nokta (`@dY,dX`, `@mesafe<açı`, yalın mesafe; `Context::typed_point`, `pointFromText`) ondan ölçülür; aracın kenarı yine son köşeden başlar.
+   - **Referans noktası** (tek seferlik): istem “referans noktasını belirtin [Vazgeç (Esc)]”; sonraki basış ya da yazılan nokta referans olur (basış ve bırakışı araca gitmez), günlükte “Referans noktası: Y …  X …”. Aracın son köşesi değişince (köşe kondu ya da geri alındı) referans kalkar. İlk köşeden önce de verilir (AutoCAD'in “From”u gibi).
+   - **Yapım kipi** (sürekli, işaretli): istem “yapım noktasını belirtin; köşe olmaz”; her basış ve yazılan nokta referansı yeniler. Kapatılınca referans sonraki köşe için durur, sonra kalkar. Komut bitince kapanır.
+   - **Esc:** kenar beklemesi, referans beklemesi, Yapım kipi, sonra referans kilitlerle birlikte, sırayla.
+   - **Çizimde:** referansın yerinde kenet renginde 12 px çarpı ve haleli “R”.
+   - **Komutlar ve menü:** `draft.lock.reference`, `draft.lock.construction` (ikonları `lockReference`, `lockConstruction`), Kilit ▸'te Nesneye dik'in altında. Kilit ▸ artık nokta alan bir komut çalışırken görünür (ilk köşeden önce de: referans verilebilsin); başvuru isteyen satırlar o zaman soluktur.
+   - **Ortak iz** `lock-reference.json` (boş çizimde), resim senaryosu `usage-lock-reference.json`.
+
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
 ## Sonuçlar

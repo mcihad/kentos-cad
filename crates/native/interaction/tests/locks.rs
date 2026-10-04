@@ -303,3 +303,78 @@ fn polyline_has_no_dik_kapat() {
     b.click(5.0, 5.0);
     assert!(!b.options().contains(&"D"), "{:?}", b.options());
 }
+
+#[test]
+fn a_reference_point_measures_typed_points_and_goes_with_the_corner() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.ask_reference(cx)));
+    assert_eq!(b.run(|s, _| s.prompt()).step, "referans noktasını belirtin");
+    // The press is the reference, not a corner.
+    b.click(10.0, 5.0);
+    assert_eq!(b.points(), 1);
+    assert_eq!(
+        b.last_text(),
+        Some("Referans noktası: Y 487010.000  X 4420005.000")
+    );
+    // Relative input from the reference; the corner placed, the reference goes.
+    assert!(b.type_text("@0,4"));
+    assert_eq!(b.points(), 2);
+    assert_eq!(b.run(|s, _| s.reference()), None, "one-shot");
+    assert!(b.type_text("@5,0"));
+    // Yapım kipi: presses and typed points renew the reference.
+    assert!(b.run(|s, cx| s.set_construction(true, cx)));
+    b.click(20.0, 0.0);
+    assert!(b.type_text("@0,-3"));
+    assert_eq!(b.points(), 3);
+    // Off: the next point is a corner, measured from the reference.
+    assert!(b.run(|s, cx| s.set_construction(false, cx)));
+    assert!(b.type_text("@5,0"));
+    b.confirm();
+    let pts = points(&b);
+    let want = [[0.0, 0.0], [10.0, 9.0], [15.0, 9.0], [25.0, -3.0]];
+    assert_eq!(pts.len(), 4, "{pts:?}");
+    assert!(pts.iter().zip(want).all(|(p, w)| near(*p, w)), "{pts:?}");
+}
+
+#[test]
+fn esc_steps_back_through_the_reference() {
+    let mut b = Bench::new("polyline");
+    b.click(0.0, 0.0);
+    assert!(b.run(|s, cx| s.ask_reference(cx)));
+    assert!(
+        b.run(|s, cx| s.cancel(cx)),
+        "the wait goes, the command stays"
+    );
+    assert_eq!(b.run(|s, _| s.prompt()).step, "sonraki noktayı belirtin");
+    assert!(b.run(|s, cx| s.set_construction(true, cx)));
+    b.click(4.0, 4.0);
+    assert!(b.run(|s, cx| s.cancel(cx)), "Yapım kipi goes");
+    assert!(!b.run(|s, _| s.construction()));
+    assert!(
+        b.run(|s, _| s.reference()).is_some(),
+        "its point stays for the next corner"
+    );
+    assert!(
+        b.run(|s, cx| s.cancel(cx)),
+        "then the reference with the locks"
+    );
+    assert_eq!(b.run(|s, _| s.reference()), None);
+    assert_eq!(b.points(), 1);
+}
+
+#[test]
+fn no_reference_without_a_command_that_takes_points() {
+    let mut b = Bench::new("polyline");
+    b.run(|s, _| s.exit());
+    let before = b.log.len();
+    assert!(!b.run(|s, cx| s.ask_reference(cx)));
+    assert!(!b.run(|s, cx| s.set_construction(true, cx)));
+    assert_eq!(
+        b.said(before),
+        [
+            (Level::Warn, kentos_interaction::NO_REFERENCE_TOOL),
+            (Level::Warn, kentos_interaction::NO_REFERENCE_TOOL)
+        ]
+    );
+}

@@ -190,8 +190,20 @@ pub struct Session {
     select: Select,
     /// Nesneye paralel or dik waiting for its edge (docs/adr/0166 §3).
     lock_pick: Option<LockPick>,
-    /// The press that picked the edge: its release does not reach the tool.
+    /// The press that picked the edge, or set the reference: its release
+    /// does not reach the tool.
     pick_pressed: bool,
+    /// Referans noktası's or Yapım kipi's point (docs/adr/0166 §5).
+    reference: Option<Vec2>,
+    /// The tool's own last point when the reference was set: once it
+    /// moves (a corner was placed), a one-shot reference is done.
+    reference_from: Option<Vec2>,
+    /// Referans noktası asked: the next press or typed point is the reference.
+    reference_wait: bool,
+    /// Yapım kipi: every press and typed point renews the reference.
+    construction: bool,
+    /// The pointer's last place, for a distance typed as a reference.
+    cursor: Option<Vec2>,
 }
 
 /// What the web says when the command takes no point at its step.
@@ -208,6 +220,10 @@ pub const NO_TRAVEL: &str =
 
 /// What Esc and Kilitleri kaldır say.
 pub const LOCKS_GONE: &str = "Kilitler kaldırıldı.";
+
+/// Referans noktası or Yapım kipi asked where no command takes points.
+pub const NO_REFERENCE_TOOL: &str =
+    "Referans noktası, nokta bekleyen bir komut çalışırken verilir.";
 
 impl Session {
     pub fn new() -> Self {
@@ -410,6 +426,7 @@ impl Session {
         // A new command starts with nothing locked (docs/adr/0166 §1).
         cx.locks.reset();
         self.lock_pick = None;
+        self.drop_reference();
         cx.selection.set_hover(None);
         if let Some(tool) = &mut self.tool
             && tool.activate(cx) == Flow::Exit
@@ -424,6 +441,15 @@ impl Session {
         self.tool = None;
         self.parent = None;
         self.lock_pick = None;
+        self.drop_reference();
+    }
+
+    /// No reference, none asked, Yapım kipi off: a new command's start.
+    fn drop_reference(&mut self) {
+        self.reference = None;
+        self.reference_from = None;
+        self.reference_wait = false;
+        self.construction = false;
     }
 
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
@@ -434,8 +460,18 @@ impl Session {
         if self.lock_pick.take().is_some() {
             return true;
         }
-        if cx.locks.any() && self.lock_reference().is_some() {
+        // Then a reference asked for, Yapım kipi, and the reference with the locks (§5).
+        if std::mem::take(&mut self.reference_wait) {
+            return true;
+        }
+        if self.construction {
+            self.set_construction(false, cx);
+            return true;
+        }
+        if (cx.locks.any() || self.reference.is_some()) && self.lock_reference().is_some() {
             cx.locks.clear();
+            self.reference = None;
+            cx.locks.reference = None;
             cx.say(Level::Info, LOCKS_GONE.to_owned());
             return true;
         }
@@ -524,15 +560,97 @@ impl Session {
             .tool
             .as_ref()
             .map_or_else(|| self.select.prompt(), |t| t.prompt());
-        // An edge awaited for a lock speaks for the step (docs/adr/0166 §3).
-        match self.lock_pick {
-            Some(pick) => match prompt.tool {
-                Some(tool) => Prompt::new(tool, pick.step()),
-                None => Prompt::untitled(pick.step()),
+        // An edge awaited for a lock, a reference asked for and Yapım kipi
+        // speak for the step (docs/adr/0166 §3, §5).
+        let step = match self.lock_pick {
+            Some(pick) => pick.step(),
+            None if self.reference_wait => "referans noktasını belirtin",
+            None if self.construction && self.tool.is_some() => {
+                "yapım noktasını belirtin; köşe olmaz"
             }
-            .option("Vazgeç", "Esc"),
-            None => prompt,
+            None => return prompt,
+        };
+        match prompt.tool {
+            Some(tool) => Prompt::new(tool, step),
+            None => Prompt::untitled(step),
         }
+        .option("Vazgeç", "Esc")
+    }
+
+    /// Referans noktası's or Yapım kipi's point, if one is set (docs/adr/0166 §5).
+    pub fn reference(&self) -> Option<Vec2> {
+        self.reference
+    }
+
+    /// Whether Yapım kipi is on.
+    pub fn construction(&self) -> bool {
+        self.construction
+    }
+
+    /// Whether a command runs that takes points: Referans noktası and
+    /// Yapım kipi work then, before its first corner too.
+    pub fn takes_points(&self) -> bool {
+        self.tool
+            .as_ref()
+            .is_some_and(|t| t.accepts_points() && t.snaps())
+    }
+
+    /// Referans noktası (docs/adr/0166 §5): the next press or typed point
+    /// is the reference the locks and relative input are measured from,
+    /// not a corner; false (and why) when no command takes points.
+    pub fn ask_reference(&mut self, cx: &mut Context<'_>) -> bool {
+        if !self.takes_points() {
+            cx.say(Level::Warn, NO_REFERENCE_TOOL.to_owned());
+            return false;
+        }
+        self.reference_wait = true;
+        true
+    }
+
+    /// Yapım kipi on or off: while on, every press and typed point renews
+    /// the reference; off, the next point is a corner, measured from it.
+    pub fn set_construction(&mut self, on: bool, cx: &mut Context<'_>) -> bool {
+        if on && !self.takes_points() {
+            cx.say(Level::Warn, NO_REFERENCE_TOOL.to_owned());
+            return false;
+        }
+        self.construction = on;
+        self.reference_wait = false;
+        // The reference stays for the next corner, then goes.
+        self.reference_from = self.snap_from();
+        cx.say(
+            Level::Info,
+            if on {
+                "Yapım kipi açık: tıklanan ve yazılan noktalar köşe olmaz, referansı yeniler."
+            } else {
+                "Yapım kipi kapalı: sonraki nokta köşedir."
+            }
+            .to_owned(),
+        );
+        true
+    }
+
+    /// Whether the next press or typed point is a reference rather than a corner.
+    fn takes_reference(&self) -> bool {
+        self.reference_wait || (self.construction && self.tool.is_some())
+    }
+
+    /// The reference is now `p`: the locks follow it, said in the log.
+    fn set_reference(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        self.reference = Some(p);
+        self.reference_from = self.snap_from();
+        self.reference_wait = false;
+        cx.locks.reference = Some(p);
+        let line = format!("Referans noktası: {}", cx.format().point(p));
+        cx.say(Level::Info, line);
+        self.follow_locks(cx);
+    }
+
+    /// What the cursor rule reads of the session before an event: the
+    /// tool's direction (Sapma, Dik açı) and the reference point.
+    fn prime(&self, cx: &mut Context<'_>) {
+        cx.locks.travel = self.travel();
+        cx.locks.reference = self.reference;
     }
 
     /// Nesneye paralel or dik waiting for its edge, if one is.
@@ -651,7 +769,8 @@ impl Session {
     }
 
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        cx.locks.travel = self.travel();
+        self.prime(cx);
+        self.cursor = Some(p.world);
         match &mut self.tool {
             Some(tool) => tool.pointer_move(p, cx),
             None => self.select.pointer_move(p, cx),
@@ -662,10 +781,16 @@ impl Session {
 
     /// The left button went down on the drawing.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        cx.locks.travel = self.travel();
+        self.prime(cx);
         if let Some(pick) = self.lock_pick {
             self.pick_pressed = true;
             self.pick_edge_now(pick, p, cx);
+            return;
+        }
+        // Referans noktası and Yapım kipi: the press is the reference, not a corner (§5).
+        if self.takes_reference() {
+            self.pick_pressed = true;
+            self.set_reference(p.world, cx);
             return;
         }
         match &mut self.tool {
@@ -677,7 +802,7 @@ impl Session {
 
     /// The left button came up (on the drawing, or wherever a press on it ended).
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        cx.locks.travel = self.travel();
+        self.prime(cx);
         // The release of the press that picked a lock's edge is the pick's.
         if std::mem::take(&mut self.pick_pressed) {
             return;
@@ -694,7 +819,7 @@ impl Session {
     /// point is expected after another.
     pub fn lock_reference(&self) -> Option<Vec2> {
         match &self.tool {
-            Some(_) => self.snap_from(),
+            Some(_) => self.reference.or_else(|| self.snap_from()),
             None if self.select.grip_active() => self.select.snap_from(),
             None => None,
         }
@@ -729,7 +854,7 @@ impl Session {
             cx.say(Level::Warn, NO_TRAVEL.to_owned());
             return false;
         }
-        cx.locks.travel = self.travel();
+        self.prime(cx);
         cx.locks.lock_toward(toward, at);
         self.say_locks(cx);
         true
@@ -739,7 +864,7 @@ impl Session {
     /// docs/adr/0166 §6), given to the running tool as if clicked, or to a
     /// grip being moved; false when the step takes none.
     pub fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
-        cx.locks.travel = self.travel();
+        self.prime(cx);
         let taken = match &mut self.tool {
             Some(tool) => tool.accepts_points() && tool.accept_point(p, cx),
             None => self.select.accept_point(p, cx),
@@ -781,12 +906,20 @@ impl Session {
 
     /// After an event: the locks follow the reference (one-shot ones go when
     /// a point was placed); with no command and no grip, nothing is locked.
-    fn follow_locks(&self, cx: &mut Context<'_>) {
+    fn follow_locks(&mut self, cx: &mut Context<'_>) {
         if self.tool.is_none() && !self.select.grip_active() {
             cx.locks.reset();
             return;
         }
-        cx.locks.travel = self.travel();
+        // A one-shot reference is done once the tool's own last point moved:
+        // a corner was placed from it, or taken back (docs/adr/0166 §5).
+        if self.reference.is_some()
+            && !self.takes_reference()
+            && self.snap_from() != self.reference_from
+        {
+            self.reference = None;
+        }
+        self.prime(cx);
         cx.locks.follow(self.lock_reference());
     }
 
@@ -835,7 +968,14 @@ impl Session {
             self.lock_toward(Toward::Angle(a), cx);
             return true;
         }
-        cx.locks.travel = self.travel();
+        self.prime(cx);
+        // Referans noktası and Yapım kipi: a typed point is the reference (§5).
+        if self.takes_reference()
+            && let Some(p) = cx.typed_point(text, self.lock_reference(), self.cursor)
+        {
+            self.set_reference(p, cx);
+            return true;
+        }
         let taken = match self.tool.as_mut() {
             Some(tool) => tool.input(text, cx),
             // A typed point places a grip being moved.

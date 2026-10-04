@@ -33,7 +33,9 @@ export const constrainCursor =
  * direction projects even a snapped point; a length alone with the cursor
  * on `from` leaves it there.
  */
-export function constrainPoint(ctx: AppContext, from: Vec2 | null, p: ToolPointer): { point: Vec2; tracking: Tracking | null } {
+export function constrainPoint(ctx: AppContext, last: Vec2 | null, p: ToolPointer): { point: Vec2; tracking: Tracking | null } {
+  // A reference point stands in for the last corner (docs/adr/0166 §5); a tool's unit test has no tool manager.
+  const from = ctx.tools?.reference?.value ?? last;
   if (from) followLocks(ctx);
   // A context without locks (a tool's unit test) has none.
   const locks = ctx.settings.locks?.value ?? NO_LOCKS;
@@ -80,6 +82,8 @@ export function drawTracking(g: CanvasRenderingContext2D, view: ViewTransform, t
  */
 export function pointFromText(ctx: AppContext, text: string, last: Vec2 | null, cursor: Vec2 | null): Vec2 | null {
   // Typed in the project's unit: a local project's millimetres become metres here (docs/adr/0165 §2); a polar
-  // angle in the project's way and angle unit (§4).
-  return parsePointInput(text, last, cursor, (d) => ctx.view.trackAlong(d), (v) => ctx.format.toMetres(v), ctx.format.angles);
+  // angle in the project's way and angle unit (§4). Relative input is measured from a reference point, when one is
+  // set (docs/adr/0166 §5).
+  const base = ctx.tools?.reference?.value ?? last;
+  return parsePointInput(text, base, cursor, (d) => ctx.view.trackAlong(d), (v) => ctx.format.toMetres(v), ctx.format.angles);
 }

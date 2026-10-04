@@ -100,6 +100,10 @@ pub struct LockMarks {
     pub length: Option<f64>,
     /// The edge a Paralel or Dik lock was picked on (docs/adr/0166 §3).
     pub edge: Option<kentos_geometry_core::geom::intersect::Edge>,
+    /// Referans noktası's or Yapım kipi's point, marked “R” (§5).
+    pub named: Option<Vec2>,
+    /// Whether locks hold (else only the reference is marked).
+    pub locks: bool,
 }
 
 /// How long the crosshair's arms are (`appearance.crosshair`, the web's `CROSSHAIR_ARM`).
@@ -355,6 +359,24 @@ fn locks(frame: &mut canvas::Frame, l: &LockMarks, camera: &Camera, colors: &Mar
     };
     let [ox, oy] = camera.world_to_screen(l.reference);
     let o = Point::new(ox as f32, oy as f32);
+    // The reference point: a cross and “R” (the web's `drawLocks`).
+    if let Some(r) = l.named {
+        let [x, y] = camera.world_to_screen(r);
+        let c = Point::new(x as f32, y as f32);
+        let solid = Stroke::default().with_color(colors.snap).with_width(1.5);
+        frame.stroke(
+            &Path::line(c - Vector::new(6.0, 6.0), c + Vector::new(6.0, 6.0)),
+            solid,
+        );
+        frame.stroke(
+            &Path::line(c - Vector::new(6.0, -6.0), c + Vector::new(6.0, -6.0)),
+            solid,
+        );
+        halo_label(frame, "R", c, colors);
+    }
+    if !l.locks {
+        return;
+    }
     // The picked edge, solid (the web's `drawLocks`).
     if let Some(edge) = l.edge {
         let at = |p: Vec2| {

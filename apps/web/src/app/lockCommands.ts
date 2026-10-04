@@ -1,5 +1,5 @@
 import type { Command } from '../core/commands';
-import { clearLocks, hasLocks, keepLocks, lockReference, lockTravel, NO_LOCK_REFERENCE, NO_TRAVEL, type LockAsk } from '../tools/locks';
+import { clearLocks, hasLocks, keepLocks, lockReference, lockTravel, NO_LOCK_REFERENCE, NO_TRAVEL, takesPoints, type LockAsk } from '../tools/locks';
 import type { AppContext } from './context';
 
 const C = 'Çizim yardımcıları';
@@ -81,6 +81,31 @@ export function lockCommands(ctx: AppContext): Command[] {
       isEnabled: enabled,
       whyDisabled: why,
       watch,
+    },
+    {
+      id: 'draft.lock.reference',
+      title: 'Referans noktası',
+      short: 'Referans',
+      category: C,
+      icon: 'lockReference',
+      description: 'Sonraki tıklama ya da yazılan nokta köşe olmaz, referans olur: kilitler ve göreli giriş (@dY,dX, @mesafe<açı, yalın mesafe) ondan ölçülür; kenar yine son köşeden başlar. Nokta konunca referans son köşeye döner.',
+      run: () => void ctx.tools.askReference(),
+      isEnabled: () => takesPoints(ctx),
+      whyDisabled: () => (takesPoints(ctx) ? null : 'Referans noktası, nokta bekleyen bir komut çalışırken verilir.'),
+      watch: [...watch, ctx.tools.reference],
+    },
+    {
+      id: 'draft.lock.construction',
+      title: 'Yapım kipi',
+      short: 'Yapım',
+      category: C,
+      icon: 'lockConstruction',
+      description: 'Açıkken her tıklama ve yazılan nokta köşe olmaz, referansı yeniler; kapatılınca sonraki nokta köşedir. Komut bitince kapanır.',
+      run: () => void ctx.tools.setConstruction(!ctx.tools.construction.value),
+      isChecked: () => ctx.tools.construction.value,
+      isEnabled: () => takesPoints(ctx),
+      whyDisabled: () => (takesPoints(ctx) ? null : 'Yapım kipi, nokta bekleyen bir komut çalışırken açılır.'),
+      watch: [...watch, ctx.tools.construction],
     },
     {
       id: 'draft.lock.keep',

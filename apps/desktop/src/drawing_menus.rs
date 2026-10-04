@@ -314,8 +314,9 @@ impl App {
         let mut menu = menu
             .submenu("Tek seferlik kenet", self.snap_menu(Menu::new()))
             .icon(crate::icons::from_web(Some("snap")));
-        // The digitizing locks (docs/adr/0166 §6), while a point is expected after another.
-        if self.session.lock_reference().is_some() {
+        // The digitizing locks (docs/adr/0166 §6), while a command takes
+        // points: a reference point may come before the first corner (§5).
+        if self.session.takes_points() {
             menu = menu
                 .submenu("Kilit", self.lock_menu())
                 .icon(crate::icons::from_web(Some("lock")));
@@ -350,8 +351,10 @@ impl App {
         }
         let menu = self.command_item(menu, "draft.lock.deflection");
         let menu = self.command_item(menu, "draft.lock.parallel");
+        let menu = self.command_item(menu, "draft.lock.perpendicular");
+        let menu = self.command_item(menu, "draft.lock.reference");
         let menu = self
-            .command_item(menu, "draft.lock.perpendicular")
+            .command_item(menu, "draft.lock.construction")
             .separator();
         let menu = self.command_item(menu, "draft.lock.keep");
         self.command_item(menu, "draft.lock.clear")

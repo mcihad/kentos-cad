@@ -160,14 +160,26 @@ export function lockWords(ctx: AppContext, s: LockState = ctx.settings.locks.val
 export function lockReference(ctx: AppContext): Vec2 | null {
   const tool = ctx.tools.active;
   if (!takesTypedInput(ctx.tools.activeId.value, tool) || tool.snaps === false) return null;
-  return tool.snapFrom?.() ?? null;
+  // Referans noktası's or Yapım kipi's point stands in for the last corner (docs/adr/0166 §5).
+  return ctx.tools.reference?.value ?? tool.snapFrom?.() ?? null;
 }
+
+/** Whether a command runs that takes points: Referans noktası and Yapım kipi work then, before its first corner too. */
+export function takesPoints(ctx: AppContext): boolean {
+  const tool = ctx.tools.active;
+  return takesTypedInput(ctx.tools.activeId.value, tool) && tool.snaps !== false && !!tool.acceptPoint;
+}
+
+/** Referans noktası or Yapım kipi asked where no command takes points (the desktop's words). */
+export const NO_REFERENCE_TOOL = 'Referans noktası, nokta bekleyen bir komut çalışırken verilir.';
 
 /** The direction the object being drawn travels at its last point (Sapma turns from it). */
 export const lockTravel = (ctx: AppContext): Vec2 | null => ctx.tools.active.travelDirection?.() ?? null;
 
 /** After an event: the locks follow the reference; one-shot ones go once their point is placed. */
 export function followLocks(ctx: AppContext): void {
+  // A one-shot reference is done once a corner was placed from it (docs/adr/0166 §5).
+  ctx.tools?.followReference?.();
   // A context without locks (a tool's unit test) has nothing to follow.
   const s = ctx.settings.locks?.value;
   if (!s || !hasLocks(s)) return;

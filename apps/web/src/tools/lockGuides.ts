@@ -12,6 +12,9 @@ import { hasLocks, lockedDirection, lockReference, lockTravel, lockWords } from 
  */
 export function drawLocks(ctx: AppContext, g: CanvasRenderingContext2D, cam: Camera, pal: CanvasPalette, cursor: Vec2 | null): void {
   const s = ctx.settings.locks.value;
+  // Referans noktası's or Yapım kipi's point: a cross and “R” (docs/adr/0166 §5).
+  const named = ctx.tools.reference.value;
+  if (named) drawReference(g, cam.worldToScreen(named), pal);
   if (!hasLocks(s)) return;
   const ref = lockReference(ctx);
   if (!ref) return;
@@ -65,6 +68,27 @@ export function drawLocks(ctx: AppContext, g: CanvasRenderingContext2D, cam: Cam
   }
   g.restore();
   if (cursor && !ctx.settings.valueCard.value) drawLockTag(g, cursor, `Kilit: ${lockWords(ctx).join(' · ')}`, pal);
+}
+
+/** The reference point: a 12 px cross and “R” above-right on a halo, in the snap colour. */
+function drawReference(g: CanvasRenderingContext2D, at: Vec2, pal: CanvasPalette): void {
+  g.save();
+  g.strokeStyle = pal.snap;
+  g.lineWidth = 1.5;
+  g.beginPath();
+  g.moveTo(at.x - 6, at.y - 6);
+  g.lineTo(at.x + 6, at.y + 6);
+  g.moveTo(at.x - 6, at.y + 6);
+  g.lineTo(at.x + 6, at.y - 6);
+  g.stroke();
+  g.font = `600 10.5px ${pal.font}`;
+  g.textBaseline = 'bottom';
+  g.lineWidth = 3;
+  g.strokeStyle = pal.labelHalo;
+  g.strokeText('R', at.x + 9, at.y - 7);
+  g.fillStyle = pal.snap;
+  g.fillText('R', at.x + 9, at.y - 7);
+  g.restore();
 }
 
 /** The tag above-left of the cursor; on its other side where the drawing's edge would cut it off. */

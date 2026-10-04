@@ -232,6 +232,8 @@ export class CursorInput extends Component {
     ctx.log.command(echo(text));
     // #ad: a point's place by its name (docs/adr/0152 §4).
     if (namedPoint(ctx, text)) return;
+    // Referans noktası and Yapım kipi: a typed point is the reference (docs/adr/0166 §5).
+    if (ctx.tools.typedReference(text)) return;
     // <45: the next point's direction locked (docs/adr/0166 §6).
     if (typedLock(ctx, text)) return;
     const f = ctx.format;

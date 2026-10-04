@@ -29,7 +29,8 @@ pub(crate) fn constrain(
     p: &Pointer,
     cx: &Context<'_>,
 ) -> (Vec2, Option<Tracking>) {
-    let Some(from) = from else {
+    // A reference point stands in for the last corner (docs/adr/0166 §5).
+    let Some(from) = cx.locks.reference.or(from) else {
         return (p.world, None);
     };
     let exact = p.snap.is_some() || p.tracked;

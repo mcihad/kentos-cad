@@ -2,7 +2,8 @@ import type { AppContext } from '../app/context';
 import type { Disposable } from '../core/disposable';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
-import { clearLocks, lockPickStep, lockReference, lockToward, NO_LOCK_EDGE, NO_LOCK_REFERENCE, NO_LOCKS, pickedEdge, type LockPick } from './locks';
+import { clearLocks, followLocks as followLocksHere, lockPickStep, lockReference, lockToward, NO_LOCK_EDGE, NO_LOCK_REFERENCE, NO_LOCKS, NO_REFERENCE_TOOL, pickedEdge, takesPoints, type LockPick } from './locks';
+import { pointFromText } from './tracking';
 import { drawLocks } from './lockGuides';
 import type { CanvasPalette } from '../render/color';
 import type { Camera } from '../viewport/Camera';
@@ -13,8 +14,16 @@ export class ToolManager {
   readonly prompt = new Signal('');
   /** Nesneye paralel or dik waiting for its edge (docs/adr/0166 §3): the next press picks it instead of reaching the tool. */
   readonly lockPick = new Signal<LockPick | null>(null);
-  /** The press that picked the edge: its release does not reach the tool. */
+  /** The press that picked the edge, or set the reference: its release does not reach the tool. */
   private pickPressed = false;
+  /** Referans noktası's or Yapım kipi's point (docs/adr/0166 §5): the locks and relative input are measured from it. */
+  readonly reference = new Signal<Vec2 | null>(null);
+  /** The tool's own last point when the reference was set: once it moves (a corner was placed), a one-shot reference is done. */
+  private referenceFrom: Vec2 | null = null;
+  /** Referans noktası asked: the next press or typed point is the reference. */
+  readonly referenceWait = new Signal(false);
+  /** Yapım kipi: every press and typed point renews the reference. */
+  readonly construction = new Signal(false);
   private registry = new Map<string, ToolDescriptor>();
   private current: Tool | null = null;
   private promptSub: Disposable | null = null;
@@ -70,6 +79,7 @@ export class ToolManager {
     // A new command starts with nothing locked (docs/adr/0166 §1).
     this.ctx.settings.locks.set(NO_LOCKS);
     this.lockPick.set(null);
+    this.dropReference();
     this.current = d.create(this.ctx);
     if (id !== 'select' && id !== 'pan') this.lastRepeatable = id;
     this.promptSub = this.current.prompt.subscribe(() => this.showPrompt(), true);
@@ -92,6 +102,7 @@ export class ToolManager {
     this.promptSub?.();
     this.ctx.settings.locks.set(NO_LOCKS);
     this.lockPick.set(null);
+    this.dropReference();
     this.current = tool;
     this.promptSub = tool.prompt.subscribe(() => this.showPrompt(), true);
     this.ctx.log.command(label);
@@ -144,6 +155,17 @@ export class ToolManager {
   /** Esc: leave the running tool and return to selection; an awaited lock edge, then the locks go first (docs/adr/0166 §1, §3). */
   exit(): void {
     if (this.lockPick.value) return this.endPick();
+    // Then a reference asked for, Yapım kipi, and the reference with the locks (docs/adr/0166 §5).
+    if (this.referenceWait.value) {
+      this.referenceWait.set(false);
+      return this.showPrompt();
+    }
+    if (this.construction.value) return void this.setConstruction(false);
+    if (this.reference.value && lockReference(this.ctx)) {
+      this.reference.set(null);
+      if (!clearLocks(this.ctx)) this.ctx.log.info('Kilitler kaldırıldı.');
+      return this.showPrompt();
+    }
     if (lockReference(this.ctx) && clearLocks(this.ctx)) return;
     if (this.current?.cancel?.()) return;
     if (this.parents.length) return this.unnest(null);
@@ -154,16 +176,87 @@ export class ToolManager {
     this.activate('select');
   }
 
-  /** The prompt: the running tool's, or the awaited lock edge's step under the tool's name. */
+  /** The prompt: the running tool's, or the awaited lock edge's, the reference's or Yapım kipi's step under the tool's name. */
   private showPrompt(): void {
     const pick = this.lockPick.value;
     const own = this.current?.prompt.value ?? '';
-    if (!pick) return this.prompt.set(own);
+    const step = pick
+      ? lockPickStep(pick)
+      : this.referenceWait.value
+        ? 'referans noktasını belirtin [Vazgeç (Esc)]'
+        : this.construction.value
+          ? 'yapım noktasını belirtin; köşe olmaz [Vazgeç (Esc)]'
+          : null;
+    if (!step) return this.prompt.set(own);
     // The tool's name stays before the step, as the tool writes it (“Çoklu çizgi: …”; promptOptions.ts reads it so).
     const colon = own.indexOf(':');
     const bracket = own.indexOf('[');
     const name = colon > 0 && (bracket < 0 || colon < bracket) ? own.slice(0, colon) : '';
-    this.prompt.set(name ? `${name}: ${lockPickStep(pick)}` : lockPickStep(pick));
+    this.prompt.set(name ? `${name}: ${step}` : step);
+  }
+
+  /** No reference, none asked, Yapım kipi off: a new command's start. */
+  private dropReference(): void {
+    this.reference.set(null);
+    this.referenceFrom = null;
+    this.referenceWait.set(false);
+    this.construction.set(false);
+  }
+
+  /** The running tool's own last point. */
+  private ownFrom(): Vec2 | null {
+    return this.current?.snapFrom?.() ?? null;
+  }
+
+  /** Referans noktası (docs/adr/0166 §5): the next press or typed point is the reference, not a corner. */
+  askReference(): boolean {
+    if (!takesPoints(this.ctx)) return void this.ctx.log.warn(NO_REFERENCE_TOOL), false;
+    this.referenceWait.set(true);
+    this.showPrompt();
+    return true;
+  }
+
+  /** Yapım kipi on or off: while on, every press and typed point renews the reference; off, the next point is a corner. */
+  setConstruction(on: boolean): boolean {
+    if (on && !takesPoints(this.ctx)) return void this.ctx.log.warn(NO_REFERENCE_TOOL), false;
+    this.construction.set(on);
+    this.referenceWait.set(false);
+    // The reference stays for the next corner, then goes.
+    this.referenceFrom = this.ownFrom();
+    this.ctx.log.info(on ? 'Yapım kipi açık: tıklanan ve yazılan noktalar köşe olmaz, referansı yeniler.' : 'Yapım kipi kapalı: sonraki nokta köşedir.');
+    this.showPrompt();
+    return true;
+  }
+
+  /** Whether the next press or typed point is a reference rather than a corner. */
+  private takesReference(): boolean {
+    return this.referenceWait.value || this.construction.value;
+  }
+
+  private setReference(p: Vec2): void {
+    this.referenceFrom = this.ownFrom();
+    this.referenceWait.set(false);
+    this.reference.set(p);
+    this.ctx.log.info(`Referans noktası: ${this.ctx.format.point(p)}`);
+    this.showPrompt();
+    followLocksHere(this.ctx);
+  }
+
+  /** Typed where a reference is taken: the point (relative to the reference so far) is the new reference. Whether it was taken. */
+  typedReference(text: string): boolean {
+    if (!this.takesReference()) return false;
+    const p = pointFromText(this.ctx, text, lockReference(this.ctx), this.ctx.view.cursorWorld.value);
+    if (!p) return false;
+    this.setReference(p);
+    return true;
+  }
+
+  /** After a point was placed: a one-shot reference is done once the tool's own last point moved (docs/adr/0166 §5). */
+  followReference(): void {
+    if (!this.reference.value || this.takesReference()) return;
+    const own = this.ownFrom();
+    const same = own === null || this.referenceFrom === null ? own === this.referenceFrom : own.x === this.referenceFrom.x && own.y === this.referenceFrom.y;
+    if (!same) this.reference.set(null);
   }
 
   private endPick(): void {
@@ -183,6 +276,12 @@ export class ToolManager {
   /** A press on the drawing while an edge is awaited: the edge under it gives the direction lock, or the wait goes on and says why. Whether the press was the pick's. */
   pickPress(p: ToolPointer): boolean {
     const pick = this.lockPick.value;
+    // Referans noktası and Yapım kipi: the press is the reference, not a corner (docs/adr/0166 §5).
+    if (!pick && this.takesReference() && takesPoints(this.ctx)) {
+      this.pickPressed = true;
+      this.setReference(p.world);
+      return true;
+    }
     if (!pick) return false;
     this.pickPressed = true;
     const found = pickedEdge(this.ctx, p);

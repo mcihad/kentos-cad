@@ -1,0 +1,32 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-lock-reference",
+  "title": "Kullanım: Referans noktası ve Yapım kipi; çizginin köşesi bir referanstan @dY,dX ile, Yapım kipinde referans tıklanarak ve yazılarak taşınır",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0166 §5",
+  "covers": ["HYB-10"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.05 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.05,
+  "steps": [
+    { "run": "tool.polyline", "note": "Çoklu çizgi." },
+    { "click": [-6, -4], "expect": { "points": 1 } },
+    { "run": "draft.lock.reference", "note": "Sağ tık Kilit ▸ Referans noktası." },
+    { "click": [2, 1], "note": "Referans: çarpı ve R.", "expect": { "points": 1 } },
+    { "move": [3, 4] },
+    { "shot": "referans", "note": "Kenar son köşeden imlece, R referansın yeri; istem ve günlük referansı söyler." },
+    { "text": "@0,3" },
+    { "key": "Enter", "note": "Köşe referanstan 3 m kuzeyde.", "expect": { "points": 2 } },
+    { "run": "draft.lock.construction", "note": "Yapım kipi." },
+    { "click": [6, -2], "expect": { "points": 2 } },
+    { "move": [7, -5] },
+    { "shot": "yapim", "note": "İstem yapım noktasını sorar; tık köşe olmaz, R taşınır." },
+    { "run": "draft.lock.construction" },
+    { "text": "@0,-3" },
+    { "key": "Enter", "note": "Köşe yeni referanstan 3 m güneyde.", "expect": { "points": 3 } },
+    { "key": "Enter", "note": "Çoklu çizgi yazılır.", "expect": { "entities": 1 } },
+    { "shot": "cizgi" }
+  ]
+}

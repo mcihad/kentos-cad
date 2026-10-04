@@ -776,6 +776,8 @@ impl Context<'_> {
         cursor: Option<Vec2>,
     ) -> Option<Vec2> {
         let format = self.format();
+        // Relative input is measured from a reference point, when one is set (docs/adr/0166 §5).
+        let last = self.locks.reference.or(last);
         kentos_geometry_core::tools::point_text::point_from_text_in(
             text,
             last,

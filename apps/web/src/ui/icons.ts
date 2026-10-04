@@ -289,6 +289,9 @@ export const ICONS = {
   lockPerpendicular: `<path d="M2.5 15.5h9"/><path d="M6 15.5V3.5" stroke-dasharray="1.8 1.5"/><path d="M6 12.5h3v3" stroke-width="1.1"/>${padlock(12.4, 13.3)}`,
   // Dik açı: a path whose every turn is square, two of its corners marked.
   rightAngle: '<path d="M3 17V10h7V3.5h7"/><path d="M3 12.5h2.5V10M10 6h2.5V3.5" stroke-width="1.1"/>',
+  // Referans noktası: a point marked R; Yapım kipi: construction lines through a point.
+  lockReference: '<path d="M3.5 8.5l6 6M9.5 8.5l-6 6"/><path d="M12.5 3.5v7M12.5 3.5h2.4a1.8 1.8 0 0 1 0 3.6h-2.4M14.7 7.1l2.3 3.4" stroke-width="1.2"/>',
+  lockConstruction: '<path d="M2.5 15.5 17.5 4.5M2.5 7l15 6.5" stroke-dasharray="1.8 1.5"/><circle cx="10" cy="10.2" r="1.9" fill="currentColor" stroke="none"/>',
   // Kalıcı: the padlock and a turning arrow, it stays for the next points.
   lockKeep:
     '<rect x="3" y="9.5" width="8.5" height="7" rx="1.1"/><path d="M5 9.5V7.6a2.25 2.25 0 0 1 4.5 0v1.9"/><path d="M14.2 7.2a3.8 3.8 0 1 1-.6 6.4"/><path d="m14.6 4.6-.4 2.7 2.7.3" stroke-width="1.2"/>',

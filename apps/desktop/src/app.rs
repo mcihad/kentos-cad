@@ -1538,6 +1538,13 @@ impl App {
                     s.pick_lock_edge(kentos_interaction::LockPick::Perpendicular, cx)
                 });
             }
+            "draft.lock.reference" => {
+                self.with_tool(|s, cx| s.ask_reference(cx));
+            }
+            "draft.lock.construction" => {
+                let on = !self.session.construction();
+                self.with_tool(|s, cx| s.set_construction(on, cx));
+            }
             "draft.lock.keep" => {
                 let keep = !self.locks.keep;
                 self.with_tool(|s, cx| s.keep_locks(keep, cx));
@@ -1661,6 +1668,7 @@ impl App {
             "draft.topologyPoints" => self.draft.topology_points,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
             "draft.lock.keep" => self.locks.keep,
+            "draft.lock.construction" => self.session.construction(),
             "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,
             "draft.overlap.layer" => self.draft.overlap == kentos_interaction::Overlap::Layer,
             "draft.overlap.layers" => self.draft.overlap == kentos_interaction::Overlap::Layers,
@@ -1697,6 +1705,7 @@ impl App {
             | "draft.lock.parallel"
             | "draft.lock.perpendicular"
             | "draft.lock.keep" => self.session.lock_reference().is_some(),
+            "draft.lock.reference" | "draft.lock.construction" => self.session.takes_points(),
             "draft.lock.deflection" => {
                 self.session.lock_reference().is_some() && self.session.travel().is_some()
             }

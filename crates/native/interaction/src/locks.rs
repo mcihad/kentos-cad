@@ -104,6 +104,10 @@ pub struct LockState {
     pub travel: Option<Vec2>,
     /// The edge a Paralel or Dik lock was picked on: drawn while it holds.
     pub edge: Option<Edge>,
+    /// Referans noktası's or Yapım kipi's point (docs/adr/0166 §5): the
+    /// cursor rule and typed relative points are measured from it instead
+    /// of the tool's last corner. The session sets it before each event.
+    pub reference: Option<Vec2>,
 }
 
 impl LockState {

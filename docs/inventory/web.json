@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 290,
-      "implemented": 277,
+      "total": 292,
+      "implemented": 279,
       "partial": 0,
       "pending": 13
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 111,
-    "commandsOnDesktop": 217,
+    "commandsOnDesktop": 219,
     "desktop": {
       "commands": {
-        "total": 290,
-        "implemented": 217,
+        "total": 292,
+        "implemented": 219,
         "partial": 0,
         "pending": 13,
         "none": 58,
@@ -1091,6 +1091,33 @@
       "tests": []
     },
     {
+      "id": "draft.lock.construction",
+      "title": "Yapım kipi",
+      "short": "Yapım",
+      "category": "Çizim yardımcıları",
+      "icon": "lockConstruction",
+      "description": "Açıkken her tıklama ve yazılan nokta köşe olmaz, referansı yeniler; kapatılınca sonraki nokta köşedir. Komut bitince kapanır.",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/lock-reference.json",
+        "fixtures/interaction/v1/usage-lock-reference.json"
+      ]
+    },
+    {
       "id": "draft.lock.deflection",
       "title": "Sapma kilidi…",
       "short": "Sapma",
@@ -1219,6 +1246,33 @@
       "tests": [
         "fixtures/interaction/v1/lock-edges.json",
         "fixtures/interaction/v1/usage-lock-edges.json"
+      ]
+    },
+    {
+      "id": "draft.lock.reference",
+      "title": "Referans noktası",
+      "short": "Referans",
+      "category": "Çizim yardımcıları",
+      "icon": "lockReference",
+      "description": "Sonraki tıklama ya da yazılan nokta köşe olmaz, referans olur: kilitler ve göreli giriş (@dY,dX, @mesafe<açı, yalın mesafe) ondan ölçülür; kenar yine son köşeden başlar. Nokta konunca referans son köşeye döner.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/viewportMenus.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/lock-reference.json",
+        "fixtures/interaction/v1/usage-lock-reference.json"
       ]
     },
     {
@@ -7183,6 +7237,7 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "fixtures/interaction/v1/lock-edges.json",
+        "fixtures/interaction/v1/lock-reference.json",
         "fixtures/interaction/v1/locks.json",
         "fixtures/interaction/v1/polyline-arc.json",
         "fixtures/interaction/v1/right-angle.json",
@@ -7190,6 +7245,7 @@
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
         "fixtures/interaction/v1/usage-lock-edges.json",
+        "fixtures/interaction/v1/usage-lock-reference.json",
         "fixtures/interaction/v1/usage-locks.json",
         "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
@@ -10908,6 +10964,7 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/layout.mjs",
         "fixtures/interaction/v1/lock-edges.json",
+        "fixtures/interaction/v1/lock-reference.json",
         "fixtures/interaction/v1/locks.json",
         "fixtures/interaction/v1/polyline-arc.json",
         "fixtures/interaction/v1/right-angle.json",
@@ -10915,6 +10972,7 @@
         "fixtures/interaction/v1/stream-draw.json",
         "fixtures/interaction/v1/trace-draw.json",
         "fixtures/interaction/v1/usage-lock-edges.json",
+        "fixtures/interaction/v1/usage-lock-reference.json",
         "fixtures/interaction/v1/usage-locks.json",
         "fixtures/interaction/v1/usage-snap-acquire.json",
         "fixtures/interaction/v1/usage-stream-draw.json",
@@ -24853,6 +24911,8 @@
     "lockParallel": "<path d=\"M2.5 11.5 10 4\"/><path d=\"M5 16.5 13 8.5\" stroke-dasharray=\"1.8 1.5\"/><rect x=\"12.4\" y=\"13.3\" width=\"5.6\" height=\"4.2\" rx=\".7\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M13.700000000000001 13.3v-1.2a1.5 1.5 0 0 1 3 0V13.3\" stroke-width=\"1.1\"/>",
     "lockPerpendicular": "<path d=\"M2.5 15.5h9\"/><path d=\"M6 15.5V3.5\" stroke-dasharray=\"1.8 1.5\"/><path d=\"M6 12.5h3v3\" stroke-width=\"1.1\"/><rect x=\"12.4\" y=\"13.3\" width=\"5.6\" height=\"4.2\" rx=\".7\" fill=\"currentColor\" fill-opacity=\".25\" stroke-width=\"1.1\"/><path d=\"M13.700000000000001 13.3v-1.2a1.5 1.5 0 0 1 3 0V13.3\" stroke-width=\"1.1\"/>",
     "rightAngle": "<path d=\"M3 17V10h7V3.5h7\"/><path d=\"M3 12.5h2.5V10M10 6h2.5V3.5\" stroke-width=\"1.1\"/>",
+    "lockReference": "<path d=\"M3.5 8.5l6 6M9.5 8.5l-6 6\"/><path d=\"M12.5 3.5v7M12.5 3.5h2.4a1.8 1.8 0 0 1 0 3.6h-2.4M14.7 7.1l2.3 3.4\" stroke-width=\"1.2\"/>",
+    "lockConstruction": "<path d=\"M2.5 15.5 17.5 4.5M2.5 7l15 6.5\" stroke-dasharray=\"1.8 1.5\"/><circle cx=\"10\" cy=\"10.2\" r=\"1.9\" fill=\"currentColor\" stroke=\"none\"/>",
     "lockKeep": "<rect x=\"3\" y=\"9.5\" width=\"8.5\" height=\"7\" rx=\"1.1\"/><path d=\"M5 9.5V7.6a2.25 2.25 0 0 1 4.5 0v1.9\"/><path d=\"M14.2 7.2a3.8 3.8 0 1 1-.6 6.4\"/><path d=\"m14.6 4.6-.4 2.7 2.7.3\" stroke-width=\"1.2\"/>",
     "magnet": "<path d=\"M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z\"/><path d=\"M4.5 6.8h3.3M12.2 6.8h3.3\"/>",
     "magnetOff": "<path d=\"M4.5 3.5h3.3v6.4a2.2 2.2 0 0 0 4.4 0V3.5h3.3v6.6a5.5 5.5 0 0 1-11 0z\"/><path d=\"M4.5 6.8h3.3M12.2 6.8h3.3M3 3l14 14\"/>",

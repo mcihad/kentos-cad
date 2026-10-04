@@ -13,7 +13,8 @@ impl App {
     /// The guides: the locked direction from the reference, the locked
     /// length round it; none without locks or a reference.
     pub(crate) fn lock_marks(&self, format: &Format) -> Option<LockMarks> {
-        if !self.locks.any() {
+        let named = self.session.reference();
+        if !self.locks.any() && named.is_none() {
             return None;
         }
         let reference = self.session.lock_reference()?;
@@ -24,6 +25,8 @@ impl App {
             direction: locks.direction(format.angles()).map(|d| (d.u, d.both)),
             length: locks.length,
             edge: locks.edge,
+            named,
+            locks: self.locks.any(),
         })
     }
 

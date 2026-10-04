@@ -725,6 +725,9 @@ export class ViewportController {
     d.add(this.ctx.prefs.crosshair.subscribe(() => this.requestOverlay()));
     // A lock that changes with the pointer still shows at once (docs/adr/0166 §6).
     d.add(settings.locks.subscribe(() => this.repoint()));
+    // A reference set, asked for or Yapım kipi: the cursor rule's base changed (docs/adr/0166 §5).
+    d.add(tools.reference.subscribe(() => this.repoint()));
+    for (const s of [tools.referenceWait, tools.construction]) d.add(s.subscribe(() => this.requestOverlay()));
     d.add(
       tools.lockPick.subscribe((pick) => {
         this.overlay.dataset.cursor = pick ? 'pick' : tools.active.cursor;

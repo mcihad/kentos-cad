@@ -208,7 +208,7 @@ pub use path::NO_SQUARE_CLOSE;
 pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;
-pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_TRAVEL, Session};
+pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRAVEL, Session};
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
