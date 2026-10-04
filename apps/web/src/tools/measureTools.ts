@@ -2,13 +2,14 @@ import type { AppContext } from '../app/context';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgePathLength, bulgeRingArea } from '../model/geom/bulge';
 import { netArea, type Area, type Ring } from '../model/geom/region';
+import { SecondCrs } from '../model/secondCrs';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { indexMark, ringMark } from './constructPreview';
 import { joinCorners, sayJoined } from './junctions';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
-import { PathTool } from './pathTool';
+import { PathTool, saySecondMeasures } from './pathTool';
 import { drawArea, drawTag, strokePath, tint } from './preview';
 import type { ToolPointer } from './Tool';
 import { VisibleFaces } from './visibleFaces';
@@ -80,7 +81,14 @@ export class DistanceTool extends PathTool {
     if (!this.fixed || !first) return super.onPoint(p);
     if (dist(first, p) <= 1e-9) return;
     this.pts.push(p);
-    this.ctx.log.info(`${this.pts.length - 1}: ${this.reading(first, p)}`);
+    this.ctx.log.info(`${this.pts.length - 1}: ${this.reading(first, p)}${this.secondReading(first, p)}`);
+  }
+
+  /** The ray's length in the second system's plane too, when it has one (docs/adr/0167 §2). */
+  private secondReading(from: Vec2, to: Vec2): string {
+    const second = SecondCrs.of(this.ctx.doc.settings);
+    const m = second?.measure([{ pts: [from, to] }], false);
+    return second && m && !('why' in m) ? ` (${second.short} düzleminde ${this.ctx.format.length(m.length)})` : '';
   }
 
   /** A reading as the tag and the log give it: the distance and the bearing, in the project's formats. */
@@ -229,6 +237,7 @@ export class AreaMeasureTool extends PathTool {
     const f = this.ctx.format;
     const net = netArea(area);
     this.ctx.log.success(`Alan ${f.area(net)}   Çevre ${f.length(regionPerimeter(area))}`);
+    saySecondMeasures(this.ctx, [area.outer, ...area.holes], true);
     this.measured = { ring: area.outer, holes: area.holes, area: net };
     this.refreshPrompt();
     this.ctx.view.requestOverlay();

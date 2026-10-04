@@ -3,7 +3,7 @@ import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
-import { secondChoices, secondTitle } from '../../app/secondCrs';
+import { secondChoices, secondTitle } from '../../model/secondCrs';
 import { h, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';

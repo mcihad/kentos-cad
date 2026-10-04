@@ -10,6 +10,7 @@
 //! `40°45′12.3456″K, 29°55′01.2345″D` or `40.7534293°K, 29.9170096°D`.
 
 use kentos_contracts::ProjectSettings;
+use kentos_geometry_core::crs::measure::{NoPlane, PlaneMeasures, Ring, plane_measures};
 use kentos_geometry_core::crs::{self as core, Transformed, format_dd, format_dms};
 use kentos_project::crs;
 
@@ -111,6 +112,38 @@ impl Second {
         }
     }
 
+    /// A path (`closed` false) or an area's rings (the outer first), given
+    /// in the project's system, measured in the second system's plane
+    /// (docs/adr/0167 §2): none in a geographic system or the
+    /// Pseudo-Mercator, or where it does not reach.
+    pub fn measure(&self, rings: &[Ring], closed: bool) -> Result<PlaneMeasures, NoPlane> {
+        plane_measures(&self.from, &self.to, rings, closed)
+    }
+
+    /// The line Mesafe ölç and Alan hesapla say after their own: the length,
+    /// or the area and the perimeter, in the second system's plane, or why
+    /// there are none.
+    pub fn measures_line(&self, rings: &[Ring], closed: bool, f: &Format) -> String {
+        let name = self.short();
+        match self.measure(rings, closed) {
+            Ok(m) if closed => format!(
+                "{name} düzleminde: Alan {}   Çevre {}",
+                f.area(m.area),
+                f.length(m.length)
+            ),
+            Ok(m) => format!("{name} düzleminde: Toplam uzunluk {}", f.length(m.length)),
+            Err(NoPlane::Geographic) => {
+                format!("{name} coğrafi bir sistem: uzunluk ve alan onun düzleminde verilmez.")
+            }
+            Err(NoPlane::Mercator) => format!(
+                "{name}: uzunluk ve alan verilmez, Pseudo-Mercator'un ölçeği her enlemde başkadır."
+            ),
+            Err(NoPlane::Unreachable) => format!(
+                "{name}: ölçülen yerin bir noktası bu sistemin ulaştığı yerin dışında; değer yazılmadı."
+            ),
+        }
+    }
+
     /// How sure the values are: “±2.1 m, EPSG:1783 + EPSG:5260; resmî
     /// dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon”
     /// within one datum.
@@ -182,6 +215,33 @@ mod tests {
         let utm = Second::of(&settings(5254, Some(5252))).expect("TUREF");
         let t = utm.point(Vec2::new(500_000.0, 4_400_000.0)).expect("TUREF");
         assert_eq!(utm.accuracy(&t), "kesin, yalnız projeksiyon");
+    }
+
+    #[test]
+    fn measures_are_said_in_the_second_plane_or_why_not() {
+        let s = settings(5254, Some(2320));
+        let second = Second::of(&s).expect("ED50 TM30");
+        let f = Format::of(&s);
+        let ring = Ring {
+            pts: vec![
+                Vec2::new(414_000.0, 4_540_000.0),
+                Vec2::new(414_040.0, 4_540_000.0),
+                Vec2::new(414_040.0, 4_540_025.0),
+                Vec2::new(414_000.0, 4_540_025.0),
+            ],
+            bulges: None,
+        };
+        // fixtures/geodesy/v1/measure.json: 1000.0104879 m², 130.0006813 m (PROJ).
+        assert_eq!(
+            second.measures_line(std::slice::from_ref(&ring), true, &f),
+            "ED50 TM30 düzleminde: Alan 1000.01 m²   Çevre 130.001 m"
+        );
+        let geographic = Second::of(&settings(5254, Some(4326))).expect("WGS 84");
+        assert!(
+            geographic
+                .measures_line(&[ring], false, &f)
+                .starts_with("WGS 84 coğrafi bir sistem")
+        );
     }
 
     #[test]

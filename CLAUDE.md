@@ -205,6 +205,7 @@ python3 scripts/fixtures/snap_cases.py --check   # Kenet eklerinin kurallarını
 cargo test --release -p kentos-geometry-core --test adjoin -- --ignored --nocapture   # Bitişik alan'ın bir görünüm parselindeki süresi, önizleme bütçesi için (ADR 0162 §5)
 python3 scripts/fixtures/trace_cases.py --check   # İzle'nin yollarını (kesişimden dönme, düz geçme, iki yoldan kısası, eşit yollar, yaylar, delik ve parça, ortak kenar, daire) ve Zincir'i 50 basamaklı bağımsız başvurudan denetle (ADR 0161)
 python3 scripts/fixtures/crs_transform_cases.py --check   # koordinat dönüşümlerini (TM, UTM, coğrafi, Pseudo-Mercator; ED50, TUREF ve WGS 84 arası EPSG yolları) ve DMS yazılışını PROJ'la (pyproj) denetle; durumlar fixtures/geodesy/v1/transform.json (ADR 0167)
+python3 scripts/fixtures/crs_measure_cases.py --check   # ikinci sistemin düzlemindeki uzunluk ve alanları (yollar, yaylı ve delikli alanlar; coğrafi ve Pseudo-Mercator redleri, yayların parçaları) PROJ'la denetle; durumlar fixtures/geodesy/v1/measure.json (ADR 0167 §2)
 python3 scripts/fixtures/tm_cases.py --check   # ileri TM izdüşümünün durumlarını (TUREF ve ED50 TM3, UTM; dilim kenarları) PROJ'un tmerc'iyle denetle; durumlar fixtures/geodesy/v1 (ADR 0165 §3)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
@@ -686,9 +687,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   kipi; ortak iz `lock-reference.json`) tamam; `HYB-10` bitti. `HYB-11` ikinci koordinat sistemi ve dönüştürücü
   ([ADR 0167](docs/adr/0167-second-crs-and-converter.md)): 1. adım (çekirdek `crs::transform`, geri TM, DMS; PROJ başvurusu
   `crs_transform_cases.py`) ve 2. adım (proje ayarı `secondSrid`, `.kcad` şema 12, `display.geographic`; okunuş `kentos_interaction::second`
-  ve `app/secondCrs.ts`; durum çubuğunda iletiyle aynı yeri paylaşan hücre, sistem düğmelerinin sağ tık menüsünde İkinci sistem ▸,
-  Proje ayarları'nda alan, Koordinat oku'nun ikinci satırı; ortak iz `second-crs.json`) tamam; sıradaki 3. adım (Mesafe ölç ve Alan
-  hesapla'nın ikinci sistem değerleri). 3 Ekim:
+  ve `model/secondCrs.ts`; durum çubuğunda iletiyle aynı yeri paylaşan hücre, sistem düğmelerinin sağ tık menüsünde İkinci sistem ▸,
+  Proje ayarları'nda alan, Koordinat oku'nun ikinci satırı; ortak iz `second-crs.json`) ve 3. adım (Mesafe ölç ve Alan hesapla'nın ikinci
+  sistemin düzlemindeki uzunluğu, alanı ve çevresi: çekirdek `crs::measure`, PROJ başvurusu `crs_measure_cases.py`) tamam; sıradaki 4. adım
+  (Koordinat dönüştür penceresi, `crs.transform`). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

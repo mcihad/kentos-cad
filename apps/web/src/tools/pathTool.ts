@@ -4,6 +4,7 @@ import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
 import type { Area } from '../model/geom/overlay';
 import type { Traced } from '../model/ops/trace';
+import { SecondCrs, type PlaneRing } from '../model/secondCrs';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import { polylineCreate } from '../product/polylineCreate';
@@ -424,6 +425,7 @@ export class PathTool extends PointInputTool {
     if (this.measureOnly) {
       if (this.closed) this.ctx.log.success(`Alan ${f.area(area())}   Çevre ${f.length(bulgePathLength(pts, bulges, true))}`);
       else this.ctx.log.success(`Toplam uzunluk ${f.length(bulgePathLength(pts, bulges, false))} (${pts.length - 1} kenar)`);
+      saySecondMeasures(this.ctx, [{ pts, bulges: bulges ?? null }], this.closed);
       return super.finish();
     }
     const geom = { kind: this.closed ? ('polygon' as const) : ('polyline' as const), pts, ...(bulges && { bulges }) };
@@ -612,4 +614,13 @@ export class PathTool extends PointInputTool {
     drawTag(g, view.worldToScreen(this.hover), lines, pal.accent, pal.labelHalo);
     this.drawTracking(g, view);
   }
+}
+
+/**
+ * Mesafe ölç's and Alan hesapla's measure in the second system's plane, or why there is none, when the project has a
+ * second system (docs/adr/0167 §2): the line after their own.
+ */
+export function saySecondMeasures(ctx: AppContext, rings: readonly PlaneRing[], closed: boolean): void {
+  const second = SecondCrs.of(ctx.doc.settings);
+  if (second) ctx.log.info(second.measuresLine(rings, closed, ctx.format));
 }

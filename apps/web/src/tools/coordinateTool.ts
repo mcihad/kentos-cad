@@ -1,5 +1,5 @@
 import type { AppContext } from '../app/context';
-import { SecondCrs } from '../app/secondCrs';
+import { SecondCrs } from '../model/secondCrs';
 import { Signal } from '../core/signal';
 import type { Vec2 } from '../model/geometry';
 import { elevationAt } from '../product/elevationValues';

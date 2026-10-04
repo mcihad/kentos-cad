@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { commandItem } from '../../app/menus';
-import { secondChoices, secondTitle } from '../../app/secondCrs';
+import { secondChoices, secondTitle } from '../../model/secondCrs';
 import type { MenuItem } from '../widgets/PopupMenu';
 
 /** The coordinate system's right-click menu, in the status bar and the tab row: Koordinat sistemi… and İkinci sistem ▸. */

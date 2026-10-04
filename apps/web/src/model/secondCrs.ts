@@ -1,8 +1,9 @@
 import { crsBySrid, DATUM_LABEL, LOCAL_SRID, CRS_REGISTRY, type CrsDef } from '../geo/crs';
-import type { Vec2 } from '../model/geometry';
-import { crsTransform, formatDd, formatDms, systemOf, type System, type Transformed } from '../model/geom/crsTransform';
-import type { ProjectSettings } from '../model/projectSettings';
-import type { Formatter } from './format';
+import type { Vec2 } from './geometry';
+import { crsPlaneMeasures, crsTransform, formatDd, formatDms, systemOf, type PlaneMeasures, type PlaneRing, type System, type Transformed } from './geom/crsTransform';
+
+export type { PlaneRing };
+import type { ProjectSettings } from './projectSettings';
 
 /**
  * The project's second coordinate system (docs/adr/0167 §1–§2, §5): a point of the drawing in it, written as the user
@@ -16,6 +17,15 @@ import type { Formatter } from './format';
 
 /** How a geographic second system's latitude and longitude are written (`display.geographic`). */
 export type GeographicNotation = 'dms' | 'dd';
+
+/** What of the project's number formats the second system's values need (app/format.ts `Formatter` has it). */
+export interface SecondFormat {
+  readonly eastLabel: string;
+  readonly northLabel: string;
+  coord(v: number): string;
+  length(m: number): string;
+  area(m2: number): string;
+}
 
 const write = (notation: GeographicNotation, deg: number, latitude: boolean): string =>
   notation === 'dd' ? formatDd(deg, latitude, 7) : formatDms(deg, latitude, 4);
@@ -61,7 +71,7 @@ export class SecondCrs {
   }
 
   /** The two values of `q` (a point in the second system) with their names: east and north as the project's type names them, or the latitude and the longitude. */
-  values(q: Vec2, f: Formatter, notation: GeographicNotation): [[string, string], [string, string]] {
+  values(q: Vec2, f: SecondFormat, notation: GeographicNotation): [[string, string], [string, string]] {
     return this.geographic
       ? [
           ['Enlem', write(notation, q.y, true)],
@@ -74,9 +84,29 @@ export class SecondCrs {
   }
 
   /** The values on one line, as Koordinat oku says them: `Y=…, X=…`, or `40°45′12.3456″K, 29°55′01.2345″D`. */
-  reading(q: Vec2, f: Formatter, notation: GeographicNotation): string {
+  reading(q: Vec2, f: SecondFormat, notation: GeographicNotation): string {
     const [a, b] = this.values(q, f, notation);
     return this.geographic ? `${a[1]}, ${b[1]}` : `${a[0]}=${a[1]}, ${b[0]}=${b[1]}`;
+  }
+
+  /**
+   * A path (`closed` false) or an area's rings (the outer first), given in the project's system, measured in the second
+   * system's plane (docs/adr/0167 §2): none in a geographic system or the Pseudo-Mercator, or where it does not reach.
+   */
+  measure(rings: readonly PlaneRing[], closed: boolean): PlaneMeasures {
+    return crsPlaneMeasures(this.from, this.to, rings, closed);
+  }
+
+  /** The line Mesafe ölç and Alan hesapla say after their own: the length, or the area and the perimeter, in the second system's plane, or why there are none. */
+  measuresLine(rings: readonly PlaneRing[], closed: boolean, f: SecondFormat): string {
+    const name = this.short;
+    const m = this.measure(rings, closed);
+    if ('why' in m) {
+      if (m.why === 'geographic') return `${name} coğrafi bir sistem: uzunluk ve alan onun düzleminde verilmez.`;
+      if (m.why === 'mercator') return `${name}: uzunluk ve alan verilmez, Pseudo-Mercator'un ölçeği her enlemde başkadır.`;
+      return `${name}: ölçülen yerin bir noktası bu sistemin ulaştığı yerin dışında; değer yazılmadı.`;
+    }
+    return closed ? `${name} düzleminde: Alan ${f.area(m.area)}   Çevre ${f.length(m.length)}` : `${name} düzleminde: Toplam uzunluk ${f.length(m.length)}`;
   }
 
   /** How sure the values are: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon” within one datum. */

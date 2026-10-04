@@ -947,7 +947,8 @@
       },
       "tests": [
         "apps/web/src/app/netcadNames.test.ts",
-        "fixtures/interaction/v1/second-crs.json"
+        "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
     {
@@ -5219,7 +5220,7 @@
       "title": "Alan hesapla",
       "category": "Harita",
       "icon": "area",
-      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir.",
+      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir. Projenin ikinci koordinat sistemi projeksiyonluysa alan ve çevre onun düzleminde de verilir.",
       "aliases": [
         "AA",
         "AREA",
@@ -5250,7 +5251,9 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
-        "fixtures/interaction/v1/measure-parcel.json"
+        "fixtures/interaction/v1/measure-parcel.json",
+        "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
     {
@@ -6583,7 +6586,7 @@
       "title": "Mesafe ölç",
       "category": "Harita",
       "icon": "measure",
-      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer.",
+      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer. Projenin ikinci koordinat sistemi projeksiyonluysa uzunluk onun düzleminde de verilir.",
       "aliases": [
         "DI",
         "DIST",
@@ -6616,7 +6619,9 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json",
-        "fixtures/interaction/v1/trace-draw.json"
+        "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
     {
@@ -9446,7 +9451,7 @@
       "rare": false,
       "methods": [],
       "steps": 4,
-      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir.",
+      "description": "Tıklanan köşelerden ya da içine tıklanan bölgeden alan ve çevre hesaplar; ölçülen alan istenirse alan olarak çizilir. Projenin ikinci koordinat sistemi projeksiyonluysa alan ve çevre onun düzleminde de verilir.",
       "productCommand": "cad.polygon.create",
       "status": "implemented",
       "platforms": {
@@ -9457,7 +9462,9 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
-        "fixtures/interaction/v1/measure-parcel.json"
+        "fixtures/interaction/v1/measure-parcel.json",
+        "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
     {
@@ -10476,7 +10483,7 @@
       "rare": false,
       "methods": [],
       "steps": 4,
-      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer.",
+      "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer; “Sabit ilk nokta” açıkken her noktayı ilk noktadan ölçer. Projenin ikinci koordinat sistemi projeksiyonluysa uzunluk onun düzleminde de verilir.",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -10487,7 +10494,9 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/measure-parcel.json",
-        "fixtures/interaction/v1/trace-draw.json"
+        "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
     {

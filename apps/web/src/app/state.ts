@@ -6,7 +6,7 @@ import type { LineType } from '../model/layers';
 import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './layoutPlan';
 import type { SettingsStore } from './settings/store';
 import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
-import type { GeographicNotation } from './secondCrs';
+import type { GeographicNotation } from '../model/secondCrs';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 

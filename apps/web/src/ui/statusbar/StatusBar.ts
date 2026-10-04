@@ -20,7 +20,7 @@ import { accountMenu, saveCell } from './cloudCells';
 import { crsTitle } from '../../geo/crs';
 import { scaleText } from '../../model/newProjectWizard';
 import { offeredScales, typedScale } from './scaleSelector';
-import { SecondCrs } from '../../app/secondCrs';
+import { SecondCrs } from '../../model/secondCrs';
 import { crsMenu, secondMenu } from './secondMenu';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');

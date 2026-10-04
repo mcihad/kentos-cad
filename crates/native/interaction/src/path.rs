@@ -86,6 +86,7 @@ use crate::log::Level;
 use crate::overlap;
 use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
+use crate::second::Second;
 use crate::tool::{
     Area, Context, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
     Tool,
@@ -584,13 +585,27 @@ impl Path {
         self.bulges.push(0.0);
         let f = cx.format();
         // The direction as the project's type reads it: a semt, or a CAD project's angle (docs/adr/0165 §4).
-        let text = format!(
+        let mut text = format!(
             "{}: {}, {} {}",
             self.pts.len() - 1,
             f.length(dist(first, p)),
             f.direction_name().to_lowercase(),
             f.direction(bearing_grad(first, p))
         );
+        // The ray's length in the second system's plane too, when it has one (docs/adr/0167 §2).
+        if let Some(second) = Second::of(cx.doc.settings()) {
+            let ray = Ring {
+                pts: vec![first, p],
+                bulges: None,
+            };
+            if let Ok(m) = second.measure(&[ray], false) {
+                text.push_str(&format!(
+                    " ({} düzleminde {})",
+                    second.short(),
+                    f.length(m.length)
+                ));
+            }
+        }
         cx.say(Level::Info, text);
     }
 
@@ -607,6 +622,11 @@ impl Path {
             f.length(perimeter(&region))
         );
         cx.say(Level::Success, text);
+        let rings: Vec<Ring> = std::iter::once(&region.outer)
+            .chain(&region.holes)
+            .cloned()
+            .collect();
+        say_second(&rings, true, cx);
         self.measured = Some(region);
     }
 
@@ -820,6 +840,11 @@ impl Path {
                     pts.len() - 1
                 );
                 cx.say(Level::Success, text);
+                let path = Ring {
+                    pts: pts.clone(),
+                    bulges: bulges.clone(),
+                };
+                say_second(&[path], false, cx);
             }
             Shape::MeasureArea => {
                 let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
@@ -827,6 +852,11 @@ impl Path {
                 let f = cx.format();
                 let text = format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter));
                 cx.say(Level::Success, text);
+                let ring = Ring {
+                    pts: pts.clone(),
+                    bulges: bulges.clone(),
+                };
+                say_second(&[ring], true, cx);
                 self.measured = Some(Region {
                     outer: Ring { pts, bulges },
                     holes: Vec::new(),
@@ -1102,6 +1132,15 @@ fn js_parse_int(text: &str) -> Option<u64> {
 /// The perimeter of a region as İçine tıkla says it: its outer ring's and its
 /// islands', as a polygon's (`measure::polygon_perimeter`, holes included as in
 /// GIS): the region drawn with Alan olarak çiz shows the same in Öznitelikler.
+/// Mesafe ölç's and Alan hesapla's measure in the second system's plane, or
+/// why there is none, when the project has a second system (docs/adr/0167 §2).
+fn say_second(rings: &[Ring], closed: bool, cx: &mut Context<'_>) {
+    if let Some(second) = Second::of(cx.doc.settings()) {
+        let line = second.measures_line(rings, closed, &cx.format());
+        cx.say(Level::Info, line);
+    }
+}
+
 fn perimeter(region: &Region) -> f64 {
     std::iter::once(&region.outer)
         .chain(&region.holes)

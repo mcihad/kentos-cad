@@ -51,6 +51,21 @@ export interface Transformed {
 /** `p` of `from` in `to` (x east or longitude, y north or latitude); null where a projection cannot take or give it. */
 export const crsTransform = op<(from: System, to: System, p: Vec2) => Transformed | null>('crsTransform');
 
+/** A path or a ring: its vertices and its segments' bulges (none, or a missing one, straight). */
+export interface PlaneRing {
+  readonly pts: readonly Vec2[];
+  readonly bulges?: readonly number[] | null;
+}
+
+/** What a path (its length) or an area (its perimeter and net area) measures in a plane, or why there is none (docs/adr/0167 §2). */
+export type PlaneMeasures = { readonly length: number; readonly area: number } | { readonly why: 'geographic' | 'mercator' | 'unreachable' };
+
+/**
+ * A path (`closed` false: the first ring) or an area's rings (the first the outer, the others its holes), given in
+ * `from`, measured in `to`'s plane: arcs as straight pieces within 0.1 mm, the points taken into `to` (crs::measure).
+ */
+export const crsPlaneMeasures = op<(from: System, to: System, rings: readonly PlaneRing[], closed: boolean) => PlaneMeasures>('crsPlaneMeasures');
+
 /** A latitude or longitude as 40°45′12.3456″K (seconds with `decimals` places; K/G, D/B). */
 export const formatDms = op<(deg: number, latitude: boolean, decimals: number) => string>('formatDms');
 

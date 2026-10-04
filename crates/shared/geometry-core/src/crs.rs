@@ -9,6 +9,8 @@
 //! (`scripts/fixtures/crs_transform_cases.py`); `libm` keeps native and WASM
 //! bit for bit equal. Heights are 0 on both sides: 2D, as the ADR says.
 
+pub mod measure;
+
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson};
 use crate::display::fixed;

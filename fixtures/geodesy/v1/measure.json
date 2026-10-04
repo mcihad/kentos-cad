@@ -1,0 +1,1323 @@
+{
+ "format": "kentos.crs-measure",
+ "version": 1,
+ "proj": "9.7.1",
+ "chord": 0.0001,
+ "measure": [
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, açık yol, üç köşe",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414060.25,
+       4540012.5
+      ],
+      [
+       414084.75,
+       4539969.875
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 110.69802407726273
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF / TM33, açık yol, üç köşe",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 5255,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414060.25,
+       4540012.5
+      ],
+      [
+       414084.75,
+       4539969.875
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 110.84338649690972
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, açık yol, üç köşe",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414060.25,
+       4540012.5
+      ],
+      [
+       414084.75,
+       4539969.875
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 110.68084475661652
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, açık yol, üç köşe",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414060.25,
+       4540012.5
+      ],
+      [
+       414084.75,
+       4539969.875
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": null,
+   "why": "geographic"
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / Pseudo-Mercator, açık yol, üç köşe",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 5254,
+   "toSrid": 3857,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414060.25,
+       4540012.5
+      ],
+      [
+       414084.75,
+       4539969.875
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": null,
+   "why": "mercator"
+  },
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, açık yol, yaylı kenarla",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540030.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 73.1043872191046
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF / TM33, açık yol, yaylı kenarla",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 5255,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540030.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 73.20039182839162
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, açık yol, yaylı kenarla",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540030.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": {
+    "length": 73.09303376757991
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, açık yol, yaylı kenarla",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540030.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": null,
+   "why": "geographic"
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / Pseudo-Mercator, açık yol, yaylı kenarla",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 5254,
+   "toSrid": 3857,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540030.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "expect": null,
+   "why": "mercator"
+  },
+  {
+   "name": "TUREF / TM30 → ED50 / TM30, kapalı alan, 40 × 25 m",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540025.0
+      ],
+      [
+       414000.0,
+       4540025.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 130.00068134548712,
+    "area": 1000.0104879000737
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF / TM33, kapalı alan, 40 × 25 m",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 5255,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540025.0
+      ],
+      [
+       414000.0,
+       4540025.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 130.17141375069286,
+    "area": 1002.6388732523185
+   }
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / UTM 35N, kapalı alan, 40 × 25 m",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 27,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 32635,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540025.0
+      ],
+      [
+       414000.0,
+       4540025.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 129.9804827391673,
+    "area": 999.6997569927667
+   }
+  },
+  {
+   "name": "TUREF / TM30 → TUREF, kapalı alan, 40 × 25 m",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5254,
+   "toSrid": 5252,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540025.0
+      ],
+      [
+       414000.0,
+       4540025.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": null,
+   "why": "geographic"
+  },
+  {
+   "name": "TUREF / TM30 → WGS 84 / Pseudo-Mercator, kapalı alan, 40 × 25 m",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 5254,
+   "toSrid": 3857,
+   "rings": [
+    {
+     "pts": [
+      [
+       414000.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540000.0
+      ],
+      [
+       414040.0,
+       4540025.0
+      ],
+      [
+       414000.0,
+       4540025.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": null,
+   "why": "mercator"
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / UTM 36N, kapalı alan, yaylı kenarlı ve delikli",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 23036,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420280.0
+      ],
+      [
+       486500.0,
+       4420280.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       486540.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420250.0
+      ],
+      [
+       486540.0,
+       4420250.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 483.9845420959156,
+    "area": 9532.46747502352
+   }
+  },
+  {
+   "name": "TUREF / TM36 → WGS 84 / UTM 36N, kapalı alan, yaylı kenarlı ve delikli",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 32636,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420280.0
+      ],
+      [
+       486500.0,
+       4420280.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       486540.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420250.0
+      ],
+      [
+       486540.0,
+       4420250.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 483.98203723171775,
+    "area": 9532.368761391182
+   }
+  },
+  {
+   "name": "TUREF / TM36 → TUREF / TM39, kapalı alan, yaylı kenarlı ve delikli",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 39,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 5257,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420280.0
+      ],
+      [
+       486500.0,
+       4420280.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       486540.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420250.0
+      ],
+      [
+       486540.0,
+       4420250.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 484.25785057057067,
+    "area": 9543.235310408398
+   }
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / TM36, kapalı alan, yaylı kenarlı ve delikli",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 2322,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420280.0
+      ],
+      [
+       486500.0,
+       4420280.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       486540.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420250.0
+      ],
+      [
+       486540.0,
+       4420250.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 483.8274125406034,
+    "area": 9526.278281036028
+   }
+  },
+  {
+   "name": "TUREF / TM36 → WGS 84, kapalı alan, yaylı kenarlı ve delikli",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5256,
+   "toSrid": 4326,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420200.0
+      ],
+      [
+       486620.0,
+       4420280.0
+      ],
+      [
+       486500.0,
+       4420280.0
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       486540.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420230.0
+      ],
+      [
+       486560.0,
+       4420250.0
+      ],
+      [
+       486540.0,
+       4420250.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": null,
+   "why": "geographic"
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / UTM 36N, büyük parsel, 1 km",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 23036,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4421200.0
+      ],
+      [
+       486500.0,
+       4421200.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 4001.3299808831625,
+    "area": 1000665.1009896671
+   }
+  },
+  {
+   "name": "TUREF / TM36 → WGS 84 / UTM 36N, büyük parsel, 1 km",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 32636,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4421200.0
+      ],
+      [
+       486500.0,
+       4421200.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 4001.309268707553,
+    "area": 1000654.7414853245
+   }
+  },
+  {
+   "name": "TUREF / TM36 → TUREF / TM39, büyük parsel, 1 km",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 39,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 5257,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4421200.0
+      ],
+      [
+       486500.0,
+       4421200.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 4003.5672868101688,
+    "area": 1001784.4387460398
+   }
+  },
+  {
+   "name": "TUREF / TM36 → ED50 / TM36, büyük parsel, 1 km",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 2322,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4421200.0
+      ],
+      [
+       486500.0,
+       4421200.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": {
+    "length": 4000.020189596128,
+    "area": 1000010.0948235401
+   }
+  },
+  {
+   "name": "TUREF / TM36 → WGS 84, büyük parsel, 1 km",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5256,
+   "toSrid": 4326,
+   "rings": [
+    {
+     "pts": [
+      [
+       486500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4420200.0
+      ],
+      [
+       487500.0,
+       4421200.0
+      ],
+      [
+       486500.0,
+       4421200.0
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "expect": null,
+   "why": "geographic"
+  }
+ ],
+ "pieces": [
+  {
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    40,
+    0
+   ],
+   "bulge": 0.0,
+   "points": 2
+  },
+  {
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    40,
+    0
+   ],
+   "bulge": 0.1,
+   "points": 143
+  },
+  {
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    40,
+    0
+   ],
+   "bulge": 0.4,
+   "points": 291
+  },
+  {
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    40,
+    0
+   ],
+   "bulge": 1.0,
+   "points": 498
+  },
+  {
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    40,
+    0
+   ],
+   "bulge": -0.25,
+   "points": 227
+  }
+ ]
+}

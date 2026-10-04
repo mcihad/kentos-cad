@@ -457,3 +457,54 @@ describe('Alan hesapla: Alan olarak çiz', () => {
     tool.input('D');
   });
 });
+
+describe('The second system’s plane (docs/adr/0167 §2)', () => {
+  // fixtures/geodesy/v1/measure.json (PROJ): TUREF TM30 at İstanbul, measured in ED50 TM30.
+  const ist = (x: number, y: number) => at(414000 + x, 4540000 + y);
+
+  it('Mesafe ölç says the total in the second plane after its own', () => {
+    const h = toolHarness();
+    h.doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    const tool = distance(h, false);
+    tool.pointerDown(ist(0, 0));
+    tool.pointerDown(ist(60.25, 12.5));
+    tool.pointerDown(ist(84.75, -30.125));
+    tool.confirm();
+    expect(h.said().slice(-2)).toEqual(['Toplam uzunluk 110.697 m (2 kenar)', 'ED50 TM30 düzleminde: Toplam uzunluk 110.698 m']);
+  });
+
+  it('Alan hesapla says the area and the perimeter there; a ray gives its length there too', () => {
+    const h = toolHarness();
+    h.doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    const tool = area(h, false);
+    for (const [x, y] of [
+      [0, 0],
+      [40, 0],
+      [40, 25],
+      [0, 25],
+    ])
+      tool.pointerDown(ist(x, y));
+    tool.confirm();
+    expect(h.said().slice(-2)).toEqual(['Alan 1000.00 m²   Çevre 130.000 m', 'ED50 TM30 düzleminde: Alan 1000.01 m²   Çevre 130.001 m']);
+    const rays = distance(h, true);
+    rays.pointerDown(ist(0, 0));
+    rays.pointerDown(ist(40, 0));
+    expect(h.said().at(-1)).toMatch(/^1: 40\.000 m, semt 100\.0000 g \(ED50 TM30 düzleminde 40\.\d{3} m\)$/);
+    rays.input('S');
+  });
+
+  it('says why there is none in a geographic system or the Pseudo-Mercator', () => {
+    const h = toolHarness();
+    h.doc.settings.assign({ srid: 5254, secondSrid: 4326 });
+    const tool = distance(h, false);
+    tool.pointerDown(ist(0, 0));
+    tool.pointerDown(ist(10, 0));
+    tool.confirm();
+    expect(h.said().at(-1)).toBe('WGS 84 coğrafi bir sistem: uzunluk ve alan onun düzleminde verilmez.');
+    h.doc.settings.assign({ secondSrid: 3857 });
+    tool.pointerDown(ist(0, 0));
+    tool.pointerDown(ist(10, 0));
+    tool.confirm();
+    expect(h.said().at(-1)).toBe("WGS 84 Pseudo-Mercator: uzunluk ve alan verilmez, Pseudo-Mercator'un ölçeği her enlemde başkadır.");
+  });
+});
