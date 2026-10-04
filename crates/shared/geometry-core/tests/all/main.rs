@@ -25,3 +25,4 @@ mod snap;
 mod text;
 mod topology;
 mod vertex_points;
+mod vertex_table;
