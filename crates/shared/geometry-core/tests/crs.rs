@@ -64,7 +64,11 @@ fn points_move_between_the_systems_as_proj_moves_them() {
             w.x,
             w.y
         );
-        assert_eq!(got.accuracy, num(&want["accuracy"]), "{name}: accuracy");
+        assert_eq!(
+            got.accuracy,
+            Some(num(&want["accuracy"])),
+            "{name}: accuracy"
+        );
         assert_eq!(got.via, want["via"].as_str().expect("via"), "{name}: via");
         let args =
             json!([case["from"], case["to"], {"x": num(&case["p"][0]), "y": num(&case["p"][1])}]);

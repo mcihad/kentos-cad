@@ -49,8 +49,6 @@ pub struct Second {
     pub system: &'static crs::System,
     from: core::System,
     to: core::System,
-    /// ED50 on either side: the values are not an official transformation's (§5).
-    unofficial: bool,
 }
 
 impl Second {
@@ -64,7 +62,6 @@ impl Second {
             system,
             from: project.transform_system()?,
             to: system.transform_system()?,
-            unofficial: project.datum == "ED50" || system.datum == "ED50",
         })
     }
 
@@ -141,6 +138,9 @@ impl Second {
             Err(NoPlane::Unreachable) => format!(
                 "{name}: ölçülen yerin bir noktası bu sistemin ulaştığı yerin dışında; değer yazılmadı."
             ),
+            Err(NoPlane::NoLink) => {
+                format!("{name}: datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.")
+            }
         }
     }
 
@@ -148,20 +148,24 @@ impl Second {
     /// dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon”
     /// within one datum.
     pub fn accuracy(&self, t: &Transformed) -> String {
-        accuracy_text(t, self.unofficial)
+        accuracy_text(t)
     }
 }
 
 /// How sure a point moved between two systems is: “±2.1 m, EPSG:1783 +
-/// EPSG:5260; resmî dönüşüm değil” (`unofficial`: ED50 on either side,
-/// docs/adr/0167 §5), “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon”
-/// within one datum (the web's `accuracyText`).
-pub fn accuracy_text(t: &Transformed, unofficial: bool) -> String {
+/// EPSG:5260; resmî dönüşüm değil” (an EPSG operation of ED50 was used,
+/// docs/adr/0167 §5), “±1 m, EPSG:5261”, “doğruluğu bilinmiyor, Bölge 7”
+/// (a step's accuracy is not written, docs/adr/0168 §2), or “kesin, yalnız
+/// projeksiyon” within one datum (the web's `accuracyText`).
+pub fn accuracy_text(t: &Transformed) -> String {
     if t.via.is_empty() {
         return "kesin, yalnız projeksiyon".to_owned();
     }
-    let mut text = format!("±{} m, {}", t.accuracy, t.via);
-    if unofficial {
+    let mut text = match t.accuracy {
+        Some(a) => format!("±{a} m, {}", t.via),
+        None => format!("doğruluğu bilinmiyor, {}", t.via),
+    };
+    if t.unofficial {
         text.push_str("; resmî dönüşüm değil");
     }
     text

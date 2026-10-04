@@ -1,82 +1,45 @@
-//! Points between the registry's coordinate systems (docs/adr/0167 §3): a
-//! grid to latitude and longitude (`geodesy`'s transverse Mercator, the
-//! spherical Pseudo-Mercator), the datum shift through Earth-centred
-//! coordinates with EPSG's seven-parameter Helmert transformations (the
-//! ones PROJ picks by default for Türkiye), and back to the target's grid.
-//! Each answer carries its accuracy and the EPSG operations it rests on.
-//! Latitudes and longitudes are written and read in degrees, minutes and
-//! seconds or in decimal degrees (§1). The reference is PROJ itself
-//! (`scripts/fixtures/crs_transform_cases.py`); `libm` keeps native and WASM
-//! bit for bit equal. Heights are 0 on both sides: 2D, as the ADR says.
+//! Points between coordinate systems (docs/adr/0167 §3, docs/adr/0168): a
+//! grid to latitude and longitude (`geodesy`'s transverse Mercator, of any
+//! origin; the spherical Pseudo-Mercator; a local system's plane transform
+//! to its base), the datum shift (`datum`: EPSG's seven-parameter Helmert
+//! transformations, the ones PROJ picks by default for Türkiye; a datum of
+//! the project's through WGS 84; the project's own choices), and back to the
+//! target's grid. Each answer carries its accuracy and what it rests on, or
+//! why there is none. Latitudes and longitudes are written and read in
+//! degrees, minutes and seconds or in decimal degrees (0167 §1). The
+//! references are PROJ itself (`scripts/fixtures/crs_transform_cases.py`,
+//! `scripts/fixtures/crs_custom_cases.py`); `libm` keeps native and WASM bit
+//! for bit equal. Heights are 0 on both sides: 2D, as the ADRs say.
 
+mod datum;
 pub mod measure;
+mod plane;
+
+pub use datum::{Choice, Convention, CustomDatum, Datum, Ellipsoid, Helmert, Method, NoLink};
+pub use plane::Plane;
 
 use crate::api::Op;
-use crate::api::json::{FromJson, Json, ToJson};
+use crate::api::json::{ToJson, field};
 use crate::display::fixed;
 use crate::geodesy::{Tm, tm_forward, tm_inverse};
 use crate::jsmath::PI;
 use crate::op;
 use crate::vec2::Vec2;
 
-/// A datum of the registry, with its ellipsoid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Datum {
-    /// TUREF (ITRF96), GRS80.
-    Turef,
-    /// ED50, International 1924.
-    Ed50,
-    /// WGS 84, its own ellipsoid.
-    Wgs84,
-}
-
-impl Datum {
-    /// The ellipsoid: semi-major axis (m) and inverse flattening.
-    pub fn ellipsoid(self) -> (f64, f64) {
-        match self {
-            Datum::Turef => (6_378_137.0, 298.257_222_101),
-            Datum::Ed50 => (6_378_388.0, 297.0),
-            Datum::Wgs84 => (6_378_137.0, 298.257_223_563),
-        }
-    }
-
-    fn name(self) -> &'static str {
-        match self {
-            Datum::Turef => "TUREF",
-            Datum::Ed50 => "ED50",
-            Datum::Wgs84 => "WGS84",
-        }
-    }
-}
-
-impl FromJson for Datum {
-    fn from_json(v: &Json) -> Result<Datum, String> {
-        match String::from_json(v)?.as_str() {
-            "TUREF" => Ok(Datum::Turef),
-            "ED50" => Ok(Datum::Ed50),
-            "WGS84" => Ok(Datum::Wgs84),
-            other => Err(format!("bilinmeyen datum: {other}")),
-        }
-    }
-}
-
-impl ToJson for Datum {
-    fn write_json(&self, out: &mut String) {
-        self.name().to_owned().write_json(out);
-    }
-}
-
 /// A coordinate system as the transforms read it: the registry's entry
-/// without its names. A point is (east, north) on a grid, (longitude,
-/// latitude) in degrees on a geographic system: the core's x and y.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// without its names, or the project's definition (docs/adr/0168 §1). A
+/// point is (east, north) on a grid, (longitude, latitude) in degrees on a
+/// geographic system: the core's x and y.
+#[derive(Clone, Debug, PartialEq)]
 pub enum System {
     Geographic {
         datum: Datum,
     },
-    /// A transverse Mercator grid: the TM3 zones, UTM.
+    /// A transverse Mercator grid: the TM3 zones, UTM, or the project's own
+    /// (its origin's latitude 0 when not given).
     Tm {
         datum: Datum,
+        latitude_of_origin: Option<f64>,
         central_meridian: f64,
         scale_factor: f64,
         false_easting: f64,
@@ -85,6 +48,11 @@ pub enum System {
     /// WGS 84 / Pseudo-Mercator (EPSG:3857): the WGS 84 latitude and
     /// longitude on a sphere of the ellipsoid's semi-major axis.
     Mercator {},
+    /// A local system: its coordinates become its base's by a plane transform.
+    Local {
+        base: Box<System>,
+        plane: Plane,
+    },
 }
 
 crate::json_tagged!(
@@ -93,19 +61,22 @@ crate::json_tagged!(
     Geographic => "geographic" { datum },
     Tm => "tm" {
         datum,
+        latitude_of_origin => "latitudeOfOrigin",
         central_meridian => "centralMeridian",
         scale_factor => "scaleFactor",
         false_easting => "falseEasting",
         false_northing => "falseNorthing"
     },
     Mercator => "mercator" {},
+    Local => "local" { base, plane },
 );
 
 impl System {
     fn datum(&self) -> Datum {
-        match *self {
-            System::Geographic { datum } | System::Tm { datum, .. } => datum,
+        match self {
+            System::Geographic { datum } | System::Tm { datum, .. } => datum.clone(),
             System::Mercator {} => Datum::Wgs84,
+            System::Local { base, .. } => base.datum(),
         }
     }
 
@@ -116,19 +87,36 @@ impl System {
             scale_factor,
             false_easting,
             false_northing,
-        } = *self
+            ..
+        } = self
         else {
             return None;
         };
         let (semi_major, inverse_flattening) = datum.ellipsoid();
         Some(Tm {
-            central_meridian,
-            scale_factor,
-            false_easting,
-            false_northing,
+            central_meridian: *central_meridian,
+            scale_factor: *scale_factor,
+            false_easting: *false_easting,
+            false_northing: *false_northing,
             semi_major,
             inverse_flattening,
         })
+    }
+
+    /// How far north of the equator's the origin's latitude puts the grid
+    /// (m): the grid's northing there, without the false northing; 0 for the
+    /// equator.
+    fn origin_northing(&self, tm: &Tm) -> Option<f64> {
+        match self {
+            System::Tm {
+                latitude_of_origin: Some(lat0),
+                central_meridian,
+                ..
+            } if *lat0 != 0.0 => {
+                Some(tm_forward(tm, *lat0, *central_meridian)?.y - tm.false_northing)
+            }
+            _ => Some(0.0),
+        }
     }
 
     /// The point's latitude and longitude (degrees) on the system's datum.
@@ -137,13 +125,18 @@ impl System {
             System::Geographic { .. } => {
                 (p.y.abs() <= 90.0 && p.x.is_finite()).then_some((p.y, p.x))
             }
-            System::Tm { .. } => tm_inverse(&self.tm()?, p.x, p.y),
+            System::Tm { .. } => {
+                let tm = self.tm()?;
+                let y0 = self.origin_northing(&tm)?;
+                tm_inverse(&tm, p.x, p.y + y0)
+            }
             System::Mercator {} => {
                 let r = Datum::Wgs84.ellipsoid().0;
                 let lat = (2.0 * libm::atan(libm::exp(p.y / r)) - PI / 2.0) * 180.0 / PI;
                 let lon = p.x / r * 180.0 / PI;
                 (lat.is_finite() && lon.is_finite()).then_some((lat, lon))
             }
+            System::Local { base, plane } => base.unproject(plane.forward(p)),
         }
     }
 
@@ -151,7 +144,12 @@ impl System {
     fn project(&self, lat: f64, lon: f64) -> Option<Vec2> {
         match self {
             System::Geographic { .. } => Some(Vec2::new(lon, lat)),
-            System::Tm { .. } => tm_forward(&self.tm()?, lat, lon),
+            System::Tm { .. } => {
+                let tm = self.tm()?;
+                let y0 = self.origin_northing(&tm)?;
+                let p = tm_forward(&tm, lat, lon)?;
+                Some(Vec2::new(p.x, p.y - y0))
+            }
             System::Mercator {} => {
                 if lat.abs() >= 90.0 {
                     return None;
@@ -162,168 +160,88 @@ impl System {
                 let p = Vec2::new(r * lon * rad, y);
                 (p.x.is_finite() && p.y.is_finite()).then_some(p)
             }
+            System::Local { base, plane } => plane.inverse(base.project(lat, lon)?),
         }
-    }
-}
-
-/// A seven-parameter Helmert transformation, EPSG's position vector
-/// convention (9606): translations in metres, rotations in arc-seconds, the
-/// scale difference in ppm.
-#[derive(Clone, Copy, Debug, PartialEq)]
-struct Helmert {
-    t: [f64; 3],
-    r: [f64; 3],
-    ds: f64,
-}
-
-/// ED50 to WGS 84 (30), EPSG:1784, and ED50 to ETRS89 (9), EPSG:1783: the
-/// same parameters, 2 m.
-const ED50: Helmert = Helmert {
-    t: [-84.1, -101.8, -129.7],
-    r: [0.0, 0.0, 0.468],
-    ds: 1.05,
-};
-
-/// TUREF to ETRS89 (1), EPSG:5260: 0.1 m.
-const TUREF_ETRS89: Helmert = Helmert {
-    t: [0.023, 0.036, -0.068],
-    r: [0.00176, 0.00912, -0.01136],
-    ds: 0.00439,
-};
-
-impl Helmert {
-    /// The small-angle rotation (PROJ's, its position vector form) and the scale.
-    fn matrix(&self) -> ([[f64; 3]; 3], f64) {
-        let sec = PI / (180.0 * 3600.0);
-        let (rx, ry, rz) = (self.r[0] * sec, self.r[1] * sec, self.r[2] * sec);
-        (
-            [[1.0, -rz, ry], [rz, 1.0, -rx], [-ry, rx, 1.0]],
-            1.0 + self.ds * 1e-6,
-        )
-    }
-
-    fn forward(&self, x: [f64; 3]) -> [f64; 3] {
-        let (m, s) = self.matrix();
-        let mut out = [0.0; 3];
-        for i in 0..3 {
-            out[i] = self.t[i] + s * (m[i][0] * x[0] + m[i][1] * x[1] + m[i][2] * x[2]);
-        }
-        out
-    }
-
-    /// PROJ's reverse: the translation off, the scale out, the rotation transposed.
-    fn reverse(&self, x: [f64; 3]) -> [f64; 3] {
-        let (m, s) = self.matrix();
-        let d = [
-            (x[0] - self.t[0]) / s,
-            (x[1] - self.t[1]) / s,
-            (x[2] - self.t[2]) / s,
-        ];
-        let mut out = [0.0; 3];
-        for i in 0..3 {
-            out[i] = m[0][i] * d[0] + m[1][i] * d[1] + m[2][i] * d[2];
-        }
-        out
-    }
-}
-
-/// Earth-centred coordinates of a latitude and longitude (degrees) at height 0.
-fn to_geocentric(datum: Datum, lat: f64, lon: f64) -> [f64; 3] {
-    let (a, inv_f) = datum.ellipsoid();
-    let f = 1.0 / inv_f;
-    let e2 = f * (2.0 - f);
-    let rad = PI / 180.0;
-    let (sp, cp) = (libm::sin(lat * rad), libm::cos(lat * rad));
-    let (sl, cl) = (libm::sin(lon * rad), libm::cos(lon * rad));
-    let n = a / libm::sqrt(1.0 - e2 * sp * sp);
-    [n * cp * cl, n * cp * sl, n * (1.0 - e2) * sp]
-}
-
-/// The latitude and longitude (degrees) of Earth-centred coordinates; the
-/// height is dropped (2D). Iterated on the latitude from the spheroid's
-/// first guess: a handful of steps reach the double's last bit near the
-/// surface.
-fn from_geocentric(datum: Datum, x: [f64; 3]) -> (f64, f64) {
-    let (a, inv_f) = datum.ellipsoid();
-    let f = 1.0 / inv_f;
-    let e2 = f * (2.0 - f);
-    let p = libm::hypot(x[0], x[1]);
-    let lon = libm::atan2(x[1], x[0]);
-    let mut lat = libm::atan2(x[2], p * (1.0 - e2));
-    for _ in 0..10 {
-        let s = libm::sin(lat);
-        let n = a / libm::sqrt(1.0 - e2 * s * s);
-        let next = libm::atan2(x[2] + e2 * n * s, p);
-        let done = (next - lat).abs() < 1e-15;
-        lat = next;
-        if done {
-            break;
-        }
-    }
-    let deg = 180.0 / PI;
-    (lat * deg, lon * deg)
-}
-
-/// A latitude and longitude moved from one datum to another the way PROJ
-/// does by default for Türkiye; the accuracy (m) and the EPSG operations.
-fn shift(from: Datum, to: Datum, lat: f64, lon: f64) -> ((f64, f64), f64, &'static str) {
-    match (from, to) {
-        (a, b) if a == b => ((lat, lon), 0.0, ""),
-        // TUREF to WGS 84 (1): a null transformation on latitude and longitude.
-        (Datum::Turef, Datum::Wgs84) | (Datum::Wgs84, Datum::Turef) => {
-            ((lat, lon), 1.0, "EPSG:5261")
-        }
-        (Datum::Ed50, Datum::Wgs84) => {
-            let x = ED50.forward(to_geocentric(Datum::Ed50, lat, lon));
-            (from_geocentric(Datum::Wgs84, x), 2.0, "EPSG:1784")
-        }
-        (Datum::Wgs84, Datum::Ed50) => {
-            let x = ED50.reverse(to_geocentric(Datum::Wgs84, lat, lon));
-            (from_geocentric(Datum::Ed50, x), 2.0, "EPSG:1784")
-        }
-        // Through ETRS89: ED50 to ETRS89 (9), then TUREF to ETRS89 (1) reversed.
-        (Datum::Ed50, Datum::Turef) => {
-            let x = TUREF_ETRS89.reverse(ED50.forward(to_geocentric(Datum::Ed50, lat, lon)));
-            (
-                from_geocentric(Datum::Turef, x),
-                2.1,
-                "EPSG:1783 + EPSG:5260",
-            )
-        }
-        (Datum::Turef, Datum::Ed50) => {
-            let x = ED50.reverse(TUREF_ETRS89.forward(to_geocentric(Datum::Turef, lat, lon)));
-            (
-                from_geocentric(Datum::Ed50, x),
-                2.1,
-                "EPSG:1783 + EPSG:5260",
-            )
-        }
-        _ => unreachable!("every pair of the three datums is above"),
     }
 }
 
 /// A point moved to another system: where it falls, how far that can be
-/// off (m; 0 where only the projection changed) and what it rests on.
+/// off (m; 0 where only the projection changed; none when a step's is not
+/// known), what it rests on, and whether an EPSG operation of ED50 was used
+/// (its values are not the official transformation's, docs/adr/0167 §5).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Transformed {
     pub point: Vec2,
-    pub accuracy: f64,
-    /// The EPSG operations of the datum shift; empty when the datum stays.
+    pub accuracy: Option<f64>,
+    /// The datum shift's operations and the project's names, joined by “ + ”;
+    /// empty when the datum stays.
     pub via: String,
+    pub unofficial: bool,
 }
 
-crate::json_struct!(out Transformed { point, accuracy, via });
+crate::json_struct!(out Transformed { point, accuracy, via, unofficial });
 
-/// `p` of the system `from` in the system `to`; none where a projection
-/// cannot take or give the point.
-pub fn transform(from: &System, to: &System, p: Vec2) -> Option<Transformed> {
-    let (lat, lon) = from.unproject(p)?;
-    let ((lat, lon), accuracy, via) = shift(from.datum(), to.datum(), lat, lon);
-    Some(Transformed {
-        point: to.project(lat, lon)?,
-        accuracy,
-        via: via.to_owned(),
+/// Why a point has no value in another system.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Unreached {
+    /// A projection cannot take or give the point (or a local system's plane
+    /// transform folds).
+    Outside,
+    /// A datum of the project's with no way to WGS 84 stands between them.
+    NoLink,
+}
+
+impl Unreached {
+    /// As the references write it.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Unreached::Outside => "outside",
+            Unreached::NoLink => "noLink",
+        }
+    }
+}
+
+/// `p` of the system `from` in the system `to`, the project's datum choices
+/// taken where they apply.
+pub fn transform_in(
+    from: &System,
+    to: &System,
+    p: Vec2,
+    choices: &[Choice],
+) -> Result<Transformed, Unreached> {
+    let (a, b) = (from.datum(), to.datum());
+    let way = datum::path(&a, &b, choices).map_err(|NoLink| Unreached::NoLink)?;
+    let (lat, lon) = from.unproject(p).ok_or(Unreached::Outside)?;
+    let (lat, lon) = way.run(a.ellipsoid(), lat, lon);
+    Ok(Transformed {
+        point: to.project(lat, lon).ok_or(Unreached::Outside)?,
+        accuracy: way.accuracy,
+        via: way.via.join(" + "),
+        unofficial: way.unofficial,
     })
+}
+
+/// `p` of the system `from` in the system `to` by the registry's ways; none
+/// where it has no value there.
+pub fn transform(from: &System, to: &System, p: Vec2) -> Option<Transformed> {
+    transform_in(from, to, p, &[]).ok()
+}
+
+/// The op's answer: the moved point, or why there is none.
+struct Moved(Result<Transformed, Unreached>);
+
+impl ToJson for Moved {
+    fn write_json(&self, out: &mut String) {
+        match &self.0 {
+            Ok(t) => t.write_json(out),
+            Err(why) => {
+                out.push('{');
+                let mut first = true;
+                field(out, &mut first, "error", why.as_str());
+                out.push('}');
+            }
+        }
+    }
 }
 
 /// A latitude or a longitude in degrees, minutes and seconds: `40°45′12.3456″K`.
@@ -420,6 +338,17 @@ pub(crate) static OPS: &[Op] = &[
     op!("crsTransform", |from: System, to: System, p: Vec2| {
         transform(&from, &to, p)
     }),
+    op!(
+        "crsTransformIn",
+        |from: System, to: System, p: Vec2, choices: Option<Vec<Choice>>| {
+            Moved(transform_in(
+                &from,
+                &to,
+                p,
+                choices.as_deref().unwrap_or_default(),
+            ))
+        }
+    ),
     op!("formatDms", |deg: f64, latitude: bool, decimals: f64| {
         format_dms(deg, latitude, decimals as usize)
     }),
@@ -435,6 +364,7 @@ mod tests {
 
     const TM30: System = System::Tm {
         datum: Datum::Turef,
+        latitude_of_origin: None,
         central_meridian: 30.0,
         scale_factor: 1.0,
         false_easting: 500_000.0,
@@ -448,7 +378,7 @@ mod tests {
             datum: Datum::Turef,
         };
         let there = transform(&TM30, &geo, p).expect("geographic");
-        assert_eq!((there.accuracy, there.via.as_str()), (0.0, ""));
+        assert_eq!((there.accuracy, there.via.as_str()), (Some(0.0), ""));
         let back = transform(&geo, &TM30, there.point).expect("back");
         assert!(
             (back.point.x - p.x).abs() < 1e-6 && (back.point.y - p.y).abs() < 1e-6,
@@ -458,6 +388,7 @@ mod tests {
 
     const ED50_TM30: System = System::Tm {
         datum: Datum::Ed50,
+        latitude_of_origin: None,
         central_meridian: 30.0,
         scale_factor: 1.0,
         false_easting: 500_000.0,
@@ -467,7 +398,11 @@ mod tests {
     #[test]
     fn the_datum_shift_says_what_it_rests_on() {
         let t = transform(&TM30, &ED50_TM30, Vec2::new(412_345.678, 4_512_345.678)).expect("ED50");
-        assert_eq!((t.accuracy, t.via.as_str()), (2.1, "EPSG:1783 + EPSG:5260"));
+        assert_eq!(
+            (t.accuracy, t.via.as_str()),
+            (Some(2.1), "EPSG:1783 + EPSG:5260")
+        );
+        assert!(t.unofficial);
         // PROJ 9.7: EPSG:5254 to EPSG:2320, its default path.
         let proj = Vec2::new(412_379.976_700_991, 4_512_531.675_571_951);
         assert!(

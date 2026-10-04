@@ -365,6 +365,12 @@ impl<T: FromJson> FromJson for Option<T> {
     }
 }
 
+impl<T: FromJson> FromJson for Box<T> {
+    fn from_json(v: &Json) -> Result<Box<T>, String> {
+        T::from_json(v).map(Box::new)
+    }
+}
+
 impl<T: FromJson> FromJson for Vec<T> {
     fn from_json(v: &Json) -> Result<Vec<T>, String> {
         match v {
@@ -457,6 +463,15 @@ impl<T: ToJson> ToJson for Option<T> {
     }
     fn is_absent(&self) -> bool {
         self.is_none()
+    }
+}
+
+impl<T: ToJson + ?Sized> ToJson for Box<T> {
+    fn write_json(&self, out: &mut String) {
+        (**self).write_json(out);
+    }
+    fn is_absent(&self) -> bool {
+        (**self).is_absent()
     }
 }
 

@@ -1,0 +1,1559 @@
+{
+ "format": "kentos.crs-custom",
+ "version": 1,
+ "proj": "9.7.1",
+ "transforms": [
+  {
+   "name": "başlangıcı ve ölçeği farklı TM'den TUREF TM33'e",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "latitudeOfOrigin": 36.0,
+    "centralMeridian": 34.5,
+    "scaleFactor": 0.9999,
+    "falseEasting": 200000.0,
+    "falseNorthing": 100000.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     201234.567,
+     162345.678
+    ],
+    [
+     185000.0,
+     95000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      635518.9006644274,
+      4048961.0738343466
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      620324.5465858113,
+      3981351.7392223338
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "başlangıcı ve ölçeği farklı TM'den WGS 84'e",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "latitudeOfOrigin": 36.0,
+    "centralMeridian": 34.5,
+    "scaleFactor": 0.9999,
+    "falseEasting": 200000.0,
+    "falseNorthing": 100000.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "choices": [],
+   "points": [
+    [
+     201234.567,
+     162345.678
+    ],
+    [
+     185000.0,
+     95000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      34.51379238420987,
+      36.561909276959746
+     ],
+     "accuracy": 1.0,
+     "via": "EPSG:5261",
+     "unofficial": false
+    },
+    {
+     "point": [
+      34.333714143241664,
+      35.95481844166663
+     ],
+     "accuracy": 1.0,
+     "via": "EPSG:5261",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "TUREF coğrafiden başlangıcı farklı TM'ye",
+   "from": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "latitudeOfOrigin": 36.0,
+    "centralMeridian": 34.5,
+    "scaleFactor": 0.9999,
+    "falseEasting": 200000.0,
+    "falseNorthing": 100000.0
+   },
+   "choices": [],
+   "points": [
+    [
+     33.4567891,
+     39.8765432
+    ],
+    [
+     32.0,
+     37.5
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      110764.00965517838,
+      530756.3756821558
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      -21059.830347804702,
+      269379.80842196336
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "Bessel datumlu TM'den WGS 84'e",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      33.14065256533479,
+      39.949583818418624
+     ],
+     "accuracy": 1.5,
+     "via": "Bessel datumu",
+     "unofficial": false
+    },
+    {
+     "point": [
+      32.84650649351703,
+      38.83757198679238
+     ],
+     "accuracy": 1.5,
+     "via": "Bessel datumu",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "Bessel datumlu TM'den TUREF TM33'e",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      512019.6957776502,
+      4423940.5857452955
+     ],
+     "accuracy": 2.5,
+     "via": "Bessel datumu + EPSG:5261",
+     "unofficial": false
+    },
+    {
+     "point": [
+      486673.0590395439,
+      4300483.407050266
+     ],
+     "accuracy": 2.5,
+     "via": "Bessel datumu + EPSG:5261",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "Bessel datumlu TM'den ED50 TM33'e",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      512048.2218016911,
+      4424124.797458838
+     ],
+     "accuracy": 3.5,
+     "via": "Bessel datumu + EPSG:1784",
+     "unofficial": true
+    },
+    {
+     "point": [
+      486701.2697980895,
+      4300666.983515254
+     ],
+     "accuracy": 3.5,
+     "via": "Bessel datumu + EPSG:1784",
+     "unofficial": true
+    }
+   ]
+  },
+  {
+   "name": "aynısı, koordinat çerçevesi kuralıyla",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       -0.202,
+       -0.045,
+       2.455
+      ],
+      "scale": 6.7,
+      "convention": "coordinateFrame",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      512048.2218016911,
+      4424124.797458838
+     ],
+     "accuracy": 3.5,
+     "via": "Bessel datumu + EPSG:1784",
+     "unofficial": true
+    },
+    {
+     "point": [
+      486701.2697980895,
+      4300666.983515254
+     ],
+     "accuracy": 3.5,
+     "via": "Bessel datumu + EPSG:1784",
+     "unofficial": true
+    }
+   ]
+  },
+  {
+   "name": "ED50 TM33'ten Bessel datumlu TM'ye",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      512643.1359125932,
+      4422788.789698165
+     ],
+     "accuracy": 3.5,
+     "via": "EPSG:1784 + Bessel datumu",
+     "unofficial": true
+    },
+    {
+     "point": [
+      487298.73159826855,
+      4299333.026074702
+     ],
+     "accuracy": 3.5,
+     "via": "EPSG:1784 + Bessel datumu",
+     "unofficial": true
+    }
+   ]
+  },
+  {
+   "name": "Krasovski Gauss-Krüger'den Bessel coğrafiye",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Krasovski datumu",
+     "ellipsoid": {
+      "name": "Krasovski 1940",
+      "semiMajor": 6378245.0,
+      "inverseFlattening": 298.3
+     },
+     "toWgs84": {
+      "translation": [
+       24.0,
+       -123.0,
+       -94.0
+      ],
+      "rotation": [
+       0.02,
+       -0.25,
+       -0.13
+      ],
+      "scale": 1.1,
+      "convention": "coordinateFrame"
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 6500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    }
+   },
+   "choices": [],
+   "points": [
+    [
+     6512345.678,
+     4423456.789
+    ],
+    [
+     6487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      33.14693508579119,
+      39.94373638410998
+     ],
+     "accuracy": null,
+     "via": "Krasovski datumu + Bessel datumu",
+     "unofficial": false
+    },
+    {
+     "point": [
+      32.85270347409213,
+      38.83162825202509
+     ],
+     "accuracy": null,
+     "via": "Krasovski datumu + Bessel datumu",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "Bessel coğrafiden Pseudo-Mercator'a",
+   "from": {
+    "kind": "geographic",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    }
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "choices": [],
+   "points": [
+    [
+     33.4567891,
+     39.8765432
+    ],
+    [
+     32.0,
+     37.5
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      3723962.796798566,
+      4848073.569020503
+     ],
+     "accuracy": 1.5,
+     "via": "Bessel datumu",
+     "unofficial": false
+    },
+    {
+     "point": [
+      3561822.878038673,
+      4509114.058159444
+     ],
+     "accuracy": 1.5,
+     "via": "Bessel datumu",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "Bessel datumlu TM'den ED50'ye, projenin WGS 84 → ED50 seçimiyle",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "WGS84",
+     "to": "ED50",
+     "name": "WGS 84 → ED50: saha",
+     "helmert": {
+      "translation": [
+       87.0,
+       98.0,
+       121.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "scale": 0.0,
+      "convention": "positionVector",
+      "accuracy": 1.0
+     }
+    }
+   ],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      512054.57515096245,
+      4424117.890611827
+     ],
+     "accuracy": 2.5,
+     "via": "Bessel datumu + WGS 84 → ED50: saha",
+     "unofficial": false
+    },
+    {
+     "point": [
+      486707.78006808215,
+      4300659.938636923
+     ],
+     "accuracy": 2.5,
+     "via": "Bessel datumu + WGS 84 → ED50: saha",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "ED50 TM30'dan TUREF TM30'a, projenin bölge parametreleriyle",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ],
+    [
+     530000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      412311.2008395895,
+      4512159.796218806
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    },
+    {
+     "point": [
+      529964.8518132648,
+      4399814.627619508
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "TUREF TM30'dan ED50 TM30'a, aynı seçimin tersi",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ],
+    [
+     530000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      412380.15531072393,
+      4512531.560730383
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    },
+    {
+     "point": [
+      530035.1483133294,
+      4400185.37334557
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "ED50 TM30'dan WGS 84'e: seçim yalnız kendi çiftinde",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ],
+    [
+     530000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      28.961846445594816,
+      40.73946844917709
+     ],
+     "accuracy": 2.0,
+     "via": "EPSG:1784",
+     "unofficial": true
+    },
+    {
+     "point": [
+      30.349538101601166,
+      39.731852697850485
+     ],
+     "accuracy": 2.0,
+     "via": "EPSG:1784",
+     "unofficial": true
+    }
+   ]
+  },
+  {
+   "name": "doğruluğu yazılmamış bölge parametreleri",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame"
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ],
+    [
+     530000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      412311.2008395895,
+      4512159.796218806
+     ],
+     "accuracy": null,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    },
+    {
+     "point": [
+      529964.8518132648,
+      4399814.627619508
+     ],
+     "accuracy": null,
+     "via": "ED50 → TUREF: Bölge 7",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "şantiye sisteminden tabanına (benzerlik)",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1234.567,
+     -876.543
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      492345.678,
+      4422345.678
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      493740.71620139974,
+      4421757.114711218
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "şantiye sisteminden WGS 84'e",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "choices": [],
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1234.567,
+     -876.543
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      32.91044899530349,
+      39.93527035566908
+     ],
+     "accuracy": 1.0,
+     "via": "EPSG:5261",
+     "unofficial": false
+    },
+    {
+     "point": [
+      32.92677574539975,
+      39.92998103694972
+     ],
+     "accuracy": 1.0,
+     "via": "EPSG:5261",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "TUREF TM33'ten şantiye sistemine",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      19766.171384224344,
+      -3243.9801182340243
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      -31699.035011644264,
+      -118287.16099129208
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "şantiye sisteminden ED50'ye bağlı afin yerel sisteme",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "to": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "affine",
+     "a": 1.00002,
+     "b": -0.0003,
+     "c": 492000.0,
+     "d": 0.00025,
+     "e": 0.99998,
+     "f": 4422500.0
+    }
+   },
+   "choices": [],
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1234.567,
+     -876.543
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      373.72059495731145,
+      29.53343149953353
+     ],
+     "accuracy": 2.1,
+     "via": "EPSG:1783 + EPSG:5260",
+     "unofficial": true
+    },
+    {
+     "point": [
+      1768.5606813566746,
+      -559.3955288701446
+     ],
+     "accuracy": 2.1,
+     "via": "EPSG:1783 + EPSG:5260",
+     "unofficial": true
+    }
+   ]
+  },
+  {
+   "name": "afin yerel sistemden ED50 TM33'e",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "affine",
+     "a": 1.00002,
+     "b": -0.0003,
+     "c": 492000.0,
+     "d": 0.00025,
+     "e": 0.99998,
+     "f": 4422500.0
+    }
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1234.567,
+     -876.543
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      492000.0,
+      4422500.0
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      493234.85465424,
+      4421623.78317261
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "özel TM'ye bağlı yerel sistemden TUREF TM33'e",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "latitudeOfOrigin": 36.0,
+     "centralMeridian": 34.5,
+     "scaleFactor": 0.9999,
+     "falseEasting": 200000.0,
+     "falseNorthing": 100000.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 1000.0,
+     "north": 2000.0,
+     "rotation": -3.25,
+     "scale": 1.0
+    }
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     1234.567,
+     -876.543
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      437766.527613906,
+      3885565.9472250165
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      438963.1075403528,
+      3884639.0546510797
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "bağsız datumdan kendi coğrafisine",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bağsız datum",
+     "ellipsoid": {
+      "name": "Clarke 1880 (RGS)",
+      "semiMajor": 6378249.145,
+      "inverseFlattening": 293.465
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": {
+     "name": "Bağsız datum",
+     "ellipsoid": {
+      "name": "Clarke 1880 (RGS)",
+      "semiMajor": 6378249.145,
+      "inverseFlattening": 293.465
+     }
+    }
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      33.14445789377978,
+      39.94793741576319
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    },
+    {
+     "point": [
+      32.850281383161246,
+      38.83590924122232
+     ],
+     "accuracy": 0.0,
+     "via": "",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "bağsız datumdan TUREF'e",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bağsız datum",
+     "ellipsoid": {
+      "name": "Clarke 1880 (RGS)",
+      "semiMajor": 6378249.145,
+      "inverseFlattening": 293.465
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "error": "noLink"
+    },
+    {
+     "error": "noLink"
+    }
+   ]
+  },
+  {
+   "name": "TUREF'ten bağsız datuma",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bağsız datum",
+     "ellipsoid": {
+      "name": "Clarke 1880 (RGS)",
+      "semiMajor": 6378249.145,
+      "inverseFlattening": 293.465
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "points": [
+    [
+     512345.678,
+     4423456.789
+    ],
+    [
+     487000.0,
+     4300000.0
+    ]
+   ],
+   "expect": [
+    {
+     "error": "noLink"
+    },
+    {
+     "error": "noLink"
+    }
+   ]
+  }
+ ]
+}

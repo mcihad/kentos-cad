@@ -206,7 +206,7 @@ pub fn convert_point(
     Ok(Converted {
         point: moved.point,
         values: write_point(to, moved.point, f),
-        accuracy: accuracy_text(&moved, from.datum == "ED50" || to.datum == "ED50"),
+        accuracy: accuracy_text(&moved),
     })
 }
 

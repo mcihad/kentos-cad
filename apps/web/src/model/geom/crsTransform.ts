@@ -3,26 +3,71 @@ import { op } from '../../wasm/core';
 import type { Vec2 } from '../geometry';
 
 /**
- * Points between the registry's coordinate systems (crates/shared/geometry-core/src/crs.rs, docs/adr/0167 §3): the
- * grids' transverse Mercator both ways, the Pseudo-Mercator, the datum shift by EPSG's Helmert transformations (the
- * ones PROJ takes by default for Türkiye), each answer with its accuracy and the operations it rests on. Latitudes and
- * longitudes in degrees, minutes and seconds or decimal degrees, written and read (§1, §4).
+ * Points between coordinate systems (crates/shared/geometry-core/src/crs.rs, docs/adr/0167 §3, docs/adr/0168): the
+ * grids' transverse Mercator both ways (of any origin), the Pseudo-Mercator, a local system's plane transform to its
+ * base, the datum shift by EPSG's Helmert transformations (the ones PROJ takes by default for Türkiye), a datum of the
+ * project's through WGS 84, the project's own choices; each answer with its accuracy and what it rests on, or why
+ * there is none. Latitudes and longitudes in degrees, minutes and seconds or decimal degrees, written and read.
  */
 
-export type Datum = 'TUREF' | 'ED50' | 'WGS84';
+/** Which way a Helmert transformation's rotations turn: EPSG's position vector (9606) or coordinate frame (9607). */
+export type Convention = 'positionVector' | 'coordinateFrame';
 
-/** A system as the core reads it: the registry's entry without its names (geo/crs.ts makes it, `systemOf`). */
+/** Seven parameters: translations (m), rotations (″) in their convention, the scale difference (ppm), the accuracy (m). */
+export interface Helmert {
+  readonly translation: readonly [number, number, number];
+  readonly rotation: readonly [number, number, number];
+  readonly scale: number;
+  readonly convention: Convention;
+  readonly accuracy?: number;
+}
+
+/** An ellipsoid: its name, semi-major axis (m) and inverse flattening. */
+export interface Ellipsoid {
+  readonly name: string;
+  readonly semiMajor: number;
+  readonly inverseFlattening: number;
+}
+
+/** A datum the project defines (docs/adr/0168 §2): without a way to WGS 84 it stands alone. */
+export interface CustomDatum {
+  readonly name: string;
+  readonly ellipsoid: Ellipsoid;
+  readonly toWgs84?: Helmert;
+}
+
+export type RegistryDatum = 'TUREF' | 'ED50' | 'WGS84';
+export type Datum = RegistryDatum | CustomDatum;
+
+/** A local system's coordinates to its base's: base x = a·x + b·y + c, base y = d·x + e·y + f (a similarity turns counter-clockwise, in degrees). */
+export type Plane =
+  | { readonly kind: 'similarity'; readonly east: number; readonly north: number; readonly rotation: number; readonly scale: number }
+  | { readonly kind: 'affine'; readonly a: number; readonly b: number; readonly c: number; readonly d: number; readonly e: number; readonly f: number };
+
+/** A system as the core reads it: the registry's entry without its names (`systemOf`), or the project's definition. */
 export type System =
   | { readonly kind: 'geographic'; readonly datum: Datum }
   | {
       readonly kind: 'tm';
       readonly datum: Datum;
+      /** Degrees; 0 when left out. */
+      readonly latitudeOfOrigin?: number;
       readonly centralMeridian: number;
       readonly scaleFactor: number;
       readonly falseEasting: number;
       readonly falseNorthing: number;
     }
-  | { readonly kind: 'mercator' };
+  | { readonly kind: 'mercator' }
+  | { readonly kind: 'local'; readonly base: System; readonly plane: Plane };
+
+/** The project's choice for a pair of the registry's datums instead of EPSG's way (docs/adr/0168 §3). */
+export interface DatumChoice {
+  readonly from: RegistryDatum;
+  readonly to: RegistryDatum;
+  /** What the values rest on: “ED50 → TUREF: Bölge 7”. */
+  readonly name: string;
+  readonly helmert: Helmert;
+}
 
 /** The core's system for a registry entry (the desktop's `transform_system`); null for the local one. */
 export function systemOf(crs: CrsDef): System | null {
@@ -40,16 +85,28 @@ export function systemOf(crs: CrsDef): System | null {
   };
 }
 
-/** A point moved: where it falls, how far that can be off (m; 0 where only the projection changed), what it rests on. */
+/**
+ * A point moved: where it falls, how far that can be off (m; 0 where only the projection changed; left out when a
+ * step's is not known), what it rests on, and whether an EPSG operation of ED50 was used (not the official values).
+ */
 export interface Transformed {
   readonly point: Vec2;
-  readonly accuracy: number;
-  /** The EPSG operations of the datum shift, “EPSG:1784”; empty when the datum stays. */
+  readonly accuracy?: number;
+  /** The datum shift's operations and the project's names, “EPSG:1784”, “Bessel datumu + EPSG:5261”; empty when the datum stays. */
   readonly via: string;
+  readonly unofficial: boolean;
 }
+
+/** Why a point has no value in another system: a projection cannot take or give it, or a datum with no way to WGS 84 stands between. */
+export type Unreached = 'outside' | 'noLink';
 
 /** `p` of `from` in `to` (x east or longitude, y north or latitude); null where a projection cannot take or give it. */
 export const crsTransform = op<(from: System, to: System, p: Vec2) => Transformed | null>('crsTransform');
+
+/** `p` of `from` in `to`, the project's datum choices taken where they apply; or why it has no value there. */
+export const crsTransformIn = op<(from: System, to: System, p: Vec2, choices?: readonly DatumChoice[]) => Transformed | { readonly error: Unreached }>(
+  'crsTransformIn',
+);
 
 /** A path or a ring: its vertices and its segments' bulges (none, or a missing one, straight). */
 export interface PlaneRing {
@@ -58,13 +115,17 @@ export interface PlaneRing {
 }
 
 /** What a path (its length) or an area (its perimeter and net area) measures in a plane, or why there is none (docs/adr/0167 §2). */
-export type PlaneMeasures = { readonly length: number; readonly area: number } | { readonly why: 'geographic' | 'mercator' | 'unreachable' };
+export type PlaneMeasures =
+  | { readonly length: number; readonly area: number }
+  | { readonly why: 'geographic' | 'mercator' | 'unreachable' | 'noLink' };
 
 /**
  * A path (`closed` false: the first ring) or an area's rings (the first the outer, the others its holes), given in
- * `from`, measured in `to`'s plane: arcs as straight pieces within 0.1 mm, the points taken into `to` (crs::measure).
+ * `from`, measured in `to`'s plane: arcs as straight pieces within 0.1 mm, the points taken into `to` (crs::measure),
+ * the project's datum choices taken where they apply.
  */
-export const crsPlaneMeasures = op<(from: System, to: System, rings: readonly PlaneRing[], closed: boolean) => PlaneMeasures>('crsPlaneMeasures');
+export const crsPlaneMeasures =
+  op<(from: System, to: System, rings: readonly PlaneRing[], closed: boolean, choices?: readonly DatumChoice[]) => PlaneMeasures>('crsPlaneMeasures');
 
 /** A latitude or longitude as 40°45′12.3456″K (seconds with `decimals` places; K/G, D/B). */
 export const formatDms = op<(deg: number, latitude: boolean, decimals: number) => string>('formatDms');

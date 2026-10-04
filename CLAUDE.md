@@ -207,6 +207,7 @@ cargo test --release -p kentos-geometry-core --test adjoin -- --ignored --nocapt
 python3 scripts/fixtures/trace_cases.py --check   # İzle'nin yollarını (kesişimden dönme, düz geçme, iki yoldan kısası, eşit yollar, yaylar, delik ve parça, ortak kenar, daire) ve Zincir'i 50 basamaklı bağımsız başvurudan denetle (ADR 0161)
 python3 scripts/fixtures/crs_transform_cases.py --check   # koordinat dönüşümlerini (TM, UTM, coğrafi, Pseudo-Mercator; ED50, TUREF ve WGS 84 arası EPSG yolları) ve DMS yazılışını PROJ'la (pyproj) denetle; durumlar fixtures/geodesy/v1/transform.json (ADR 0167)
 python3 scripts/fixtures/crs_measure_cases.py --check   # ikinci sistemin düzlemindeki uzunluk ve alanları (yollar, yaylı ve delikli alanlar; coğrafi ve Pseudo-Mercator redleri, yayların parçaları) PROJ'la denetle; durumlar fixtures/geodesy/v1/measure.json (ADR 0167 §2)
+python3 scripts/fixtures/crs_custom_cases.py --check   # projenin koordinat sistemlerini (başlangıcı farklı TM, Bessel ve Krasovski datumları iki dönüklük kuralıyla, yerel sistemler, projenin datum seçimleri) PROJ hatlarıyla denetle; durumlar fixtures/geodesy/v1/custom.json (ADR 0168)
 python3 scripts/fixtures/crs_convert_cases.py --check   # Koordinat dönüştür'ün okuma ve yazmasını (eksen adları, sayı ve açı dilbilgisi, DMS ve DD, doğruluk metni, hatalar) PROJ'la denetle; durumlar fixtures/crs/v1/convert.json (ADR 0167 §4)
 python3 scripts/fixtures/tm_cases.py --check   # ileri TM izdüşümünün durumlarını (TUREF ve ED50 TM3, UTM; dilim kenarları) PROJ'un tmerc'iyle denetle; durumlar fixtures/geodesy/v1 (ADR 0165 §3)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
@@ -694,7 +695,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   Proje ayarları'nda alan, Koordinat oku'nun ikinci satırı; ortak iz `second-crs.json`) ve 3. adım (Mesafe ölç ve Alan hesapla'nın ikinci
   sistemin düzlemindeki uzunluğu, alanı ve çevresi: çekirdek `crs::measure`, PROJ başvurusu `crs_measure_cases.py`) ve 4. adım
   (Koordinat dönüştür penceresi, `crs.transform`: tek nokta, Çizimden, liste, panoya ve CSV; okuma ve yazma `crs_convert_cases.py`)
-  tamam; `HYB-11` bitti. Sıradaki `HYB-12` (özel koordinat sistemi). 3 Ekim:
+  tamam; `HYB-11` bitti. `HYB-12` özel koordinat sistemi ([ADR 0168](docs/adr/0168-custom-crs-and-datum-transforms.md)):
+  1a (çekirdek: projenin datumu, başlangıç enlemli TM, yerel sistem, projenin datum seçimleri; PROJ başvurusu
+  `crs_custom_cases.py`) tamam; sıradaki 1b (WKT ve PROJ okuma ve yazma). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

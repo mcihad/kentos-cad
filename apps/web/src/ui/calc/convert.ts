@@ -79,7 +79,7 @@ export function convertPoint(from: CrsDef, to: CrsDef, a: string, b: string, f: 
   const [s, t] = [systemOf(from), systemOf(to)];
   const moved = s && t ? crsTransform(s, t, p) : null;
   if (!moved) return 'unreachable';
-  return { point: moved.point, values: writePoint(to, moved.point, f), accuracy: accuracyText(moved, from.datum === 'ED50' || to.datum === 'ED50') };
+  return { point: moved.point, values: writePoint(to, moved.point, f), accuracy: accuracyText(moved) };
 }
 
 /** What went wrong with a point, in a sentence that says how to put it right. */

@@ -16,7 +16,7 @@ use crate::jsmath::{acos, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
-use super::{System, transform};
+use super::{Choice, System, Unreached, transform_in};
 
 /// The largest sagitta of an arc's straight pieces (m; docs/adr/0149's bound).
 pub const CHORD: f64 = 1e-4;
@@ -43,6 +43,9 @@ pub enum NoPlane {
     Mercator,
     /// A point the system's projection does not reach.
     Unreachable,
+    /// A datum of the project's with no way to WGS 84 stands between the
+    /// systems (docs/adr/0168 §2).
+    NoLink,
 }
 
 impl NoPlane {
@@ -52,6 +55,7 @@ impl NoPlane {
             NoPlane::Geographic => "geographic",
             NoPlane::Mercator => "mercator",
             NoPlane::Unreachable => "unreachable",
+            NoPlane::NoLink => "noLink",
         }
     }
 }
@@ -143,11 +147,28 @@ pub fn plane_measures(
     rings: &[Ring],
     closed: bool,
 ) -> Result<PlaneMeasures, NoPlane> {
-    match to {
-        System::Geographic { .. } => return Err(NoPlane::Geographic),
-        System::Mercator {} => return Err(NoPlane::Mercator),
-        System::Tm { .. } => {}
+    plane_measures_in(from, to, rings, closed, &[])
+}
+
+/// [`plane_measures`] with the project's datum choices (docs/adr/0168 §3).
+/// A local system's plane is its own (its plane transform scales and
+/// shears its base's).
+pub fn plane_measures_in(
+    from: &System,
+    to: &System,
+    rings: &[Ring],
+    closed: bool,
+    choices: &[Choice],
+) -> Result<PlaneMeasures, NoPlane> {
+    fn planar(s: &System) -> Result<(), NoPlane> {
+        match s {
+            System::Geographic { .. } => Err(NoPlane::Geographic),
+            System::Mercator {} => Err(NoPlane::Mercator),
+            System::Tm { .. } => Ok(()),
+            System::Local { base, .. } => planar(base),
+        }
     }
+    planar(to)?;
     let mut measures = PlaneMeasures {
         length: 0.0,
         area: 0.0,
@@ -160,9 +181,12 @@ pub fn plane_measures(
     for (i, ring) in rings.iter().enumerate() {
         let moved = ring_points(ring, closed)
             .into_iter()
-            .map(|p| transform(from, to, p).map(|t| t.point))
-            .collect::<Option<Vec<Vec2>>>()
-            .ok_or(NoPlane::Unreachable)?;
+            .map(|p| transform_in(from, to, p, choices).map(|t| t.point))
+            .collect::<Result<Vec<Vec2>, Unreached>>()
+            .map_err(|why| match why {
+                Unreached::Outside => NoPlane::Unreachable,
+                Unreached::NoLink => NoPlane::NoLink,
+            })?;
         measures.length += length(&moved, closed);
         if closed {
             let a = area(&moved);
@@ -192,7 +216,13 @@ impl ToJson for Answer {
 
 pub(crate) static OPS: &[Op] = &[op!(
     "crsPlaneMeasures",
-    |from: System, to: System, rings: Vec<Ring>, closed: bool| {
-        Answer(plane_measures(&from, &to, &rings, closed))
+    |from: System, to: System, rings: Vec<Ring>, closed: bool, choices: Option<Vec<Choice>>| {
+        Answer(plane_measures_in(
+            &from,
+            &to,
+            &rings,
+            closed,
+            choices.as_deref().unwrap_or_default(),
+        ))
     }
 )];

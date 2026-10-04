@@ -35,14 +35,11 @@ export class SecondCrs {
   readonly system: CrsDef;
   private readonly from: System;
   private readonly to: System;
-  /** ED50 on either side: the values are not an official transformation's (§5). */
-  private readonly unofficial: boolean;
 
-  private constructor(system: CrsDef, from: System, to: System, unofficial: boolean) {
+  private constructor(system: CrsDef, from: System, to: System) {
     this.system = system;
     this.from = from;
     this.to = to;
-    this.unofficial = unofficial;
   }
 
   /** The second system of a project that has one the registry knows; null for none, a local project, one the transforms do not read. */
@@ -52,7 +49,7 @@ export class SecondCrs {
     if (!system || project.srid === LOCAL_SRID) return null;
     const from = systemOf(project);
     const to = systemOf(system);
-    return from && to ? new SecondCrs(system, from, to, project.datum === 'ED50' || system.datum === 'ED50') : null;
+    return from && to ? new SecondCrs(system, from, to) : null;
   }
 
   /** Its name without the slash: “ED50 TM30”, “WGS 84 UTM 35N”, “TUREF”. */
@@ -104,6 +101,7 @@ export class SecondCrs {
     if ('why' in m) {
       if (m.why === 'geographic') return `${name} coğrafi bir sistem: uzunluk ve alan onun düzleminde verilmez.`;
       if (m.why === 'mercator') return `${name}: uzunluk ve alan verilmez, Pseudo-Mercator'un ölçeği her enlemde başkadır.`;
+      if (m.why === 'noLink') return `${name}: datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.`;
       return `${name}: ölçülen yerin bir noktası bu sistemin ulaştığı yerin dışında; değer yazılmadı.`;
     }
     return closed ? `${name} düzleminde: Alan ${f.area(m.area)}   Çevre ${f.length(m.length)}` : `${name} düzleminde: Toplam uzunluk ${f.length(m.length)}`;
@@ -111,17 +109,19 @@ export class SecondCrs {
 
   /** How sure the values are: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon” within one datum. */
   accuracy(t: Transformed): string {
-    return accuracyText(t, this.unofficial);
+    return accuracyText(t);
   }
 }
 
 /**
- * How sure a point moved between two systems is: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil” (`unofficial`:
- * ED50 on either side, docs/adr/0167 §5), “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon” within one datum.
+ * How sure a point moved between two systems is: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil” (an EPSG
+ * operation of ED50 was used, docs/adr/0167 §5), “±1 m, EPSG:5261”, “doğruluğu bilinmiyor, Bölge 7” (a step's accuracy
+ * is not written, docs/adr/0168 §2), or “kesin, yalnız projeksiyon” within one datum (the desktop's `accuracy_text`).
  */
-export function accuracyText(t: Transformed, unofficial: boolean): string {
+export function accuracyText(t: Transformed): string {
   if (!t.via) return 'kesin, yalnız projeksiyon';
-  return `±${t.accuracy} m, ${t.via}${unofficial ? '; resmî dönüşüm değil' : ''}`;
+  const sure = t.accuracy === undefined ? 'doğruluğu bilinmiyor' : `±${t.accuracy} m`;
+  return `${sure}, ${t.via}${t.unofficial ? '; resmî dönüşüm değil' : ''}`;
 }
 
 /** The systems a project in `project` may take as its second, grouped by datum as the registry lists them: every one but the local and its own. */

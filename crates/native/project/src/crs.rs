@@ -131,6 +131,7 @@ impl System {
                 let tm = self.tm()?;
                 Some(Of::Tm {
                     datum,
+                    latitude_of_origin: None,
                     central_meridian: tm.central_meridian,
                     scale_factor: tm.scale_factor,
                     false_easting: tm.false_easting,
