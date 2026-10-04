@@ -31,7 +31,8 @@
 // grid added, one a datum choice names that the device does not have, Kaldır's question); datums (Proje ayarları' Datum
 // dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
-// chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points).
+// chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
+// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3664,6 +3665,24 @@ SCENES.datums = [
     },
     close: async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.grids.remove('${TR_ID}')`)),
   },
+];
+
+/**
+ * Proje ayarları' Ölçme (docs/adr/0169 §3): empty, k and the three tolerances typed, and what does not hold said under
+ * its field (Kaydet waits). The desktop's are `project::survey::tests::screens` (olcme-ayar-*).
+ */
+const surveyOpen = async (ui, fields) => {
+  await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'survey'))`);
+  await ui.waitFor(`!!document.querySelector('.survey-field')`);
+  for (const [label, v] of fields) await ui.clickSel(`[aria-label="${label}"]`), await ui.type(v);
+  await ui.sleep(250);
+};
+const SURVEY_FILLED = [['Refraksiyon katsayısı (k)', '0.14'], ['İki durum yatay açı farkı', '20'], ['İndeks hatası', '10'], ['İki durum uzunluk farkı', '5']];
+const SURVEY_WRONG = [['Refraksiyon katsayısı (k)', '1.5'], ['İki durum yatay açı farkı', '0'], ['İndeks hatası', 'on'], ['İki durum uzunluk farkı', '5']];
+SCENES.survey = [
+  { id: 'survey-empty', open: (ui) => surveyOpen(ui, []), close: (ui) => ui.escapeAll(3) },
+  { id: 'survey-filled', open: (ui) => surveyOpen(ui, SURVEY_FILLED), close: (ui) => ui.escapeAll(3) },
+  { id: 'survey-problems', open: (ui) => surveyOpen(ui, SURVEY_WRONG), close: (ui) => ui.escapeAll(3) },
 ];
 
 /**

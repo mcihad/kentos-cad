@@ -14,7 +14,7 @@ use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DocumentSnapshotV2, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
     LayerNodeType, LayerSnap, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol,
-    ProjectId, ProjectSettings, ProjectStyles, Vec2, Workspace,
+    ProjectId, ProjectSettings, ProjectStyles, SurveySettings, Vec2, Workspace,
 };
 
 use crate::SCHEMAS;
@@ -297,12 +297,13 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
 }
 
 /// The settings; `has` says whether the schema has the drawing unit (11 and
-/// up), the second coordinate system (12 and up) and the project's own
-/// systems and datum choices (13).
+/// up), the second coordinate system (12 and up), the project's own
+/// systems and datum choices (13 and up) and the survey settings (14).
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
     let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
+    let mut survey = None;
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -367,6 +368,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 second_custom_crs = Some(crs::crs_definition(r)?)
             }
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
+            "survey" if has.survey => survey = Some(survey_settings(r)?),
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
@@ -426,7 +428,29 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         custom_crs,
         second_custom_crs,
         datum_transforms,
+        survey,
     })
+}
+
+/// Schema 14's survey settings (docs/adr/0169 §3), checked whole: at least
+/// one, k within [−1, 1], tolerances above zero.
+fn survey_settings(r: &mut Reader<'_>) -> Result<SurveySettings, KcadError> {
+    let at = r.position();
+    let mut s = SurveySettings::default();
+    map(r, |r, key| {
+        match key {
+            "index" => s.index = Some(r.float()?),
+            "faceHz" => s.face_hz = Some(r.float()?),
+            "faceSlope" => s.face_slope = Some(r.float()?),
+            "refraction" => s.refraction = Some(r.float()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    match s.problem() {
+        Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
+        None => Ok(s),
+    }
 }
 
 fn source(r: &mut Reader<'_>) -> Result<MigrationSource, KcadError> {

@@ -15,6 +15,12 @@ use crate::op;
 /// The earth's mean radius for the curvature term (m).
 pub const EARTH_RADIUS: f64 = 6_371_000.0;
 
+/// The earth's curvature and refraction for a horizontal distance with the
+/// refraction coefficient k: (1 − k)·D²/2R (docs/adr/0169 §3).
+pub fn curvature(horizontal: f64, k: f64) -> f64 {
+    (1.0 - k) * horizontal * horizontal / (2.0 * EARTH_RADIUS)
+}
+
 /// An observation as the instrument wrote it: the target, the horizontal
 /// reading, the zenith angle (0 straight up; none: a direction only), the
 /// slope distance, the target (reflector) height, a code, and the line of
@@ -234,7 +240,7 @@ pub fn reduce(station: &Station, unit: Unit, k: f64) -> Reduction {
             let ih = station.instrument_height.unwrap_or(0.0);
             let th = row.target_height.unwrap_or(0.0);
             row.horizontal = Some(hd);
-            row.dh = Some(s * cos(z) + (1.0 - k) * hd * hd / (2.0 * EARTH_RADIUS) + ih - th);
+            row.dh = Some(s * cos(z) + curvature(hd, k) + ih - th);
         }
         rows.push(row);
     }

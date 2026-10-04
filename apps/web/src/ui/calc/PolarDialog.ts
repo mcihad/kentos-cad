@@ -29,8 +29,8 @@ import { fixed } from '../../core/displayNumber';
  * instrument is oriented on a known back point by its reading to it; each
  * point has a horizontal direction reading and a distance, horizontal or
  * slope with its zenith angle (then a height too, from the station's height,
- * the instrument's and the target's). Curvature and refraction are not
- * applied.
+ * the instrument's and the target's, with the earth's curvature and
+ * refraction by the project's k, docs/adr/0169 §3).
  */
 export function openPolar(ctx: AppContext): void {
   new PolarDialog(ctx);
@@ -121,7 +121,11 @@ class PolarDialog implements Picker {
     };
     replaceChildren(
       this.table,
-      h('p', { class: 'io-field__hint' }, 'Okumalar saat yönündedir; bakılan noktanın okuması semtine eşlenir. Başucu açısı verilen uzunluk eğiktir (0 tam yukarı, çeyrek tur yatay); o zaman nokta kotu da hesaplanır. Yer eğriliği ve kırılma uygulanmaz.'),
+      h(
+        'p',
+        { class: 'io-field__hint' },
+        `Okumalar saat yönündedir; bakılan noktanın okuması semtine eşlenir. Başucu açısı verilen uzunluk eğiktir (0 tam yukarı, çeyrek tur yatay); o zaman nokta kotu da hesaplanır, yer eğriliği ve refraksiyonla: (1 − k)·D²/2R, k = ${this.ctx.doc.settings.refraction} (Proje ayarları › Ölçme).`,
+      ),
       new Grid(model, recompute).el,
     );
     this.recompute();
@@ -131,7 +135,7 @@ class PolarDialog implements Picker {
   private recompute(): void {
     const { ctx } = this;
     const form = { station: state.station.text, back: state.back.text, backReading: state.backReading, stationZ: state.stationZ, instrumentHeight: state.instrumentHeight, rows: state.rows };
-    const read = readPolar(form, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value);
+    const read = readPolar(form, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value, ctx.doc.settings.refraction);
     this.result = read.points ? { points: read.points, names: read.names } : null;
     this.show(read.errors);
   }

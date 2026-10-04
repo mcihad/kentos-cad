@@ -5193,6 +5193,8 @@ class ProjectSettings(_Model):
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
             the project's own system, never a local project's.
+        survey: The project's survey constants and tolerances (docs/adr/0169 §3);
+            absent: k = [`REFRACTION`] and no tolerance.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -5209,6 +5211,7 @@ class ProjectSettings(_Model):
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
+    survey: SurveySettings | None | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -5231,6 +5234,8 @@ class ProjectSettings(_Model):
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
+        if self.survey is not UNSET:
+            out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -5250,6 +5255,7 @@ class ProjectSettings(_Model):
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
+            survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -5519,6 +5525,46 @@ class SplineEntity(Entity):
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveySettings(_Model):
+    """The project's survey constants and tolerances (docs/adr/0169 §3): the
+    refraction coefficient k of trigonometric heights, and the greatest
+    differences a field book's two faces are checked against. Angles are in
+    radians, lengths in metres. An absent tolerance is not checked; the
+    differences are still shown.
+    Attributes:
+        face_hz: The two faces' horizontal reading difference.
+        face_slope: The two faces' slope distance difference.
+        index: The vertical index error.
+        refraction: k, within [−1, 1]; absent: [`REFRACTION`].
+    """
+    face_hz: float | None | Unset = UNSET
+    face_slope: float | None | Unset = UNSET
+    index: float | None | Unset = UNSET
+    refraction: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.face_hz is not UNSET:
+            out["faceHz"] = None if self.face_hz is None else float(self.face_hz)
+        if self.face_slope is not UNSET:
+            out["faceSlope"] = None if self.face_slope is None else float(self.face_slope)
+        if self.index is not UNSET:
+            out["index"] = None if self.index is None else float(self.index)
+        if self.refraction is not UNSET:
+            out["refraction"] = None if self.refraction is None else float(self.refraction)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveySettings:
+        return cls(
+            face_hz=UNSET if "faceHz" not in data else None if data["faceHz"] is None else float(data["faceHz"]),
+            face_slope=UNSET if "faceSlope" not in data else None if data["faceSlope"] is None else float(data["faceSlope"]),
+            index=UNSET if "index" not in data else None if data["index"] is None else float(data["index"]),
+            refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
         )
 
 
@@ -7096,6 +7142,7 @@ __all__ = [
     "SimilarityTransform",
     "SplineEntity",
     "SplineEntityGeometry",
+    "SurveySettings",
     "TenantKind",
     "TenantKindName",
     "TextAlign",

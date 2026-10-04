@@ -3,12 +3,13 @@ import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
+import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
-export type { CrsDefinition, DatumTransform, DrawingFont, DrawingUnit, Workspace };
+export type { CrsDefinition, DatumTransform, DrawingFont, DrawingUnit, SurveySettings, Workspace };
 
 /** How many of a drawing unit make a metre (docs/adr/0165 §2). */
 export const UNIT_PER_METRE: Record<DrawingUnit, number> = { mm: 1000, cm: 100, m: 1 };
@@ -55,17 +56,48 @@ export interface ProjectSettingsData {
   secondCustomCrs?: CrsDefinition;
   /** The project's datum choices (docs/adr/0168 §3); absent: EPSG's ways. */
   datumTransforms?: DatumTransform[];
+  /** The project's survey constants and tolerances (docs/adr/0169 §3); absent: k = 0.13 and no tolerance. */
+  survey?: SurveySettings;
 }
 
 /**
- * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs` or `secondCustomCrs` removes it,
- * an empty `datumTransforms` the datum choices.
+ * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs`, `secondCustomCrs` or `survey`
+ * removes it, an empty `datumTransforms` the datum choices.
  */
-export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs'>> & {
+export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs' | 'survey'>> & {
   secondSrid?: number | null;
   customCrs?: CrsDefinition | null;
   secondCustomCrs?: CrsDefinition | null;
+  survey?: SurveySettings | null;
 };
+
+/** The refraction coefficient of trigonometric heights when a project names none (docs/adr/0169 §3). */
+export const REFRACTION = 0.13;
+
+/** Whether `k` is one a project may name: finite, within [−1, 1] (the contract's `SurveySettings::refraction_holds`). */
+export const refractionHolds = (k: number): boolean => Number.isFinite(k) && k >= -1 && k <= 1;
+
+/** Whether `t` is a tolerance: finite and above zero. */
+export const toleranceHolds = (t: number): boolean => Number.isFinite(t) && t > 0;
+
+/**
+ * The survey settings as a project keeps them (the contract's `SurveySettings::sanitized`): k where it holds and is not
+ * the default, the tolerances that hold; null when nothing is left.
+ */
+export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySettings | null {
+  if (!s) return null;
+  const k = s.refraction;
+  const kept: SurveySettings = {
+    ...(k !== undefined && refractionHolds(k) && k !== REFRACTION ? { refraction: k } : {}),
+    ...(s.faceHz !== undefined && toleranceHolds(s.faceHz) ? { faceHz: s.faceHz } : {}),
+    ...(s.index !== undefined && toleranceHolds(s.index) ? { index: s.index } : {}),
+    ...(s.faceSlope !== undefined && toleranceHolds(s.faceSlope) ? { faceSlope: s.faceSlope } : {}),
+  };
+  return Object.keys(kept).length ? kept : null;
+}
+
+const sameSurvey = (a: SurveySettings | null, b: SurveySettings | null): boolean =>
+  a === b || (a !== null && b !== null && a.refraction === b.refraction && a.faceHz === b.faceHz && a.index === b.index && a.faceSlope === b.faceSlope);
 
 /**
  * Whether `second` may be the second system of a project in `crs`: another system, and the project has one — the
@@ -110,6 +142,8 @@ export class ProjectSettings {
   readonly secondCustomCrs: Signal<CrsDefinition | null>;
   /** The project's datum choices (docs/adr/0168 §3). */
   readonly datumTransforms: Signal<readonly DatumTransform[]>;
+  /** The project's survey constants and tolerances, or null: k = 0.13 and no tolerance (docs/adr/0169 §3). */
+  readonly survey: Signal<SurveySettings | null>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -129,6 +163,7 @@ export class ProjectSettings {
     this.secondSrid = new Signal(secondAllowed(this.crs.value, d.secondSrid, custom) ? d.secondSrid : null);
     this.secondCustomCrs = new Signal(this.secondSrid.value === null && (this.crs.value.kind !== 'local' || custom) ? (d.secondCustomCrs ?? null) : null);
     this.datumTransforms = new Signal<readonly DatumTransform[]>(d.datumTransforms ?? []);
+    this.survey = new Signal(sanitizeSurvey(d.survey), sameSurvey);
     watchAll(
       [
         this.crs,
@@ -144,6 +179,7 @@ export class ProjectSettings {
         this.customCrs,
         this.secondCustomCrs,
         this.datumTransforms,
+        this.survey,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -168,7 +204,14 @@ export class ProjectSettings {
       ...(this.customCrs.value ? { customCrs: this.customCrs.value } : {}),
       ...(this.secondCustomCrs.value ? { secondCustomCrs: this.secondCustomCrs.value } : {}),
       ...(this.datumTransforms.value.length ? { datumTransforms: [...this.datumTransforms.value] } : {}),
+      // Written only when there are (KCAD schema 14).
+      ...(this.survey.value ? { survey: { ...this.survey.value } } : {}),
     };
+  }
+
+  /** The refraction coefficient k of trigonometric heights: the project's, or 0.13 (docs/adr/0169 §3). */
+  get refraction(): number {
+    return this.survey.value?.refraction ?? REFRACTION;
   }
 
   /** The second coordinate system, when the project has one the registry knows (docs/adr/0167 §1). */
@@ -195,6 +238,7 @@ export class ProjectSettings {
       customCrs: data.customCrs ?? null,
       secondCustomCrs: data.secondCustomCrs ?? null,
       datumTransforms: data.datumTransforms ?? [],
+      survey: data.survey ?? null,
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -229,5 +273,6 @@ export class ProjectSettings {
     const secondCustom = data.secondCustomCrs === undefined ? this.secondCustomCrs.value : data.secondCustomCrs;
     this.secondCustomCrs.set(this.secondSrid.value === null && this.hasSystem ? secondCustom : null);
     if (data.datumTransforms !== undefined) this.datumTransforms.set(data.datumTransforms);
+    if (data.survey !== undefined) this.survey.set(sanitizeSurvey(data.survey));
   }
 }

@@ -23,13 +23,15 @@ import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 import { fixed } from '../../core/displayNumber';
+import { angleMark, readSurvey, SURVEY_FIELDS, surveyTexts, type SurveyField, type SurveyTexts } from '../../model/surveyForm';
+import type { AngleUnit } from '../../model/projectSettings';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
 interface ProjectDraft extends ProjectSettingsData {
   name: string;
 }
 
-export type ProjectSettingsSection = 'general' | 'crs' | 'units';
+export type ProjectSettingsSection = 'general' | 'crs' | 'units' | 'survey';
 
 export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSection): void {
   const doc = ctx.doc;
@@ -40,6 +42,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
   // The project's own definition and its second's (docs/adr/0168 §1), kept while another system is chosen: their rows
   // stay in the lists until Kaydet, which keeps only the chosen (the desktop's `State.defined`).
   const defined: Defined = { own: initial.srid === LOCAL_SRID ? (initial.customCrs ?? null) : null, second: initial.secondCustomCrs ?? null };
+  // Ölçme's texts as typed (docs/adr/0169 §3), in the angle unit they were written for.
+  const surveyState: SurveyState = { texts: surveyTexts(initial.survey, initial.angleUnit), unit: initial.angleUnit };
 
   const sections: SectionDef<ProjectDraft>[] = [
     {
@@ -128,6 +132,15 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       keys: ['drawingUnit', 'lengthDecimals', 'areaDecimals', 'areaUnit', 'angleUnit'],
       render: (api) => unitsSection(api),
     },
+    {
+      id: 'survey',
+      label: 'Ölçme',
+      icon: 'surveyPolar',
+      title: 'Ölçme',
+      lead: 'Saha ölçülerinin indirgenmesindeki katsayı ve karnenin iki durumunun denetlendiği toleranslar.',
+      keys: ['survey'],
+      render: (api) => surveySection(api, surveyState),
+    },
   ];
 
   new SettingsShell<ProjectDraft>({
@@ -137,8 +150,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
     initial,
     defaults: { ...PROJECT_SETTINGS_DEFAULTS, drawingUnit: 'm', srid: initial.srid, name: initial.name },
     section,
-    // A datum choice with something to put right keeps Kaydet waiting.
-    blocked: () => choiceState.problems.some((p) => Object.keys(p).length > 0),
+    // A datum choice or an Ölçme field with something to put right keeps Kaydet waiting.
+    blocked: () => choiceState.problems.some((p) => Object.keys(p).length > 0) || Object.keys(readSurvey(surveyState.texts, surveyState.unit).problems).length > 0,
     onSave: (draft, init) => {
       const name = draft.name.trim() || init.name;
       if (name !== init.name) doc.name.set(name);
@@ -153,6 +166,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
         secondSrid: settings.secondSrid ?? null,
         secondCustomCrs: settings.secondCustomCrs ?? null,
         datumTransforms: settings.datumTransforms ?? [],
+        survey: settings.survey ?? null,
       });
       // The project's system, a definition's too (docs/adr/0168 §1).
       const own = ownOf(draft);
@@ -455,6 +469,69 @@ function gridsGroup(ctx: AppContext, api: DraftApi<ProjectDraft>): Child {
     list,
     h('div', { class: 'grid-library__actions' }, add, input),
   );
+}
+
+/** Ölçme's texts as typed and the angle unit they are read in. */
+interface SurveyState {
+  texts: SurveyTexts;
+  unit: AngleUnit;
+}
+
+/**
+ * Ölçme (docs/adr/0169 §3): the project's refraction coefficient k and the tolerances a field book's two faces are
+ * checked against, typed as model/surveyForm.ts reads them (the desktop's `project/survey.rs`). An empty tolerance is not
+ * checked; what does not hold is said under its field, and Kaydet waits.
+ */
+function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
+  const d = api.draft;
+  const unit = d.angleUnit;
+  // The texts follow the draft when it changed elsewhere (the section's reset), and the angle unit when they hold: a
+  // tolerance's cc become ″; what is typed stays otherwise.
+  const read = readSurvey(state.texts, state.unit);
+  const holds = Object.keys(read.problems).length === 0;
+  if ((state.unit !== unit && holds) || JSON.stringify(read.survey) !== JSON.stringify(d.survey ?? null)) state.texts = surveyTexts(d.survey, unit);
+  state.unit = unit;
+  const problems = new Map<SurveyField, HTMLElement>();
+  const paint = () => {
+    const now = readSurvey(state.texts, unit);
+    for (const [f, el] of problems) el.textContent = now.problems[f] ?? '';
+    return now;
+  };
+  const field = (f: SurveyField, label: string, mark: string, placeholder = '') => {
+    const i = SURVEY_FIELDS.indexOf(f);
+    const input = textField({
+      label,
+      value: state.texts[i]!,
+      placeholder,
+      onChange: (v) => {
+        state.texts[i] = v;
+        api.set('survey', paint().survey ?? undefined, false);
+      },
+    });
+    const problem = h('div', { class: 'datum-field__problem' });
+    problems.set(f, problem);
+    return h('div', { class: 'survey-field' }, h('div', { class: 'survey-field__row' }, input, h('span', { class: 'survey-field__unit' }, mark)), problem);
+  };
+  const mark = angleMark(unit);
+  const rows = [
+    group(
+      'İndirgeme',
+      settingRow(
+        'Refraksiyon katsayısı (k)',
+        'Trigonometrik kot farkına yer eğriliği ve refraksiyon düzeltmesi: (1 − k)·D²/2R, R = 6 371 000 m. Boş bırakılırsa 0.13. Karne ve Kutupsal alım bunu kullanır.',
+        field('refraction', 'Refraksiyon katsayısı (k)', '', '0.13'),
+      ),
+    ),
+    group(
+      'Toleranslar',
+      note('info', 'Boş bırakılan denetlenmez; farklar karnede yine gösterilir. Aşan değer karnede uyarı rengindedir, hesaba aktarmayı durdurmaz.'),
+      settingRow('İki durum yatay açı farkı', 'Bir hedefin I. ve II. durum okumaları, yarım tur farkıyla.', field('faceHz', 'İki durum yatay açı farkı', mark)),
+      settingRow('İndeks hatası', 'Düşey açının iki durumundan bulunan indeks hatası.', field('index', 'İndeks hatası', mark)),
+      settingRow('İki durum uzunluk farkı', 'Bir hedefin iki durumdaki eğik uzunlukları.', field('faceSlope', 'İki durum uzunluk farkı', 'mm')),
+    ),
+  ];
+  paint();
+  return rows;
 }
 
 function unitsSection(api: DraftApi<ProjectDraft>): Child {

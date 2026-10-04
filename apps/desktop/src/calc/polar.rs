@@ -2,9 +2,9 @@
 //! surveyed from a known station oriented on a known back point, by their
 //! horizontal readings and lengths. A slope length has its zenith angle
 //! (0 straight up, a quarter turn level); then the point's height comes too,
-//! with the station's height and the instrument and target heights. Earth
-//! curvature and refraction are not applied. The computation is the shared
-//! core's (`survey::polar::polar_survey`).
+//! with the station's height and the instrument and target heights, and the
+//! earth's curvature and refraction with the project's k (docs/adr/0169 §3).
+//! The computation is the shared core's (`survey::polar::polar_survey`).
 
 use iced::widget::{column, row};
 use iced::{Element, Fill};
@@ -99,6 +99,7 @@ impl Form {
             self,
             |t| resolve_point(model, t),
             unit_name(model.settings().angle_unit),
+            Some(model.settings().refraction()),
         )
     }
 
@@ -197,9 +198,10 @@ impl Form {
         let mut body = column![
             column![fields, numbers].spacing(12),
             column![
-                label::caption(
-                    "Okumalar saat yönündedir; bakılan noktanın okuması semtine eşlenir. Başucu açısı verilen uzunluk eğiktir (0 tam yukarı, çeyrek tur yatay); o zaman nokta kotu da hesaplanır. Yer eğriliği ve kırılma uygulanmaz."
-                )
+                label::caption(format!(
+                    "Okumalar saat yönündedir; bakılan noktanın okuması semtine eşlenir. Başucu açısı verilen uzunluk eğiktir (0 tam yukarı, çeyrek tur yatay); o zaman nokta kotu da hesaplanır, yer eğriliği ve refraksiyonla: (1 − k)·D²/2R, k = {} (Proje ayarları › Ölçme).",
+                    model.settings().refraction()
+                ))
                 .width(Fill),
                 table,
             ]

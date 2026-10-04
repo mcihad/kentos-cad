@@ -2332,6 +2332,17 @@
                 "minimum": 0,
                 "type": "integer"
               },
+              "survey": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SurveySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -2485,6 +2496,44 @@
               "pts",
               "closed"
             ],
+            "type": "object"
+          },
+          "SurveySettings": {
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "properties": {
+              "faceHz": {
+                "description": "The two faces' horizontal reading difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "faceSlope": {
+                "description": "The two faces' slope distance difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "index": {
+                "description": "The vertical index error.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "refraction": {
+                "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "TextAlign": {
@@ -3892,6 +3941,17 @@
                 "minimum": 0,
                 "type": "integer"
               },
+              "survey": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SurveySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -3995,6 +4055,44 @@
               "WGS84"
             ],
             "type": "string"
+          },
+          "SurveySettings": {
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "properties": {
+              "faceHz": {
+                "description": "The two faces' horizontal reading difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "faceSlope": {
+                "description": "The two faces' slope distance difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "index": {
+                "description": "The vertical index error.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "refraction": {
+                "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
@@ -6476,6 +6574,17 @@
                 "minimum": 0,
                 "type": "integer"
               },
+              "survey": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SurveySettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
               "workspace": {
                 "anyOf": [
                   {
@@ -6665,6 +6774,44 @@
               "pts",
               "closed"
             ],
+            "type": "object"
+          },
+          "SurveySettings": {
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "properties": {
+              "faceHz": {
+                "description": "The two faces' horizontal reading difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "faceSlope": {
+                "description": "The two faces' slope distance difference.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "index": {
+                "description": "The vertical index error.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "refraction": {
+                "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
             "type": "object"
           },
           "TenantKind": {

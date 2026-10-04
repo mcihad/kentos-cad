@@ -280,6 +280,7 @@ __all__ = [
     "SimilarityTransform",
     "SplineEntity",
     "SplineEntityGeometry",
+    "SurveySettings",
     "TenantKind",
     "TenantKindName",
     "TenantRef",

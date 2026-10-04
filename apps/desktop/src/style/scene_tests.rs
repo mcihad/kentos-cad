@@ -116,6 +116,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            survey: None,
         },
         origin: Vec2 {
             x: 486_000.0,

@@ -166,6 +166,95 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DatumTransform>>", optional))]
     pub datum_transforms: Vec<DatumTransform>,
+    /// The project's survey constants and tolerances (docs/adr/0169 §3);
+    /// absent: k = [`REFRACTION`] and no tolerance.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub survey: Option<SurveySettings>,
+}
+
+/// The refraction coefficient of trigonometric heights when a project names
+/// none (docs/adr/0169 §3; the owner's choice, 4 October 2026).
+pub const REFRACTION: f64 = 0.13;
+
+/// The project's survey constants and tolerances (docs/adr/0169 §3): the
+/// refraction coefficient k of trigonometric heights, and the greatest
+/// differences a field book's two faces are checked against. Angles are in
+/// radians, lengths in metres. An absent tolerance is not checked; the
+/// differences are still shown.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveySettings {
+    /// k, within [−1, 1]; absent: [`REFRACTION`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refraction: Option<f64>,
+    /// The two faces' horizontal reading difference.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub face_hz: Option<f64>,
+    /// The vertical index error.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub index: Option<f64>,
+    /// The two faces' slope distance difference.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub face_slope: Option<f64>,
+}
+
+impl SurveySettings {
+    /// k: the project's, or [`REFRACTION`].
+    pub fn refraction(&self) -> f64 {
+        self.refraction.unwrap_or(REFRACTION)
+    }
+
+    /// Whether `k` is one a project may name: finite, within [−1, 1].
+    pub fn refraction_holds(k: f64) -> bool {
+        k.is_finite() && (-1.0..=1.0).contains(&k)
+    }
+
+    /// Whether `t` is a tolerance: finite and above zero.
+    pub fn tolerance_holds(t: f64) -> bool {
+        t.is_finite() && t > 0.0
+    }
+
+    /// What is wrong with the settings as a file holds them: none of them,
+    /// k out of [−1, 1], a tolerance not above zero; none when they hold.
+    pub fn problem(&self) -> Option<String> {
+        if *self == Self::default() {
+            return Some("ölçme ayarları boş; ayarı olmayan proje alanı yazmaz".to_owned());
+        }
+        if let Some(k) = self.refraction.filter(|k| !Self::refraction_holds(*k)) {
+            return Some(format!("kırılma katsayısı k {k}; −1 ile 1 arasında olmalı"));
+        }
+        let tolerances = [
+            ("iki durumun yatay açı farkı", self.face_hz),
+            ("indeks hatası", self.index),
+            ("iki durumun uzunluk farkı", self.face_slope),
+        ];
+        tolerances.into_iter().find_map(|(what, t)| {
+            t.filter(|t| !Self::tolerance_holds(*t))
+                .map(|t| format!("{what} toleransı {t}; sıfırdan büyük olmalı"))
+        })
+    }
+
+    /// The settings as a project keeps them: k where it holds and is not
+    /// the default, the tolerances that hold; none when nothing is left.
+    pub fn sanitized(self) -> Option<Self> {
+        let kept = Self {
+            refraction: self
+                .refraction
+                .filter(|k| Self::refraction_holds(*k) && *k != REFRACTION),
+            face_hz: self.face_hz.filter(|t| Self::tolerance_holds(*t)),
+            index: self.index.filter(|t| Self::tolerance_holds(*t)),
+            face_slope: self.face_slope.filter(|t| Self::tolerance_holds(*t)),
+        };
+        (kept != Self::default()).then_some(kept)
+    }
 }
 
 impl ProjectSettings {
@@ -173,6 +262,14 @@ impl ProjectSettings {
     /// former Hibrit mode's (docs/adr/0165 §1).
     pub fn project_type(&self) -> Option<Workspace> {
         self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
+    }
+
+    /// The refraction coefficient k of trigonometric heights: the project's,
+    /// or [`REFRACTION`] (docs/adr/0169 §3).
+    pub fn refraction(&self) -> f64 {
+        self.survey
+            .as_ref()
+            .map_or(REFRACTION, SurveySettings::refraction)
     }
 
     /// Whether the project has a coordinate system: the registry's, or its
@@ -202,7 +299,7 @@ impl ProjectSettings {
     /// its own definition only without an EPSG code and where its rules
     /// hold, a second system only where it may be (an EPSG code before a
     /// definition), a unit only without a system, the datum choices only
-    /// when they all hold.
+    /// when they all hold, the survey settings that hold (docs/adr/0169 §3).
     pub fn sanitized(mut self) -> Self {
         if self.srid != 0
             || self
@@ -228,6 +325,7 @@ impl ProjectSettings {
         if choices_problem(&self.datum_transforms).is_some() {
             self.datum_transforms.clear();
         }
+        self.survey = self.survey.and_then(SurveySettings::sanitized);
         self
     }
 }

@@ -98,6 +98,9 @@
   - "3 nokta hesaplandı, 2 noktanın kotu ile.";
   - kot farkı olup istasyon kotu yoksa "İstasyon kotu verilmedi: yükseklik farkları hesaplandı, kotlar yazılmadı."
 - **Sonuç tablosu:** Nokta, Semt, Yatay uzunluk, Y, X, Z. Z kot, "Δ fark" ya da "—" olabilir.
+- **Ek (4 Ekim 2026, ADR 0169 §3):** kot farkına yer eğriliği ve refraksiyon düzeltmesi, (1 − k)·D²/2R, projenin k'sıyla uygulanır
+  (Proje ayarları › Ölçme, varsayılan 0,13); tablonun üstündeki açıklama k'yı söyler. Çekirdekte `PolarInput`'un `refraction`'ı; karnenin
+  indirgemesiyle aynı terim (`survey::fieldbook::curvature`).
 - **Çizime ekle:**
   - Varsayılan katman etkin katmandır.
   - Tür "Alım noktası"; kot noktanın Z'si ve "Z (m)" özniteliği olur. `cad.entities.create`, işlem `polarSurvey`, adım "Kutupsal alım".

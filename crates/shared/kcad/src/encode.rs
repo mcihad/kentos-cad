@@ -21,7 +21,7 @@ mod objects;
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
     Entity, LabelStyle, LayerNode, LayerNodeType, LayerSnap, LayerStyle, MigrationSource,
-    ProjectSettings, Vec2,
+    ProjectSettings, SurveySettings, Vec2,
 };
 use serde_json::Value;
 
@@ -31,7 +31,7 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -276,10 +276,15 @@ impl<'d> Encoder<'d> {
             + usize::from(s.second_srid.is_some())
             + usize::from(s.custom_crs.is_some())
             + usize::from(s.second_custom_crs.is_some())
-            + usize::from(!s.datum_transforms.is_empty());
+            + usize::from(!s.datum_transforms.is_empty())
+            + usize::from(s.survey.is_some());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
+        if let Some(v) = &s.survey {
+            self.key("survey");
+            self.at(Seg::Name("survey"), |e| e.survey(v))?;
+        }
         self.key("areaUnit");
         self.w.text(area_unit(s.area_unit));
         self.key("angleUnit");
@@ -344,6 +349,28 @@ impl<'d> Encoder<'d> {
                 }
                 e.crs_definition(d)
             })?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    /// The survey settings (docs/adr/0169 §3), checked whole as a reader checks them.
+    fn survey(&mut self, v: &SurveySettings) -> Result<(), KcadError> {
+        if let Some(problem) = v.problem() {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        let fields = [
+            ("index", v.index),
+            ("faceHz", v.face_hz),
+            ("faceSlope", v.face_slope),
+            ("refraction", v.refraction),
+        ];
+        self.open(fields.iter().filter(|(_, x)| x.is_some()).count(), true)?;
+        for (key, x) in fields {
+            if let Some(x) = x {
+                self.key(key);
+                self.at(Seg::Name(key), |e| e.float(x))?;
+            }
         }
         self.close();
         Ok(())
@@ -592,7 +619,9 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 10 when a layer has its own
+/// The oldest schema that holds the drawing: 14 when the project has survey
+/// settings, 13 when it has its own systems or datum choices, 12 when it has
+/// a second system, 11 when it names a drawing unit, 10 when a layer has its own
 /// snapping, 9 when a dimension of it or of
 /// a block definition has one of schema 9's kinds or fields, 8 when it or a
 /// block definition has a leader, 7 when a text or an attribute definition has an
@@ -606,6 +635,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
     let s = &doc.settings;
+    if s.survey.is_some() {
+        return SCHEMA_WITH_SURVEY;
+    }
     if s.custom_crs.is_some() || s.second_custom_crs.is_some() || !s.datum_transforms.is_empty() {
         return SCHEMA_WITH_CUSTOM_CRS;
     }
@@ -706,7 +738,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 26] = [
+        let maps: [&[&str]; 27] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -723,6 +755,7 @@ mod tests {
             ],
             &[
                 "srid",
+                "survey",
                 "areaUnit",
                 "angleUnit",
                 "customCrs",
@@ -801,6 +834,8 @@ mod tests {
             &["a", "b", "c", "d", "e", "f", "kind"],
             &["to", "from", "grid", "name", "helmert"],
             &["id", "file", "size", "accuracy"],
+            // The survey settings (docs/adr/0169 §3).
+            &["index", "faceHz", "faceSlope", "refraction"],
         ];
         for keys in maps {
             assert!(

@@ -146,8 +146,16 @@ pub const SCHEMA_WITH_SECOND_SRID: u32 = 12;
 /// has one rather than open a project of its own system as one without any.
 pub const SCHEMA_WITH_CUSTOM_CRS: u32 = 13;
 
+/// Document schema 14 (docs/specs/kcad-v2.md §6.1): schema 13 and the
+/// project's survey constants and tolerances, the settings' `survey`
+/// (docs/adr/0169 §3). A writer writes it only when the project has them:
+/// any other drawing stays 13 or older, byte for byte; a reader of those
+/// refuses a drawing that has them rather than reduce its field book with
+/// another refraction coefficient and no tolerances.
+pub const SCHEMA_WITH_SURVEY: u32 = 14;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 12] = [
+pub const SCHEMAS: [u32; 13] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -160,6 +168,7 @@ pub const SCHEMAS: [u32; 12] = [
     SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_SECOND_SRID,
     SCHEMA_WITH_CUSTOM_CRS,
+    SCHEMA_WITH_SURVEY,
 ];
 
 /// The file a drawing is saved as.

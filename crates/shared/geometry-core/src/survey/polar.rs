@@ -7,8 +7,11 @@
 //! A distance is horizontal, or slope with its zenith angle (0 straight up,
 //! a quarter turn level): then its horizontal part places the point and its
 //! vertical part, with the instrument and target heights, gives its height.
-//! Earth curvature and refraction are not applied (short sights).
+//! With a refraction coefficient k the height difference has the earth's
+//! curvature and refraction too, (1 − k)·D²/2R, as a field book's reduction
+//! has (docs/adr/0169 §3); without one, neither.
 
+use super::fieldbook::curvature;
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
 use crate::api::Op;
 use crate::jsmath::{cos, sin};
@@ -44,6 +47,9 @@ pub struct PolarInput {
     pub station_z: Option<f64>,
     pub instrument_height: Option<f64>,
     pub shots: Vec<Shot>,
+    /// The refraction coefficient k of the heights (the project's); none:
+    /// no curvature or refraction.
+    pub refraction: Option<f64>,
 }
 
 crate::json_struct!(PolarInput {
@@ -53,7 +59,8 @@ crate::json_struct!(PolarInput {
     back_reading => "backReading",
     station_z => "stationZ",
     instrument_height => "instrumentHeight",
-    shots
+    shots,
+    refraction
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -91,8 +98,13 @@ pub fn polar_survey(input: &PolarInput) -> Result<Vec<PolarPoint>, String> {
             let (horizontal, dz) = match s.zenith {
                 Some(z) => {
                     let z = unit.rad(finite(z, &format!("{n}. noktanın başucu açısı"))?);
-                    let dz = s.distance * cos(z) + i_h - s.target_height.unwrap_or(0.0);
-                    (s.distance * sin(z), Some(dz))
+                    let horizontal = s.distance * sin(z);
+                    let t_h = s.target_height.unwrap_or(0.0);
+                    let dz = match input.refraction {
+                        Some(k) => s.distance * cos(z) + curvature(horizontal, k) + i_h - t_h,
+                        None => s.distance * cos(z) + i_h - t_h,
+                    };
+                    (horizontal, Some(dz))
                 }
                 None => (s.distance, None),
             };

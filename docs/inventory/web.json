@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 320,
-      "implemented": 320,
+      "total": 325,
+      "implemented": 325,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 320,
-        "implemented": 320,
+        "total": 325,
+        "implemented": 325,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -17359,6 +17359,19 @@
       }
     },
     {
+      "id": "ProjectSettings.survey",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "survey",
+      "type": "SurveySettings",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ProjectSettings.workspace",
       "contract": "ProjectSettings",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -17561,6 +17574,58 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "symbol",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.faceHz",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "faceHz",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.faceSlope",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "faceSlope",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.index",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "index",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.refraction",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "refraction",
+      "type": "number",
       "optional": true,
       "status": "implemented",
       "platforms": {

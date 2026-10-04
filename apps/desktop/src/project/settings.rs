@@ -19,6 +19,8 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Dialog, overlay};
 use kentos_ui::{label, style};
 
+use kentos_project::survey_form;
+
 use super::custom_crs::{self, Outcome, Target};
 use super::{Event as ProjectEvent, Window, group, message, modes, scales, setting};
 use crate::app::{App, Message};
@@ -32,16 +34,24 @@ pub enum Section {
     General,
     Crs,
     Units,
+    /// Ölçme: the survey settings (docs/adr/0169 §3; survey.rs).
+    Survey,
 }
 
 impl Section {
-    const ALL: [Section; 3] = [Section::General, Section::Crs, Section::Units];
+    const ALL: [Section; 4] = [
+        Section::General,
+        Section::Crs,
+        Section::Units,
+        Section::Survey,
+    ];
 
     fn label(self) -> &'static str {
         match self {
             Section::General => "Genel",
             Section::Crs => "Koordinat sistemi",
             Section::Units => "Birimler ve hassasiyet",
+            Section::Survey => "Ölçme",
         }
     }
 
@@ -52,6 +62,7 @@ impl Section {
             Section::General => Icon::Properties,
             Section::Crs => Icon::Globe,
             Section::Units => Icon::Ruler,
+            Section::Survey => crate::icons::from_web(Some("surveyPolar")),
         }
     }
 
@@ -65,6 +76,9 @@ impl Section {
             }
             Section::Units => {
                 "Bu projede panellerde, komut satırında ve ölçüm etiketlerinde sayıların nasıl gösterileceği."
+            }
+            Section::Survey => {
+                "Saha ölçülerinin indirgenmesindeki katsayı ve karnenin iki durumunun denetlendiği toleranslar."
             }
         }
     }
@@ -136,6 +150,8 @@ pub struct State {
     /// until Kaydet, which keeps only the chosen.
     defined: Option<CrsDefinition>,
     second_defined: Option<CrsDefinition>,
+    /// Ölçme's texts as typed (k and the three tolerances; survey.rs).
+    survey: [String; 4],
 }
 
 #[derive(Debug, Clone)]
@@ -172,6 +188,8 @@ pub enum Event {
     Choice(usize, super::choices::Edit),
     /// Izgaralar's library (grids.rs).
     Grid(crate::grids::Event),
+    /// Ölçme: a field typed (docs/adr/0169 §3).
+    Survey(survey_form::Field, String),
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -202,7 +220,19 @@ impl State {
                 .clone()
                 .filter(|_| doc.settings().srid == crs::LOCAL_SRID),
             second_defined: doc.settings().second_custom_crs.clone(),
+            survey: survey_form::texts(doc.settings().survey.as_ref(), doc.settings().angle_unit),
         }
+    }
+
+    /// The draft's survey settings (Ölçme).
+    #[cfg(test)]
+    pub(super) fn draft_survey(&self) -> Option<kentos_contracts::SurveySettings> {
+        self.settings.survey.clone()
+    }
+
+    /// Whether Ölçme has a text to put right: Kaydet waits.
+    fn survey_blocked(&self) -> bool {
+        survey_form::read(&self.survey, self.settings.angle_unit).blocked()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -300,9 +330,24 @@ impl App {
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
-            Event::AngleUnit(u) => d.angle_unit = u,
+            // The tolerances are typed in the unit's cc or ″: their texts follow it.
+            Event::AngleUnit(u) => {
+                d.angle_unit = u;
+                if !survey_form::read(&s.survey, u).blocked() {
+                    s.survey = survey_form::texts(d.survey.as_ref(), u);
+                }
+            }
+            Event::Survey(field, t) => {
+                if let Some(i) = survey_form::Field::ALL.iter().position(|f| *f == field) {
+                    s.survey[i] = t;
+                }
+                d.survey = survey_form::read(&s.survey, d.angle_unit).survey;
+            }
             Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
-            Event::ResetSection => reset_section(s.section, d),
+            Event::ResetSection => {
+                reset_section(s.section, d);
+                s.survey = survey_form::texts(d.survey.as_ref(), d.angle_unit);
+            }
             Event::OpenApp | Event::Save => {}
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
@@ -379,8 +424,8 @@ impl App {
         let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
             return;
         };
-        // A datum choice with something to put right is not saved (its button waits too).
-        if s.choices.blocked() {
+        // A datum choice or an Ölçme field with something to put right is not saved (its button waits too).
+        if s.choices.blocked() || s.survey_blocked() {
             return;
         }
         let name = s.name.trim();
@@ -465,6 +510,9 @@ impl App {
             Section::General => self.general(s, doc),
             Section::Crs => self.crs_section(s),
             Section::Units => units(s),
+            Section::Survey => super::survey::view(&s.survey, s.settings.angle_unit, |f, t| {
+                event(Event::Survey(f, t))
+            }),
         };
         let content = column![
             text(s.section.label())
@@ -506,10 +554,10 @@ impl App {
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),
                 ))
-                // A datum choice with something to put right keeps it waiting (choices.rs).
+                // A datum choice or an Ölçme field with something to put right keeps it waiting.
                 .action(words::primary(
                     "Kaydet",
-                    (!s.choices.blocked()).then(|| event(Event::Save)),
+                    (!s.choices.blocked() && !s.survey_blocked()).then(|| event(Event::Save)),
                 ))
                 .width(900.0)
                 .max_height(760.0),
@@ -972,6 +1020,7 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
                 d.angle_unit = unit;
             }
         }
+        Section::Survey => d.survey = None,
         Section::Crs => {}
     }
 }

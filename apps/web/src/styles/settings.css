@@ -1211,3 +1211,24 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Proje ayarları › Ölçme (docs/adr/0169 §3): a number, its unit, and what is wrong under them. */
+.survey-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 156px;
+}
+.survey-field__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.survey-field__row .field {
+  width: 120px;
+}
+.survey-field__unit {
+  width: 28px;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}

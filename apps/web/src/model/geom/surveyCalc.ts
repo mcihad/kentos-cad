@@ -64,6 +64,8 @@ export interface PolarInput {
   stationZ: number | null;
   instrumentHeight: number | null;
   shots: Shot[];
+  /** The refraction coefficient k of the heights (the project's, docs/adr/0169 §3); null: no curvature or refraction. */
+  refraction?: number | null;
 }
 
 export interface PolarPoint {

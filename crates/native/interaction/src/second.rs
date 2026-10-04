@@ -231,6 +231,7 @@ mod tests {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            survey: None,
         }
     }
 

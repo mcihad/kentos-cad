@@ -66,7 +66,7 @@ export function atTableRow(message: string, rowOf: (shot: number) => number | un
 }
 
 /** Kutupsal alım's fields read and computed: the points and their names, or why not (the errors in order). */
-export function readPolar(form: PolarForm, resolve: (text: string) => Known, unit: AngleUnit): { errors: string[]; points: PolarPoint[] | null; names: string[] } {
+export function readPolar(form: PolarForm, resolve: (text: string) => Known, unit: AngleUnit, refraction: number | null = null): { errors: string[]; points: PolarPoint[] | null; names: string[] } {
   const errors: string[] = [];
   const known = (text: string, label: string): Vec2 | null => {
     const r = resolve(text);
@@ -100,7 +100,7 @@ export function readPolar(form: PolarForm, resolve: (text: string) => Known, uni
   const names = rows.map(({ r, i }) => r.name?.trim() || `${i + 1}`);
   if (errors.length || !station || !back) return { errors, points: null, names };
   try {
-    const points = surveyPolar({ unit, station, back, backReading, stationZ, instrumentHeight: ih, shots });
+    const points = surveyPolar({ unit, station, back, backReading, stationZ, instrumentHeight: ih, shots, refraction });
     return { errors, points, names };
   } catch (e) {
     errors.push(atTableRow((e as Error).message, (shot) => (rows[shot - 1] ? rows[shot - 1].i + 1 : undefined)));

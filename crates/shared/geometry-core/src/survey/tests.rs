@@ -336,6 +336,7 @@ fn polar_survey_and_stakeout_are_inverse() {
             station_z: Some(sz),
             instrument_height: Some(ih),
             shots: shots.clone(),
+            refraction: None,
         })
         .unwrap();
         for (k, (got, want)) in pts.iter().zip(&targets).enumerate() {

@@ -1,5 +1,6 @@
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
+import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
@@ -269,6 +270,9 @@ const second = (v: unknown, srid: number, custom: boolean): number => {
   if (!Number.isInteger(s) || s <= 0 || s > 0xffffffff) fail(where, 'bir EPSG kodu olmalı');
   return s === srid || (srid === 0 && !custom) ? fail(where, 'projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz') : s;
 };
+/** The project's survey settings (docs/adr/0169 §3): their shape here, their rules where they are written and read (the KCAD codec). */
+const surveyOf = (v: unknown): SurveySettings =>
+  isObj(v) && Object.values(v).every(finite) ? (v as SurveySettings) : fail('Proje ayarları › ölçme', 'sayılardan oluşan bir harita olmalı');
 /** A coordinate system definition of the project's (docs/adr/0168 §1): its shape here, its rules where it is written and read (the KCAD codec). */
 const definition = (v: unknown, where: string): CrsDefinition =>
   isObj(v) && typeof v.name === 'string' && isObj(v.system) ? (v as unknown as CrsDefinition) : fail(where, 'bir koordinat sistemi tanımı ({name, system}) olmalı');
@@ -372,6 +376,7 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
           : Array.isArray(settings.datumTransforms) && settings.datumTransforms.every(isObj)
             ? { datumTransforms: settings.datumTransforms as unknown as DatumTransform[] }
             : fail('Proje ayarları › datum dönüşümleri', 'liste olmalı')),
+        ...(settings.survey === undefined ? {} : { survey: surveyOf(settings.survey) }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

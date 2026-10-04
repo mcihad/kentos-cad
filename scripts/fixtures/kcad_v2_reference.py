@@ -285,10 +285,19 @@ def settings(s):
                 "customCrs": (crs_definition, False),
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
+                "survey": (survey, False),
             },
             "settings",
         )
     )
+
+
+def survey(s):
+    """The project's survey settings (docs/adr/0169 §3): at least one, k within [−1, 1], tolerances above zero."""
+    assert s, "ölçme ayarları boş olamaz"
+    assert "refraction" not in s or -1.0 <= s["refraction"] <= 1.0, "k −1 ile 1 arasında olmalı"
+    assert all(s[k] > 0.0 for k in ("faceHz", "index", "faceSlope") if k in s), "tolerans sıfırdan büyük olmalı"
+    return cmap(fields(s, {"index": (f64, False), "faceHz": (f64, False), "faceSlope": (f64, False), "refraction": (f64, False)}, "survey"))
 
 
 def label_style(s):
@@ -541,6 +550,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    if settings and "survey" in settings:
+        return 14
     if settings and any(k in settings for k in ("customCrs", "secondCustomCrs", "datumTransforms")):
         return 13
     if settings and "secondSrid" in settings:
@@ -755,7 +766,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-14.kcad"] = container(root(cmap(parts), version=b"\x0e"))
+    files["schema-version-15.kcad"] = container(root(cmap(parts), version=b"\x0f"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -988,6 +999,13 @@ def broken(minimal_content, minimal_file):
         "ED50", "TUREF", helmert=seven, grid=cmap({"id": text("a" * 64), "file": text("g.gsb"), "size": uint(10)}))]))
     files["datum-transform-grid-id.kcad"] = with_settings(13, srid=5254, datumTransforms=array([choice(
         "ED50", "TUREF", grid=cmap({"id": text("A" * 64), "file": text("g.gsb"), "size": uint(10)}))]))
+    # The survey settings are schema 14's (docs/adr/0169 §3): an unknown field in schema 13; at least one, k within
+    # [−1, 1], tolerances above zero, no other key.
+    files["survey-in-schema-13.kcad"] = with_settings(13, survey=cmap({"refraction": f64(0.14)}))
+    files["survey-empty.kcad"] = with_settings(14, survey=cmap({}))
+    files["survey-refraction-range.kcad"] = with_settings(14, survey=cmap({"refraction": f64(1.5)}))
+    files["survey-tolerance-zero.kcad"] = with_settings(14, survey=cmap({"faceHz": f64(0.0)}))
+    files["survey-unknown-key.kcad"] = with_settings(14, survey=cmap({"closure": f64(0.01)}))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -1030,6 +1048,7 @@ def build():
     out["custom-crs.kcad"] = container(document(load("custom-crs.json")))
     out["custom-second-crs.kcad"] = container(document(load("custom-second-crs.json")))
     out["custom-geographic.kcad"] = container(document(load("custom-geographic.json")))
+    out["survey.kcad"] = container(document(load("survey.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

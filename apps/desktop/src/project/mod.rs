@@ -12,6 +12,7 @@ mod choices;
 mod content;
 mod custom_crs;
 pub(crate) mod settings;
+mod survey;
 mod wizard;
 
 use std::fmt;

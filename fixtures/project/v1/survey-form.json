@@ -1,0 +1,242 @@
+{
+  "format": "kentos.survey-form",
+  "version": 1,
+  "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3)",
+  "fields": [
+    "refraction",
+    "faceHz",
+    "index",
+    "faceSlope"
+  ],
+  "messages": {
+    "number": "Sayı yazın.",
+    "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
+    "tolerance": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın."
+  },
+  "texts": [
+    {
+      "name": "hiçbiri",
+      "unit": "grad",
+      "survey": null,
+      "texts": [
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "k ve üç tolerans, gon",
+      "unit": "grad",
+      "survey": {
+        "refraction": 0.14,
+        "faceHz": 3.141592653589793e-05,
+        "index": 1.5707963267948964e-05,
+        "faceSlope": 0.005
+      },
+      "texts": [
+        "0.14",
+        "20",
+        "10",
+        "5"
+      ]
+    },
+    {
+      "name": "aynısı, derece",
+      "unit": "deg",
+      "survey": {
+        "refraction": 0.14,
+        "faceHz": 3.141592653589793e-05,
+        "index": 1.5707963267948964e-05,
+        "faceSlope": 0.005
+      },
+      "texts": [
+        "0.14",
+        "6.48",
+        "3.24",
+        "5"
+      ]
+    },
+    {
+      "name": "eksi k, yalnız uzunluk farkı",
+      "unit": "grad",
+      "survey": {
+        "refraction": -0.2,
+        "faceSlope": 0.0025
+      },
+      "texts": [
+        "-0.2",
+        "",
+        "",
+        "2.5"
+      ]
+    },
+    {
+      "name": "saniyeyle yazılmış, derece",
+      "unit": "deg",
+      "survey": {
+        "faceHz": 3.1415926535897935e-05
+      },
+      "texts": [
+        "",
+        "6.48",
+        "",
+        ""
+      ]
+    },
+    {
+      "name": "dört ondalıktan uzun",
+      "unit": "grad",
+      "survey": {
+        "refraction": 0.123456,
+        "faceHz": 1.9392545654192562e-05
+      },
+      "texts": [
+        "0.1235",
+        "12.3457",
+        "",
+        ""
+      ]
+    }
+  ],
+  "reads": [
+    {
+      "name": "boş",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "survey": null,
+      "problems": {}
+    },
+    {
+      "name": "hepsi, gon",
+      "unit": "grad",
+      "texts": [
+        "0.14",
+        "20",
+        "10",
+        "5"
+      ],
+      "survey": {
+        "refraction": 0.14,
+        "faceHz": 3.141592653589793e-05,
+        "index": 1.5707963267948964e-05,
+        "faceSlope": 0.005
+      },
+      "problems": {}
+    },
+    {
+      "name": "hepsi, derece",
+      "unit": "deg",
+      "texts": [
+        "0,14",
+        "6.48",
+        "3,24",
+        "2.5"
+      ],
+      "survey": {
+        "refraction": 0.14,
+        "faceHz": 3.1415926535897935e-05,
+        "index": 1.5707963267948967e-05,
+        "faceSlope": 0.0025
+      },
+      "problems": {}
+    },
+    {
+      "name": "varsayılan k yazılmaz",
+      "unit": "grad",
+      "texts": [
+        "0.13",
+        "",
+        "",
+        ""
+      ],
+      "survey": null,
+      "problems": {}
+    },
+    {
+      "name": "boşluklar ve üs",
+      "unit": "grad",
+      "texts": [
+        " -0.2 ",
+        "1e1",
+        "",
+        " 5 "
+      ],
+      "survey": {
+        "refraction": -0.2,
+        "faceHz": 1.5707963267948964e-05,
+        "faceSlope": 0.005
+      },
+      "problems": {}
+    },
+    {
+      "name": "aralık dışı k, sıfır ve eksi tolerans",
+      "unit": "grad",
+      "texts": [
+        "1.5",
+        "0",
+        "-3",
+        "4"
+      ],
+      "survey": {
+        "faceSlope": 0.004
+      },
+      "problems": {
+        "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
+        "faceHz": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+        "index": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın."
+      }
+    },
+    {
+      "name": "sayı olmayanlar",
+      "unit": "deg",
+      "texts": [
+        "k",
+        "20cc",
+        "1,5,0",
+        "."
+      ],
+      "survey": null,
+      "problems": {
+        "refraction": "Sayı yazın.",
+        "faceHz": "Sayı yazın.",
+        "index": "Sayı yazın.",
+        "faceSlope": "Sayı yazın."
+      }
+    },
+    {
+      "name": "sınırlar: −1 ve 1",
+      "unit": "grad",
+      "texts": [
+        "-1",
+        "",
+        "",
+        ""
+      ],
+      "survey": {
+        "refraction": -1.0
+      },
+      "problems": {}
+    },
+    {
+      "name": "sınırlar: 1",
+      "unit": "deg",
+      "texts": [
+        "1",
+        "",
+        "0.0001",
+        ""
+      ],
+      "survey": {
+        "refraction": 1.0,
+        "index": 4.84813681109536e-10
+      },
+      "problems": {}
+    }
+  ]
+}

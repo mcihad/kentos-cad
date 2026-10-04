@@ -764,8 +764,8 @@ export class CadDocument {
       const m = changes.meta;
       if (m?.layers) this.layers.reset(m.layers, m.activeLayer ?? this.layers.active.value);
       else if (m?.activeLayer) this.layers.reset(this.layers.tree, m.activeLayer);
-      // The server's settings are whole: a unit, a second system, a definition or datum choices it does not name are none
-      // (docs/adr/0165 §2, 0167 §1, 0168).
+      // The server's settings are whole: a unit, a second system, a definition, datum choices or survey settings it does
+      // not name are none (docs/adr/0165 §2, 0167 §1, 0168, 0169 §3).
       if (m?.settings)
         this.settings.assign({
           ...m.settings,
@@ -774,6 +774,7 @@ export class CadDocument {
           customCrs: m.settings.customCrs ?? null,
           secondCustomCrs: m.settings.secondCustomCrs ?? null,
           datumTransforms: m.settings.datumTransforms ?? [],
+          survey: m.settings.survey ?? null,
         });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);

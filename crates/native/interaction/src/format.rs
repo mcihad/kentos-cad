@@ -451,6 +451,7 @@ mod tests {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            survey: None,
         };
         let cad = Format::of(&settings);
         assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
@@ -518,6 +519,7 @@ mod tests {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            survey: None,
         };
         let f = Format::of(&settings);
         assert_eq!(f.coord(0.1), "100.000");

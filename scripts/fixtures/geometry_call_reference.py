@@ -391,6 +391,29 @@ case("Kutupsal alım (grad, eğik uzunluk ve başucu açısı)", "surveyPolar",
        "shots": [{"reading": float(r), "distance": float(d), "zenith": None if z is None else float(z), "targetHeight": None if th is None else float(th)} for r, d, z, th in shots]}],
      exp, "1e-8")
 
+# Kutupsal alım with the project's refraction coefficient k (docs/adr/0169 §3): the height difference gains the earth's
+# curvature and refraction, (1 − k)·D²/2R with R = 6 371 000 m.
+R_EARTH, KR = Decimal(6371000), Decimal("0.13")
+exp = []
+for r, d, z, th in shots:
+    t = pmod(orient + Decimal(r) / k)
+    D_ = Decimal(d)
+    if z is None:
+        h, dz = D_, None
+    else:
+        zr = Decimal(z) / k
+        h = D_ * dsin(zr)
+        dz = D_ * dcos(zr) + (1 - KR) * h * h / (2 * R_EARTH) + ih - Decimal(th)
+    e = {"p": {"x": S(St[1][0] + h * dsin(t)), "y": S(St[1][1] + h * dcos(t))}, "bearing": S(t * k), "horizontal": S(h)}
+    if dz is not None:
+        e["z"], e["dz"] = S(sz + dz), S(dz)
+    exp.append(e)
+case("Kutupsal alım (grad, k = 0,13: yer eğriliği ve kırılma)", "surveyPolar",
+     [{"unit": "grad", "station": St[0], "back": Bk[0], "backReading": float(back_reading), "stationZ": float(sz), "instrumentHeight": float(ih),
+       "shots": [{"reading": float(r), "distance": float(d), "zenith": None if z is None else float(z), "targetHeight": None if th is None else float(th)} for r, d, z, th in shots],
+       "refraction": 0.13}],
+     exp, "1e-8")
+
 # Aplikasyon: bearings, distances and turning angles from the station.
 T1, T2 = pt("-40.004", "95.312"), pt("301.77", "-12.5")
 exp = []

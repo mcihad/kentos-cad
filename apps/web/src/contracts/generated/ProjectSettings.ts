@@ -5,6 +5,7 @@ import type { CrsDefinition } from "./CrsDefinition";
 import type { DatumTransform } from "./DatumTransform";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { SurveySettings } from "./SurveySettings";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -48,4 +49,9 @@ secondCustomCrs?: CrsDefinition,
 /**
  * The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
  */
-datumTransforms?: Array<DatumTransform>, };
+datumTransforms?: Array<DatumTransform>, 
+/**
+ * The project's survey constants and tolerances (docs/adr/0169 §3);
+ * absent: k = [`REFRACTION`] and no tolerance.
+ */
+survey?: SurveySettings, };

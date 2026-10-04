@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–13 yazar, §6.1), KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–14 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11` ya da `12`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13` ya da `14`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -221,7 +221,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 13**, şema 12'nin kendisi ve projenin kendi koordinat sistemleriyle datum seçimleridir: proje ayarlarının `customCrs`, `secondCustomCrs` ve `datumTransforms` alanları (§6.4, §6.4.1; ADR 0168). Yazıcı `13`'ü **yalnız bu alanlardan biri varken** yazar. Başka her çizim şema 2–12'dir ve eskisiyle bayt bayt aynıdır. Şema 2–12 yükünde bu alanlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/custom-crs-in-schema-12.kcad`): eski okuyucu kendi sistemi olan bir projeyi koordinat sistemi yokmuş gibi açmaz. Şema 13 şema 12'yi kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 14**, şema 13'ün kendisi ve projenin ölçme ayarlarıdır: proje ayarlarının `survey` alanı (§6.4, §6.4.2; ADR 0169 §3). Yazıcı `14`'ü **yalnız projenin ölçme ayarı varken** yazar. Başka her çizim şema 2–13'tür ve eskisiyle bayt bayt aynıdır. Şema 2–13 yükünde `survey` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-in-schema-13.kcad`): eski okuyucu karneyi başka bir refraksiyon katsayısıyla ve toleranssız indirgemez, dosyayı açmaz. Şema 14 şema 13'ü kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -264,6 +266,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | Anahtar | Tür | Zorunlu | Değerler |
 |---|---|---|---|
 | `srid` | u32 | evet | EPSG kodu; 0 yerel sistemdir (koordinat sistemi yok, ADR 0165 §2). Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
+| `survey` | harita (§6.4.2) | | şema 14'te: projenin ölçme ayarları (ADR 0169 §3) |
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
 | `customCrs` | harita (§6.4.1) | | şema 13'te: projenin kendi sistemi bir tanımsa o (ADR 0168 §1); o zaman `srid` 0'dır, değilse `bad_value` (`broken/custom-crs-with-srid.kcad`). Böyle projenin ikinci sistemi olabilir (`secondSrid`), çizim birimi metredir |
@@ -300,6 +303,20 @@ Bir sistemde türünün olmayan anahtar `unknown_field`'dır (`broken/custom-crs
 Bir **datum seçimi** haritadır: `to` ve `from` (kayıttaki iki ayrı datum), `name` (metin) ve ya `helmert` (yedi parametre) ya `grid` (harita: `id` küçük harfli 64 onaltılık rakamla dosyanın SHA-256'sı, `file` metin, `size` u64 0'dan büyük, isteğe bağlı `accuracy`); tam biri. Izgaranın kendisi dosyada değildir, cihazın kitaplığındadır (ADR 0168 §4).
 
 Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/custom-crs-two-datums.kcad`, `custom-crs-flat-ellipsoid.kcad`, `custom-crs-folded-plane.kcad`, `custom-crs-local-base.kcad`, `custom-crs-rotation-two.kcad`, `datum-transform-same.kcad`, `datum-transform-both.kcad`, `datum-transform-grid-id.kcad`). Örnek dosyalar `custom-crs.kcad` (yerel sistem, kayıttaki taban, iki datum seçimi), `custom-second-crs.kcad` (ikinci sistemin tanımı: afin, projenin datumlu TM tabanı) ve `custom-geographic.kcad` (WGS 84'e bağı olmayan datumla coğrafi sistem).
+
+
+#### 6.4.2 Ölçme ayarları
+
+Şema 14'te (ADR 0169 §3). Harita; anahtarların hepsi isteğe bağlı float'tır ama en az biri bulunur (boş harita `bad_value`, `broken/survey-empty.kcad`); başka anahtar `unknown_field`'dır (`broken/survey-unknown-key.kcad`):
+
+| Anahtar | Değer |
+|---|---|
+| `index` | indeks hatası toleransı, radyan; 0'dan büyük |
+| `faceHz` | iki durum yatay açı farkı toleransı, radyan; 0'dan büyük (`broken/survey-tolerance-zero.kcad`) |
+| `faceSlope` | iki durum eğik uzunluk farkı toleransı, m; 0'dan büyük |
+| `refraction` | trigonometrik kot farkının refraksiyon katsayısı k, −1 ile 1 arası (`broken/survey-refraction-range.kcad`); yokluğu 0.13 |
+
+Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz. Uygulamalar varsayılan k'yı (0.13) yazmaz; okuyucu yazılmış 0.13'ü de okur.
 
 ### 6.5 Katman ağacı
 

@@ -201,6 +201,7 @@ pub fn read_polar(
     form: &super::polar::Form,
     resolve: impl Fn(&str) -> Known,
     unit: &str,
+    refraction: Option<f64>,
 ) -> PolarRead {
     use super::polar::{DISTANCE, NAME, READING, TARGET, ZENITH};
     let mut errors = Vec::new();
@@ -290,6 +291,7 @@ pub fn read_polar(
         station_z,
         instrument_height,
         shots,
+        refraction,
     }) {
         Ok(points) => Some(points),
         Err(e) => {
@@ -433,12 +435,12 @@ mod tests {
             &[],
             &[(NAME, "3"), (READING, "100"), (DISTANCE, "0")],
         ]);
-        let read = read_polar(&form, resolve, "grad");
+        let read = read_polar(&form, resolve, "grad", None);
         assert_eq!(read.points, None);
         assert_eq!(read.errors, ["3. noktanın uzunluğu sıfırdan büyük olmalı."]);
         let form = polar(&[&[], &[], &[(READING, "0"), (DISTANCE, "10"), (ZENITH, "0")]]);
         assert_eq!(
-            read_polar(&form, resolve, "grad").errors,
+            read_polar(&form, resolve, "grad", None).errors,
             [
                 "3. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."
             ]
@@ -455,7 +457,7 @@ mod tests {
         let mut form = polar(&[&[(READING, "0"), (DISTANCE, "10")]]);
         form.station_z = "12a".to_owned();
         form.instrument_height = "x".to_owned();
-        let read = read_polar(&form, resolve, "grad");
+        let read = read_polar(&form, resolve, "grad", None);
         assert_eq!(read.points, None);
         assert_eq!(
             read.errors,
@@ -480,7 +482,7 @@ mod tests {
         ]]);
         form.station_z = "100".to_owned();
         form.instrument_height = "1,5".to_owned();
-        let read = read_polar(&form, resolve, "grad");
+        let read = read_polar(&form, resolve, "grad", None);
         assert!(read.errors.is_empty(), "{:?}", read.errors);
         assert_eq!(read.names, ["A"]);
         let points = read.points.expect("a point");

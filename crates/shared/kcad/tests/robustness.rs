@@ -446,6 +446,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            survey: None,
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {
