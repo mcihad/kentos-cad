@@ -147,7 +147,10 @@ Python ve MCP aynısını nesnenin geometrisini yazarak yapar.
    düzenleme (Y, X, Z, Yarıçap; “Köşe düzenle”), Satır ekle (“Köşe ekle”) ve Sil (Delete; “Köşe sil”); web `ui/bottom/VertexTable.ts`,
    `vertexEdit.ts`, masaüstü `vertices/`; ortak durumlar `edits.json` (`vertex_edit_cases.py`, 53 durum); resimler `kose-tablosu-*`
    (masaüstü `vertices::tests::screens`, web `shots.mjs vertextable`), sahne `fixtures/interaction/v1/vertex-table.kcad`. Bitti (5 Ekim).
-3. Topoloji açıkken komşular (§6), takma adlar ve kullanım senaryosu.
+3. Topoloji açıkken komşular (§6; masaüstü `kentos_interaction::neighbours::neighbours_in`, web `neighboursOf`; sahneye 12'nin ilk
+   kenarını paylaşan 13 numaralı parsel), `view.coords`'un takma adları (KOSETABLOSU, KT) ve açıklaması. Kullanım senaryosu
+   yerine: izlerin dilbilgisi alt paneli sürmez; tablo iki platformda resimlerle (web'de gerçek fare ve klavyeyle) sınanır. Bitti
+   (5 Ekim).
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

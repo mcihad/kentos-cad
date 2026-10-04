@@ -131,7 +131,7 @@ fn every_write_is_the_references() {
                 index: index(&a["index"]),
             };
             let slot = Slot(a["id"].as_u64().unwrap_or_default() as u32);
-            let out = write_cell(&mut doc, slot, at, col, &text(&a["text"]));
+            let out = write_cell(&mut doc, slot, at, col, &text(&a["text"]), None);
             (out.said, out.step, out.stay, None)
         } else if let Some(a) = c.get("draft") {
             let at = At {
@@ -144,7 +144,7 @@ fn every_write_is_the_references() {
                 z: text(&a["z"]),
             };
             let slot = Slot(a["id"].as_u64().unwrap_or_default() as u32);
-            let (out, next) = write_draft(&mut doc, slot, at, &d);
+            let (out, next) = write_draft(&mut doc, slot, at, &d, None);
             (
                 out.said,
                 out.step,
@@ -163,7 +163,7 @@ fn every_write_is_the_references() {
                 })
                 .collect();
             let slot = Slot(a["id"].as_u64().unwrap_or_default() as u32);
-            let out = remove(&mut doc, slot, &at);
+            let out = remove(&mut doc, slot, &at, None);
             (out.said, out.step, out.stay, None)
         };
         let objects: Vec<Value> = doc.entities().map(view).collect();
@@ -308,10 +308,11 @@ fn the_table_selects_rows_and_edits_cells_in_place() {
     assert_eq!(app.vertices.editing, Some((Cell::Draft, Column::North)));
     ev(&mut app, Event::Input("4420190".into()));
     ev(&mut app, Event::Finish(Some(Walk::Down)));
-    let outer = |app: &crate::app::App| match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
-        Some(kentos_contracts::Entity::Polygon(a)) => a.pts.clone(),
-        _ => panic!("the parcel"),
-    };
+    let outer =
+        |app: &crate::app::App| match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
+            Some(kentos_contracts::Entity::Polygon(a)) => a.pts.clone(),
+            _ => panic!("the parcel"),
+        };
     assert_eq!(outer(&app).len(), 6);
     assert_eq!((outer(&app)[1].x, outer(&app)[1].y), (486730.0, 4420190.0));
     assert_eq!(app.vertices.editing, Some((Cell::Draft, Column::East)));
@@ -340,6 +341,43 @@ fn the_table_selects_rows_and_edits_cells_in_place() {
     // A point is the point list's.
     app.selection.set(Vec::<Slot>::new());
     assert!(app.vertex_target().is_none());
+}
+
+/// Topoloji on (docs/adr/0172 §6): a shared vertex typed in the table moves
+/// the neighbour's corner with it, in the same step, and says so.
+#[test]
+fn with_topology_a_shared_vertex_takes_its_neighbour_along() {
+    use super::{Event, Walk};
+    use crate::app::Message;
+    let mut app = app_with_vertices();
+    let _ = app.update(Message::Run("draft.topology"));
+    assert!(app.draft.topology);
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("view.coords"));
+    let corner = |app: &crate::app::App, slot: u32, i: usize| match app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.get(Slot(slot)))
+    {
+        Some(kentos_contracts::Entity::Polygon(a)) => (a.pts[i].x, a.pts[i].y),
+        _ => panic!("a parcel"),
+    };
+    // Parcel 12's second vertex is parcel 13's fourth.
+    ev(&mut app, Event::Edit(1, Column::East));
+    ev(&mut app, Event::Input("486761.5".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    assert_eq!(corner(&app, 1, 1), (486761.5, 4420195.0));
+    assert_eq!(corner(&app, 5, 3), (486761.5, 4420195.0));
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text == "Topolojik düzenleme: 1 komşu nesne de değişti.")
+    );
+    ev(&mut app, Event::Cancel);
+    // One step: an undo puts both back.
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Köşe düzenle"));
+    assert_eq!(corner(&app, 5, 3), (486760.0, 4420195.0));
 }
 
 /// Köşe tablosu's pictures (docs/adr/0172), the web's `shots.mjs

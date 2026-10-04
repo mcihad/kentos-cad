@@ -117,6 +117,23 @@ pub enum Shown {
 /// The open drawing (its session), its changes and the object.
 type Key = (u64, u64, Slot);
 
+/// Topoloji's state for a write: on or off, and Noktalar da.
+#[derive(Clone, Copy)]
+struct TopologyOn {
+    on: bool,
+    points: bool,
+}
+
+impl TopologyOn {
+    /// The topology a write takes, with the store (in step with the drawing).
+    fn of(self, spatial: &kentos_interaction::spatial::Spatial) -> Option<edit::Topology<'_>> {
+        self.on.then_some(edit::Topology {
+            spatial,
+            points: self.points,
+        })
+    }
+}
+
 /// The tab's state, kept for as long as the app lives.
 #[derive(Default)]
 pub(crate) struct VertexPanel {
@@ -478,16 +495,41 @@ impl App {
                 if !target.writes || at.is_empty() {
                     return Task::none();
                 }
+                let Some(topology) = self.vertex_topology() else {
+                    return Task::none();
+                };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let out = edit::remove(&mut doc.model, target.slot, &at);
-                for line in out.said {
-                    self.warn(line);
-                }
+                let out =
+                    edit::remove(&mut doc.model, target.slot, &at, topology.of(&self.spatial));
+                self.say_vertex(out);
             }
         }
         Task::none()
+    }
+
+    /// Whether the table's writes take the neighbours along (Topoloji, docs/adr/0172 §6), the
+    /// geometry store brought in step with the drawing first; none without a drawing.
+    fn vertex_topology(&mut self) -> Option<TopologyOn> {
+        let doc = self.document.as_ref()?;
+        if self.draft.topology {
+            self.spatial.sync(&doc.model);
+        }
+        Some(TopologyOn {
+            on: self.draft.topology,
+            points: self.draft.topology_points,
+        })
+    }
+
+    /// Says what came of a write: its warnings, and the neighbours that changed with it.
+    fn say_vertex(&mut self, out: edit::Outcome) {
+        for line in out.told {
+            self.output(line);
+        }
+        for line in out.said {
+            self.warn(line);
+        }
     }
 
     /// The cell edited from now (none: no editor), its text the value's.
@@ -546,14 +588,23 @@ impl App {
             .iter()
             .position(|r| r.path == at.path && r.index == at.index);
         let next = walk.and_then(|w| place.and_then(|i| next_cell(kind, rows, i, col, w)));
+        let Some(topology) = self.vertex_topology() else {
+            return Task::none();
+        };
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let out = edit::write_cell(&mut doc.model, slot, at, col, &text);
-        for line in out.said {
-            self.warn(line);
-        }
-        if out.stay && walk.is_some() {
+        let out = edit::write_cell(
+            &mut doc.model,
+            slot,
+            at,
+            col,
+            &text,
+            topology.of(&self.spatial),
+        );
+        let stay = out.stay;
+        self.say_vertex(out);
+        if stay && walk.is_some() {
             self.vertices.editing = Some((cell, col));
             self.vertices.text = text;
             return focus_field();
@@ -608,13 +659,15 @@ impl App {
             Some(Walk::Right) => self.edit_draft(cells[(c + 1) % cells.len()]),
             Some(Walk::Left) => self.edit_draft(cells[(c + cells.len() - 1) % cells.len()]),
             Some(Walk::Down) => {
+                let Some(topology) = self.vertex_topology() else {
+                    return Task::none();
+                };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let (out, next) = edit::write_draft(&mut doc.model, slot, after, &d);
-                for line in out.said {
-                    self.warn(line);
-                }
+                let (out, next) =
+                    edit::write_draft(&mut doc.model, slot, after, &d, topology.of(&self.spatial));
+                self.say_vertex(out);
                 match next {
                     Some(next) => {
                         let rows = self.vertex_rows(slot);

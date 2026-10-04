@@ -42,7 +42,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   indir” açıkken Kutupsal alım ve Poligon hesabı ölçülen uzunlukları düzleme indirir, Aplikasyon zemin uzunluklarını da verir (ölçek ve
   yükseklik çarpanı raporda); çekirdekte noktanın ve çizginin ölçeği, GeographicLib'in libm'li kopyası (ADR 0171);
   köşe tablosu: alt panelin Koordinat listesi tek çizgi, çoklu çizgi ya da alanda düzenlenir: Halka, Y, X, Z, işaretli Yarıçap, Kenar,
-  Semt; seçili satırların köşeleri çizimde halkalı, yerinde düzenleme (“Köşe düzenle”), Satır ekle, Sil ve Delete (ADR 0172);
+  Semt; seçili satırların köşeleri çizimde halkalı, yerinde düzenleme (“Köşe düzenle”), Satır ekle, Sil ve Delete; Topoloji açıkken
+  komşular da (ADR 0172);
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
   numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
   noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
@@ -799,9 +800,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `grid_factor`; `survey::polar`, `survey::traverse` isteğe bağlı `grid` ile, iki ve üç geçiş; başvuru `ground_survey_cases.py`)
   ve 3b (Ölçme'de anahtar: yükseklik, sistem ve noktanın tek ölçeğiyle açılır, `survey_grid`, `why_not_grid`, `surveyGrid`,
   `whyNotGrid`; pencerelerin tabloları, özetleri ve raporları iki platformda) tamam; `HYB-14` bitti (5 Ekim). `HYB-15` köşe tablosu
-  ([ADR 0172](docs/adr/0172-vertex-table.md)): 1. adım (çekirdek `ops::vertex_table`, başvuru `vertex_table_cases.py`) ve 2. adım
-  (düzenlenen Koordinat listesi iki platformda: web `VertexTable.ts`, `vertexEdit.ts`, masaüstü `vertices/`; `edits.json`) tamam;
-  sıradaki 3. adım (Topoloji açıkken komşular, takma adlar, kullanım). 4 Ekim: derleme ve test süreleri
+  ([ADR 0172](docs/adr/0172-vertex-table.md)): 1. adım (çekirdek `ops::vertex_table`, başvuru `vertex_table_cases.py`), 2. adım
+  (düzenlenen Koordinat listesi iki platformda: web `VertexTable.ts`, `vertexEdit.ts`, masaüstü `vertices/`; `edits.json`) ve 3. adım
+  (Topoloji açıkken komşular: `neighbours_in`, `neighboursOf`; takma adlar) tamam; `HYB-15` bitti (5 Ekim). Sıradaki `HYB-16` biçim
+  değiştirme. 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

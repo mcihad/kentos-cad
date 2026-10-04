@@ -143,7 +143,7 @@ pub mod mirror;
 pub mod modify;
 pub mod move_copy;
 pub mod navigate;
-mod neighbours;
+pub mod neighbours;
 pub mod object;
 pub mod object_tracking;
 pub mod offset;

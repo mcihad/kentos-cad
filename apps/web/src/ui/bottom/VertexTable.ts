@@ -12,6 +12,7 @@ import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
+import { neighboursOf } from '../../tools/neighbours';
 import {
   cellEditable,
   cellText,
@@ -298,7 +299,7 @@ export class VertexTable extends Component {
     const e = this.entity();
     const at = this.marked().map((r) => ({ path: r.path, index: r.index }));
     if (!this.writes || !e || !at.length) return;
-    this.say(removeVertices(this.ctx.doc, e, at, (v) => this.ctx.format.length(v)));
+    this.say(removeVertices(this.ctx.doc, e, at, (v) => this.ctx.format.length(v), this.neighbours));
     this.refresh();
   }
 
@@ -479,8 +480,12 @@ export class VertexTable extends Component {
   }
 
   private say(out: Outcome): void {
+    for (const line of out.told ?? []) this.ctx.log.info(line);
     for (const line of out.said) this.ctx.log.warn(line);
   }
+
+  /** Topoloji (docs/adr/0172 §6): the neighbours a write takes along, while the mode is on. */
+  private readonly neighbours = (before: Entity, after: Entity) => neighboursOf(this.ctx, [[before, after]]);
 
   /** The edit ends with `value`: written, then the editor goes `how` (Enter down, Tab right, Shift+Tab left; null stops). */
   private finish(value: string, how: 'down' | 'right' | 'left' | null): void {
@@ -493,7 +498,7 @@ export class VertexTable extends Component {
     // Where to go next, by the rows before the write (a vertex's place does not change its row).
     const at = this.keys.indexOf(keyOf(editing.at));
     const next = how && at >= 0 ? nextVertexCell(kind, this.rows, at, editing.col, how) : null;
-    const out = writeVertexCell(this.ctx.doc, e, editing.at, editing.col, value, (v) => this.ctx.format.length(v));
+    const out = writeVertexCell(this.ctx.doc, e, editing.at, editing.col, value, (v) => this.ctx.format.length(v), this.neighbours);
     this.say(out);
     // A value refused: the cell stays open with what was typed (a click elsewhere gives it up).
     if (out.stay) return this.edit(how ? editing : null, how ? value : null);
@@ -515,7 +520,7 @@ export class VertexTable extends Component {
       const c = cells.indexOf(col) + (how === 'right' ? 1 : -1);
       return this.edit({ at: null, col: cells[(c + cells.length) % cells.length] });
     }
-    const out = writeVertexDraft(this.ctx.doc, e, this.draft.after, this.draft.d, (v) => this.ctx.format.length(v));
+    const out = writeVertexDraft(this.ctx.doc, e, this.draft.after, this.draft.d, (v) => this.ctx.format.length(v), this.neighbours);
     this.say(out);
     if (!out.next) return this.edit({ at: null, col });
     this.draft = { after: out.next, d: emptyVertexDraft() };

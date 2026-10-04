@@ -574,10 +574,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     },
     fullscreen(),
     {
+      // Köşe tablosu (docs/adr/0172): the list of one line, polyline or area is edited in place.
       id: 'view.coords',
       title: 'Koordinat listesi',
       category: V,
       icon: 'table',
+      aliases: ['KOSETABLOSU', 'KT'],
+      description:
+        'Alt panelde seçimin koordinatları: noktalar Y, X ve Z ile; tek çizgi, çoklu çizgi ya da alan Köşe tablosunda düzenlenir (Halka, Y, X, Z, Yarıçap; Satır ekle, Sil).',
       run: () => {
         ui.bottomTab.set('coords');
         ui.bottomExpanded.set(true);

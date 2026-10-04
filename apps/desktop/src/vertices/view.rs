@@ -201,10 +201,9 @@ impl App {
                 };
                 let Shown::Row(k) = which(i) else {
                     // Satır ekle's row: Yeni, its ring, its cells as typed, the one edited open.
-                    let (after, d) = draft.clone().unwrap_or((
-                        At { path: 0, index: 0 },
-                        super::edit::Draft::default(),
-                    ));
+                    let (after, d) = draft
+                        .clone()
+                        .unwrap_or((At { path: 0, index: 0 }, super::edit::Draft::default()));
                     let cells = cols.iter().map(|c| -> Element<'_, Message> {
                         if let (Some(col), Some((Cell::Draft, ec))) = (c.edit(), editing)
                             && ec == col
@@ -316,20 +315,21 @@ impl App {
         } else {
             texts::MANY
         };
-        let bar_button = |glyph: &str, words: &'static str, hint: &'static str, on: Option<Message>| {
-            tip(
-                button(
-                    row![icon(from_web(Some(glyph))).size(14.0), label::body(words)]
-                        .spacing(6)
-                        .align_y(Center),
+        let bar_button =
+            |glyph: &str, words: &'static str, hint: &'static str, on: Option<Message>| {
+                tip(
+                    button(
+                        row![icon(from_web(Some(glyph))).size(14.0), label::body(words)]
+                            .spacing(6)
+                            .align_y(Center),
+                    )
+                    .style(style::button::secondary)
+                    .padding([4, 10])
+                    .on_press_maybe(on),
+                    Tip::new(words).body(hint),
+                    iced::widget::tooltip::Position::Top,
                 )
-                .style(style::button::secondary)
-                .padding([4, 10])
-                .on_press_maybe(on),
-                Tip::new(words).body(hint),
-                iced::widget::tooltip::Position::Top,
-            )
-        };
+            };
         let bar = container(
             row![
                 label::muted(hint),

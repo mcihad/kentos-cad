@@ -80,12 +80,18 @@ export function neighboursOf(ctx: AppContext, edits: readonly (readonly [Entity,
 /** The neighbours `edited` becoming `after` puts right (a grip, the grip menu). */
 export const neighbours = (ctx: AppContext, edited: Entity, after: Entity): Neighbours | null => neighboursOf(ctx, [[edited, after]]);
 
+/** What to say of the neighbours once the edit is written, in order: how many changed with it, how many could not. */
+export function neighbourLines(n: Neighbours): { level: 'info' | 'warn'; text: string }[] {
+  const out: { level: 'info' | 'warn'; text: string }[] = [];
+  if (n.changes.length) out.push({ level: 'info', text: `Topolojik düzenleme: ${n.changes.length} komşu nesne de değişti.` });
+  if (n.locked) out.push({ level: 'warn', text: `Kilitli katmandaki ${n.locked} komşu nesne değişmedi; ortak sınır ayrıldı.` });
+  if (n.invalid) out.push({ level: 'warn', text: `${n.invalid} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe).` });
+  return out;
+}
+
 /** Says what the neighbours did, once the edit is written: how many changed with it, how many could not. */
 export function sayNeighbours(ctx: AppContext, n: Neighbours | null): void {
-  if (!n) return;
-  if (n.changes.length) ctx.log.info(`Topolojik düzenleme: ${n.changes.length} komşu nesne de değişti.`);
-  if (n.locked) ctx.log.warn(`Kilitli katmandaki ${n.locked} komşu nesne değişmedi; ortak sınır ayrıldı.`);
-  if (n.invalid) ctx.log.warn(`${n.invalid} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe).`);
+  for (const { level, text } of n ? neighbourLines(n) : []) ctx.log[level](text);
 }
 
 /**

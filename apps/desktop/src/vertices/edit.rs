@@ -16,8 +16,11 @@ use kentos_geometry_core::ops::vertex_table::{
     self, Edited, Kind, Refusal, Row, inserted, moved, removed, with_radius, with_z,
 };
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
-use kentos_interaction::Format;
+use kentos_interaction::neighbours::{lines as neighbour_lines, neighbours_in};
+use kentos_interaction::spatial::Spatial;
+use kentos_interaction::{Format, Level};
 use kentos_native_application::elevation::paths as elevated_paths;
+use kentos_native_application::geometry::{entity_of, shape};
 use kentos_native_application::{ExecutionContext, edit};
 
 use crate::points::edit::{in_step, refusal};
@@ -71,13 +74,23 @@ pub struct At {
     pub index: usize,
 }
 
-/// What came of a write: what to say, the undo step written (none:
-/// nothing), and whether the cell stays open.
+/// What came of a write: what to warn of, the undo step written (none:
+/// nothing), whether the cell stays open, and what to tell (the neighbours
+/// that changed with it).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Outcome {
     pub said: Vec<String>,
     pub step: Option<&'static str>,
     pub stay: bool,
+    pub told: Vec<String>,
+}
+
+/// Topological editing, while the mode is on (docs/adr/0160, 0172 §6): the
+/// geometry store in step with the drawing, and Noktalar da.
+#[derive(Clone, Copy)]
+pub struct Topology<'a> {
+    pub spatial: &'a Spatial,
+    pub points: bool,
 }
 
 /// Satır ekle's row: its cells as typed.
@@ -266,6 +279,7 @@ fn written(
     step: &'static str,
     operation: EditOperation,
     adding: bool,
+    topology: Option<Topology<'_>>,
 ) -> Outcome {
     let format = Format::of(doc.settings());
     let edited = match answer {
@@ -273,8 +287,8 @@ fn written(
         Err(r) => {
             return Outcome {
                 said: vec![refusal_text(&r, &format, adding)],
-                step: None,
                 stay: true,
+                ..Outcome::default()
             };
         }
     };
@@ -284,6 +298,11 @@ fn written(
     let Some(geometry) = geometry_of(&e, edited.kind, &edited.paths) else {
         return Outcome::default();
     };
+    // With the mode on, the neighbours' shared corners and edges go with it (docs/adr/0172 §6).
+    let follow = topology.and_then(|t| {
+        let after = shape(&entity_of(&geometry, e.base().clone()));
+        neighbours_in(doc, t.spatial, t.points, &[(slot, shape(&e), after)])
+    });
     let uid = uid.to_string();
     let change = if Some(edited.kind) == kind_of(&e) {
         EntityEdit::Update { uid, geometry }
@@ -294,25 +313,35 @@ fn written(
             keep_data: Some(true),
         }
     };
+    let mut changes = vec![change];
+    if let Some(n) = &follow {
+        changes.extend(n.changes.iter().cloned());
+    }
     let refused = in_step(doc, step, |doc| {
         let input = EntitiesEdit {
             operation,
-            changes: vec![change],
+            changes,
             expected_revision: None,
         };
         refusal(edit::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
     });
-    match refused {
-        Some(refused) => Outcome {
+    if let Some(refused) = refused {
+        return Outcome {
             said: vec![refused],
             ..Outcome::default()
-        },
-        None => Outcome {
-            said: Vec::new(),
-            step: Some(step),
-            stay: false,
-        },
+        };
     }
+    let mut out = Outcome {
+        step: Some(step),
+        ..Outcome::default()
+    };
+    for (level, text) in follow.as_ref().map(neighbour_lines).unwrap_or_default() {
+        match level {
+            Level::Info | Level::Success => out.told.push(text),
+            _ => out.said.push(text),
+        }
+    }
+    out
 }
 
 /// A vertex's cell given `text` (docs/adr/0172 §4; the web's
@@ -320,7 +349,14 @@ fn written(
 /// its elevation (empty removes it), Yarıçap its edge's radius (empty or 0:
 /// straight). A value that is no number, or that the core refuses, keeps the
 /// cell open; an unchanged one writes nothing.
-pub fn write_cell(doc: &mut Document, slot: Slot, at: At, col: Column, text: &str) -> Outcome {
+pub fn write_cell(
+    doc: &mut Document,
+    slot: Slot,
+    at: At,
+    col: Column,
+    text: &str,
+    topology: Option<Topology<'_>>,
+) -> Outcome {
     let Some(e) = doc.get(slot).cloned() else {
         return Outcome::default();
     };
@@ -347,8 +383,8 @@ pub fn write_cell(doc: &mut Document, slot: Slot, at: At, col: Column, text: &st
             None => {
                 return Outcome {
                     said: vec![format!("{PREFIX}{} bir sayı olmalı.", col.word(&format))],
-                    step: None,
                     stay: true,
+                    ..Outcome::default()
                 };
             }
         }
@@ -391,6 +427,7 @@ pub fn write_cell(doc: &mut Document, slot: Slot, at: At, col: Column, text: &st
         STEP,
         EditOperation::Properties,
         false,
+        topology,
     )
 }
 
@@ -398,14 +435,20 @@ pub fn write_cell(doc: &mut Document, slot: Slot, at: At, col: Column, text: &st
 /// web's `writeVertexDraft`): Y and X are needed, Z is optional; through
 /// `cad.entities.edit` as Köşe ekle writes (“Köşe ekle”). With the
 /// outcome, where the next draft goes (after the new vertex).
-pub fn write_draft(doc: &mut Document, slot: Slot, after: At, d: &Draft) -> (Outcome, Option<At>) {
+pub fn write_draft(
+    doc: &mut Document,
+    slot: Slot,
+    after: At,
+    d: &Draft,
+    topology: Option<Topology<'_>>,
+) -> (Outcome, Option<At>) {
     let format = Format::of(doc.settings());
     let fail = |said: String| {
         (
             Outcome {
                 said: vec![said],
-                step: None,
                 stay: true,
+                ..Outcome::default()
             },
             None,
         )
@@ -450,7 +493,15 @@ pub fn write_draft(doc: &mut Document, slot: Slot, after: At, d: &Draft) -> (Out
         kentos_geometry_core::Vec2::new(x, y),
         z,
     );
-    let out = written(doc, slot, answer, ADD_STEP, EditOperation::VertexAdd, true);
+    let out = written(
+        doc,
+        slot,
+        answer,
+        ADD_STEP,
+        EditOperation::VertexAdd,
+        true,
+        topology,
+    );
     let next = out.step.map(|_| At {
         path: after.path,
         index: after.index + 1,
@@ -460,7 +511,12 @@ pub fn write_draft(doc: &mut Document, slot: Slot, after: At, d: &Draft) -> (Out
 
 /// The vertices `at` removed in one write (docs/adr/0172 §5; the web's
 /// `removeVertices`), as Köşe sil writes (“Köşe sil”).
-pub fn remove(doc: &mut Document, slot: Slot, at: &[At]) -> Outcome {
+pub fn remove(
+    doc: &mut Document,
+    slot: Slot,
+    at: &[At],
+    topology: Option<Topology<'_>>,
+) -> Outcome {
     let Some(e) = doc.get(slot).cloned() else {
         return Outcome::default();
     };
@@ -479,6 +535,7 @@ pub fn remove(doc: &mut Document, slot: Slot, at: &[At]) -> Outcome {
             REMOVE_STEP,
             EditOperation::VertexRemove,
             false,
+            topology,
         )
     }
 }

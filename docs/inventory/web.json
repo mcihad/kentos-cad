@@ -8735,7 +8735,11 @@
       "title": "Koordinat listesi",
       "category": "Görünüm",
       "icon": "table",
-      "aliases": [],
+      "description": "Alt panelde seçimin koordinatları: noktalar Y, X ve Z ile; tek çizgi, çoklu çizgi ya da alan Köşe tablosunda düzenlenir (Halka, Y, X, Z, Yarıçap; Satır ekle, Sil).",
+      "aliases": [
+        "KOSETABLOSU",
+        "KT"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [

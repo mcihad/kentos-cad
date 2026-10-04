@@ -5,9 +5,10 @@ import type { Entity, LineEntity, PolylineEntity } from '../../model/entities';
 import type { Elevated } from '../../model/ops/elevation';
 import { vertexTableInsert, vertexTableMove, vertexTableRadius, vertexTableRemove, vertexTableRows, vertexTableZ, type VertexAnswer, type VertexKind, type VertexRefusal, type VertexRow } from '../../model/ops/vertexTable';
 import { UNIT_PER_METRE } from '../../model/projectSettings';
-import { elevatedPaths } from '../../product/elevation';
+import { elevatedPaths, withoutElevations } from '../../product/elevation';
 import { entitiesEdit } from '../../product/entitiesEdit';
 import { parseNumber } from '../../tools/coordinateInput';
+import { neighbourLines, type Neighbours } from '../../tools/neighbours';
 import { inStep } from './pointEdit';
 
 /**
@@ -38,12 +39,22 @@ export interface At {
   index: number;
 }
 
-/** What came of a write: what to say, the undo step written (null: none), and whether the cell stays open. */
+/**
+ * What came of a write: what to warn of, the undo step written (null: none), whether the cell stays open, and what to
+ * tell (the neighbours that changed with it).
+ */
 export interface Outcome {
   said: string[];
   step: string | null;
   stay: boolean;
+  told?: string[];
 }
+
+/**
+ * Topological editing while the mode is on (docs/adr/0160, 0172 §6): the neighbours the object becoming `after`
+ * (from `before`) puts right, or null. The table gives `tools/neighbours.ts`'s; the cases run without it.
+ */
+export type NeighboursOf = (before: Entity, after: Entity) => Neighbours | null;
 
 /** A draft written: where the next one goes (after the new vertex), null when not written. */
 export interface DraftOutcome extends Outcome {
@@ -157,22 +168,42 @@ export function radiusSlack(doc: CadDocument): number {
   return (0.5 * Number(`1e-${doc.settings.lengthDecimals.value}`)) / UNIT_PER_METRE[doc.settings.unit];
 }
 
+/** The object as `geometry` makes it, its data kept, for the neighbours' rule (which reads only its shape). */
+function entityAfter(e: Editable, geometry: EditGeometry): Entity {
+  const { pts: _pts, bulges: _bulges, holes: _holes, parts: _parts, zs: _zs, ...rest } = e as unknown as Record<string, unknown>;
+  const { a: _a, b: _b, za: _za, zb: _zb, ...data } = rest;
+  return { ...data, ...withoutElevations(geometry) } as unknown as Entity;
+}
+
 /**
  * The core's answer written as one undo step named `step`, the object updated in place (a line that became a polyline
- * replaced, keeping its slot, id and data); a refusal said in the table's words keeps the cell open, the command's
- * refusal closes it.
+ * replaced, keeping its slot, id and data), with the neighbours `neighbours` puts right; a refusal said in the table's
+ * words keeps the cell open, the command's refusal closes it.
  */
-function written(doc: CadDocument, e: Editable, answer: VertexAnswer, step: string, operation: 'properties' | 'vertexAdd' | 'vertexRemove', length: LengthText, adding = false): Outcome {
+function written(
+  doc: CadDocument,
+  e: Editable,
+  answer: VertexAnswer,
+  step: string,
+  operation: 'properties' | 'vertexAdd' | 'vertexRemove',
+  length: LengthText,
+  neighbours: NeighboursOf | undefined,
+  adding = false,
+): Outcome {
   if ('refusal' in answer) return { said: [refusalText(answer.refusal, length, adding)], step: null, stay: true };
   const { kind, paths } = answer.edited;
   const uid = doc.uidOf(e.id) ?? '';
   const geometry = geometryOf(e, kind, paths);
   const change: EntityEdit = kind === e.kind ? { kind: 'update', uid, geometry } : { kind: 'replace', uid, geometry, keepData: true };
+  // With the mode on, the neighbours' shared corners and edges go with it (docs/adr/0172 §6).
+  const follow = neighbours?.(e, entityAfter(e, geometry)) ?? null;
   const refused = inStep(doc, step, () => {
-    const r = entitiesEdit.execute({ doc }, { operation, changes: [change] });
+    const r = entitiesEdit.execute({ doc }, { operation, changes: [change, ...(follow?.changes ?? [])] });
     return r.status === 'completed' || !('error' in r) ? null : r.error.message;
   });
-  return refused ? { said: [refused], step: null, stay: false } : { said: [], step, stay: false };
+  if (refused) return { said: [refused], step: null, stay: false };
+  const lines = follow ? neighbourLines(follow) : [];
+  return { said: lines.filter((l) => l.level === 'warn').map((l) => l.text), step, stay: false, told: lines.filter((l) => l.level === 'info').map((l) => l.text) };
 }
 
 /**
@@ -180,7 +211,7 @@ function written(doc: CadDocument, e: Editable, answer: VertexAnswer, step: stri
  * (empty removes it), Yarıçap its edge's radius (empty or 0: straight). Numbers read as the point input reads them; a
  * value that is no number, or that the core refuses, keeps the cell open; an unchanged one writes nothing.
  */
-export function writeVertexCell(doc: CadDocument, e: Editable, at: At, col: VertexColumn, text: string, length: LengthText): Outcome {
+export function writeVertexCell(doc: CadDocument, e: Editable, at: At, col: VertexColumn, text: string, length: LengthText, neighbours?: NeighboursOf): Outcome {
   const paths = elevatedPaths(e);
   const row = vertexTableRows(paths).find((r) => r.path === at.path && r.index === at.index);
   if (!row) return { said: [`${PREFIX}Köşe bulunamadı.`], step: null, stay: false };
@@ -193,24 +224,24 @@ export function writeVertexCell(doc: CadDocument, e: Editable, at: At, col: Vert
   if (col === 'east' || col === 'north') {
     const to = col === 'east' ? { x: v as number, y: row.p.y } : { x: row.p.x, y: v as number };
     if (to.x === row.p.x && to.y === row.p.y) return nothing;
-    return written(doc, e, vertexTableMove(kind, paths, at.path, at.index, to), STEP, 'properties', length);
+    return written(doc, e, vertexTableMove(kind, paths, at.path, at.index, to), STEP, 'properties', length, neighbours);
   }
   if (col === 'z') {
     if (v === (row.z ?? null)) return nothing;
-    return written(doc, e, vertexTableZ(kind, paths, at.path, at.index, v), STEP, 'properties', length);
+    return written(doc, e, vertexTableZ(kind, paths, at.path, at.index, v), STEP, 'properties', length, neighbours);
   }
   // A radius within 1e-9 of the edge's is the edge's: the cell opens with it, its last bit is the platform's.
   const radius = row.radius ?? null;
   const same = v !== null && radius !== null && Math.abs(v - radius) <= 1e-9 * Math.abs(radius);
   if (((v === null || v === 0) && radius === null) || same) return nothing;
-  return written(doc, e, vertexTableRadius(kind, paths, at.path, at.index, v === 0 ? null : v, radiusSlack(doc)), STEP, 'properties', length);
+  return written(doc, e, vertexTableRadius(kind, paths, at.path, at.index, v === 0 ? null : v, radiusSlack(doc)), STEP, 'properties', length, neighbours);
 }
 
 /**
  * Satır ekle's row written after vertex `after` (docs/adr/0172 §5): Y and X are needed, Z is optional; through
  * `cad.entities.edit` as Köşe ekle writes (“Köşe ekle”). The next draft goes after the new vertex.
  */
-export function writeVertexDraft(doc: CadDocument, e: Editable, after: At, d: VertexDraft, length: LengthText): DraftOutcome {
+export function writeVertexDraft(doc: CadDocument, e: Editable, after: At, d: VertexDraft, length: LengthText, neighbours?: NeighboursOf): DraftOutcome {
   const fail = (said: string): DraftOutcome => ({ said: [said], step: null, stay: true, next: null });
   const [eastWord, northWord] = [word(doc, 'east'), word(doc, 'north')];
   const east = d.east.trim();
@@ -230,14 +261,14 @@ export function writeVertexDraft(doc: CadDocument, e: Editable, after: At, d: Ve
   }
   const metres = metresOf(doc);
   const answer = vertexTableInsert(e.kind as VertexKind, elevatedPaths(e), after.path, after.index, { x: metres(x), y: metres(y) }, z === null ? null : metres(z));
-  const out = written(doc, e, answer, ADD_STEP, 'vertexAdd', length, true);
+  const out = written(doc, e, answer, ADD_STEP, 'vertexAdd', length, neighbours, true);
   return { ...out, next: out.step ? { path: after.path, index: after.index + 1 } : null };
 }
 
 /** The vertices `at` removed in one write (docs/adr/0172 §5), as Köşe sil writes (“Köşe sil”). */
-export function removeVertices(doc: CadDocument, e: Editable, at: readonly At[], length: LengthText): Outcome {
+export function removeVertices(doc: CadDocument, e: Editable, at: readonly At[], length: LengthText, neighbours?: NeighboursOf): Outcome {
   const answer = vertexTableRemove(e.kind as VertexKind, elevatedPaths(e), at.map((a) => [a.path, a.index] as const));
-  const out = written(doc, e, answer, REMOVE_STEP, 'vertexRemove', length);
+  const out = written(doc, e, answer, REMOVE_STEP, 'vertexRemove', length, neighbours);
   // Nothing to keep open: a removal has no cell.
   return { ...out, stay: false };
 }

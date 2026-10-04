@@ -3,6 +3,7 @@ import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import type { Entity, NewEntity } from '../../model/entities';
 import { elevatedPaths } from '../../product/elevation';
+import { neighboursOf } from '../../tools/neighbours';
 import { toolHarness } from '../../tools/toolHarness';
 import { cellText, removeVertices, vertexRows, writeVertexCell, writeVertexDraft, type Editable, type VertexColumn } from './vertexEdit';
 
@@ -93,6 +94,27 @@ describe('Köşe tablosu: yazma', () => {
       return d ? [d] : [];
     });
     expect(off).toEqual([]);
+  });
+
+  it('takes the neighbour’s shared corner along with Topoloji on, in the same step (docs/adr/0172 §6)', () => {
+    const h = toolHarness();
+    const square = (x: number) => [{ x, y: 0 }, { x: x + 10, y: 0 }, { x: x + 10, y: 10 }, { x, y: 10 }];
+    const a = h.add({ kind: 'polygon', pts: square(0) } as never) as Editable;
+    const b = h.add({ kind: 'polygon', pts: square(10) } as never);
+    h.ctx.settings.topology.set(true);
+    // The index finds the neighbour round the shared corner (10, 0).
+    h.state.inWindow = [b.id];
+    const before = h.doc.revision;
+    const out = writeVertexCell(h.doc, a, { path: 0, index: 1 }, 'east', '10.5', (v) => `${v} m`, (x, y) => neighboursOf(h.ctx, [[x, y]]));
+    expect(out).toEqual({ said: [], step: 'Köşe düzenle', stay: false, told: ['Topolojik düzenleme: 1 komşu nesne de değişti.'] });
+    const pts = (id: number) => (h.doc.get(id) as Editable & { pts: { x: number; y: number }[] }).pts;
+    expect([pts(a.id)[1], pts(b.id)[0]]).toEqual([
+      { x: 10.5, y: 0 },
+      { x: 10.5, y: 0 },
+    ]);
+    expect(h.doc.revision).not.toBe(before);
+    expect(h.doc.undo()).toBe('Köşe düzenle');
+    expect(pts(b.id)[0]).toEqual({ x: 10, y: 0 });
   });
 
   it('opens a cell with the value whole, in a local project’s unit', () => {

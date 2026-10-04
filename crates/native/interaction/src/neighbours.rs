@@ -5,22 +5,25 @@
 //! the neighbours are the visible objects within 1 µm of the places the edit
 //! changed, looked up in the geometry store (a locked layer's are counted,
 //! never changed). Both platforms play
-//! `fixtures/interaction/v1/topology-edit.json`.
+//! `fixtures/interaction/v1/topology-edit.json`. A host writing outside a
+//! tool (Köşe tablosu, docs/adr/0172 §6) asks [`neighbours_in`] with its
+//! drawing and store, and says [`lines`].
 
 use kentos_contracts::EntityEdit;
-use kentos_domain::Slot;
+use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::topology_edit::{self, Change, Neighbour, SAME};
 use kentos_native_application::geometry::{edit_geometry, shape};
 
 use crate::Vec2;
 use crate::log::Level;
+use crate::spatial::Spatial;
 use crate::tool::Context;
 
 /// The neighbours an edit puts right: their writes, their shapes for the
 /// preview, how many are locked or would be left invalid.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Neighbours {
+pub struct Neighbours {
     pub changes: Vec<EntityEdit>,
     pub shapes: Vec<Shape>,
     pub locked: usize,
@@ -34,12 +37,21 @@ pub(crate) type Found = Vec<(Slot, Neighbour)>;
 /// (lines, paths, areas; points with Noktalar da), the `edited` ones left
 /// out, in the order the store finds them (the web's `neighboursAt`).
 pub(crate) fn around(cx: &Context<'_>, at: &[Vec2], edited: &[Slot]) -> Found {
-    let doc = &*cx.doc;
-    let points = cx.draft.topology_points;
+    around_in(cx.doc, cx.spatial, cx.draft.topology_points, at, edited)
+}
+
+/// [`around`] in `doc` by `spatial` (in step with it); `points`: Noktalar da.
+fn around_in(
+    doc: &Document,
+    spatial: &Spatial,
+    points: bool,
+    at: &[Vec2],
+    edited: &[Slot],
+) -> Found {
     let mut seen = edited.to_vec();
     let mut found = Found::new();
     for p in at {
-        let near = cx.spatial.in_rect(
+        let near = spatial.in_rect(
             Vec2::new(p.x - SAME, p.y - SAME),
             Vec2::new(p.x + SAME, p.y + SAME),
             true,
@@ -70,8 +82,13 @@ pub(crate) fn around(cx: &Context<'_>, at: &[Vec2], edited: &[Slot]) -> Found {
 /// `found` put right by `changes` (the core's `apply`): their writes and
 /// shapes, the locked and invalid counts (the web's `putRight`).
 pub(crate) fn put_right(cx: &Context<'_>, found: &Found, changes: &[Change]) -> Neighbours {
+    put_right_in(cx.doc, cx.draft.topology_points, found, changes)
+}
+
+/// [`put_right`] in `doc`; `points`: Noktalar da.
+fn put_right_in(doc: &Document, points: bool, found: &Found, changes: &[Change]) -> Neighbours {
     let list: Vec<Neighbour> = found.iter().map(|(_, n)| n.clone()).collect();
-    let answer = topology_edit::apply(&list, changes, cx.draft.topology_points);
+    let answer = topology_edit::apply(&list, changes, points);
     let mut out = Neighbours {
         locked: answer.locked,
         invalid: answer.invalid,
@@ -81,7 +98,7 @@ pub(crate) fn put_right(cx: &Context<'_>, found: &Found, changes: &[Change]) -> 
         let Some(&(s, _)) = found.get(index) else {
             continue;
         };
-        let (Some(uid), Some(geometry)) = (cx.doc.uid(s), edit_geometry(shape.clone())) else {
+        let (Some(uid), Some(geometry)) = (doc.uid(s), edit_geometry(shape.clone())) else {
             continue;
         };
         out.changes.push(EntityEdit::Update {
@@ -103,7 +120,19 @@ pub(crate) fn neighbours_of(
     if !cx.draft.topology {
         return None;
     }
-    let points = cx.draft.topology_points;
+    neighbours_in(cx.doc, cx.spatial, cx.draft.topology_points, edits)
+}
+
+/// The neighbours the edited objects (each its slot, its shape before and
+/// after) put right together in `doc`, found by `spatial` (in step with it),
+/// for a host writing outside a tool while the mode is on (Köşe tablosu,
+/// docs/adr/0172 §6); `points`: Noktalar da. `None` when nothing is shared.
+pub fn neighbours_in(
+    doc: &Document,
+    spatial: &Spatial,
+    points: bool,
+    edits: &[(Slot, Shape, Shape)],
+) -> Option<Neighbours> {
     let changes: Vec<Change> = edits
         .iter()
         .filter(|(_, before, _)| points || !matches!(before, Shape::Point { .. }))
@@ -114,8 +143,8 @@ pub(crate) fn neighbours_of(
     }
     let at: Vec<Vec2> = changes.iter().map(anchor).collect();
     let edited: Vec<Slot> = edits.iter().map(|(slot, ..)| *slot).collect();
-    let found = around(cx, &at, &edited);
-    (!found.is_empty()).then(|| put_right(cx, &found, &changes))
+    let found = around_in(doc, spatial, points, &at, &edited);
+    (!found.is_empty()).then(|| put_right_in(doc, points, &found, &changes))
 }
 
 /// The neighbours the object at `slot` becoming `after` (from `before`)
@@ -132,36 +161,43 @@ pub(crate) fn neighbours(
 /// Says what the neighbours did, once the edit is written: how many changed
 /// with it, how many could not (the web's `sayNeighbours`).
 pub(crate) fn say(n: Option<&Neighbours>, cx: &mut Context<'_>) {
-    let Some(n) = n else {
-        return;
-    };
+    for (level, text) in n.map(lines).unwrap_or_default() {
+        cx.say(level, text);
+    }
+}
+
+/// What to say of the neighbours once the edit is written, in order: how
+/// many changed with it, how many could not.
+pub fn lines(n: &Neighbours) -> Vec<(Level, String)> {
+    let mut out = Vec::new();
     if !n.changes.is_empty() {
-        cx.say(
+        out.push((
             Level::Info,
             format!(
                 "Topolojik düzenleme: {} komşu nesne de değişti.",
                 n.changes.len()
             ),
-        );
+        ));
     }
     if n.locked > 0 {
-        cx.say(
+        out.push((
             Level::Warn,
             format!(
                 "Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı.",
                 n.locked
             ),
-        );
+        ));
     }
     if n.invalid > 0 {
-        cx.say(
+        out.push((
             Level::Warn,
             format!(
                 "{} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe).",
                 n.invalid
             ),
-        );
+        ));
     }
+    out
 }
 
 /// How many objects have a corner at `at`, the selected one at `own` among
