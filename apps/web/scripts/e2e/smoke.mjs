@@ -2902,6 +2902,27 @@ try {
         JSON.stringify({ waiting, card, got }),
       );
       await b.eval(`window.kentos.doc.settings.assign({ srid: 5256, customCrs: null })`);
+
+      // WKT ya da PROJ'dan al (docs/adr/0168 §5): a WKT pasted fills the fields; the registry's system it is is offered,
+      // and Kayıttakini seç puts it in Proje ayarları' draft in the window's place.
+      await b.eval(`window.kentos.commands.execute('crs.set')`);
+      await b.waitFor(`!!document.querySelector('.crs-list__action')`, 3000).catch(() => {});
+      await press('.crs-list__action');
+      await b.waitFor(`!!document.querySelector('.dialog--custom-crs')`, 3000).catch(() => {});
+      await typeIn('WKT ya da PROJ metni', 'PROJCS["TUREF_TM33",GEOGCS["GCS_TUREF",DATUM["D_Turkish_National_Reference_Frame",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",33.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]');
+      await b.eval(`[...document.querySelectorAll('.dialog--custom-crs .btn')].find((x) => x.textContent === 'Al')?.setAttribute('data-smoke-take', '')`);
+      await press('.dialog--custom-crs [data-smoke-take]');
+      const filled = await b.eval(`({ name: document.querySelector('.dialog--custom-crs [aria-label="Ad"]')?.value, meridian: document.querySelector('.dialog--custom-crs [aria-label="Orta meridyen (°)"]')?.value, offer: !![...document.querySelectorAll('.dialog--custom-crs .note .btn')].find((x) => x.textContent === 'Kayıttakini seç') })`);
+      await b.eval(`[...document.querySelectorAll('.dialog--custom-crs .note .btn')].find((x) => x.textContent === 'Kayıttakini seç')?.setAttribute('data-smoke-same', '')`);
+      await press('.dialog--custom-crs [data-smoke-same]');
+      const chosen = await b.eval(`({ open: !!document.querySelector('.dialog--custom-crs'), current: document.querySelector('.crs-current .crs-current__name')?.textContent })`);
+      check(
+        'Özel koordinat sistemi: a WKT pasted fills the fields (TUREF TM33, meridian 33), Kayıttakini seç puts EPSG:5255 in Proje ayarları in its place',
+        filled.name === 'TUREF TM33' && filled.meridian === '33' && filled.offer && !chosen.open && chosen.current === 'TUREF / TM33',
+        JSON.stringify({ filled, chosen }),
+      );
+      await b.eval(`[...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Vazgeç')?.click()`);
+      await sleep(200);
     }
 
     // Kenar yumuşatma (TODOS.md AA-01/02, SET-03/05): the counts come from the context, a preset only fills

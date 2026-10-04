@@ -213,6 +213,7 @@ python3 scripts/fixtures/crs_sweep.py   # dönüşümlerin rastgele fark testi: 
 python3 scripts/fixtures/crs_choice_form_cases.py --check   # Datum dönüşümleri'nin form kurallarını (ad, sayılar, üç parametre, doğruluk, ızgara; EPSG yollarının metni) kurallardan denetle; durumlar fixtures/crs/v1/choice-form.json (ADR 0168 §9 4a)
 cargo test -p kentos-desktop project::choices::tests::screens -- --ignored --nocapture   # Datum dönüşümleri'nin resimleri, .run/shots/datum-donusumleri-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs datums))
 python3 scripts/fixtures/crs_definition_form_cases.py --check   # Özel koordinat sistemi penceresinin form kurallarını (ad, TM'nin sayıları, projenin datumu, yerel sistemin tabanı ve düzlemi, kayıttakiyle aynı tanım) kurallardan denetle; durumlar fixtures/crs/v1/definition-form.json (ADR 0168 §9 4b)
+python3 scripts/fixtures/crs_definition_text_cases.py --check   # Özel koordinat sistemi'nin WKT ve PROJ okumasını (tanım, Kayıttakini seç, ızgara notu, redlerin nedenleri) PROJ'un okuduğu sistemlerden ve kurallardan denetle; durumlar fixtures/crs/v1/definition-text.json (ADR 0168 §9 4c)
 cargo test -p kentos-desktop project::custom_crs::tests::screens -- --ignored --nocapture   # Özel koordinat sistemi penceresinin ve Proje ayarları'nda tanımın resimleri, .run/shots/ozel-crs-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs definitions))
 python3 scripts/fixtures/project_crs_cases.py --check   # projenin sistemlerinin çözümünü (kayıttaki ya da tanım, ikinci sistem, datum seçimleri; adları ve kodları) kurallardan ve kayıttan denetle; durumlar fixtures/geodesy/v1/project.json (ADR 0168 §9 3b)
 cargo test -p kentos-desktop grids::tests::screens -- --ignored --nocapture   # Proje ayarları'nın Izgaralar grubunun resimleri, .run/shots/izgara-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs grids); ADR 0168 §4)
@@ -717,8 +718,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve 3d (cihazın ızgara kitaplığı, `grids.rs`, `app/gridLibrary.ts`; Proje ayarları'nda Izgaralar) ve 4a (Proje ayarları'nda Datum
   dönüşümleri, form kuralları `choice_form`) ve 4b (Özel koordinat sistemi penceresi: masaüstü `project/custom_crs.rs` Proje ayarları'nın
   üstünde, web `ui/settings/CustomCrsDialog.ts`; form kuralları `definition_form`, `model/definitionForm.ts`, ortak durumlar
-  `definition-form.json`; listelerde tanımın satırı, “Özel sistem…” ve Düzenle) tamam; sıradaki 4c (WKT/PROJ, Deneme noktası), 4d (ortak
-  noktalardan düzlem). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  `definition-form.json`; listelerde tanımın satırı, “Özel sistem…” ve Düzenle) ve 4c (pencerede WKT ve PROJ'dan al, kopyala, Kayıttakini
+  seç, Deneme noktası; okuma kuralları `definition_form::read`, `readDefinition`, ortak durumlar `definition-text.json`) tamam; sıradaki 4d
+  (ortak noktalardan düzlem). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

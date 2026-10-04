@@ -5,18 +5,25 @@
 //! its datum (the registry's, or the project's: an ellipsoid and seven
 //! parameters to WGS 84), a local system's base and plane. What is typed is
 //! checked field by field (`kentos_project::definition_form`, the shared
-//! cases'), and a definition the registry has is said. It opens over Proje
+//! cases'), and a definition the registry has is said, with Kayıttakini
+//! seç. A WKT or PROJ text pasted, or a `.prj` file, fills the fields
+//! (docs/adr/0168 §5); the definition is copied as WKT or PROJ; a Deneme
+//! noktası shows where a point typed in it is in WGS 84 and in the project's
+//! other system, with the project's datum choices. It opens over Proje
 //! ayarları, which waits under it: Tamam puts the definition in its draft,
 //! Kaydet there assigns it; the drawing is not transformed.
 
 use std::fmt;
+use std::path::PathBuf;
 
-use iced::widget::{Column, column, container, row};
-use iced::{Element, Fill};
+use iced::widget::{Column, column, container, row, text_editor};
+use iced::{Element, Fill, Length};
 use kentos_contracts::{Convention, CrsDefinition, CrsSystem, RegistryDatum};
+use kentos_geometry_core::crs as core;
 use kentos_project::definition_form::{
     self, AFFINE, DatumPick, ELLIPSOIDS, Form, Kind, PARAMETERS, PlaneKind, Problems,
 };
+use kentos_project::systems::definition_system;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
@@ -25,7 +32,11 @@ use kentos_ui::{label, style};
 
 use super::choices::{CAPTIONS, Rule, field};
 use crate::app::Message;
+use crate::calc::convert::{ConvertFormat, convert_point, error_text};
 use crate::exchange::words;
+
+/// The largest `.prj` file read (a definition is a few hundred bytes).
+const PRJ_LIMIT: u64 = 1 << 20;
 
 /// Whose definition the window edits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,35 +82,74 @@ pub enum Event {
     Plane(PlaneKind),
     /// One of the affine's six coefficients by its place.
     Affine(usize, String),
+    /// WKT ya da PROJ'dan al: the box edited, read, or a `.prj` file asked for and picked.
+    Paste(text_editor::Action),
+    Read,
+    PickFile,
+    Picked(Option<PathBuf>),
+    /// The definition as text, to the clipboard.
+    Copy(Text),
+    /// Kayıttakini seç: the registry's system the definition is.
+    Registry,
+    /// Deneme noktası's two values.
+    Trial(usize, String),
     Done,
     Cancel,
 }
 
-/// What an event leaves: the window open, closed, or done with a definition.
+/// The texts a definition is copied as.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Text {
+    Wkt,
+    Proj,
+}
+
+/// What an event leaves: the window open, closed, or done with a definition;
+/// a file to ask for, a text for the clipboard, the registry's system chosen.
 #[derive(Debug)]
 pub enum Outcome {
     Keep,
     Close,
     Done(Target, CrsDefinition),
+    PickFile,
+    Copy(String, &'static str),
+    Registry(Target, u32),
+}
+
+/// Where a trial point is compared: the project's other system (named),
+/// its datum choices and how it writes points.
+#[derive(Debug)]
+pub struct Context {
+    pub reference: Option<(String, core::System)>,
+    pub choices: Vec<core::Choice>,
+    pub format: ConvertFormat,
 }
 
 /// The window as typed, and what is wrong.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Editor {
     pub target: Target,
     form: Form,
     problems: Problems,
     /// The registry's system the definition is (“EPSG:5254 … ile aynı”).
     note: Option<String>,
+    same: Option<u32>,
     /// A definition from a file whose base is itself a definition: the
     /// window cannot show that base, so the definition stays as it is until
     /// something is typed.
     kept: Option<CrsDefinition>,
+    /// The text pasted, and what reading it said: the name read or why not.
+    paste: text_editor::Content,
+    read: Option<Result<String, String>>,
+    /// A grid the registry has on the text's own datum (said after a read).
+    grid: Option<String>,
+    trial: [String; 2],
+    context: Context,
 }
 
 impl Editor {
     /// The window on a definition, or on a new one (a TM on TUREF to fill in).
-    pub fn new(target: Target, existing: Option<&CrsDefinition>) -> Self {
+    pub fn new(target: Target, existing: Option<&CrsDefinition>, context: Context) -> Self {
         let kept = existing
             .filter(|d| matches!(&d.system, CrsSystem::Local(l) if l.base.definition.is_some()))
             .cloned();
@@ -108,7 +158,13 @@ impl Editor {
             form: existing.map(definition_form::form_of).unwrap_or_default(),
             problems: Problems::new(),
             note: None,
+            same: None,
             kept,
+            paste: text_editor::Content::new(),
+            read: None,
+            grid: None,
+            trial: Default::default(),
+            context,
         };
         // A new window says nothing before anything is typed; a definition is checked as it is.
         if existing.is_some() && editor.kept.is_none() {
@@ -119,14 +175,50 @@ impl Editor {
 
     fn check(&mut self) {
         match definition_form::build(&self.form) {
-            Ok((_, note)) => {
+            Ok((d, note)) => {
                 self.problems.clear();
                 self.note = note;
+                self.same = definition_form::same_srid(&d);
             }
             Err(p) => {
                 self.problems = p;
                 self.note = None;
+                self.same = None;
             }
+        }
+    }
+
+    /// The definition as it stands: the one kept, or the form's when it builds.
+    fn definition(&self) -> Option<CrsDefinition> {
+        match &self.kept {
+            Some(d) => Some(d.clone()),
+            None => definition_form::build(&self.form).ok().map(|(d, _)| d),
+        }
+    }
+
+    /// A text read into the fields, or why not (the shared cases').
+    fn take_text(&mut self, text: &str) {
+        match definition_form::read(text) {
+            Ok(read) => {
+                let local_on_definition = matches!(
+                    &read.definition.system,
+                    CrsSystem::Local(l) if l.base.definition.is_some()
+                );
+                self.form = definition_form::form_of(&read.definition);
+                self.read = Some(Ok(format!(
+                    "“{}” okundu; alanlar metinden dolduruldu.",
+                    read.definition.name
+                )));
+                self.grid = read.note;
+                self.kept = local_on_definition.then_some(read.definition);
+                self.problems.clear();
+                self.note = None;
+                self.same = None;
+                if self.kept.is_none() {
+                    self.check();
+                }
+            }
+            Err(why) => self.read = Some(Err(why)),
         }
     }
 
@@ -182,6 +274,62 @@ impl Editor {
                     *c = t;
                 }
             }
+            Event::Paste(action) => {
+                self.paste.perform(action);
+                return Outcome::Keep;
+            }
+            Event::Read => {
+                let text = self.paste.text();
+                self.take_text(&text);
+                return Outcome::Keep;
+            }
+            Event::PickFile => return Outcome::PickFile,
+            Event::Picked(None) => return Outcome::Keep,
+            Event::Picked(Some(path)) => {
+                match std::fs::metadata(&path) {
+                    Ok(m) if m.len() > PRJ_LIMIT => {
+                        self.read = Some(Err(
+                            "Dosya bir tanım için çok büyük (en çok 1 MiB); .prj dosyasını seçin."
+                                .to_owned(),
+                        ));
+                    }
+                    _ => match std::fs::read_to_string(&path) {
+                        Ok(text) => {
+                            self.paste = text_editor::Content::with_text(text.trim());
+                            self.take_text(&text);
+                        }
+                        Err(e) => {
+                            self.read = Some(Err(format!(
+                                "Dosya okunamadı ({e}); metni kutuya yapıştırmayı deneyin."
+                            )));
+                        }
+                    },
+                }
+                return Outcome::Keep;
+            }
+            Event::Copy(what) => {
+                let text = self.definition().and_then(|d| match what {
+                    Text::Wkt => definition_form::wkt(&d),
+                    Text::Proj => definition_form::proj(&d),
+                });
+                return match (text, what) {
+                    (Some(t), Text::Wkt) => Outcome::Copy(t, "WKT"),
+                    (Some(t), Text::Proj) => Outcome::Copy(t, "PROJ dizesi"),
+                    (None, _) => Outcome::Keep,
+                };
+            }
+            Event::Registry => {
+                return match self.same {
+                    Some(srid) => Outcome::Registry(self.target, srid),
+                    None => Outcome::Keep,
+                };
+            }
+            Event::Trial(i, t) => {
+                if let Some(v) = self.trial.get_mut(i) {
+                    *v = t;
+                }
+                return Outcome::Keep;
+            }
             Event::Cancel => return Outcome::Close,
             Event::Done => {
                 if let Some(d) = &self.kept {
@@ -197,8 +345,45 @@ impl Editor {
             }
         }
         self.kept = None;
+        self.grid = None;
         self.check();
         Outcome::Keep
+    }
+
+    /// Deneme noktası: the point in WGS 84 and in the project's other system
+    /// (a line each: the system and the values, how sure), or why not.
+    fn trial_lines(&self) -> Result<Vec<(String, String, String)>, String> {
+        if self.trial.iter().all(|t| t.trim().is_empty()) {
+            return Ok(Vec::new());
+        }
+        let from = self
+            .definition()
+            .as_ref()
+            .and_then(definition_system)
+            .ok_or_else(|| "Önce tanımı tamamlayın; nokta onunla dönüştürülür.".to_owned())?;
+        let c = &self.context;
+        let wgs84 = core::System::Geographic {
+            datum: core::Datum::Wgs84,
+        };
+        let mut targets = vec![("WGS 84".to_owned(), wgs84)];
+        targets.extend(c.reference.iter().cloned());
+        let mut lines = Vec::new();
+        for (name, to) in targets {
+            let [a, b] = &self.trial;
+            match convert_point(&from, &to, &c.choices, a, b, &c.format) {
+                Ok(p) => {
+                    let values = p
+                        .values
+                        .iter()
+                        .map(|(k, v)| format!("{k} {v}"))
+                        .collect::<Vec<_>>()
+                        .join("   ");
+                    lines.push((name, values, p.accuracy));
+                }
+                Err(e) => lines.push((name, error_text(e, &from, &c.format), String::new())),
+            }
+        }
+        Ok(lines)
     }
 }
 
@@ -291,6 +476,7 @@ pub fn view<'a>(
             "Kayıtta olmayan bir sistemi ikinci sistem olarak tanımlayın: değerleri durum çubuğunda ve Koordinat oku'da projeninkilerin yanında gösterilir. Tamam tanımı Proje ayarları'na yazar, Kaydet onu atar; çizim dönüştürülmez."
         }
     }));
+    body = body.push(paste(editor, on.clone()));
     if editor.kept.is_some() {
         body = body.push(Banner::info(
             "Bu tanımın tabanı da bir tanım (dosyadan geldi); bu pencere onu gösteremez. Bir alanı değiştirmezseniz tanım olduğu gibi kalır.",
@@ -364,11 +550,41 @@ pub fn view<'a>(
         Kind::Local => body = body.push(local(editor, on.clone())),
     }
     if let Some(note) = &editor.note {
-        body = body.push(Banner::info(note.clone()));
+        let banner = Banner::info(note.clone());
+        body = body.push(match editor.same {
+            Some(_) => banner.action("Kayıttakini seç", on(Event::Registry)),
+            None => banner,
+        });
     }
+    if let Some(grid) = &editor.grid {
+        body = body.push(Banner::info(grid.clone()));
+    }
+    body = body.push(trial(editor, on.clone()));
+    let whole = editor.definition();
+    let local = whole
+        .as_ref()
+        .is_some_and(|d| matches!(d.system, CrsSystem::Local(_)));
+    let copy = |caption: &'a str, what: Text, can: bool| {
+        words::secondary(caption, can.then(|| on(Event::Copy(what))))
+    };
+    let proj = copy("PROJ olarak kopyala", Text::Proj, whole.is_some() && !local);
+    // PROJ cannot write a system derived from another (docs/adr/0168 §5): said where the button waits.
+    let proj = if local {
+        kentos_ui::widget::tip(
+            proj,
+            kentos_ui::widget::Tip::new(
+                "Yerel sistem PROJ dizesiyle yazılamaz; WKT olarak kopyalayın.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        )
+    } else {
+        proj
+    };
     overlay::blocking(
         Dialog::new("Özel koordinat sistemi")
             .scroll(body)
+            .aside(copy("WKT olarak kopyala", Text::Wkt, whole.is_some()))
+            .aside(proj)
             .action(words::secondary("Vazgeç", Some(on(Event::Cancel))))
             .action(words::primary(
                 "Tamam",
@@ -377,6 +593,92 @@ pub fn view<'a>(
             .width(760.0)
             .max_height(760.0),
     )
+}
+
+/// WKT ya da PROJ'dan al: the box, Al and `.prj dosyası…`, and what reading said.
+fn paste<'a>(
+    editor: &'a Editor,
+    on: impl Fn(Event) -> Message + Clone + 'a,
+) -> Element<'a, Message> {
+    let typed = !editor.paste.text().trim().is_empty();
+    let box_ = text_editor(&editor.paste)
+        .placeholder("WKT (PROJCS[…], GEOGCS[…], PROJCRS[…] …) ya da +proj=… ile başlayan PROJ dizesi yapıştırın")
+        .on_action({
+            let on = on.clone();
+            move |a| on(Event::Paste(a))
+        })
+        .height(Length::Fixed(typography::from_default(64.0)))
+        // WKT has no spaces to break at: a long line breaks between letters.
+        .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
+        .size(typography::body())
+        .padding([5, 8])
+        .style(style::field::text_area);
+    let mut c = column![
+        section("WKT ya da PROJ'dan al"),
+        box_,
+        row![
+            words::secondary("Al", typed.then(|| on(Event::Read))),
+            words::secondary(".prj dosyası…", Some(on(Event::PickFile))),
+        ]
+        .spacing(8),
+    ]
+    .spacing(8);
+    match &editor.read {
+        Some(Ok(said)) => c = c.push(label::caption(said.clone())),
+        Some(Err(why)) => c = c.push(label::caption(why.clone()).style(style::text::danger)),
+        None => {}
+    }
+    c.into()
+}
+
+/// Deneme noktası: a point typed in this system, where it is in WGS 84 and
+/// in the project's other system, how sure.
+fn trial<'a>(
+    editor: &'a Editor,
+    on: impl Fn(Event) -> Message + Clone + 'a,
+) -> Element<'a, Message> {
+    // Named by the kind chosen, not by a whole definition: the names stay as the fields are typed.
+    let format = &editor.context.format;
+    let names = match editor.form.kind {
+        Kind::Geographic => ["Enlem", "Boylam"],
+        _ => [format.east, format.north],
+    };
+    let input = |i: usize| {
+        let on = on.clone();
+        field(names[i], &editor.trial[i], 160.0, None, move |t| {
+            on(Event::Trial(i, t))
+        })
+    };
+    let reference = editor
+        .context
+        .reference
+        .as_ref()
+        .map_or("WGS 84'teki yeri".to_owned(), |(name, _)| {
+            format!("WGS 84'teki ve {name} sistemindeki yeri")
+        });
+    let mut c = column![
+        section("Deneme noktası"),
+        label::caption(format!(
+            "Bu sistemde bir nokta yazın: {reference}, projenin datum dönüşümleriyle gösterilir."
+        )),
+        row![input(0), input(1)].spacing(12),
+    ]
+    .spacing(8);
+    match editor.trial_lines() {
+        Ok(lines) => {
+            for (name, values, accuracy) in lines {
+                c = c.push(
+                    row![
+                        container(label::caption(name)).width(180),
+                        column![label::mono(values), label::caption(accuracy)].spacing(2)
+                    ]
+                    .spacing(8),
+                );
+            }
+        }
+        Err(why) => c = c.push(label::caption(why)),
+    }
+    c.into()
 }
 
 /// A part's heading in the window's body.
@@ -606,6 +908,21 @@ fn local<'a>(
 mod tests {
     use super::*;
 
+    /// A trial point compared with TUREF / TM30, no datum choices, as a CBS project writes points.
+    fn context() -> Context {
+        Context {
+            reference: kentos_project::crs::system(5254)
+                .and_then(|s| Some(("TUREF / TM30".to_owned(), s.transform_system()?))),
+            choices: Vec::new(),
+            format: ConvertFormat {
+                east: "Y",
+                north: "X",
+                decimals: 3,
+                notation: kentos_interaction::second::Notation::Dms,
+            },
+        }
+    }
+
     fn typed(editor: &mut Editor, at: Field, t: &str) {
         assert!(matches!(
             editor.edit(Event::Text(at, t.to_owned())),
@@ -618,7 +935,7 @@ mod tests {
     /// build (definition_form.rs).
     #[test]
     fn a_new_definition_is_typed_checked_and_given() {
-        let mut editor = Editor::new(Target::Own, None);
+        let mut editor = Editor::new(Target::Own, None, context());
         assert!(editor.ready(), "nothing said before typing");
         typed(&mut editor, Field::Name, "Şantiye");
         assert_eq!(
@@ -651,7 +968,7 @@ mod tests {
     /// chosen before; a datum without its link keeps no parameters.
     #[test]
     fn the_datum_and_its_ellipsoid_are_chosen_or_typed() {
-        let mut editor = Editor::new(Target::Second, None);
+        let mut editor = Editor::new(Target::Second, None, context());
         typed(&mut editor, Field::Name, "Bessel TM");
         typed(&mut editor, Field::CentralMeridian, "27");
         typed(&mut editor, Field::FalseEasting, "500000");
@@ -696,7 +1013,7 @@ mod tests {
             .iter()
             .find_map(|c| serde_json::from_value(c["definition"].clone()).ok())
             .expect("a definition");
-        let mut editor = Editor::new(Target::Own, Some(&d));
+        let mut editor = Editor::new(Target::Own, Some(&d), context());
         assert!(editor.ready());
         assert!(matches!(editor.edit(Event::Done), Outcome::Done(Target::Own, got) if got == d));
         assert!(matches!(editor.edit(Event::Cancel), Outcome::Close));
@@ -716,7 +1033,7 @@ mod tests {
                 },
             }),
         };
-        let mut editor = Editor::new(Target::Second, Some(&based));
+        let mut editor = Editor::new(Target::Second, Some(&based), context());
         assert!(editor.ready(), "kept, nothing said");
         assert!(
             matches!(editor.edit(Event::Done), Outcome::Done(Target::Second, got) if got == based)
@@ -724,6 +1041,98 @@ mod tests {
         editor.edit(Event::Text(Field::Name, "Başka".to_owned()));
         // Typed: the window's own base (none chosen) is asked for.
         assert_eq!(editor.problems.get("base"), Some(&definition_form::BASE));
+    }
+
+    fn paste(editor: &mut Editor, text: &str) {
+        let paste = text_editor::Action::Edit(text_editor::Edit::Paste(std::sync::Arc::new(
+            text.to_owned(),
+        )));
+        assert!(matches!(editor.edit(Event::Paste(paste)), Outcome::Keep));
+    }
+
+    /// WKT ya da PROJ'dan al (docs/adr/0168 §5): a text pasted fills the
+    /// fields; one the registry has offers Kayıttakini seç; a text that is
+    /// not read says why and leaves the fields; a `.prj` file is read too.
+    #[test]
+    fn a_text_or_a_prj_file_fills_the_fields() {
+        let mut editor = Editor::new(Target::Own, None, context());
+        paste(
+            &mut editor,
+            "PROJCS[\"TUREF_TM36\",GEOGCS[\"GCS_TUREF\",DATUM[\"D_Turkish_National_Reference_Frame\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",36.0],PARAMETER[\"Scale_Factor\",1.0],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]",
+        );
+        assert!(matches!(editor.edit(Event::Read), Outcome::Keep));
+        assert_eq!(editor.form.name, "TUREF TM36");
+        assert_eq!(editor.form.central_meridian, "36");
+        assert_eq!(editor.same, Some(5256));
+        assert_eq!(
+            editor.note.as_deref(),
+            Some("EPSG:5256 (TUREF / TM36) ile aynı; kayıttakini seçin.")
+        );
+        assert!(matches!(
+            editor.edit(Event::Registry),
+            Outcome::Registry(Target::Own, 5256)
+        ));
+
+        // Not read: why, the fields as they were.
+        let mut editor = Editor::new(Target::Own, None, context());
+        paste(&mut editor, "+proj=lcc +lat_1=36 +lat_2=42 +units=m");
+        editor.edit(Event::Read);
+        assert_eq!(
+            editor.read,
+            Some(Err(
+                definition_form::READ_UNSUPPORTED.replace("{detail}", "+proj=lcc")
+            ))
+        );
+        assert_eq!(editor.form, Form::default());
+
+        // A .prj file: the box shows it, the fields are filled.
+        let dir = crate::files_testing::scratch("ozel-crs-prj");
+        let file = dir.join("santiye.prj");
+        std::fs::write(
+            &file,
+            "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs",
+        )
+        .expect("a file");
+        let mut editor = Editor::new(Target::Second, None, context());
+        editor.edit(Event::Picked(Some(file)));
+        assert!(editor.paste.text().starts_with("+proj=tmerc"));
+        assert_eq!(editor.form.datum, DatumPick::Custom);
+        assert_eq!(editor.form.ellipsoid, Some(3), "Bessel 1841");
+        assert!(editor.ready(), "{:?}", editor.problems);
+    }
+
+    /// The definition copied as WKT and PROJ (the core's texts), and a trial
+    /// point shown in WGS 84 and in the project's other system.
+    #[test]
+    fn a_definition_is_copied_and_tried() {
+        let mut editor = Editor::new(Target::Second, None, context());
+        for (at, v) in [
+            (Field::Name, "Kaydırılmış TM30"),
+            (Field::CentralMeridian, "30"),
+            (Field::FalseEasting, "400000"),
+            (Field::FalseNorthing, "0"),
+        ] {
+            typed(&mut editor, at, v);
+        }
+        let d = editor.definition().expect("whole");
+        let Outcome::Copy(wkt, "WKT") = editor.edit(Event::Copy(Text::Wkt)) else {
+            panic!("WKT to the clipboard");
+        };
+        assert_eq!(Some(wkt), definition_form::wkt(&d));
+        let Outcome::Copy(proj, "PROJ dizesi") = editor.edit(Event::Copy(Text::Proj)) else {
+            panic!("PROJ to the clipboard");
+        };
+        assert!(proj.starts_with("+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=400000"));
+        // TM30 with its false easting 100 km less: a point is TM30's 100 km further east.
+        editor.edit(Event::Trial(0, "400000".to_owned()));
+        editor.edit(Event::Trial(1, "4400000".to_owned()));
+        let lines = editor.trial_lines().expect("lines");
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0].0, "WGS 84");
+        assert!(lines[0].1.starts_with("Enlem 39°"), "{}", lines[0].1);
+        assert_eq!(lines[1].0, "TUREF / TM30");
+        assert_eq!(lines[1].1, "Y 500000.000   X 4400000.000");
+        assert_eq!(lines[1].2, "kesin, yalnız projeksiyon");
     }
 
     /// The editor over Proje ayarları, if it is open.
@@ -882,6 +1291,49 @@ mod tests {
         ));
     }
 
+    /// Through Proje ayarları: a WKT read offers the registry's system, and
+    /// Kayıttakini seç puts it in the draft in the window's place; a copy
+    /// says so in the log.
+    #[test]
+    fn kayittakini_sec_and_a_copy_go_through_proje_ayarlari() {
+        use crate::project::{SettingsEvent, settings_message};
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(Message::Run("crs.set"));
+        let send = |app: &mut crate::app::App, e: Event| {
+            let _ = app.update(settings_message(SettingsEvent::Custom(e)));
+        };
+        let _ = app.update(settings_message(SettingsEvent::NewDefinition(Target::Own)));
+        let paste = text_editor::Action::Edit(text_editor::Edit::Paste(std::sync::Arc::new(
+            "+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+                .to_owned(),
+        )));
+        send(&mut app, Event::Paste(paste));
+        send(&mut app, Event::Read);
+        send(&mut app, Event::Copy(Text::Proj));
+        assert!(app.log.said(
+            kentos_interaction::Level::Success,
+            "PROJ dizesi panoya kopyalandı."
+        ));
+        // GRS80 without TUREF's name is a datum of the text's own: no registry system, a shared grid said.
+        let editor = open_editor(&app).expect("open");
+        assert_eq!(editor.same, None);
+        assert_eq!(
+            editor.grid.as_deref(),
+            Some("Izgarası EPSG:5255 (TUREF / TM33) ile aynı; datumu metnin kendi datumu.")
+        );
+        send(
+            &mut app,
+            Event::Datum(DatumPick::Registry(RegistryDatum::Turef)),
+        );
+        assert_eq!(open_editor(&app).expect("open").same, Some(5255));
+        send(&mut app, Event::Registry);
+        assert!(open_editor(&app).is_none());
+        let Some(super::super::Window::Settings(s)) = &app.project else {
+            panic!("Proje ayarları stays");
+        };
+        assert_eq!(s.draft_srid(), (5255, false));
+    }
+
     /// Pictures for the owner: the window new and filled (a TM on the
     /// project's datum, a local system with its affine), what is wrong said
     /// under its field, and Proje ayarları with the definition chosen (its
@@ -897,19 +1349,27 @@ mod tests {
 
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
         std::fs::create_dir_all(&out).expect("a folder for the pictures");
-        let shots: [(&str, &[Event]); 4] = [
-            ("yeni", &[]),
+        let paste = |t: &str| {
+            Event::Paste(text_editor::Action::Edit(text_editor::Edit::Paste(
+                std::sync::Arc::new(t.to_owned()),
+            )))
+        };
+        let tm36 = "PROJCS[\"TUREF_TM36\",GEOGCS[\"GCS_TUREF\",DATUM[\"D_Turkish_National_Reference_Frame\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",36.0],PARAMETER[\"Scale_Factor\",1.0],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]";
+        // Each picture: its name, what is done in the window, whether its body is scrolled to the end.
+        let shots: Vec<(&str, Vec<Event>, bool)> = vec![
+            ("yeni", vec![], false),
             (
                 "hata",
-                &[
+                vec![
                     Event::Text(Field::Name, "Şantiye".to_owned()),
                     Event::Text(Field::CentralMeridian, "300".to_owned()),
                     Event::Text(Field::ScaleFactor, "0".to_owned()),
                 ],
+                false,
             ),
             (
                 "tm",
-                &[
+                vec![
                     Event::Text(Field::Name, "Bessel TM27".to_owned()),
                     Event::Text(Field::CentralMeridian, "27".to_owned()),
                     Event::Text(Field::ScaleFactor, "1".to_owned()),
@@ -923,10 +1383,11 @@ mod tests {
                     Event::Parameter(2, "405.346".to_owned()),
                     Event::Text(Field::Accuracy, "1".to_owned()),
                 ],
+                true,
             ),
             (
                 "yerel",
-                &[
+                vec![
                     Event::Text(Field::Name, "Belediye yerel".to_owned()),
                     Event::Kind(Kind::Local),
                     Event::Base(5254),
@@ -938,16 +1399,50 @@ mod tests {
                     Event::Affine(4, "1.0000215".to_owned()),
                     Event::Affine(5, "4521000".to_owned()),
                 ],
+                false,
+            ),
+            ("metin", vec![paste(tm36), Event::Read], false),
+            (
+                "metin-hata",
+                vec![
+                    paste("+proj=lcc +lat_1=36 +lat_2=42 +lon_0=33 +units=m"),
+                    Event::Read,
+                ],
+                false,
+            ),
+            (
+                "deneme",
+                vec![
+                    Event::Text(Field::Name, "Kaydırılmış TM36".to_owned()),
+                    Event::Text(Field::CentralMeridian, "36".to_owned()),
+                    Event::Text(Field::FalseEasting, "400000".to_owned()),
+                    Event::Text(Field::FalseNorthing, "0".to_owned()),
+                    Event::Trial(0, "412345.678".to_owned()),
+                    Event::Trial(1, "4421234.567".to_owned()),
+                ],
+                true,
             ),
         ];
         for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-            let picture = |app: &mut App, name: &str, click: Option<&str>| {
+            let picture = |app: &mut App, name: &str, click: Option<&str>, end: bool| {
                 app.follow.flash = None;
                 let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);
                 };
                 snapshot.settle(app, App::view, &mut update);
+                if end
+                    && let Some(r) = crate::files_testing::find_texts(
+                        &mut snapshot,
+                        app,
+                        "Özel koordinat sistemi",
+                    )
+                    .last()
+                    .copied()
+                {
+                    let body = iced::Point::new(r.x + 200.0, r.y + 200.0);
+                    snapshot.input(app, App::view, &mut update, Input::Scroll(body, -40.0));
+                }
                 if let Some(caption) = click
                     && let Some(r) = crate::files_testing::find_texts(&mut snapshot, app, caption)
                         .last()
@@ -971,30 +1466,35 @@ mod tests {
                 let _ = app.update(Message::Run("crs.set"));
                 app
             };
-            for (name, events) in &shots {
+            for (name, events, end) in &shots {
                 let mut app = fresh();
                 let _ = app.update(settings_message(SettingsEvent::NewDefinition(Target::Own)));
                 for e in events.iter() {
                     let _ = app.update(settings_message(SettingsEvent::Custom(e.clone())));
                 }
-                picture(&mut app, name, None);
+                picture(&mut app, name, None, *end);
             }
             // Proje ayarları with the definition chosen, and the second system's list open.
             let mut app = fresh();
             let _ = app.update(settings_message(SettingsEvent::NewDefinition(Target::Own)));
-            for e in shots[2].1 {
+            for e in &shots[2].1 {
                 let _ = app.update(settings_message(SettingsEvent::Custom(e.clone())));
             }
             let _ = app.update(settings_message(SettingsEvent::Custom(Event::Done)));
-            picture(&mut app, "ayarlar", None);
+            picture(&mut app, "ayarlar", None, false);
             let _ = app.update(settings_message(SettingsEvent::NewDefinition(
                 Target::Second,
             )));
-            for e in shots[3].1 {
+            for e in &shots[3].1 {
                 let _ = app.update(settings_message(SettingsEvent::Custom(e.clone())));
             }
             let _ = app.update(settings_message(SettingsEvent::Custom(Event::Done)));
-            picture(&mut app, "ikinci", Some("Belediye yerel (özel sistem)"));
+            picture(
+                &mut app,
+                "ikinci",
+                Some("Belediye yerel (özel sistem)"),
+                false,
+            );
         }
     }
 }

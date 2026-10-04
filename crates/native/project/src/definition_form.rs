@@ -1,9 +1,11 @@
-//! The Özel koordinat sistemi window's rules (docs/adr/0168 §1–§2, §6; the
-//! web's `model/definitionForm.ts`): what is typed turned into the project's
-//! definition (`CrsDefinition`) or, field by field, what is wrong; a
-//! definition the registry has already is said. The shared cases are
-//! fixtures/crs/v1/definition-form.json
-//! (scripts/fixtures/crs_definition_form_cases.py, from the ADR's rules).
+//! The Özel koordinat sistemi window's rules (docs/adr/0168 §1–§2, §5–§6;
+//! the web's `model/definitionForm.ts`): what is typed turned into the
+//! project's definition (`CrsDefinition`) or, field by field, what is wrong;
+//! a definition the registry has already is said; a WKT or PROJ text read
+//! into one, or why not; a definition written as WKT and PROJ. The shared
+//! cases are fixtures/crs/v1/definition-form.json and definition-text.json
+//! (scripts/fixtures/crs_definition_form_cases.py and
+//! crs_definition_text_cases.py, from the ADR's rules).
 
 use std::collections::BTreeMap;
 
@@ -12,8 +14,10 @@ use kentos_contracts::{
     GeographicDefinition, Helmert, LocalDefinition, RegistryDatum, TmDefinition,
 };
 
+use kentos_geometry_core::crs::text::{self as core_text, Refusal};
+
 use crate::crs::{system, systems};
-use crate::systems::definition_system;
+use crate::systems::{definition_from, definition_system};
 
 /// What the definition is.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -40,8 +44,8 @@ pub enum PlaneKind {
     Affine,
 }
 
-/// The classic ellipsoids by name: semi-major axis (m), inverse flattening
-/// (the core's `crs::text` table).
+/// The classic ellipsoids by name (EPSG's): semi-major axis (m), inverse
+/// flattening.
 pub const ELLIPSOIDS: [(&str, f64, f64); 6] = [
     ("GRS 1980", 6_378_137.0, 298.257_222_101),
     ("WGS 84", 6_378_137.0, 298.257_223_563),
@@ -132,6 +136,15 @@ pub const INVERSE_FLATTENING: &str = "Ters basıklığı 1'den büyük yazın.";
 pub const ACCURACY: &str = "0 ya da büyük bir sayı yazın; bilinmiyorsa boş bırakın.";
 pub const BASE: &str = "Kayıttaki projeksiyonlu bir sistem seçin.";
 pub const FOLDS: &str = "Bu katsayılar düzlemi katlıyor (a·e − b·d = 0).";
+
+/// What reading a text says when it gives no definition, and of a grid the
+/// registry has on the text's own datum; `{detail}`, `{srid}` and `{name}`
+/// are filled in.
+pub const READ_SYNTAX: &str = "Metin okunamadı: WKT (PROJCS[…], GEOGCS[…], PROJCRS[…] …) ya da +proj= ile başlayan bir PROJ dizesi yapıştırın.";
+pub const READ_UNSUPPORTED: &str = "“{detail}” okunmuyor: yalnız Transverse Mercator (UTM dahil), coğrafi sistem ve afinle türetilmiş yerel sistem tanımlanabilir.";
+pub const READ_UNIT: &str = "Birim “{detail}”: yalnız metre ve derece okunur.";
+pub const READ_MERIDIAN: &str = "Başlangıç meridyeni “{detail}”: yalnız Greenwich okunur.";
+pub const READ_GRID: &str = "Izgarası EPSG:{srid} ({name}) ile aynı; datumu metnin kendi datumu.";
 
 /// A number as the Hesap windows read one: trimmed, its first comma a
 /// point, `^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$`; none for anything else.
@@ -374,9 +387,9 @@ pub fn build(form: &Form) -> Result<(CrsDefinition, Option<String>), Problems> {
     Ok((definition, note))
 }
 
-/// “EPSG:5254 (TUREF / TM30) ile aynı; kayıttakini seçin.”: the registry's
-/// system a definition on one of its datums is, every value the same.
-fn same_as_registry(d: &CrsDefinition) -> Option<String> {
+/// The registry's system a definition on one of its datums is, every value
+/// the same (the window's Kayıttakini seç).
+pub fn same_srid(d: &CrsDefinition) -> Option<u32> {
     let registry_datum = match &d.system {
         CrsSystem::Tm(t) => t.datum.is_some(),
         CrsSystem::Geographic(g) => g.datum.is_some(),
@@ -390,7 +403,71 @@ fn same_as_registry(d: &CrsDefinition) -> Option<String> {
         .iter()
         .filter(|s| !s.is_local())
         .find(|s| s.transform_system().as_ref() == Some(&it))
-        .map(|s| format!("EPSG:{} ({}) ile aynı; kayıttakini seçin.", s.srid, s.name))
+        .map(|s| s.srid)
+}
+
+/// “EPSG:5254 (TUREF / TM30) ile aynı; kayıttakini seçin.”
+fn same_as_registry(d: &CrsDefinition) -> Option<String> {
+    let s = system(same_srid(d)?)?;
+    Some(format!(
+        "EPSG:{} ({}) ile aynı; kayıttakini seçin.",
+        s.srid, s.name
+    ))
+}
+
+/// A WKT or PROJ text read (docs/adr/0168 §5): the definition it is, the
+/// registry's system it is, what its datum shares with the registry.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Imported {
+    pub definition: CrsDefinition,
+    pub same: Option<u32>,
+    pub note: Option<String>,
+}
+
+/// A text pasted or a `.prj` file read as a definition, or why not.
+pub fn read(text: &str) -> Result<Imported, String> {
+    let r = core_text::read_text(text).map_err(|why| match &why {
+        Refusal::Syntax => READ_SYNTAX.to_owned(),
+        Refusal::Unsupported(d) => READ_UNSUPPORTED.replace("{detail}", d),
+        Refusal::Unit(d) => READ_UNIT.replace("{detail}", d),
+        Refusal::Meridian(d) => READ_MERIDIAN.replace("{detail}", d),
+    })?;
+    let definition = definition_from(&r.name, &r.system)
+        .ok_or_else(|| READ_UNSUPPORTED.replace("{detail}", "Pseudo-Mercator"))?;
+    let note = match r.registry {
+        Some((srid, false)) => system(srid).map(|s| {
+            READ_GRID
+                .replace("{srid}", &srid.to_string())
+                .replace("{name}", &s.name)
+        }),
+        _ => None,
+    };
+    Ok(Imported {
+        same: same_srid(&definition),
+        definition,
+        note,
+    })
+}
+
+/// A definition as WKT: WKT 1, a local system WKT 2 over its base, named as
+/// the registry or the base's definition names it (docs/adr/0168 §5).
+pub fn wkt(d: &CrsDefinition) -> Option<String> {
+    let s = definition_system(d)?;
+    let base = match &d.system {
+        CrsSystem::Local(l) => Some(match (l.base.srid, &l.base.definition) {
+            (_, Some(b)) => b.name.clone(),
+            (Some(srid), None) => system(srid)?.name.clone(),
+            (None, None) => return None,
+        }),
+        _ => None,
+    };
+    core_text::write_wkt(&d.name, &s, base.as_deref())
+}
+
+/// A definition as a PROJ string; none for a local system (PROJ cannot
+/// write one derived from another).
+pub fn proj(d: &CrsDefinition) -> Option<String> {
+    core_text::write_proj(&definition_system(d)?)
 }
 
 /// The form of a definition (a new one: an empty TM on TUREF).
@@ -591,6 +668,83 @@ mod tests {
                     assert_eq!(again, Ok(want), "{name}");
                 }
             }
+        }
+    }
+
+    /// A text read as the shared cases say (the web reads the same file,
+    /// `wasm/definitionText.wasm.test.ts`): the definition, the registry's
+    /// system it is and what its datum shares with the registry, or why not.
+    #[test]
+    fn texts_read_as_the_shared_cases() {
+        let file: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/crs/v1/definition-text.json"
+        ))
+        .expect("the cases read");
+        assert_eq!(file["format"], "kentos.crs-definition-text");
+        for (key, text) in [
+            ("syntax", READ_SYNTAX),
+            ("unsupported", READ_UNSUPPORTED),
+            ("unit", READ_UNIT),
+            ("meridian", READ_MERIDIAN),
+            ("grid", READ_GRID),
+            ("base", "{name} tabanı"),
+        ] {
+            assert_eq!(file["texts"][key], text, "{key}");
+        }
+        let reads = file["reads"].as_array().expect("reads");
+        assert!(reads.len() >= 27);
+        for case in reads {
+            let name = case["name"].as_str().expect("a name");
+            let got = read(case["text"].as_str().expect("a text"));
+            match case.get("problem") {
+                Some(p) => assert_eq!(got.as_ref().err().map(String::as_str), p.as_str(), "{name}"),
+                None => {
+                    let got = got.unwrap_or_else(|e| panic!("{name}: {e}"));
+                    let want: CrsDefinition =
+                        serde_json::from_value(case["definition"].clone()).expect("a definition");
+                    assert_eq!(got.definition, want, "{name}");
+                    assert_eq!(got.same, case["same"].as_u64().map(|s| s as u32), "{name}");
+                    assert_eq!(got.note.as_deref(), case["note"].as_str(), "{name}");
+                }
+            }
+        }
+    }
+
+    /// A definition copied is the core's text of its system (the cases of
+    /// fixtures/geodesy/v1/text.json, which PROJ reads back): WKT 1, a local
+    /// system WKT 2 over its base by name; PROJ but for a local system.
+    #[test]
+    fn a_definition_is_copied_as_the_cores_texts() {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        let file: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/geodesy/v1/text.json"))
+                .expect("the cases read");
+        for case in file["writes"].as_array().expect("writes") {
+            let w = &case["definition"];
+            let system = kentos_geometry_core::crs::System::from_json(
+                &Json::parse(&w["system"].to_string()).expect("JSON"),
+            )
+            .expect("the core reads it");
+            let name = w["name"].as_str().expect("a name");
+            let mut d = definition_from(name, &system).expect("a definition");
+            let want_wkt = case["wkt"].as_str();
+            // A base the registry does not have is named as the case names it.
+            if let CrsSystem::Local(l) = &mut d.system
+                && let Some(b) = l.base.definition.as_mut()
+            {
+                b.name = want_wkt
+                    .and_then(|t| t.split("BASEPROJCRS[\"").nth(1))
+                    .and_then(|t| t.split('"').next())
+                    .expect("the base's name")
+                    .to_owned();
+            }
+            assert_eq!(wkt(&d).as_deref(), want_wkt, "{}: WKT", case["name"]);
+            assert_eq!(
+                proj(&d).as_deref(),
+                case["proj"].as_str(),
+                "{}: PROJ",
+                case["name"]
+            );
         }
     }
 }

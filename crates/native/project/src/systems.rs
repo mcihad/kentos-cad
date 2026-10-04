@@ -6,8 +6,9 @@
 //! (scripts/fixtures/project_crs_cases.py, from the ADR's rules).
 
 use kentos_contracts::{
-    Convention, CrsDefinition, CrsPlane, CrsSystem, DatumRef, DatumTransform, Helmert,
-    ProjectSettings, RegistryDatum,
+    Convention, CrsBase, CrsDefinition, CrsPlane, CrsSystem, CustomDatum, DatumRef, DatumTransform,
+    Ellipsoid, GeographicDefinition, Helmert, LocalDefinition, ProjectSettings, RegistryDatum,
+    TmDefinition,
 };
 use kentos_geometry_core::crs as core;
 
@@ -197,6 +198,117 @@ pub fn definition_system(d: &CrsDefinition) -> Option<core::System> {
     })
 }
 
+/// A system the core reads (from WKT or PROJ, docs/adr/0168 §5) as the
+/// project's definition named `name`: the registry's datums by name, any
+/// other as the project's own; a local system's base the registry's
+/// projected system with every value the same, else a definition of its own
+/// named “<name> tabanı”. None for what a definition cannot be (the
+/// Pseudo-Mercator, a local system on another base).
+pub fn definition_from(name: &str, s: &core::System) -> Option<CrsDefinition> {
+    Some(CrsDefinition {
+        name: name.to_owned(),
+        system: match s {
+            core::System::Geographic { datum } => {
+                let (datum, custom_datum) = datum_fields(datum);
+                CrsSystem::Geographic(GeographicDefinition {
+                    datum,
+                    custom_datum,
+                })
+            }
+            core::System::Tm { .. } => CrsSystem::Tm(tm_from(s)?),
+            core::System::Local { base, plane } => {
+                let srid = crate::crs::systems()
+                    .iter()
+                    .find(|r| r.kind == "projected" && r.transform_system().as_ref() == Some(base))
+                    .map(|r| r.srid);
+                let definition = match srid {
+                    Some(_) => None,
+                    None => Some(Box::new(CrsDefinition {
+                        name: format!("{name} tabanı"),
+                        system: CrsSystem::Tm(tm_from(base)?),
+                    })),
+                };
+                CrsSystem::Local(LocalDefinition {
+                    base: CrsBase { srid, definition },
+                    plane: match *plane {
+                        core::Plane::Similarity {
+                            east,
+                            north,
+                            rotation,
+                            scale,
+                        } => CrsPlane::Similarity {
+                            east,
+                            north,
+                            rotation,
+                            scale,
+                        },
+                        core::Plane::Affine { a, b, c, d, e, f } => {
+                            CrsPlane::Affine { a, b, c, d, e, f }
+                        }
+                    },
+                })
+            }
+            core::System::Mercator {} => return None,
+        },
+    })
+}
+
+/// A transverse Mercator the core reads as a definition's.
+fn tm_from(s: &core::System) -> Option<TmDefinition> {
+    let core::System::Tm {
+        datum,
+        latitude_of_origin,
+        central_meridian,
+        scale_factor,
+        false_easting,
+        false_northing,
+    } = s
+    else {
+        return None;
+    };
+    let (datum, custom_datum) = datum_fields(datum);
+    Some(TmDefinition {
+        datum,
+        custom_datum,
+        latitude_of_origin: latitude_of_origin.filter(|v| *v != 0.0),
+        central_meridian: *central_meridian,
+        scale_factor: *scale_factor,
+        false_easting: *false_easting,
+        false_northing: *false_northing,
+    })
+}
+
+/// A datum the core reads as a definition's two fields: the registry's by
+/// name, or the project's own.
+fn datum_fields(d: &core::Datum) -> (Option<RegistryDatum>, Option<Box<CustomDatum>>) {
+    match d {
+        core::Datum::Turef => (Some(RegistryDatum::Turef), None),
+        core::Datum::Ed50 => (Some(RegistryDatum::Ed50), None),
+        core::Datum::Wgs84 => (Some(RegistryDatum::Wgs84), None),
+        core::Datum::Custom(c) => (
+            None,
+            Some(Box::new(CustomDatum {
+                name: c.name.clone(),
+                ellipsoid: Ellipsoid {
+                    name: c.ellipsoid.name.clone(),
+                    semi_major: c.ellipsoid.semi_major,
+                    inverse_flattening: c.ellipsoid.inverse_flattening,
+                },
+                to_wgs84: c.to_wgs84.as_ref().map(|h| Helmert {
+                    translation: h.translation,
+                    rotation: h.rotation,
+                    scale: h.scale,
+                    convention: match h.convention {
+                        core::Convention::PositionVector => Convention::PositionVector,
+                        core::Convention::CoordinateFrame => Convention::CoordinateFrame,
+                    },
+                    accuracy: h.accuracy,
+                }),
+            })),
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -248,5 +360,57 @@ mod tests {
                 .collect();
             assert_eq!(choices(&settings), want, "{name}");
         }
+    }
+
+    /// Every system the core reads from the texts of fixtures/geodesy/v1/text.json
+    /// (PROJ's) is a definition that the transforms read back as it was; a
+    /// local system's base is the registry's when every value is, else a
+    /// definition of its own (the web's `definitionFrom`).
+    #[test]
+    fn a_system_read_is_a_definition_read_back_as_it_was() {
+        let file: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/geodesy/v1/text.json"))
+                .expect("the cases read");
+        let mut read = 0;
+        for case in file["reads"].as_array().expect("reads") {
+            let Some(want) = case.get("expect") else {
+                continue;
+            };
+            let name = want["name"].as_str().expect("a name");
+            let system: core::System = core_json(&want["system"]);
+            let d = definition_from(name, &system).unwrap_or_else(|| panic!("{name}"));
+            assert_eq!(definition_system(&d), Some(system), "{}", case["name"]);
+            read += 1;
+        }
+        assert!(read >= 19);
+        // A local system on a base the registry does not have: the base is a definition of its own.
+        let base = core::System::Tm {
+            datum: core::Datum::Turef,
+            latitude_of_origin: None,
+            central_meridian: 30.0,
+            scale_factor: 1.0,
+            false_easting: 400_000.0,
+            false_northing: 0.0,
+        };
+        let local = core::System::Local {
+            base: Box::new(base.clone()),
+            plane: core::Plane::Similarity {
+                east: 1.0,
+                north: 2.0,
+                rotation: 0.5,
+                scale: 1.0,
+            },
+        };
+        let d = definition_from("Şantiye", &local).expect("a definition");
+        let CrsSystem::Local(l) = &d.system else {
+            panic!("a local system");
+        };
+        assert_eq!(l.base.srid, None);
+        assert_eq!(
+            l.base.definition.as_ref().map(|b| b.name.as_str()),
+            Some("Şantiye tabanı")
+        );
+        assert_eq!(definition_system(&d), Some(local));
+        assert_eq!(definition_from("Web", &core::System::Mercator {}), None);
     }
 }

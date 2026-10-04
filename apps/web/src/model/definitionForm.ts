@@ -5,14 +5,17 @@ import type { CrsSystem } from '../contracts/generated/CrsSystem';
 import type { CustomDatum } from '../contracts/generated/CustomDatum';
 import type { RegistryDatum } from '../contracts/generated/RegistryDatum';
 import { CRS_REGISTRY, crsBySrid } from '../geo/crs';
+import { crsReadText, crsWriteProj, crsWriteWkt } from './geom/crsText';
 import { systemOf } from './geom/crsTransform';
-import { definitionSystem } from './projectCrs';
+import { definitionFrom, definitionSystem } from './projectCrs';
 
 /**
- * The Özel koordinat sistemi window's rules (docs/adr/0168 §1–§2, §6; the desktop's `kentos_project::definition_form`):
- * what is typed turned into the project's definition (`CrsDefinition`) or, field by field, what is wrong; a definition
- * the registry has already is said. The shared cases are fixtures/crs/v1/definition-form.json
- * (scripts/fixtures/crs_definition_form_cases.py, from the ADR's rules).
+ * The Özel koordinat sistemi window's rules (docs/adr/0168 §1–§2, §5–§6; the desktop's
+ * `kentos_project::definition_form`): what is typed turned into the project's definition (`CrsDefinition`) or, field by
+ * field, what is wrong; a definition the registry has already is said; a WKT or PROJ text read into one, or why not; a
+ * definition written as WKT and PROJ. The shared cases are fixtures/crs/v1/definition-form.json and
+ * definition-text.json (scripts/fixtures/crs_definition_form_cases.py and crs_definition_text_cases.py, from the ADR's
+ * rules).
  */
 
 export type Kind = 'tm' | 'geographic' | 'local';
@@ -20,7 +23,7 @@ export type Kind = 'tm' | 'geographic' | 'local';
 export type DatumPick = RegistryDatum | 'custom';
 export type PlaneKind = 'similarity' | 'affine';
 
-/** The classic ellipsoids by name: semi-major axis (m), inverse flattening (the core's `crs::text` table). */
+/** The classic ellipsoids by name (EPSG's): semi-major axis (m), inverse flattening. */
 export const ELLIPSOIDS: readonly (readonly [string, number, number])[] = [
   ['GRS 1980', 6378137, 298.257222101],
   ['WGS 84', 6378137, 298.257223563],
@@ -229,14 +232,70 @@ export function buildDefinition(f: DefinitionForm): { readonly definition: CrsDe
   return note ? { definition, note } : { definition };
 }
 
-/** “EPSG:5254 (TUREF / TM30) ile aynı; kayıttakini seçin.”: the registry's system a definition on one of its datums is. */
-function sameAsRegistry(d: CrsDefinition): string | null {
+/** The registry's system a definition on one of its datums is, every value the same (the window's Kayıttakini seç). */
+export function sameSrid(d: CrsDefinition): number | null {
   const s = d.system;
   if (s.kind === 'local' || s.datum === undefined) return null;
   const it = definitionSystem(d);
   if (!it) return null;
   const same = CRS_REGISTRY.find((c) => c.kind !== 'local' && JSON.stringify(systemOf(c)) === JSON.stringify(it));
-  return same ? `EPSG:${same.srid} (${same.name}) ile aynı; kayıttakini seçin.` : null;
+  return same ? same.srid : null;
+}
+
+/** “EPSG:5254 (TUREF / TM30) ile aynı; kayıttakini seçin.” */
+function sameAsRegistry(d: CrsDefinition): string | null {
+  const srid = sameSrid(d);
+  const c = srid === null ? undefined : crsBySrid(srid);
+  return c ? `EPSG:${c.srid} (${c.name}) ile aynı; kayıttakini seçin.` : null;
+}
+
+/** What reading a text says when it gives no definition, and of a grid the registry has on the text's own datum. */
+export const READ_TEXTS = {
+  syntax: 'Metin okunamadı: WKT (PROJCS[…], GEOGCS[…], PROJCRS[…] …) ya da +proj= ile başlayan bir PROJ dizesi yapıştırın.',
+  unsupported: '“{detail}” okunmuyor: yalnız Transverse Mercator (UTM dahil), coğrafi sistem ve afinle türetilmiş yerel sistem tanımlanabilir.',
+  unit: 'Birim “{detail}”: yalnız metre ve derece okunur.',
+  meridian: 'Başlangıç meridyeni “{detail}”: yalnız Greenwich okunur.',
+  grid: 'Izgarası EPSG:{srid} ({name}) ile aynı; datumu metnin kendi datumu.',
+} as const;
+
+/** A WKT or PROJ text read (docs/adr/0168 §5): the definition it is, the registry's system it is, what its datum shares with the registry. */
+export interface Imported {
+  readonly definition: CrsDefinition;
+  readonly same: number | null;
+  readonly note: string | null;
+}
+
+/** A text pasted or a `.prj` file read as a definition, or why not. */
+export function readDefinition(text: string): Imported | { readonly problem: string } {
+  const r = crsReadText(text);
+  if ('error' in r) return { problem: READ_TEXTS[r.error.kind].replaceAll('{detail}', () => r.error.detail) };
+  const definition = definitionFrom(r.name, r.system);
+  if (!definition) return { problem: READ_TEXTS.unsupported.replaceAll('{detail}', 'Pseudo-Mercator') };
+  const shared = r.registry && !r.registry.exact ? crsBySrid(r.registry.srid) : undefined;
+  return {
+    definition,
+    same: sameSrid(definition),
+    note: shared ? READ_TEXTS.grid.replaceAll('{srid}', String(shared.srid)).replaceAll('{name}', () => shared.name) : null,
+  };
+}
+
+/** A definition as WKT: WKT 1, a local system WKT 2 over its base, named as the registry or the base's definition names it (§5). */
+export function definitionWkt(d: CrsDefinition): string | null {
+  const s = definitionSystem(d);
+  if (!s) return null;
+  let base: string | null = null;
+  if (d.system.kind === 'local') {
+    const b = d.system.base;
+    base = b.definition ? b.definition.name : b.srid !== undefined ? (crsBySrid(b.srid)?.name ?? null) : null;
+    if (base === null) return null;
+  }
+  return crsWriteWkt(d.name, s, base);
+}
+
+/** A definition as a PROJ string; null for a local system (PROJ cannot write one derived from another). */
+export function definitionProj(d: CrsDefinition): string | null {
+  const s = definitionSystem(d);
+  return s ? crsWriteProj(s) : null;
 }
 
 /** The form of a definition. */

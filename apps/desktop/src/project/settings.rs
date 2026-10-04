@@ -116,7 +116,7 @@ impl fmt::Display for Angle {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct State {
     /// The page shown; Koordinat sistemi… opens on `Crs`.
     pub(super) section: Section,
@@ -205,6 +205,12 @@ impl State {
         }
     }
 
+    /// The draft's system: its SRID, and whether it is the project's own definition.
+    #[cfg(test)]
+    pub(super) fn draft_srid(&self) -> (u32, bool) {
+        (self.settings.srid, self.settings.custom_crs.is_some())
+    }
+
     /// Esc: the window over this one, or the question in a row, goes first.
     pub(super) fn dismiss_inner(&mut self) -> bool {
         self.custom.take().is_some() || self.removing.take().is_some()
@@ -223,8 +229,12 @@ impl App {
             self.dialog_under = Some(crate::app::Dialog::Project);
             return Task::none();
         }
-        // The grids a datum choice may name, before the window is borrowed.
+        if let Event::Custom(e) = e {
+            return self.custom_crs_event(e);
+        }
+        // The grids a datum choice may name and the user's notation, before the window is borrowed.
         let grids = self.choice_grids();
+        let notation = self.draft.geographic;
         let Some(Window::Settings(s)) = &mut self.project else {
             return Task::none();
         };
@@ -271,31 +281,19 @@ impl App {
                     d.second_custom_crs = Some(def.clone());
                 }
             }
-            Event::NewDefinition(target) => s.custom = Some(custom_crs::Editor::new(target, None)),
+            Event::NewDefinition(target) => {
+                let context = custom_context(target, d, &s.initial, notation);
+                s.custom = Some(custom_crs::Editor::new(target, None, context));
+            }
             Event::EditDefinition(target) => {
+                let context = custom_context(target, d, &s.initial, notation);
                 let existing = match target {
                     Target::Own => s.defined.as_ref(),
                     Target::Second => s.second_defined.as_ref(),
                 };
-                s.custom = Some(custom_crs::Editor::new(target, existing));
+                s.custom = Some(custom_crs::Editor::new(target, existing, context));
             }
-            Event::Custom(e) => match s.custom.as_mut().map(|editor| editor.edit(e)) {
-                Some(Outcome::Close) => s.custom = None,
-                // Tamam: the definition is the draft's (Kaydet assigns it).
-                Some(Outcome::Done(Target::Own, def)) => {
-                    s.custom = None;
-                    d.srid = crs::LOCAL_SRID;
-                    d.custom_crs = Some(def.clone());
-                    s.defined = Some(def);
-                }
-                Some(Outcome::Done(Target::Second, def)) => {
-                    s.custom = None;
-                    d.second_srid = None;
-                    d.second_custom_crs = Some(def.clone());
-                    s.second_defined = Some(def);
-                }
-                Some(Outcome::Keep) | None => {}
-            },
+            Event::Custom(_) => {}
             Event::GridAsk(id) => s.removing = id,
             Event::Choice(i, edit) => s.choices.edit(i, edit, &grids, &mut d.datum_transforms),
             Event::Grid(_) => {}
@@ -306,6 +304,69 @@ impl App {
             Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
             Event::ResetSection => reset_section(s.section, d),
             Event::OpenApp | Event::Save => {}
+        }
+        // The project's own system, or none, is no second system (docs/adr/0167 §1).
+        d.second_srid = d.second();
+        Task::none()
+    }
+
+    /// Özel koordinat sistemi's fields and buttons: Tamam puts the definition
+    /// in the draft (Kaydet assigns it), Kayıttakini seç the registry's
+    /// system; a `.prj` file is asked for, a text goes to the clipboard.
+    fn custom_crs_event(&mut self, e: custom_crs::Event) -> Task<Message> {
+        let Some(Window::Settings(s)) = &mut self.project else {
+            return Task::none();
+        };
+        let Some(editor) = s.custom.as_mut() else {
+            return Task::none();
+        };
+        let d = &mut s.settings;
+        match editor.edit(e) {
+            Outcome::Keep => return Task::none(),
+            Outcome::Close => s.custom = None,
+            Outcome::Done(Target::Own, def) => {
+                s.custom = None;
+                d.srid = crs::LOCAL_SRID;
+                d.custom_crs = Some(def.clone());
+                s.defined = Some(def);
+            }
+            Outcome::Done(Target::Second, def) => {
+                s.custom = None;
+                d.second_srid = None;
+                d.second_custom_crs = Some(def.clone());
+                s.second_defined = Some(def);
+            }
+            // The registry's system takes the place of a definition (docs/adr/0168 §1, §6).
+            Outcome::Registry(Target::Own, srid) => {
+                s.custom = None;
+                d.srid = srid;
+                d.custom_crs = None;
+            }
+            Outcome::Registry(Target::Second, srid) => {
+                s.custom = None;
+                d.second_srid = Some(srid);
+                d.second_custom_crs = None;
+            }
+            Outcome::PickFile => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title("Koordinat sistemi tanımı al")
+                            .add_filter(
+                                "Koordinat sistemi tanımı (.prj, .wkt, .txt)",
+                                &["prj", "PRJ", "wkt", "WKT", "txt", "TXT"],
+                            )
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |path| event(Event::Custom(custom_crs::Event::Picked(path))),
+                );
+            }
+            Outcome::Copy(text, what) => {
+                self.say(Level::Success, format!("{what} panoya kopyalandı."));
+                return iced::clipboard::write(text);
+            }
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
         d.second_srid = d.second();
@@ -641,6 +702,29 @@ impl App {
             ]
             .spacing(10),
         )
+    }
+}
+
+/// Where Özel koordinat sistemi's trial point is compared (custom_crs.rs):
+/// the project's system as it was saved for its own definition, the draft's
+/// own system for the second; the draft's datum choices; the project's way
+/// of writing points.
+fn custom_context(
+    target: Target,
+    draft: &ProjectSettings,
+    initial: &ProjectSettings,
+    notation: kentos_interaction::second::Notation,
+) -> custom_crs::Context {
+    let reference = match target {
+        Target::Own if initial.custom_crs.is_none() => kentos_project::systems::own(initial),
+        Target::Own => None,
+        Target::Second => kentos_project::systems::own(draft),
+    }
+    .and_then(|n| Some((n.name, n.system?)));
+    custom_crs::Context {
+        reference,
+        choices: kentos_project::systems::choices(draft),
+        format: crate::calc::convert::ConvertFormat::of(draft, notation),
     }
 }
 

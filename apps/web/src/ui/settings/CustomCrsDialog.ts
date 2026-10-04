@@ -4,10 +4,14 @@ import { CRS_REGISTRY, crsTitle } from '../../geo/crs';
 import {
   AFFINE,
   buildDefinition,
+  definitionProj,
+  definitionWkt,
   ELLIPSOIDS,
   emptyForm,
   formOf,
   PARAMETERS,
+  readDefinition,
+  sameSrid,
   type Coefficient,
   type DatumPick,
   type DefinitionForm,
@@ -16,6 +20,9 @@ import {
   type PlaneKind,
   type Problems,
 } from '../../model/definitionForm';
+import type { DatumChoice, System } from '../../model/geom/crsTransform';
+import { definitionSystem } from '../../model/projectCrs';
+import { convertPoint, errorText, type ConvertFormat } from '../calc/convert';
 import { h, replaceChildren, type Child } from '../dom';
 import { Dialog } from '../widgets/Dialog';
 import { Dropdown } from '../widgets/Dropdown';
@@ -27,16 +34,36 @@ import { note, segmented, textField } from '../widgets/controls';
  * its second system typed as a definition: its name, its kind (a transverse Mercator, a geographic system, a local
  * system bound to a base), the kind's values, its datum (the registry's, or the project's: an ellipsoid and seven
  * parameters to WGS 84), a local system's base and plane. What is typed is checked field by field
- * (model/definitionForm.ts, the shared cases'), and a definition the registry has is said. It opens over Proje
- * ayarları: Tamam puts the definition in its draft, Kaydet there assigns it; the drawing is not transformed.
+ * (model/definitionForm.ts, the shared cases'), and a definition the registry has is said, with Kayıttakini seç. A WKT
+ * or PROJ text pasted, or a `.prj` file, fills the fields (docs/adr/0168 §5); the definition is copied as WKT or PROJ; a
+ * Deneme noktası shows where a point typed in it is in WGS 84 and in the project's other system, with the project's
+ * datum choices. It opens over Proje ayarları: Tamam puts the definition in its draft, Kaydet there assigns it; the
+ * drawing is not transformed.
  */
 export interface CustomCrsOptions {
   /** Whose definition: the project's own system or its second. */
   readonly target: 'own' | 'second';
   /** The definition there is; null: a new one. */
   readonly existing: CrsDefinition | null;
+  /** Where a trial point is compared. */
+  readonly trial: TrialContext;
   onDone(definition: CrsDefinition): void;
+  /** Kayıttakini seç: the registry's system the definition is. */
+  onRegistry(srid: number): void;
+  /** What happened, for the log: a text copied, or not. */
+  say(kind: 'success' | 'error', text: string): void;
 }
+
+/** Where a trial point is compared: the project's other system (named), its datum choices, how it writes points. */
+export interface TrialContext {
+  readonly reference: { readonly name: string; readonly system: System } | null;
+  readonly choices: readonly DatumChoice[];
+  readonly format: ConvertFormat;
+}
+
+/** The largest `.prj` file read (a definition is a few hundred bytes). */
+const PRJ_LIMIT = 1 << 20;
+const WGS84: System = { kind: 'geographic', datum: 'WGS84' };
 
 /** The seven parameters' captions (Datum dönüşümleri's too). */
 export const PARAMETER_CAPTIONS: Record<Parameter, string> = { tx: 'ΔX (m)', ty: 'ΔY (m)', tz: 'ΔZ (m)', rx: 'rX (″)', ry: 'rY (″)', rz: 'rZ (″)', ds: 'Ölçek farkı (ppm)' };
@@ -60,29 +87,145 @@ export function openCustomCrs(o: CustomCrsOptions): void {
   let kept: CrsDefinition | null = o.existing?.system.kind === 'local' && o.existing.system.base.definition ? o.existing : null;
   let problems: Problems = {};
   let said: string | null = null;
+  let same: number | null = null;
+  // What reading a text said, and a grid the registry has on the text's own datum.
+  let read: { readonly ok: boolean; readonly text: string } | null = null;
+  let grid: string | null = null;
+  const trial = ['', ''];
   const problemNodes: { key: string; el: HTMLElement }[] = [];
-  const noteSlot = h('div', null);
+  const noteSlot = h('div', { class: 'custom-crs__notes' });
   const body = h('div', { class: 'custom-crs' });
   const ok = h('button', { class: 'btn btn--primary', type: 'button' }, 'Tamam');
   const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const wkt = h('button', { class: 'btn', type: 'button' }, 'WKT olarak kopyala');
+  const proj = h('button', { class: 'btn', type: 'button' }, 'PROJ olarak kopyala');
+  // The box keeps what is pasted across redraws: it is made once.
+  const paste = h('textarea', {
+    class: 'field custom-crs__paste',
+    rows: 3,
+    placeholder: 'WKT (PROJCS[…], GEOGCS[…], PROJCRS[…] …) ya da +proj=… ile başlayan PROJ dizesi yapıştırın',
+    'aria-label': 'WKT ya da PROJ metni',
+    spellcheck: 'false',
+  }) as HTMLTextAreaElement;
+  const take = h('button', { class: 'btn btn--small', type: 'button' }, 'Al');
+  const pick = h('button', { class: 'btn btn--small', type: 'button' }, '.prj dosyası…');
+  const file = h('input', { type: 'file', accept: '.prj,.PRJ,.wkt,.WKT,.txt,.TXT', hidden: true }) as HTMLInputElement;
+  const readSaid = h('div', { class: 'custom-crs__read' });
+  const trialOut = h('div', { class: 'custom-crs__trial' });
 
   const check = () => {
     const got = buildDefinition(f);
     problems = 'problems' in got ? got.problems : {};
     said = 'problems' in got ? null : (got.note ?? null);
+    same = 'problems' in got ? null : sameSrid(got.definition);
+  };
+  /** The definition as it stands: the one kept, or the form's when it builds. */
+  const definition = (): CrsDefinition | null => {
+    if (kept) return kept;
+    const got = buildDefinition(f);
+    return 'problems' in got ? null : got.definition;
+  };
+  const paintTrial = () => {
+    if (trial.every((t) => !t.trim())) return replaceChildren(trialOut);
+    const d = definition();
+    const from = d ? definitionSystem(d) : null;
+    if (!from) return replaceChildren(trialOut, h('p', { class: 'custom-crs__note' }, 'Önce tanımı tamamlayın; nokta onunla dönüştürülür.'));
+    const targets: [string, System][] = [['WGS 84', WGS84], ...(o.trial.reference ? [[o.trial.reference.name, o.trial.reference.system] as [string, System]] : [])];
+    replaceChildren(
+      trialOut,
+      targets.map(([name, to]) => {
+        const c = convertPoint(from, to, o.trial.choices, trial[0]!, trial[1]!, o.trial.format);
+        const said =
+          typeof c === 'string'
+            ? h('div', null, errorText(c, from, o.trial.format))
+            : [h('div', { class: 'custom-crs__values num' }, c.values.map(([k, v]) => h('span', null, `${k} ${v}`))), h('div', { class: 'custom-crs__note' }, c.accuracy)];
+        return [h('div', { class: 'custom-crs__trial-name' }, name), h('div', null, said)];
+      }),
+    );
   };
   const paint = () => {
     for (const p of problemNodes) p.el.textContent = problems[p.key] ?? '';
-    replaceChildren(noteSlot, said ? note('info', said) : null);
+    const notes: Child[] = [];
+    if (said) {
+      const offer = same === null ? null : h('button', { class: 'btn btn--small', type: 'button' }, 'Kayıttakini seç');
+      offer?.addEventListener('click', () => {
+        if (same === null) return;
+        o.onRegistry(same);
+        dialog.close();
+      });
+      notes.push(note('info', h('span', { class: 'custom-crs__said' }, said), offer));
+    }
+    if (grid) notes.push(note('info', grid));
+    replaceChildren(noteSlot, notes);
     ok.disabled = Object.keys(problems).length > 0;
+    const whole = definition();
+    const local = whole?.system.kind === 'local';
+    wkt.disabled = !whole;
+    proj.disabled = !whole || local;
+    // PROJ cannot write a system derived from another (docs/adr/0168 §5): said where the button waits.
+    proj.title = local ? 'Yerel sistem PROJ dizesiyle yazılamaz; WKT olarak kopyalayın.' : '';
+    take.disabled = !paste.value.trim();
+    replaceChildren(readSaid, read?.text ?? '');
+    readSaid.toggleAttribute('data-error', read !== null && !read.ok);
+    paintTrial();
   };
-  // Something typed or chosen: a definition kept from a file goes, the form is checked; a choice draws the form again.
+  // Something typed or chosen: a definition kept from a file and what a text's datum shares go, the form is checked; a
+  // choice draws the form again.
   const changed = (redraw: boolean) => {
     kept = null;
+    grid = null;
     check();
     if (redraw) render();
     else paint();
   };
+  /** A text read into the fields, or why not (the shared cases'). */
+  const takeText = (text: string) => {
+    const got = readDefinition(text);
+    if ('problem' in got) {
+      read = { ok: false, text: got.problem };
+      return paint();
+    }
+    Object.assign(f, formOf(got.definition));
+    const d = got.definition;
+    kept = d.system.kind === 'local' && d.system.base.definition ? d : null;
+    grid = got.note;
+    read = { ok: true, text: `“${d.name}” okundu; alanlar metinden dolduruldu.` };
+    problems = {};
+    said = null;
+    same = null;
+    if (!kept) check();
+    render();
+  };
+  paste.addEventListener('input', () => (take.disabled = !paste.value.trim()));
+  take.addEventListener('click', () => takeText(paste.value));
+  pick.addEventListener('click', () => file.click());
+  file.addEventListener('change', async () => {
+    const chosen = file.files?.[0];
+    file.value = '';
+    if (!chosen) return;
+    if (chosen.size > PRJ_LIMIT) {
+      read = { ok: false, text: 'Dosya bir tanım için çok büyük (en çok 1 MiB); .prj dosyasını seçin.' };
+      return paint();
+    }
+    const text = await chosen.text();
+    paste.value = text.trim();
+    takeText(text);
+  });
+  const copy = (what: 'WKT' | 'PROJ dizesi', text: string | null) => {
+    if (!text) return;
+    void navigator.clipboard.writeText(text).then(
+      () => o.say('success', `${what} panoya kopyalandı.`),
+      () => o.say('error', `${what} panoya yazılamadı: tarayıcı izin vermedi. Pencereyi tıklayıp yeniden deneyin.`),
+    );
+  };
+  wkt.addEventListener('click', () => {
+    const d = definition();
+    copy('WKT', d && definitionWkt(d));
+  });
+  proj.addEventListener('click', () => {
+    const d = definition();
+    copy('PROJ dizesi', d && definitionProj(d));
+  });
 
   const caption = (text: string) => h('span', { class: 'datum-field__caption' }, text);
   const field = (key: string, label: string, value: string, set: (v: string) => void, size: 'wide' | 'number' | 'scale' | 'coefficient' = 'number') => {
@@ -195,6 +338,19 @@ export function openCustomCrs(o: CustomCrsOptions): void {
     ];
   };
 
+  /** Deneme noktası: a point typed in this system, where it is in WGS 84 and in the project's other system, how sure. */
+  const trialPart = (): Child[] => {
+    // Named by the kind chosen, not by a whole definition: the names stay as the fields are typed.
+    const [a, b] = f.kind === 'geographic' ? ['Enlem', 'Boylam'] : [o.trial.format.east, o.trial.format.north];
+    const input = (i: 0 | 1, label: string) => {
+      const el = textField({ label: `Deneme noktası ${label}`, value: trial[i]!, onChange: (v) => ((trial[i] = v), paintTrial()) });
+      el.classList.add('datum-field__input');
+      return h('label', { class: 'datum-field datum-field--scale' }, caption(label), el);
+    };
+    const where = o.trial.reference ? `WGS 84'teki ve ${o.trial.reference.name} sistemindeki yeri` : "WGS 84'teki yeri";
+    return [heading('Deneme noktası'), words(`Bu sistemde bir nokta yazın: ${where}, projenin datum dönüşümleriyle gösterilir.`), row(input(0, a), input(1, b)), trialOut];
+  };
+
   const render = () => {
     // Keep the keyboard's place across a redraw: the nearest labelled control.
     const active = document.activeElement as HTMLElement | null;
@@ -212,6 +368,10 @@ export function openCustomCrs(o: CustomCrsOptions): void {
     });
     const parts: Child[] = [
       words(LEADS[o.target]),
+      heading("WKT ya da PROJ'dan al"),
+      paste,
+      h('div', { class: 'custom-crs__actions' }, take, pick, file),
+      readSaid,
       kept ? note('info', 'Bu tanımın tabanı da bir tanım (dosyadan geldi); bu pencere onu gösteremez. Bir alanı değiştirmezseniz tanım olduğu gibi kalır.') : null,
       row(field('name', 'Ad', f.name, (v) => (f.name = v), 'wide'), control('Tür', kinds)),
     ];
@@ -232,7 +392,7 @@ export function openCustomCrs(o: CustomCrsOptions): void {
       );
     else if (f.kind === 'geographic') parts.push(...datumPart());
     else parts.push(...localPart());
-    parts.push(noteSlot);
+    parts.push(noteSlot, ...trialPart());
     replaceChildren(body, parts);
     paint();
     if (focusKey) {
@@ -241,7 +401,7 @@ export function openCustomCrs(o: CustomCrsOptions): void {
     }
   };
 
-  const dialog = new Dialog({ title: 'Özel koordinat sistemi', width: 760, className: 'dialog--custom-crs', stack: true, content: [body], footer: [h('div', { class: 'dialog__spacer' }), cancel, ok] });
+  const dialog = new Dialog({ title: 'Özel koordinat sistemi', width: 760, className: 'dialog--custom-crs', stack: true, content: [body], footer: [wkt, proj, h('div', { class: 'dialog__spacer' }), cancel, ok] });
   cancel.addEventListener('click', () => dialog.close());
   ok.addEventListener('click', () => {
     if (kept) {

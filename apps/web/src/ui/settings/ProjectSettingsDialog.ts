@@ -3,7 +3,7 @@ import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
-import { definitionTitle, DEFINITION_CODE } from '../../model/projectCrs';
+import { datumChoices, definitionTitle, DEFINITION_CODE, ownSystem } from '../../model/projectCrs';
 import { secondChoices, secondTitle } from '../../model/secondCrs';
 import { h, replaceChildren, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
@@ -16,7 +16,7 @@ import type { Convention } from '../../contracts/generated/Convention';
 import type { DatumTransform } from '../../contracts/generated/DatumTransform';
 import { buildChoice, datumName, epsgText, formOf, PAIRS, PARAMETERS, type ChoiceForm, type GridRef, type Method, type Parameter, type Problems } from '../../model/choiceForm';
 import { crsPicker } from './crsPicker';
-import { CONVENTIONS, openCustomCrs, PARAMETER_CAPTIONS } from './CustomCrsDialog';
+import { CONVENTIONS, openCustomCrs, PARAMETER_CAPTIONS, type TrialContext } from './CustomCrsDialog';
 import type { CrsDefinition } from '../../contracts/generated/CrsDefinition';
 import { workspacePicker } from './workspacePicker';
 import { effectiveWorkspace } from '../../app/workspaces';
@@ -110,9 +110,9 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
               api.set('customCrs', undefined, false);
               api.set('srid', srid, rerender);
             },
-            defined: ownDefined(api, defined),
+            defined: ownDefined(ctx, api, defined),
           }),
-          secondGroup(api, defined),
+          secondGroup(ctx, api, defined),
           datumGroup(ctx, api, choiceState),
           gridsGroup(ctx, api),
           group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${crsTitle(def)}. Uygulama ayarlarından değiştirilir.` : null, openApp)),
@@ -182,12 +182,43 @@ interface Defined {
 /** A draft's own definition: only without an EPSG code (docs/adr/0168 §1). */
 const ownOf = (d: ProjectSettingsData): CrsDefinition | null => (d.srid === LOCAL_SRID ? (d.customCrs ?? null) : null);
 
+/**
+ * Where Özel koordinat sistemi's trial point is compared (the desktop's `custom_context`): the project's system as it was
+ * saved for its own definition, the draft's own system for the second; the draft's datum choices; the project's way of
+ * writing points.
+ */
+function trialContext(ctx: AppContext, api: DraftApi<ProjectDraft>, target: 'own' | 'second'): TrialContext {
+  const named = target === 'own' ? (ownOf(api.initial) ? null : ownSystem(api.initial)) : ownSystem(api.draft);
+  return {
+    reference: named?.system ? { name: named.name, system: named.system } : null,
+    choices: datumChoices(api.draft),
+    format: { east: ctx.format.eastLabel, north: ctx.format.northLabel, decimals: api.draft.lengthDecimals, notation: ctx.prefs.geographic.value },
+  };
+}
+
+/** Özel koordinat sistemi over Proje ayarları for the project's own system or its second. */
+function openDefinition(ctx: AppContext, api: DraftApi<ProjectDraft>, target: 'own' | 'second', existing: CrsDefinition | null, onDone: (d: CrsDefinition) => void, onRegistry: (srid: number) => void): void {
+  openCustomCrs({
+    target,
+    existing,
+    trial: trialContext(ctx, api, target),
+    onDone,
+    onRegistry,
+    say: (kind, text) => (kind === 'success' ? ctx.log.success(text) : ctx.log.error(text)),
+  });
+}
+
 /** The picker's definition (docs/adr/0168 §6): its row, Özel sistem… under the list, Düzenle on its card. */
-function ownDefined(api: DraftApi<ProjectDraft>, defined: Defined) {
+function ownDefined(ctx: AppContext, api: DraftApi<ProjectDraft>, defined: Defined) {
   const done = (d: CrsDefinition) => {
     defined.own = d;
     api.set('srid', LOCAL_SRID, false);
     api.set('customCrs', d);
+  };
+  // Kayıttakini seç: the registry's system takes the definition's place (docs/adr/0168 §1).
+  const registry = (srid: number) => {
+    api.set('customCrs', undefined, false);
+    api.set('srid', srid);
   };
   return {
     definition: defined.own,
@@ -195,8 +226,8 @@ function ownDefined(api: DraftApi<ProjectDraft>, defined: Defined) {
     was: ownOf(api.initial) !== null,
     changed: api.draft.srid !== api.initial.srid || JSON.stringify(ownOf(api.draft)) !== JSON.stringify(ownOf(api.initial)),
     onPick: () => defined.own && done(defined.own),
-    onNew: () => openCustomCrs({ target: 'own', existing: null, onDone: done }),
-    onEdit: () => openCustomCrs({ target: 'own', existing: defined.own, onDone: done }),
+    onNew: () => openDefinition(ctx, api, 'own', null, done, registry),
+    onEdit: () => openDefinition(ctx, api, 'own', defined.own, done, registry),
   };
 }
 
@@ -206,7 +237,7 @@ function ownDefined(api: DraftApi<ProjectDraft>, defined: Defined) {
  * edits the one chosen. Its values show beside the project's in the status bar and Koordinat oku; the drawing is not
  * transformed (the desktop's `second_group`).
  */
-function secondGroup(api: DraftApi<ProjectDraft>, defined: Defined): Child {
+function secondGroup(ctx: AppContext, api: DraftApi<ProjectDraft>, defined: Defined): Child {
   const project = crsBySrid(api.draft.srid);
   const custom = !!api.draft.customCrs && api.draft.srid === LOCAL_SRID;
   const what = 'Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.';
@@ -231,7 +262,7 @@ function secondGroup(api: DraftApi<ProjectDraft>, defined: Defined): Child {
       { label: 'Yok', radio: true, checked: shown === null && chosen === null, run: () => choose(undefined) },
       ...(defined.second ? [{ label: defined.second.name, hint: DEFINITION_CODE, radio: true, checked: chosen !== null, run: () => defined.second && done(defined.second) } satisfies MenuItem] : []),
       // At the head of the long list, where it is seen without scrolling (the desktop's list keeps it under the rows).
-      { label: 'Özel sistem…', icon: 'plus', run: () => openCustomCrs({ target: 'second', existing: null, onDone: done }) },
+      { label: 'Özel sistem…', icon: 'plus', run: () => openDefinition(ctx, api, 'second', null, done, choose) },
       { kind: 'separator' },
       ...secondChoices(project).flatMap(({ datum, systems }): MenuItem[] => [
         { kind: 'header', label: datum },
@@ -243,7 +274,7 @@ function secondGroup(api: DraftApi<ProjectDraft>, defined: Defined): Child {
   let control: Child = pick.el;
   if (chosen) {
     const edit = h('button', { class: 'btn btn--small', type: 'button' }, 'Düzenle');
-    edit.addEventListener('click', () => openCustomCrs({ target: 'second', existing: defined.second, onDone: done }));
+    edit.addEventListener('click', () => openDefinition(ctx, api, 'second', defined.second, done, choose));
     control = h('div', { class: 'second-crs__control' }, pick.el, edit);
   }
   return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, control));

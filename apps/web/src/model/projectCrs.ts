@@ -2,7 +2,7 @@ import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { CustomDatum } from '../contracts/generated/CustomDatum';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { RegistryDatum } from '../contracts/generated/RegistryDatum';
-import { crsBySrid, crsCode, crsTitle, LOCAL_SRID } from '../geo/crs';
+import { CRS_REGISTRY, crsBySrid, crsCode, crsTitle, LOCAL_SRID } from '../geo/crs';
 import { systemOf, type Datum, type DatumChoice, type System } from './geom/crsTransform';
 import type { ProjectSettings } from './projectSettings';
 
@@ -134,5 +134,54 @@ export function definitionSystem(d: CrsDefinition): System | null {
       } else if (definition !== undefined && srid === undefined) base = definitionSystem(definition);
       return base ? { kind: 'local', base, plane: s.plane } : null;
     }
+  }
+}
+
+/** A value written with its keys in order: two systems compared whatever order their fields came in. */
+const canonical = (v: unknown): string =>
+  JSON.stringify(v, (_k, x: unknown) =>
+    x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) : x,
+  );
+
+/** A datum the core reads as a definition's two fields: the registry's by name, or the project's own. */
+const datumFields = (d: Datum): { datum: RegistryDatum } | { customDatum: CustomDatum } =>
+  typeof d === 'string'
+    ? { datum: d }
+    : { customDatum: { name: d.name, ellipsoid: { ...d.ellipsoid }, ...(d.toWgs84 ? { toWgs84: { ...d.toWgs84, translation: [...d.toWgs84.translation], rotation: [...d.toWgs84.rotation] } } : {}) } };
+
+type Tm = Extract<System, { kind: 'tm' }>;
+
+/** A transverse Mercator the core reads as a definition's. */
+const tmFrom = (s: Tm) => ({
+  kind: 'tm' as const,
+  ...datumFields(s.datum),
+  ...(s.latitudeOfOrigin !== undefined && s.latitudeOfOrigin !== 0 ? { latitudeOfOrigin: s.latitudeOfOrigin } : {}),
+  centralMeridian: s.centralMeridian,
+  scaleFactor: s.scaleFactor,
+  falseEasting: s.falseEasting,
+  falseNorthing: s.falseNorthing,
+});
+
+/**
+ * A system the core reads (from WKT or PROJ, docs/adr/0168 §5) as the project's definition named `name`: the registry's
+ * datums by name, any other as the project's own; a local system's base the registry's projected system with every
+ * value the same, else a definition of its own named “<name> tabanı”. Null for what a definition cannot be (the
+ * Pseudo-Mercator, a local system on another base). The desktop's `kentos_project::systems::definition_from`.
+ */
+export function definitionFrom(name: string, s: System): CrsDefinition | null {
+  switch (s.kind) {
+    case 'geographic':
+      return { name, system: { kind: 'geographic', ...datumFields(s.datum) } };
+    case 'tm':
+      return { name, system: tmFrom(s) };
+    case 'local': {
+      if (s.base.kind !== 'tm') return null;
+      const want = canonical(s.base);
+      const entry = CRS_REGISTRY.find((c) => c.kind === 'projected' && canonical(systemOf(c)) === want);
+      const base = entry ? { srid: entry.srid } : { definition: { name: `${name} tabanı`, system: tmFrom(s.base) } };
+      return { name, system: { kind: 'local', base, plane: { ...s.plane } } };
+    }
+    default:
+      return null;
   }
 }

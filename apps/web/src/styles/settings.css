@@ -1129,6 +1129,68 @@
 .custom-crs__check input {
   accent-color: var(--c-accent);
 }
+/* WKT ya da PROJ'dan al: a long WKT line breaks between letters; what reading said under the buttons. */
+.custom-crs__paste {
+  width: 100%;
+  min-height: calc(64px * var(--ui-scale));
+  padding: 6px 8px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.custom-crs__actions {
+  display: flex;
+  gap: 8px;
+}
+.custom-crs__read {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.custom-crs__read[data-error] {
+  color: var(--c-danger);
+}
+.custom-crs__read:empty {
+  display: none;
+}
+/* The registry's system the definition is, with Kayıttakini seç beside what is said. */
+.custom-crs__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.custom-crs__notes:empty {
+  display: none;
+}
+.custom-crs__notes .note {
+  margin: 0;
+}
+.custom-crs__notes .note__body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* Deneme noktası: each system's values beside its name, how sure under them. */
+.custom-crs__trial {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 6px 12px;
+  font-size: var(--fs-sm);
+}
+.custom-crs__trial:empty {
+  display: none;
+}
+.custom-crs__trial-name {
+  color: var(--c-text-3);
+}
+.custom-crs__values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
 /* İkinci sistem's list with Düzenle beside the chosen definition. */
 .second-crs__control {
   display: flex;
