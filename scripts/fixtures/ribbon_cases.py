@@ -48,10 +48,11 @@ SAMPLES = {
     'cannotStart': (['Daire', '3 nokta'], lambda t, l: f'“{t}: {l}” şu an başlatılamadı.'),
 }
 
-# The web's tabs in each ready project type (app/ribbon.ts ribbonTabs; docs/adr/0165), in order; the selection tab is contextual.
+# The web's tabs in each ready project type (app/ribbon.ts CAD_RIBBON_TABS, GIS_RIBBON_TABS; docs/adr/0165 §6), in order;
+# the selection tab is contextual.
 TABS = {
-    'cad': [('file', 'Dosya'), ('home', 'Giriş'), ('draw', 'Çizim'), ('modify', 'Değiştir'), ('map', 'Ölçme'), ('view', 'Görünüm'), ('tools', 'Araçlar'), ('selection', 'Seçim')],
-    'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('draw', 'Çizim'), ('modify', 'Değiştir'), ('map', 'Harita'), ('view', 'Görünüm'), ('processing', 'İşlemler'), ('tools', 'Araçlar'), ('selection', 'Seçim')],
+    'cad': [('file', 'Dosya'), ('home', 'Giriş'), ('insert', 'Ekle'), ('annotate', 'Açıklama'), ('modify', 'Değiştir'), ('view', 'Görünüm'), ('manage', 'Yönet'), ('output', 'Çıktı'), ('selection', 'Seçim')],
+    'gis': [('file', 'Dosya'), ('home', 'Giriş'), ('map', 'Harita'), ('data', 'Veri'), ('edit', 'Düzenle'), ('analysis', 'Analiz'), ('survey', 'Ölçme'), ('view', 'Görünüm'), ('output', 'Çıktı'), ('selection', 'Seçim')],
 }
 
 # ── Answers ─────────────────────────────────────────────────────────
