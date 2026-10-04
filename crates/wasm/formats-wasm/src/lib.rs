@@ -73,6 +73,14 @@ pub fn read_field_book(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> 
     to_json(&kentos_formats::field::read(bytes, opts.as_ref()))
 }
 
+/// Reads a GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with
+/// `<`, else an NMEA 0183 log; the result `GnssRead` (JSON bytes), WGS 84
+/// positions as the file wrote them.
+#[wasm_bindgen(js_name = readGnss)]
+pub fn read_gnss(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+    to_json(&kentos_formats::gnss::read(bytes))
+}
+
 /// Writes a coordinate list from `CoordWriteInput` (JSON).
 #[wasm_bindgen(js_name = writeCoords)]
 pub fn write_coords(input: &str) -> Result<Written, JsError> {

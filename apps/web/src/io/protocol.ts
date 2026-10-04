@@ -27,6 +27,8 @@ export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
   /** A field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW, Trimble JobXML) by its content, else a text book with the user's mapping (null: its first line only). */
   | { id: number; op: 'readFieldBook'; bytes: ArrayBuffer; options: FieldCsvOptions | null }
+  /** A GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; WGS 84 positions as written. */
+  | { id: number; op: 'readGnss'; bytes: ArrayBuffer }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }

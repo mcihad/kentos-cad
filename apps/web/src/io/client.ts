@@ -7,6 +7,7 @@ import type { FieldBookRead } from '../contracts/generated/FieldBookRead';
 import type { FieldCsvOptions } from '../contracts/generated/FieldCsvOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { GnssRead } from '../contracts/generated/GnssRead';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
 import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { ImportResult } from '../contracts/generated/ImportResult';
@@ -91,6 +92,15 @@ export class FormatsClient {
   async readFieldBook(bytes: Uint8Array, options: FieldCsvOptions | null): Promise<FieldBookRead> {
     const copy = bytes.slice().buffer;
     return json<FieldBookRead>(await this.request({ op: 'readFieldBook', bytes: copy, options }, [copy]));
+  }
+
+  /**
+   * Reads a GNSS file (docs/adr/0169 §1, §6): GPX 1.1 when it begins with “<”, else an NMEA 0183 log; its WGS 84 positions as
+   * written, and what was not read. The caller keeps `bytes`.
+   */
+  async readGnss(bytes: Uint8Array): Promise<GnssRead> {
+    const copy = bytes.slice().buffer;
+    return json<GnssRead>(await this.request({ op: 'readGnss', bytes: copy }, [copy]));
   }
 
   /**

@@ -1,0 +1,158 @@
+{
+  "format": "kentos.gnss-nmea",
+  "version": 1,
+  "source": "scripts/fixtures/gnss_nmea_cases.py (docs/adr/0169 §1; NMEA 0183 GGA, RMC)",
+  "texts": {
+    "checksum": "Satır {line}: NMEA cümlesinin sağlama toplamı tutmuyor; cümle okunmadı.",
+    "position": "Satır {line}: konum “{data}” okunmuyor; cümle okunmadı.",
+    "value": "Satır {line}: “{data}” sayı değil; cümle okunmadı.",
+    "unit": "Satır {line}: yükseklik birimi “{data}” okunmuyor; yalnız metre (M); cümle okunmadı.",
+    "nofix": "Satır {line}: konumu olmayan GGA cümleleri ({count} cümle, kalite 0) okunmadı."
+  },
+  "cases": [
+    {
+      "name": "RTK sabit ve kayan, RMC tarihi, kayıt öneki, GSV, güney ve batı, sınırda konum",
+      "text": "$GPRMC,101500.00,A,4045.2345,N,02923.1234,E,0.02,0.0,041026,,,D*66\r\n$GPGGA,101500.00,4045.23450,N,02923.12340,E,4,14,0.6,105.234,M,36.123,M,1.0,0001*4E\r\n2026-10-04 10:15:01 $GNGGA,101501.00,4045.23455,N,02923.12345,E,5,12,0.9,105.240,M,36.123,M,,*74\r\n$GPGSV,3,1,11,03,03,111,00,04,15,270,00,06,01,010,00,13,06,292,00*74\r\n$GPGGA,101502,0000.0000,S,00000.0000,W,1,05,2.5,-0.5,M,,M,,*7E\r\n$GPGGA,101503.5,8959.99999,N,17959.99999,W,2,08,1.2,,,,,,*7B\r\n",
+      "expect": {
+        "points": [
+          {
+            "kind": "gga",
+            "lat": 40.753908333333335,
+            "lon": 29.38539,
+            "height": 105.234,
+            "ellipsoidal": 141.357,
+            "geoid": 36.123,
+            "time": "2026-10-04T10:15:00.00Z",
+            "fix": "RTK sabit",
+            "satellites": 14,
+            "hdop": 0.6,
+            "line": 2
+          },
+          {
+            "kind": "gga",
+            "lat": 40.753909166666666,
+            "lon": 29.385390833333332,
+            "height": 105.24,
+            "ellipsoidal": 141.363,
+            "geoid": 36.123,
+            "time": "2026-10-04T10:15:01.00Z",
+            "fix": "RTK kayan",
+            "satellites": 12,
+            "hdop": 0.9,
+            "line": 3
+          },
+          {
+            "kind": "gga",
+            "lat": 0.0,
+            "lon": 0.0,
+            "height": -0.5,
+            "time": "2026-10-04T10:15:02Z",
+            "fix": "GPS",
+            "satellites": 5,
+            "hdop": 2.5,
+            "line": 5
+          },
+          {
+            "kind": "gga",
+            "lat": 89.99999983333333,
+            "lon": -179.99999983333333,
+            "time": "2026-10-04T10:15:03.5Z",
+            "fix": "DGPS",
+            "satellites": 8,
+            "hdop": 1.2,
+            "line": 6
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "kalite 0, sağlama toplamı, bozuk konum, birim ve sayılar, tarihsiz zaman",
+      "text": "$GPGGA,101500.00,4045.2345,N,02923.1234,E,0,00,99.9,,,,,,*6A\n$GPGGA,101501.00,4045.2345,N,02923.1234,E,0,00,99.9,,,,,,*6B\n$GPGGA,101502.00,4045.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*00\n$GPGGA,101503.00,4045.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*G1\n$GPGGA,101504.00,4045.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,\n$GPGGA,101505.00,4060.0000,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*6D\n$GPGGA,101506.00,9100.0000,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*64\n$GPGGA,101507.00,4045.2345,X,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*7E\n$GPGGA,101508.00,445.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*57\n$GPGGA,101509.00,4045.2345,N,02923.1234,E,1,08,1.0,100.0,F,36.0,M,,*6D\n$GPGGA,101510.00,4045.2345,N,02923.1234,E,1,x8,1.0,100.0,M,36.0,M,,*26\n$GPGGA,101511.00,4045.2345,N,02923.1234,E,1,08,1.0a,100.0,M,36.0,M,,*0E\n$GPGGA,99,4045.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*44\nno sentence here\n$GPRMC,101512,A,4045.2345,N,02923.1234,E,,,311326,,*14\n$GPGGA,101512.00,4045.2345,N,02923.1234,E,1,08,1.0,100.0,M,36.0,M,,*6C\n",
+      "expect": {
+        "points": [
+          {
+            "kind": "gga",
+            "lat": 40.753908333333335,
+            "lon": 29.38539,
+            "height": 100.0,
+            "ellipsoidal": 136.0,
+            "geoid": 36.0,
+            "time": "10:15:04.00",
+            "fix": "GPS",
+            "satellites": 8,
+            "hdop": 1.0,
+            "line": 5
+          },
+          {
+            "kind": "gga",
+            "lat": 40.753908333333335,
+            "lon": 29.38539,
+            "height": 100.0,
+            "ellipsoidal": 136.0,
+            "geoid": 36.0,
+            "fix": "GPS",
+            "satellites": 8,
+            "hdop": 1.0,
+            "line": 13
+          },
+          {
+            "kind": "gga",
+            "lat": 40.753908333333335,
+            "lon": 29.38539,
+            "height": 100.0,
+            "ellipsoidal": 136.0,
+            "geoid": 36.0,
+            "time": "10:15:12.00",
+            "fix": "GPS",
+            "satellites": 8,
+            "hdop": 1.0,
+            "line": 16
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: konumu olmayan GGA cümleleri (2 cümle, kalite 0) okunmadı."
+          },
+          {
+            "line": 3,
+            "problem": "Satır 3: NMEA cümlesinin sağlama toplamı tutmuyor; cümle okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: NMEA cümlesinin sağlama toplamı tutmuyor; cümle okunmadı."
+          },
+          {
+            "line": 6,
+            "problem": "Satır 6: konum “4060.0000,N” okunmuyor; cümle okunmadı."
+          },
+          {
+            "line": 7,
+            "problem": "Satır 7: konum “9100.0000,N” okunmuyor; cümle okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: konum “4045.2345,X” okunmuyor; cümle okunmadı."
+          },
+          {
+            "line": 9,
+            "problem": "Satır 9: konum “445.2345,N” okunmuyor; cümle okunmadı."
+          },
+          {
+            "line": 10,
+            "problem": "Satır 10: yükseklik birimi “F” okunmuyor; yalnız metre (M); cümle okunmadı."
+          },
+          {
+            "line": 11,
+            "problem": "Satır 11: “x8” sayı değil; cümle okunmadı."
+          },
+          {
+            "line": 12,
+            "problem": "Satır 12: “1.0a” sayı değil; cümle okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

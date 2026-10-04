@@ -30,6 +30,7 @@ pub mod field;
 pub mod geojson;
 pub mod geom;
 pub mod gis;
+pub mod gnss;
 pub mod import;
 pub mod json;
 pub mod math;

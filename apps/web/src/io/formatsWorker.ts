@@ -145,6 +145,9 @@ scope.onmessage = (e) => {
           const read = m.op === 'readCoords' ? f.readCoords : m.op === 'readFieldBook' ? f.readFieldBook : f.readGeoJson;
           const json = own(read(new Uint8Array(m.bytes), JSON.stringify(m.options)));
           scope.postMessage({ id: m.id, ok: true, json }, [json]);
+        } else if (m.op === 'readGnss') {
+          const json = own(f.readGnss(new Uint8Array(m.bytes)));
+          scope.postMessage({ id: m.id, ok: true, json }, [json]);
         } else if (m.op === 'readShapefile') {
           const s = m.files;
           const part = (b?: ArrayBuffer) => (b ? new Uint8Array(b) : undefined);

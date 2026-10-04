@@ -11,7 +11,7 @@ use kentos_contracts::{FieldBookRead, FieldCsvOptions, FieldObservation, FieldSt
 
 use crate::text;
 
-mod exact;
+pub(crate) mod exact;
 pub mod gsi;
 pub mod gts7;
 pub mod jobxml;

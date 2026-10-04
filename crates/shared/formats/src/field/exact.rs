@@ -1,8 +1,8 @@
 //! Exact field values (docs/adr/0169 §1, CLAUDE.md §23): a number as the
 //! instrument wrote it, decimal or DDD.MMSS, kept as a fraction until it is
-//! rounded once to the nearest float64. The readers of Topcon GTS-7 and
-//! Nikon RAW share it; their independent references compute with Python's
-//! `Fraction` and its `float()`.
+//! rounded once to the nearest float64. The readers of Topcon GTS-7, Nikon
+//! RAW, GPX and NMEA share it; their independent references compute with
+//! Python's `Fraction` and its `float()`.
 
 use std::cmp::Ordering;
 
@@ -93,6 +93,33 @@ impl Exact {
     /// Its size against a whole number.
     pub fn size_cmp(self, n: i128) -> Ordering {
         self.num.abs().cmp(&(n * self.den))
+    }
+
+    /// Over a whole number (not zero).
+    pub fn over(self, n: i128) -> Self {
+        Self {
+            num: self.num,
+            den: self.den * n,
+        }
+    }
+
+    /// Its negative.
+    pub fn negated(self) -> Self {
+        Self {
+            num: -self.num,
+            den: self.den,
+        }
+    }
+
+    /// The sum of two values; none when it does not fit (values of more than
+    /// thirty digits each, far apart in scale).
+    pub fn sum(self, other: Self) -> Option<Self> {
+        let den = self.den.checked_mul(other.den)?;
+        let num = self
+            .num
+            .checked_mul(other.den)?
+            .checked_add(other.num.checked_mul(self.den)?)?;
+        Some(Self { num, den })
     }
 
     /// Plus a whole number.

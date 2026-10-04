@@ -56,7 +56,8 @@ use crate::layer::LineType;
 /// 23: Topcon GTS-7 field books (`gts7`).
 /// 24: Nikon RAW field books (`nikon`).
 /// 25: Trimble JobXML field books (`jobxml`), XML read by roxmltree.
-pub const FORMATS_VERSION: u32 = 25;
+/// 26: GNSS files, GPX 1.1 and NMEA 0183 (`readGnss` → `GnssRead`).
+pub const FORMATS_VERSION: u32 = 26;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -401,6 +402,64 @@ pub struct FieldBookRead {
     pub unit: Option<String>,
     pub first_line: Vec<String>,
     pub stations: Vec<FieldStation>,
+    pub problems: Vec<LineError>,
+}
+
+/// A GNSS position as the file wrote it (docs/adr/0169 §1, §6): its kind
+/// (`wpt`, `rtept`, `trkpt` of GPX; `gga` of NMEA), its name, its WGS 84
+/// latitude and longitude (degrees), its height as written (GPX's `ele`;
+/// GGA's above mean sea level), the geoid's height above the WGS 84
+/// ellipsoid, the ellipsoidal height (the two summed, when both are
+/// given), its time as the file gives it, its fix (named: `3B`, `RTK
+/// sabit` …), satellites in use, HDOP, and the file's line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GnssPoint {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    pub lat: f64,
+    pub lon: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geoid: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ellipsoidal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fix: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub satellites: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub hdop: Option<f64>,
+    pub line: u32,
+}
+
+/// A GNSS file read (docs/adr/0169 §1, §6): its format (`gpx`, `nmea`),
+/// the text's encoding, its positions in order, the points or sentences
+/// not read with why.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GnssRead {
+    pub format: String,
+    pub encoding: String,
+    pub points: Vec<GnssPoint>,
     pub problems: Vec<LineError>,
 }
 

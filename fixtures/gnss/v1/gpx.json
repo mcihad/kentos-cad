@@ -1,0 +1,156 @@
+{
+  "format": "kentos.gnss-gpx",
+  "version": 1,
+  "source": "scripts/fixtures/gnss_gpx_cases.py (docs/adr/0169 §1; GPX 1.1 schema)",
+  "texts": {
+    "xml": "Satır 1: dosya XML olarak okunamadı; GNSS noktaları okunmadı.",
+    "deep": "Satır 1: XML öğeleri {depth} düzeyden derin iç içe; GNSS noktaları okunmadı.",
+    "root": "Satır {line}: XML dosyası GPX değil (kök öğe {root}); GNSS noktaları okunmadı.",
+    "position": "Satır {line}: konum (lat “{lat}”, lon “{lon}”) okunmuyor; nokta okunmadı.",
+    "value": "Satır {line}: {what} “{data}” okunmuyor; nokta okunmadı.",
+    "nofix": "Satır {line}: konumu olmayan noktalar ({count} nokta, fix none) okunmadı."
+  },
+  "cases": [
+    {
+      "name": "yol noktası, rota ve iz noktaları, geoit yüksekliği, fix, uydu, HDOP, ad ve zaman",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gpx version=\"1.1\" creator=\"KentOS\" xmlns=\"http://www.topografix.com/GPX/1/1\">\n  <wpt lat=\"40.7539083\" lon=\"29.3853900\">\n    <ele>105.234</ele><time>2026-10-04T10:15:00Z</time><geoidheight>36.123</geoidheight>\n    <name>N1</name><fix>3d</fix><sat>14</sat><hdop>0.6</hdop>\n  </wpt>\n  <wpt lat=\"-0.5\" lon=\"+179.999\"><name> SINIR </name><fix>dgps</fix></wpt>\n  <rte><name>Yol</name>\n    <rtept lat=\"40.75\" lon=\"29.38\"><ele>100</ele></rtept>\n  </rte>\n  <trk><name>İz</name><trkseg>\n    <trkpt lat=\"40.7540\" lon=\"29.3854\"><ele>104.9</ele><time>2026-10-04T10:16:00Z</time></trkpt>\n    <trkpt lat=\".5\" lon=\"-.5\"><fix>rtk</fix></trkpt>\n  </trkseg></trk>\n</gpx>\n",
+      "expect": {
+        "points": [
+          {
+            "kind": "wpt",
+            "name": "N1",
+            "lat": 40.7539083,
+            "lon": 29.38539,
+            "height": 105.234,
+            "ellipsoidal": 141.357,
+            "geoid": 36.123,
+            "time": "2026-10-04T10:15:00Z",
+            "fix": "3B",
+            "satellites": 14,
+            "hdop": 0.6,
+            "line": 3
+          },
+          {
+            "kind": "wpt",
+            "name": "SINIR",
+            "lat": -0.5,
+            "lon": 179.999,
+            "fix": "DGPS",
+            "line": 7
+          },
+          {
+            "kind": "rtept",
+            "lat": 40.75,
+            "lon": 29.38,
+            "height": 100.0,
+            "line": 9
+          },
+          {
+            "kind": "trkpt",
+            "lat": 40.754,
+            "lon": 29.3854,
+            "height": 104.9,
+            "time": "2026-10-04T10:16:00Z",
+            "line": 12
+          },
+          {
+            "kind": "trkpt",
+            "lat": 0.5,
+            "lon": -0.5,
+            "fix": "rtk",
+            "line": 13
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "bozuk konumlar ve değerler, konumu olmayan noktalar, yükseksiz geoit",
+      "text": "<?xml version=\"1.0\"?>\n<gpx>\n  <wpt lat=\"91\" lon=\"29\"/>\n  <wpt lat=\"40\" lon=\"-181\"/>\n  <wpt lon=\"29\"/>\n  <wpt lat=\"4e1\" lon=\"29\"/>\n  <wpt lat=\"40\" lon=\"29\"><ele>1,5</ele></wpt>\n  <wpt lat=\"40\" lon=\"29\"><sat>-3</sat></wpt>\n  <wpt lat=\"40\" lon=\"29\"><hdop>x</hdop></wpt>\n  <wpt lat=\"40\" lon=\"29\"><fix>none</fix></wpt>\n  <wpt lat=\"41\" lon=\"29\"><fix>none</fix></wpt>\n  <wpt lat=\"40\" lon=\"29\"><geoidheight>36</geoidheight></wpt>\n</gpx>\n",
+      "expect": {
+        "points": [
+          {
+            "kind": "wpt",
+            "lat": 40.0,
+            "lon": 29.0,
+            "geoid": 36.0,
+            "line": 12
+          }
+        ],
+        "problems": [
+          {
+            "line": 3,
+            "problem": "Satır 3: konum (lat “91”, lon “29”) okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: konum (lat “40”, lon “-181”) okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 5,
+            "problem": "Satır 5: konum (lat “”, lon “29”) okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 6,
+            "problem": "Satır 6: konum (lat “4e1”, lon “29”) okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 7,
+            "problem": "Satır 7: ele “1,5” okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: sat “-3” okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 9,
+            "problem": "Satır 9: hdop “x” okunmuyor; nokta okunmadı."
+          },
+          {
+            "line": 10,
+            "problem": "Satır 10: konumu olmayan noktalar (2 nokta, fix none) okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "XML değil",
+      "text": "<gpx><wpt></gpx>\n",
+      "expect": {
+        "points": [],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: dosya XML olarak okunamadı; GNSS noktaları okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "GPX değil",
+      "text": "<?xml version=\"1.0\"?>\n<JOBFile version=\"5.3\"/>\n",
+      "expect": {
+        "points": [],
+        "problems": [
+          {
+            "line": 2,
+            "problem": "Satır 2: XML dosyası GPX değil (kök öğe JOBFile); GNSS noktaları okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "256 düzeyden derin",
+      "text": "<gpx><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><b/></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></gpx>\n",
+      "expect": {
+        "points": [],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: XML öğeleri 256 düzeyden derin iç içe; GNSS noktaları okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

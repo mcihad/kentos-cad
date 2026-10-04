@@ -197,7 +197,22 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    öğelerin başladığı satır) ve 6000 rastgele belgede Rust ile birebir; örnek `sample.jxl` GSI örneğinin derecedeki karşılığı (açılar
    1e-9 içinde ×0,9, uzunluklar ve kot farkları mikrometre içinde); dosya süzgecinde `.jxl`, `.xml`; resimler `karne-jobxml-*`,
    `fieldbook-jobxml-*`.
-6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
+6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine. İki parçada: 6a okuyucular (biçim çekirdeğinde, iki platformda), 6b içe aktarma
+   (pencere, dönüşüm, ölçü noktası olarak yazma).
+
+   *(4 Ekim: 6a tamam.)* Okuyucular `formats::gnss` (web'e `readGnss`, sözleşmeler `GnssPoint`, `GnssRead`; `FORMATS_VERSION` 26):
+   ilk dolu karakteri `<` olan dosya GPX, başkası NMEA okunur (NMEA okuyucusu cümlesiz satırları atlar). GPX 1.1 (kaynak şema,
+   https://www.topografix.com/GPX/1/1/gpx.xsd): kök gpx, sırayla wpt, rte/rtept, trk/trkseg/trkpt; lat (−90…90) ve lon (−180…180)
+   ondalık; ele, geoidheight, name, time, fix (none, 2d, 3d, dgps, pps; adları 2B, 3B, DGPS, PPS), sat, hdop; fix none konumsuzdur, bir kez
+   sayısıyla söylenir; XML JobXML'inki gibi roxmltree ve 256 düzeylik derinlik koruması (`formats::xml`). NMEA 0183: satırın ilk `$`'ından
+   başlayan cümle (önündeki kayıt zamanı atlanır), varsa `*` sağlama toplamı (dolu baytların XOR'u; tutmayan söylenir), GGA'nın konumu
+   (ddmm.mmmm, dddmm.mmmm kesin değerden tek yuvarlamayla), kalitesi (0 konumsuz, bir kez söylenir; 1 GPS … 4 RTK sabit, 5 RTK kayan …),
+   uydu sayısı, HDOP, deniz düzeyinden yüksekliği ve geoit ayrımı (yalnız M birimi); RMC'nin tarihi sonraki GGA'ların zamanına (yoksa
+   yalnız saat). Yükseklik kuralı (§1'in “elipsoit yüksekliği” kararının uygulanışı): okuyucu dosyadaki yüksekliği (GPX `ele`, GGA'nın
+   deniz düzeyinden yüksekliği), geoit ayrımını (GPX `geoidheight`, GGA'nın ayrımı) ve ikisi varsa toplamlarını, elipsoit yüksekliğini
+   ayrı tutar; 6b noktanın kotuna yalnız elipsoit yüksekliğini yazar, öbürlerini öznitelik yapar, tahmin etmez. Bağımsız başvurular
+   `gnss_gpx_cases.py` (şemadan, expat ile; `fixtures/gnss/v1/gpx.json`, 5 durum) ve `gnss_nmea_cases.py` (cümlelerden;
+   `nmea.json`, 2 durum) ve 6000 rastgele dosyada Rust ile birebir.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
