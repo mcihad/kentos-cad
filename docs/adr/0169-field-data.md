@@ -108,7 +108,21 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    adıyla, yoksa dosyadaki koordinatlarıyla, istasyon kotu dosyanınki, alet yüksekliği yazılan; değerler açılarda 8, uzunluklarda 6
    ondalıkla yazılır (aletin çözünürlüğünün çok altında); Kutupsal alım açılır, karne kalır; kaç nokta aktarıldığı ve aktarılmayan
    doğrultular söylenir. Kutupsal alım aynı k'yı uyguladığı için kot farkları karnedekilerle aynıdır (masaüstü testi 1e-6 m).
-4. Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar).
+4. Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar). İki parçada: 4a aktarma, 4b toleranslar (iki yönden uzunluk farkı,
+   poligonun açı ve koordinat kapanması; `.kcad` şema 15).
+
+   *(4 Ekim: 4a tamam.)* Çekirdekte `survey::fieldbook::traverse_transfer` (web'e `fieldTraverse`): poligon karnenin istasyonlarından
+   sırayla geçer (iki ve daha çok istasyon); ilk istasyon kendi geri bakışına, sonuncusu seçilen ileri bakışa yöneltilir (yoksa
+   orada açı yok). Her istasyonda kırılma açısı ileri hedefin okuması eksi geri hedefinki, [0, tam tur); hedef istasyonun o adlı
+   ilk indirgenmiş satırıdır (önceki ve sonraki istasyon). Kenar ST(i) → ST(i+1): ileri yatay uzunluk ST(i)'de, geri ST(i+1)'de
+   (doğrultu satırının uzunluğu yoktur); ikisi varsa ortalaması ve farkı, biri varsa o; hiçbiri yoksa kenar eksik diye söylenir;
+   bulunmayan hedefler de (istasyon, hedef) söylenir; açılar projenin birimine çevrilir. Bağımsız başvuru
+   `scripts/fixtures/field_traverse_cases.py` (`fixtures/field/v1/traverse.json`, 6 durum; indirgemenin mpmath başvurusuyla).
+   Karne editöründe (iki ve daha çok istasyonda) Poligon bölümü: istasyon zinciri, Bitişte bakılan (son istasyonun satırları ya da
+   —), Kenarlar tablosu (İleri, Geri, Ortalama, Fark); her istasyonun Geri bakış'ı kendisinindir, ilkinki poligonun da başlangıçta
+   bakılan noktasıdır. “Poligon hesabı'na aktar” Poligon hesabı'nı Bağlı doldurur (bitişte yöneltme ileri bakış seçildiyse):
+   başlangıç ve bitiş istasyonları çizimde adlarıyla varsa adlarıyla, yoksa dosyadaki koordinatlarıyla; ara istasyonlar yeni
+   noktalar; açılar 8, kenarlar 6 ondalıkla; bulunmayan gözlemler söylenir. Örnek `sample.gsi` iki istasyonlu bir poligon oldu.
 5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.

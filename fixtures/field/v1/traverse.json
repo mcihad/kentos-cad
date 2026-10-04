@@ -1,0 +1,566 @@
+{
+  "format": "kentos.field-traverse",
+  "version": 1,
+  "source": "scripts/fixtures/field_traverse_cases.py (docs/adr/0169 §3)",
+  "tolerance": {
+    "metres": 1e-09,
+    "angle": 1e-11
+  },
+  "cases": [
+    {
+      "name": "üç istasyon, bağlı (gon)",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": "L",
+      "to": "grad",
+      "book": [
+        {
+          "station": "A",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 300.0,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 150.0,
+              "zenith": 100.002,
+              "slope": 120.004,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 350.0006,
+              "zenith": 299.998,
+              "slope": 120.006,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "K",
+              "hz": 200.0004,
+              "zenith": 300.0,
+              "slope": 300.002,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "A",
+              "hz": 10.0,
+              "zenith": 99.998,
+              "slope": 120.002,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "C",
+              "hz": 190.1234,
+              "zenith": 100.0,
+              "slope": 95.5,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "B",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 95.497,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "L",
+              "hz": 222.2222,
+              "zenith": 100.0,
+              "slope": 200.0,
+              "targetHeight": 1.5
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          150.0001,
+          180.1234,
+          222.2222
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 120.00499994077991,
+            "backward": 120.00199994078139,
+            "mean": 120.00349994078064,
+            "diff": 0.002999999998522185
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 95.5,
+            "backward": 95.497,
+            "mean": 95.4985,
+            "diff": 0.0030000000000001137
+          }
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "aynısı, derecelere",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": "L",
+      "to": "deg",
+      "book": [
+        {
+          "station": "A",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 300.0,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 150.0,
+              "zenith": 100.002,
+              "slope": 120.004,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 350.0006,
+              "zenith": 299.998,
+              "slope": 120.006,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "K",
+              "hz": 200.0004,
+              "zenith": 300.0,
+              "slope": 300.002,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "A",
+              "hz": 10.0,
+              "zenith": 99.998,
+              "slope": 120.002,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "C",
+              "hz": 190.1234,
+              "zenith": 100.0,
+              "slope": 95.5,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "B",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 95.497,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "L",
+              "hz": 222.2222,
+              "zenith": 100.0,
+              "slope": 200.0,
+              "targetHeight": 1.5
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          135.00009,
+          162.11106,
+          199.99998
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 120.00499994077991,
+            "backward": 120.00199994078139,
+            "mean": 120.00349994078064,
+            "diff": 0.002999999998522185
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 95.5,
+            "backward": 95.497,
+            "mean": 95.4985,
+            "diff": 0.0030000000000001137
+          }
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "bitişte yöneltme yok",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": null,
+      "to": "grad",
+      "book": [
+        {
+          "station": "A",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 300.0,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 150.0,
+              "zenith": 100.002,
+              "slope": 120.004,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 350.0006,
+              "zenith": 299.998,
+              "slope": 120.006,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "K",
+              "hz": 200.0004,
+              "zenith": 300.0,
+              "slope": 300.002,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "A",
+              "hz": 10.0,
+              "zenith": 99.998,
+              "slope": 120.002,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "C",
+              "hz": 190.1234,
+              "zenith": 100.0,
+              "slope": 95.5,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "B",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 95.497,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "L",
+              "hz": 222.2222,
+              "zenith": 100.0,
+              "slope": 200.0,
+              "targetHeight": 1.5
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          150.0001,
+          180.1234,
+          null
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 120.00499994077991,
+            "backward": 120.00199994078139,
+            "mean": 120.00349994078064,
+            "diff": 0.002999999998522185
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 95.5,
+            "backward": 95.497,
+            "mean": 95.4985,
+            "diff": 0.0030000000000001137
+          }
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "geri bakış istasyonda yok, bir kenar tek yönden",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "X",
+      "fore": null,
+      "to": "grad",
+      "book": [
+        {
+          "station": "A",
+          "observations": [
+            {
+              "target": "B",
+              "hz": 50.0,
+              "zenith": 100.0,
+              "slope": 80.0
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "observations": [
+            {
+              "target": "A",
+              "hz": 0.0
+            },
+            {
+              "target": "C",
+              "hz": 123.0,
+              "zenith": 100.0,
+              "slope": 60.0
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "observations": [
+            {
+              "target": "B",
+              "hz": 10.0,
+              "zenith": 100.0,
+              "slope": 60.004
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          null,
+          123.0,
+          null
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 80.0,
+            "mean": 80.0
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 60.0,
+            "backward": 60.004,
+            "mean": 60.001999999999995,
+            "diff": -0.003999999999997783
+          }
+        ],
+        "missing": [
+          {
+            "station": "A",
+            "target": "X"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ölçülmemiş kenar",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": "K",
+      "to": "grad",
+      "book": [
+        {
+          "station": "A",
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0
+            },
+            {
+              "target": "B",
+              "hz": 100.0
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "observations": [
+            {
+              "target": "A",
+              "hz": 0.0
+            },
+            {
+              "target": "K",
+              "hz": 200.0
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B"
+        ],
+        "angles": [
+          100.0,
+          200.0
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B"
+          }
+        ],
+        "missing": [
+          {
+            "station": "A",
+            "target": "B"
+          }
+        ]
+      }
+    },
+    {
+      "name": "derece, iki istasyon",
+      "unit": "deg",
+      "k": 0.13,
+      "back": "R",
+      "fore": "T",
+      "to": "deg",
+      "book": [
+        {
+          "station": "S1",
+          "instrumentHeight": 1.45,
+          "observations": [
+            {
+              "target": "R",
+              "hz": 0.0,
+              "zenith": 90.0,
+              "slope": 150.0,
+              "targetHeight": 2.0
+            },
+            {
+              "target": "S2",
+              "hz": 120.5,
+              "zenith": 89.5,
+              "slope": 512.345,
+              "targetHeight": 2.0
+            }
+          ]
+        },
+        {
+          "station": "S2",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "S1",
+              "hz": 300.25,
+              "zenith": 90.5,
+              "slope": 512.349,
+              "targetHeight": 2.0
+            },
+            {
+              "target": "T",
+              "hz": 45.125,
+              "zenith": 90.0,
+              "slope": 80.0,
+              "targetHeight": 2.0
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "S1",
+          "S2"
+        ],
+        "angles": [
+          120.5,
+          104.875
+        ],
+        "legs": [
+          {
+            "from": "S1",
+            "to": "S2",
+            "forward": 512.3254914723128,
+            "backward": 512.3294913200051,
+            "mean": 512.327491396159,
+            "diff": -0.003999847692284675
+          }
+        ],
+        "missing": []
+      }
+    }
+  ]
+}

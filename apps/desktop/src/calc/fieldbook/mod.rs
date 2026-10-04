@@ -16,7 +16,8 @@ use kentos_contracts::{AngleUnit, FieldBookRead, FieldCsvOptions, FieldStation};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::survey::Unit;
 use kentos_geometry_core::survey::fieldbook::{
-    Observation, PolarTransfer, Reduction, Station, Tolerances, polar_transfer, reduce,
+    Observation, PolarTransfer, Reduction, Station, Tolerances, TraverseTransfer, polar_transfer,
+    reduce, traverse_transfer,
 };
 
 use super::grid::{Col, Mark, Table};
@@ -110,6 +111,10 @@ pub enum Event {
     /// The reduced row that is the back sight, and Kutupsal alım'a aktar.
     Back(usize),
     Transfer,
+    /// The last station's row the traverse ends oriented on (none: —), and
+    /// Poligon hesabı'na aktar.
+    Fore(Option<usize>),
+    TransferTraverse,
 }
 
 /// A text book's mapping, remembered while the app runs.
@@ -178,8 +183,16 @@ pub struct Form {
     pub book: Option<FieldBookRead>,
     pub mapping: Mapping,
     pub station: usize,
-    /// The station's reduced row Kutupsal alım is oriented on.
-    pub back: usize,
+    /// Each station's reduced row Kutupsal alım is oriented on (the first
+    /// station's is the traverse's back sight too).
+    pub backs: Vec<usize>,
+    /// The last station's reduced row the traverse ends oriented on.
+    pub fore: Option<usize>,
+    /// The traverse through the stations (two or more), in the project's unit,
+    /// and the targets of the last station's reduced rows (Bitişte bakılan).
+    traverse: Option<TraverseTransfer>,
+    last_rows: Vec<String>,
+    ends: Option<(String, Option<String>)>,
     edits: Vec<Edits>,
     /// Why the file was not read.
     pub error: Option<String>,
@@ -234,14 +247,16 @@ impl Form {
         };
         let book = kentos_formats::field::read(bytes, self.mapping.options().as_ref());
         self.edits = book.stations.iter().map(Edits::of).collect();
+        self.backs = vec![0; book.stations.len()];
+        self.fore = None;
         self.station = self.station.min(book.stations.len().saturating_sub(1));
         self.book = Some(book);
     }
 
-    /// The station shown, in the core's terms: the observations used, as named here.
-    fn core_station(&self) -> Option<(Station, Vec<usize>)> {
-        let st = self.book.as_ref()?.stations.get(self.station)?;
-        let edits = self.edits.get(self.station)?;
+    /// A station in the core's terms: the observations used, as named here.
+    fn core_station(&self, at: usize) -> Option<(Station, Vec<usize>)> {
+        let st = self.book.as_ref()?.stations.get(at)?;
+        let edits = self.edits.get(at)?;
         let mut from = Vec::new();
         let observations = st
             .observations
@@ -277,19 +292,20 @@ impl Form {
         self.rows.clear();
         self.reduction = None;
         self.reduced_from.clear();
+        self.traverse = None;
+        self.last_rows.clear();
+        self.ends = None;
         let unit = self.unit(settings.angle_unit);
-        let Some((station, from)) = self.core_station() else {
-            return;
-        };
         let survey = settings.survey.clone().unwrap_or_default();
         let tolerances = Tolerances {
             face_hz: survey.face_hz,
             index: survey.index,
             face_slope: survey.face_slope,
         };
-        let core = match unit {
-            AngleUnit::Grad => Unit::GRAD,
-            AngleUnit::Deg => Unit::DEG,
+        let core = core_unit(unit);
+        self.sync_traverse(settings, core, &tolerances);
+        let Some((station, from)) = self.core_station(self.station) else {
+            return;
         };
         let reduction = reduce(&station, core, settings.refraction(), &tolerances);
         let (Some(book), Some(edits)) = (&self.book, self.edits.get(self.station)) else {
@@ -335,6 +351,71 @@ impl Form {
     }
 }
 
+/// An angle unit as the core names it.
+fn core_unit(u: AngleUnit) -> Unit {
+    match u {
+        AngleUnit::Grad => Unit::GRAD,
+        AngleUnit::Deg => Unit::DEG,
+    }
+}
+
+impl Form {
+    /// The traverse through every station (two or more), oriented on the
+    /// first station's back sight and on the last's chosen row, its angles in
+    /// the project's unit (docs/adr/0169 §3).
+    fn sync_traverse(
+        &mut self,
+        settings: &kentos_contracts::ProjectSettings,
+        core: Unit,
+        tolerances: &Tolerances,
+    ) {
+        let n = self.book.as_ref().map_or(0, |b| b.stations.len());
+        if n < 2 {
+            return;
+        }
+        let reduced: Vec<(String, Reduction)> = (0..n)
+            .filter_map(|i| {
+                let (st, _) = self.core_station(i)?;
+                let r = reduce(&st, core, settings.refraction(), tolerances);
+                Some((st.station, r))
+            })
+            .collect();
+        let (Some((_, first)), Some((_, last))) = (reduced.first(), reduced.last()) else {
+            return;
+        };
+        self.last_rows = last.rows.iter().map(|r| r.target.clone()).collect();
+        let back = first
+            .rows
+            .get(self.backs.first().copied().unwrap_or(0))
+            .map(|r| r.target.clone());
+        let fore = self
+            .fore
+            .and_then(|j| last.rows.get(j))
+            .map(|r| r.target.clone());
+        if let Some(back) = back {
+            self.traverse = Some(traverse_transfer(
+                &reduced,
+                &back,
+                fore.as_deref(),
+                core,
+                core_unit(settings.angle_unit),
+            ));
+            self.ends = Some((back, fore));
+        }
+    }
+
+    /// The traverse through the stations, when the book has two or more.
+    pub fn traverse(&self) -> Option<&TraverseTransfer> {
+        self.traverse.as_ref()
+    }
+
+    /// The traverse's back sight (the first station's chosen row) and fore
+    /// sight (the last station's, if one is chosen), as last synced.
+    fn traverse_ends(&self) -> Option<(&str, Option<&str>)> {
+        self.ends.as_ref().map(|(b, f)| (b.as_str(), f.as_deref()))
+    }
+}
+
 impl Form {
     /// Kutupsal alım's fields from the station shown, its back sight row
     /// the orientation, the angles in the project's unit (docs/adr/0169 §3).
@@ -345,7 +426,7 @@ impl Form {
         };
         polar_transfer(
             self.reduction.as_ref()?,
-            self.back,
+            self.backs.get(self.station).copied().unwrap_or(0),
             core(self.unit(project)),
             core(project),
         )

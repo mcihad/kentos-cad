@@ -41,6 +41,33 @@ export function openTraverse(ctx: AppContext): void {
 
 type Kind = 'connected' | 'closed' | 'open';
 
+/** Poligon hesabı's fields as another window fills them (Karne editörü, docs/adr/0169 §3). */
+export interface TraverseFill {
+  kind: Kind;
+  endOriented: boolean;
+  start: string;
+  back: string;
+  end: string;
+  fore: string;
+  first: Row;
+  rows: Row[];
+  last: Row;
+}
+
+/** Fills Poligon hesabı's fields, then opens it. */
+export function openTraverseWith(ctx: AppContext, fill: TraverseFill): void {
+  state.kind = fill.kind;
+  state.endOriented = fill.endOriented;
+  state.start.text = fill.start;
+  state.back.text = fill.back;
+  state.end.text = fill.end;
+  state.fore.text = fill.fore;
+  state.first = fill.first;
+  state.rows = fill.rows;
+  state.last = fill.last;
+  openTraverse(ctx);
+}
+
 const state = {
   kind: 'connected' as Kind,
   endOriented: true,

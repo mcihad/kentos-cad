@@ -374,6 +374,173 @@ pub fn polar_transfer(
     })
 }
 
+/// A leg of a field book's traverse: its two stations, the horizontal
+/// distance measured from each end, their mean and their difference
+/// (forward − backward).
+#[derive(Clone, Debug, PartialEq)]
+pub struct BookLeg {
+    pub from: String,
+    pub to: String,
+    pub forward: Option<f64>,
+    pub backward: Option<f64>,
+    pub mean: Option<f64>,
+    pub diff: Option<f64>,
+}
+
+crate::json_struct!(out BookLeg {
+    from,
+    to,
+    forward,
+    backward,
+    mean,
+    diff
+});
+
+/// A target a station has no row for: an angle's back or fore target, or a
+/// leg measured from neither end.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Missing {
+    pub station: String,
+    pub target: String,
+}
+
+crate::json_struct!(out Missing { station, target });
+
+/// Poligon hesabı's angles and legs from a field book's stations
+/// (docs/adr/0169 §3; `scripts/fixtures/field_traverse_cases.py`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TraverseTransfer {
+    pub stations: Vec<String>,
+    pub angles: Vec<Option<f64>>,
+    pub legs: Vec<BookLeg>,
+    pub missing: Vec<Missing>,
+}
+
+crate::json_struct!(out TraverseTransfer {
+    stations,
+    angles,
+    legs,
+    missing
+});
+
+/// The traverse through `stations` in order (each named, reduced in
+/// `from`): ST1 oriented on `back`, STn on `fore` (none: no angle there).
+/// At a station the angle is the fore target's reading less the back
+/// target's, in [0, a turn), each target the station's first row of that
+/// name (the previous and the next station); a leg's distances are the
+/// horizontal distances measured at either end. The angles go into `to`.
+pub fn traverse_transfer(
+    stations: &[(String, Reduction)],
+    back: &str,
+    fore: Option<&str>,
+    from: Unit,
+    to: Unit,
+) -> TraverseTransfer {
+    let full = from.full();
+    let turn = |v: f64| {
+        if from.full() == to.full() {
+            v
+        } else {
+            v * to.full() / from.full()
+        }
+    };
+    let row = |i: usize, target: &str| stations[i].1.rows.iter().find(|r| r.target == target);
+    let mut missing: Vec<Missing> = Vec::new();
+    let mut say = |station: &str, target: &str| {
+        if !missing
+            .iter()
+            .any(|m| m.station == station && m.target == target)
+        {
+            missing.push(Missing {
+                station: station.to_owned(),
+                target: target.to_owned(),
+            });
+        }
+    };
+    let n = stations.len();
+    let mut angles = Vec::with_capacity(n);
+    for (i, (name, _)) in stations.iter().enumerate() {
+        let b = if i == 0 {
+            back
+        } else {
+            stations[i - 1].0.as_str()
+        };
+        let f = if i + 1 == n {
+            fore
+        } else {
+            Some(stations[i + 1].0.as_str())
+        };
+        let Some(f) = f else {
+            angles.push(None);
+            continue;
+        };
+        let (rb, rf) = (row(i, b), row(i, f));
+        if rb.is_none() {
+            say(name, b);
+        }
+        if rf.is_none() {
+            say(name, f);
+        }
+        angles.push(rb.zip(rf).map(|(rb, rf)| {
+            let a = (rf.hz - rb.hz) % full;
+            turn(if a < 0.0 { a + full } else { a })
+        }));
+    }
+    let mut legs = Vec::with_capacity(n.saturating_sub(1));
+    for i in 0..n.saturating_sub(1) {
+        let (a, b) = (&stations[i].0, &stations[i + 1].0);
+        let forward = row(i, b).and_then(|r| r.horizontal);
+        let backward = row(i + 1, a).and_then(|r| r.horizontal);
+        if forward.is_none() && backward.is_none() {
+            say(a, b);
+        }
+        let (mean, diff) = match (forward, backward) {
+            (Some(f), Some(b)) => (Some((f + b) / 2.0), Some(f - b)),
+            (f, b) => (f.or(b), None),
+        };
+        legs.push(BookLeg {
+            from: a.clone(),
+            to: b.clone(),
+            forward,
+            backward,
+            mean,
+            diff,
+        });
+    }
+    TraverseTransfer {
+        stations: stations.iter().map(|(name, _)| name.clone()).collect(),
+        angles,
+        legs,
+        missing,
+    }
+}
+
+/// A book's stations reduced and turned into Poligon hesabı's fields (the
+/// web's `fieldTraverse`).
+fn traverse_named(
+    stations: &[Station],
+    unit: &str,
+    k: f64,
+    tolerances: Option<Tolerances>,
+    back: &str,
+    fore: Option<&str>,
+    to: &str,
+) -> Result<TraverseTransfer, String> {
+    let from = Unit::parse(unit)?;
+    let tolerances = tolerances.unwrap_or_default();
+    let reduced: Vec<(String, Reduction)> = stations
+        .iter()
+        .map(|s| (s.station.clone(), reduce(s, from, k, &tolerances)))
+        .collect();
+    Ok(traverse_transfer(
+        &reduced,
+        back,
+        fore,
+        from,
+        Unit::parse(to)?,
+    ))
+}
+
 /// A station reduced and turned into Kutupsal alım's fields (the web's
 /// `fieldPolar`): the `back` row the back sight, the angles in `to`.
 fn polar_named(
@@ -419,5 +586,14 @@ pub(crate) static OPS: &[Op] = &[
                        back: usize,
                        to: String| {
         polar_named(&station, &unit, k, tolerances, back, &to)
+    }),
+    op!("fieldTraverse", |stations: Vec<Station>,
+                          unit: String,
+                          k: f64,
+                          tolerances: Option<Tolerances>,
+                          back: String,
+                          fore: Option<String>,
+                          to: String| {
+        traverse_named(&stations, &unit, k, tolerances, &back, fore.as_deref(), &to)
     }),
 ];

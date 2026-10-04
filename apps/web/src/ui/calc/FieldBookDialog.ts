@@ -4,7 +4,7 @@ import type { FieldCsvOptions } from '../../contracts/generated/FieldCsvOptions'
 import type { FieldStation } from '../../contracts/generated/FieldStation';
 import { fixed } from '../../core/displayNumber';
 import { formats } from '../../io/client';
-import { fieldPolar, fieldReduce, type FieldStation as CoreStation, type Reduction, type Tolerances } from '../../model/geom/surveyCalc';
+import { fieldPolar, fieldReduce, fieldTraverse, type FieldStation as CoreStation, type Reduction, type Tolerances, type TraverseTransfer } from '../../model/geom/surveyCalc';
 import type { AngleUnit } from '../../model/projectSettings';
 import { surveyTexts } from '../../model/surveyForm';
 import { h, replaceChildren } from '../dom';
@@ -13,6 +13,7 @@ import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { copyReport, Grid, readNumber, resolvePoint, summary, summaryLine, type GridModel, type Row } from './common';
 import { openPolarWith } from './PolarDialog';
+import { openTraverseWith } from './TraverseDialog';
 
 /**
  * Karne editörü (docs/adr/0169 §2–§3, §6; the desktop's `calc/fieldbook/`): a field book opened from an instrument's
@@ -49,8 +50,10 @@ const state = {
   book: null as FieldBookRead | null,
   mapping: { columns: Array<number | null>(8).fill(null), header: true, unit: null as AngleUnit | null },
   station: 0,
-  /** The station's reduced row Kutupsal alım is oriented on. */
-  back: 0,
+  /** Each station's reduced row Kutupsal alım is oriented on (the first station's is the traverse's back sight too). */
+  backs: [] as number[],
+  /** The last station's reduced row the traverse ends oriented on. */
+  fore: null as number | null,
   edits: [] as Edits[],
   error: null as string | null,
 };
@@ -59,6 +62,21 @@ const editsOf = (s: FieldStation): Edits => ({
   rows: s.observations.map((o) => ({ use: '1', name: o.target })),
   height: s.instrumentHeight === undefined ? '' : String(s.instrumentHeight),
 });
+
+/** A station in the core's terms: the observations used, as named here, and where each came from in the file's list. */
+function coreStation(at: number): { station: CoreStation; from: number[] } | null {
+  const st = state.book?.stations[at];
+  const edits = state.edits[at];
+  if (!st || !edits) return null;
+  const from: number[] = [];
+  const observations = st.observations.flatMap((o, i) => {
+    if (edits.rows[i]?.use === '0') return [];
+    from.push(i);
+    return [{ ...o, target: edits.rows[i]?.name ?? o.target }];
+  });
+  const ih = readNumber(edits.height);
+  return { station: { station: st.station, ...(ih !== null && Number.isFinite(ih) ? { instrumentHeight: ih } : {}), observations }, from };
+}
 
 /** A text book's reader options; null until the point and the horizontal reading are mapped. */
 function options(): FieldCsvOptions | null {
@@ -94,6 +112,13 @@ class FieldBookDialog {
   private readonly summaryBox = h('div', { class: 'io-summary' });
   private readonly copy = h('button', { class: 'btn', type: 'button' }, 'Raporu kopyala');
   private readonly transfer = h('button', { class: 'btn btn--primary', type: 'button' }, "Kutupsal alım'a aktar");
+  private readonly toTraverseButton = h('button', { class: 'btn', type: 'button' }, "Poligon hesabı'na aktar");
+  /** Poligon: the stations in order, the fore sight, the legs (two stations or more). */
+  private readonly traverseBox = h('div', { class: 'calc-section' });
+  private traverse: TraverseTransfer | null = null;
+  /** The last station's reduced rows (Bitişte bakılan), and the traverse's back and fore sights as last synced. */
+  private lastRows: string[] = [];
+  private ends: { back: string; fore: string | null } | null = null;
   /** Geri bakış: the reduced row Kutupsal alım is oriented on (filled when the station is reduced). */
   private readonly backBox = h('div', { class: 'fieldbook-back' });
   /** The station shown in the core's terms, as last reduced (Kutupsal alım'a aktar reduces it again). */
@@ -110,12 +135,13 @@ class FieldBookDialog {
       title: TITLE,
       width: 1040,
       className: 'dialog--io dialog--calc dialog--fieldbook',
-      content: [this.fileBox, this.mappingBox, this.stationBox, this.tableBox, this.reducedBox, this.summaryBox],
-      footer: [h('div', { class: 'dialog__spacer' }), this.copy, this.transfer, close],
+      content: [this.fileBox, this.mappingBox, this.stationBox, this.tableBox, this.reducedBox, this.traverseBox, this.summaryBox],
+      footer: [h('div', { class: 'dialog__spacer' }), this.copy, this.toTraverseButton, this.transfer, close],
     });
     close.addEventListener('click', () => this.dialog.close());
     this.copy.addEventListener('click', () => this.copyReport());
     this.transfer.addEventListener('click', () => this.toPolar());
+    this.toTraverseButton.addEventListener('click', () => this.toTraverse());
     this.render();
   }
 
@@ -173,6 +199,8 @@ class FieldBookDialog {
       const book = await formats().readFieldBook(state.bytes, options());
       state.book = book;
       state.edits = book.stations.map(editsOf);
+      state.backs = book.stations.map(() => 0);
+      state.fore = null;
       state.station = Math.min(state.station, Math.max(0, book.stations.length - 1));
     } catch (e) {
       state.error = `Karne okunamadı: ${e instanceof Error ? e.message : String(e)}`;
@@ -245,7 +273,7 @@ class FieldBookDialog {
       h(
         'div',
         { class: 'io-row' },
-        field('İstasyon', select('İstasyon', stations, String(state.station), (v) => ((state.station = Number(v)), (state.back = 0), this.render()))),
+        field('İstasyon', select('İstasyon', stations, String(state.station), (v) => ((state.station = Number(v)), this.render()))),
         field('Alet yüksekliği (m)', height),
         this.backBox,
         st.east !== undefined && st.north !== undefined
@@ -266,6 +294,9 @@ class FieldBookDialog {
       replaceChildren(this.tableBox);
       replaceChildren(this.reducedBox);
       replaceChildren(this.backBox);
+      replaceChildren(this.traverseBox);
+      this.traverse = null;
+      this.toTraverseButton.disabled = true;
       this.core = null;
       this.copy.disabled = true;
       this.transfer.disabled = true;
@@ -275,19 +306,15 @@ class FieldBookDialog {
     const unit = this.unit();
     const settings = this.ctx.doc.settings;
     const survey = settings.survey.value;
-    const observations = st.observations.flatMap((o, i) => {
-      if (edits.rows[i]?.use === '0') return [];
-      this.from.push(i);
-      return [{ ...o, target: edits.rows[i]?.name ?? o.target }];
-    });
-    const ih = readNumber(edits.height);
-    const station = { station: st.station, ...(ih !== null && Number.isFinite(ih) ? { instrumentHeight: ih } : {}), observations };
+    const { station, from } = coreStation(state.station)!;
+    this.from = from;
     const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope } : null;
+    this.syncTraverse(unit, tolerances);
     this.reduction = fieldReduce(station, unit, settings.refraction, tolerances);
     this.core = { station, tolerances };
     // Kutupsal alım is oriented on a reduced row: the first, or the one chosen.
     const rowsReduced = this.reduction.rows;
-    state.back = Math.min(state.back, Math.max(0, rowsReduced.length - 1));
+    const back = Math.min(state.backs[state.station] ?? 0, Math.max(0, rowsReduced.length - 1));
     replaceChildren(
       this.backBox,
       rowsReduced.length
@@ -296,13 +323,13 @@ class FieldBookDialog {
             select(
               'Geri bakış',
               rowsReduced.map((row, i) => ({ value: String(i), label: row.target })),
-              String(state.back),
-              (v) => ((state.back = Number(v)), this.sync()),
+              String(back),
+              (v) => ((state.backs[state.station] = Number(v)), this.sync()),
             ),
           )
         : null,
     );
-    const polar = rowsReduced.length ? fieldPolar(station, unit, settings.refraction, tolerances, state.back, settings.angleUnit.value) : null;
+    const polar = rowsReduced.length ? fieldPolar(station, unit, settings.refraction, tolerances, back, settings.angleUnit.value) : null;
     this.transfer.disabled = !polar?.shots.length;
     const faces = new Map<number, number | null>();
     this.from.forEach((i, k) => faces.set(i, this.reduction!.faces[k] ?? null));
@@ -405,6 +432,7 @@ class FieldBookDialog {
         const over = r.rows.filter((row) => row.over.length).length;
         if (over) lines.push(summaryLine('warn', `${over} hedefte tolerans aşıldı.`));
       }
+      for (const m of this.traverse?.missing.slice(0, 6) ?? []) lines.push(summaryLine('warn', `Poligon: ${m.station} istasyonunda ${m.target} gözlemi yok.`));
       lines.push(summaryLine('info', `Kot farkları yer eğriliği ve refraksiyonla, k = ${settings.refraction}.`));
     }
     summary(this.summaryBox, lines);
@@ -419,7 +447,7 @@ class FieldBookDialog {
     const core = this.core;
     if (!st || !core) return;
     const settings = this.ctx.doc.settings;
-    const t = fieldPolar(core.station, this.unit(), settings.refraction, core.tolerances, state.back, settings.angleUnit.value);
+    const t = fieldPolar(core.station, this.unit(), settings.refraction, core.tolerances, state.backs[state.station] ?? 0, settings.angleUnit.value);
     if (!t?.shots.length) return;
     const known = resolvePoint(this.ctx, st.station);
     const station = known && !('error' in known) ? st.station : st.east !== undefined && st.north !== undefined ? `${st.east},${st.north}` : st.station;
@@ -433,6 +461,100 @@ class FieldBookDialog {
     });
     this.ctx.log.success(`Karne editörü: ${t.shots.length} nokta Kutupsal alım'a aktarıldı (geri bakış ${t.back}).`);
     if (t.left.length) this.ctx.log.warn(`Uzunluğu ya da başucu açısı olmayan ${t.left.length} doğrultu aktarılmadı: ${t.left.join(', ')}.`);
+    this.dialog.close();
+  }
+
+  /** The traverse through every station (two or more), its angles in the project's unit (docs/adr/0169 §3). */
+  private syncTraverse(unit: AngleUnit, tolerances: Tolerances | null): void {
+    this.traverse = null;
+    this.lastRows = [];
+    this.ends = null;
+    const n = state.book?.stations.length ?? 0;
+    const settings = this.ctx.doc.settings;
+    const stations = Array.from({ length: n }, (_, i) => coreStation(i)?.station).filter((s): s is CoreStation => !!s);
+    const first = stations[0] ? fieldReduce(stations[0], unit, settings.refraction, tolerances) : null;
+    const last = n >= 2 && stations[n - 1] ? fieldReduce(stations[n - 1]!, unit, settings.refraction, tolerances) : null;
+    const back = first?.rows[state.backs[0] ?? 0]?.target;
+    if (n < 2 || stations.length !== n || !last || back === undefined) {
+      replaceChildren(this.traverseBox);
+      this.toTraverseButton.disabled = true;
+      return;
+    }
+    this.lastRows = last.rows.map((r) => r.target);
+    const fore = state.fore === null ? null : (last.rows[state.fore]?.target ?? null);
+    this.traverse = fieldTraverse(stations, unit, settings.refraction, tolerances, back, fore, settings.angleUnit.value);
+    this.ends = { back, fore };
+    this.toTraverseButton.disabled = false;
+    const legs = this.traverse.legs.map((l) => [`${l.from} → ${l.to}`, shown(l.forward, 4), shown(l.backward, 4), shown(l.mean, 4), shown(l.diff === undefined ? null : l.diff * 1000, 1)]);
+    const numeric = [false, true, true, true, true];
+    replaceChildren(
+      this.traverseBox,
+      h('h3', { class: 'calc-results__title' }, 'Poligon'),
+      h(
+        'div',
+        { class: 'io-row' },
+        field('İstasyonlar', h('span', { class: 'fieldbook-chain' }, this.traverse.stations.map((s) => s || '(adsız)').join(' → ')), undefined, 'grow'),
+        field(
+          'Bitişte bakılan',
+          select(
+            'Bitişte bakılan',
+            [{ value: '', label: '—' }, ...this.lastRows.map((r, i) => ({ value: String(i), label: r }))],
+            state.fore === null ? '' : String(state.fore),
+            (v) => ((state.fore = v === '' ? null : Number(v)), this.sync()),
+          ),
+        ),
+      ),
+      h(
+        'div',
+        { class: 'io-table-wrap calc-results' },
+        h(
+          'table',
+          { class: 'io-table' },
+          h('thead', null, h('tr', null, ['Kenar', 'İleri (m)', 'Geri (m)', 'Ortalama (m)', 'Fark (mm)'].map((c, i) => h('th', { class: numeric[i] ? 'num' : '' }, c)))),
+          h('tbody', null, legs.map((cells) => h('tr', null, cells.map((c, i) => h('td', { class: numeric[i] ? 'num' : '' }, c))))),
+        ),
+      ),
+    );
+  }
+
+  /**
+   * Poligon hesabı'na aktar (docs/adr/0169 §3): a connected traverse through the stations, from the first (oriented on its
+   * back sight) to the last (on the fore sight chosen, if any), each station's angle and each leg's mean distance; the
+   * stations by their names when the drawing has them, else by the file's coordinates. Poligon hesabı opens.
+   */
+  private toTraverse(): void {
+    const t = this.traverse;
+    const ends = this.ends;
+    const book = state.book;
+    if (!t || !ends || !book) return;
+    const n = t.stations.length;
+    const place = (i: number): string => {
+      const st = book.stations[i]!;
+      const known = resolvePoint(this.ctx, st.station);
+      return known && !('error' in known) ? st.station : st.east !== undefined && st.north !== undefined ? `${st.east},${st.north}` : st.station;
+    };
+    const angle = (i: number): string => {
+      const a = t.angles[i];
+      return a === null || a === undefined ? '' : exact(a, 8);
+    };
+    const leg = (i: number): string => {
+      const m = t.legs[i]?.mean;
+      return m === undefined ? '' : exact(m, 6);
+    };
+    openTraverseWith(this.ctx, {
+      kind: 'connected',
+      endOriented: ends.fore !== null,
+      start: place(0),
+      back: ends.back,
+      end: place(n - 1),
+      fore: ends.fore ?? '',
+      first: { name: '', angle: angle(0), distance: leg(0) },
+      rows: t.stations.slice(1, -1).map((name, k) => ({ name, angle: angle(k + 1), distance: leg(k + 1) })),
+      last: { name: '', angle: ends.fore !== null ? angle(n - 1) : '', distance: '' },
+    });
+    this.ctx.log.success(`Karne editörü: ${n} istasyonlu poligon Poligon hesabı'na aktarıldı.`);
+    if (t.missing.length)
+      this.ctx.log.warn(`Poligonda bulunamayan gözlemler: ${t.missing.map((m) => `${m.station} istasyonunda ${m.target}`).join('; ')}. Açısı ya da kenarı olmayan satırları Poligon hesabı'nda yazın.`);
     this.dialog.close();
   }
 

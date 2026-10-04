@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldPolar, fieldReduce, type FieldStation, type PolarTransfer, type Tolerances } from '../model/geom/surveyCalc';
+import { fieldPolar, fieldReduce, fieldTraverse, type FieldStation, type PolarTransfer, type Tolerances, type TraverseTransfer } from '../model/geom/surveyCalc';
 
 /**
  * The field book's reduction (docs/adr/0169 §3) through the WASM core the app calls, against
@@ -56,6 +56,31 @@ describe('Karne: indirgeme', () => {
         });
       }
       expect(got.problems.map((p) => p.observation), c.name).toEqual(c.expect.problems.map((p) => p.observation));
+    }
+  });
+
+  it('runs the traverse of a field book as the reference does (fixtures/field/v1/traverse.json)', () => {
+    const t = JSON.parse(fs.readFileSync(new URL('../../../../fixtures/field/v1/traverse.json', import.meta.url), 'utf8')) as {
+      format: string;
+      tolerance: { metres: number; angle: number };
+      cases: { name: string; unit: 'grad' | 'deg'; k: number; back: string; fore: string | null; to: 'grad' | 'deg'; book: FieldStation[]; expect: TraverseTransfer }[];
+    };
+    expect(t.format).toBe('kentos.field-traverse');
+    expect(t.cases.length).toBeGreaterThanOrEqual(6);
+    const near = (a: number | null | undefined, b: number | null | undefined, tol: number, what: string) => {
+      if (a === null || a === undefined || b === null || b === undefined) expect(a ?? null, what).toBe(b ?? null);
+      else expect(Math.abs(a - b), what).toBeLessThanOrEqual(tol);
+    };
+    for (const c of t.cases) {
+      const got = fieldTraverse(c.book, c.unit, c.k, null, c.back, c.fore, c.to);
+      expect([got.stations, got.missing], c.name).toEqual([c.expect.stations, c.expect.missing]);
+      expect(got.angles.length, c.name).toBe(c.expect.angles.length);
+      got.angles.forEach((a, i) => near(a, c.expect.angles[i], t.tolerance.angle, `${c.name}: angle ${i}`));
+      got.legs.forEach((l, i) => {
+        const w = c.expect.legs[i]!;
+        expect([l.from, l.to], c.name).toEqual([w.from, w.to]);
+        for (const k of ['forward', 'backward', 'mean', 'diff'] as const) near(l[k], w[k], t.tolerance.metres, `${c.name}: ${k}`);
+      });
     }
   });
 });

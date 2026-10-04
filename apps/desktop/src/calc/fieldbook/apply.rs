@@ -66,12 +66,15 @@ impl crate::app::App {
                 form.read();
             }
             Event::Unit(u) => form.mapping.unit = Some(u),
-            Event::Station(i) => {
-                form.station = i;
-                form.back = 0;
+            Event::Station(i) => form.station = i,
+            Event::Back(i) => {
+                if let Some(b) = form.backs.get_mut(form.station) {
+                    *b = i;
+                }
             }
-            Event::Back(i) => form.back = i,
             Event::Transfer => return self.fieldbook_transfer(),
+            Event::Fore(j) => form.fore = j,
+            Event::TransferTraverse => return self.fieldbook_traverse(),
             Event::Height(t) => {
                 if let Some(e) = form.edits.get_mut(form.station) {
                     e.height = t;
@@ -143,6 +146,86 @@ impl crate::app::App {
             ));
         }
         self.calc_show(Window::Polar);
+        Task::none()
+    }
+
+    /// Poligon hesabı'na aktar: a connected traverse through the stations,
+    /// from the first (oriented on its back sight) to the last (on the fore
+    /// sight chosen, if any), each station's angle and each leg's mean
+    /// distance; the stations by their names when the drawing has them, else
+    /// by the file's coordinates. Poligon hesabı opens; this window waits.
+    fn fieldbook_traverse(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let form = &self.calc.fieldbook;
+        let (Some(t), Some((back, fore)), Some(book)) =
+            (form.traverse(), form.traverse_ends(), form.book.as_ref())
+        else {
+            return Task::none();
+        };
+        let n = t.stations.len();
+        let place = |i: usize| {
+            let st = &book.stations[i];
+            match (resolve_point(&doc.model, &st.station), st.east, st.north) {
+                (Known::Point { .. }, _, _) => st.station.clone(),
+                (_, Some(e), Some(n)) => format!("{e},{n}"),
+                _ => st.station.clone(),
+            }
+        };
+        let angle = |i: usize| {
+            t.angles
+                .get(i)
+                .copied()
+                .flatten()
+                .map(|a| exact(a, 8))
+                .unwrap_or_default()
+        };
+        let leg = |i: usize| {
+            t.legs
+                .get(i)
+                .and_then(|l| l.mean)
+                .map(|d| exact(d, 6))
+                .unwrap_or_default()
+        };
+        let (start, end) = (place(0), place(n - 1));
+        let back = back.to_owned();
+        let fore = fore.map(str::to_owned);
+        let first = [String::new(), angle(0), leg(0)];
+        let rows: Vec<[String; 3]> = (1..n - 1)
+            .map(|i| [t.stations[i].clone(), angle(i), leg(i)])
+            .collect();
+        let last_angle = if fore.is_some() {
+            angle(n - 1)
+        } else {
+            String::new()
+        };
+        let missing: Vec<String> = t
+            .missing
+            .iter()
+            .map(|m| format!("{} istasyonunda {}", m.station, m.target))
+            .collect();
+        let traverse = &mut self.calc.traverse;
+        traverse.kind = super::super::traverse::Kind::Connected;
+        traverse.end_oriented = fore.is_some();
+        traverse.start = start;
+        traverse.back = back;
+        traverse.end = end;
+        traverse.fore = fore.unwrap_or_default();
+        traverse.first = first;
+        traverse.rows = rows;
+        traverse.last = [String::new(), last_angle, String::new()];
+        self.say(
+            Level::Success,
+            format!("Karne editörü: {n} istasyonlu poligon Poligon hesabı'na aktarıldı."),
+        );
+        if !missing.is_empty() {
+            self.warn(format!(
+                "Poligonda bulunamayan gözlemler: {}. Açısı ya da kenarı olmayan satırları Poligon hesabı'nda yazın.",
+                missing.join("; ")
+            ));
+        }
+        self.calc_show(Window::Traverse);
         Task::none()
     }
 }

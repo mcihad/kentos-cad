@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Writes fixtures/field/v1/sample.gsi: a hand-made Leica GSI-16 field book for the Karne editörü's pictures and its flow
-test (docs/adr/0169 §6): two stations with their coordinates and instrument heights, a back sight and four targets in
-both faces at the first (one over the 5 mm slope tolerance), a single-face target with a code, a reflector height that
-changes, and three targets at the second."""
+tests (docs/adr/0169 §6): a two-station traverse, each station with its coordinates and instrument height; at the first a
+back sight, four targets and the second station in both faces (one target over the 5 mm slope tolerance), a single-face
+target with a code and a reflector height that changes; at the second the first station, three targets and a fore sight
+the traverse ends oriented on."""
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "field" / "v1" / "sample.gsi"
@@ -58,7 +59,9 @@ obs("101", 87.4321, 101.2345, 63.2140, code="BINA")
 obs("102", 120.5550, 100.4400, 82.4410)
 obs("103", 210.1200, 98.7000, 55.1230, 2.000)
 obs("104", 305.0000, 100.0100, 40.0000, code="AGAC")
-obs("103", 10.1214, 301.3008, 55.1290)
+obs("ST2", 150.2500, 100.1200, 83.3950, 1.700)
+obs("ST2", 350.2512, 299.8806, 83.3960)
+obs("103", 10.1214, 301.3008, 55.1290, 2.000)
 obs("102", 320.5544, 299.5606, 82.4415)
 obs("101", 287.4337, 298.7671, 63.2160)
 obs("P2", 200.0026, 300.1251, 245.6760, 1.700)
@@ -67,5 +70,6 @@ obs("ST1", 0.0000, 100.3340, 83.3920, 1.700)
 obs("201", 45.2210, 99.1200, 27.5530)
 obs("202", 133.0870, 100.8750, 31.0040, code="SINIR")
 obs("203", 250.4400, 99.9990, 18.2500)
+obs("P9", 300.0000, 100.0000, 150.0000)
 OUT.write_text("\r\n".join(lines) + "\r\n", encoding="ascii")
 print(OUT, len(lines), "blok")

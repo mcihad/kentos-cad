@@ -6,6 +6,7 @@ use iced::{Center, Element, Fill, Length};
 use kentos_contracts::{AngleUnit, FieldBookRead};
 use kentos_domain::Document as Model;
 use kentos_geometry_core::display::fixed;
+use kentos_geometry_core::survey::fieldbook::TraverseTransfer;
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
@@ -128,6 +129,9 @@ impl Form {
                 )
                 .push(column![label::strong("İndirgenmiş"), self.reduced_view(unit)].spacing(6));
         }
+        if let Some(t) = self.traverse() {
+            body = body.push(self.traverse_view(t));
+        }
         if let Some(s) = summary(self.summary_lines(settings, unit)) {
             body = body.push(s);
         }
@@ -140,6 +144,11 @@ impl Form {
                     .as_ref()
                     .filter(|r| !r.rows.is_empty())
                     .map(|_| event(CalcEvent::CopyReport)),
+                false,
+            ))
+            .action(footer_button(
+                "Poligon hesabı'na aktar",
+                self.traverse().map(|_| fb(Event::TransferTraverse)),
                 false,
             ))
             .action(footer_button(
@@ -261,9 +270,17 @@ impl Form {
             bar = bar.push(
                 column![
                     label::caption("Geri bakış"),
-                    Select::new(choices, Some(self.back.min(r.rows.len() - 1)), |i| {
-                        fb(Event::Back(i))
-                    })
+                    Select::new(
+                        choices,
+                        Some(
+                            self.backs
+                                .get(self.station)
+                                .copied()
+                                .unwrap_or(0)
+                                .min(r.rows.len() - 1),
+                        ),
+                        |i| { fb(Event::Back(i)) },
+                    )
                     .searchable(false),
                 ]
                 .spacing(4)
@@ -418,6 +435,17 @@ impl Form {
                 lines.push((Line::Warn, format!("{over} hedefte tolerans aşıldı.")));
             }
         }
+        if let Some(t) = self.traverse() {
+            for m in t.missing.iter().take(6) {
+                lines.push((
+                    Line::Warn,
+                    format!(
+                        "Poligon: {} istasyonunda {} gözlemi yok.",
+                        m.station, m.target
+                    ),
+                ));
+            }
+        }
         lines.push((
             Line::Info,
             format!(
@@ -439,5 +467,71 @@ impl std::fmt::Display for Angle {
             AngleUnit::Grad => "Grad",
             AngleUnit::Deg => "Derece",
         })
+    }
+}
+
+impl Form {
+    /// Poligon: the stations in order, the fore sight the traverse ends on,
+    /// each leg's distances from both ends with their mean and difference.
+    fn traverse_view<'a>(&'a self, t: &TraverseTransfer) -> Element<'a, Message> {
+        let chain = t
+            .stations
+            .iter()
+            .map(|s| if s.is_empty() { "(adsız)" } else { s.as_str() })
+            .collect::<Vec<_>>()
+            .join(" → ");
+        let mut choices = vec![Choice::new("—")];
+        choices.extend(self.last_rows.iter().map(|r| Choice::new(r.clone())));
+        let fore = column![
+            label::caption("Bitişte bakılan"),
+            Select::new(choices, Some(self.fore.map_or(0, |j| j + 1)), |k| {
+                fb(Event::Fore(k.checked_sub(1)))
+            })
+            .searchable(false),
+        ]
+        .spacing(4)
+        .width(Length::Fixed(200.0));
+        let heads = [
+            ("Kenar", false),
+            ("İleri (m)", true),
+            ("Geri (m)", true),
+            ("Ortalama (m)", true),
+            ("Fark (mm)", true),
+        ];
+        let mut table = Column::new().push(
+            container(Row::with_children(
+                heads
+                    .iter()
+                    .map(|(h, n)| head((*h).to_owned(), *n))
+                    .collect::<Vec<_>>(),
+            ))
+            .width(Fill)
+            .style(style::container::header),
+        );
+        for l in &t.legs {
+            table = table.push(Row::with_children(vec![
+                cell(format!("{} → {}", l.from, l.to), false, false),
+                cell(shown(l.forward, 4), true, false),
+                cell(shown(l.backward, 4), true, false),
+                cell(shown(l.mean, 4), true, false),
+                cell(shown(l.diff.map(|d| d * 1000.0), 1), true, false),
+            ]));
+        }
+        column![
+            label::strong("Poligon"),
+            row![
+                column![label::caption("İstasyonlar"), label::body(chain)]
+                    .spacing(4)
+                    .width(Fill),
+                fore,
+            ]
+            .spacing(24)
+            .align_y(iced::Bottom),
+            container(table)
+                .width(Fill)
+                .style(style::container::bordered),
+        ]
+        .spacing(8)
+        .into()
     }
 }

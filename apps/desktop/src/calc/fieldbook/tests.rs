@@ -51,7 +51,14 @@ fn a_gsi_book_is_read_reduced_and_edited() {
         .collect();
     assert_eq!(
         rows,
-        [("P2", 2), ("101", 2), ("102", 2), ("103", 2), ("104", 1)]
+        [
+            ("P2", 2),
+            ("101", 2),
+            ("102", 2),
+            ("103", 2),
+            ("104", 1),
+            ("ST2", 2)
+        ]
     );
     let over: Vec<&str> = r
         .rows
@@ -63,7 +70,7 @@ fn a_gsi_book_is_read_reduced_and_edited() {
     // P2's face I left out: its face II reads alone.
     let _ = app.update(Message::Calc(CalcEvent::Cell(0, USE, "0".to_owned())));
     let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
-    assert_eq!((r.rows[4].target.as_str(), r.rows[4].faces), ("P2", 1));
+    assert_eq!((r.rows[5].target.as_str(), r.rows[5].faces), ("P2", 1));
     // 104 renamed.
     let _ = app.update(Message::Calc(CalcEvent::Cell(4, NAME, "105".to_owned())));
     let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
@@ -72,7 +79,7 @@ fn a_gsi_book_is_read_reduced_and_edited() {
     // The second station.
     send(&mut app, Event::Station(1));
     let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
-    assert_eq!(r.rows.len(), 4);
+    assert_eq!(r.rows.len(), 5);
 }
 
 /// A text book is read only to its first line until its point and
@@ -108,8 +115,8 @@ fn a_text_book_is_mapped_then_read() {
 }
 
 /// Karne editörü's pictures: the sample book in the light theme at
-/// 1440×900 and the dark at 1100×650, a text book's mapping, and Kutupsal
-/// alım filled from the first station.
+/// 1440×900 and the dark at 1100×650, a text book's mapping, Kutupsal alım
+/// filled from the first station and Poligon hesabı from both.
 #[test]
 #[ignore = "writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture"]
 fn screens() {
@@ -127,7 +134,7 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "csv", "polar"] {
+        for name in ["gsi", "csv", "polar", "poligon"] {
             let mut app = opened();
             let _ = app
                 .settings
@@ -135,6 +142,10 @@ fn screens() {
             app.apply_settings();
             if name == "polar" {
                 send(&mut app, Event::Transfer);
+            }
+            if name == "poligon" {
+                send(&mut app, Event::Fore(Some(4)));
+                send(&mut app, Event::TransferTraverse);
             }
             if name == "csv" {
                 app.calc.fieldbook.mapping = super::Mapping::default();
@@ -191,7 +202,7 @@ fn a_station_goes_to_kutupsal_alim() {
         ("0.0019", "105.2")
     );
     let names: Vec<&str> = polar.rows.iter().map(|r| r[0].as_str()).collect();
-    assert_eq!(names, ["101", "102", "103", "104"]);
+    assert_eq!(names, ["101", "102", "103", "104", "ST2"]);
     assert_eq!(
         polar.rows[0],
         ["101", "87.4329", "63.215", "101.2337", "1.7"]
@@ -204,4 +215,40 @@ fn a_station_goes_to_kutupsal_alim() {
         let got = p.dz.expect("a height difference");
         assert!((got - want).abs() < 1e-6, "{name}: {got} ≠ {want}");
     }
+}
+
+/// Poligon hesabı'na aktar (docs/adr/0169 §3): the two stations a connected
+/// traverse, ST1 oriented on P2, ST2 on P9; each angle and the leg's mean
+/// are the core's, the stations by the file's coordinates.
+#[test]
+fn the_stations_go_to_poligon_hesabi() {
+    use crate::calc::traverse::Kind;
+
+    let mut app = opened();
+    let t = app.calc.fieldbook.traverse().expect("two stations").clone();
+    assert_eq!(t.stations, ["ST1", "ST2"]);
+    assert_eq!(t.angles[1], None, "no fore sight chosen yet");
+    // P9 is ST2's fifth reduced row.
+    send(&mut app, Event::Fore(Some(4)));
+    let t = app.calc.fieldbook.traverse().expect("two stations").clone();
+    assert!(t.missing.is_empty());
+    let leg = t.legs[0].mean.expect("measured from both ends");
+    send(&mut app, Event::TransferTraverse);
+    assert_eq!(app.calc.open, Some(Window::Traverse));
+    let tr = &app.calc.traverse;
+    assert_eq!((tr.kind, tr.end_oriented), (Kind::Connected, true));
+    assert_eq!(
+        (
+            tr.start.as_str(),
+            tr.back.as_str(),
+            tr.end.as_str(),
+            tr.fore.as_str()
+        ),
+        ("412350,4521800", "P2", "412410.512,4521742.208", "P9")
+    );
+    assert!(tr.rows.is_empty(), "two stations: no new point");
+    let angle = |v: Option<f64>| super::exact(v.expect("an angle"), 8);
+    assert_eq!(tr.first[1], angle(t.angles[0]));
+    assert_eq!(tr.first[2], super::exact(leg, 6));
+    assert_eq!(tr.last[1], angle(t.angles[1]));
 }

@@ -33,7 +33,7 @@
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
 // survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
-// book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station).
+// book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3706,6 +3706,18 @@ SCENES.fieldbook = [
     // Kutupsal alım'a aktar: Kutupsal alım filled from ST1, the station by the file's coordinates.
     id: 'fieldbook-polar',
     open: async (ui) => (await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI), await ui.clickText('.dialog--fieldbook .btn', "Kutupsal alım'a aktar"), await ui.sleep(500)),
+    close: fieldBookClose,
+  },
+  {
+    // Poligon hesabı'na aktar: ST1 → ST2, ending oriented on P9.
+    id: 'fieldbook-traverse',
+    open: async (ui) => {
+      await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI);
+      await ui.eval(`(() => { const s = document.querySelector('.dialog--fieldbook select[aria-label="Bitişte bakılan"]'); s.value = '4'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+      await ui.sleep(200);
+      await ui.clickText('.dialog--fieldbook .btn', "Poligon hesabı'na aktar");
+      await ui.sleep(500);
+    },
     close: fieldBookClose,
   },
 ];

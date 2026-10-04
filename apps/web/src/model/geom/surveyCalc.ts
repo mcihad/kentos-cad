@@ -170,5 +170,26 @@ export interface PolarTransfer {
 /** A station reduced and turned into Kutupsal alım's fields: the `back` row the back sight, the angles in `to` (the core's `polar_transfer`). */
 export const fieldPolar = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null, back: number, to: AngleUnit) => PolarTransfer | null>('fieldPolar');
 
+/** A leg of a field book's traverse: its two stations, the horizontal distance measured from each end, their mean and difference (forward − backward). */
+export interface BookLeg {
+  from: string;
+  to: string;
+  forward?: number;
+  backward?: number;
+  mean?: number;
+  diff?: number;
+}
+
+/** Poligon hesabı's angles and legs from a field book's stations (docs/adr/0169 §3): the targets a station has no row for named. */
+export interface TraverseTransfer {
+  stations: string[];
+  angles: (number | null)[];
+  legs: BookLeg[];
+  missing: { station: string; target: string }[];
+}
+
+/** A book's stations reduced and turned into Poligon hesabı's fields: ST1 oriented on `back`, STn on `fore` (null: none), the angles in `to` (the core's `traverse_transfer`). */
+export const fieldTraverse = op<(stations: FieldStation[], unit: AngleUnit, k: number, tolerances: Tolerances | null, back: string, fore: string | null, to: AngleUnit) => TraverseTransfer>('fieldTraverse');
+
 /** A station's observations reduced in the unit with the refraction coefficient `k`, its pairs checked against the tolerances (the core's `survey::fieldbook`). */
 export const fieldReduce = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null) => Reduction>('fieldReduce');

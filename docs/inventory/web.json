@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 90,
-      "implemented": 90,
+      "total": 91,
+      "implemented": 91,
       "partial": 0,
       "pending": 0
     },
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 90,
-        "implemented": 72,
+        "total": 91,
+        "implemented": 73,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -18223,6 +18223,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/calc/traverse.rs (ADR 0070)"
+    },
+    {
+      "id": "apps/web/src/ui/calc/TraverseDialog.ts#openTraverseWith",
+      "name": "openTraverseWith",
+      "role": "window",
+      "source": "apps/web/src/ui/calc/TraverseDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/fieldbook/apply.rs, Poligon hesabı filled from the field book (ADR 0169 §3)"
     },
     {
       "id": "apps/web/src/ui/cloud/AccessLostNotice.ts#openAccessLostNotice",
