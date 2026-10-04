@@ -5,4 +5,8 @@
  * device's grid library keeps it by that), the file's name and size, the
  * accuracy the project gives it.
  */
-export type GridChoice = { id: string, file: string, size: bigint, accuracy?: number, };
+export type GridChoice = { id: string, file: string, 
+/**
+ * The file's size in bytes (at most the core's 256 MiB).
+ */
+size: number, accuracy?: number, };

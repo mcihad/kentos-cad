@@ -249,6 +249,8 @@ pub enum Message {
     LogScrolled(iced::widget::scrollable::Viewport),
     /// The kept layout is due to be written (layout.rs).
     LayoutSave,
+    /// The NTv2 grids the project names, looked for in the device's library (grids.rs).
+    GridsLooked(Vec<crate::grids::Looked>),
     /// The window's new size: the kept sizes are shown within it.
     WindowResized(iced::Size),
     /// The layer tree's rows and their menu (layering.rs).
@@ -455,6 +457,8 @@ pub struct App {
     pub(crate) follow: crate::message_log::Follow,
     /// The layout kept between runs (layout.rs) and the window's size it is shown in.
     pub(crate) layout: crate::layout::Keeper,
+    /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
+    pub(crate) grids: crate::grids::Grids,
     pub(crate) window_size: iced::Size,
     pub command_input: String,
     pub command_expanded: bool,
@@ -705,6 +709,7 @@ impl App {
             typed: Vec::new(),
             follow: crate::message_log::Follow::default(),
             layout: crate::layout::Keeper::memory(),
+            grids: crate::grids::Grids::default(),
             window_size: iced::Size::new(1440.0, 900.0),
             command_input: String::new(),
             command_expanded: false,
@@ -942,6 +947,8 @@ impl App {
             self.text_file_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
+            // The grids the project's datum choices name, read into the core (grids.rs).
+            self.follow_grids(),
             self.follow_log(Instant::now()),
             // The sheet templates' library follows the sign-in and the connection (sheet_library.rs).
             self.follow_sheet_library(Instant::now()),
@@ -1053,6 +1060,7 @@ impl App {
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),
+            Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::WindowResized(size) => self.window_resized(size),
             Message::CommandCancelled => {
                 self.line_focused = false;

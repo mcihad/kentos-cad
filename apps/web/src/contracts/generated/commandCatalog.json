@@ -1294,6 +1294,7 @@
                 "type": "string"
               },
               "size": {
+                "description": "The file's size in bytes (at most the core's 256 MiB).",
                 "format": "uint64",
                 "minimum": 0,
                 "type": "integer"
@@ -3463,6 +3464,7 @@
                 "type": "string"
               },
               "size": {
+                "description": "The file's size in bytes (at most the core's 256 MiB).",
                 "format": "uint64",
                 "minimum": 0,
                 "type": "integer"
@@ -5386,6 +5388,7 @@
                 "type": "string"
               },
               "size": {
+                "description": "The file's size in bytes (at most the core's 256 MiB).",
                 "format": "uint64",
                 "minimum": 0,
                 "type": "integer"

@@ -5,11 +5,13 @@ import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
 import { PROJECT_SETTINGS_DEFAULTS, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
 import { definitionTitle, DEFINITION_CODE } from '../../model/projectCrs';
 import { secondChoices, secondTitle } from '../../model/secondCrs';
-import { h, type Child } from '../dom';
+import { h, replaceChildren, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PLOT_SCALES } from '../ribbon/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
+import { askRemove } from '../widgets/confirm';
+import { gridLine } from '../../app/gridLibrary';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { effectiveWorkspace } from '../../app/workspaces';
@@ -96,6 +98,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
             onChange: (srid, rerender) => api.set('srid', srid, rerender),
           }),
           secondGroup(api),
+          gridsGroup(ctx, api),
           group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${crsTitle(def)}. Uygulama ayarlarından değiştirilir.` : null, openApp)),
         ];
       },
@@ -182,6 +185,61 @@ function secondGroup(api: DraftApi<ProjectDraft>): Child {
   });
   pick.set(shown !== null ? secondTitle(shown) : defined ? definitionTitle(defined) : 'Yok');
   return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, pick.el));
+}
+
+/**
+ * Izgaralar (docs/adr/0168 §4, §6): the device's NTv2 grids, each with what its header says and Kaldır (asked), the
+ * grids the project's datum choices name that this device does not have, and Ekle…. The grids are the device's, not
+ * the project's; the rows are drawn again as the library changes (the desktop's `grids_group`).
+ */
+function gridsGroup(ctx: AppContext, api: DraftApi<ProjectDraft>): Child {
+  const list = h('div', { class: 'grid-library' });
+  const paint = () => {
+    const entries = ctx.grids.entries.value;
+    const missing = (api.draft.datumTransforms ?? []).flatMap((t) => (t.grid && !entries.some((e) => e.id === t.grid!.id) ? [t.grid.file] : []));
+    replaceChildren(
+      list,
+      entries.map((e) => {
+        const remove = h('button', { class: 'btn btn--small', type: 'button' }, 'Kaldır');
+        remove.addEventListener('click', async () => {
+          const yes = await askRemove({
+            title: 'Izgara kaldırılsın mı?',
+            message: `“${e.file}” bu cihazın ızgara kitaplığından silinecek.`,
+            details: ['Onu anan projelerin datum seçimi, ızgara yeniden eklenene dek değer vermez.'],
+            action: 'Kaldır',
+          });
+          if (!yes) return;
+          await ctx.grids.remove(e.id);
+          ctx.log.success(`“${e.file}” ızgara kitaplığından kaldırıldı.`);
+          await ctx.grids.follow(api.draft.datumTransforms ?? [], (text) => ctx.log.warn(text));
+          paint();
+        });
+        return settingRow(e.file, gridLine(e), remove);
+      }),
+      missing.map((file) => note('warn', `${file}: projenin datum seçimi bu ızgarayı istiyor, bu cihazda yok. Aynı dosyayı Ekle… ile ekleyin.`)),
+      entries.length || missing.length ? null : h('p', { class: 'sgroup__note' }, 'Bu cihazda NTv2 ızgarası yok.'),
+    );
+  };
+  const input = h('input', { type: 'file', accept: '.gsb,.GSB', hidden: true }) as HTMLInputElement;
+  const add = h('button', { class: 'btn btn--small', type: 'button' }, 'Ekle…');
+  add.addEventListener('click', () => input.click());
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const got = await ctx.grids.add(file.name, new Uint8Array(await file.arrayBuffer()));
+    if ('error' in got) ctx.log.error(got.error);
+    else ctx.log.success(`“${got.file}” ızgara kitaplığına eklendi (${got.from} → ${got.to}); projelerin datum seçimleri onu kullanabilir.`);
+    paint();
+  });
+  paint();
+  void ctx.grids.refresh().then(paint);
+  return group(
+    'Izgaralar',
+    h('p', { class: 'sgroup__note' }, "NTv2 ızgaraları bu cihazda saklanır, projeyle paylaşılmaz: projenin datum seçimi onları SHA-256'larıyla anar, projeyi açan başka cihaza da eklenmeleri gerekir."),
+    list,
+    h('div', { class: 'grid-library__actions' }, add, input),
+  );
 }
 
 function unitsSection(api: DraftApi<ProjectDraft>): Child {

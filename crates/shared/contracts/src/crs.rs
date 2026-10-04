@@ -242,6 +242,9 @@ pub struct CrsDefinition {
 pub struct GridChoice {
     pub id: String,
     pub file: String,
+    /// The file's size in bytes (at most the core's 256 MiB).
+    // A number in TypeScript, as JSON gives it: exact up to 2^53.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

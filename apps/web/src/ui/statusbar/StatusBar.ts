@@ -254,7 +254,8 @@ export class StatusBar extends Component {
       fit.refit();
       this.fitSecond();
     };
-    this.d.add(watchAll([ctx.doc.settings.changed, ctx.prefs.geographic, ctx.prefs.uiFont, ctx.prefs.textSize], takeSecond));
+    // The project's grids read into the core change its values too (docs/adr/0168 §4).
+    this.d.add(watchAll([ctx.doc.settings.changed, ctx.prefs.geographic, ctx.prefs.uiFont, ctx.prefs.textSize, ctx.grids.revision], takeSecond));
     this.d.add(listen(document.fonts, 'loadingdone', takeSecond));
     takeSecond();
     this.d.add(

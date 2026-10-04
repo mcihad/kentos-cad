@@ -9,6 +9,7 @@ import type { Clipboard } from './clipboard';
 import type { CloudSession } from './cloud/session';
 import type { RecoveryCopies } from './recovery';
 import type { DocumentFiles } from './fileIO';
+import type { GridLibrary } from './gridLibrary';
 import type { ServerStatus } from './server';
 import type { Formatter } from './format';
 import type { ProcessingService } from './processing';
@@ -51,6 +52,8 @@ export interface AppContext {
   readonly files: DocumentFiles;
   /** Local recovery copies of unsaved work, offered after a crash (app/recovery.ts, docs/adr/0030). */
   readonly recovery: RecoveryCopies;
+  /** The device's NTv2 grids for the project's datum choices (app/gridLibrary.ts, docs/adr/0168 §4). */
+  readonly grids: GridLibrary;
   /** Whether the KentOS API answers (`/v1/health`); the drawing works without it (app/server.ts). */
   readonly server: ServerStatus;
   /** Signing in, the open cloud project, its autosave and live events (app/cloud/session.ts). */

@@ -111,6 +111,14 @@
   font-weight: 600;
 }
 
+/* Izgaralar (docs/adr/0168 §6): the device's NTv2 grids, the project's missing ones, Ekle…. */
+.grid-library > .note {
+  margin-top: 8px;
+}
+.grid-library__actions {
+  margin-top: 10px;
+}
+
 /* ── CRS picker ──────────────────────────────────────────────────── */
 .crs-current {
   display: flex;

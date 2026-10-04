@@ -27,7 +27,9 @@
 // secondcrs (docs/adr/0167: the second system's values in the status bar, the coordinate system's menu, Koordinat oku,
 // Proje ayarları' field); convert (Koordinat dönüştür: a point to the second system and to WGS 84, the systems, a list);
 // customcrs (docs/adr/0168: a second system the project defines, its menu; a project whose system is its own
-// definition, its second system by the project's datum choice, Koordinat oku).
+// definition, its second system by the project's datum choice, Koordinat oku); grids (Proje ayarları' Izgaralar: a
+// grid added, one a datum choice names that the device does not have, Kaldır's question).
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -3589,6 +3591,42 @@ const customOwn = `(() => { window.kentos.doc.settings.assign({ srid: 0, customC
 const customClose = async (ui) => (
   await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256, customCrs: null, secondSrid: null, secondCustomCrs: null, datumTransforms: [] })`)
 );
+/**
+ * Proje ayarları' Izgaralar (docs/adr/0168 §4, §6): the test grid of fixtures/geodesy/v1/ntv2 added to the device's
+ * library, the project's second system WGS 84 by it, and a choice naming a grid the device does not have; Kaldır's
+ * question. The desktop's are `grids::tests::screens` (izgara-*).
+ */
+const TR_GSB = readFileSync(new URL('../../../../fixtures/geodesy/v1/ntv2/tr.gsb', import.meta.url));
+const TR_ID = createHash('sha256').update(TR_GSB).digest('hex');
+const gridChoice = (from, to, name, id, file) => ({ from, to, name, grid: { id, file, size: 1024 } });
+const gridsOpen = async (ui) => {
+  const choices = [gridChoice('TUREF', 'WGS84', 'TUREF → WGS 84: ızgara', TR_ID, 'tr.gsb'), gridChoice('ED50', 'TUREF', 'ED50 → TUREF: bölge ızgarası', 'ab'.repeat(32), 'ed50-turef-bolge.gsb')];
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    const bytes = Uint8Array.from(atob('${TR_GSB.toString('base64')}'), (c) => c.charCodeAt(0));
+    await k.grids.add('tr.gsb', bytes);
+    k.doc.settings.assign({ secondSrid: 4326, datumTransforms: ${JSON.stringify(choices)} });
+    ${settle};
+  })()`);
+  await ui.sleep(300);
+  await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'crs'))`);
+  await ui.waitFor(`!!document.querySelector('.settings__content')`);
+  await ui.sleep(300);
+  await ui.eval(`[...document.querySelectorAll('.sgroup__title')].find((e) => e.textContent === 'Izgaralar')?.scrollIntoView({ block: 'center' })`);
+  await ui.sleep(300);
+};
+const gridsClose = async (ui) => (
+  await ui.escapeAll(3), await ui.eval(`(async () => { const k = window.kentos; await k.grids.remove('${TR_ID}'); k.doc.settings.assign({ secondSrid: null, datumTransforms: [] }); })()`)
+);
+SCENES.grids = [
+  { id: 'grids-list', open: gridsOpen, close: gridsClose },
+  {
+    id: 'grids-remove',
+    open: async (ui) => (await gridsOpen(ui), await ui.clickText('.grid-library .btn', 'Kaldır'), await ui.sleep(300)),
+    close: gridsClose,
+  },
+];
+
 SCENES.customcrs = [
   { id: 'custom-second', open: async (ui) => (await ui.eval(customSecond), await overDrawing(ui)), close: customClose },
   {

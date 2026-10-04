@@ -55,8 +55,8 @@
       "pending": 0
     },
     "storage": {
-      "total": 10,
-      "implemented": 10,
+      "total": 11,
+      "implemented": 11,
       "partial": 0,
       "pending": 0
     },
@@ -153,8 +153,8 @@
         "n/a": 1
       },
       "storage": {
-        "total": 10,
-        "implemented": 8,
+        "total": 11,
+        "implemented": 9,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -13528,6 +13528,17 @@
       "desktopWhere": "$XDG_STATE_HOME/kentos-cad/son-dosyalar.json (ADR 0050)"
     },
     {
+      "id": "kentos.grids/grids",
+      "kind": "indexedDB",
+      "source": "apps/web/src/app/gridLibrary.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "$XDG_DATA_HOME/kentos-cad/izgara/<sha256>.gsb, başlığının bilgisi <sha256>.json (apps/desktop/src/grids.rs, ADR 0168 §4)"
+    },
+    {
       "id": "kentos.invitation",
       "kind": "sessionStorage",
       "source": "apps/web/src/app/cloud/invitationLink.ts",
@@ -15622,7 +15633,7 @@
       "contract": "GridChoice",
       "rust": "crates/shared/contracts/src/crs.rs",
       "field": "size",
-      "type": "bigint",
+      "type": "number",
       "optional": false,
       "status": "implemented",
       "platforms": {

@@ -49,6 +49,13 @@ fn message(event: Event) -> Message {
     Message::Project(Box::new(event))
 }
 
+pub(crate) use settings::Event as SettingsEvent;
+
+/// A Proje ayarları event as the app's message (grids.rs sends Izgaralar's).
+pub(crate) fn settings_message(e: SettingsEvent) -> Message {
+    message(Event::Settings(e))
+}
+
 /// The web command ids this module runs; Koordinat sistemi… is Proje
 /// ayarları on its coordinate system page (the web's `openProjectSettings('crs')`).
 pub const COMMANDS: [&str; 3] = ["file.new", "file.settings", "crs.set"];
@@ -67,6 +74,8 @@ impl App {
                         state.section = settings::Section::Crs;
                     }
                     self.open_project_window(Window::Settings(Box::new(state)));
+                    // Izgaralar lists the device's grids as they are now (grids.rs).
+                    self.refresh_grids();
                 }
                 None => self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O)."),
             },
@@ -83,10 +92,7 @@ impl App {
     pub(crate) fn project_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::New(e) => self.new_project_event(e),
-            Event::Settings(e) => {
-                self.project_settings_event(e);
-                Task::none()
-            }
+            Event::Settings(e) => self.project_settings_event(e),
             Event::Type(e) => {
                 self.project_type_event(e);
                 Task::none()

@@ -22,6 +22,7 @@ import { registerCalcCommands } from './calc';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
 import { RecoveryCopies } from './recovery';
+import { GridLibrary, indexedGridStore } from './gridLibrary';
 import { ServerStatus } from './server';
 import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
@@ -99,6 +100,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
       (id, done) => lazy(ctx, import('../ui/blocks/AttributeValuesDialog'), (m) => m.openAttributeValuesDialog(ctx, id, done)),
     ),
     server: new ServerStatus(),
+    grids: new GridLibrary(indexedGridStore()),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);
@@ -117,6 +119,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   ctx.recovery = new RecoveryCopies(ctx);
   ctx.files.discarded = () => ctx.recovery.discard();
   ctx.recovery.start();
+  // The NTv2 grids the project's datum choices name, read into the core from this device's library (docs/adr/0168 §4).
+  doc.settings.datumTransforms.subscribe((choices) => void ctx.grids.follow(choices, (text) => ctx.log.warn(text)), true);
   // Closing the tab with unsaved changes asks first. Not in development, where Vite reloads the page on every edit.
   if (import.meta.env.PROD) window.addEventListener('beforeunload', (e) => doc.dirty.value && e.preventDefault());
   TOOL_CATALOG.forEach((d) => ctx.tools.register(d));

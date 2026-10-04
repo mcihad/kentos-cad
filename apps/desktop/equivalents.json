@@ -113,6 +113,7 @@
   },
   "storage": {
     "kentos.cloud/drafts": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/bulut-taslak (ADR 0040, 0043)" },
+    "kentos.grids/grids": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/izgara/<sha256>.gsb, başlığının bilgisi <sha256>.json (apps/desktop/src/grids.rs, ADR 0168 §4)" },
     "kentos.files/recent": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/son-dosyalar.json (ADR 0050)" },
     "kentos.processing.v1": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/islemler.json (ADR 0084)" },
     "kentos.invitation": { "desktop": "n/a", "reason": "Davet bağlantısı web uygulamasının adresidir; belirteci yalnız o tarayıcı sekmesinde tutulur (ADR 0042). Masaüstü davet eder, bağlantıyı açmaz; kabul edilen proje masaüstünün kataloğunda da görünür." },

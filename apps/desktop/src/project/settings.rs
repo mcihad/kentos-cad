@@ -7,7 +7,7 @@
 use std::fmt;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
-use iced::{Element, Fill};
+use iced::{Element, Fill, Task};
 use kentos_contracts::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, ProjectSettings, Workspace};
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::typography;
@@ -122,6 +122,8 @@ pub struct State {
     initial_name: String,
     initial: ProjectSettings,
     query: String,
+    /// The grid whose Kaldır asks in its row (Izgaralar).
+    removing: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -144,6 +146,10 @@ pub enum Event {
     Second(Option<u32>),
     /// The second definition the project has, kept.
     SecondDefined,
+    /// Kaldır on a grid's row: asked in the row; none: Vazgeç.
+    GridAsk(Option<String>),
+    /// Izgaralar's library (grids.rs).
+    Grid(crate::grids::Event),
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -165,25 +171,30 @@ impl State {
             initial_name: doc.name().to_owned(),
             initial: doc.settings().clone(),
             query: String::new(),
+            removing: None,
         }
     }
 }
 
 impl App {
-    pub(super) fn project_settings_event(&mut self, e: Event) {
+    pub(super) fn project_settings_event(&mut self, e: Event) -> Task<Message> {
         if let Event::Save = e {
             self.save_project_settings();
-            return;
+            return Task::none();
         }
         if let Event::OpenApp = e {
             // This window waits under Uygulama ayarları, as it is (app.rs `dialog_back`).
             self.open_settings_at(crate::settings_sections::Section::NewProjects);
             self.dialog_under = Some(crate::app::Dialog::Project);
-            return;
+            return Task::none();
         }
         let Some(Window::Settings(s)) = &mut self.project else {
-            return;
+            return Task::none();
         };
+        if let Event::Grid(e) = e {
+            s.removing = None;
+            return self.grid_event(e);
+        }
         let d = &mut s.settings;
         match e {
             Event::Section(section) => s.section = section,
@@ -207,6 +218,8 @@ impl App {
                 d.second_custom_crs = None;
             }
             Event::SecondDefined => {}
+            Event::GridAsk(id) => s.removing = id,
+            Event::Grid(_) => {}
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
@@ -217,6 +230,7 @@ impl App {
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
         d.second_srid = d.second();
+        Task::none()
     }
 
     /// Kaydet: the draft goes into the drawing (the web's `onSave`).
@@ -438,6 +452,7 @@ impl App {
                 |q| event(Event::Search(q)),
             ),
             second_group(s),
+            self.grids_group(s),
             group(
                 "Yeni projeler",
                 row![
@@ -455,6 +470,71 @@ impl App {
         ]
         .spacing(16)
         .into()
+    }
+}
+
+impl App {
+    /// Izgaralar (docs/adr/0168 §4, §6): the device's NTv2 grids, each with
+    /// what its header says and Kaldır (asked in its row), the grids the
+    /// project's datum choices name that this device does not have, and
+    /// Ekle…. The grids are the device's, not the project's.
+    fn grids_group<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
+        let entries = &self.grids.entries;
+        let mut list = Column::new().spacing(10);
+        for e in entries {
+            let about = column![
+                label::body(e.file.clone()),
+                label::caption(crate::grids::grid_line(e))
+            ]
+            .spacing(2)
+            .width(Fill);
+            let side: Element<'a, Message> = if s.removing.as_deref() == Some(e.id.as_str()) {
+                row![
+                    label::caption("Cihazdan silinsin mi?"),
+                    button(label::body("Sil"))
+                        .on_press(event(Event::Grid(crate::grids::Event::Remove(
+                            e.id.clone()
+                        ))))
+                        .padding([5, 16])
+                        .style(style::button::danger),
+                    words::secondary("Vazgeç", Some(event(Event::GridAsk(None)))),
+                ]
+                .spacing(8)
+                .align_y(iced::Center)
+                .into()
+            } else {
+                words::secondary("Kaldır", Some(event(Event::GridAsk(Some(e.id.clone())))))
+            };
+            list = list.push(row![about, side].spacing(16).align_y(iced::Center));
+        }
+        let missing: Vec<&str> = s
+            .settings
+            .datum_transforms
+            .iter()
+            .filter_map(|t| t.grid.as_ref())
+            .filter(|g| !entries.iter().any(|e| e.id == g.id))
+            .map(|g| g.file.as_str())
+            .collect();
+        for file in &missing {
+            list = list.push(Banner::warning(format!(
+                "{file}: projenin datum seçimi bu ızgarayı istiyor, bu cihazda yok. Aynı dosyayı Ekle… ile ekleyin."
+            )));
+        }
+        if entries.is_empty() && missing.is_empty() {
+            list = list.push(label::caption("Bu cihazda NTv2 ızgarası yok."));
+        }
+        let add = words::secondary("Ekle…", Some(event(Event::Grid(crate::grids::Event::Add))));
+        group(
+            "Izgaralar",
+            column![
+                label::caption(
+                    "NTv2 ızgaraları bu cihazda saklanır, projeyle paylaşılmaz: projenin datum seçimi onları SHA-256'larıyla anar, projeyi açan başka cihaza da eklenmeleri gerekir."
+                ),
+                list,
+                row![add],
+            ]
+            .spacing(10),
+        )
     }
 }
 

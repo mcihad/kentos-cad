@@ -210,6 +210,7 @@ python3 scripts/fixtures/crs_measure_cases.py --check   # ikinci sistemin düzle
 python3 scripts/fixtures/crs_custom_cases.py --check   # projenin koordinat sistemlerini (başlangıcı farklı TM, Bessel ve Krasovski datumları iki dönüklük kuralıyla, yerel sistemler, projenin datum seçimleri) PROJ hatlarıyla denetle; durumlar fixtures/geodesy/v1/custom.json (ADR 0168)
 python3 scripts/fixtures/crs_text_cases.py --check   # WKT 1, WKT 2 ve PROJ dizesi okuma ve yazmayı (datum kuralı, redler, yerel sistemin DERIVEDPROJCRS'i) PROJ'un okuduğuyla denetle; durumlar fixtures/geodesy/v1/text.json (ADR 0168 §5)
 python3 scripts/fixtures/project_crs_cases.py --check   # projenin sistemlerinin çözümünü (kayıttaki ya da tanım, ikinci sistem, datum seçimleri; adları ve kodları) kurallardan ve kayıttan denetle; durumlar fixtures/geodesy/v1/project.json (ADR 0168 §9 3b)
+cargo test -p kentos-desktop grids::tests::screens -- --ignored --nocapture   # Proje ayarları'nın Izgaralar grubunun resimleri, .run/shots/izgara-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs grids); ADR 0168 §4)
 cargo test -p kentos-desktop second_crs::tests::custom_screens -- --ignored --nocapture   # projenin tanımlarının resimleri, .run/shots/ozel-sistem-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs customcrs); ADR 0168)
 python3 scripts/fixtures/ntv2_cases.py --check   # NTv2 ızgaralarını (KentOS kodu olmadan yazılan Türkiye, büyük uçlu ve iç içe ızgaralar, bozuk dosyalar) ve kaymalarını PROJ'un hgridshift'iyle denetle; durumlar fixtures/geodesy/v1/ntv2.json (ADR 0168 §4)
 python3 scripts/fixtures/crs_convert_cases.py --check   # Koordinat dönüştür'ün okuma ve yazmasını (eksen adları, sayı ve açı dilbilgisi, DMS ve DD, doğruluk metni, hatalar; projenin tanımları ve datum seçimleri) PROJ'la denetle; durumlar fixtures/crs/v1/convert.json (ADR 0167 §4, 0168 §9 3c)
@@ -291,7 +292,9 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   anahtarı `bulut/…`, `proje/…`, `dosya/…`, `oturum/…`; `templates`, hesabın bulut kitaplığının kopyaları
   da; `assets`, anahtarı SHA-256, yazılırken özeti denetlenir; sürüm 1'den yükseltme yalnız eksik depoyu
   açar); masaüstünde `$XDG_DATA_HOME/kentos-cad/pafta/` (yoksa `~/.local/share/kentos-cad/pafta/`;
-  ADR 0164). Hata ayıklarken kullanıcı verisini izinsiz silmeyin.
+  ADR 0164). NTv2 ızgaraları cihazındır, projeninki değil: IndexedDB `kentos.grids` (`grids` bilgiler, `bytes` baytlar; anahtar
+  SHA-256), masaüstünde `$XDG_DATA_HOME/kentos-cad/izgara/<sha256>.gsb` ve yanında `<sha256>.json` (ADR 0168 §4).
+  Hata ayıklarken kullanıcı verisini izinsiz silmeyin.
 
 ## 3. Teknik kısıtlar
 
@@ -705,8 +708,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve 2. adım (NTv2 ızgarası `crs::ntv2`, PROJ'un hgridshift'i birebir; başvuru `ntv2_cases.py`) ve 3a (sözleşme
   `kentos_contracts::crs`, ayarlar `customCrs`, `secondCustomCrs`, `datumTransforms`, `ProjectSettings::sanitized`; `.kcad` şema 13 ve
   bağımsız Python okuyucu ve yazıcısı) ve 3b (çözücü `kentos_project::systems`, `model/projectCrs.ts`, başvuru `project_crs_cases.py`;
-  ikinci sistem tanımlar ve seçimlerle; tanımın adı; tanımlı proje sistemli sayılır) ve 3c (dönüştürücüde projenin tanımları ve seçimleri)
-  tamam; sıradaki 3d (cihazın ızgara kitaplığı), sonra 4. adım (arayüz). 3 Ekim:
+  ikinci sistem tanımlar ve seçimlerle; tanımın adı; tanımlı proje sistemli sayılır), 3c (dönüştürücüde projenin tanımları ve seçimleri)
+  ve 3d (cihazın ızgara kitaplığı, `grids.rs`, `app/gridLibrary.ts`; Proje ayarları'nda Izgaralar) tamam; sıradaki 4. adım (Özel koordinat
+  sistemi penceresi, Datum dönüşümleri grubu). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

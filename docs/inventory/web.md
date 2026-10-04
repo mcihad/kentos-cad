@@ -10,7 +10,7 @@
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 80 | 80 | 0 | 0 |
-| Tarayıcı depoları | 10 | 10 | 0 | 0 |
+| Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 320 | 320 | 0 | 0 |
 | Pencereler ve paneller | 87 | 87 | 0 | 0 |
 
@@ -55,7 +55,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 77 | 0 | 2 | 0 | 1 | 80 |
-| Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
+| Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 320 | 0 | 0 | 0 | 0 | 320 |
 | Pencereler ve paneller | 69 | 2 | 15 | 0 | 1 | 87 |
 
@@ -172,7 +172,7 @@ Yok.
 - `session.overlapLast`
 - `session.overlapLayers`
 
-#### Tarayıcı depoları (0 / 10)
+#### Tarayıcı depoları (0 / 11)
 
 Yok.
 

@@ -33,6 +33,7 @@ mod find_replace;
 mod expression;
 #[cfg(test)]
 mod files_testing;
+mod grids;
 mod hover_card;
 #[cfg(test)]
 mod icon_tour;
@@ -186,6 +187,8 @@ fn main() -> iced::Result {
             app.cloud.replicas = cloud::default_replicas();
             // The sheets' books, by the project's key, beside them (docs/sheet/design.md §10).
             app.sheet_store = sheets::default_store();
+            // The device's NTv2 grids for the projects' datum choices (docs/adr/0168 §4).
+            app.grids.library = grids::Library::device();
             // The recent files, kept beside the program's other history.
             if let Some(folder) = recent::RecentFiles::default_folder() {
                 app.recent = recent::RecentFiles::open(&folder);
