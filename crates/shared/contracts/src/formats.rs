@@ -49,7 +49,8 @@ use crate::layer::LineType;
 ///    (its vertices, height and turn; the note a text, the arrowhead an int, the mask a flag).
 /// 18: the new dimensions (docs/adr/0147): `.kcad` document schema 9, five more dimension styles
 ///    in the typed columns' numbering and the dimension's mask (a flag), `za` and `zb` (floats).
-pub const FORMATS_VERSION: u32 = 18;
+/// 19: the field book (docs/adr/0169): `readFieldCsv`, `FieldCsvOptions` → `FieldBookRead`.
+pub const FORMATS_VERSION: u32 = 19;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -292,6 +293,93 @@ pub struct CoordRow {
 pub struct LineError {
     pub line: u32,
     pub message: String,
+}
+
+/// A plain-text field book's columns as the user maps them (0-based; the
+/// station, its instrument height and the optional values may be left out)
+/// and whether its first line names them (docs/adr/0169 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldCsvOptions {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub station: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub instrument_height: Option<u32>,
+    pub target: u32,
+    pub hz: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zenith: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub slope: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub target_height: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<u32>,
+    pub header: bool,
+}
+
+/// An observation as the instrument wrote it (docs/adr/0169 §2): the
+/// target, the horizontal reading, the zenith angle (none: a direction
+/// only), the slope distance, the target height, a code, the file's line.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldObservation {
+    pub target: String,
+    pub hz: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zenith: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub slope: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub target_height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
+    pub line: u32,
+}
+
+/// A station of the field book: its name (empty when the file names none),
+/// the instrument's height above it, its observations in order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldStation {
+    pub station: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub instrument_height: Option<f64>,
+    pub observations: Vec<FieldObservation>,
+}
+
+/// A field book read: the text's encoding, the first line's cells (the
+/// columns' names to map), its stations, and the lines not read with why.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldBookRead {
+    pub encoding: String,
+    pub first_line: Vec<String>,
+    pub stations: Vec<FieldStation>,
+    pub problems: Vec<LineError>,
 }
 
 /// A coordinate list read with the given options, and what the reader found.

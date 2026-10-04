@@ -6,6 +6,7 @@
 //! and direction readings run clockwise. Angles come and go in the
 //! project's unit (grad or degrees), distances in metres.
 
+pub mod fieldbook;
 pub mod intersection;
 pub mod polar;
 pub mod traverse;
@@ -30,6 +31,11 @@ impl Unit {
             "deg" => Ok(Unit::DEG),
             _ => Err(format!("Açı birimi “{s}” tanınmıyor (grad ya da deg).")),
         }
+    }
+
+    /// A full turn in this unit (400 or 360).
+    pub fn full(self) -> f64 {
+        self.full
     }
 
     /// An angle in this unit, in radians.

@@ -2,6 +2,7 @@ import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
+import type { FieldCsvOptions } from '../contracts/generated/FieldCsvOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
@@ -24,6 +25,8 @@ import type { KcadProgress } from './kcad';
 
 export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
+  /** A plain-text field book with the user's column mapping (docs/adr/0169). */
+  | { id: number; op: 'readFieldCsv'; bytes: ArrayBuffer; options: FieldCsvOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   /** A DXF drawing to import (the DXF module, crates/wasm/dxf-wasm). */
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }

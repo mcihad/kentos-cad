@@ -92,3 +92,51 @@ export const surveyForward = op<(unit: AngleUnit, a: Vec2, b: Vec2, alpha: numbe
 
 /** Geriden kestirme: at P, α clockwise from A to B and β from B to C; `strength` near 0 near the danger circle. */
 export const surveyResection = op<(unit: AngleUnit, a: Vec2, b: Vec2, c: Vec2, alpha: number, beta: number) => { p: Vec2; strength: number }>('surveyResection');
+
+/** A field book's observation as the instrument wrote it (docs/adr/0169 §2): the zenith absent for a direction only. */
+export interface FieldObservation {
+  target: string;
+  hz: number;
+  zenith?: number;
+  slope?: number;
+  targetHeight?: number;
+  code?: string;
+  /** The line of the file it came from. */
+  line?: number;
+}
+
+/** A station: its name, the instrument's height above it, its observations in order. */
+export interface FieldStation {
+  station: string;
+  instrumentHeight?: number;
+  observations: FieldObservation[];
+}
+
+/**
+ * A target reduced (docs/adr/0169 §3): one face or two (the observations it came from), the reading and zenith in face
+ * I, the faces' differences (the reading's, the index error, the distance's), the horizontal distance and the height
+ * difference station mark → target mark (earth curvature and refraction applied).
+ */
+export interface Reduced {
+  target: string;
+  faces: 1 | 2;
+  observations: number[];
+  hz: number;
+  zenith?: number;
+  slope?: number;
+  hzDiff?: number;
+  index?: number;
+  slopeDiff?: number;
+  targetHeight?: number;
+  horizontal?: number;
+  dh?: number;
+}
+
+/** A station's reduction: its targets in order, the observations left out (a zenith that is no face). */
+export interface Reduction {
+  rows: Reduced[];
+  problems: { observation: number; problem: 'zenith' }[];
+}
+
+/** A station's observations reduced in the unit with the refraction coefficient `k` (the core's `survey::fieldbook`). */
+export const fieldReduce = op<(station: FieldStation, unit: AngleUnit, k: number) => Reduction>('fieldReduce');

@@ -4,6 +4,8 @@ import type { CoordRead } from '../contracts/generated/CoordRead';
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { ExportReport } from '../contracts/generated/ExportReport';
+import type { FieldBookRead } from '../contracts/generated/FieldBookRead';
+import type { FieldStation } from '../contracts/generated/FieldStation';
 import { FORMATS_VERSION } from './version';
 
 /**
@@ -19,6 +21,7 @@ interface Formats {
   formatsVersion(): number;
   readCoords(bytes: Uint8Array, options: string): Uint8Array;
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
+  readFieldCsv(bytes: Uint8Array, options: string): Uint8Array;
 }
 
 const glue = import.meta.glob<Formats>('./pkg/kentos_formats_wasm.js');
@@ -104,4 +107,17 @@ describe.skipIf(!loader)('formats WASM module', () => {
     ]);
   });
 
+
+  it('reads plain-text field books as the reference does (fixtures/field/v1/csv.json, docs/adr/0169)', async () => {
+    const w = await load();
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/csv.json', import.meta.url)))) as {
+      cases: { name: string; mapping: Record<string, number>; header: boolean; text: string; expect: { stations: FieldStation[]; problems: { line: number; problem: string }[] } }[];
+    };
+    expect(file.cases.length).toBeGreaterThanOrEqual(5);
+    for (const c of file.cases) {
+      const got = JSON.parse(new TextDecoder().decode(w.readFieldCsv(new TextEncoder().encode(c.text), JSON.stringify({ ...c.mapping, header: c.header })))) as FieldBookRead;
+      expect(got.stations, c.name).toEqual(c.expect.stations);
+      expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
+    }
+  });
 });

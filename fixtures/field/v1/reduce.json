@@ -1,0 +1,550 @@
+{
+  "format": "kentos.field-reduce",
+  "version": 1,
+  "source": "scripts/fixtures/field_reduce_cases.py (docs/adr/0169 §3)",
+  "earthRadius": 6371000.0,
+  "tolerance": {
+    "metres": 1e-09,
+    "angle": 1e-11
+  },
+  "cases": [
+    {
+      "name": "tek durum, gon",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "P1",
+        "instrumentHeight": 1.552,
+        "observations": [
+          {
+            "target": "P2",
+            "hz": 0.0,
+            "zenith": 99.8765,
+            "slope": 245.678,
+            "targetHeight": 1.7
+          },
+          {
+            "target": "101",
+            "hz": 87.4321,
+            "zenith": 101.2345,
+            "slope": 63.214,
+            "targetHeight": 1.7
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "P2",
+            "faces": 1,
+            "observations": [
+              0
+            ],
+            "hz": 0.0,
+            "zenith": 99.8765,
+            "slope": 245.678,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": 1.7,
+            "horizontal": 245.6775377149963,
+            "dh": 0.33271976884498905
+          },
+          {
+            "target": "101",
+            "faces": 1,
+            "observations": [
+              1
+            ],
+            "hz": 87.4321,
+            "zenith": 101.2345,
+            "slope": 63.214,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": 1.7,
+            "horizontal": 63.20211520732565,
+            "dh": -1.373463498360078
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "iki durum, gon",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "P1",
+        "instrumentHeight": 1.552,
+        "observations": [
+          {
+            "target": "P2",
+            "hz": 0.0012,
+            "zenith": 99.8765,
+            "slope": 245.678,
+            "targetHeight": 1.7
+          },
+          {
+            "target": "101",
+            "hz": 87.4321,
+            "zenith": 101.2345,
+            "slope": 63.214,
+            "targetHeight": 1.7
+          },
+          {
+            "target": "101",
+            "hz": 287.4337,
+            "zenith": 298.7671,
+            "slope": 63.216,
+            "targetHeight": 1.7
+          },
+          {
+            "target": "P2",
+            "hz": 200.0026,
+            "zenith": 300.1251,
+            "slope": 245.676,
+            "targetHeight": 1.7
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "P2",
+            "faces": 2,
+            "observations": [
+              0,
+              3
+            ],
+            "hz": 0.0019000000000005228,
+            "zenith": 99.87570000000001,
+            "slope": 245.677,
+            "hzDiff": -0.001400000000001046,
+            "index": 0.0007999999999839247,
+            "slopeDiff": 0.0020000000000095497,
+            "targetHeight": 1.7,
+            "horizontal": 245.67653170838892,
+            "dh": 0.3358050575489175
+          },
+          {
+            "target": "101",
+            "faces": 2,
+            "observations": [
+              1,
+              2
+            ],
+            "hz": 87.43289999999999,
+            "zenith": 101.23369999999998,
+            "slope": 63.215,
+            "hzDiff": -0.0015999999999820602,
+            "index": 0.0008000000000123464,
+            "slopeDiff": -0.0020000000000024443,
+            "targetHeight": 1.7,
+            "horizontal": 63.20313041762594,
+            "dh": -1.3726886459993823
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "iki durum, sıfırdan geçen okuma",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.5,
+        "observations": [
+          {
+            "target": "A",
+            "hz": 399.999,
+            "zenith": 100.004,
+            "slope": 120.0,
+            "targetHeight": 1.3
+          },
+          {
+            "target": "A",
+            "hz": 199.9996,
+            "zenith": 299.9962,
+            "slope": 120.002,
+            "targetHeight": 1.3
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              0,
+              1
+            ],
+            "hz": 399.9993,
+            "zenith": 100.00390000000002,
+            "slope": 120.001,
+            "hzDiff": -0.0005999999999630745,
+            "index": 9.999999999621423e-05,
+            "slopeDiff": -0.001999999999995339,
+            "targetHeight": 1.3,
+            "horizontal": 120.0009997748231,
+            "dh": 0.1936318334655841
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "derece, iki durum",
+      "unit": "deg",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.45,
+        "observations": [
+          {
+            "target": "A",
+            "hz": 45.1234,
+            "zenith": 89.5,
+            "slope": 512.345,
+            "targetHeight": 2.0
+          },
+          {
+            "target": "A",
+            "hz": 225.1246,
+            "zenith": 270.502,
+            "slope": 512.349,
+            "targetHeight": 2.0
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              0,
+              1
+            ],
+            "hz": 45.123999999999995,
+            "zenith": 89.499,
+            "slope": 512.347,
+            "hzDiff": -0.0011999999999900979,
+            "index": 0.0010000000000047748,
+            "slopeDiff": -0.004000000000019099,
+            "targetHeight": 2.0,
+            "horizontal": 512.327413284207,
+            "dh": 3.9478776863895284
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "yalnız II. durum",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "observations": [
+          {
+            "target": "B",
+            "hz": 250.0,
+            "zenith": 301.0,
+            "slope": 88.8
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "B",
+            "faces": 1,
+            "observations": [
+              0
+            ],
+            "hz": 50.0,
+            "zenith": 99.0,
+            "slope": 88.8,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": null,
+            "horizontal": 88.78904496437146,
+            "dh": 1.3953480475941764
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "refraksiyonsuz (k = 1)",
+      "unit": "grad",
+      "k": 1.0,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.6,
+        "observations": [
+          {
+            "target": "C",
+            "hz": 10.0,
+            "zenith": 95.0,
+            "slope": 900.0,
+            "targetHeight": 1.6
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "C",
+            "faces": 1,
+            "observations": [
+              0
+            ],
+            "hz": 10.0,
+            "zenith": 95.0,
+            "slope": 900.0,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": 1.6,
+            "horizontal": 897.2256003598152,
+            "dh": 70.61318615506045
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "uzunluksuz gözlem",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "observations": [
+          {
+            "target": "D",
+            "hz": 123.4567,
+            "zenith": 100.0
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "D",
+            "faces": 1,
+            "observations": [
+              0
+            ],
+            "hz": 123.4567,
+            "zenith": 100.0,
+            "slope": null,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": null,
+            "horizontal": null,
+            "dh": null
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "başucu açısız doğrultu (geri bakış)",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "observations": [
+          {
+            "target": "BS",
+            "hz": 0.0
+          },
+          {
+            "target": "BS",
+            "hz": 200.0006,
+            "slope": 50.0
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "BS",
+            "faces": 1,
+            "observations": [
+              0
+            ],
+            "hz": 0.0,
+            "zenith": null,
+            "slope": null,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": null,
+            "horizontal": null,
+            "dh": null
+          },
+          {
+            "target": "BS",
+            "faces": 1,
+            "observations": [
+              1
+            ],
+            "hz": 200.0006,
+            "zenith": null,
+            "slope": 50.0,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": null,
+            "horizontal": null,
+            "dh": null
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "geçersiz başucu açıları",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "observations": [
+          {
+            "target": "E",
+            "hz": 1.0,
+            "zenith": 0.0,
+            "slope": 10.0
+          },
+          {
+            "target": "F",
+            "hz": 2.0,
+            "zenith": 200.0,
+            "slope": 10.0
+          },
+          {
+            "target": "G",
+            "hz": 3.0,
+            "zenith": 99.0,
+            "slope": 10.0
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "G",
+            "faces": 1,
+            "observations": [
+              2
+            ],
+            "hz": 3.0,
+            "zenith": 99.0,
+            "slope": 10.0,
+            "hzDiff": null,
+            "index": null,
+            "slopeDiff": null,
+            "targetHeight": null,
+            "horizontal": 9.998766324816605,
+            "dh": 0.1570799992471799
+          }
+        ],
+        "problems": [
+          {
+            "observation": 0,
+            "problem": "zenith"
+          },
+          {
+            "observation": 1,
+            "problem": "zenith"
+          }
+        ]
+      }
+    },
+    {
+      "name": "iki set: her çift ayrı satır",
+      "unit": "grad",
+      "k": 0.13,
+      "setup": {
+        "station": "S",
+        "instrumentHeight": 1.5,
+        "observations": [
+          {
+            "target": "A",
+            "hz": 10.0,
+            "zenith": 99.0,
+            "slope": 100.0,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "A",
+            "hz": 210.001,
+            "zenith": 301.0004,
+            "slope": 100.002,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "A",
+            "hz": 60.0,
+            "zenith": 99.0002,
+            "slope": 100.001,
+            "targetHeight": 1.5
+          },
+          {
+            "target": "A",
+            "hz": 259.9994,
+            "zenith": 300.9996,
+            "slope": 100.001,
+            "targetHeight": 1.5
+          }
+        ]
+      },
+      "expect": {
+        "rows": [
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              0,
+              1
+            ],
+            "hz": 10.000500000000002,
+            "zenith": 98.9998,
+            "slope": 100.001,
+            "hzDiff": -0.0010000000000047748,
+            "index": 0.0002000000000066393,
+            "slopeDiff": -0.001999999999995339,
+            "targetHeight": 1.5,
+            "horizontal": 99.9886581896565,
+            "dh": 1.5717441886234098
+          },
+          {
+            "target": "A",
+            "faces": 2,
+            "observations": [
+              2,
+              3
+            ],
+            "hz": 59.99969999999999,
+            "zenith": 99.00030000000001,
+            "slope": 100.001,
+            "hzDiff": 0.0006000000000199179,
+            "index": -0.00010000000000331966,
+            "slopeDiff": 0.0,
+            "targetHeight": 1.5,
+            "horizontal": 99.98867052566126,
+            "dh": 1.5709588796583458
+          }
+        ],
+        "problems": []
+      }
+    }
+  ]
+}

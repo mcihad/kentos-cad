@@ -3,6 +3,8 @@ import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
+import type { FieldBookRead } from '../contracts/generated/FieldBookRead';
+import type { FieldCsvOptions } from '../contracts/generated/FieldCsvOptions';
 import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
 import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
 import type { NczReadOptions } from '../contracts/generated/NczReadOptions';
@@ -79,6 +81,12 @@ export class FormatsClient {
   async readCoords(bytes: Uint8Array, options: CoordReadOptions): Promise<CoordRead> {
     const copy = bytes.slice().buffer;
     return json<CoordRead>(await this.request({ op: 'readCoords', bytes: copy, options }, [copy]));
+  }
+
+  /** Reads a plain-text field book with the user's column mapping (docs/adr/0169); the caller keeps `bytes`. */
+  async readFieldCsv(bytes: Uint8Array, options: FieldCsvOptions): Promise<FieldBookRead> {
+    const copy = bytes.slice().buffer;
+    return json<FieldBookRead>(await this.request({ op: 'readFieldCsv', bytes: copy, options }, [copy]));
   }
 
   /**

@@ -11,7 +11,8 @@
 //! drawing to save or one read crosses as typed columns (docs/adr/0030).
 
 use kentos_contracts::{
-    CoordReadOptions, CoordWriteInput, FORMATS_VERSION, GeoJsonReadOptions, ShapefileReadOptions,
+    CoordReadOptions, CoordWriteInput, FORMATS_VERSION, FieldCsvOptions, GeoJsonReadOptions,
+    ShapefileReadOptions,
 };
 use wasm_bindgen::prelude::*;
 
@@ -58,6 +59,14 @@ pub fn read_coords(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
     let opts: CoordReadOptions =
         serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
     to_json(&kentos_formats::coords::read(bytes, &opts))
+}
+
+/// Reads a plain-text field book: `options` is `FieldCsvOptions`, the result `FieldBookRead` (JSON bytes; docs/adr/0169).
+#[wasm_bindgen(js_name = readFieldCsv)]
+pub fn read_field_csv(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
+    let opts: FieldCsvOptions =
+        serde_json::from_str(options).map_err(|e| bad_input("Karne seçenekleri", &e))?;
+    to_json(&kentos_formats::field::read_csv(bytes, &opts))
 }
 
 /// Writes a coordinate list from `CoordWriteInput` (JSON).
