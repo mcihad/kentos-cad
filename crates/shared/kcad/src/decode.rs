@@ -368,7 +368,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 second_custom_crs = Some(crs::crs_definition(r)?)
             }
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
-            "survey" if has.survey => survey = Some(survey_settings(r)?),
+            "survey" if has.survey => survey = Some(survey_settings(r, has)?),
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
@@ -433,8 +433,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
 }
 
 /// Schema 14's survey settings (docs/adr/0169 §3), checked whole: at least
-/// one, k within [−1, 1], tolerances above zero.
-fn survey_settings(r: &mut Reader<'_>) -> Result<SurveySettings, KcadError> {
+/// one, k within [−1, 1], tolerances above zero; schema 15's traverse
+/// tolerances too.
+fn survey_settings(r: &mut Reader<'_>, has: Features) -> Result<SurveySettings, KcadError> {
     let at = r.position();
     let mut s = SurveySettings::default();
     map(r, |r, key| {
@@ -443,6 +444,9 @@ fn survey_settings(r: &mut Reader<'_>) -> Result<SurveySettings, KcadError> {
             "faceHz" => s.face_hz = Some(r.float()?),
             "faceSlope" => s.face_slope = Some(r.float()?),
             "refraction" => s.refraction = Some(r.float()?),
+            "twoWay" if has.traverse_tolerances => s.two_way = Some(r.float()?),
+            "traverseAngle" if has.traverse_tolerances => s.traverse_angle = Some(r.float()?),
+            "traverseCoord" if has.traverse_tolerances => s.traverse_coord = Some(r.float()?),
             _ => return Err(unknown(r)),
         }
         Ok(())

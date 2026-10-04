@@ -114,9 +114,25 @@ fn a_text_book_is_mapped_then_read() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// The project's traverse tolerances of the pictures: the leg's two ends
+/// 3 mm (the sample's differ by more), the misclosures 60 cc and 30 mm.
+fn with_traverse_tolerances(app: &mut App) {
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.settings().clone();
+    settings.survey = Some(SurveySettings {
+        face_slope: Some(0.005),
+        two_way: Some(0.003),
+        traverse_angle: Some(60.0 * std::f64::consts::PI / 2_000_000.0),
+        traverse_coord: Some(0.03),
+        ..SurveySettings::default()
+    });
+    doc.model.set_settings(settings);
+}
+
 /// Karne editörü's pictures: the sample book in the light theme at
 /// 1440×900 and the dark at 1100×650, a text book's mapping, Kutupsal alım
-/// filled from the first station and Poligon hesabı from both.
+/// filled from the first station, the traverse's leg above its two-way
+/// tolerance and Poligon hesabı filled from both stations.
 #[test]
 #[ignore = "writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture"]
 fn screens() {
@@ -134,7 +150,7 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "csv", "polar", "poligon"] {
+        for name in ["gsi", "csv", "polar", "kenar", "poligon"] {
             let mut app = opened();
             let _ = app
                 .settings
@@ -143,8 +159,11 @@ fn screens() {
             if name == "polar" {
                 send(&mut app, Event::Transfer);
             }
-            if name == "poligon" {
+            if name == "kenar" || name == "poligon" {
+                with_traverse_tolerances(&mut app);
                 send(&mut app, Event::Fore(Some(4)));
+            }
+            if name == "poligon" {
                 send(&mut app, Event::TransferTraverse);
             }
             if name == "csv" {
@@ -157,6 +176,11 @@ fn screens() {
                 let _ = app.update(message);
             };
             snapshot.settle(&mut app, App::view, &mut update);
+            if name == "kenar" {
+                // The traverse's legs at the body's foot.
+                snapshot.operate(app.view(), Box::new(crate::files_testing::SnapAll));
+                snapshot.settle(&mut app, App::view, &mut update);
+            }
             let file = out.join(format!("karne-{name}-{w}x{h}-{theme}.png"));
             snapshot
                 .render(app.view(), &app.theme())
@@ -214,6 +238,52 @@ fn a_station_goes_to_kutupsal_alim() {
     for ((name, want), p) in dh.iter().zip(&points) {
         let got = p.dz.expect("a height difference");
         assert!((got - want).abs() < 1e-6, "{name}: {got} ≠ {want}");
+    }
+}
+
+/// The two-way tolerance (docs/adr/0169 §3): a leg whose distances from
+/// its two ends differ by more is marked and counted under the tables.
+#[test]
+fn a_legs_two_way_difference_is_checked() {
+    let mut app = opened();
+    let diff = app.calc.fieldbook.traverse().expect("two stations").legs[0]
+        .diff
+        .expect("measured from both ends")
+        .abs();
+    assert!(diff > 0.0, "the sample's leg differs");
+    let says = |app: &App| -> Vec<String> {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.calc
+            .fieldbook
+            .summary_lines(doc.settings(), doc.settings().angle_unit)
+            .into_iter()
+            .map(|(_, t)| t)
+            .collect()
+    };
+    for (tolerance, over) in [(diff / 2.0, true), (diff * 2.0, false)] {
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.survey = Some(SurveySettings {
+            face_slope: Some(0.005),
+            two_way: Some(tolerance),
+            ..SurveySettings::default()
+        });
+        doc.model.set_settings(settings);
+        send(&mut app, Event::Station(0));
+        let t = app.calc.fieldbook.traverse().expect("two stations");
+        assert_eq!(t.legs[0].over, over, "{tolerance}");
+        let lines = says(&app);
+        assert!(
+            lines.iter().any(|l| l.contains("kenarın iki yönden farkı")),
+            "{lines:?}"
+        );
+        assert_eq!(
+            lines
+                .iter()
+                .any(|l| l == "1 kenarda iki yönden fark toleransı aşıldı."),
+            over,
+            "{lines:?}"
+        );
     }
 }
 

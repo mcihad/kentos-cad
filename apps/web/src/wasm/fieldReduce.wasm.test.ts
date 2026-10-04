@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldPolar, fieldReduce, fieldTraverse, type FieldStation, type PolarTransfer, type Tolerances, type TraverseTransfer } from '../model/geom/surveyCalc';
+import { fieldPolar, fieldReduce, fieldTraverse, surveyTraverseClosure, type Closure, type FieldStation, type PolarTransfer, type Tolerances, type TraverseTransfer } from '../model/geom/surveyCalc';
 
 /**
  * The field book's reduction (docs/adr/0169 §3) through the WASM core the app calls, against
@@ -63,7 +63,8 @@ describe('Karne: indirgeme', () => {
     const t = JSON.parse(fs.readFileSync(new URL('../../../../fixtures/field/v1/traverse.json', import.meta.url), 'utf8')) as {
       format: string;
       tolerance: { metres: number; angle: number };
-      cases: { name: string; unit: 'grad' | 'deg'; k: number; back: string; fore: string | null; to: 'grad' | 'deg'; book: FieldStation[]; expect: TraverseTransfer }[];
+      cases: { name: string; unit: 'grad' | 'deg'; k: number; back: string; fore: string | null; to: 'grad' | 'deg'; twoWay?: number; book: FieldStation[]; expect: TraverseTransfer }[];
+      closures: { unit: 'grad' | 'deg'; angleMisclosure?: number; linearMisclosure?: number; angle?: number; coord?: number; angleOver?: boolean; coordOver?: boolean }[];
     };
     expect(t.format).toBe('kentos.field-traverse');
     expect(t.cases.length).toBeGreaterThanOrEqual(6);
@@ -72,7 +73,7 @@ describe('Karne: indirgeme', () => {
       else expect(Math.abs(a - b), what).toBeLessThanOrEqual(tol);
     };
     for (const c of t.cases) {
-      const got = fieldTraverse(c.book, c.unit, c.k, null, c.back, c.fore, c.to);
+      const got = fieldTraverse(c.book, c.unit, c.k, c.twoWay === undefined ? null : { twoWay: c.twoWay }, c.back, c.fore, c.to);
       expect([got.stations, got.missing], c.name).toEqual([c.expect.stations, c.expect.missing]);
       expect(got.angles.length, c.name).toBe(c.expect.angles.length);
       got.angles.forEach((a, i) => near(a, c.expect.angles[i], t.tolerance.angle, `${c.name}: angle ${i}`));
@@ -80,7 +81,14 @@ describe('Karne: indirgeme', () => {
         const w = c.expect.legs[i]!;
         expect([l.from, l.to], c.name).toEqual([w.from, w.to]);
         for (const k of ['forward', 'backward', 'mean', 'diff'] as const) near(l[k], w[k], t.tolerance.metres, `${c.name}: ${k}`);
+        expect(l.over, `${c.name}: over`).toBe(w.over);
       });
+    }
+    // Poligon hesabı's misclosures against the project's tolerances.
+    expect(t.closures.length).toBeGreaterThanOrEqual(5);
+    for (const c of t.closures) {
+      const got: Closure = surveyTraverseClosure(c.unit, c.angleMisclosure ?? null, c.linearMisclosure ?? null, c.angle ?? null, c.coord ?? null);
+      expect([got.angleOver ?? null, got.coordOver ?? null], JSON.stringify(c)).toEqual([c.angleOver ?? null, c.coordOver ?? null]);
     }
   });
 });

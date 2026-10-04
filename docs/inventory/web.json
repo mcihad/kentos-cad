@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 325,
-      "implemented": 325,
+      "total": 328,
+      "implemented": 328,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 325,
-        "implemented": 325,
+        "total": 328,
+        "implemented": 328,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -17660,6 +17660,45 @@
       "contract": "SurveySettings",
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "refraction",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.traverseAngle",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "traverseAngle",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.traverseCoord",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "traverseCoord",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.twoWay",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "twoWay",
       "type": "number",
       "optional": true,
       "status": "implemented",

@@ -32,6 +32,7 @@ use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -362,8 +363,11 @@ impl<'d> Encoder<'d> {
         let fields = [
             ("index", v.index),
             ("faceHz", v.face_hz),
+            ("twoWay", v.two_way),
             ("faceSlope", v.face_slope),
             ("refraction", v.refraction),
+            ("traverseAngle", v.traverse_angle),
+            ("traverseCoord", v.traverse_coord),
         ];
         self.open(fields.iter().filter(|(_, x)| x.is_some()).count(), true)?;
         for (key, x) in fields {
@@ -619,8 +623,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 14 when the project has survey
-/// settings, 13 when it has its own systems or datum choices, 12 when it has
+/// The oldest schema that holds the drawing: 15 when its survey settings
+/// name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
 /// a second system, 11 when it names a drawing unit, 10 when a layer has its own
 /// snapping, 9 when a dimension of it or of
 /// a block definition has one of schema 9's kinds or fields, 8 when it or a
@@ -635,6 +639,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
     let s = &doc.settings;
+    if s.survey.as_ref().is_some_and(SurveySettings::has_traverse) {
+        return SCHEMA_WITH_TRAVERSE_TOLERANCES;
+    }
     if s.survey.is_some() {
         return SCHEMA_WITH_SURVEY;
     }
@@ -835,7 +842,15 @@ mod tests {
             &["to", "from", "grid", "name", "helmert"],
             &["id", "file", "size", "accuracy"],
             // The survey settings (docs/adr/0169 §3).
-            &["index", "faceHz", "faceSlope", "refraction"],
+            &[
+                "index",
+                "faceHz",
+                "twoWay",
+                "faceSlope",
+                "refraction",
+                "traverseAngle",
+                "traverseCoord",
+            ],
         ];
         for keys in maps {
             assert!(

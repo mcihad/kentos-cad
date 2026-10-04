@@ -194,4 +194,62 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
     })
 }
 
+/// Whether a traverse's misclosures are above the project's tolerances
+/// (docs/adr/0169 §3); none where there is no misclosure or no tolerance.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Closure {
+    pub angle_over: Option<bool>,
+    pub coord_over: Option<bool>,
+}
+
+crate::json_struct!(out Closure {
+    angle_over => "angleOver",
+    coord_over => "coordOver"
+});
+
+/// The angular misclosure (in `unit`) against `angle` (radians), the linear
+/// (fs) against `coord` (metres); one equal to its tolerance is within it.
+pub fn closure(
+    unit: Unit,
+    angle_misclosure: Option<f64>,
+    linear_misclosure: Option<f64>,
+    angle: Option<f64>,
+    coord: Option<f64>,
+) -> Closure {
+    Closure {
+        angle_over: angle_misclosure
+            .zip(angle)
+            .map(|(f, t)| f.abs() > unit.of(t)),
+        coord_over: linear_misclosure.zip(coord).map(|(fs, t)| fs > t),
+    }
+}
+
 pub(crate) const OP: Op = op!("surveyTraverse", |input: TraverseInput| traverse(&input));
+
+/// [`closure`] in the named unit (`"grad"` or `"deg"`).
+fn closure_named(
+    unit: &str,
+    angle_misclosure: Option<f64>,
+    linear_misclosure: Option<f64>,
+    angle: Option<f64>,
+    coord: Option<f64>,
+) -> Result<Closure, String> {
+    Ok(closure(
+        Unit::parse(unit)?,
+        angle_misclosure,
+        linear_misclosure,
+        angle,
+        coord,
+    ))
+}
+
+pub(crate) const CLOSURE: Op = op!(
+    "surveyTraverseClosure",
+    |unit: String,
+     angle_misclosure: Option<f64>,
+     linear_misclosure: Option<f64>,
+     angle: Option<f64>,
+     coord: Option<f64>| {
+        closure_named(&unit, angle_misclosure, linear_misclosure, angle, coord)
+    }
+);

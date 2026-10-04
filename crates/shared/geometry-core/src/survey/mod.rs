@@ -98,6 +98,7 @@ fn finite(v: f64, what: &str) -> Result<f64, String> {
 
 pub(crate) static OPS: &[Op] = &[
     crate::survey::traverse::OP,
+    crate::survey::traverse::CLOSURE,
     crate::survey::polar::POLAR_OP,
     crate::survey::polar::STAKEOUT_OP,
     crate::survey::intersection::FORWARD_OP,

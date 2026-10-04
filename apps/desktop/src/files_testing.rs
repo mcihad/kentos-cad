@@ -166,3 +166,24 @@ pub fn find_texts(
     );
     found.lock().map(|f| f.clone()).unwrap_or_default()
 }
+
+/// Snaps every scrollable to its end, for a picture of a window's foot (a
+/// dialog's body has no id).
+pub struct SnapAll;
+
+impl iced::advanced::widget::Operation for SnapAll {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+        operate(self);
+    }
+
+    fn scrollable(
+        &mut self,
+        _id: Option<&iced::widget::Id>,
+        _bounds: iced::Rectangle,
+        _content_bounds: iced::Rectangle,
+        _translation: iced::Vector,
+        state: &mut dyn iced::advanced::widget::operation::Scrollable,
+    ) {
+        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
+    }
+}

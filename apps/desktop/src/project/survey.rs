@@ -46,7 +46,7 @@ fn field<'a>(
 
 /// The section: k, then the three tolerances in the project's angle unit.
 pub(super) fn view<'a>(
-    texts: &'a [String; 4],
+    texts: &'a [String; 7],
     unit: AngleUnit,
     on: impl Fn(Field, String) -> Message + Copy + 'a,
 ) -> Element<'a, Message> {
@@ -88,6 +88,26 @@ pub(super) fn view<'a>(
                     "İki durum uzunluk farkı",
                     Some("Bir hedefin iki durumdaki eğik uzunlukları."),
                     typed(Field::FaceSlope, "", "mm"),
+                )),
+        ),
+        group(
+            "Poligon",
+            Column::new()
+                .spacing(10)
+                .push(setting(
+                    "Kenarın iki yönden farkı",
+                    Some("Bir poligon kenarının iki ucundan ölçülen yatay uzunlukları."),
+                    typed(Field::TwoWay, "", "mm"),
+                ))
+                .push(setting(
+                    "Açı kapanması",
+                    Some("Poligon hesabı'nın açı kapanma hatası fβ."),
+                    typed(Field::TraverseAngle, "", mark),
+                ))
+                .push(setting(
+                    "Koordinat kapanması",
+                    Some("Poligon hesabı'nın koordinat kapanma hatası fs."),
+                    typed(Field::TraverseCoord, "", "mm"),
                 )),
         ),
     ]
@@ -142,6 +162,7 @@ mod tests {
                 face_hz: Some(20.0 * PI / 2_000_000.0),
                 index: Some(10.0 * PI / 2_000_000.0),
                 face_slope: Some(0.005),
+                ..SurveySettings::default()
             })
         );
         assert_eq!(settings.refraction(), 0.14);
@@ -153,7 +174,7 @@ mod tests {
         };
         assert_eq!(
             kentos_project::survey_form::texts(s_survey(s).as_ref(), AngleUnit::Deg),
-            ["0.14", "6.48", "3.24", "5"]
+            ["0.14", "6.48", "3.24", "5", "", "", ""]
         );
         send(&mut app, SettingsEvent::Section(Section::Survey));
         send(&mut app, SettingsEvent::ResetSection);
@@ -245,6 +266,9 @@ mod tests {
                     (Field::FaceHz, "20"),
                     (Field::Index, "10"),
                     (Field::FaceSlope, "5"),
+                    (Field::TwoWay, "10"),
+                    (Field::TraverseAngle, "60"),
+                    (Field::TraverseCoord, "30"),
                 ],
             ),
             (
@@ -254,6 +278,7 @@ mod tests {
                     (Field::FaceHz, "0"),
                     (Field::Index, "on"),
                     (Field::FaceSlope, "5"),
+                    (Field::TraverseCoord, "-2"),
                 ],
             ),
         ];

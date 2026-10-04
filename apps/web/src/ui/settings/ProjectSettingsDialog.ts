@@ -529,6 +529,12 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
       settingRow('İndeks hatası', 'Düşey açının iki durumundan bulunan indeks hatası.', field('index', 'İndeks hatası', mark)),
       settingRow('İki durum uzunluk farkı', 'Bir hedefin iki durumdaki eğik uzunlukları.', field('faceSlope', 'İki durum uzunluk farkı', 'mm')),
     ),
+    group(
+      'Poligon',
+      settingRow('Kenarın iki yönden farkı', 'Bir poligon kenarının iki ucundan ölçülen yatay uzunlukları.', field('twoWay', 'Kenarın iki yönden farkı', 'mm')),
+      settingRow('Açı kapanması', "Poligon hesabı'nın açı kapanma hatası fβ.", field('traverseAngle', 'Açı kapanması', mark)),
+      settingRow('Koordinat kapanması', "Poligon hesabı'nın koordinat kapanma hatası fs.", field('traverseCoord', 'Koordinat kapanması', 'mm')),
+    ),
   ];
   paint();
   return rows;

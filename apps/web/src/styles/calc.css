@@ -295,7 +295,8 @@
   white-space: pre;
   font-family: var(--font-mono);
 }
-.fieldbook-reduced td.is-over {
+.fieldbook-reduced td.is-over,
+.fieldbook-legs td.is-over {
   color: var(--c-danger);
   font-weight: 600;
 }

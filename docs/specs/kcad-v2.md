@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–14 yazar, §6.1), KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–15 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13` ya da `14`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14` ya da `15`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -223,7 +223,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 14**, şema 13'ün kendisi ve projenin ölçme ayarlarıdır: proje ayarlarının `survey` alanı (§6.4, §6.4.2; ADR 0169 §3). Yazıcı `14`'ü **yalnız projenin ölçme ayarı varken** yazar. Başka her çizim şema 2–13'tür ve eskisiyle bayt bayt aynıdır. Şema 2–13 yükünde `survey` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-in-schema-13.kcad`): eski okuyucu karneyi başka bir refraksiyon katsayısıyla ve toleranssız indirgemez, dosyayı açmaz. Şema 14 şema 13'ü kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 15**, şema 14'ün kendisi ve ölçme ayarlarının poligon toleranslarıdır: `survey`'in `twoWay`, `traverseAngle` ve `traverseCoord`'u (§6.4.2; ADR 0169 §3). Yazıcı `15`'i **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–14'tür ve eskisiyle bayt bayt aynıdır. Şema 14 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-traverse-in-schema-14.kcad`): eski okuyucu poligonu toleranssız denetlemez, dosyayı açmaz. Şema 15 şema 14'ü kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -315,6 +317,9 @@ Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/cus
 | `faceHz` | iki durum yatay açı farkı toleransı, radyan; 0'dan büyük (`broken/survey-tolerance-zero.kcad`) |
 | `faceSlope` | iki durum eğik uzunluk farkı toleransı, m; 0'dan büyük |
 | `refraction` | trigonometrik kot farkının refraksiyon katsayısı k, −1 ile 1 arası (`broken/survey-refraction-range.kcad`); yokluğu 0.13 |
+| `twoWay` | şema 15'te: poligon kenarının iki yönden yatay uzunluk farkı toleransı, m; 0'dan büyük (`broken/survey-two-way-zero.kcad`) |
+| `traverseAngle` | şema 15'te: poligonun açı kapanması toleransı, radyan; 0'dan büyük |
+| `traverseCoord` | şema 15'te: poligonun koordinat kapanması (fs) toleransı, m; 0'dan büyük |
 
 Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz. Uygulamalar varsayılan k'yı (0.13) yazmaz; okuyucu yazılmış 0.13'ü de okur.
 

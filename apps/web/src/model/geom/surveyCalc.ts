@@ -136,11 +136,12 @@ export interface Reduced {
   over: ('faceHz' | 'index' | 'faceSlope')[];
 }
 
-/** The project's tolerances of a pair (docs/adr/0169 §3), radians and metres; an absent one is not checked. */
+/** The project's tolerances of a pair and of a traverse leg (docs/adr/0169 §3), radians and metres; an absent one is not checked. */
 export interface Tolerances {
   faceHz?: number;
   index?: number;
   faceSlope?: number;
+  twoWay?: number;
 }
 
 /** A station's reduction: its targets in order, the observations left out (a zenith that is no face), each observation's face (1, 2, 0 for a direction only, null for none). */
@@ -170,7 +171,7 @@ export interface PolarTransfer {
 /** A station reduced and turned into Kutupsal alım's fields: the `back` row the back sight, the angles in `to` (the core's `polar_transfer`). */
 export const fieldPolar = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null, back: number, to: AngleUnit) => PolarTransfer | null>('fieldPolar');
 
-/** A leg of a field book's traverse: its two stations, the horizontal distance measured from each end, their mean and difference (forward − backward). */
+/** A leg of a field book's traverse: its two stations, the horizontal distance measured from each end, their mean and difference (forward − backward), whether that is above the two-way tolerance. */
 export interface BookLeg {
   from: string;
   to: string;
@@ -178,7 +179,17 @@ export interface BookLeg {
   backward?: number;
   mean?: number;
   diff?: number;
+  over: boolean;
 }
+
+/** Whether a traverse's misclosures are above the project's tolerances (docs/adr/0169 §3); absent without a misclosure or a tolerance. */
+export interface Closure {
+  angleOver?: boolean;
+  coordOver?: boolean;
+}
+
+/** The angular misclosure (in the unit) against `angle` (radians), the linear (fs) against `coord` (metres): the core's `traverse::closure`. */
+export const surveyTraverseClosure = op<(unit: AngleUnit, angleMisclosure: number | null, linearMisclosure: number | null, angle: number | null, coord: number | null) => Closure>('surveyTraverseClosure');
 
 /** Poligon hesabı's angles and legs from a field book's stations (docs/adr/0169 §3): the targets a station has no row for named. */
 export interface TraverseTransfer {

@@ -68,12 +68,15 @@ pub struct Tolerances {
     pub face_hz: Option<f64>,
     pub index: Option<f64>,
     pub face_slope: Option<f64>,
+    /// A traverse leg's two-way difference (Poligon).
+    pub two_way: Option<f64>,
 }
 
 crate::json_struct!(Tolerances {
     face_hz => "faceHz",
     index,
-    face_slope => "faceSlope"
+    face_slope => "faceSlope",
+    two_way => "twoWay"
 });
 
 /// A target reduced: one face or two (the observations it came from), the
@@ -376,7 +379,8 @@ pub fn polar_transfer(
 
 /// A leg of a field book's traverse: its two stations, the horizontal
 /// distance measured from each end, their mean and their difference
-/// (forward − backward).
+/// (forward − backward), and whether the difference is above the project's
+/// two-way tolerance.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BookLeg {
     pub from: String,
@@ -385,6 +389,7 @@ pub struct BookLeg {
     pub backward: Option<f64>,
     pub mean: Option<f64>,
     pub diff: Option<f64>,
+    pub over: bool,
 }
 
 crate::json_struct!(out BookLeg {
@@ -393,7 +398,8 @@ crate::json_struct!(out BookLeg {
     forward,
     backward,
     mean,
-    diff
+    diff,
+    over
 });
 
 /// A target a station has no row for: an angle's back or fore target, or a
@@ -428,13 +434,15 @@ crate::json_struct!(out TraverseTransfer {
 /// At a station the angle is the fore target's reading less the back
 /// target's, in [0, a turn), each target the station's first row of that
 /// name (the previous and the next station); a leg's distances are the
-/// horizontal distances measured at either end. The angles go into `to`.
+/// horizontal distances measured at either end, a difference above
+/// `two_way` marked. The angles go into `to`.
 pub fn traverse_transfer(
     stations: &[(String, Reduction)],
     back: &str,
     fore: Option<&str>,
     from: Unit,
     to: Unit,
+    two_way: Option<f64>,
 ) -> TraverseTransfer {
     let full = from.full();
     let turn = |v: f64| {
@@ -505,6 +513,7 @@ pub fn traverse_transfer(
             backward,
             mean,
             diff,
+            over: matches!((diff, two_way), (Some(d), Some(t)) if d.abs() > t),
         });
     }
     TraverseTransfer {
@@ -538,6 +547,7 @@ fn traverse_named(
         fore,
         from,
         Unit::parse(to)?,
+        tolerances.two_way,
     ))
 }
 

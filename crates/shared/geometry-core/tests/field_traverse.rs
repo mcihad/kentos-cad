@@ -53,6 +53,7 @@ fn a_field_books_traverse_is_the_references() {
             case["fore"].as_str(),
             unit,
             to,
+            case["twoWay"].as_f64(),
         );
         let want = &case["expect"];
         let stations: Vec<&str> = want["stations"]
@@ -86,6 +87,7 @@ fn a_field_books_traverse_is_the_references() {
             ] {
                 near(value, &w[key], metres, &format!("{name}: {key}"));
             }
+            assert_eq!(g.over, w["over"].as_bool().expect("over"), "{name}: over");
         }
         let missing: Vec<(&str, &str)> = want["missing"]
             .as_array()
@@ -105,6 +107,34 @@ fn a_field_books_traverse_is_the_references() {
                 .collect::<Vec<_>>(),
             missing,
             "{name}"
+        );
+    }
+}
+
+/// Poligon hesabı's misclosures against the project's tolerances, as the
+/// reference compares them (the angle turned into the unit, an equal one
+/// within its tolerance).
+#[test]
+fn a_traverses_closure_is_checked_as_the_reference_checks_it() {
+    use kentos_geometry_core::survey::traverse::closure;
+    let file: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/field/v1/traverse.json"))
+            .expect("the cases read");
+    let cases = file["closures"].as_array().expect("closures");
+    assert!(cases.len() >= 5);
+    for c in cases {
+        let unit = Unit::parse(c["unit"].as_str().expect("a unit")).expect("a unit");
+        let got = closure(
+            unit,
+            c["angleMisclosure"].as_f64(),
+            c["linearMisclosure"].as_f64(),
+            c["angle"].as_f64(),
+            c["coord"].as_f64(),
+        );
+        assert_eq!(
+            (got.angle_over, got.coord_over),
+            (c["angleOver"].as_bool(), c["coordOver"].as_bool()),
+            "{c}"
         );
     }
 }

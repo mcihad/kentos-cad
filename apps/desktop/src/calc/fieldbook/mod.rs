@@ -301,6 +301,7 @@ impl Form {
             face_hz: survey.face_hz,
             index: survey.index,
             face_slope: survey.face_slope,
+            two_way: survey.two_way,
         };
         let core = core_unit(unit);
         self.sync_traverse(settings, core, &tolerances);
@@ -399,6 +400,7 @@ impl Form {
                 fore.as_deref(),
                 core,
                 core_unit(settings.angle_unit),
+                tolerances.two_way,
             ));
             self.ends = Some((back, fore));
         }

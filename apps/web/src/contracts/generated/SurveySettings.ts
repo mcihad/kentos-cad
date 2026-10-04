@@ -23,4 +23,17 @@ index?: number,
 /**
  * The two faces' slope distance difference.
  */
-faceSlope?: number, };
+faceSlope?: number, 
+/**
+ * A traverse leg's horizontal distance measured from its two ends
+ * (schema 15).
+ */
+twoWay?: number, 
+/**
+ * A traverse's angular misclosure (schema 15).
+ */
+traverseAngle?: number, 
+/**
+ * A traverse's linear (coordinate) misclosure (schema 15).
+ */
+traverseCoord?: number, };

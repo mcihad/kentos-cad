@@ -323,16 +323,21 @@ impl Form {
                 p.map(|p| format.coord(p.y)).unwrap_or_default(),
             ]);
         }
+        // Each misclosure's row ends with its verdict against the project's
+        // tolerance (docs/adr/0169 §3).
+        let checked = checked(r, model.settings());
         if let Some(f) = r.angle_misclosure {
-            lines.push(vec![
+            let mut row = vec![
                 "Açı kapanma hatası".to_owned(),
                 small_angle_text(format, f),
                 "Düzeltme".to_owned(),
                 small_angle_text(format, r.angle_correction.unwrap_or(0.0)),
-            ]);
+            ];
+            row.extend(verdict(&checked.angle));
+            lines.push(row);
         }
         if let Some(fs) = r.linear_misclosure {
-            lines.push(vec![
+            let mut row = vec![
                 "fy".to_owned(),
                 mm_text(r.fy.unwrap_or(0.0)),
                 "fx".to_owned(),
@@ -341,13 +346,21 @@ impl Form {
                 mm_text(fs),
                 "Toplam".to_owned(),
                 format.length(r.length),
-            ]);
+            ];
+            row.extend(verdict(&checked.coord));
+            lines.push(row);
         }
         Some(lines)
     }
 
-    /// What the summary says of a result (the web's `show`).
-    fn summary_lines(&self, r: &TraverseResult, format: &Format) -> Vec<(Line, String)> {
+    /// What the summary says of a result (the web's `show`); the
+    /// misclosures against the project's tolerances (docs/adr/0169 §3).
+    fn summary_lines(
+        &self,
+        r: &TraverseResult,
+        format: &Format,
+        settings: &kentos_contracts::ProjectSettings,
+    ) -> Vec<(Line, String)> {
         let mut lines = Vec::new();
         match r.angle_misclosure {
             Some(f) => lines.push((
@@ -393,11 +406,7 @@ impl Form {
                 ),
             },
         ));
-        lines.push((
-            Line::Info,
-            "Hata sınırı uygulanmaz: kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın."
-                .to_owned(),
-        ));
+        lines.extend(closure_lines(r, settings));
         lines
     }
 
@@ -487,7 +496,7 @@ impl Form {
                 .take(6)
                 .map(|e| (Line::Warn, e.clone()))
                 .collect(),
-            Some(r) => self.summary_lines(r, format),
+            Some(r) => self.summary_lines(r, format, model.settings()),
         };
         if let Some(summary) = summary(lines) {
             body = body.push(summary);
@@ -666,4 +675,95 @@ const fn columns(unit: &'static str) -> [Col; 3] {
             numeric: true,
         },
     ]
+}
+
+/// The project's traverse tolerances as Ölçme writes them and the core's
+/// verdicts (docs/adr/0169 §3): each given one with its mark and whether the
+/// misclosure is above it; none without that misclosure.
+struct Checked {
+    given: bool,
+    angle: Option<(String, bool)>,
+    coord: Option<(String, bool)>,
+}
+
+fn checked(r: &TraverseResult, settings: &kentos_contracts::ProjectSettings) -> Checked {
+    use kentos_interaction::survey::Unit;
+    use kentos_interaction::survey::traverse::closure;
+    let unit = settings.angle_unit;
+    let texts = kentos_project::survey_form::texts(settings.survey.as_ref(), unit);
+    let survey = settings.survey.clone().unwrap_or_default();
+    let core = match unit {
+        kentos_contracts::AngleUnit::Grad => Unit::GRAD,
+        kentos_contracts::AngleUnit::Deg => Unit::DEG,
+    };
+    let c = closure(
+        core,
+        r.angle_misclosure,
+        r.linear_misclosure,
+        survey.traverse_angle,
+        survey.traverse_coord,
+    );
+    let mark = kentos_project::survey_form::angle_mark(unit);
+    Checked {
+        given: !texts[5].is_empty() || !texts[6].is_empty(),
+        angle: c
+            .angle_over
+            .map(|over| (format!("{} {mark}", texts[5]), over)),
+        coord: c.coord_over.map(|over| (format!("{} mm", texts[6]), over)),
+    }
+}
+
+/// A report row's cells for a verdict: Tolerans, the tolerance, aşıyor or içinde.
+fn verdict(c: &Option<(String, bool)>) -> Vec<String> {
+    c.as_ref().map_or_else(Vec::new, |(t, over)| {
+        vec![
+            "Tolerans".to_owned(),
+            t.clone(),
+            if *over { "aşıyor" } else { "içinde" }.to_owned(),
+        ]
+    })
+}
+
+/// The misclosures against the project's tolerances (Proje ayarları ›
+/// Ölçme, docs/adr/0169 §3); without one, the surveyor judges them.
+pub(super) fn closure_lines(
+    r: &TraverseResult,
+    settings: &kentos_contracts::ProjectSettings,
+) -> Vec<(Line, String)> {
+    let c = checked(r, settings);
+    if !c.given {
+        return vec![(
+            Line::Info,
+            "Hata sınırı verilmedi (Proje ayarları › Ölçme): kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın."
+                .to_owned(),
+        )];
+    }
+    let mut lines = Vec::new();
+    if let Some((t, over)) = c.angle {
+        lines.push(if over {
+            (
+                Line::Warn,
+                format!("Açı kapanma hatası toleransı ({t}) aşıyor."),
+            )
+        } else {
+            (
+                Line::Info,
+                format!("Açı kapanma hatası toleransın ({t}) içinde."),
+            )
+        });
+    }
+    if let Some((t, over)) = c.coord {
+        lines.push(if over {
+            (
+                Line::Warn,
+                format!("Koordinat kapanma hatası fs toleransı ({t}) aşıyor."),
+            )
+        } else {
+            (
+                Line::Info,
+                format!("Koordinat kapanma hatası fs toleransın ({t}) içinde."),
+            )
+        });
+    }
+    lines
 }

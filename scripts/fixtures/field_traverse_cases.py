@@ -16,6 +16,10 @@ The rules:
    direction only has none); with both the mean and the difference forward − backward, with one that one alone; a leg
    with neither is named (STi, STi+1) as missing.
 4. The angles go into the project's unit (gon to degrees × 9/10, degrees to gon × 10/9).
+5. A leg's difference above the project's two-way tolerance (metres) is marked (over); one equal is not.
+6. Poligon hesabı's misclosures against the project's tolerances: |fβ| (in the unit) above the angular tolerance
+   (radians, turned into the unit: × full / 2π), fs above the linear one (metres); none without a misclosure or a
+   tolerance.
 """
 
 import argparse
@@ -44,7 +48,7 @@ def first(rows, target):
     return next((r for r in rows if r["target"] == target), None)
 
 
-def traverse(book, unit, k, back, fore, to):
+def traverse(book, unit, k, back, fore, to, two_way=None):
     full = mpmath.mpf(FULL[unit])
     conv = mpmath.mpf(1) if unit == to else (mpmath.mpf(9) / 10 if unit == "grad" else mpmath.mpf(10) / 9)
     names = [s["station"] for s in book]
@@ -79,11 +83,15 @@ def traverse(book, unit, k, back, fore, to):
             leg["forward"] = forward
         if backward is not None:
             leg["backward"] = backward
+        over = False
         if forward is not None and backward is not None:
+            diff = mpmath.mpf(forward) - mpmath.mpf(backward)
             leg["mean"] = float((mpmath.mpf(forward) + mpmath.mpf(backward)) / 2)
-            leg["diff"] = float(mpmath.mpf(forward) - mpmath.mpf(backward))
+            leg["diff"] = float(diff)
+            over = two_way is not None and abs(diff) > mpmath.mpf(two_way)
         elif forward is not None or backward is not None:
             leg["mean"] = forward if forward is not None else backward
+        leg["over"] = bool(over)
         legs.append(leg)
     # Each missing row is said once, in the order found.
     seen, said = set(), []
@@ -115,6 +123,8 @@ def cases():
     ]
     return [
         ("üç istasyon, bağlı (gon)", three, "grad", 0.13, "K", "L", "grad"),
+        ("üç istasyon, iki yönden fark toleransı 2,5 mm", three, "grad", 0.13, "K", "L", "grad", 0.0025),
+        ("aynısı, tolerans 5 mm", three, "grad", 0.13, "K", "L", "grad", 0.005),
         ("aynısı, derecelere", three, "grad", 0.13, "K", "L", "deg"),
         ("bitişte yöneltme yok", three, "grad", 0.13, "K", None, "grad"),
         ("geri bakış istasyonda yok, bir kenar tek yönden", [
@@ -135,11 +145,45 @@ def cases():
 
 def build():
     out = []
-    for name, book, unit, k, back, fore, to in cases():
-        out.append({"name": name, "unit": unit, "k": k, "back": back, "fore": fore, "to": to, "book": book,
-                    "expect": traverse(book, unit, k, back, fore, to)})
+    for name, book, unit, k, back, fore, to, *more in cases():
+        two_way = more[0] if more else None
+        case = {"name": name, "unit": unit, "k": k, "back": back, "fore": fore, "to": to}
+        if two_way is not None:
+            case["twoWay"] = two_way
+        case["book"] = book
+        case["expect"] = traverse(book, unit, k, back, fore, to, two_way)
+        out.append(case)
     return {"format": "kentos.field-traverse", "version": 1, "source": "scripts/fixtures/field_traverse_cases.py (docs/adr/0169 §3)",
-            "tolerance": {"metres": 1e-9, "angle": 1e-11}, "cases": out}
+            "tolerance": {"metres": 1e-9, "angle": 1e-11}, "cases": out, "closures": closures()}
+
+
+def closures():
+    """Poligon hesabı's misclosures against the tolerances (rule 6)."""
+    out = []
+    for unit, fb, fs, angle, coord in [
+        ("grad", 0.0025, 0.012, 20 * 3.141592653589793 / 2000000.0, 0.01),
+        ("grad", -0.0015, 0.008, 20 * 3.141592653589793 / 2000000.0, 0.01),
+        ("deg", 0.001, 0.03, 5 * 3.141592653589793 / 648000.0, 0.05),
+        ("deg", -0.002, 0.06, 5 * 3.141592653589793 / 648000.0, 0.05),
+        ("grad", None, 0.02, 20 * 3.141592653589793 / 2000000.0, None),
+        ("grad", 0.003, None, None, 0.01),
+    ]:
+        rad = 2 * mpmath.pi / FULL[unit]
+        c = {"unit": unit}
+        if fb is not None:
+            c["angleMisclosure"] = fb
+        if fs is not None:
+            c["linearMisclosure"] = fs
+        if angle is not None:
+            c["angle"] = angle
+        if coord is not None:
+            c["coord"] = coord
+        if fb is not None and angle is not None:
+            c["angleOver"] = bool(abs(mpmath.mpf(fb)) > mpmath.mpf(angle) / rad)
+        if fs is not None and coord is not None:
+            c["coordOver"] = bool(mpmath.mpf(fs) > mpmath.mpf(coord))
+        out.append(c)
+    return out
 
 
 def main():

@@ -108,7 +108,8 @@
             "forward": 120.00499994077991,
             "backward": 120.00199994078139,
             "mean": 120.00349994078064,
-            "diff": 0.002999999998522185
+            "diff": 0.002999999998522185,
+            "over": false
           },
           {
             "from": "B",
@@ -116,7 +117,244 @@
             "forward": 95.5,
             "backward": 95.497,
             "mean": 95.4985,
-            "diff": 0.0030000000000001137
+            "diff": 0.0030000000000001137,
+            "over": false
+          }
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "üç istasyon, iki yönden fark toleransı 2,5 mm",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": "L",
+      "to": "grad",
+      "twoWay": 0.0025,
+      "book": [
+        {
+          "station": "A",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 300.0,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 150.0,
+              "zenith": 100.002,
+              "slope": 120.004,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 350.0006,
+              "zenith": 299.998,
+              "slope": 120.006,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "K",
+              "hz": 200.0004,
+              "zenith": 300.0,
+              "slope": 300.002,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "A",
+              "hz": 10.0,
+              "zenith": 99.998,
+              "slope": 120.002,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "C",
+              "hz": 190.1234,
+              "zenith": 100.0,
+              "slope": 95.5,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "B",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 95.497,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "L",
+              "hz": 222.2222,
+              "zenith": 100.0,
+              "slope": 200.0,
+              "targetHeight": 1.5
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          150.0001,
+          180.1234,
+          222.2222
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 120.00499994077991,
+            "backward": 120.00199994078139,
+            "mean": 120.00349994078064,
+            "diff": 0.002999999998522185,
+            "over": true
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 95.5,
+            "backward": 95.497,
+            "mean": 95.4985,
+            "diff": 0.0030000000000001137,
+            "over": true
+          }
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "aynısı, tolerans 5 mm",
+      "unit": "grad",
+      "k": 0.13,
+      "back": "K",
+      "fore": "L",
+      "to": "grad",
+      "twoWay": 0.005,
+      "book": [
+        {
+          "station": "A",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "K",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 300.0,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 150.0,
+              "zenith": 100.002,
+              "slope": 120.004,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "B",
+              "hz": 350.0006,
+              "zenith": 299.998,
+              "slope": 120.006,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "K",
+              "hz": 200.0004,
+              "zenith": 300.0,
+              "slope": 300.002,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "B",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "A",
+              "hz": 10.0,
+              "zenith": 99.998,
+              "slope": 120.002,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "C",
+              "hz": 190.1234,
+              "zenith": 100.0,
+              "slope": 95.5,
+              "targetHeight": 1.5
+            }
+          ]
+        },
+        {
+          "station": "C",
+          "instrumentHeight": 1.5,
+          "observations": [
+            {
+              "target": "B",
+              "hz": 0.0,
+              "zenith": 100.0,
+              "slope": 95.497,
+              "targetHeight": 1.5
+            },
+            {
+              "target": "L",
+              "hz": 222.2222,
+              "zenith": 100.0,
+              "slope": 200.0,
+              "targetHeight": 1.5
+            }
+          ]
+        }
+      ],
+      "expect": {
+        "stations": [
+          "A",
+          "B",
+          "C"
+        ],
+        "angles": [
+          150.0001,
+          180.1234,
+          222.2222
+        ],
+        "legs": [
+          {
+            "from": "A",
+            "to": "B",
+            "forward": 120.00499994077991,
+            "backward": 120.00199994078139,
+            "mean": 120.00349994078064,
+            "diff": 0.002999999998522185,
+            "over": false
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "forward": 95.5,
+            "backward": 95.497,
+            "mean": 95.4985,
+            "diff": 0.0030000000000001137,
+            "over": false
           }
         ],
         "missing": []
@@ -223,7 +461,8 @@
             "forward": 120.00499994077991,
             "backward": 120.00199994078139,
             "mean": 120.00349994078064,
-            "diff": 0.002999999998522185
+            "diff": 0.002999999998522185,
+            "over": false
           },
           {
             "from": "B",
@@ -231,7 +470,8 @@
             "forward": 95.5,
             "backward": 95.497,
             "mean": 95.4985,
-            "diff": 0.0030000000000001137
+            "diff": 0.0030000000000001137,
+            "over": false
           }
         ],
         "missing": []
@@ -338,7 +578,8 @@
             "forward": 120.00499994077991,
             "backward": 120.00199994078139,
             "mean": 120.00349994078064,
-            "diff": 0.002999999998522185
+            "diff": 0.002999999998522185,
+            "over": false
           },
           {
             "from": "B",
@@ -346,7 +587,8 @@
             "forward": 95.5,
             "backward": 95.497,
             "mean": 95.4985,
-            "diff": 0.0030000000000001137
+            "diff": 0.0030000000000001137,
+            "over": false
           }
         ],
         "missing": []
@@ -414,7 +656,8 @@
             "from": "A",
             "to": "B",
             "forward": 80.0,
-            "mean": 80.0
+            "mean": 80.0,
+            "over": false
           },
           {
             "from": "B",
@@ -422,7 +665,8 @@
             "forward": 60.0,
             "backward": 60.004,
             "mean": 60.001999999999995,
-            "diff": -0.003999999999997783
+            "diff": -0.003999999999997783,
+            "over": false
           }
         ],
         "missing": [
@@ -480,7 +724,8 @@
         "legs": [
           {
             "from": "A",
-            "to": "B"
+            "to": "B",
+            "over": false
           }
         ],
         "missing": [
@@ -556,11 +801,60 @@
             "forward": 512.3254914723128,
             "backward": 512.3294913200051,
             "mean": 512.327491396159,
-            "diff": -0.003999847692284675
+            "diff": -0.003999847692284675,
+            "over": false
           }
         ],
         "missing": []
       }
+    }
+  ],
+  "closures": [
+    {
+      "unit": "grad",
+      "angleMisclosure": 0.0025,
+      "linearMisclosure": 0.012,
+      "angle": 3.141592653589793e-05,
+      "coord": 0.01,
+      "angleOver": true,
+      "coordOver": true
+    },
+    {
+      "unit": "grad",
+      "angleMisclosure": -0.0015,
+      "linearMisclosure": 0.008,
+      "angle": 3.141592653589793e-05,
+      "coord": 0.01,
+      "angleOver": false,
+      "coordOver": false
+    },
+    {
+      "unit": "deg",
+      "angleMisclosure": 0.001,
+      "linearMisclosure": 0.03,
+      "angle": 2.42406840554768e-05,
+      "coord": 0.05,
+      "angleOver": false,
+      "coordOver": false
+    },
+    {
+      "unit": "deg",
+      "angleMisclosure": -0.002,
+      "linearMisclosure": 0.06,
+      "angle": 2.42406840554768e-05,
+      "coord": 0.05,
+      "angleOver": true,
+      "coordOver": true
+    },
+    {
+      "unit": "grad",
+      "linearMisclosure": 0.02,
+      "angle": 3.141592653589793e-05
+    },
+    {
+      "unit": "grad",
+      "angleMisclosure": 0.003,
+      "coord": 0.01
     }
   ]
 }

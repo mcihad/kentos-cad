@@ -2532,6 +2532,30 @@
                   "number",
                   "null"
                 ]
+              },
+              "traverseAngle": {
+                "description": "A traverse's angular misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "traverseCoord": {
+                "description": "A traverse's linear (coordinate) misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "twoWay": {
+                "description": "A traverse leg's horizontal distance measured from its two ends\n(schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
               }
             },
             "type": "object"
@@ -4085,6 +4109,30 @@
               },
               "refraction": {
                 "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "traverseAngle": {
+                "description": "A traverse's angular misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "traverseCoord": {
+                "description": "A traverse's linear (coordinate) misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "twoWay": {
+                "description": "A traverse leg's horizontal distance measured from its two ends\n(schema 15).",
                 "format": "double",
                 "type": [
                   "number",
@@ -6805,6 +6853,30 @@
               },
               "refraction": {
                 "description": "k, within [−1, 1]; absent: [`REFRACTION`].",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "traverseAngle": {
+                "description": "A traverse's angular misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "traverseCoord": {
+                "description": "A traverse's linear (coordinate) misclosure (schema 15).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "twoWay": {
+                "description": "A traverse leg's horizontal distance measured from its two ends\n(schema 15).",
                 "format": "double",
                 "type": [
                   "number",

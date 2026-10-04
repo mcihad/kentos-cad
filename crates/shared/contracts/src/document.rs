@@ -204,6 +204,19 @@ pub struct SurveySettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub face_slope: Option<f64>,
+    /// A traverse leg's horizontal distance measured from its two ends
+    /// (schema 15).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub two_way: Option<f64>,
+    /// A traverse's angular misclosure (schema 15).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub traverse_angle: Option<f64>,
+    /// A traverse's linear (coordinate) misclosure (schema 15).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub traverse_coord: Option<f64>,
 }
 
 impl SurveySettings {
@@ -222,6 +235,11 @@ impl SurveySettings {
         t.is_finite() && t > 0.0
     }
 
+    /// Whether the settings name a traverse tolerance (schema 15's fields).
+    pub fn has_traverse(&self) -> bool {
+        self.two_way.is_some() || self.traverse_angle.is_some() || self.traverse_coord.is_some()
+    }
+
     /// What is wrong with the settings as a file holds them: none of them,
     /// k out of [−1, 1], a tolerance not above zero; none when they hold.
     pub fn problem(&self) -> Option<String> {
@@ -235,6 +253,9 @@ impl SurveySettings {
             ("iki durumun yatay açı farkı", self.face_hz),
             ("indeks hatası", self.index),
             ("iki durumun uzunluk farkı", self.face_slope),
+            ("kenarın iki yönden uzunluk farkı", self.two_way),
+            ("poligonun açı kapanması", self.traverse_angle),
+            ("poligonun koordinat kapanması", self.traverse_coord),
         ];
         tolerances.into_iter().find_map(|(what, t)| {
             t.filter(|t| !Self::tolerance_holds(*t))
@@ -252,6 +273,9 @@ impl SurveySettings {
             face_hz: self.face_hz.filter(|t| Self::tolerance_holds(*t)),
             index: self.index.filter(|t| Self::tolerance_holds(*t)),
             face_slope: self.face_slope.filter(|t| Self::tolerance_holds(*t)),
+            two_way: self.two_way.filter(|t| Self::tolerance_holds(*t)),
+            traverse_angle: self.traverse_angle.filter(|t| Self::tolerance_holds(*t)),
+            traverse_coord: self.traverse_coord.filter(|t| Self::tolerance_holds(*t)),
         };
         (kept != Self::default()).then_some(kept)
     }

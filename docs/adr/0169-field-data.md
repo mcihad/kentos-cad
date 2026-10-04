@@ -123,6 +123,17 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    bakılan noktasıdır. “Poligon hesabı'na aktar” Poligon hesabı'nı Bağlı doldurur (bitişte yöneltme ileri bakış seçildiyse):
    başlangıç ve bitiş istasyonları çizimde adlarıyla varsa adlarıyla, yoksa dosyadaki koordinatlarıyla; ara istasyonlar yeni
    noktalar; açılar 8, kenarlar 6 ondalıkla; bulunmayan gözlemler söylenir. Örnek `sample.gsi` iki istasyonlu bir poligon oldu.
+
+   *(4 Ekim: 4b tamam; 4. adım bitti.)* Proje ayarları › Ölçme'de Poligon grubu: Kenarın iki yönden farkı (mm), Açı kapanması (cc ya
+   da ″), Koordinat kapanması (mm); `.kcad` şema 15 (`twoWay`, `traverseAngle`, `traverseCoord`; şema 14'te bu anahtarlar ve sıfır ya
+   da eksi tolerans reddedilir; bağımsız Python okuyucu ve yazıcısıyla). Çekirdekte kenarın iki ucundan ölçülen yatay uzunlukların
+   farkı `traverse_transfer`'in toleransıyla denetlenir (`BookLeg.over`: |fark| > tolerans), poligonun kapanmaları
+   `survey::traverse::closure` ile (web'e `surveyTraverseClosure`): açı kapanması birimine çevrilen toleransı aşınca (|fβ| > t), fs
+   toleransı aşınca; eşit olan içindedir, kapanması olmayan (açık poligon, bitişte yöneltme yok) denetlenmez. Bağımsız başvuru
+   `field_traverse_cases.py` (kenarların `over`'ı 2,5 ve 5 mm'lik toleranslarla; `closures`, iki birimde ve sınırda). Karne editöründe
+   aşan kenarın Fark'ı uyarı rengindedir, altta toleranslar ve “n kenarda iki yönden fark toleransı aşıldı.”; Poligon hesabı'nda
+   kapanma satırlarının altında toleransla karşılaştırma (aşıyor uyarı, içinde bilgi), raporun kapanma satırları Tolerans, değeri ve
+   aşıyor ya da içinde ile biter; tolerans verilmediyse “Hata sınırı verilmedi (Proje ayarları › Ölçme) …”. Aktarma toleransla durmaz.
 5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.

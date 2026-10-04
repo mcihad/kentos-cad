@@ -92,12 +92,24 @@ export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySett
     ...(s.faceHz !== undefined && toleranceHolds(s.faceHz) ? { faceHz: s.faceHz } : {}),
     ...(s.index !== undefined && toleranceHolds(s.index) ? { index: s.index } : {}),
     ...(s.faceSlope !== undefined && toleranceHolds(s.faceSlope) ? { faceSlope: s.faceSlope } : {}),
+    ...(s.twoWay !== undefined && toleranceHolds(s.twoWay) ? { twoWay: s.twoWay } : {}),
+    ...(s.traverseAngle !== undefined && toleranceHolds(s.traverseAngle) ? { traverseAngle: s.traverseAngle } : {}),
+    ...(s.traverseCoord !== undefined && toleranceHolds(s.traverseCoord) ? { traverseCoord: s.traverseCoord } : {}),
   };
   return Object.keys(kept).length ? kept : null;
 }
 
 const sameSurvey = (a: SurveySettings | null, b: SurveySettings | null): boolean =>
-  a === b || (a !== null && b !== null && a.refraction === b.refraction && a.faceHz === b.faceHz && a.index === b.index && a.faceSlope === b.faceSlope);
+  a === b ||
+  (a !== null &&
+    b !== null &&
+    a.refraction === b.refraction &&
+    a.faceHz === b.faceHz &&
+    a.index === b.index &&
+    a.faceSlope === b.faceSlope &&
+    a.twoWay === b.twoWay &&
+    a.traverseAngle === b.traverseAngle &&
+    a.traverseCoord === b.traverseCoord);
 
 /**
  * Whether `second` may be the second system of a project in `crs`: another system, and the project has one — the

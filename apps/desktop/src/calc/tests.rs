@@ -193,6 +193,54 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
             "0.00400 g (40.0 cc)".to_owned()
         ]
     );
+    // Against the project's tolerances (docs/adr/0169 §3): fβ = 40 cc is
+    // above 30 cc; the adjusted square closes, fs within 10 mm. Without
+    // one the surveyor judges them.
+    use crate::exchange::words::Kind as Line;
+    let mut settings = doc.settings().clone();
+    assert_eq!(
+        traverse::closure_lines(&r, &settings),
+        [(
+            Line::Info,
+            "Hata sınırı verilmedi (Proje ayarları › Ölçme): kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın."
+                .to_owned()
+        )]
+    );
+    settings.survey = Some(kentos_contracts::SurveySettings {
+        traverse_angle: Some(30.0 * std::f64::consts::PI / 2_000_000.0),
+        traverse_coord: Some(0.01),
+        ..Default::default()
+    });
+    assert_eq!(
+        traverse::closure_lines(&r, &settings),
+        [
+            (
+                Line::Warn,
+                "Açı kapanma hatası toleransı (30 cc) aşıyor.".to_owned()
+            ),
+            (
+                Line::Info,
+                "Koordinat kapanma hatası fs toleransın (10 mm) içinde.".to_owned()
+            ),
+        ]
+    );
+    // The report's misclosure rows end with the verdicts.
+    let doc = app.document.as_mut().expect("open");
+    doc.model.set_settings(settings);
+    let doc = app.document.as_ref().expect("open");
+    let report = app
+        .calc
+        .traverse
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert_eq!(
+        report[report.len() - 2][4..],
+        ["Tolerans", "30 cc", "aşıyor"]
+    );
+    assert_eq!(
+        report[report.len() - 1][8..],
+        ["Tolerans", "10 mm", "içinde"]
+    );
     let count = doc.model.entities().count();
     calc(&mut app, Event::AddPoints);
     assert_eq!(app.dialog, None);
@@ -321,6 +369,7 @@ fn screens() {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
                 "hesap-poligon",
+                "hesap-poligon-tolerans",
                 "hesap-poligon-uyari",
                 "hesap-kutupsal",
                 "hesap-onden",
@@ -344,10 +393,22 @@ fn screens() {
                     let _ = app.update(Message::Calc(e));
                 };
                 match name {
-                    "hesap-poligon" => {
+                    "hesap-poligon" | "hesap-poligon-tolerans" => {
                         use traverse::{ANGLE, DISTANCE};
                         // A connected traverse worked out from the points'
-                        // coordinates, with 9 cc and 4 mm of error in it.
+                        // coordinates, with 9 cc and 4 mm of error in it;
+                        // with the project's tolerances of 6 cc and 10 mm
+                        // (docs/adr/0169 §3) the angle's is above its own.
+                        if name == "hesap-poligon-tolerans" {
+                            let doc = app.document.as_mut().expect("open");
+                            let mut settings = doc.settings().clone();
+                            settings.survey = Some(kentos_contracts::SurveySettings {
+                                traverse_angle: Some(6.0 * std::f64::consts::PI / 2_000_000.0),
+                                traverse_coord: Some(0.01),
+                                ..Default::default()
+                            });
+                            doc.model.set_settings(settings);
+                        }
                         let _ = app.run("calc.traverse");
                         calc(&mut app, Event::Known(Field::Start, "P1".into()));
                         calc(

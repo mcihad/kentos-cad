@@ -1916,6 +1916,8 @@ try {
       for (let i = 0; i < 3; i++) dist.push(Math.hypot(st[i + 1].x - st[i].x, st[i + 1].y - st[i].y).toFixed(4));
       return { X1, X2, ang, dist };
     })()`);
+    // The project's coordinate misclosure tolerance (docs/adr/0169 §3): 10 mm, above the designed traverse's fs.
+    await b.eval(`window.kentos.doc.settings.assign({ survey: { traverseCoord: 0.01 } })`);
     await b.eval(`window.kentos.commands.execute('calc.traverse')`);
     await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="start"]')`, 10000);
     await b.eval(`[...document.querySelectorAll('.dialog--calc .seg button')].find((x) => x.textContent === 'Bağlı')?.click()`);
@@ -1925,6 +1927,11 @@ try {
     await sleep(200);
     const shown = await b.eval(`document.querySelector('.dialog--calc .io-summary').innerText`);
     check('Hesap: a connected traverse shows its misclosures', /Açı kapanma hatası/.test(shown) && /fs = 0\.\d mm/.test(shown), shown.split('\n')[0]);
+    check(
+      "Hesap: the traverse's fs is checked against the project's tolerance, the angle's not given",
+      shown.includes('Koordinat kapanma hatası fs toleransın (10 mm) içinde.') && !shown.includes('Açı kapanma hatası tolerans') && !shown.includes('Hata sınırı verilmedi'),
+      shown,
+    );
     await b.shot('calc-traverse');
     const n0 = await b.eval('window.kentos.doc.size');
     const addAt = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog--calc .btn--primary')].find((x) => x.textContent === 'Çizime ekle'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
@@ -1940,6 +1947,7 @@ try {
     await b.key('z', { ctrl: true });
     await sleep(100);
     check('Hesap: undo takes the traverse points back', (await b.eval('window.kentos.doc.size')) === n0);
+    await b.eval(`window.kentos.doc.settings.assign({ survey: null })`);
     // Resection at P.107 towards three sample points seen left to right.
     const rs = await b.eval(`(() => { ${helpers} const P = pt('P.107');
       const o = ['P.101', 'P.104', 'P.112', 'P.109'].map((n) => ({ n, t: semt(P, pt(n)) })).sort((a, b) => a.t - b.t).slice(0, 3);

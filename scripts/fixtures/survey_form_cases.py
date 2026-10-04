@@ -2,9 +2,9 @@
 """Independent reference of Proje ayarları › Ölçme's form (docs/adr/0169 §3; step 3a).
 
 Writes fixtures/project/v1/survey-form.json from the rules alone, no KentOS code: the project's survey settings as the
-form's four texts (the refraction coefficient k, the two faces' horizontal reading difference, the index error, the two
-faces' slope distance difference) and the texts read back into settings, with what is said of a text that does not
-hold.
+form's seven texts (the refraction coefficient k, the two faces' horizontal reading difference, the index error, the two
+faces' slope distance difference; a traverse leg's two-way difference, a traverse's angular and linear misclosure) and
+the texts read back into settings, with what is said of a text that does not hold.
 
 The rules:
 
@@ -13,7 +13,7 @@ The rules:
 2. k: within [−1, 1]; empty is the default 0.13, and so is 0.13 itself (a project keeps only another k).
 3. A tolerance: above zero; empty is not checked. The angles are typed in cc (a ten-thousandth of a gon) in a gon
    project, in arc seconds (″) in a degree one, and kept in radians: cc × π / 2 000 000, ″ × π / 648 000 (each one
-   multiplication, then one division, in this order). The length is typed in millimetres and kept in metres (÷ 1000).
+   multiplication, then one division, in this order). The lengths are typed in millimetres and kept in metres (÷ 1000).
 4. A value written for the form: k and the tolerances back in their units (rad × 2 000 000 / π, rad × 648 000 / π,
    m × 1000), by the display rule (docs/adr/0149) with four decimals, trailing zeros and a bare point dropped; an absent
    value (k's default too) is an empty text.
@@ -33,7 +33,8 @@ from numeric_display import shown  # noqa: E402  (the display rule's own referen
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "project" / "v1" / "survey-form.json"
-FIELDS = ("refraction", "faceHz", "index", "faceSlope")
+FIELDS = ("refraction", "faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord")
+LENGTHS = ("faceSlope", "twoWay", "traverseCoord")
 TEXTS = {
     "number": "Sayı yazın.",
     "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
@@ -51,7 +52,7 @@ def number(text):
 def to_stored(field, v, unit):
     if field == "refraction":
         return v
-    if field == "faceSlope":
+    if field in LENGTHS:
         return v / 1000.0
     return v * math.pi / 2000000.0 if unit == "grad" else v * math.pi / 648000.0
 
@@ -59,7 +60,7 @@ def to_stored(field, v, unit):
 def to_typed(field, v, unit):
     if field == "refraction":
         return v
-    if field == "faceSlope":
+    if field in LENGTHS:
         return v * 1000.0
     return v * 2000000.0 / math.pi if unit == "grad" else v * 648000.0 / math.pi
 
@@ -110,6 +111,8 @@ def cases():
     s6 = 6.48 * math.pi / 648000.0
     shows = [
         ("hiçbiri", None, "grad"),
+        ("poligon toleransları, gon", {"twoWay": 0.01, "traverseAngle": 30 * math.pi / 2000000.0, "traverseCoord": 0.05}, "grad"),
+        ("poligon toleransları, derece", {"twoWay": 0.01, "traverseAngle": 30 * math.pi / 2000000.0, "traverseCoord": 0.05}, "deg"),
         ("k ve üç tolerans, gon", {"refraction": 0.14, "faceHz": cc20, "index": cc10, "faceSlope": 0.005}, "grad"),
         ("aynısı, derece", {"refraction": 0.14, "faceHz": cc20, "index": cc10, "faceSlope": 0.005}, "deg"),
         ("eksi k, yalnız uzunluk farkı", {"refraction": -0.2, "faceSlope": 0.0025}, "grad"),
@@ -117,15 +120,15 @@ def cases():
         ("dört ondalıktan uzun", {"refraction": 0.123456, "faceHz": 12.345678 * math.pi / 2000000.0}, "grad"),
     ]
     reads = [
-        ("boş", ["", "", "", ""], "grad"),
-        ("hepsi, gon", ["0.14", "20", "10", "5"], "grad"),
-        ("hepsi, derece", ["0,14", "6.48", "3,24", "2.5"], "deg"),
-        ("varsayılan k yazılmaz", ["0.13", "", "", ""], "grad"),
-        ("boşluklar ve üs", [" -0.2 ", "1e1", "", " 5 "], "grad"),
-        ("aralık dışı k, sıfır ve eksi tolerans", ["1.5", "0", "-3", "4"], "grad"),
-        ("sayı olmayanlar", ["k", "20cc", "1,5,0", "."], "deg"),
-        ("sınırlar: −1 ve 1", ["-1", "", "", ""], "grad"),
-        ("sınırlar: 1", ["1", "", "0.0001", ""], "deg"),
+        ("boş", ["", "", "", "", "", "", ""], "grad"),
+        ("hepsi, gon", ["0.14", "20", "10", "5", "10", "30", "50"], "grad"),
+        ("hepsi, derece", ["0,14", "6.48", "3,24", "2.5", "10", "9.72", "50"], "deg"),
+        ("varsayılan k yazılmaz", ["0.13", "", "", "", "", "", ""], "grad"),
+        ("boşluklar ve üs", [" -0.2 ", "1e1", "", " 5 ", "", "", ""], "grad"),
+        ("aralık dışı k, sıfır ve eksi tolerans", ["1.5", "0", "-3", "4", "0", "-1", "x"], "grad"),
+        ("sayı olmayanlar", ["k", "20cc", "1,5,0", ".", "", "", ""], "deg"),
+        ("sınırlar: −1 ve 1", ["-1", "", "", "", "", "", ""], "grad"),
+        ("sınırlar: 1", ["1", "", "0.0001", "", "", "", ""], "deg"),
     ]
     out = {"texts": [], "reads": []}
     for name, survey, unit in shows:

@@ -1,9 +1,11 @@
 //! Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey
-//! settings as four texts (the refraction coefficient k, the two faces'
+//! settings as seven texts (the refraction coefficient k, the two faces'
 //! horizontal reading difference, the index error, the two faces' slope
-//! distance difference) and the texts read back. The tolerances' angles are
-//! typed in cc in a gon project and in arc seconds in a degree one and kept
-//! in radians; the length is typed in millimetres and kept in metres. The
+//! distance difference; a traverse leg's two-way difference, a traverse's
+//! angular and linear misclosure) and the texts read back. The tolerances'
+//! angles are typed in cc in a gon project and in arc seconds in a degree
+//! one and kept in radians; the lengths are typed in millimetres and kept in
+//! metres. The
 //! web's twin is `apps/web/src/model/surveyForm.ts`; both pass
 //! `fixtures/project/v1/survey-form.json`, which
 //! `scripts/fixtures/survey_form_cases.py` writes from the rules alone.
@@ -27,14 +29,20 @@ pub enum Field {
     FaceHz,
     Index,
     FaceSlope,
+    TwoWay,
+    TraverseAngle,
+    TraverseCoord,
 }
 
 impl Field {
-    pub const ALL: [Field; 4] = [
+    pub const ALL: [Field; 7] = [
         Field::Refraction,
         Field::FaceHz,
         Field::Index,
         Field::FaceSlope,
+        Field::TwoWay,
+        Field::TraverseAngle,
+        Field::TraverseCoord,
     ];
 
     /// The settings' key (`refraction`, `faceHz`, `index`, `faceSlope`).
@@ -44,6 +52,9 @@ impl Field {
             Field::FaceHz => "faceHz",
             Field::Index => "index",
             Field::FaceSlope => "faceSlope",
+            Field::TwoWay => "twoWay",
+            Field::TraverseAngle => "traverseAngle",
+            Field::TraverseCoord => "traverseCoord",
         }
     }
 
@@ -53,6 +64,9 @@ impl Field {
             Field::FaceHz => s.face_hz,
             Field::Index => s.index,
             Field::FaceSlope => s.face_slope,
+            Field::TwoWay => s.two_way,
+            Field::TraverseAngle => s.traverse_angle,
+            Field::TraverseCoord => s.traverse_coord,
         }
     }
 
@@ -62,8 +76,19 @@ impl Field {
             Field::FaceHz => &mut s.face_hz,
             Field::Index => &mut s.index,
             Field::FaceSlope => &mut s.face_slope,
+            Field::TwoWay => &mut s.two_way,
+            Field::TraverseAngle => &mut s.traverse_angle,
+            Field::TraverseCoord => &mut s.traverse_coord,
         };
         *slot = Some(v);
+    }
+
+    /// Whether the field is a length (typed in millimetres).
+    fn length(self) -> bool {
+        matches!(
+            self,
+            Field::FaceSlope | Field::TwoWay | Field::TraverseCoord
+        )
     }
 
     /// A typed value as the settings keep it: cc × π / 2 000 000 and
@@ -71,7 +96,7 @@ impl Field {
     fn stored(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
             (Field::Refraction, _) => v,
-            (Field::FaceSlope, _) => v / 1000.0,
+            (f, _) if f.length() => v / 1000.0,
             (_, AngleUnit::Grad) => v * PI / 2_000_000.0,
             (_, AngleUnit::Deg) => v * PI / 648_000.0,
         }
@@ -81,7 +106,7 @@ impl Field {
     fn typed(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
             (Field::Refraction, _) => v,
-            (Field::FaceSlope, _) => v * 1000.0,
+            (f, _) if f.length() => v * 1000.0,
             (_, AngleUnit::Grad) => v * 2_000_000.0 / PI,
             (_, AngleUnit::Deg) => v * 648_000.0 / PI,
         }
@@ -114,7 +139,7 @@ fn trimmed(v: f64) -> String {
 
 /// The texts the form shows for the settings; an absent value (k's
 /// default too) is an empty text.
-pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 4] {
+pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 7] {
     Field::ALL.map(|f| {
         survey
             .and_then(|s| f.get(s))
@@ -128,7 +153,7 @@ pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 4] {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Read {
     pub survey: Option<SurveySettings>,
-    pub problems: [Option<&'static str>; 4],
+    pub problems: [Option<&'static str>; 7],
 }
 
 impl Read {
@@ -139,9 +164,9 @@ impl Read {
 }
 
 /// Reads the form's texts in a project of `unit`.
-pub fn read<S: AsRef<str>>(texts: &[S; 4], unit: AngleUnit) -> Read {
+pub fn read<S: AsRef<str>>(texts: &[S; 7], unit: AngleUnit) -> Read {
     let mut survey = SurveySettings::default();
-    let mut problems = [None; 4];
+    let mut problems = [None; 7];
     for (i, (f, t)) in Field::ALL.iter().zip(texts).enumerate() {
         let t = t.as_ref();
         if t.trim().is_empty() {
@@ -214,7 +239,7 @@ mod tests {
             );
         }
         for case in file["reads"].as_array().expect("reads") {
-            let typed: [String; 4] = serde_json::from_value(case["texts"].clone()).expect("texts");
+            let typed: [String; 7] = serde_json::from_value(case["texts"].clone()).expect("texts");
             let got = read(&typed, unit(&case["unit"]));
             let want: Option<SurveySettings> =
                 serde_json::from_value(case["survey"].clone()).expect("settings");

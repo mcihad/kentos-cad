@@ -374,7 +374,7 @@ impl Form {
 
     /// What is said under the tables: the lines not read, the observations
     /// that are no face, the tolerances and what is above them, k.
-    fn summary_lines(
+    pub(super) fn summary_lines(
         &self,
         settings: &kentos_contracts::ProjectSettings,
         unit: AngleUnit,
@@ -415,10 +415,13 @@ impl Form {
         let (_, fine, _) = marks(unit);
         // The tolerances as Ölçme writes them: cc or seconds, millimetres.
         let texts = kentos_project::survey_form::texts(settings.survey.as_ref(), unit);
+        let traverse = self.traverse();
         let given: Vec<String> = [
             (!texts[1].is_empty()).then(|| format!("yatay fark {} {fine}", texts[1])),
             (!texts[2].is_empty()).then(|| format!("indeks {} {fine}", texts[2])),
             (!texts[3].is_empty()).then(|| format!("uzunluk farkı {} mm", texts[3])),
+            (traverse.is_some() && !texts[4].is_empty())
+                .then(|| format!("kenarın iki yönden farkı {} mm", texts[4])),
         ]
         .into_iter()
         .flatten()
@@ -434,8 +437,15 @@ impl Form {
             if over > 0 {
                 lines.push((Line::Warn, format!("{over} hedefte tolerans aşıldı.")));
             }
+            let legs = traverse.map_or(0, |t| t.legs.iter().filter(|l| l.over).count());
+            if legs > 0 {
+                lines.push((
+                    Line::Warn,
+                    format!("{legs} kenarda iki yönden fark toleransı aşıldı."),
+                ));
+            }
         }
-        if let Some(t) = self.traverse() {
+        if let Some(t) = traverse {
             for m in t.missing.iter().take(6) {
                 lines.push((
                     Line::Warn,
@@ -514,7 +524,7 @@ impl Form {
                 cell(shown(l.forward, 4), true, false),
                 cell(shown(l.backward, 4), true, false),
                 cell(shown(l.mean, 4), true, false),
-                cell(shown(l.diff.map(|d| d * 1000.0), 1), true, false),
+                cell(shown(l.diff.map(|d| d * 1000.0), 1), true, l.over),
             ]));
         }
         column![

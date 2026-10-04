@@ -81,6 +81,8 @@ SCHEMA_WITH_SECOND_SRID = 12
 SCHEMA_WITH_CUSTOM_CRS = 13
 # Schema 14: schema 13 and the project's survey constants and tolerances, the settings' `survey` (docs/adr/0169 §3).
 SCHEMA_WITH_SURVEY = 14
+# Schema 15: schema 14 and the survey settings' traverse tolerances, `twoWay`, `traverseAngle`, `traverseCoord` (docs/adr/0169 §3).
+SCHEMA_WITH_TRAVERSE_TOLERANCES = 15
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
@@ -93,7 +95,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -588,6 +590,7 @@ class _Schema:
         self.second_srid = version >= SCHEMA_WITH_SECOND_SRID
         self.custom_crs = version >= SCHEMA_WITH_CUSTOM_CRS
         self.survey_fields = version >= SCHEMA_WITH_SURVEY
+        self.traverse_tolerances = version >= SCHEMA_WITH_TRAVERSE_TOLERANCES
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -672,13 +675,17 @@ class _Schema:
     def survey(self, v):
         # The project's survey constants and tolerances (schema 14, spec §6.4.2, docs/adr/0169 §3): at least one, k
         # within [−1, 1], tolerances above zero.
-        s = self.fields({"index": (self.float, False), "faceHz": (self.float, False), "faceSlope": (self.float, False), "refraction": (self.float, False)})(v)
+        table = {"index": (self.float, False), "faceHz": (self.float, False), "faceSlope": (self.float, False), "refraction": (self.float, False)}
+        if self.traverse_tolerances:
+            # Schema 15: the traverse tolerances.
+            table.update({"twoWay": (self.float, False), "traverseAngle": (self.float, False), "traverseCoord": (self.float, False)})
+        s = self.fields(table)(v)
         if not s:
             self.fail("bad_value", "ölçme ayarları boş; ayarı olmayan proje alanı yazmaz")
         k = s.get("refraction")
         if k is not None and not -1.0 <= k <= 1.0:
             self.fail("bad_value", f"kırılma katsayısı k {k}; −1 ile 1 arasında olmalı")
-        for key in ("faceHz", "index", "faceSlope"):
+        for key in ("faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord"):
             if key in s and not s[key] > 0.0:
                 self.fail("bad_value", f"{key} toleransı {s[key]}; sıfırdan büyük olmalı")
         return s

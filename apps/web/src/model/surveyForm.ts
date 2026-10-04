@@ -4,10 +4,11 @@ import { number } from './definitionForm';
 import { REFRACTION, refractionHolds, toleranceHolds, type AngleUnit } from './projectSettings';
 
 /**
- * Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey settings as four texts (the refraction
- * coefficient k, the two faces' horizontal reading difference, the index error, the two faces' slope distance
- * difference) and the texts read back. The tolerances' angles are typed in cc in a gon project and in arc seconds in a
- * degree one and kept in radians; the length is typed in millimetres and kept in metres. The desktop's twin is
+ * Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey settings as seven texts (the refraction
+ * coefficient k, the two faces' horizontal reading difference, the index error, the two faces' slope distance difference;
+ * a traverse leg's two-way difference, a traverse's angular and linear misclosure) and the texts read back. The
+ * tolerances' angles are typed in cc in a gon project and in arc seconds in a degree one and kept in radians; the lengths
+ * are typed in millimetres and kept in metres. The desktop's twin is
  * `kentos_project::survey_form`; both pass fixtures/project/v1/survey-form.json (scripts/fixtures/survey_form_cases.py).
  */
 
@@ -19,9 +20,11 @@ export const SURVEY_TEXTS = {
 } as const;
 
 /** The form's fields, in order (the settings' keys). */
-export const SURVEY_FIELDS = ['refraction', 'faceHz', 'index', 'faceSlope'] as const;
+export const SURVEY_FIELDS = ['refraction', 'faceHz', 'index', 'faceSlope', 'twoWay', 'traverseAngle', 'traverseCoord'] as const;
 export type SurveyField = (typeof SURVEY_FIELDS)[number];
-export type SurveyTexts = [string, string, string, string];
+export type SurveyTexts = [string, string, string, string, string, string, string];
+/** The fields that are lengths (typed in millimetres). */
+const LENGTHS: readonly SurveyField[] = ['faceSlope', 'twoWay', 'traverseCoord'];
 
 /** The mark a tolerance's angle is typed with: cc (a ten-thousandth of a gon) in a gon project, ″ in a degree one. */
 export const angleMark = (unit: AngleUnit): string => (unit === 'grad' ? 'cc' : '″');
@@ -29,14 +32,14 @@ export const angleMark = (unit: AngleUnit): string => (unit === 'grad' ? 'cc' : 
 /** A typed value as the settings keep it: cc × π / 2 000 000 and ″ × π / 648 000 rad, mm ÷ 1000 m. */
 function stored(field: SurveyField, v: number, unit: AngleUnit): number {
   if (field === 'refraction') return v;
-  if (field === 'faceSlope') return v / 1000;
+  if (LENGTHS.includes(field)) return v / 1000;
   return unit === 'grad' ? (v * Math.PI) / 2_000_000 : (v * Math.PI) / 648_000;
 }
 
 /** A kept value in the unit it is typed in. */
 function typed(field: SurveyField, v: number, unit: AngleUnit): number {
   if (field === 'refraction') return v;
-  if (field === 'faceSlope') return v * 1000;
+  if (LENGTHS.includes(field)) return v * 1000;
   return unit === 'grad' ? (v * 2_000_000) / Math.PI : (v * 648_000) / Math.PI;
 }
 

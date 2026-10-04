@@ -29,6 +29,7 @@ use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -100,6 +101,8 @@ pub(super) struct Features {
     pub(super) custom_crs: bool,
     /// Schema 14: the project's survey settings (the settings' `survey`).
     pub(super) survey: bool,
+    /// Schema 15: the survey settings' traverse tolerances.
+    pub(super) traverse_tolerances: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -120,6 +123,7 @@ impl Features {
             second_srid: schema >= SCHEMA_WITH_SECOND_SRID,
             custom_crs: schema >= SCHEMA_WITH_CUSTOM_CRS,
             survey: schema >= SCHEMA_WITH_SURVEY,
+            traverse_tolerances: schema >= SCHEMA_WITH_TRAVERSE_TOLERANCES,
             uids: true,
         }
     }

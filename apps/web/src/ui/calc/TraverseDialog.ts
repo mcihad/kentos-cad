@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
-import { surveyTraverse, type TraverseResult } from '../../model/geom/surveyCalc';
+import { surveyTraverse, surveyTraverseClosure, type TraverseResult } from '../../model/geom/surveyCalc';
+import { angleMark, surveyTexts } from '../../model/surveyForm';
 import type { Vec2 } from '../../model/geometry';
 import { h, replaceChildren } from '../dom';
 import { segmented, toggleSwitch } from '../widgets/controls';
@@ -52,6 +53,19 @@ export interface TraverseFill {
   first: Row;
   rows: Row[];
   last: Row;
+}
+
+/** A misclosure's verdict against the project's tolerance: the tolerance as Ölçme writes it and whether it is above it. */
+interface Verdict {
+  text: string;
+  over: boolean;
+}
+
+/** The project's traverse tolerances' verdicts; `given` when any is. */
+interface Checked {
+  given: boolean;
+  angle: Verdict | null;
+  coord: Verdict | null;
 }
 
 /** Fills Poligon hesabı's fields, then opens it. */
@@ -263,6 +277,34 @@ class TraverseDialog implements Picker {
     this.show(errors);
   }
 
+  /**
+   * The project's traverse tolerances as Ölçme writes them and the core's verdicts (docs/adr/0169 §3): each given one
+   * with its mark and whether the misclosure is above it; none without that misclosure.
+   */
+  private checked(r: TraverseResult): Checked {
+    const settings = this.ctx.doc.settings;
+    const unit = settings.angleUnit.value;
+    const survey = settings.survey.value;
+    const texts = surveyTexts(survey, unit);
+    const [angle, coord] = [texts[5], texts[6]];
+    const c = surveyTraverseClosure(unit, r.angleMisclosure ?? null, r.linearMisclosure ?? null, survey?.traverseAngle ?? null, survey?.traverseCoord ?? null);
+    return {
+      given: !!angle || !!coord,
+      angle: c.angleOver === undefined ? null : { text: `${angle} ${angleMark(unit)}`, over: c.angleOver },
+      coord: c.coordOver === undefined ? null : { text: `${coord} mm`, over: c.coordOver },
+    };
+  }
+
+  /** The misclosures against the project's tolerances (Proje ayarları › Ölçme, docs/adr/0169 §3); without one, the surveyor judges them. */
+  private closureLines(r: TraverseResult): HTMLElement[] {
+    const c = this.checked(r);
+    if (!c.given) return [summaryLine('info', 'Hata sınırı verilmedi (Proje ayarları › Ölçme): kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın.')];
+    const lines: HTMLElement[] = [];
+    if (c.angle) lines.push(c.angle.over ? summaryLine('warn', `Açı kapanma hatası toleransı (${c.angle.text}) aşıyor.`) : summaryLine('info', `Açı kapanma hatası toleransın (${c.angle.text}) içinde.`));
+    if (c.coord) lines.push(c.coord.over ? summaryLine('warn', `Koordinat kapanma hatası fs toleransı (${c.coord.text}) aşıyor.`) : summaryLine('info', `Koordinat kapanma hatası fs toleransın (${c.coord.text}) içinde.`));
+    return lines;
+  }
+
   private show(errors: string[]): void {
     const { ctx } = this;
     const f = ctx.format;
@@ -289,7 +331,7 @@ class TraverseDialog implements Picker {
             `Koordinat kapanma hatası fy = ${mmText(r.fy ?? 0)}, fx = ${mmText(r.fx ?? 0)}, fs = ${mmText(r.linearMisclosure)}; kenarlara uzunluklarıyla orantılı dağıtıldı (toplam ${f.length(r.length)}${ratio ? `, 1/${ratio}` : ''}).`,
           )
         : summaryLine('info', `Açık poligon: kapanma denetimi ve dengeleme yok (toplam ${f.length(r.length)}).`),
-      summaryLine('info', 'Hata sınırı uygulanmaz: kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın.'),
+      ...this.closureLines(r),
     ]);
     const endPts = [...r.points, ...(res.endName !== null ? [null] : [])];
     const rows = r.legs.map((leg, i) => {
@@ -341,8 +383,11 @@ class TraverseDialog implements Picker {
         p ? f.coord(p.y) : '',
       ]);
     });
-    if (r.angleMisclosure != null) lines.push(['Açı kapanma hatası', smallAngleText(ctx, r.angleMisclosure), 'Düzeltme', smallAngleText(ctx, r.angleCorrection ?? 0)]);
-    if (r.linearMisclosure != null) lines.push(['fy', mmText(r.fy ?? 0), 'fx', mmText(r.fx ?? 0), 'fs', mmText(r.linearMisclosure), 'Toplam', f.length(r.length)]);
+    // Each misclosure's row ends with its verdict against the project's tolerance (docs/adr/0169 §3).
+    const checked = this.checked(r);
+    const verdict = (c: Verdict | null): string[] => (c ? ['Tolerans', c.text, c.over ? 'aşıyor' : 'içinde'] : []);
+    if (r.angleMisclosure != null) lines.push(['Açı kapanma hatası', smallAngleText(ctx, r.angleMisclosure), 'Düzeltme', smallAngleText(ctx, r.angleCorrection ?? 0), ...verdict(checked.angle)]);
+    if (r.linearMisclosure != null) lines.push(['fy', mmText(r.fy ?? 0), 'fx', mmText(r.fx ?? 0), 'fs', mmText(r.linearMisclosure), 'Toplam', f.length(r.length), ...verdict(checked.coord)]);
     copyReport(ctx, TITLE, lines);
   }
 }

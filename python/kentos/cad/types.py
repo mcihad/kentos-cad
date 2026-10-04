@@ -5540,11 +5540,18 @@ class SurveySettings(_Model):
         face_slope: The two faces' slope distance difference.
         index: The vertical index error.
         refraction: k, within [−1, 1]; absent: [`REFRACTION`].
+        traverse_angle: A traverse's angular misclosure (schema 15).
+        traverse_coord: A traverse's linear (coordinate) misclosure (schema 15).
+        two_way: A traverse leg's horizontal distance measured from its two ends
+            (schema 15).
     """
     face_hz: float | None | Unset = UNSET
     face_slope: float | None | Unset = UNSET
     index: float | None | Unset = UNSET
     refraction: float | None | Unset = UNSET
+    traverse_angle: float | None | Unset = UNSET
+    traverse_coord: float | None | Unset = UNSET
+    two_way: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -5556,6 +5563,12 @@ class SurveySettings(_Model):
             out["index"] = None if self.index is None else float(self.index)
         if self.refraction is not UNSET:
             out["refraction"] = None if self.refraction is None else float(self.refraction)
+        if self.traverse_angle is not UNSET:
+            out["traverseAngle"] = None if self.traverse_angle is None else float(self.traverse_angle)
+        if self.traverse_coord is not UNSET:
+            out["traverseCoord"] = None if self.traverse_coord is None else float(self.traverse_coord)
+        if self.two_way is not UNSET:
+            out["twoWay"] = None if self.two_way is None else float(self.two_way)
         return out
 
     @classmethod
@@ -5565,6 +5578,9 @@ class SurveySettings(_Model):
             face_slope=UNSET if "faceSlope" not in data else None if data["faceSlope"] is None else float(data["faceSlope"]),
             index=UNSET if "index" not in data else None if data["index"] is None else float(data["index"]),
             refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
+            traverse_angle=UNSET if "traverseAngle" not in data else None if data["traverseAngle"] is None else float(data["traverseAngle"]),
+            traverse_coord=UNSET if "traverseCoord" not in data else None if data["traverseCoord"] is None else float(data["traverseCoord"]),
+            two_way=UNSET if "twoWay" not in data else None if data["twoWay"] is None else float(data["twoWay"]),
         )
 
 

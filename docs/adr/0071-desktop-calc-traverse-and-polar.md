@@ -70,6 +70,11 @@
   - "Koordinat kapanma hatası fy = …, fx = …, fs = … mm; kenarlara uzunluklarıyla orantılı dağıtıldı (toplam 39.018 m, 1/10764)." (fs sıfırsa oran yazılmaz);
   - Açık'ta "Açık poligon: kapanma denetimi ve dengeleme yok (toplam …).";
   - her zaman "Hata sınırı uygulanmaz: kapanma hatalarını ölçü sınıfınızın sınırlarıyla karşılaştırın."
+  - **Ek (4 Ekim 2026, ADR 0169 §3, 4b):** bu satırın yerine kapanmalar projenin toleranslarıyla karşılaştırılır (Proje ayarları ›
+    Ölçme › Poligon: Açı kapanması, Koordinat kapanması): “Açı kapanma hatası toleransı (… cc) aşıyor.” uyarı, “… toleransın (…)
+    içinde.” bilgi, fs için de; tolerans verilmediyse “Hata sınırı verilmedi (Proje ayarları › Ölçme): kapanma hatalarını ölçü
+    sınıfınızın sınırlarıyla karşılaştırın.” Raporun kapanma satırları Tolerans, değeri ve aşıyor ya da içinde ile biter. Karar
+    çekirdekte `survey::traverse::closure`.
   - Yuvarlanınca −0 çıkan değer 0 yazılır (web'in `unsigned`'ı).
 - **Sonuç tablosu:** Nokta, Semt, Kenar, ΔY, ΔX, Y, X. Her kenar ulaştığı noktanın adıyla yazılır; bilinen bitişin Y ve X'i "bilinen"dir.
 - **Rapor:** vY ve vX sütunlarıyla, kapanma satırları sonda.
@@ -146,6 +151,7 @@
 - Denetimler: `pnpm rust:test`, `pnpm rust:test:desktop`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm e2e`, `pnpm e2e:interaction`, `pnpm inventory:check`.
 - Görüntüler (`calc::tests::screens`, `.run/shots/hesap-*`), koyu ve açık, 1440×900 ve 1100×650:
   - Poligon (bağlı, sonuçlu);
+  - Poligon (bağlı, projenin toleranslarıyla: açı kapanması aşıyor, fs içinde; `hesap-poligon-tolerans`, ADR 0169 4b);
   - Poligon (açık, uyarılar ve kırmızı hücre);
   - Kutupsal alım (üç nokta, kotlar);
   - Önden kestirme, Geriden kestirme ve Aplikasyon (yeni yerleşimle).

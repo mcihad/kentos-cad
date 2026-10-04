@@ -312,26 +312,6 @@ fn the_report_lists_the_settings_and_the_links() {
     );
 }
 
-/// Scrolls every scrollable to its end (the window's foot in view).
-struct SnapAll;
-
-impl iced::advanced::widget::Operation for SnapAll {
-    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
-        operate(self);
-    }
-
-    fn scrollable(
-        &mut self,
-        _id: Option<&iced::advanced::widget::Id>,
-        _bounds: iced::Rectangle,
-        _content_bounds: iced::Rectangle,
-        _translation: iced::Vector,
-        state: &mut dyn iced::advanced::widget::operation::Scrollable,
-    ) {
-        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
-    }
-}
-
 /// The window in the web's scenes, for the owner. Not run by default:
 /// `cargo test -p kentos-desktop calc::edgematch::tests::screens -- --ignored --nocapture`
 /// (`KENTOS_SHOTS=kenar,…` for some of them); the web's are
@@ -394,7 +374,7 @@ fn screens() {
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
                 if name == "kenar-uyari" {
-                    snapshot.operate(app.view(), Box::new(SnapAll));
+                    snapshot.operate(app.view(), Box::new(crate::files_testing::SnapAll));
                     snapshot.settle(&mut app, App::view, &mut update);
                 }
                 let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));

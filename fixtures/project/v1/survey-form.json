@@ -6,7 +6,10 @@
     "refraction",
     "faceHz",
     "index",
-    "faceSlope"
+    "faceSlope",
+    "twoWay",
+    "traverseAngle",
+    "traverseCoord"
   ],
   "messages": {
     "number": "Sayı yazın.",
@@ -22,7 +25,46 @@
         "",
         "",
         "",
+        "",
+        "",
+        "",
         ""
+      ]
+    },
+    {
+      "name": "poligon toleransları, gon",
+      "unit": "grad",
+      "survey": {
+        "twoWay": 0.01,
+        "traverseAngle": 4.712388980384689e-05,
+        "traverseCoord": 0.05
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "10",
+        "30",
+        "50"
+      ]
+    },
+    {
+      "name": "poligon toleransları, derece",
+      "unit": "deg",
+      "survey": {
+        "twoWay": 0.01,
+        "traverseAngle": 4.712388980384689e-05,
+        "traverseCoord": 0.05
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "10",
+        "9.72",
+        "50"
       ]
     },
     {
@@ -38,7 +80,10 @@
         "0.14",
         "20",
         "10",
-        "5"
+        "5",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -54,7 +99,10 @@
         "0.14",
         "6.48",
         "3.24",
-        "5"
+        "5",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -68,7 +116,10 @@
         "-0.2",
         "",
         "",
-        "2.5"
+        "2.5",
+        "",
+        "",
+        ""
       ]
     },
     {
@@ -80,6 +131,9 @@
       "texts": [
         "",
         "6.48",
+        "",
+        "",
+        "",
         "",
         ""
       ]
@@ -95,6 +149,9 @@
         "0.1235",
         "12.3457",
         "",
+        "",
+        "",
+        "",
         ""
       ]
     }
@@ -104,6 +161,9 @@
       "name": "boş",
       "unit": "grad",
       "texts": [
+        "",
+        "",
+        "",
         "",
         "",
         "",
@@ -119,13 +179,19 @@
         "0.14",
         "20",
         "10",
-        "5"
+        "5",
+        "10",
+        "30",
+        "50"
       ],
       "survey": {
         "refraction": 0.14,
         "faceHz": 3.141592653589793e-05,
         "index": 1.5707963267948964e-05,
-        "faceSlope": 0.005
+        "faceSlope": 0.005,
+        "twoWay": 0.01,
+        "traverseAngle": 4.712388980384689e-05,
+        "traverseCoord": 0.05
       },
       "problems": {}
     },
@@ -136,13 +202,19 @@
         "0,14",
         "6.48",
         "3,24",
-        "2.5"
+        "2.5",
+        "10",
+        "9.72",
+        "50"
       ],
       "survey": {
         "refraction": 0.14,
         "faceHz": 3.1415926535897935e-05,
         "index": 1.5707963267948967e-05,
-        "faceSlope": 0.0025
+        "faceSlope": 0.0025,
+        "twoWay": 0.01,
+        "traverseAngle": 4.71238898038469e-05,
+        "traverseCoord": 0.05
       },
       "problems": {}
     },
@@ -151,6 +223,9 @@
       "unit": "grad",
       "texts": [
         "0.13",
+        "",
+        "",
+        "",
         "",
         "",
         ""
@@ -165,7 +240,10 @@
         " -0.2 ",
         "1e1",
         "",
-        " 5 "
+        " 5 ",
+        "",
+        "",
+        ""
       ],
       "survey": {
         "refraction": -0.2,
@@ -181,7 +259,10 @@
         "1.5",
         "0",
         "-3",
-        "4"
+        "4",
+        "0",
+        "-1",
+        "x"
       ],
       "survey": {
         "faceSlope": 0.004
@@ -189,7 +270,10 @@
       "problems": {
         "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
         "faceHz": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
-        "index": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın."
+        "index": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+        "twoWay": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+        "traverseAngle": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+        "traverseCoord": "Sayı yazın."
       }
     },
     {
@@ -199,7 +283,10 @@
         "k",
         "20cc",
         "1,5,0",
-        "."
+        ".",
+        "",
+        "",
+        ""
       ],
       "survey": null,
       "problems": {
@@ -216,6 +303,9 @@
         "-1",
         "",
         "",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {
@@ -230,6 +320,9 @@
         "1",
         "",
         "0.0001",
+        "",
+        "",
+        "",
         ""
       ],
       "survey": {

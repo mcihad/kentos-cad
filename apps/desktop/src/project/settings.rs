@@ -150,8 +150,8 @@ pub struct State {
     /// until Kaydet, which keeps only the chosen.
     defined: Option<CrsDefinition>,
     second_defined: Option<CrsDefinition>,
-    /// Ölçme's texts as typed (k and the three tolerances; survey.rs).
-    survey: [String; 4],
+    /// Ölçme's texts as typed (k and the six tolerances; survey.rs).
+    survey: [String; 7],
 }
 
 #[derive(Debug, Clone)]

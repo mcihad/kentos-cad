@@ -3678,8 +3678,16 @@ const surveyOpen = async (ui, fields) => {
   for (const [label, v] of fields) await ui.clickSel(`[aria-label="${label}"]`), await ui.type(v);
   await ui.sleep(250);
 };
-const SURVEY_FILLED = [['Refraksiyon katsayısı (k)', '0.14'], ['İki durum yatay açı farkı', '20'], ['İndeks hatası', '10'], ['İki durum uzunluk farkı', '5']];
-const SURVEY_WRONG = [['Refraksiyon katsayısı (k)', '1.5'], ['İki durum yatay açı farkı', '0'], ['İndeks hatası', 'on'], ['İki durum uzunluk farkı', '5']];
+const SURVEY_FILLED = [
+  ['Refraksiyon katsayısı (k)', '0.14'],
+  ['İki durum yatay açı farkı', '20'],
+  ['İndeks hatası', '10'],
+  ['İki durum uzunluk farkı', '5'],
+  ['Kenarın iki yönden farkı', '10'],
+  ['Açı kapanması', '60'],
+  ['Koordinat kapanması', '30'],
+];
+const SURVEY_WRONG = [['Refraksiyon katsayısı (k)', '1.5'], ['İki durum yatay açı farkı', '0'], ['İndeks hatası', 'on'], ['İki durum uzunluk farkı', '5'], ['Koordinat kapanması', '-2']];
 SCENES.survey = [
   { id: 'survey-empty', open: (ui) => surveyOpen(ui, []), close: (ui) => ui.escapeAll(3) },
   { id: 'survey-filled', open: (ui) => surveyOpen(ui, SURVEY_FILLED), close: (ui) => ui.escapeAll(3) },
@@ -3688,12 +3696,19 @@ SCENES.survey = [
 
 /**
  * Karne editörü (docs/adr/0169 §6): fixtures/field/v1/sample.gsi with the project checking the faces' slope distances
- * against 5 mm (one target above it), and a text book waiting for its columns. The desktop's are
+ * against 5 mm (one target above it), and a text book waiting for its columns; the traverse's leg against a two-way
+ * tolerance of 3 mm (above it), and Poligon hesabı's misclosures against 60 cc and 30 mm. The desktop's are
  * `calc::fieldbook::tests::screens` (karne-*).
  */
 const SAMPLE_GSI = readFileSync(new URL('../../../../fixtures/field/v1/sample.gsi', import.meta.url));
-const fieldBookOpen = async (ui, name, bytes) => {
-  await ui.eval(`window.kentos.doc.settings.assign({ survey: { faceSlope: 0.005 } })`);
+const TRAVERSE_SURVEY = `{ faceSlope: 0.005, twoWay: 0.003, traverseAngle: ${(60 * Math.PI) / 2_000_000}, traverseCoord: 0.03 }`;
+const bodyToEnd = (ui, dialog) => ui.eval(`(() => { const b = document.querySelector('${dialog} .dialog__body'); b.scrollTop = b.scrollHeight; })()`);
+const chooseFore = async (ui) => {
+  await ui.eval(`(() => { const s = document.querySelector('.dialog--fieldbook select[aria-label="Bitişte bakılan"]'); s.value = '4'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await ui.sleep(200);
+};
+const fieldBookOpen = async (ui, name, bytes, survey = '{ faceSlope: 0.005 }') => {
+  await ui.eval(`window.kentos.doc.settings.assign({ survey: ${survey} })`);
   await ui.eval(`import('/src/ui/calc/FieldBookDialog.ts').then((m) => m.openFieldBook(window.kentos, new File([Uint8Array.from(atob('${Buffer.from(bytes).toString('base64')}'), (c) => c.charCodeAt(0))], '${name}')))`);
   await ui.waitFor(`!!document.querySelector('.dialog--fieldbook .fieldbook-file .io-file')`);
   await ui.sleep(400);
@@ -3709,14 +3724,46 @@ SCENES.fieldbook = [
     close: fieldBookClose,
   },
   {
-    // Poligon hesabı'na aktar: ST1 → ST2, ending oriented on P9.
+    // The traverse ST1 → ST2 ending on P9, its leg's two-way difference above 3 mm.
+    id: 'fieldbook-legs',
+    open: async (ui) => (await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI, TRAVERSE_SURVEY), await chooseFore(ui), await bodyToEnd(ui, '.dialog--fieldbook'), await ui.sleep(200)),
+    close: fieldBookClose,
+  },
+  {
+    // Poligon hesabı'na aktar: ST1 → ST2, ending oriented on P9; the misclosures against the project's tolerances.
     id: 'fieldbook-traverse',
     open: async (ui) => {
-      await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI);
-      await ui.eval(`(() => { const s = document.querySelector('.dialog--fieldbook select[aria-label="Bitişte bakılan"]'); s.value = '4'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
-      await ui.sleep(200);
+      await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI, TRAVERSE_SURVEY);
+      await chooseFore(ui);
       await ui.clickText('.dialog--fieldbook .btn', "Poligon hesabı'na aktar");
       await ui.sleep(500);
+    },
+    close: fieldBookClose,
+  },
+  {
+    // Poligon hesabı's misclosures against the project's tolerances of 6 cc and 10 mm: a connected traverse worked out
+    // from its points' coordinates with 9 cc and 4 mm of error in it (the desktop's hesap-poligon-tolerans).
+    id: 'traverse-tolerance',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.settings.assign({ survey: { traverseAngle: ${(6 * Math.PI) / 2_000_000}, traverseCoord: 0.01 } })`);
+      const fill = {
+        kind: 'connected',
+        endOriented: true,
+        start: '486513.341,4420189.522',
+        back: '486535.757,4420188.723',
+        end: '486538.221,4420218.986',
+        fore: '486514.344,4420220.532',
+        first: { name: '', angle: '330.3870', distance: '13.304' },
+        rows: [
+          { name: 'Y1', angle: '224.5472', distance: '10.905' },
+          { name: 'Y2', angle: '188.9591', distance: '14.809' },
+        ],
+        last: { name: '', angle: '57.9557', distance: '' },
+      };
+      await ui.eval(`import('/src/ui/calc/TraverseDialog.ts').then((m) => m.openTraverseWith(window.kentos, ${JSON.stringify(fill)}))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--calc .io-summary')`);
+      await bodyToEnd(ui, '.dialog--calc');
+      await ui.sleep(400);
     },
     close: fieldBookClose,
   },

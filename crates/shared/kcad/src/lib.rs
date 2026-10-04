@@ -154,8 +154,16 @@ pub const SCHEMA_WITH_CUSTOM_CRS: u32 = 13;
 /// another refraction coefficient and no tolerances.
 pub const SCHEMA_WITH_SURVEY: u32 = 14;
 
+/// Document schema 15 (docs/specs/kcad-v2.md §6.1): schema 14 and the
+/// survey settings' traverse tolerances, `twoWay`, `traverseAngle` and
+/// `traverseCoord` (docs/adr/0169 §3). A writer writes it only when the
+/// project has one of them: any other drawing stays 14 or older, byte for
+/// byte; a reader of those refuses a drawing that has them rather than
+/// check a traverse against none.
+pub const SCHEMA_WITH_TRAVERSE_TOLERANCES: u32 = 15;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 13] = [
+pub const SCHEMAS: [u32; 14] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -169,6 +177,7 @@ pub const SCHEMAS: [u32; 13] = [
     SCHEMA_WITH_SECOND_SRID,
     SCHEMA_WITH_CUSTOM_CRS,
     SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 ];
 
 /// The file a drawing is saved as.

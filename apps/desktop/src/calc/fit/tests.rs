@@ -508,26 +508,6 @@ fn parametrelerle_reports_its_numbers() {
     assert_eq!(report(&app), None);
 }
 
-/// Snaps every scrollable to its end (the dialog's body has no id).
-struct SnapAll;
-
-impl iced::advanced::widget::Operation for SnapAll {
-    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
-        operate(self);
-    }
-
-    fn scrollable(
-        &mut self,
-        _id: Option<&iced::widget::Id>,
-        _bounds: iced::Rectangle,
-        _content_bounds: iced::Rectangle,
-        _translation: iced::Vector,
-        state: &mut dyn iced::advanced::widget::operation::Scrollable,
-    ) {
-        state.snap_to(iced::widget::scrollable::RelativeOffset::END.into());
-    }
-}
-
 /// Kauçuk levha over the matched pairs: every used pair a link the sheet
 /// meets, Helmert's residuals in the cells (the local corrections), P5's
 /// the largest; Sabit on every row.
@@ -798,7 +778,7 @@ fn screens() {
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
                 if matches!(name, "oturt-uygulama" | "oturt-levha-uyari") {
-                    snapshot.operate(app.view(), Box::new(SnapAll));
+                    snapshot.operate(app.view(), Box::new(crate::files_testing::SnapAll));
                     snapshot.settle(&mut app, App::view, &mut update);
                 }
                 let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));

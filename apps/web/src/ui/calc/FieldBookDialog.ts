@@ -308,7 +308,7 @@ class FieldBookDialog {
     const survey = settings.survey.value;
     const { station, from } = coreStation(state.station)!;
     this.from = from;
-    const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope } : null;
+    const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope, twoWay: survey.twoWay } : null;
     this.syncTraverse(unit, tolerances);
     this.reduction = fieldReduce(station, unit, settings.refraction, tolerances);
     this.core = { station, tolerances };
@@ -424,13 +424,21 @@ class FieldBookDialog {
       const unit = this.unit();
       const { fine } = marks(unit);
       const settings = this.ctx.doc.settings;
-      const [, hzText, indexText, slopeText] = surveyTexts(settings.survey.value, unit);
-      const given = [hzText ? `yatay fark ${hzText} ${fine}` : null, indexText ? `indeks ${indexText} ${fine}` : null, slopeText ? `uzunluk farkı ${slopeText} mm` : null].filter(Boolean);
+      const [, hzText, indexText, slopeText, twoWayText] = surveyTexts(settings.survey.value, unit);
+      const traverse = this.traverse;
+      const given = [
+        hzText ? `yatay fark ${hzText} ${fine}` : null,
+        indexText ? `indeks ${indexText} ${fine}` : null,
+        slopeText ? `uzunluk farkı ${slopeText} mm` : null,
+        traverse && twoWayText ? `kenarın iki yönden farkı ${twoWayText} mm` : null,
+      ].filter(Boolean);
       if (!given.length) lines.push(summaryLine('info', 'Tolerans verilmedi (Proje ayarları › Ölçme): farklar denetlenmedi.'));
       else {
         lines.push(summaryLine('info', `Toleranslar: ${given.join(', ')}.`));
         const over = r.rows.filter((row) => row.over.length).length;
         if (over) lines.push(summaryLine('warn', `${over} hedefte tolerans aşıldı.`));
+        const legs = traverse?.legs.filter((l) => l.over).length ?? 0;
+        if (legs) lines.push(summaryLine('warn', `${legs} kenarda iki yönden fark toleransı aşıldı.`));
       }
       for (const m of this.traverse?.missing.slice(0, 6) ?? []) lines.push(summaryLine('warn', `Poligon: ${m.station} istasyonunda ${m.target} gözlemi yok.`));
       lines.push(summaryLine('info', `Kot farkları yer eğriliği ve refraksiyonla, k = ${settings.refraction}.`));
@@ -485,7 +493,13 @@ class FieldBookDialog {
     this.traverse = fieldTraverse(stations, unit, settings.refraction, tolerances, back, fore, settings.angleUnit.value);
     this.ends = { back, fore };
     this.toTraverseButton.disabled = false;
-    const legs = this.traverse.legs.map((l) => [`${l.from} → ${l.to}`, shown(l.forward, 4), shown(l.backward, 4), shown(l.mean, 4), shown(l.diff === undefined ? null : l.diff * 1000, 1)]);
+    const legs = this.traverse.legs.map((l): [string, boolean][] => [
+      [`${l.from} → ${l.to}`, false],
+      [shown(l.forward, 4), false],
+      [shown(l.backward, 4), false],
+      [shown(l.mean, 4), false],
+      [shown(l.diff === undefined ? null : l.diff * 1000, 1), l.over],
+    ]);
     const numeric = [false, true, true, true, true];
     replaceChildren(
       this.traverseBox,
@@ -509,9 +523,9 @@ class FieldBookDialog {
         { class: 'io-table-wrap calc-results' },
         h(
           'table',
-          { class: 'io-table' },
+          { class: 'io-table fieldbook-legs' },
           h('thead', null, h('tr', null, ['Kenar', 'İleri (m)', 'Geri (m)', 'Ortalama (m)', 'Fark (mm)'].map((c, i) => h('th', { class: numeric[i] ? 'num' : '' }, c)))),
-          h('tbody', null, legs.map((cells) => h('tr', null, cells.map((c, i) => h('td', { class: numeric[i] ? 'num' : '' }, c))))),
+          h('tbody', null, legs.map((cells) => h('tr', null, cells.map(([c, over], i) => h('td', { class: `${numeric[i] ? 'num' : ''}${over ? ' is-over' : ''}` }, c))))),
         ),
       ),
     );
