@@ -73,8 +73,9 @@ impl Owner for Window {
             _ => "Satır ekle",
         }
     }
+    /// Kenar eşleme's links and Karne editörü's observations come from elsewhere.
     fn adds(self) -> bool {
-        self != Window::Edgematch
+        !matches!(self, Window::Edgematch | Window::FieldBook)
     }
 }
 

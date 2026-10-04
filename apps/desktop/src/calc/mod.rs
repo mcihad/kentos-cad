@@ -1,8 +1,9 @@
 //! Hesap: the surveying windows (the web's `ui/calc/`, docs/adr/0070,
 //! 0071): Poligon hesabı ([`traverse`]), Kutupsal alım ([`polar`]), Önden
 //! and Geriden kestirme ([`intersection`]), Aplikasyon ([`stakeout`]),
-//! Vektör oturtma ([`fit`], docs/adr/0156) and Koordinat dönüştür
-//! ([`convert`], docs/adr/0167 §4).
+//! Vektör oturtma ([`fit`], docs/adr/0156), Koordinat dönüştür
+//! ([`convert`], docs/adr/0167 §4) and Karne editörü ([`fieldbook`],
+//! docs/adr/0169 §6).
 //! What they share, as the web's `common.ts`:
 //!
 //! - a known point: a point object's name in the drawing or “Y,X”, or shown
@@ -22,6 +23,7 @@
 
 pub mod convert;
 pub mod edgematch;
+pub mod fieldbook;
 pub mod fit;
 pub mod grid;
 pub mod intersection;
@@ -56,6 +58,7 @@ pub const COMMANDS: &[&str] = &[
     "transform.fit",
     "transform.edgematch",
     "crs.transform",
+    "calc.fieldbook",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -72,6 +75,7 @@ pub enum Window {
     Fit,
     Edgematch,
     Convert,
+    FieldBook,
 }
 
 /// A known point field of the window it is in.
@@ -134,6 +138,8 @@ pub enum Event {
     Edgematch(edgematch::Event),
     /// Koordinat dönüştür's own controls.
     Convert(convert::Event),
+    /// Karne editörü's own controls.
+    FieldBook(fieldbook::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -147,6 +153,7 @@ pub struct Calc {
     pub fit: fit::Form,
     pub edgematch: edgematch::Form,
     pub convert: convert::Form,
+    pub fieldbook: fieldbook::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -161,6 +168,7 @@ impl Calc {
             Window::Fit => Some(&mut self.fit),
             Window::Edgematch => Some(&mut self.edgematch),
             Window::Convert => Some(&mut self.convert),
+            Window::FieldBook => Some(&mut self.fieldbook),
             Window::Intersection => None,
         }
     }
@@ -171,7 +179,11 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse.layer),
             Window::Polar => Some(&mut self.polar.layer),
             Window::Intersection => Some(&mut self.intersection.layer),
-            Window::Stakeout | Window::Fit | Window::Edgematch | Window::Convert => None,
+            Window::Stakeout
+            | Window::Fit
+            | Window::Edgematch
+            | Window::Convert
+            | Window::FieldBook => None,
         }
     }
 }
@@ -219,6 +231,7 @@ impl App {
             "transform.fit" => self.calc_show(Window::Fit),
             "transform.edgematch" => self.calc_show(Window::Edgematch),
             "crs.transform" => self.calc_show(Window::Convert),
+            "calc.fieldbook" => self.calc_show(Window::FieldBook),
             _ => {}
         }
         Task::none()
@@ -257,6 +270,10 @@ impl App {
             self.calc.edgematch.sync(&doc.model, self.selection.len());
             self.calc.edgematch.solve(&doc.model, self.selection.ids());
         }
+        // The project's k and tolerances may have changed since it was last shown.
+        if window == Window::FieldBook {
+            self.calc.fieldbook.sync(doc.settings());
+        }
         self.calc.open = Some(window);
         self.dialog = Some(Asking::Calc);
     }
@@ -292,6 +309,7 @@ impl App {
                 Task::none()
             }
             Event::Convert(e) => self.convert_event(e),
+            Event::FieldBook(e) => self.fieldbook_event(e),
             Event::CopyReport => self.calc_copy_report(window),
             Event::AddPoints => {
                 self.calc_add_points(window);
@@ -397,6 +415,12 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.solve();
         }
+        // Karne editörü reduces the station again (Kullan, a name).
+        if window == Window::FieldBook
+            && let Some(doc) = &self.document
+        {
+            self.calc.fieldbook.sync(doc.settings());
+        }
         // Kenar eşleme finds its links again (the window may have closed: Göster, Sınır's pick).
         if window == Window::Edgematch
             && self.calc.open == Some(Window::Edgematch)
@@ -427,6 +451,7 @@ impl App {
             Window::Fit => fit::TITLE,
             Window::Edgematch => edgematch::TITLE,
             Window::Convert => convert::TITLE,
+            Window::FieldBook => fieldbook::TITLE,
         }
     }
 
@@ -449,6 +474,7 @@ impl App {
             (Window::Fit, _) => return None,
             (Window::Edgematch, _) => return None,
             (Window::Convert, _) => return None,
+            (Window::FieldBook, _) => return None,
         })
     }
 
@@ -504,6 +530,7 @@ impl App {
             Window::Edgematch => self.calc.edgematch.report(model, self.selection.len()),
             // Koordinat dönüştür copies its values itself (Panoya kopyala).
             Window::Convert => None,
+            Window::FieldBook => self.calc.fieldbook.report(),
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -564,7 +591,11 @@ impl App {
                     &calc.intersection.layer,
                 )
             }
-            Window::Stakeout | Window::Fit | Window::Edgematch | Window::Convert => return,
+            Window::Stakeout
+            | Window::Fit
+            | Window::Edgematch
+            | Window::Convert
+            | Window::FieldBook => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -690,6 +721,7 @@ impl App {
                 doc.settings(),
                 &convert::ConvertFormat::of(doc.settings(), self.draft.geographic),
             ),
+            Window::FieldBook => self.calc.fieldbook.view(model, &format),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -718,6 +750,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Fit, _) => "Taban noktası",
         (Window::Edgematch, _) => "Sınır",
         (Window::Convert, _) => "Nokta",
+        (Window::FieldBook, _) => "Nokta",
     }
 }
 

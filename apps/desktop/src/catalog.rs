@@ -208,6 +208,7 @@ pub const PORTED: &[&str] = &[
     "calc.stakeout",
     "calc.traverse",
     "calc.polar",
+    "calc.fieldbook",
     // Vektör oturtma: control points, Helmert, affine or projective by least squares,
     // written through cad.entities.transform (calc/fit/, docs/adr/0156 §7).
     "transform.fit",

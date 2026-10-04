@@ -32,7 +32,8 @@
 // dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
-// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold).
+// survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
+// book with a tolerance exceeded, a text book's columns).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3683,6 +3684,24 @@ SCENES.survey = [
   { id: 'survey-empty', open: (ui) => surveyOpen(ui, []), close: (ui) => ui.escapeAll(3) },
   { id: 'survey-filled', open: (ui) => surveyOpen(ui, SURVEY_FILLED), close: (ui) => ui.escapeAll(3) },
   { id: 'survey-problems', open: (ui) => surveyOpen(ui, SURVEY_WRONG), close: (ui) => ui.escapeAll(3) },
+];
+
+/**
+ * Karne editörü (docs/adr/0169 §6): fixtures/field/v1/sample.gsi with the project checking the faces' slope distances
+ * against 5 mm (one target above it), and a text book waiting for its columns. The desktop's are
+ * `calc::fieldbook::tests::screens` (karne-*).
+ */
+const SAMPLE_GSI = readFileSync(new URL('../../../../fixtures/field/v1/sample.gsi', import.meta.url));
+const fieldBookOpen = async (ui, name, bytes) => {
+  await ui.eval(`window.kentos.doc.settings.assign({ survey: { faceSlope: 0.005 } })`);
+  await ui.eval(`import('/src/ui/calc/FieldBookDialog.ts').then((m) => m.openFieldBook(window.kentos, new File([Uint8Array.from(atob('${Buffer.from(bytes).toString('base64')}'), (c) => c.charCodeAt(0))], '${name}')))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--fieldbook .fieldbook-file .io-file')`);
+  await ui.sleep(400);
+};
+const fieldBookClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ survey: null })`));
+SCENES.fieldbook = [
+  { id: 'fieldbook-gsi', open: (ui) => fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI), close: fieldBookClose },
+  { id: 'fieldbook-csv', open: (ui) => fieldBookOpen(ui, 'arazi-karnesi.csv', Buffer.from('İstasyon;Alet;Nokta;Hz;V;SD;Prizma;Kod\nS1;1,55;A;10;99;100;1,6;POL\n')), close: fieldBookClose },
 ];
 
 /**

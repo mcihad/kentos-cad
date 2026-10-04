@@ -191,6 +191,8 @@ export const ICONS = {
   parallel: '<path d="M2 14 9 7h9" stroke-dasharray="2.4 1.6"/><path d="M2 10.46 7.96 4.5H18M2 17.54 10.04 9.5H18"/>',
   perpIn: `<path d="M3 16h14M10 4v12M10 13.3h2.7V16"/><path d="m8 8.5 2 2 2-2"/>${grip(10, 4)}`,
   surveyTraverse: `<path d="m3 15 4.5-7 5 3.5L17 4"/><path d="M9.3 9.6a2.4 2.4 0 0 1-2.1 1"/>${grip(3, 15)}${grip(17, 4)}<circle cx="7.5" cy="8" r="1.1"/><circle cx="12.5" cy="11.5" r="1.1"/>`,
+  // A field book: its binding, two lines of readings and an angle.
+  fieldBook: `<rect x="5" y="2.5" width="11" height="15" rx="1.5"/><path d="M5 6H3.5M5 10H3.5M5 14H3.5"/><path d="M8 6.5h5M8 9.5h5"/><path d="M8 14.5l4-2.6M8 14.5h4.5"/>`,
   surveyPolar: `<path d="M5 15 15 5M5 15l11 1"/><path d="M5 15 4 3.5" stroke-dasharray="2 1.5"/><path d="M4.6 10.4a4.6 4.6 0 0 1 3.7 1.3"/>${grip(5, 15)}<circle cx="15" cy="5" r="1.3"/><circle cx="16" cy="16" r="1.3"/>`,
   surveyStakeout: `<path d="M4 15 13 8.2" stroke-dasharray="2.4 1.6"/><path d="M15 4.5v10.5M13 15h4"/><path d="m10.3 7.9 2.7.3-1 2.5"/>${grip(4, 15)}`,
   surveyForward: `<path d="M4 15 10 5l6 10"/><path d="M6.6 15a2.6 2.6 0 0 0-.9-2.1M13.4 15a2.6 2.6 0 0 1 .9-2.1"/>${grip(4, 15)}${grip(16, 15)}<circle cx="10" cy="5" r="1.6"/>`,

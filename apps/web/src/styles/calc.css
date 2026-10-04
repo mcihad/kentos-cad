@@ -267,3 +267,35 @@
   color: var(--c-text-3);
   font-weight: 600;
 }
+
+/* Karne editörü (docs/adr/0169 §6): the file, a text book's columns, the station, the two tables. */
+.fieldbook-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.fieldbook-mapping {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+}
+.fieldbook-mapping__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+.fieldbook-mapping__grid select {
+  width: 100%;
+}
+.fieldbook-place {
+  white-space: pre;
+  font-family: var(--font-mono);
+}
+.fieldbook-reduced td.is-over {
+  color: var(--c-danger);
+  font-weight: 600;
+}

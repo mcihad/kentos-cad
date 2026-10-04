@@ -1,0 +1,380 @@
+import type { AppContext } from '../../app/context';
+import type { FieldBookRead } from '../../contracts/generated/FieldBookRead';
+import type { FieldCsvOptions } from '../../contracts/generated/FieldCsvOptions';
+import type { FieldStation } from '../../contracts/generated/FieldStation';
+import { fixed } from '../../core/displayNumber';
+import { formats } from '../../io/client';
+import { fieldReduce, type Reduction } from '../../model/geom/surveyCalc';
+import type { AngleUnit } from '../../model/projectSettings';
+import { surveyTexts } from '../../model/surveyForm';
+import { h, replaceChildren } from '../dom';
+import { checkField, field, fileLine, select } from '../io/common';
+import { segmented } from '../widgets/controls';
+import { Dialog } from '../widgets/Dialog';
+import { copyReport, Grid, readNumber, summary, summaryLine, type GridModel, type Row } from './common';
+
+/**
+ * Karne editörü (docs/adr/0169 §2–§3, §6; the desktop's `calc/fieldbook/`): a field book opened from an instrument's
+ * file (Leica GSI, told by its content) or a text book whose columns are mapped here; its stations, their observations as
+ * the file has them, which may be left out (Kullan) and renamed; the station shown reduced as the shared core reduces it
+ * (`fieldReduce`) with the project's k and tolerances: the faces paired and their differences, the horizontal distances
+ * and the height differences, a difference above its tolerance in the warning colour. What is opened stays while the app
+ * runs, as the other Hesap windows' fields do; the file itself is not changed.
+ */
+export function openFieldBook(ctx: AppContext, file?: File): void {
+  const dialog = new FieldBookDialog(ctx);
+  if (file) void dialog.open(file);
+}
+
+const TITLE = 'Karne editörü';
+/** The largest field book read (an instrument's files are kilobytes). */
+const LIMIT = 64 << 20;
+/** A text book's columns as the mapping names them, in the CSV options' order. */
+const MAPPED = ['İstasyon', 'Alet yüksekliği', 'Nokta', 'Yatay açı', 'Başucu açısı', 'Eğik uzunluk', 'Prizma yüksekliği', 'Kod'] as const;
+const KEYS = ['station', 'instrumentHeight', 'target', 'hz', 'zenith', 'slope', 'targetHeight', 'code'] as const;
+const TARGET = 2;
+const HZ = 3;
+
+/** A station's edits: the observations used, their names, its instrument height as typed. */
+interface Edits {
+  rows: Row[];
+  height: string;
+}
+
+/** What is opened, kept while the app runs. */
+const state = {
+  file: null as string | null,
+  bytes: null as Uint8Array | null,
+  book: null as FieldBookRead | null,
+  mapping: { columns: Array<number | null>(8).fill(null), header: true, unit: null as AngleUnit | null },
+  station: 0,
+  edits: [] as Edits[],
+  error: null as string | null,
+};
+
+const editsOf = (s: FieldStation): Edits => ({
+  rows: s.observations.map((o) => ({ use: '1', name: o.target })),
+  height: s.instrumentHeight === undefined ? '' : String(s.instrumentHeight),
+});
+
+/** A text book's reader options; null until the point and the horizontal reading are mapped. */
+function options(): FieldCsvOptions | null {
+  const c = state.mapping.columns;
+  if (c[TARGET] === null || c[HZ] === null) return null;
+  const opt: FieldCsvOptions = { target: c[TARGET]!, hz: c[HZ]!, header: state.mapping.header };
+  KEYS.forEach((k, i) => {
+    if (i !== TARGET && i !== HZ && c[i] !== null) (opt as Record<string, unknown>)[k] = c[i];
+  });
+  return opt;
+}
+
+/** An angle's columns in gon or degrees, the differences in cc or seconds. */
+const marks = (unit: AngleUnit) => (unit === 'grad' ? { mark: 'g', fine: 'cc', per: 10000 } : { mark: '°', fine: '″', per: 3600 });
+const shown = (v: number | null | undefined, d: number): string => (v === null || v === undefined ? '' : fixed(v, d));
+
+class FieldBookDialog {
+  private readonly ctx: AppContext;
+  private readonly fileBox = h('div', { class: 'fieldbook-file' });
+  private readonly mappingBox = h('div', { class: 'fieldbook-mapping' });
+  private readonly stationBox = h('div', { class: 'fieldbook-station' });
+  private readonly tableBox = h('div', { class: 'calc-section' });
+  private readonly reducedBox = h('div', { class: 'calc-section' });
+  private readonly summaryBox = h('div', { class: 'io-summary' });
+  private readonly copy = h('button', { class: 'btn', type: 'button' }, 'Raporu kopyala');
+  private readonly dialog: Dialog;
+  private reduction: Reduction | null = null;
+  /** The observations the reduction was made of (the table's rows used, in order). */
+  private from: number[] = [];
+
+  constructor(ctx: AppContext) {
+    this.ctx = ctx;
+    const close = h('button', { class: 'btn', type: 'button' }, 'Kapat');
+    this.dialog = new Dialog({
+      title: TITLE,
+      width: 1040,
+      className: 'dialog--io dialog--calc dialog--fieldbook',
+      content: [this.fileBox, this.mappingBox, this.stationBox, this.tableBox, this.reducedBox, this.summaryBox],
+      footer: [h('div', { class: 'dialog__spacer' }), this.copy, close],
+    });
+    close.addEventListener('click', () => this.dialog.close());
+    this.copy.addEventListener('click', () => this.copyReport());
+    this.render();
+  }
+
+  /** The book's angle unit: the file's, else the mapping's, else the project's. */
+  private unit(): AngleUnit {
+    const u = state.book?.unit;
+    return u === 'grad' || u === 'deg' ? u : (state.mapping.unit ?? this.ctx.doc.settings.angleUnit.value);
+  }
+
+  private render(): void {
+    this.renderFile();
+    this.renderMapping();
+    this.renderStation();
+    this.sync();
+  }
+
+  private renderFile(): void {
+    const input = h('input', { type: 'file', accept: '.gsi,.GSI,.txt,.TXT,.csv,.CSV,.dat,.DAT', hidden: true }) as HTMLInputElement;
+    input.addEventListener('change', () => {
+      const f = input.files?.[0];
+      if (f) void this.open(f);
+    });
+    const open = h('button', { class: 'btn', type: 'button' }, 'Dosya aç…');
+    open.addEventListener('click', () => input.click());
+    const book = state.book;
+    const meta = book
+      ? `${book.format === 'gsi' ? 'Leica GSI' : 'Metin karne'} · ${this.unit() === 'grad' ? 'gon' : 'derece'} · ${book.stations.length} istasyon, ${book.stations.reduce((n, s) => n + s.observations.length, 0)} gözlem · ${book.encoding}`
+      : '';
+    replaceChildren(
+      this.fileBox,
+      open,
+      input,
+      state.file && book ? fileLine(state.file, meta) : h('span', { class: 'io-field__hint' }, 'Leica GSI dosyasını ya da sütunları eşlenecek bir CSV/TXT karneyi açın.'),
+      state.error ? h('p', { class: 'note note--warn' }, state.error) : null,
+    );
+  }
+
+  /** A file opened: an instrument's by its content, a text book with the mapping remembered (or its first line, to map). */
+  async open(f: File): Promise<void> {
+    if (f.size > LIMIT) {
+      state.error = `“${f.name}” karne için çok büyük (${Math.floor(f.size / (1 << 20))} MiB); en çok 64 MiB okunur.`;
+      this.render();
+      return;
+    }
+    state.file = f.name;
+    state.bytes = new Uint8Array(await f.arrayBuffer());
+    state.error = null;
+    await this.read();
+  }
+
+  /** The bytes read again (a text book's mapping changed); the edits start over. */
+  private async read(): Promise<void> {
+    if (!state.bytes) return;
+    try {
+      const book = await formats().readFieldBook(state.bytes, options());
+      state.book = book;
+      state.edits = book.stations.map(editsOf);
+      state.station = Math.min(state.station, Math.max(0, book.stations.length - 1));
+    } catch (e) {
+      state.error = `Karne okunamadı: ${e instanceof Error ? e.message : String(e)}`;
+    }
+    this.render();
+  }
+
+  private renderMapping(): void {
+    const book = state.book;
+    if (!book || book.format !== 'csv') {
+      replaceChildren(this.mappingBox);
+      this.mappingBox.hidden = true;
+      return;
+    }
+    this.mappingBox.hidden = false;
+    const choices = [{ value: '', label: '—' }, ...book.firstLine.map((c, i) => ({ value: String(i), label: `${i + 1} · ${[...c].slice(0, 18).join('')}` }))];
+    const fieldOf = (i: number) => {
+      const c = state.mapping.columns[i];
+      const value = c !== null && c < book.firstLine.length ? String(c) : '';
+      return field(
+        i === TARGET || i === HZ ? `${MAPPED[i]} *` : MAPPED[i],
+        select(MAPPED[i], choices, value, (v) => {
+          state.mapping.columns[i] = v === '' ? null : Number(v);
+          void this.read();
+        }),
+      );
+    };
+    replaceChildren(
+      this.mappingBox,
+      h('h3', { class: 'calc-results__title' }, 'Sütunlar'),
+      h('div', { class: 'fieldbook-mapping__grid' }, MAPPED.map((_, i) => fieldOf(i))),
+      h(
+        'div',
+        { class: 'io-row' },
+        checkField('Başlık', 'İlk satır başlık', state.mapping.header, (v) => ((state.mapping.header = v), void this.read()), 'header'),
+        field(
+          'Açı birimi',
+          segmented<AngleUnit>({
+            label: 'Açı birimi',
+            value: this.unit(),
+            options: [
+              { value: 'grad', label: 'Grad' },
+              { value: 'deg', label: 'Derece' },
+            ],
+            onChange: (v) => ((state.mapping.unit = v), this.render()),
+          }),
+        ),
+      ),
+      options() ? null : h('p', { class: 'io-field__hint' }, 'Nokta ve Yatay açı sütunlarını seçin; karne eşlenen sütunlarla okunur.'),
+    );
+  }
+
+  private renderStation(): void {
+    const book = state.book;
+    if (!book || !book.stations.length) {
+      replaceChildren(this.stationBox);
+      return;
+    }
+    const st = book.stations[state.station]!;
+    const stations = book.stations.map((s, i) => ({ value: String(i), label: `${s.station || `${i + 1}. istasyon (adsız)`} · ${s.observations.length} gözlem` }));
+    const height = h('input', { class: 'field calc-num', value: state.edits[state.station]?.height ?? '', placeholder: '0', 'aria-label': 'Alet yüksekliği (m)' }) as HTMLInputElement;
+    height.addEventListener('input', () => {
+      const e = state.edits[state.station];
+      if (e) e.height = height.value;
+      this.sync();
+    });
+    const f = this.ctx.format;
+    replaceChildren(
+      this.stationBox,
+      h(
+        'div',
+        { class: 'io-row' },
+        field('İstasyon', select('İstasyon', stations, String(state.station), (v) => ((state.station = Number(v)), this.render()))),
+        field('Alet yüksekliği (m)', height),
+        st.east !== undefined && st.north !== undefined
+          ? field('Dosyadaki koordinatlar', h('span', { class: 'num fieldbook-place' }, `${f.point({ x: st.east, y: st.north })}${st.height !== undefined ? `  Z ${fixed(st.height, 3)}` : ''}`))
+          : null,
+      ),
+    );
+  }
+
+  /** The station shown again: its observations' table, its reduction with the project's k and tolerances (docs/adr/0169 §3). */
+  private sync(): void {
+    const book = state.book;
+    const st = book?.stations[state.station];
+    const edits = state.edits[state.station];
+    this.reduction = null;
+    this.from = [];
+    if (!st || !edits) {
+      replaceChildren(this.tableBox);
+      replaceChildren(this.reducedBox);
+      this.copy.disabled = true;
+      this.showSummary();
+      return;
+    }
+    const unit = this.unit();
+    const settings = this.ctx.doc.settings;
+    const survey = settings.survey.value;
+    const observations = st.observations.flatMap((o, i) => {
+      if (edits.rows[i]?.use === '0') return [];
+      this.from.push(i);
+      return [{ ...o, target: edits.rows[i]?.name ?? o.target }];
+    });
+    const ih = readNumber(edits.height);
+    const station = { station: st.station, ...(ih !== null && Number.isFinite(ih) ? { instrumentHeight: ih } : {}), observations };
+    this.reduction = fieldReduce(station, unit, settings.refraction, survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope } : null);
+    const faces = new Map<number, number | null>();
+    this.from.forEach((i, k) => faces.set(i, this.reduction!.faces[k] ?? null));
+    const { mark } = marks(unit);
+    const rows = st.observations.map((o, i) => {
+      const used = edits.rows[i]?.use !== '0';
+      const face = !used ? '—' : (({ 1: 'I', 2: 'II', 0: 'Doğrultu' }) as Record<number, string>)[faces.get(i) ?? -1] ?? 'Geçersiz';
+      Object.assign(edits.rows[i]!, { face, hz: fixed(o.hz, 5), zenith: shown(o.zenith, 5), slope: shown(o.slope, 4), th: shown(o.targetHeight, 3), code: o.code ?? '', line: String(o.line) });
+      return edits.rows[i]!;
+    });
+    const model: GridModel = {
+      columns: [
+        { key: 'use', label: 'Kullan', check: true },
+        { key: 'name', label: 'Nokta' },
+        { key: 'face', label: 'Durum' },
+        { key: 'hz', label: 'Yatay açı', unit: mark, numeric: true },
+        { key: 'zenith', label: 'Başucu açısı', unit: mark, numeric: true },
+        { key: 'slope', label: 'Eğik uzunluk', unit: 'm', numeric: true },
+        { key: 'th', label: 'Prizma', unit: 'm', numeric: true },
+        { key: 'code', label: 'Kod' },
+        { key: 'line', label: 'Satır', numeric: true },
+      ],
+      rows: () => rows,
+      addLabel: null,
+      readonly: (_r, key) => key !== 'use' && key !== 'name',
+      mark: (r) => (rows[r]?.use === '0' ? 'off' : null),
+      canInsertAfter: () => false,
+      insertAfter: () => {},
+      canRemove: () => false,
+      remove: () => {},
+    };
+    replaceChildren(this.tableBox, h('h3', { class: 'calc-results__title' }, 'Gözlemler'), new Grid(model, () => this.sync()).el);
+    this.renderReduced(unit);
+    this.showSummary();
+  }
+
+  /** The station's reduction: a row per target, the differences in cc or seconds and millimetres, one above its tolerance in the warning colour. */
+  private renderReduced(unit: AngleUnit): void {
+    const { mark, fine, per } = marks(unit);
+    const r = this.reduction;
+    const head = ['Nokta', 'Durum', `Yatay açı (${mark})`, `Fark (${fine})`, `Başucu açısı (${mark})`, `İndeks (${fine})`, 'Eğik uzunluk (m)', 'Fark (mm)', 'Yatay uzunluk (m)', 'Kot farkı (m)'];
+    const numeric = [false, false, true, true, true, true, true, true, true, true];
+    const rows = (r?.rows ?? []).map((row) => {
+      const single = r!.faces[row.observations[0] ?? -1];
+      const face = row.faces === 2 ? 'I + II' : single === 1 ? 'I' : single === 2 ? 'II' : 'Doğrultu';
+      const over = (key: 'faceHz' | 'index' | 'faceSlope') => row.over.includes(key);
+      return [
+        [row.target, false],
+        [face, false],
+        [fixed(row.hz, 5), false],
+        [shown(row.hzDiff === undefined || row.hzDiff === null ? null : row.hzDiff * per, 1), over('faceHz')],
+        [shown(row.zenith, 5), false],
+        [shown(row.index === undefined || row.index === null ? null : row.index * per, 1), over('index')],
+        [shown(row.slope, 4), false],
+        [shown(row.slopeDiff === undefined || row.slopeDiff === null ? null : row.slopeDiff * 1000, 1), over('faceSlope')],
+        [shown(row.horizontal, 4), false],
+        [shown(row.dh, 4), false],
+      ] as [string, boolean][];
+    });
+    replaceChildren(
+      this.reducedBox,
+      h('h3', { class: 'calc-results__title' }, 'İndirgenmiş'),
+      h(
+        'div',
+        { class: 'io-table-wrap calc-results' },
+        h(
+          'table',
+          { class: 'io-table fieldbook-reduced' },
+          h('thead', null, h('tr', null, head.map((c, i) => h('th', { class: numeric[i] ? 'num' : '' }, c)))),
+          h('tbody', null, rows.map((cells) => h('tr', null, cells.map(([t, over], i) => h('td', { class: `${numeric[i] ? 'num' : ''}${over ? ' is-over' : ''}` }, t))))),
+        ),
+      ),
+    );
+    this.copy.disabled = !r?.rows.length;
+  }
+
+  /** What is said under the tables: the lines not read, the observations that are no face, the tolerances and what is above them, k. */
+  private showSummary(): void {
+    const book = state.book;
+    const lines: HTMLElement[] = [];
+    if (book) {
+      for (const p of book.problems.slice(0, 6)) lines.push(summaryLine('warn', p.message));
+      if (book.problems.length > 6) lines.push(summaryLine('warn', `… ${book.problems.length - 6} satır daha okunmadı.`));
+    }
+    const r = this.reduction;
+    const st = book?.stations[state.station];
+    if (r && st) {
+      for (const u of r.problems) {
+        const o = st.observations[this.from[u.observation] ?? -1];
+        if (o) lines.push(summaryLine('warn', `Satır ${o.line}: ${o.target} noktasının başucu açısı (${shown(o.zenith, 5)}) bir durum değil; gözlem indirgenmedi.`));
+      }
+      const unit = this.unit();
+      const { fine } = marks(unit);
+      const settings = this.ctx.doc.settings;
+      const [, hzText, indexText, slopeText] = surveyTexts(settings.survey.value, unit);
+      const given = [hzText ? `yatay fark ${hzText} ${fine}` : null, indexText ? `indeks ${indexText} ${fine}` : null, slopeText ? `uzunluk farkı ${slopeText} mm` : null].filter(Boolean);
+      if (!given.length) lines.push(summaryLine('info', 'Tolerans verilmedi (Proje ayarları › Ölçme): farklar denetlenmedi.'));
+      else {
+        lines.push(summaryLine('info', `Toleranslar: ${given.join(', ')}.`));
+        const over = r.rows.filter((row) => row.over.length).length;
+        if (over) lines.push(summaryLine('warn', `${over} hedefte tolerans aşıldı.`));
+      }
+      lines.push(summaryLine('info', `Kot farkları yer eğriliği ve refraksiyonla, k = ${settings.refraction}.`));
+    }
+    summary(this.summaryBox, lines);
+  }
+
+  private copyReport(): void {
+    const r = this.reduction;
+    const st = state.book?.stations[state.station];
+    if (!r || !st) return;
+    const lines: string[][] = [[TITLE, state.file ?? ''], ['İstasyon', st.station, 'Alet yüksekliği', state.edits[state.station]?.height ?? '']];
+    lines.push(['Nokta', 'Durum', 'Yatay açı', 'Fark', 'Başucu açısı', 'İndeks', 'Eğik uzunluk', 'Fark', 'Yatay uzunluk', 'Kot farkı']);
+    for (const row of r.rows)
+      lines.push([row.target, String(row.faces), fixed(row.hz, 5), shown(row.hzDiff, 5), shown(row.zenith, 5), shown(row.index, 5), shown(row.slope, 4), shown(row.slopeDiff, 4), shown(row.horizontal, 4), shown(row.dh, 4)]);
+    copyReport(this.ctx, TITLE, lines);
+  }
+}

@@ -218,6 +218,9 @@ python3 scripts/fixtures/field_reduce_cases.py --check   # karne indirgemesini (
 python3 scripts/fixtures/field_csv_cases.py --check   # CSV/TXT karne okuyucusunu (ayırıcı, virgüllü ondalık, istasyonlar, prizma yüksekliğinin taşınması, bozuk değerler) kurallardan denetle; durumlar fixtures/field/v1/csv.json (ADR 0169 §1)
 python3 scripts/fixtures/survey_form_cases.py --check   # Proje ayarları › Ölçme'nin form kurallarını (k'nın aralığı ve varsayılanı, toleransların cc, ″ ve mm çevirisi, gösterim, iletiler) kurallardan denetle; durumlar fixtures/project/v1/survey-form.json (ADR 0169 §3)
 cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture   # Proje ayarları › Ölçme'nin resimleri, .run/shots/olcme-ayar-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs survey))
+python3 scripts/fixtures/field_sniff_cases.py --check   # karne biçiminin içerikten tanınmasını (GSI sözcüğüyle başlayan ilk dolu satır; BOM, CR, kod bloğu, metin karneler) kurallardan denetle; durumlar fixtures/field/v1/sniff.json (ADR 0169 §6)
+python3 scripts/fixtures/field_sample_gsi.py   # Karne editörünün resimleri ve akış testleri için elle yazılmış GSI-16 örneğini (fixtures/field/v1/sample.gsi) yeniden yaz
+cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture   # Karne editörünün resimleri, .run/shots/karne-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs fieldbook))
 python3 scripts/fixtures/field_gsi_cases.py --check   # Leica GSI-8 ve GSI-16 okuyucusunu (sözcükler, birim haneleri, DMS, karışık birimler, istasyon koordinatları, bozuk sözcük, mil, ayak, tam dönüşten büyük açı) Leica'nın belgesinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gsi.json (ADR 0169 §1)
 python3 scripts/fixtures/crs_definition_fit_cases.py --check   # Ortak noktalardan hesapla'nın düzlemini (benzerlik ve afin, artıklar, m0, atlanan satırlar, çözümsüzlükler) Vektör oturtma'nın kesir başvurusu ve mpmath'le denetle; durumlar fixtures/crs/v1/definition-fit.json (ADR 0168 §9 4d)
 python3 scripts/fixtures/crs_definition_text_cases.py --check   # Özel koordinat sistemi'nin WKT ve PROJ okumasını (tanım, Kayıttakini seç, ızgara notu, redlerin nedenleri) PROJ'un okuduğu sistemlerden ve kurallardan denetle; durumlar fixtures/crs/v1/definition-text.json (ADR 0168 §9 4c)
@@ -732,7 +735,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   NMEA, toleranslar proje ayarı ve değerlerini sahip verir, k = 0,13, alete okunan biçimlerle): 1. adım (çekirdek indirgeme
   `survey::fieldbook`, CSV karne `formats::field`, iki platformda; başvurular `field_reduce_cases.py`, `field_csv_cases.py`) ve 2. adım
   (Leica GSI-8 ve GSI-16, `formats::field::gsi`; başvuru `field_gsi_cases.py`) ve 3a (Proje ayarları › Ölçme: k ve toleranslar, `.kcad`
-  şema 14, `survey_form`; Kutupsal alım k'yı uygular) tamam; sıradaki 3b Karne editörü, 3c Kutupsal alım'a aktarma. Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  şema 14, `survey_form`; Kutupsal alım k'yı uygular) ve 3b (Karne editörü iki platformda, `calc.fieldbook`; çekirdekte durumlar ve
+  tolerans denetimi, `field::sniff`, `readFieldBook`) tamam; sıradaki 3c Kutupsal alım'a aktarma. Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

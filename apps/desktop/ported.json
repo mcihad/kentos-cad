@@ -127,6 +127,7 @@
     "calc.stakeout",
     "calc.traverse",
     "calc.polar",
+    "calc.fieldbook",
     "transform.fit",
     "transform.edgematch",
     "crs.transform",

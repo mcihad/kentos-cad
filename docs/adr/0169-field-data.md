@@ -85,6 +85,20 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    `kentos_project::survey_form` ve `model/surveyForm.ts`, ortak durumlar `fixtures/project/v1/survey-form.json` (bağımsız başvuru
    `scripts/fixtures/survey_form_cases.py`). Kutupsal alım kot farkına projenin k'sını uygular (çekirdek `PolarInput::refraction`,
    `survey::fieldbook::curvature`; başvuru `geometry_call_reference.py`'nin k'lı durumu), açıklaması k'yı söyler.
+
+   *(4 Ekim: 3b tamam.)* Çekirdek: indirgeme her gözlemin durumunu (I, II, doğrultu ya da durum değil) söyler ve her çifti projenin
+   toleranslarıyla karşılaştırır (kitabın birimine çevrilmiş; aşan fark satırın `over`'ında: `faceHz`, `index`, `faceSlope`; eşit aşmaz);
+   `fieldReduce` toleransları dördüncü değer alır. Biçim içerikten tanınır (`formats::field::sniff`: ilk dolu satırın ilk sözcüğü GSI
+   sözcüğüyse Leica GSI) ve tek giriş okur (`field::read`, web'de `readFieldBook`, `FORMATS_VERSION` 21; `readFieldCsv` ve
+   `readFieldGsi`'nin yerine): GSI olduğu gibi, metin karne eşlemesiyle ya da eşlemesiz yalnız ilk satırının hücreleri; `FieldBookRead`
+   biçimini söyler. Bağımsız başvurular `field_sniff_cases.py` (13 durum) ve ilk satırıyla `field_csv_cases.py`; indirgemenin başvurusu
+   durumları ve toleransları da hesaplar (iki yeni durum). Karne editörü iki platformda (masaüstü `calc/fieldbook/`, web
+   `ui/calc/FieldBookDialog.ts`; Hesap › Saha › Karne, CAD'de Giriş › Ölçme ▾, `calc.fieldbook`): Dosya aç (GSI içeriğinden; metin
+   karnede Sütunlar: sekiz alan, İlk satır başlık, Açı birimi; Nokta ve Yatay açı zorunlu, eşleme oturum boyunca hatırlanır), İstasyon
+   seçimi, Alet yüksekliği, dosyadaki koordinatlar; Gözlemler tablosu (Kullan, Nokta düzeltilir; Durum, Yatay açı, Başucu açısı, Eğik
+   uzunluk, Prizma, Kod, Satır), İndirgenmiş tablo (farklar cc ya da ″ ve mm ile; toleransı aşan kırmızı), özet (okunmayan satırlar,
+   durum olmayan gözlemler, toleranslar ve aşımlar, k), Raporu kopyala. Resimler ve akış testleri `fixtures/field/v1/sample.gsi` ile
+   (`field_sample_gsi.py`'nin elle yazılmış GSI-16 karnesi).
 4. Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar).
 5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.

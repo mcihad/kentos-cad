@@ -11,6 +11,18 @@ export function registerCalcCommands(ctx: AppContext): void {
   const failed = (e: unknown) => ctx.log.error(`Hesap penceresi yüklenemedi: ${e instanceof Error ? e.message : String(e)}. Bağlantınızı denetleyip komutu yeniden çalıştırın.`);
   const list: Command[] = [
     {
+      // Karne editörü (docs/adr/0169 §6): an instrument's file or a text book, its stations reduced.
+      id: 'calc.fieldbook',
+      title: 'Karne editörü…',
+      short: 'Karne',
+      category: 'Hesap',
+      icon: 'fieldBook',
+      description:
+        'Total station karnesini açar: Leica GSI içeriğinden tanınır, CSV/TXT karnenin sütunları eşlenir. İstasyonlar ve gözlemleri görülür, gözlem kullanılmaz ya da nokta adı düzeltilir; iki durum eşlenip ortalanır, indeks hatası, yatay uzunluk ve kot farkı (yer eğriliği ve refraksiyonla) hesaplanır, toleransı aşan fark uyarı rengindedir.',
+      aliases: ['KARNE', 'KARNEEDITORU', 'KARNEEDİTÖRÜ', 'GSI', 'FIELDBOOK'],
+      run: () => void import('../ui/calc/FieldBookDialog').then((m) => m.openFieldBook(ctx)).catch(failed),
+    },
+    {
       id: 'calc.traverse',
       title: 'Poligon hesabı…',
       short: 'Poligon',

@@ -143,6 +143,7 @@
     "apps/web/src/ui/calc/FitDialog.ts#openFit": { "desktop": "implemented", "where": "apps/desktop/src/calc/fit/ (ADR 0156)" },
     "apps/web/src/ui/calc/ConvertDialog.ts#openConvert": { "desktop": "implemented", "where": "apps/desktop/src/calc/convert.rs (ADR 0167 §4)" },
     "apps/web/src/ui/calc/EdgematchDialog.ts#openEdgematch": { "desktop": "implemented", "where": "apps/desktop/src/calc/edgematch/ (ADR 0159)" },
+    "apps/web/src/ui/calc/FieldBookDialog.ts#openFieldBook": { "desktop": "implemented", "where": "apps/desktop/src/calc/fieldbook/ (ADR 0169 §6)" },
     "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection": { "desktop": "implemented", "where": "apps/desktop/src/calc/intersection.rs (ADR 0071)" },
     "apps/web/src/ui/calc/PolarDialog.ts#openPolar": { "desktop": "implemented", "where": "apps/desktop/src/calc/polar.rs (ADR 0071)" },
     "apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout": { "desktop": "implemented", "where": "apps/desktop/src/calc/stakeout.rs (ADR 0071)" },
