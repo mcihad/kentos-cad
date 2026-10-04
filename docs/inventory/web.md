@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 292 | 279 | 0 | 13 |
+| Komutlar | 292 | 280 | 0 | 12 |
 | Araçlar | 89 | 87 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,17 +12,16 @@
 | Ayarlar | 80 | 80 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 268 | 268 | 0 | 0 |
-| Pencereler ve paneller | 86 | 86 | 0 | 0 |
+| Pencereler ve paneller | 87 | 87 | 0 | 0 |
 
 ## Kısmi (0)
 
 Yok.
 
-## Bekleyen (17)
+## Bekleyen (16)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
-- Komutlar: `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…
 - Komutlar: `file.export.pdf` PDF pafta…
 - Komutlar: `file.print` Yazdır ve pafta çıktısı…
 - Komutlar: `map.contours` Eşyükselti üret…
@@ -50,7 +49,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 219 | 0 | 58 | 13 | 2 | 292 |
+| Komutlar | 220 | 0 | 58 | 12 | 2 | 292 |
 | Araçlar | 87 | 0 | 0 | 2 | 0 | 89 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -58,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 77 | 0 | 2 | 0 | 1 | 80 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 268 | 0 | 0 | 0 | 0 | 268 |
-| Pencereler ve paneller | 68 | 2 | 15 | 0 | 1 | 86 |
+| Pencereler ve paneller | 69 | 2 | 15 | 0 | 1 | 87 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 292; ayrıca 13 iki platformda da bekliyor)
+#### Komutlar (58 / 292; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -139,7 +138,6 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `sheet.zoomSelection` Seçime yakınlaş
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
-- `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.export.pdf` PDF pafta… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `file.print` Yazdır ve pafta çıktısı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.contours` Eşyükselti üret… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -182,7 +180,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 86)
+#### Pencereler ve paneller (17 / 87)
 
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
@@ -204,4 +202,4 @@ Yok.
 
 ## Test başvurusu
 
-111 / 292 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+110 / 292 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

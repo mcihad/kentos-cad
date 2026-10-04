@@ -162,12 +162,18 @@ const ITEMS = [
   { id: 'export-dxf', open: (ui) => ui.run('file.export.dxf') },
   { id: 'export-geojson', open: (ui) => ui.run('file.export.geojson') },
   { id: 'export-ncn', open: (ui) => ui.run('file.export.ncn') },
-  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit', 'transform.edgematch'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
+  ...['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'transform.fit', 'transform.edgematch', 'crs.transform'].map((c) => ({ id: c.replace('.', '-'), open: (ui) => ui.run(c) })),
   // Vektör oturtma's Kauçuk levha (docs/adr/0158 §5): four kinds and Sabit on every row; Helmert again on closing (what is typed stays for the session).
   {
     id: 'transform-fit-rubber',
     open: async (ui) => (await ui.run('transform.fit'), await ui.clickText('.dialog--fit .seg__opt', 'Kauçuk levha')),
     close: async (ui) => (await ui.clickText('.dialog--fit .seg__opt', 'Helmert'), await ui.escapeAll(2)),
+  },
+  // Koordinat dönüştür's list (docs/adr/0167 §4): the table and what it says; Tek nokta again on closing (what is typed stays for the session).
+  {
+    id: 'crs-transform-list',
+    open: async (ui) => (await ui.run('crs.transform'), await ui.clickText('.dialog--calc .seg__opt', 'Liste')),
+    close: async (ui) => (await ui.clickText('.dialog--calc .seg__opt', 'Tek nokta'), await ui.escapeAll(2)),
   },
   { id: 'style-manager', open: (ui) => ui.run('style.manager'), ready: '.smgr__grid, .dialog' },
   { id: 'symbol-designer', open: async (ui) => (await ui.run('style.manager'), await ui.clickText('.dialog button', 'Yeni sembol'), await ui.clickText('.menu__item', 'Alan sembolü')) },

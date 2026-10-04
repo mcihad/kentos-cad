@@ -1,7 +1,8 @@
 //! Hesap: the surveying windows (the web's `ui/calc/`, docs/adr/0070,
 //! 0071): Poligon hesabı ([`traverse`]), Kutupsal alım ([`polar`]), Önden
-//! and Geriden kestirme ([`intersection`]), Aplikasyon ([`stakeout`]) and
-//! Vektör oturtma ([`fit`], docs/adr/0156).
+//! and Geriden kestirme ([`intersection`]), Aplikasyon ([`stakeout`]),
+//! Vektör oturtma ([`fit`], docs/adr/0156) and Koordinat dönüştür
+//! ([`convert`], docs/adr/0167 §4).
 //! What they share, as the web's `common.ts`:
 //!
 //! - a known point: a point object's name in the drawing or “Y,X”, or shown
@@ -19,6 +20,7 @@
 //! What is typed stays while the app runs, whatever drawing is open, as on
 //! the web; nothing of it is saved.
 
+pub mod convert;
 pub mod edgematch;
 pub mod fit;
 pub mod grid;
@@ -53,6 +55,7 @@ pub const COMMANDS: &[&str] = &[
     "calc.stakeout",
     "transform.fit",
     "transform.edgematch",
+    "crs.transform",
 ];
 
 /// The windows' greatest height: the web's body of at most 760 px with the
@@ -68,6 +71,7 @@ pub enum Window {
     Stakeout,
     Fit,
     Edgematch,
+    Convert,
 }
 
 /// A known point field of the window it is in.
@@ -128,6 +132,8 @@ pub enum Event {
     Fit(fit::Event),
     /// Kenar eşleme's own controls.
     Edgematch(edgematch::Event),
+    /// Koordinat dönüştür's own controls.
+    Convert(convert::Event),
 }
 
 /// The windows' state while the app runs (the web's module state).
@@ -140,6 +146,7 @@ pub struct Calc {
     pub stakeout: stakeout::Form,
     pub fit: fit::Form,
     pub edgematch: edgematch::Form,
+    pub convert: convert::Form,
     /// The field Çizimden picks for, while its window is closed.
     picking: Option<(Window, Field)>,
 }
@@ -153,6 +160,7 @@ impl Calc {
             Window::Stakeout => Some(&mut self.stakeout),
             Window::Fit => Some(&mut self.fit),
             Window::Edgematch => Some(&mut self.edgematch),
+            Window::Convert => Some(&mut self.convert),
             Window::Intersection => None,
         }
     }
@@ -163,7 +171,7 @@ impl Calc {
             Window::Traverse => Some(&mut self.traverse.layer),
             Window::Polar => Some(&mut self.polar.layer),
             Window::Intersection => Some(&mut self.intersection.layer),
-            Window::Stakeout | Window::Fit | Window::Edgematch => None,
+            Window::Stakeout | Window::Fit | Window::Edgematch | Window::Convert => None,
         }
     }
 }
@@ -210,6 +218,7 @@ impl App {
             "calc.stakeout" => self.calc_show(Window::Stakeout),
             "transform.fit" => self.calc_show(Window::Fit),
             "transform.edgematch" => self.calc_show(Window::Edgematch),
+            "crs.transform" => self.calc_show(Window::Convert),
             _ => {}
         }
         Task::none()
@@ -282,6 +291,7 @@ impl App {
                 self.edgematch_event(e);
                 Task::none()
             }
+            Event::Convert(e) => self.convert_event(e),
             Event::CopyReport => self.calc_copy_report(window),
             Event::AddPoints => {
                 self.calc_add_points(window);
@@ -416,6 +426,7 @@ impl App {
             Window::Stakeout => stakeout::TITLE,
             Window::Fit => fit::TITLE,
             Window::Edgematch => edgematch::TITLE,
+            Window::Convert => convert::TITLE,
         }
     }
 
@@ -437,6 +448,7 @@ impl App {
             (Window::Fit, Field::Base) => &mut calc.fit.params.base,
             (Window::Fit, _) => return None,
             (Window::Edgematch, _) => return None,
+            (Window::Convert, _) => return None,
         })
     }
 
@@ -445,6 +457,12 @@ impl App {
     pub(crate) fn calc_picked(&mut self, p: Option<Vec2>) {
         // Kenar eşleme's Göster: the look is over.
         if self.edgematch_looked() {
+            return;
+        }
+        // Koordinat dönüştür's point: its coordinates in the two fields.
+        if self.calc.convert.picking {
+            self.convert_picked(p);
+            self.calc_show(Window::Convert);
             return;
         }
         // Vektör oturtma's row: its source or target, and the name it snapped to.
@@ -484,6 +502,8 @@ impl App {
             Window::Stakeout => self.calc.stakeout.report(model, &format),
             Window::Fit => self.calc.fit.report(model, &format),
             Window::Edgematch => self.calc.edgematch.report(model, self.selection.len()),
+            // Koordinat dönüştür copies its values itself (Panoya kopyala).
+            Window::Convert => None,
         };
         let Some(lines) = lines else {
             return Task::none();
@@ -544,7 +564,7 @@ impl App {
                     &calc.intersection.layer,
                 )
             }
-            Window::Stakeout | Window::Fit | Window::Edgematch => return,
+            Window::Stakeout | Window::Fit | Window::Edgematch | Window::Convert => return,
         };
         let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
             return;
@@ -665,6 +685,11 @@ impl App {
             Window::Stakeout => self.calc.stakeout.view(model, &format),
             Window::Fit => self.calc.fit.view(model, &format, self.selection.len()),
             Window::Edgematch => self.calc.edgematch.view(model, self.selection.len()),
+            // Coordinates as the project writes them: its axes and digits, the user's notation.
+            Window::Convert => self.calc.convert.view(
+                doc.settings(),
+                &convert::ConvertFormat::of(doc.settings(), self.draft.geographic),
+            ),
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
@@ -692,6 +717,7 @@ fn field_label(window: Window, field: Field) -> &'static str {
         (Window::Intersection, _) => "A noktası",
         (Window::Fit, _) => "Taban noktası",
         (Window::Edgematch, _) => "Sınır",
+        (Window::Convert, _) => "Nokta",
     }
 }
 

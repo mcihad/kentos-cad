@@ -75,6 +75,18 @@ export function registerCalcCommands(ctx: AppContext): void {
       run: () => void import('../ui/calc/FitDialog').then((m) => m.openFit(ctx)).catch(failed),
     },
     {
+      // Koordinat dönüştür (docs/adr/0167 §4): points between the coordinate systems, one or a list.
+      id: 'crs.transform',
+      title: 'Koordinat dönüştür…',
+      short: 'Dönüştür',
+      category: 'Koordinat',
+      icon: 'crsTransform',
+      description:
+        'Bir noktayı ya da listeyi bir koordinat sisteminden ötekine dönüştürür (TM, UTM, coğrafi DMS ve ondalık derece; TUREF, ED50, WGS 84): kaynak projenin, hedef ikinci sistemindir; her sonuç doğruluğunu ve dayandığı EPSG dönüşümünü söyler. Nokta yazılır ya da çizimden seçilir, liste yapıştırılır; değerler panoya kopyalanır ya da CSV olarak kaydedilir. Çizime bir şey yazılmaz.',
+      aliases: ['DONUSTUR', 'DÖNÜŞTÜR', 'KOORDINATDONUSTUR', 'DATUM', 'CONVERT'],
+      run: () => void import('../ui/calc/ConvertDialog').then((m) => m.openConvert(ctx)).catch(failed),
+    },
+    {
       // Kenar eşleme (docs/adr/0159): the line ends of two sheets put together across their common edge.
       id: 'transform.edgematch',
       title: 'Kenar eşleme…',

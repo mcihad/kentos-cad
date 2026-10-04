@@ -673,7 +673,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     pending(ctx, 'map.sheet', 'Pafta bölümlemesi…', M, 'sheet'),
     { ...pending(ctx, 'map.parcelReport', 'Parsel alan çizelgesi', M, 'parcelReport'), short: 'Alan çizelgesi' },
     { id: 'crs.set', title: 'Koordinat sistemi…', category: K, icon: 'crs', aliases: ['SRID', 'EPSG'], run: () => hooks.openProjectSettings('crs') },
-    { ...pending(ctx, 'crs.transform', 'Datum dönüşümü (ED50 ↔ TUREF)…', K, 'crsTransform'), short: 'Datum dönüşümü' },
     {
       id: 'crs.query',
       title: 'Koordinat oku',

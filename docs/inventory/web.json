@@ -20,9 +20,9 @@
   "summary": {
     "commands": {
       "total": 292,
-      "implemented": 279,
+      "implemented": 280,
       "partial": 0,
-      "pending": 13
+      "pending": 12
     },
     "tools": {
       "total": 89,
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 86,
-      "implemented": 86,
+      "total": 87,
+      "implemented": 87,
       "partial": 0,
       "pending": 0
     },
@@ -101,14 +101,14 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 111,
-    "commandsOnDesktop": 219,
+    "commandsWithoutTests": 110,
+    "commandsOnDesktop": 220,
     "desktop": {
       "commands": {
         "total": 292,
-        "implemented": 219,
+        "implemented": 220,
         "partial": 0,
-        "pending": 13,
+        "pending": 12,
         "none": 58,
         "n/a": 2
       },
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 86,
-        "implemented": 68,
+        "total": 87,
+        "implemented": 69,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -985,15 +985,22 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/layout.mjs"
       ],
-      "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Dönüşüm bekleyen `crs.transform` ile gelecek (TODOS.md NUM-04..07)."
+      "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Noktalar ve listeler `crs.transform` (Koordinat dönüştür) ile dönüştürülür; çizimin kendisi dönüştürülmez (ADR 0167)."
     },
     {
       "id": "crs.transform",
-      "title": "Datum dönüşümü (ED50 ↔ TUREF)…",
-      "short": "Datum dönüşümü",
+      "title": "Koordinat dönüştür…",
+      "short": "Dönüştür",
       "category": "Koordinat",
       "icon": "crsTransform",
-      "aliases": [],
+      "description": "Bir noktayı ya da listeyi bir koordinat sisteminden ötekine dönüştürür (TM, UTM, coğrafi DMS ve ondalık derece; TUREF, ED50, WGS 84): kaynak projenin, hedef ikinci sistemindir; her sonuç doğruluğunu ve dayandığı EPSG dönüşümünü söyler. Nokta yazılır ya da çizimden seçilir, liste yapıştırılır; değerler panoya kopyalanır ya da CSV olarak kaydedilir. Çizime bir şey yazılmaz.",
+      "aliases": [
+        "DONUSTUR",
+        "DÖNÜŞTÜR",
+        "KOORDINATDONUSTUR",
+        "DATUM",
+        "CONVERT"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -1004,14 +1011,17 @@
       ],
       "quickAccess": false,
       "hiddenIn": [],
-      "uiSources": [],
-      "status": "pending",
+      "uiSources": [
+        "apps/web/src/ui/calc/ConvertDialog.ts"
+      ],
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
-        "desktop": "pending"
+        "web": "implemented",
+        "desktop": "implemented"
       },
-      "tests": [],
-      "desktopWhere": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)"
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "draft.grid",
@@ -17303,6 +17313,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/points/ (ADR 0153)"
+    },
+    {
+      "id": "apps/web/src/ui/calc/ConvertDialog.ts#openConvert",
+      "name": "openConvert",
+      "role": "window",
+      "source": "apps/web/src/ui/calc/ConvertDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/convert.rs (ADR 0167 §4)"
     },
     {
       "id": "apps/web/src/ui/calc/EdgematchDialog.ts#openEdgematch",

@@ -25,7 +25,7 @@
 // the new drawing and editing tools, their split buttons, each tool at work); blocks (docs/adr/0144: DXF içe aktar
 // over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel);
 // secondcrs (docs/adr/0167: the second system's values in the status bar, the coordinate system's menu, Koordinat oku,
-// Proje ayarları' field).
+// Proje ayarları' field); convert (Koordinat dönüştür: a point to the second system and to WGS 84, the systems, a list).
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -3560,6 +3560,54 @@ SCENES.secondcrs = [
       await ui.eval(`${SECOND(2322)}; import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'crs'))`);
       await ui.waitFor(`!!document.querySelector('.settings__content')`);
       await ui.eval(`[...document.querySelectorAll('.sgroup__title')].find((e) => e.textContent === 'İkinci koordinat sistemi')?.scrollIntoView({ block: 'center' })`);
+      await ui.sleep(300);
+    },
+    close: secondClose,
+  },
+];
+
+/**
+ * Koordinat dönüştür (docs/adr/0167 §4) over the demo drawing (TUREF TM36), its second system ED50 TM36: a point typed,
+ * converted to ED50 TM36 and to WGS 84 in degrees, minutes and seconds; the target's list of systems; a list with a
+ * row it cannot read. The desktop's are `calc::convert::tests::screens` (donustur-*).
+ */
+const OPEN_CONVERT = `window.kentos.commands.execute('crs.transform')`;
+const CONVERT_OPEN = `!!document.querySelector('.dialog--calc .calc-convert-systems')`;
+const typeInto = (sel, i, text) =>
+  `(() => { const el = document.querySelectorAll(${JSON.stringify(sel)})[${i}]; el.value = ${JSON.stringify(text)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`;
+// The window keeps what was typed while the page is open: each scene says its target and mode.
+const chooseTarget = async (ui, code) => {
+  await ui.clickSel('.dialog--calc .calc-convert-systems > :last-child .dropdown');
+  await ui.clickText('.menu__item', code);
+  await ui.sleep(250);
+};
+const convertPoint = async (ui) => {
+  await ui.eval(SECOND(2322));
+  await ui.eval(OPEN_CONVERT);
+  await ui.waitFor(CONVERT_OPEN);
+  await chooseTarget(ui, 'EPSG:2322');
+  await ui.clickText('.dialog--calc .seg__opt', 'Tek nokta');
+  await ui.eval(typeInto('.dialog--calc .calc-convert-point input', 0, '486512.34'));
+  await ui.eval(typeInto('.dialog--calc .calc-convert-point input', 1, '4420187.52'));
+  await ui.sleep(250);
+};
+SCENES.convert = [
+  { id: 'convert-point', open: convertPoint, close: secondClose },
+  { id: 'convert-wgs84', open: async (ui) => (await convertPoint(ui), await chooseTarget(ui, 'EPSG:4326')), close: secondClose },
+  {
+    id: 'convert-systems',
+    open: async (ui) => (await convertPoint(ui), await ui.clickSel('.dialog--calc .calc-convert-systems > :last-child .dropdown'), await ui.sleep(300)),
+    close: secondClose,
+  },
+  {
+    id: 'convert-list',
+    open: async (ui) => {
+      await convertPoint(ui);
+      await ui.clickText('.dialog--calc .seg__opt', 'Liste');
+      await ui.waitFor(`!!document.querySelector('.dialog--calc .calc-grid input, .dialog--calc table input')`);
+      const cells = '.dialog--calc .calc-section input';
+      const rows = [['P1', '486512.34', '4420187.52'], ['P2', '486530.25', '4420150.80'], ['P3', '48650x', '4420120.00']];
+      for (const [r, row] of rows.entries()) for (const [c, v] of row.entries()) await ui.eval(typeInto(cells, r * 3 + c, v));
       await ui.sleep(300);
     },
     close: secondClose,

@@ -111,9 +111,17 @@ export class SecondCrs {
 
   /** How sure the values are: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon” within one datum. */
   accuracy(t: Transformed): string {
-    if (!t.via) return 'kesin, yalnız projeksiyon';
-    return `±${t.accuracy} m, ${t.via}${this.unofficial ? '; resmî dönüşüm değil' : ''}`;
+    return accuracyText(t, this.unofficial);
   }
+}
+
+/**
+ * How sure a point moved between two systems is: “±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil” (`unofficial`:
+ * ED50 on either side, docs/adr/0167 §5), “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon” within one datum.
+ */
+export function accuracyText(t: Transformed, unofficial: boolean): string {
+  if (!t.via) return 'kesin, yalnız projeksiyon';
+  return `±${t.accuracy} m, ${t.via}${unofficial ? '; resmî dönüşüm değil' : ''}`;
 }
 
 /** The systems a project in `project` may take as its second, grouped by datum as the registry lists them: every one but the local and its own. */

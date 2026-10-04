@@ -16,7 +16,7 @@
     "note": "AutoCAD 2007 ASCII DXF (AC1021), Rust yazıcısı (ADR 0009). Yalnız ezdxf ile denetlendi; AutoCAD, Netcad, BricsCAD ve QGIS'te açılması denenmedi (TODOS.md FMT-02)."
   },
   "command:crs.set": {
-    "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Dönüşüm bekleyen `crs.transform` ile gelecek (TODOS.md NUM-04..07)."
+    "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Noktalar ve listeler `crs.transform` (Koordinat dönüştür) ile dönüştürülür; çizimin kendisi dönüştürülmez (ADR 0167)."
   },
   "command:cloud.open": {
     "note": "Kurum (tenant) projelerini açar. Kişisel çalışma alanı, proje düzeyinde yetki ve paylaşım henüz yok (ADR 0012, TODOS.md §12)."

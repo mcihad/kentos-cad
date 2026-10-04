@@ -227,3 +227,43 @@
   fill: var(--c-accent);
 }
 
+
+/* Koordinat dönüştür (docs/adr/0167 §4): the source and the target side by side with the swap between, the point's two
+   fields and its pick, the converted values large enough to read off. */
+.calc-convert-systems {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.calc-swap {
+  margin-bottom: 2px;
+}
+.calc-convert-point {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 12px 18px;
+}
+.calc-convert-point .calc-num {
+  width: 100%;
+}
+.calc-convert-result {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+}
+.calc-convert-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+.calc-convert-name {
+  color: var(--c-text-3);
+  font-weight: 600;
+}

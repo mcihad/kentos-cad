@@ -11,7 +11,6 @@
   "commands": {
     "analysis.slope": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "analysis.volume": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
-    "crs.transform": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.export.pdf": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "file.print": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "map.contours": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
@@ -141,6 +140,7 @@
     "apps/web/src/ui/bottom/PointTable.ts#PointTable": { "desktop": "implemented", "where": "apps/desktop/src/points/ (ADR 0153)" },
     "apps/web/src/ui/bottom/PointBatchDialog.ts#openPointBatchDialog": { "desktop": "implemented", "where": "apps/desktop/src/points/batch_view.rs (ADR 0153 §5)" },
     "apps/web/src/ui/calc/FitDialog.ts#openFit": { "desktop": "implemented", "where": "apps/desktop/src/calc/fit/ (ADR 0156)" },
+    "apps/web/src/ui/calc/ConvertDialog.ts#openConvert": { "desktop": "implemented", "where": "apps/desktop/src/calc/convert.rs (ADR 0167 §4)" },
     "apps/web/src/ui/calc/EdgematchDialog.ts#openEdgematch": { "desktop": "implemented", "where": "apps/desktop/src/calc/edgematch/ (ADR 0159)" },
     "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection": { "desktop": "implemented", "where": "apps/desktop/src/calc/intersection.rs (ADR 0071)" },
     "apps/web/src/ui/calc/PolarDialog.ts#openPolar": { "desktop": "implemented", "where": "apps/desktop/src/calc/polar.rs (ADR 0071)" },

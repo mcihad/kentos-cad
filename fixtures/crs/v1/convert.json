@@ -1,0 +1,578 @@
+{
+ "format": "kentos.crs-convert",
+ "version": 1,
+ "proj": "9.7.1",
+ "cases": [
+  {
+   "name": "TUREF TM30'dan ED50 TM30'a",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120.512",
+    "4540398.207"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "414154.869"
+     ],
+     [
+      "X",
+      "4540584.350"
+     ]
+    ],
+    "accuracy": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil"
+   }
+  },
+  {
+   "name": "aynısı, CAD'in eksenleriyle",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "axes": "cad",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120.512",
+    "4540398.207"
+   ],
+   "expect": {
+    "values": [
+     [
+      "X",
+      "414154.869"
+     ],
+     [
+      "Y",
+      "4540584.350"
+     ]
+    ],
+    "accuracy": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil"
+   }
+  },
+  {
+   "name": "TUREF TM30'dan WGS 84'e, DMS",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120.512",
+    "4540398.207"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Enlem",
+      "40°59′38.0581″K"
+     ],
+     [
+      "Boylam",
+      "28°58′45.7302″D"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF TM30'dan WGS 84'e, DD",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "fromSrid": 5254,
+   "toSrid": 4326,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dd",
+   "input": [
+    "414120.512",
+    "4540398.207"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Enlem",
+      "40.9939050°K"
+     ],
+     [
+      "Boylam",
+      "28.9793695°D"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84'ten TUREF TM30'a, işaretli DMS",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "40°59′38.0581″K",
+    "28°58′45.7302″D"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "414120.511"
+     ],
+     [
+      "X",
+      "4540398.209"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84'ten TUREF TM30'a, boşluklu DMS",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "40 59 38.0581",
+    "28 58 45.7302"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "414120.511"
+     ],
+     [
+      "X",
+      "4540398.209"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "WGS 84'ten TUREF TM30'a, ondalık derece",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "40.9939050",
+    "28.9793695"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "414120.511"
+     ],
+     [
+      "X",
+      "4540398.205"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "ED50 UTM 36N'den TUREF TM36'ya",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 23036,
+   "toSrid": 5256,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "486512.34",
+    "4420187.52"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "230011.758"
+     ],
+     [
+      "X",
+      "4426539.011"
+     ]
+    ],
+    "accuracy": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil"
+   }
+  },
+  {
+   "name": "TUREF TM36'dan komşu dilim TM39'a",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 39,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5256,
+   "toSrid": 5257,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "486512.34",
+    "4420187.52"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "229991.850"
+     ],
+     [
+      "X",
+      "4424952.536"
+     ]
+    ],
+    "accuracy": "kesin, yalnız projeksiyon"
+   }
+  },
+  {
+   "name": "TUREF TM36'dan Pseudo-Mercator'a",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "mercator"
+   },
+   "fromSrid": 5256,
+   "toSrid": 3857,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "486512.34",
+    "4420187.52"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "3989940.710"
+     ],
+     [
+      "X",
+      "4853708.378"
+     ]
+    ],
+    "accuracy": "±1 m, EPSG:5261"
+   }
+  },
+  {
+   "name": "TUREF TM36'dan TUREF coğrafiye, DD",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "fromSrid": 5256,
+   "toSrid": 5252,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dd",
+   "input": [
+    "486512.34",
+    "4420187.52"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Enlem",
+      "39.9157606°K"
+     ],
+     [
+      "Boylam",
+      "35.8422472°D"
+     ]
+    ],
+    "accuracy": "kesin, yalnız projeksiyon"
+   }
+  },
+  {
+   "name": "enlem 90°'nin ötesinde",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "95",
+    "29"
+   ],
+   "error": "range"
+  },
+  {
+   "name": "boylam okunmuyor",
+   "from": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 4326,
+   "toSrid": 5254,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "40",
+    "yirmi dokuz"
+   ],
+   "error": "b"
+  },
+  {
+   "name": "virgüllü doğu",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120,512",
+    "4540398.207"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "414154.869"
+     ],
+     [
+      "X",
+      "4540584.350"
+     ]
+    ],
+    "accuracy": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil"
+   }
+  },
+  {
+   "name": "doğu okunmuyor",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120.512 m",
+    "4540398.207"
+   ],
+   "error": "a"
+  },
+  {
+   "name": "kuzey yok",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "fromSrid": 5254,
+   "toSrid": 2320,
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "414120.512",
+    ""
+   ],
+   "error": "b"
+  }
+ ]
+}

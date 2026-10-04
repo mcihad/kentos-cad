@@ -214,6 +214,9 @@ pub const PORTED: &[&str] = &[
     // Kenar eşleme: the line ends of two sheets put together across their edge,
     // written through cad.entities.edit (calc/edgematch/, docs/adr/0159 §9).
     "transform.edgematch",
+    // Koordinat dönüştür: a point or a list between the coordinate systems,
+    // nothing written (calc/convert.rs, docs/adr/0167 §4).
+    "crs.transform",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",

@@ -148,15 +148,23 @@ impl Second {
     /// dönüşüm değil”, “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon”
     /// within one datum.
     pub fn accuracy(&self, t: &Transformed) -> String {
-        if t.via.is_empty() {
-            return "kesin, yalnız projeksiyon".to_owned();
-        }
-        let mut text = format!("±{} m, {}", t.accuracy, t.via);
-        if self.unofficial {
-            text.push_str("; resmî dönüşüm değil");
-        }
-        text
+        accuracy_text(t, self.unofficial)
     }
+}
+
+/// How sure a point moved between two systems is: “±2.1 m, EPSG:1783 +
+/// EPSG:5260; resmî dönüşüm değil” (`unofficial`: ED50 on either side,
+/// docs/adr/0167 §5), “±1 m, EPSG:5261”, or “kesin, yalnız projeksiyon”
+/// within one datum (the web's `accuracyText`).
+pub fn accuracy_text(t: &Transformed, unofficial: bool) -> String {
+    if t.via.is_empty() {
+        return "kesin, yalnız projeksiyon".to_owned();
+    }
+    let mut text = format!("±{} m, {}", t.accuracy, t.via);
+    if unofficial {
+        text.push_str("; resmî dönüşüm değil");
+    }
+    text
 }
 
 #[cfg(test)]

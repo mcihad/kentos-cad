@@ -129,6 +129,7 @@
     "calc.polar",
     "transform.fit",
     "transform.edgematch",
+    "crs.transform",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",
