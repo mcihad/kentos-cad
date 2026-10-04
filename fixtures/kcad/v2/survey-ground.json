@@ -1,0 +1,77 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Moda poligonu, zeminde",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "survey": {
+      "refraction": 0.14,
+      "faceHz": 3.1415926535897935e-05,
+      "groundHeight": 85.25,
+      "reduceToGrid": true
+    }
+  },
+  "origin": {
+    "x": 414000.0,
+    "y": 4540000.0
+  },
+  "layers": [
+    {
+      "id": "roper",
+      "name": "Röper",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "roper",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "roper",
+      "attrs": {
+        "ad": "R1"
+      },
+      "p": {
+        "x": 414120.512,
+        "y": 4540398.207
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "roper",
+      "attrs": {},
+      "a": {
+        "x": 414120.512,
+        "y": 4540398.207
+      },
+      "b": {
+        "x": 414187.904,
+        "y": 4540361.33
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e31",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e32"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -179,9 +179,11 @@ pub const REFRACTION: f64 = 0.13;
 
 /// The project's survey constants and tolerances (docs/adr/0169 §3): the
 /// refraction coefficient k of trigonometric heights, and the greatest
-/// differences a field book's two faces are checked against. Angles are in
-/// radians, lengths in metres. An absent tolerance is not checked; the
-/// differences are still shown.
+/// differences a field book's two faces are checked against; the mean
+/// ellipsoidal height of the ground values and whether the survey windows
+/// reduce lengths to the grid (docs/adr/0171). Angles are in radians,
+/// lengths in metres. An absent tolerance is not checked; the differences
+/// are still shown.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -217,7 +219,24 @@ pub struct SurveySettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub traverse_coord: Option<f64>,
+    /// The project's mean ellipsoidal height (m), within [−500, 9000]: the
+    /// ground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;
+    /// schema 16). Points' elevations are not used: whether orthometric or
+    /// ellipsoidal is not known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ground_height: Option<f64>,
+    /// Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
+    /// grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
+    /// schema 16): only with a ground height; absent, off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reduce_to_grid: Option<bool>,
 }
+
+/// The lowest and the highest mean ellipsoidal height a project may name (m;
+/// docs/adr/0171 §2): below the Dead Sea's shore, above the highest summit.
+pub const GROUND_HEIGHTS: (f64, f64) = (-500.0, 9000.0);
 
 impl SurveySettings {
     /// k: the project's, or [`REFRACTION`].
@@ -235,19 +254,51 @@ impl SurveySettings {
         t.is_finite() && t > 0.0
     }
 
+    /// Whether `h` is a mean ellipsoidal height a project may name: finite,
+    /// within [`GROUND_HEIGHTS`].
+    pub fn ground_height_holds(h: f64) -> bool {
+        h.is_finite() && (GROUND_HEIGHTS.0..=GROUND_HEIGHTS.1).contains(&h)
+    }
+
     /// Whether the settings name a traverse tolerance (schema 15's fields).
     pub fn has_traverse(&self) -> bool {
         self.two_way.is_some() || self.traverse_angle.is_some() || self.traverse_coord.is_some()
     }
 
+    /// Whether the settings name the ground (schema 16's fields).
+    pub fn has_ground(&self) -> bool {
+        self.ground_height.is_some() || self.reduce_to_grid.is_some()
+    }
+
+    /// Whether lengths go between the ground and the grid in the survey
+    /// windows: asked for, and a ground height to do it with.
+    pub fn reduces_to_grid(&self) -> bool {
+        self.reduce_to_grid == Some(true) && self.ground_height.is_some()
+    }
+
     /// What is wrong with the settings as a file holds them: none of them,
-    /// k out of [−1, 1], a tolerance not above zero; none when they hold.
+    /// k out of [−1, 1], a ground height out of [`GROUND_HEIGHTS`], the
+    /// reduction to the grid without a height, a tolerance not above zero;
+    /// none when they hold.
     pub fn problem(&self) -> Option<String> {
         if *self == Self::default() {
             return Some("ölçme ayarları boş; ayarı olmayan proje alanı yazmaz".to_owned());
         }
         if let Some(k) = self.refraction.filter(|k| !Self::refraction_holds(*k)) {
             return Some(format!("kırılma katsayısı k {k}; −1 ile 1 arasında olmalı"));
+        }
+        if let Some(h) = self
+            .ground_height
+            .filter(|h| !Self::ground_height_holds(*h))
+        {
+            return Some(format!(
+                "ortalama elipsoit yüksekliği {h} m; −500 ile 9000 arasında olmalı"
+            ));
+        }
+        if self.reduce_to_grid == Some(true) && self.ground_height.is_none() {
+            return Some(
+                "uzunlukları projeksiyona indirmek ortalama elipsoit yüksekliği ister".to_owned(),
+            );
         }
         let tolerances = [
             ("iki durumun yatay açı farkı", self.face_hz),
@@ -264,7 +315,9 @@ impl SurveySettings {
     }
 
     /// The settings as a project keeps them: k where it holds and is not
-    /// the default, the tolerances that hold; none when nothing is left.
+    /// the default, the tolerances and the ground height that hold, the
+    /// reduction to the grid when asked for with a height; none when
+    /// nothing is left.
     pub fn sanitized(self) -> Option<Self> {
         let kept = Self {
             refraction: self
@@ -276,6 +329,14 @@ impl SurveySettings {
             two_way: self.two_way.filter(|t| Self::tolerance_holds(*t)),
             traverse_angle: self.traverse_angle.filter(|t| Self::tolerance_holds(*t)),
             traverse_coord: self.traverse_coord.filter(|t| Self::tolerance_holds(*t)),
+            ground_height: self.ground_height.filter(|h| Self::ground_height_holds(*h)),
+            reduce_to_grid: None,
+        };
+        // Reduced to the grid only when asked for and with a height to do it with.
+        let kept = Self {
+            reduce_to_grid: (self.reduce_to_grid == Some(true) && kept.ground_height.is_some())
+                .then_some(true),
+            ..kept
         };
         (kept != Self::default()).then_some(kept)
     }
@@ -294,6 +355,20 @@ impl ProjectSettings {
         self.survey
             .as_ref()
             .map_or(REFRACTION, SurveySettings::refraction)
+    }
+
+    /// The project's mean ellipsoidal height, for the ground values
+    /// (docs/adr/0171 §2); none when it names none.
+    pub fn ground_height(&self) -> Option<f64> {
+        self.survey.as_ref().and_then(|s| s.ground_height)
+    }
+
+    /// Whether the survey windows take lengths between the ground and the
+    /// grid (docs/adr/0171 §4).
+    pub fn reduces_to_grid(&self) -> bool {
+        self.survey
+            .as_ref()
+            .is_some_and(SurveySettings::reduces_to_grid)
     }
 
     /// Whether the project has a coordinate system: the registry's, or its

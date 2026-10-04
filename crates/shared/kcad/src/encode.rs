@@ -30,9 +30,9 @@ use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
+    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -360,20 +360,30 @@ impl<'d> Encoder<'d> {
         if let Some(problem) = v.problem() {
             return Err(self.fail(Code::BadValue, &problem));
         }
+        // Floats and the one bool, in the canonical order of their keys.
         let fields = [
-            ("index", v.index),
-            ("faceHz", v.face_hz),
-            ("twoWay", v.two_way),
-            ("faceSlope", v.face_slope),
-            ("refraction", v.refraction),
-            ("traverseAngle", v.traverse_angle),
-            ("traverseCoord", v.traverse_coord),
+            ("index", v.index.map(Ok)),
+            ("faceHz", v.face_hz.map(Ok)),
+            ("twoWay", v.two_way.map(Ok)),
+            ("faceSlope", v.face_slope.map(Ok)),
+            ("refraction", v.refraction.map(Ok)),
+            ("groundHeight", v.ground_height.map(Ok)),
+            ("reduceToGrid", v.reduce_to_grid.map(Err)),
+            ("traverseAngle", v.traverse_angle.map(Ok)),
+            ("traverseCoord", v.traverse_coord.map(Ok)),
         ];
         self.open(fields.iter().filter(|(_, x)| x.is_some()).count(), true)?;
         for (key, x) in fields {
-            if let Some(x) = x {
-                self.key(key);
-                self.at(Seg::Name(key), |e| e.float(x))?;
+            match x {
+                Some(Ok(x)) => {
+                    self.key(key);
+                    self.at(Seg::Name(key), |e| e.float(x))?;
+                }
+                Some(Err(b)) => {
+                    self.key(key);
+                    self.w.bool(b);
+                }
+                None => {}
             }
         }
         self.close();
@@ -623,8 +633,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 15 when its survey settings
-/// name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
+/// The oldest schema that holds the drawing: 16 when its survey settings
+/// name the ground, 15 when they name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
 /// a second system, 11 when it names a drawing unit, 10 when a layer has its own
 /// snapping, 9 when a dimension of it or of
 /// a block definition has one of schema 9's kinds or fields, 8 when it or a
@@ -639,6 +649,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
     let s = &doc.settings;
+    if s.survey.as_ref().is_some_and(SurveySettings::has_ground) {
+        return SCHEMA_WITH_GROUND;
+    }
     if s.survey.as_ref().is_some_and(SurveySettings::has_traverse) {
         return SCHEMA_WITH_TRAVERSE_TOLERANCES;
     }
@@ -848,6 +861,8 @@ mod tests {
                 "twoWay",
                 "faceSlope",
                 "refraction",
+                "groundHeight",
+                "reduceToGrid",
                 "traverseAngle",
                 "traverseCoord",
             ],

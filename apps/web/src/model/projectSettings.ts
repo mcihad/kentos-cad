@@ -80,9 +80,16 @@ export const refractionHolds = (k: number): boolean => Number.isFinite(k) && k >
 /** Whether `t` is a tolerance: finite and above zero. */
 export const toleranceHolds = (t: number): boolean => Number.isFinite(t) && t > 0;
 
+/** The lowest and the highest mean ellipsoidal height a project may name, m (the contract's `GROUND_HEIGHTS`, docs/adr/0171 §2). */
+export const GROUND_HEIGHTS = [-500, 9000] as const;
+
+/** Whether `h` is a mean ellipsoidal height a project may name (the contract's `SurveySettings::ground_height_holds`). */
+export const groundHeightHolds = (h: number): boolean => Number.isFinite(h) && h >= GROUND_HEIGHTS[0] && h <= GROUND_HEIGHTS[1];
+
 /**
  * The survey settings as a project keeps them (the contract's `SurveySettings::sanitized`): k where it holds and is not
- * the default, the tolerances that hold; null when nothing is left.
+ * the default, the tolerances and the ground height that hold, the reduction to the grid when asked for with a height
+ * (docs/adr/0171); null when nothing is left.
  */
 export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySettings | null {
   if (!s) return null;
@@ -95,7 +102,10 @@ export function sanitizeSurvey(s: SurveySettings | null | undefined): SurveySett
     ...(s.twoWay !== undefined && toleranceHolds(s.twoWay) ? { twoWay: s.twoWay } : {}),
     ...(s.traverseAngle !== undefined && toleranceHolds(s.traverseAngle) ? { traverseAngle: s.traverseAngle } : {}),
     ...(s.traverseCoord !== undefined && toleranceHolds(s.traverseCoord) ? { traverseCoord: s.traverseCoord } : {}),
+    ...(s.groundHeight !== undefined && groundHeightHolds(s.groundHeight) ? { groundHeight: s.groundHeight } : {}),
   };
+  // Reduced to the grid only when asked for and with a height to do it with.
+  if (s.reduceToGrid === true && kept.groundHeight !== undefined) kept.reduceToGrid = true;
   return Object.keys(kept).length ? kept : null;
 }
 
@@ -109,7 +119,9 @@ const sameSurvey = (a: SurveySettings | null, b: SurveySettings | null): boolean
     a.faceSlope === b.faceSlope &&
     a.twoWay === b.twoWay &&
     a.traverseAngle === b.traverseAngle &&
-    a.traverseCoord === b.traverseCoord);
+    a.traverseCoord === b.traverseCoord &&
+    a.groundHeight === b.groundHeight &&
+    a.reduceToGrid === b.reduceToGrid);
 
 /**
  * Whether `second` may be the second system of a project in `crs`: another system, and the project has one — the
@@ -224,6 +236,17 @@ export class ProjectSettings {
   /** The refraction coefficient k of trigonometric heights: the project's, or 0.13 (docs/adr/0169 §3). */
   get refraction(): number {
     return this.survey.value?.refraction ?? REFRACTION;
+  }
+
+  /** The project's mean ellipsoidal height for the ground values, or null (docs/adr/0171 §2). */
+  get groundHeight(): number | null {
+    return this.survey.value?.groundHeight ?? null;
+  }
+
+  /** Whether the survey windows take lengths between the ground and the grid (docs/adr/0171 §4). */
+  get reducesToGrid(): boolean {
+    const s = this.survey.value;
+    return s?.reduceToGrid === true && s.groundHeight !== undefined;
   }
 
   /** The second coordinate system, when the project has one the registry knows (docs/adr/0167 §1). */

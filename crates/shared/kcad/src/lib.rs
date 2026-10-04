@@ -162,8 +162,16 @@ pub const SCHEMA_WITH_SURVEY: u32 = 14;
 /// check a traverse against none.
 pub const SCHEMA_WITH_TRAVERSE_TOLERANCES: u32 = 15;
 
+/// Document schema 16 (docs/specs/kcad-v2.md §6.1): schema 15 and the
+/// survey settings' ground, `groundHeight` and `reduceToGrid`
+/// (docs/adr/0171 §2, §4). A writer writes it only when the project has one
+/// of them: any other drawing stays 15 or older, byte for byte; a reader of
+/// those refuses a drawing that has them rather than give ground values at
+/// another height or leave its lengths on the ground.
+pub const SCHEMA_WITH_GROUND: u32 = 16;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 14] = [
+pub const SCHEMAS: [u32; 15] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -178,6 +186,7 @@ pub const SCHEMAS: [u32; 14] = [
     SCHEMA_WITH_CUSTOM_CRS,
     SCHEMA_WITH_SURVEY,
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_GROUND,
 ];
 
 /// The file a drawing is saved as.

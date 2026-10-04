@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 328,
-      "implemented": 328,
+      "total": 330,
+      "implemented": 330,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 328,
-        "implemented": 328,
+        "total": 330,
+        "implemented": 330,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -5374,8 +5374,10 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/ground-measures.json",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/usage-ground-measures.json",
         "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
@@ -6741,9 +6743,11 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/ground-measures.json",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/second-crs.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-ground-measures.json",
         "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
@@ -9585,8 +9589,10 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/ground-measures.json",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/second-crs.json",
+        "fixtures/interaction/v1/usage-ground-measures.json",
         "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
@@ -10616,9 +10622,11 @@
         "apps/web/src/app/netcadNames.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/ground-measures.json",
         "fixtures/interaction/v1/measure-parcel.json",
         "fixtures/interaction/v1/second-crs.json",
         "fixtures/interaction/v1/trace-draw.json",
+        "fixtures/interaction/v1/usage-ground-measures.json",
         "fixtures/interaction/v1/usage-second-crs.json"
       ]
     },
@@ -17720,11 +17728,37 @@
       }
     },
     {
+      "id": "SurveySettings.groundHeight",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "groundHeight",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "SurveySettings.index",
       "contract": "SurveySettings",
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "index",
       "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "SurveySettings.reduceToGrid",
+      "contract": "SurveySettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "reduceToGrid",
+      "type": "boolean",
       "optional": true,
       "status": "implemented",
       "platforms": {

@@ -3,9 +3,11 @@
 /**
  * The project's survey constants and tolerances (docs/adr/0169 §3): the
  * refraction coefficient k of trigonometric heights, and the greatest
- * differences a field book's two faces are checked against. Angles are in
- * radians, lengths in metres. An absent tolerance is not checked; the
- * differences are still shown.
+ * differences a field book's two faces are checked against; the mean
+ * ellipsoidal height of the ground values and whether the survey windows
+ * reduce lengths to the grid (docs/adr/0171). Angles are in radians,
+ * lengths in metres. An absent tolerance is not checked; the differences
+ * are still shown.
  */
 export type SurveySettings = { 
 /**
@@ -36,4 +38,17 @@ traverseAngle?: number,
 /**
  * A traverse's linear (coordinate) misclosure (schema 15).
  */
-traverseCoord?: number, };
+traverseCoord?: number, 
+/**
+ * The project's mean ellipsoidal height (m), within [−500, 9000]: the
+ * ground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;
+ * schema 16). Points' elevations are not used: whether orthometric or
+ * ellipsoidal is not known.
+ */
+groundHeight?: number, 
+/**
+ * Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
+ * grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
+ * schema 16): only with a ground height; absent, off.
+ */
+reduceToGrid?: boolean, };

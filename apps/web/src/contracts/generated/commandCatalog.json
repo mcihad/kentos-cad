@@ -2499,7 +2499,7 @@
             "type": "object"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -2517,11 +2517,26 @@
                   "null"
                 ]
               },
+              "groundHeight": {
+                "description": "The project's mean ellipsoidal height (m), within [−500, 9000]: the\nground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;\nschema 16). Points' elevations are not used: whether orthometric or\nellipsoidal is not known.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "index": {
                 "description": "The vertical index error.",
                 "format": "double",
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "reduceToGrid": {
+                "description": "Kutupsal alım and Poligon hesabı take measured (ground) lengths to the\ngrid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;\nschema 16): only with a ground height; absent, off.",
+                "type": [
+                  "boolean",
                   "null"
                 ]
               },
@@ -4081,7 +4096,7 @@
             "type": "string"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -4099,11 +4114,26 @@
                   "null"
                 ]
               },
+              "groundHeight": {
+                "description": "The project's mean ellipsoidal height (m), within [−500, 9000]: the\nground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;\nschema 16). Points' elevations are not used: whether orthometric or\nellipsoidal is not known.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "index": {
                 "description": "The vertical index error.",
                 "format": "double",
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "reduceToGrid": {
+                "description": "Kutupsal alım and Poligon hesabı take measured (ground) lengths to the\ngrid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;\nschema 16): only with a ground height; absent, off.",
+                "type": [
+                  "boolean",
                   "null"
                 ]
               },
@@ -6825,7 +6855,7 @@
             "type": "object"
           },
           "SurveySettings": {
-            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against. Angles are in\nradians, lengths in metres. An absent tolerance is not checked; the\ndifferences are still shown.",
+            "description": "The project's survey constants and tolerances (docs/adr/0169 §3): the\nrefraction coefficient k of trigonometric heights, and the greatest\ndifferences a field book's two faces are checked against; the mean\nellipsoidal height of the ground values and whether the survey windows\nreduce lengths to the grid (docs/adr/0171). Angles are in radians,\nlengths in metres. An absent tolerance is not checked; the differences\nare still shown.",
             "properties": {
               "faceHz": {
                 "description": "The two faces' horizontal reading difference.",
@@ -6843,11 +6873,26 @@
                   "null"
                 ]
               },
+              "groundHeight": {
+                "description": "The project's mean ellipsoidal height (m), within [−500, 9000]: the\nground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;\nschema 16). Points' elevations are not used: whether orthometric or\nellipsoidal is not known.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "index": {
                 "description": "The vertical index error.",
                 "format": "double",
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "reduceToGrid": {
+                "description": "Kutupsal alım and Poligon hesabı take measured (ground) lengths to the\ngrid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;\nschema 16): only with a ground height; absent, off.",
+                "type": [
+                  "boolean",
                   "null"
                 ]
               },

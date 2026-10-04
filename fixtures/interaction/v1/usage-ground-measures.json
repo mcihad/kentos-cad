@@ -1,0 +1,107 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-ground-measures",
+  "title": "Kullanım: zemin, elipsoit ve düzlem; ortalama elipsoit yüksekliği 850 m olan TUREF TM30 projesinde Mesafe ölç ve Alan hesapla'nın elipsoit ve zemin satırları",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0171 §4a",
+  "covers": [
+    "HYB-14"
+  ],
+  "document": "ground-measures.kcad",
+  "view": {
+    "center": [
+      414070,
+      4540045
+    ],
+    "metresPerPixel": 0.2
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.2,
+  "steps": [
+    {
+      "move": [
+        20,
+        10
+      ]
+    },
+    {
+      "run": "tool.measure"
+    },
+    {
+      "text": "414000,4540000"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414040,4540000"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414040,4540030"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "key": "Enter",
+      "note": "Toplam uzunluk, ardından elipsoit üstündeki (düzlemin ölçeğiyle) ve 850 m'deki zemin uzunluğu (yükseklik çarpanıyla)."
+    },
+    {
+      "shot": "mesafe",
+      "note": "Mesafe ölç'ün üç satırı: düzlem, elipsoit, zemin."
+    },
+    {
+      "key": "Esc"
+    },
+    {
+      "run": "tool.area"
+    },
+    {
+      "text": "414100,4540050"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414140,4540050"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414140,4540075"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414100,4540075"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "key": "Enter",
+      "note": "Alan ve çevre, ardından elipsoit üstündekiler ve zemindekiler."
+    },
+    {
+      "shot": "alan",
+      "note": "Alan hesapla'nın üç satırı ve ölçülen alan."
+    },
+    {
+      "key": "Esc"
+    }
+  ]
+}

@@ -228,3 +228,59 @@ fn a_projects_own_systems_keep_their_rules() {
     assert!(kentos_contracts::crs::choices_problem(&twice.datum_transforms).is_some());
     assert!(twice.sanitized().datum_transforms.is_empty());
 }
+
+#[test]
+fn a_ground_height_and_the_reduction_to_the_grid_keep_their_rules() {
+    use kentos_contracts::{GROUND_HEIGHTS, ProjectSettings, SurveySettings};
+    // docs/adr/0171 §2, §4: a mean ellipsoidal height within [−500, 9000] m;
+    // the reduction to the grid only with one.
+    assert_eq!(GROUND_HEIGHTS, (-500.0, 9000.0));
+    let with = |h: Option<f64>, r: Option<bool>| SurveySettings {
+        ground_height: h,
+        reduce_to_grid: r,
+        ..SurveySettings::default()
+    };
+    assert_eq!(with(Some(850.0), None).problem(), None);
+    assert_eq!(with(Some(-500.0), Some(true)).problem(), None);
+    assert_eq!(
+        with(Some(9000.5), None).problem().as_deref(),
+        Some("ortalama elipsoit yüksekliği 9000.5 m; −500 ile 9000 arasında olmalı")
+    );
+    assert_eq!(
+        with(None, Some(true)).problem().as_deref(),
+        Some("uzunlukları projeksiyona indirmek ortalama elipsoit yüksekliği ister")
+    );
+    assert_eq!(with(None, Some(false)).problem(), None);
+    assert!(with(Some(1.0), None).has_ground());
+    assert!(with(None, Some(false)).has_ground());
+    assert!(!SurveySettings::default().has_ground());
+    // As a project keeps them: a height that holds, the reduction only when
+    // asked for and with one; nothing left, none.
+    assert_eq!(with(Some(f64::NAN), Some(true)).sanitized(), None);
+    assert_eq!(with(None, Some(true)).sanitized(), None);
+    assert_eq!(
+        with(Some(120.0), Some(false)).sanitized(),
+        Some(with(Some(120.0), None))
+    );
+    assert_eq!(
+        with(Some(120.0), Some(true)).sanitized(),
+        Some(with(Some(120.0), Some(true)))
+    );
+    let mut settings: ProjectSettings = serde_json::from_str(
+        r#"{"srid":5254,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000}"#,
+    )
+    .expect("settings");
+    assert_eq!(settings.ground_height(), None);
+    assert!(!settings.reduces_to_grid());
+    settings.survey = Some(with(Some(850.0), Some(true)));
+    assert_eq!(settings.ground_height(), Some(850.0));
+    assert!(settings.reduces_to_grid());
+    // In JSON: `groundHeight` and `reduceToGrid` in the survey settings.
+    let json = serde_json::to_string(&settings).expect("json");
+    assert!(
+        json.contains(r#""survey":{"groundHeight":850.0,"reduceToGrid":true}"#),
+        "{json}"
+    );
+    settings.survey = Some(with(Some(850.0), None));
+    assert!(!settings.reduces_to_grid());
+}

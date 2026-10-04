@@ -1,8 +1,10 @@
 //! Proje ayarları › Ölçme's form (docs/adr/0169 §3): the project's survey
-//! settings as seven texts (the refraction coefficient k, the two faces'
+//! settings as eight texts (the refraction coefficient k, the two faces'
 //! horizontal reading difference, the index error, the two faces' slope
 //! distance difference; a traverse leg's two-way difference, a traverse's
-//! angular and linear misclosure) and the texts read back. The tolerances'
+//! angular and linear misclosure; the mean ellipsoidal height of the ground
+//! values, docs/adr/0171 §2) and the texts read back. The height is typed
+//! in metres. The tolerances'
 //! angles are typed in cc in a gon project and in arc seconds in a degree
 //! one and kept in radians; the lengths are typed in millimetres and kept in
 //! metres. The
@@ -21,6 +23,8 @@ use crate::definition_form::number;
 pub const NUMBER: &str = "Sayı yazın.";
 pub const REFRACTION_RANGE: &str = "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.";
 pub const TOLERANCE: &str = "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.";
+pub const HEIGHT: &str =
+    "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın.";
 
 /// The form's fields, in order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,10 +36,11 @@ pub enum Field {
     TwoWay,
     TraverseAngle,
     TraverseCoord,
+    GroundHeight,
 }
 
 impl Field {
-    pub const ALL: [Field; 7] = [
+    pub const ALL: [Field; 8] = [
         Field::Refraction,
         Field::FaceHz,
         Field::Index,
@@ -43,6 +48,7 @@ impl Field {
         Field::TwoWay,
         Field::TraverseAngle,
         Field::TraverseCoord,
+        Field::GroundHeight,
     ];
 
     /// The settings' key (`refraction`, `faceHz`, `index`, `faceSlope`).
@@ -55,6 +61,7 @@ impl Field {
             Field::TwoWay => "twoWay",
             Field::TraverseAngle => "traverseAngle",
             Field::TraverseCoord => "traverseCoord",
+            Field::GroundHeight => "groundHeight",
         }
     }
 
@@ -67,6 +74,7 @@ impl Field {
             Field::TwoWay => s.two_way,
             Field::TraverseAngle => s.traverse_angle,
             Field::TraverseCoord => s.traverse_coord,
+            Field::GroundHeight => s.ground_height,
         }
     }
 
@@ -79,6 +87,7 @@ impl Field {
             Field::TwoWay => &mut s.two_way,
             Field::TraverseAngle => &mut s.traverse_angle,
             Field::TraverseCoord => &mut s.traverse_coord,
+            Field::GroundHeight => &mut s.ground_height,
         };
         *slot = Some(v);
     }
@@ -95,7 +104,7 @@ impl Field {
     /// ″ × π / 648 000 rad, mm ÷ 1000 m.
     fn stored(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
-            (Field::Refraction, _) => v,
+            (Field::Refraction | Field::GroundHeight, _) => v,
             (f, _) if f.length() => v / 1000.0,
             (_, AngleUnit::Grad) => v * PI / 2_000_000.0,
             (_, AngleUnit::Deg) => v * PI / 648_000.0,
@@ -105,7 +114,7 @@ impl Field {
     /// A kept value in the unit it is typed in.
     fn typed(self, v: f64, unit: AngleUnit) -> f64 {
         match (self, unit) {
-            (Field::Refraction, _) => v,
+            (Field::Refraction | Field::GroundHeight, _) => v,
             (f, _) if f.length() => v * 1000.0,
             (_, AngleUnit::Grad) => v * 2_000_000.0 / PI,
             (_, AngleUnit::Deg) => v * 648_000.0 / PI,
@@ -139,7 +148,7 @@ fn trimmed(v: f64) -> String {
 
 /// The texts the form shows for the settings; an absent value (k's
 /// default too) is an empty text.
-pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 7] {
+pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 8] {
     Field::ALL.map(|f| {
         survey
             .and_then(|s| f.get(s))
@@ -153,7 +162,7 @@ pub fn texts(survey: Option<&SurveySettings>, unit: AngleUnit) -> [String; 7] {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Read {
     pub survey: Option<SurveySettings>,
-    pub problems: [Option<&'static str>; 7],
+    pub problems: [Option<&'static str>; 8],
 }
 
 impl Read {
@@ -164,9 +173,9 @@ impl Read {
 }
 
 /// Reads the form's texts in a project of `unit`.
-pub fn read<S: AsRef<str>>(texts: &[S; 7], unit: AngleUnit) -> Read {
+pub fn read<S: AsRef<str>>(texts: &[S; 8], unit: AngleUnit) -> Read {
     let mut survey = SurveySettings::default();
-    let mut problems = [None; 7];
+    let mut problems = [None; 8];
     for (i, (f, t)) in Field::ALL.iter().zip(texts).enumerate() {
         let t = t.as_ref();
         if t.trim().is_empty() {
@@ -184,6 +193,14 @@ pub fn read<S: AsRef<str>>(texts: &[S; 7], unit: AngleUnit) -> Read {
             }
             continue;
         }
+        if *f == Field::GroundHeight {
+            if SurveySettings::ground_height_holds(v) {
+                f.set(&mut survey, v);
+            } else {
+                problems[i] = Some(HEIGHT);
+            }
+            continue;
+        }
         let kept = f.stored(v, unit);
         if !(v > 0.0 && SurveySettings::tolerance_holds(kept)) {
             problems[i] = Some(TOLERANCE);
@@ -195,6 +212,17 @@ pub fn read<S: AsRef<str>>(texts: &[S; 7], unit: AngleUnit) -> Read {
         survey: (survey != SurveySettings::default()).then_some(survey),
         problems,
     }
+}
+
+/// The settings read from the texts with the reduction to the grid the
+/// form keeps beside them (docs/adr/0171 §4): kept only with a height, as a
+/// project keeps them (the web's `withReduction`).
+pub fn with_reduction(survey: Option<SurveySettings>, reduce: bool) -> Option<SurveySettings> {
+    SurveySettings {
+        reduce_to_grid: reduce.then_some(true),
+        ..survey.unwrap_or_default()
+    }
+    .sanitized()
 }
 
 #[cfg(test)]
@@ -222,6 +250,7 @@ mod tests {
             ("number", NUMBER),
             ("refraction", REFRACTION_RANGE),
             ("tolerance", TOLERANCE),
+            ("height", HEIGHT),
         ] {
             assert_eq!(file["messages"][key], text, "{key}");
         }
@@ -238,8 +267,25 @@ mod tests {
                 case["name"]
             );
         }
+        // The reduction to the grid rides beside the texts, kept only with a height.
+        let height = SurveySettings {
+            ground_height: Some(850.0),
+            ..SurveySettings::default()
+        };
+        assert_eq!(with_reduction(None, true), None);
+        assert_eq!(
+            with_reduction(Some(height.clone()), false),
+            Some(height.clone())
+        );
+        assert_eq!(
+            with_reduction(Some(height.clone()), true),
+            Some(SurveySettings {
+                reduce_to_grid: Some(true),
+                ..height
+            })
+        );
         for case in file["reads"].as_array().expect("reads") {
-            let typed: [String; 7] = serde_json::from_value(case["texts"].clone()).expect("texts");
+            let typed: [String; 8] = serde_json::from_value(case["texts"].clone()).expect("texts");
             let got = read(&typed, unit(&case["unit"]));
             let want: Option<SurveySettings> =
                 serde_json::from_value(case["survey"].clone()).expect("settings");

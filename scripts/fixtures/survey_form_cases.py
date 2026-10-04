@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Independent reference of Proje ayarları › Ölçme's form (docs/adr/0169 §3; step 3a).
+"""Independent reference of Proje ayarları › Ölçme's form (docs/adr/0169 §3; step 3a; docs/adr/0171 §2).
 
 Writes fixtures/project/v1/survey-form.json from the rules alone, no KentOS code: the project's survey settings as the
-form's seven texts (the refraction coefficient k, the two faces' horizontal reading difference, the index error, the two
-faces' slope distance difference; a traverse leg's two-way difference, a traverse's angular and linear misclosure) and
-the texts read back into settings, with what is said of a text that does not hold.
+form's eight texts (the refraction coefficient k, the two faces' horizontal reading difference, the index error, the two
+faces' slope distance difference; a traverse leg's two-way difference, a traverse's angular and linear misclosure; the
+project's mean ellipsoidal height) and the texts read back into settings, with what is said of a text that does not
+hold.
 
 The rules:
 
@@ -14,11 +15,12 @@ The rules:
 3. A tolerance: above zero; empty is not checked. The angles are typed in cc (a ten-thousandth of a gon) in a gon
    project, in arc seconds (″) in a degree one, and kept in radians: cc × π / 2 000 000, ″ × π / 648 000 (each one
    multiplication, then one division, in this order). The lengths are typed in millimetres and kept in metres (÷ 1000).
-4. A value written for the form: k and the tolerances back in their units (rad × 2 000 000 / π, rad × 648 000 / π,
-   m × 1000), by the display rule (docs/adr/0149) with four decimals, trailing zeros and a bare point dropped; an absent
-   value (k's default too) is an empty text.
-5. What a text that does not hold says: "Sayı yazın." for one that is no number, k's range or a tolerance's sign
-   otherwise. The settings read are the values that hold; the form is saved only without a problem.
+4. The mean ellipsoidal height: metres, within [−500, 9000]; empty is none (the ground values are not given).
+5. A value written for the form: k, the tolerances and the height back in their units (rad × 2 000 000 / π,
+   rad × 648 000 / π, m × 1000; the height as it is), by the display rule (docs/adr/0149) with four decimals, trailing
+   zeros and a bare point dropped; an absent value (k's default too) is an empty text.
+6. What a text that does not hold says: "Sayı yazın." for one that is no number, k's range, a tolerance's sign or the
+   height's range otherwise. The settings read are the values that hold; the form is saved only without a problem.
 """
 
 import argparse
@@ -33,12 +35,13 @@ from numeric_display import shown  # noqa: E402  (the display rule's own referen
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "project" / "v1" / "survey-form.json"
-FIELDS = ("refraction", "faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord")
+FIELDS = ("refraction", "faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord", "groundHeight")
 LENGTHS = ("faceSlope", "twoWay", "traverseCoord")
 TEXTS = {
     "number": "Sayı yazın.",
     "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
     "tolerance": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+    "height": "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın.",
 }
 REFRACTION = 0.13
 NUMBER = re.compile(r"^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$", re.IGNORECASE)
@@ -50,7 +53,7 @@ def number(text):
 
 
 def to_stored(field, v, unit):
-    if field == "refraction":
+    if field in ("refraction", "groundHeight"):
         return v
     if field in LENGTHS:
         return v / 1000.0
@@ -58,7 +61,7 @@ def to_stored(field, v, unit):
 
 
 def to_typed(field, v, unit):
-    if field == "refraction":
+    if field in ("refraction", "groundHeight"):
         return v
     if field in LENGTHS:
         return v * 1000.0
@@ -94,6 +97,12 @@ def read(typed, unit):
             elif v != REFRACTION:
                 survey[f] = v
             continue
+        if f == "groundHeight":
+            if not -500.0 <= v <= 9000.0:
+                problems[f] = TEXTS["height"]
+            else:
+                survey[f] = v
+            continue
         if not v > 0.0:
             problems[f] = TEXTS["tolerance"]
             continue
@@ -118,17 +127,27 @@ def cases():
         ("eksi k, yalnız uzunluk farkı", {"refraction": -0.2, "faceSlope": 0.0025}, "grad"),
         ("saniyeyle yazılmış, derece", {"faceHz": s6}, "deg"),
         ("dört ondalıktan uzun", {"refraction": 0.123456, "faceHz": 12.345678 * math.pi / 2000000.0}, "grad"),
+        ("ortalama yükseklik", {"groundHeight": 850.25}, "grad"),
+        ("eksi ve uzun ondalıklı yükseklik, k ile", {"refraction": 0.14, "groundHeight": -27.123456}, "deg"),
+        ("sıfır yükseklik", {"groundHeight": 0.0}, "grad"),
     ]
     reads = [
-        ("boş", ["", "", "", "", "", "", ""], "grad"),
-        ("hepsi, gon", ["0.14", "20", "10", "5", "10", "30", "50"], "grad"),
-        ("hepsi, derece", ["0,14", "6.48", "3,24", "2.5", "10", "9.72", "50"], "deg"),
-        ("varsayılan k yazılmaz", ["0.13", "", "", "", "", "", ""], "grad"),
-        ("boşluklar ve üs", [" -0.2 ", "1e1", "", " 5 ", "", "", ""], "grad"),
-        ("aralık dışı k, sıfır ve eksi tolerans", ["1.5", "0", "-3", "4", "0", "-1", "x"], "grad"),
-        ("sayı olmayanlar", ["k", "20cc", "1,5,0", ".", "", "", ""], "deg"),
-        ("sınırlar: −1 ve 1", ["-1", "", "", "", "", "", ""], "grad"),
-        ("sınırlar: 1", ["1", "", "0.0001", "", "", "", ""], "deg"),
+        ("boş", ["", "", "", "", "", "", "", ""], "grad"),
+        ("hepsi, gon", ["0.14", "20", "10", "5", "10", "30", "50", ""], "grad"),
+        ("hepsi, derece", ["0,14", "6.48", "3,24", "2.5", "10", "9.72", "50", ""], "deg"),
+        ("varsayılan k yazılmaz", ["0.13", "", "", "", "", "", "", ""], "grad"),
+        ("boşluklar ve üs", [" -0.2 ", "1e1", "", " 5 ", "", "", "", ""], "grad"),
+        ("aralık dışı k, sıfır ve eksi tolerans", ["1.5", "0", "-3", "4", "0", "-1", "x", ""], "grad"),
+        ("sayı olmayanlar", ["k", "20cc", "1,5,0", ".", "", "", "", ""], "deg"),
+        ("sınırlar: −1 ve 1", ["-1", "", "", "", "", "", "", ""], "grad"),
+        ("sınırlar: 1", ["1", "", "0.0001", "", "", "", "", ""], "deg"),
+        ("yükseklik", ["", "", "", "", "", "", "", "850.25"], "grad"),
+        ("yükseklik virgülle ve boşlukla", ["", "", "", "", "", "", "", " 1250,5 "], "deg"),
+        ("yükseklik sınırları", ["", "", "", "", "", "", "", "-500"], "grad"),
+        ("yükseklik sınırları: 9000", ["", "", "", "", "", "", "", "9000"], "grad"),
+        ("aralık dışı yükseklik", ["0.14", "", "", "", "", "", "", "9000.5"], "grad"),
+        ("sayı olmayan yükseklik", ["", "", "", "", "", "", "", "850 m"], "grad"),
+        ("sıfır yükseklik yazılır", ["", "", "", "", "", "", "", "0"], "grad"),
     ]
     out = {"texts": [], "reads": []}
     for name, survey, unit in shows:
@@ -139,7 +158,7 @@ def cases():
 
 
 def build():
-    return {"format": "kentos.survey-form", "version": 1, "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3)", "fields": list(FIELDS), "messages": TEXTS, **cases()}
+    return {"format": "kentos.survey-form", "version": 1, "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3, docs/adr/0171 §2)", "fields": list(FIELDS), "messages": TEXTS, **cases()}
 
 
 def main():

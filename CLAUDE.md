@@ -37,6 +37,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   iki durumun indirgenmesi, indeks hatası, yatay uzunluk ve kot farkı yer eğriliği ve refraksiyonla; toleransı aşan fark; poligonun
   istasyon zinciri ve iki yönden kenarları), Kutupsal alım'a ve Poligon hesabı'na aktar; Proje ayarları › Ölçme: k (0,13), iki durumun
   ve poligonun toleransları (`.kcad` şema 14, 15), Kutupsal alım da k'yı uygular, Poligon hesabı kapanmaları toleranslarla karşılaştırır;
+  zemin, elipsoit ve düzlem: Proje ayarları › Ölçme'de ortalama elipsoit yüksekliği (`.kcad` şema 16), yazılıyken Mesafe ölç ve Alan
+  hesapla'nın elipsoit üstündeki (jeodezikler, düzlemin ölçeği) ve zemindeki (yükseklik çarpanı) satırları; çekirdekte noktanın ve
+  çizginin ölçeği, GeographicLib'in libm'li kopyası (ADR 0171);
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
   numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
   noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
@@ -782,8 +785,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ([ADR 0171](docs/adr/0171-ground-ellipsoid-plane.md); sahibin kararları 4 Ekim: `geographiclib-rs`, projenin ortalama elipsoit
   yüksekliği, “Uzunlukları projeksiyona indir” kapalı başlar): 1. adım (çekirdek `crs::ground`: noktanın ve çizginin ölçeği,
   `geodesy::tm_scale`, yükseklik çarpanı, jeodezik uzunluk, köşe çokgeni ve yayların alanı; başvuru `ground_cases.py`, PROJ ve
-  GeographicLib'in C'si, alanlar eşit alanlı izdüşümde) tamam; sıradaki 2. adım (Mesafe ölç ve Alan hesapla'nın satırları,
-  `groundHeight`). 4 Ekim: derleme ve test süreleri
+  GeographicLib'in C'si, alanlar eşit alanlı izdüşümde; GeographicLib libm'li kopyayla, `scripts/vendor/geographiclib.py`) ve 2. adım
+  (Ölçme'de Ortalama elipsoit yüksekliği, `.kcad` şema 16 `groundHeight` ve `reduceToGrid`; yükseklik yazılıyken Mesafe ölç ve Alan
+  hesapla'nın elipsoit ve zemin satırları, `kentos_interaction::ground`, `model/groundMeasures.ts`; ortak iz `ground-measures.json`)
+  tamam; sıradaki 3. adım (Hesap pencerelerinde “Uzunlukları projeksiyona indir”: Kutupsal alım, Poligon hesabı, Aplikasyon). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

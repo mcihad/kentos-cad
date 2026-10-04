@@ -78,7 +78,7 @@ impl Section {
                 "Bu projede panellerde, komut satırında ve ölçüm etiketlerinde sayıların nasıl gösterileceği."
             }
             Section::Survey => {
-                "Saha ölçülerinin indirgenmesindeki katsayı ve karnenin iki durumunun denetlendiği toleranslar."
+                "Saha ölçülerinin indirgenmesindeki katsayı, zemin değerlerinin yüksekliği ve karnenin denetlendiği toleranslar."
             }
         }
     }
@@ -150,8 +150,13 @@ pub struct State {
     /// until Kaydet, which keeps only the chosen.
     defined: Option<CrsDefinition>,
     second_defined: Option<CrsDefinition>,
-    /// Ölçme's texts as typed (k and the six tolerances; survey.rs).
-    survey: [String; 7],
+    /// Ölçme's texts as typed (k, the six tolerances and the ground height;
+    /// survey.rs).
+    survey: [String; 8],
+    /// Whether the survey windows reduce lengths to the grid (docs/adr/0171
+    /// §4): beside the texts, so a height typed wrong for a while does not
+    /// lose it.
+    reduce: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -221,6 +226,7 @@ impl State {
                 .filter(|_| doc.settings().srid == crs::LOCAL_SRID),
             second_defined: doc.settings().second_custom_crs.clone(),
             survey: survey_form::texts(doc.settings().survey.as_ref(), doc.settings().angle_unit),
+            reduce: doc.settings().reduces_to_grid(),
         }
     }
 
@@ -341,12 +347,17 @@ impl App {
                 if let Some(i) = survey_form::Field::ALL.iter().position(|f| *f == field) {
                     s.survey[i] = t;
                 }
-                d.survey = survey_form::read(&s.survey, d.angle_unit).survey;
+                // The reduction to the grid rides beside the texts (docs/adr/0171 §4).
+                d.survey = survey_form::with_reduction(
+                    survey_form::read(&s.survey, d.angle_unit).survey,
+                    s.reduce,
+                );
             }
             Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
             Event::ResetSection => {
                 reset_section(s.section, d);
                 s.survey = survey_form::texts(d.survey.as_ref(), d.angle_unit);
+                s.reduce = d.reduces_to_grid();
             }
             Event::OpenApp | Event::Save => {}
         }

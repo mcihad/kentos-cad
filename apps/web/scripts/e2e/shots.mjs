@@ -3671,8 +3671,8 @@ SCENES.datums = [
 ];
 
 /**
- * Proje ayarları' Ölçme (docs/adr/0169 §3): empty, k and the three tolerances typed, and what does not hold said under
- * its field (Kaydet waits). The desktop's are `project::survey::tests::screens` (olcme-ayar-*).
+ * Proje ayarları' Ölçme (docs/adr/0169 §3): empty, k, the ground height (docs/adr/0171 §2) and the tolerances typed, and
+ * what does not hold said under its field (Kaydet waits). The desktop's are `project::survey::tests::screens` (olcme-ayar-*).
  */
 const surveyOpen = async (ui, fields) => {
   await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'survey'))`);
@@ -3682,6 +3682,7 @@ const surveyOpen = async (ui, fields) => {
 };
 const SURVEY_FILLED = [
   ['Refraksiyon katsayısı (k)', '0.14'],
+  ['Ortalama elipsoit yüksekliği', '850'],
   ['İki durum yatay açı farkı', '20'],
   ['İndeks hatası', '10'],
   ['İki durum uzunluk farkı', '5'],
@@ -3689,11 +3690,20 @@ const SURVEY_FILLED = [
   ['Açı kapanması', '60'],
   ['Koordinat kapanması', '30'],
 ];
-const SURVEY_WRONG = [['Refraksiyon katsayısı (k)', '1.5'], ['İki durum yatay açı farkı', '0'], ['İndeks hatası', 'on'], ['İki durum uzunluk farkı', '5'], ['Koordinat kapanması', '-2']];
+const SURVEY_WRONG = [
+  ['Refraksiyon katsayısı (k)', '1.5'],
+  ['Ortalama elipsoit yüksekliği', '9500'],
+  ['İki durum yatay açı farkı', '0'],
+  ['İndeks hatası', 'on'],
+  ['İki durum uzunluk farkı', '5'],
+  ['Koordinat kapanması', '-2'],
+];
 SCENES.survey = [
   { id: 'survey-empty', open: (ui) => surveyOpen(ui, []), close: (ui) => ui.escapeAll(3) },
   { id: 'survey-filled', open: (ui) => surveyOpen(ui, SURVEY_FILLED), close: (ui) => ui.escapeAll(3) },
   { id: 'survey-problems', open: (ui) => surveyOpen(ui, SURVEY_WRONG), close: (ui) => ui.escapeAll(3) },
+  // The ground height beyond its bounds, the Zemin group in view (docs/adr/0171 §2).
+  { id: 'survey-ground', open: (ui) => surveyOpen(ui, [['Ortalama elipsoit yüksekliği', '9500']]), close: (ui) => ui.escapeAll(3) },
 ];
 
 /**

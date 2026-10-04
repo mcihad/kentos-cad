@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
-import { readSurvey, SURVEY_FIELDS, SURVEY_TEXTS, surveyTexts } from './surveyForm';
+import { readSurvey, SURVEY_FIELDS, SURVEY_TEXTS, surveyTexts, withReduction } from './surveyForm';
 import type { AngleUnit } from './projectSettings';
 
 /**
@@ -29,5 +29,11 @@ describe('Proje ayarları › Ölçme (docs/adr/0169 §3)', () => {
     for (const c of file.texts) expect(surveyTexts(c.survey, c.unit), c.name).toEqual(c.texts);
     expect(file.reads.length).toBeGreaterThanOrEqual(9);
     for (const c of file.reads) expect(readSurvey(c.texts, c.unit), c.name).toEqual({ survey: c.survey, problems: c.problems });
+  });
+
+  it('keeps the reduction to the grid beside the texts, only with a height (docs/adr/0171 §4)', () => {
+    expect(withReduction(null, true)).toBeNull();
+    expect(withReduction({ groundHeight: 850 }, false)).toEqual({ groundHeight: 850 });
+    expect(withReduction({ groundHeight: 850 }, true)).toEqual({ groundHeight: 850, reduceToGrid: true });
   });
 });

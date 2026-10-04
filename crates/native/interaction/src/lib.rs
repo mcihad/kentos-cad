@@ -128,6 +128,7 @@ pub mod find_replace;
 mod format;
 pub mod gnss;
 pub mod grip_menu;
+pub mod ground;
 pub mod hatch;
 mod junctions;
 pub mod leader;

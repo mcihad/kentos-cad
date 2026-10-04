@@ -4,6 +4,7 @@ import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
 import type { Area } from '../model/geom/overlay';
 import type { Traced } from '../model/ops/trace';
+import { groundLines } from '../model/groundMeasures';
 import { SecondCrs, type PlaneRing } from '../model/secondCrs';
 import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
@@ -617,10 +618,12 @@ export class PathTool extends PointInputTool {
 }
 
 /**
- * Mesafe ölç's and Alan hesapla's measure in the second system's plane, or why there is none, when the project has a
- * second system (docs/adr/0167 §2): the line after their own.
+ * Mesafe ölç's and Alan hesapla's measure on the ellipsoid and on the ground (docs/adr/0171 §4a), then in the second
+ * system's plane, or why there is none, when the project has a second system (docs/adr/0167 §2): the lines after their
+ * own.
  */
 export function saySecondMeasures(ctx: AppContext, rings: readonly PlaneRing[], closed: boolean): void {
+  for (const line of groundLines(ctx.doc.settings, rings, closed, ctx.format)) ctx.log.info(line);
   const second = SecondCrs.of(ctx.doc.settings);
   if (second) ctx.log.info(second.measuresLine(rings, closed, ctx.format));
 }

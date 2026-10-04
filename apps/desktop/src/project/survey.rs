@@ -1,9 +1,10 @@
 //! Proje ayarları › Ölçme (docs/adr/0169 §3): the project's refraction
-//! coefficient k and the tolerances a field book's two faces are checked
-//! against, typed as `kentos_project::survey_form` reads them (the web's
-//! `surveySection` in `ui/settings/ProjectSettingsDialog.ts`). An empty
-//! tolerance is not checked; what does not hold is said under its field,
-//! and Kaydet waits.
+//! coefficient k, its mean ellipsoidal height for the ground values
+//! (docs/adr/0171 §2) and the tolerances a field book's two faces are
+//! checked against, typed as `kentos_project::survey_form` reads them (the
+//! web's `surveySection` in `ui/settings/ProjectSettingsDialog.ts`). An
+//! empty tolerance is not checked; what does not hold is said under its
+//! field, and Kaydet waits.
 
 use iced::widget::{Column, column, row, text_input};
 use iced::{Center, Element};
@@ -46,7 +47,7 @@ fn field<'a>(
 
 /// The section: k, then the three tolerances in the project's angle unit.
 pub(super) fn view<'a>(
-    texts: &'a [String; 7],
+    texts: &'a [String; 8],
     unit: AngleUnit,
     on: impl Fn(Field, String) -> Message + Copy + 'a,
 ) -> Element<'a, Message> {
@@ -65,6 +66,14 @@ pub(super) fn view<'a>(
                 "Refraksiyon katsayısı (k)",
                 Some("Trigonometrik kot farkına yer eğriliği ve refraksiyon düzeltmesi: (1 − k)·D²/2R, R = 6 371 000 m. Boş bırakılırsa 0.13. Karne ve Kutupsal alım bunu kullanır."),
                 typed(Field::Refraction, "0.13", ""),
+            ),
+        ),
+        group(
+            "Zemin",
+            setting(
+                "Ortalama elipsoit yüksekliği",
+                Some("Mesafe ölç ve Alan hesapla zemin uzunluk ve alanlarını bu yükseklikte verir. Noktaların kotları kullanılmaz; boş bırakılırsa zemin değeri verilmez."),
+                typed(Field::GroundHeight, "", "m"),
             ),
         ),
         group(
@@ -174,7 +183,7 @@ mod tests {
         };
         assert_eq!(
             kentos_project::survey_form::texts(s_survey(s).as_ref(), AngleUnit::Deg),
-            ["0.14", "6.48", "3.24", "5", "", "", ""]
+            ["0.14", "6.48", "3.24", "5", "", "", "", ""]
         );
         send(&mut app, SettingsEvent::Section(Section::Survey));
         send(&mut app, SettingsEvent::ResetSection);
@@ -185,6 +194,56 @@ mod tests {
 
     fn s_survey(s: &crate::project::settings::State) -> Option<SurveySettings> {
         s.draft_survey()
+    }
+
+    /// Ortalama elipsoit yüksekliği (docs/adr/0171 §2): metres within
+    /// [−500, 9000], Kaydet waits for one beyond; the reduction to the grid
+    /// the project has stays while a height does (§4).
+    #[test]
+    fn the_ground_height_is_typed_checked_and_saved() {
+        let mut app = crate::files_testing::app_with_drawing();
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.survey = Some(SurveySettings {
+            ground_height: Some(120.0),
+            reduce_to_grid: Some(true),
+            ..SurveySettings::default()
+        });
+        doc.model.set_settings(settings);
+        let _ = app.update(Message::Run("file.settings"));
+        send(&mut app, SettingsEvent::Section(Section::Survey));
+        typed(&mut app, Field::GroundHeight, "9500");
+        send(&mut app, SettingsEvent::Save);
+        assert!(app.project.is_some(), "Kaydet waits for the height");
+        typed(&mut app, Field::GroundHeight, "850,5");
+        typed(&mut app, Field::Refraction, "0.14");
+        send(&mut app, SettingsEvent::Save);
+        assert!(app.project.is_none());
+        let settings = app.document.as_ref().expect("a drawing").settings().clone();
+        assert_eq!(
+            settings.survey,
+            Some(SurveySettings {
+                refraction: Some(0.14),
+                ground_height: Some(850.5),
+                reduce_to_grid: Some(true),
+                ..SurveySettings::default()
+            })
+        );
+        assert_eq!(settings.ground_height(), Some(850.5));
+        assert!(settings.reduces_to_grid());
+        // Without a height the reduction goes too.
+        let _ = app.update(Message::Run("file.settings"));
+        send(&mut app, SettingsEvent::Section(Section::Survey));
+        typed(&mut app, Field::GroundHeight, "");
+        send(&mut app, SettingsEvent::Save);
+        let settings = app.document.as_ref().expect("a drawing").settings().clone();
+        assert_eq!(
+            settings.survey,
+            Some(SurveySettings {
+                refraction: Some(0.14),
+                ..SurveySettings::default()
+            })
+        );
     }
 
     /// Kutupsal alım computes its heights with the project's k: the same as
@@ -263,6 +322,7 @@ mod tests {
                 "dolu",
                 &[
                     (Field::Refraction, "0.14"),
+                    (Field::GroundHeight, "850"),
                     (Field::FaceHz, "20"),
                     (Field::Index, "10"),
                     (Field::FaceSlope, "5"),
@@ -275,6 +335,7 @@ mod tests {
                 "hata",
                 &[
                     (Field::Refraction, "1.5"),
+                    (Field::GroundHeight, "9500"),
                     (Field::FaceHz, "0"),
                     (Field::Index, "on"),
                     (Field::FaceSlope, "5"),

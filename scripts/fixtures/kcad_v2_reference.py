@@ -293,12 +293,16 @@ def settings(s):
 
 
 def survey(s):
-    """The project's survey settings (docs/adr/0169 §3): at least one, k within [−1, 1], tolerances above zero."""
+    """The project's survey settings (docs/adr/0169 §3): at least one, k within [−1, 1], tolerances above zero; the
+    ground height within [−500, 9000] m and the reduction to the grid only with one (schema 16, docs/adr/0171)."""
     assert s, "ölçme ayarları boş olamaz"
     assert "refraction" not in s or -1.0 <= s["refraction"] <= 1.0, "k −1 ile 1 arasında olmalı"
     assert all(s[k] > 0.0 for k in ("faceHz", "index", "faceSlope", "twoWay", "traverseAngle", "traverseCoord") if k in s), "tolerans sıfırdan büyük olmalı"
+    assert "groundHeight" not in s or -500.0 <= s["groundHeight"] <= 9000.0, "ortalama yükseklik −500 ile 9000 m arasında olmalı"
+    assert s.get("reduceToGrid") is not True or "groundHeight" in s, "projeksiyona indirme yükseklik ister"
     return cmap(fields(s, {"index": (f64, False), "faceHz": (f64, False), "faceSlope": (f64, False), "refraction": (f64, False),
-                           "twoWay": (f64, False), "traverseAngle": (f64, False), "traverseCoord": (f64, False)}, "survey"))
+                           "twoWay": (f64, False), "traverseAngle": (f64, False), "traverseCoord": (f64, False),
+                           "groundHeight": (f64, False), "reduceToGrid": (boolean, False)}, "survey"))
 
 
 def label_style(s):
@@ -540,7 +544,9 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 12 with a second coordinate system (docs/adr/0167 §1), 11 with a local
+    """The oldest schema that holds the drawing: 16 with the survey settings' ground height or reduction to the grid
+    (docs/adr/0171), 15 with their traverse tolerances, 14 with survey settings (docs/adr/0169 §3), 13 with the project's
+    own systems or datum choices (docs/adr/0168), 12 with a second coordinate system (docs/adr/0167 §1), 11 with a local
     project's drawing unit (docs/adr/0165 §2), 10 with a layer's own snapping (docs/adr/0163 §4), 9 with one of
     schema 9's dimension kinds, a dimension's mask or a
     slope's elevations, in the drawing or a block definition (docs/adr/0147), 8 with a leader, in the drawing or a
@@ -551,6 +557,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    if settings and any(k in settings.get("survey", {}) for k in ("groundHeight", "reduceToGrid")):
+        return 16
     if settings and any(k in settings.get("survey", {}) for k in ("twoWay", "traverseAngle", "traverseCoord")):
         return 15
     if settings and "survey" in settings:
@@ -769,7 +777,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-16.kcad"] = container(root(cmap(parts), version=b"\x10"))
+    files["schema-version-17.kcad"] = container(root(cmap(parts), version=b"\x11"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1012,6 +1020,12 @@ def broken(minimal_content, minimal_file):
     # The traverse tolerances are schema 15's: unknown fields in schema 14, above zero.
     files["survey-traverse-in-schema-14.kcad"] = with_settings(14, survey=cmap({"twoWay": f64(0.01)}))
     files["survey-two-way-zero.kcad"] = with_settings(15, survey=cmap({"twoWay": f64(0.0)}))
+    # The ground is schema 16's (docs/adr/0171): unknown fields in schema 15; a height within [−500, 9000] m, the
+    # reduction to the grid only with one, a bool.
+    files["survey-ground-in-schema-15.kcad"] = with_settings(15, survey=cmap({"groundHeight": f64(850.0)}))
+    files["survey-ground-range.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(9500.0)}))
+    files["survey-reduce-without-height.kcad"] = with_settings(16, survey=cmap({"reduceToGrid": b"\xf5"}))
+    files["survey-reduce-not-bool.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(850.0), "reduceToGrid": uint(1)}))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -1056,6 +1070,7 @@ def build():
     out["custom-geographic.kcad"] = container(document(load("custom-geographic.json")))
     out["survey.kcad"] = container(document(load("survey.json")))
     out["survey-traverse.kcad"] = container(document(load("survey-traverse.json")))
+    out["survey-ground.kcad"] = container(document(load("survey-ground.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

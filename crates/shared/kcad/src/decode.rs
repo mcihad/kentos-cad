@@ -434,7 +434,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
 
 /// Schema 14's survey settings (docs/adr/0169 §3), checked whole: at least
 /// one, k within [−1, 1], tolerances above zero; schema 15's traverse
-/// tolerances too.
+/// tolerances too; schema 16's ground height within [−500, 9000] m and its
+/// reduction to the grid only with one (docs/adr/0171).
 fn survey_settings(r: &mut Reader<'_>, has: Features) -> Result<SurveySettings, KcadError> {
     let at = r.position();
     let mut s = SurveySettings::default();
@@ -447,6 +448,8 @@ fn survey_settings(r: &mut Reader<'_>, has: Features) -> Result<SurveySettings, 
             "twoWay" if has.traverse_tolerances => s.two_way = Some(r.float()?),
             "traverseAngle" if has.traverse_tolerances => s.traverse_angle = Some(r.float()?),
             "traverseCoord" if has.traverse_tolerances => s.traverse_coord = Some(r.float()?),
+            "groundHeight" if has.ground => s.ground_height = Some(r.float()?),
+            "reduceToGrid" if has.ground => s.reduce_to_grid = Some(r.bool()?),
             _ => return Err(unknown(r)),
         }
         Ok(())

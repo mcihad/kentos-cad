@@ -5532,13 +5532,22 @@ class SplineEntity(Entity):
 class SurveySettings(_Model):
     """The project's survey constants and tolerances (docs/adr/0169 §3): the
     refraction coefficient k of trigonometric heights, and the greatest
-    differences a field book's two faces are checked against. Angles are in
-    radians, lengths in metres. An absent tolerance is not checked; the
-    differences are still shown.
+    differences a field book's two faces are checked against; the mean
+    ellipsoidal height of the ground values and whether the survey windows
+    reduce lengths to the grid (docs/adr/0171). Angles are in radians,
+    lengths in metres. An absent tolerance is not checked; the differences
+    are still shown.
     Attributes:
         face_hz: The two faces' horizontal reading difference.
         face_slope: The two faces' slope distance difference.
+        ground_height: The project's mean ellipsoidal height (m), within [−500, 9000]: the
+            ground values of Mesafe ölç and Alan hesapla (docs/adr/0171 §2;
+            schema 16). Points' elevations are not used: whether orthometric or
+            ellipsoidal is not known.
         index: The vertical index error.
+        reduce_to_grid: Kutupsal alım and Poligon hesabı take measured (ground) lengths to the
+            grid, Aplikasyon gives grid lengths on the ground (docs/adr/0171 §4;
+            schema 16): only with a ground height; absent, off.
         refraction: k, within [−1, 1]; absent: [`REFRACTION`].
         traverse_angle: A traverse's angular misclosure (schema 15).
         traverse_coord: A traverse's linear (coordinate) misclosure (schema 15).
@@ -5547,7 +5556,9 @@ class SurveySettings(_Model):
     """
     face_hz: float | None | Unset = UNSET
     face_slope: float | None | Unset = UNSET
+    ground_height: float | None | Unset = UNSET
     index: float | None | Unset = UNSET
+    reduce_to_grid: bool | None | Unset = UNSET
     refraction: float | None | Unset = UNSET
     traverse_angle: float | None | Unset = UNSET
     traverse_coord: float | None | Unset = UNSET
@@ -5559,8 +5570,12 @@ class SurveySettings(_Model):
             out["faceHz"] = None if self.face_hz is None else float(self.face_hz)
         if self.face_slope is not UNSET:
             out["faceSlope"] = None if self.face_slope is None else float(self.face_slope)
+        if self.ground_height is not UNSET:
+            out["groundHeight"] = None if self.ground_height is None else float(self.ground_height)
         if self.index is not UNSET:
             out["index"] = None if self.index is None else float(self.index)
+        if self.reduce_to_grid is not UNSET:
+            out["reduceToGrid"] = self.reduce_to_grid
         if self.refraction is not UNSET:
             out["refraction"] = None if self.refraction is None else float(self.refraction)
         if self.traverse_angle is not UNSET:
@@ -5576,7 +5591,9 @@ class SurveySettings(_Model):
         return cls(
             face_hz=UNSET if "faceHz" not in data else None if data["faceHz"] is None else float(data["faceHz"]),
             face_slope=UNSET if "faceSlope" not in data else None if data["faceSlope"] is None else float(data["faceSlope"]),
+            ground_height=UNSET if "groundHeight" not in data else None if data["groundHeight"] is None else float(data["groundHeight"]),
             index=UNSET if "index" not in data else None if data["index"] is None else float(data["index"]),
+            reduce_to_grid=data.get("reduceToGrid", UNSET),
             refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
             traverse_angle=UNSET if "traverseAngle" not in data else None if data["traverseAngle"] is None else float(data["traverseAngle"]),
             traverse_coord=UNSET if "traverseCoord" not in data else None if data["traverseCoord"] is None else float(data["traverseCoord"]),

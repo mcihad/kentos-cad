@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(21);
+    expect(valid).toBe(22);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -183,6 +183,8 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['drawing-unit.json', 'drawing-unit.kcad'],
       // Schema 12: the project's second coordinate system, kept by the page's head (docs/adr/0167 §1).
       ['second-crs.json', 'second-crs.kcad'],
+      // Schema 16: the survey settings' ground height and reduction to the grid (docs/adr/0171 §2, §4).
+      ['survey-ground.json', 'survey-ground.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

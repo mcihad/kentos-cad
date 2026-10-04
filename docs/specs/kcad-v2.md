@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–15 yazar, §6.1), KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–16 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14` ya da `15`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15` ya da `16`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -225,7 +225,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 15**, şema 14'ün kendisi ve ölçme ayarlarının poligon toleranslarıdır: `survey`'in `twoWay`, `traverseAngle` ve `traverseCoord`'u (§6.4.2; ADR 0169 §3). Yazıcı `15`'i **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–14'tür ve eskisiyle bayt bayt aynıdır. Şema 14 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-traverse-in-schema-14.kcad`): eski okuyucu poligonu toleranssız denetlemez, dosyayı açmaz. Şema 15 şema 14'ü kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 16**, şema 15'in kendisi ve ölçme ayarlarının zeminidir: `survey`'in `groundHeight` ve `reduceToGrid`'i (§6.4.2; ADR 0171 §2, §4). Yazıcı `16`'yı **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–15'tir ve eskisiyle bayt bayt aynıdır. Şema 15 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-ground-in-schema-15.kcad`): eski okuyucu zemin değerlerini başka bir yükseklikte vermez, ölçülen uzunlukları düzleme indirmeden bırakmaz, dosyayı açmaz. Şema 16 şema 15'i kapsar. Örnek dosya `survey-ground.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -309,7 +311,7 @@ Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/cus
 
 #### 6.4.2 Ölçme ayarları
 
-Şema 14'te (ADR 0169 §3). Harita; anahtarların hepsi isteğe bağlı float'tır ama en az biri bulunur (boş harita `bad_value`, `broken/survey-empty.kcad`); başka anahtar `unknown_field`'dır (`broken/survey-unknown-key.kcad`):
+Şema 14'te (ADR 0169 §3). Harita; anahtarların hepsi isteğe bağlıdır ama en az biri bulunur (boş harita `bad_value`, `broken/survey-empty.kcad`); `reduceToGrid` bool, ötekiler float'tır; başka anahtar `unknown_field`'dır (`broken/survey-unknown-key.kcad`):
 
 | Anahtar | Değer |
 |---|---|
@@ -320,6 +322,8 @@ Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/cus
 | `twoWay` | şema 15'te: poligon kenarının iki yönden yatay uzunluk farkı toleransı, m; 0'dan büyük (`broken/survey-two-way-zero.kcad`) |
 | `traverseAngle` | şema 15'te: poligonun açı kapanması toleransı, radyan; 0'dan büyük |
 | `traverseCoord` | şema 15'te: poligonun koordinat kapanması (fs) toleransı, m; 0'dan büyük |
+| `groundHeight` | şema 16'da: projenin ortalama elipsoit yüksekliği, m; −500 ile 9000 arası (`broken/survey-ground-range.kcad`); Mesafe ölç ve Alan hesapla'nın zemin değerleri (ADR 0171 §2) |
+| `reduceToGrid` | şema 16'da: bool; Hesap pencereleri ölçülen uzunlukları düzleme indirir, Aplikasyon düzlemdekini zemine çevirir (ADR 0171 §4); `true` yalnız `groundHeight` varken (`broken/survey-reduce-without-height.kcad`), bool değilse `wrong_type` (`broken/survey-reduce-not-bool.kcad`); uygulamalar `false`'u yazmaz, okuyucu yazılmış `false`'u da okur |
 
 Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz. Uygulamalar varsayılan k'yı (0.13) yazmaz; okuyucu yazılmış 0.13'ü de okur.
 

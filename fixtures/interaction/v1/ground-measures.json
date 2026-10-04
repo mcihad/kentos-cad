@@ -1,0 +1,137 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "ground-measures",
+  "title": "Zemin, elipsoit ve düzlem (ADR 0171 §4a): TUREF TM30 projesinde, ortalama elipsoit yüksekliği 850 m; Mesafe ölç toplam uzunluğun ardından elipsoit üstündeki uzunluğu düzlemin ölçeğiyle, zemindekini yükseklik çarpanıyla söyler; Alan hesapla alanın ve çevrenin elipsoit üstündekilerini ve zemindekilerini; çizime bir şey yazılmaz",
+  "source": "Web'in yol aracı (pathTool.ts) ve model/groundMeasures.ts'i, masaüstünün kentos_interaction::path ve ::ground'u; değerler çekirdeğin crs::ground'undan değil, scripts/fixtures/ground_cases.py'nin kurallarından, ADR 0171",
+  "covers": [
+    "HYB-14",
+    "UX-01"
+  ],
+  "document": "ground-measures.kcad",
+  "view": {
+    "center": [
+      414070,
+      4540190
+    ],
+    "metresPerPixel": 0.5
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.5,
+  "steps": [
+    {
+      "run": "tool.measure",
+      "expect": {
+        "tool": "measure",
+        "points": 0
+      }
+    },
+    {
+      "text": "414000,4540000"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "points": 1
+      }
+    },
+    {
+      "text": "414040,4540000"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414040,4540030"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "points": 3
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "Toplam uzunluk, ardından elipsoit üstündeki (düzlemin ölçeğiyle) ve 850 m yükseklikteki zemin uzunluğu (yükseklik çarpanıyla); değerler scripts/fixtures/ground_cases.py'nin kurallarından (PROJ, GeographicLib'in C'si, mpmath).",
+      "expect": {
+        "points": 0,
+        "logged": [
+          "Toplam uzunluk 70.000 m (2 kenar)",
+          "Elipsoit üstünde: Toplam uzunluk 69.994 m   Ölçek 1.00009093",
+          "Zeminde (h = 850 m): Toplam uzunluk 70.003 m   Yükseklik çarpanı 0.99986672"
+        ],
+        "entities": 0,
+        "canUndo": false
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "run": "tool.area",
+      "expect": {
+        "tool": "area",
+        "points": 0
+      }
+    },
+    {
+      "text": "414100,4540350"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "points": 1
+      }
+    },
+    {
+      "text": "414140,4540350"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414140,4540375"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "text": "414100,4540375"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "points": 4
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "40 × 25 m'lik alanın alanı ve çevresi, ardından elipsoit üstündekiler (jeodeziklerle sınırlı alan) ve zemindekiler ((M + h)(N + h)/(MN) ile).",
+      "expect": {
+        "points": 0,
+        "logged": [
+          "Alan 1000.00 m²   Çevre 130.000 m",
+          "Elipsoit üstünde: Alan 999.82 m²   Çevre 129.988 m   Ölçek 1.00009074",
+          "Zeminde (h = 850 m): Alan 1000.09 m²   Çevre 130.006 m   Yükseklik çarpanı 0.99986669"
+        ],
+        "entities": 0,
+        "canUndo": false
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    }
+  ]
+}

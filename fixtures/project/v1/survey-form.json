@@ -1,7 +1,7 @@
 {
   "format": "kentos.survey-form",
   "version": 1,
-  "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3)",
+  "source": "scripts/fixtures/survey_form_cases.py (docs/adr/0169 §3, docs/adr/0171 §2)",
   "fields": [
     "refraction",
     "faceHz",
@@ -9,12 +9,14 @@
     "faceSlope",
     "twoWay",
     "traverseAngle",
-    "traverseCoord"
+    "traverseCoord",
+    "groundHeight"
   ],
   "messages": {
     "number": "Sayı yazın.",
     "refraction": "−1 ile 1 arasında bir sayı yazın; boş bırakılırsa 0.13.",
-    "tolerance": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın."
+    "tolerance": "Sıfırdan büyük bir sayı yazın; denetlenmeyecekse boş bırakın.",
+    "height": "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın."
   },
   "texts": [
     {
@@ -22,6 +24,7 @@
       "unit": "grad",
       "survey": null,
       "texts": [
+        "",
         "",
         "",
         "",
@@ -46,7 +49,8 @@
         "",
         "10",
         "30",
-        "50"
+        "50",
+        ""
       ]
     },
     {
@@ -64,7 +68,8 @@
         "",
         "10",
         "9.72",
-        "50"
+        "50",
+        ""
       ]
     },
     {
@@ -81,6 +86,7 @@
         "20",
         "10",
         "5",
+        "",
         "",
         "",
         ""
@@ -102,6 +108,7 @@
         "5",
         "",
         "",
+        "",
         ""
       ]
     },
@@ -119,6 +126,7 @@
         "2.5",
         "",
         "",
+        "",
         ""
       ]
     },
@@ -131,6 +139,7 @@
       "texts": [
         "",
         "6.48",
+        "",
         "",
         "",
         "",
@@ -152,7 +161,60 @@
         "",
         "",
         "",
+        "",
         ""
+      ]
+    },
+    {
+      "name": "ortalama yükseklik",
+      "unit": "grad",
+      "survey": {
+        "groundHeight": 850.25
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "850.25"
+      ]
+    },
+    {
+      "name": "eksi ve uzun ondalıklı yükseklik, k ile",
+      "unit": "deg",
+      "survey": {
+        "refraction": 0.14,
+        "groundHeight": -27.123456
+      },
+      "texts": [
+        "0.14",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "-27.1235"
+      ]
+    },
+    {
+      "name": "sıfır yükseklik",
+      "unit": "grad",
+      "survey": {
+        "groundHeight": 0.0
+      },
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "0"
       ]
     }
   ],
@@ -161,6 +223,7 @@
       "name": "boş",
       "unit": "grad",
       "texts": [
+        "",
         "",
         "",
         "",
@@ -182,7 +245,8 @@
         "5",
         "10",
         "30",
-        "50"
+        "50",
+        ""
       ],
       "survey": {
         "refraction": 0.14,
@@ -205,7 +269,8 @@
         "2.5",
         "10",
         "9.72",
-        "50"
+        "50",
+        ""
       ],
       "survey": {
         "refraction": 0.14,
@@ -228,6 +293,7 @@
         "",
         "",
         "",
+        "",
         ""
       ],
       "survey": null,
@@ -241,6 +307,7 @@
         "1e1",
         "",
         " 5 ",
+        "",
         "",
         "",
         ""
@@ -262,7 +329,8 @@
         "4",
         "0",
         "-1",
-        "x"
+        "x",
+        ""
       ],
       "survey": {
         "faceSlope": 0.004
@@ -286,6 +354,7 @@
         ".",
         "",
         "",
+        "",
         ""
       ],
       "survey": null,
@@ -301,6 +370,7 @@
       "unit": "grad",
       "texts": [
         "-1",
+        "",
         "",
         "",
         "",
@@ -323,11 +393,140 @@
         "",
         "",
         "",
+        "",
         ""
       ],
       "survey": {
         "refraction": 1.0,
         "index": 4.84813681109536e-10
+      },
+      "problems": {}
+    },
+    {
+      "name": "yükseklik",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "850.25"
+      ],
+      "survey": {
+        "groundHeight": 850.25
+      },
+      "problems": {}
+    },
+    {
+      "name": "yükseklik virgülle ve boşlukla",
+      "unit": "deg",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        " 1250,5 "
+      ],
+      "survey": {
+        "groundHeight": 1250.5
+      },
+      "problems": {}
+    },
+    {
+      "name": "yükseklik sınırları",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "-500"
+      ],
+      "survey": {
+        "groundHeight": -500.0
+      },
+      "problems": {}
+    },
+    {
+      "name": "yükseklik sınırları: 9000",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "9000"
+      ],
+      "survey": {
+        "groundHeight": 9000.0
+      },
+      "problems": {}
+    },
+    {
+      "name": "aralık dışı yükseklik",
+      "unit": "grad",
+      "texts": [
+        "0.14",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "9000.5"
+      ],
+      "survey": {
+        "refraction": 0.14
+      },
+      "problems": {
+        "groundHeight": "−500 ile 9000 m arasında bir yükseklik yazın; zemin değerleri gerekmiyorsa boş bırakın."
+      }
+    },
+    {
+      "name": "sayı olmayan yükseklik",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "850 m"
+      ],
+      "survey": null,
+      "problems": {
+        "groundHeight": "Sayı yazın."
+      }
+    },
+    {
+      "name": "sıfır yükseklik yazılır",
+      "unit": "grad",
+      "texts": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "0"
+      ],
+      "survey": {
+        "groundHeight": 0.0
       },
       "problems": {}
     }

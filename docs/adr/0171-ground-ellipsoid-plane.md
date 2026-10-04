@@ -40,14 +40,17 @@ Bir uzunluk ya da alan üç düzeyde verilir:
   parçanın ortasında doğrultusundaki Euler eğrilik yarıçapı (§3); alan A·(M + h)(N + h)/(MN), M ve N alanın orta enleminde
   (en güney ve en kuzey noktasının ortası) meridyen ve birinci düşey eğrilik yarıçapları (yükselen yüzeyin alan çarpanı).
 
-Yerel projede (SRID 0, projenin sistemi yok) yalnız düzlem vardır; elipsoit ve zemin satırı nedenini söyler. Projenin sistemi
-coğrafiyse düzlem satırı yoktur (derece). Yerel sistem tanımı (ADR 0168) tabanının TM'i üstünden elipsoide gider.
+Yerel projede (SRID 0, projenin sistemi yok) yalnız düzlem vardır; başka satır yazılmaz (CAD'de her ölçümde aynı nedeni
+söylemek gürültüdür). Projenin sistemi coğrafiyse düzlem değeri yoktur (derece). Yerel sistem tanımı (ADR 0168) tabanının TM'i
+üstünden elipsoide gider.
 
 ### 2. Ortalama elipsoit yüksekliği proje ayarıdır
 
-`groundHeight` (metre, isteğe bağlı), Proje ayarları › Ölçme'de. Yazılmadıkça zemin satırı “ortalama yükseklik verilmedi” der.
-Noktaların kotları kullanılmaz: ortometrik mi elipsoit yüksekliği mi olduğu bilinmez (ADR 0169'un GNSS kuralı gibi), yerine
-tahmin konmaz.
+`groundHeight` (metre, isteğe bağlı; −500 ile 9 000 arası), Proje ayarları › Ölçme'de “Ortalama elipsoit yüksekliği”.
+Ayar aynı zamanda anahtardır: yazılmadıkça Mesafe ölç ve Alan hesapla bugünkü gibi yalnız düzlemi (ve ikinci sistemi) söyler
+(§4a). Noktaların kotları kullanılmaz: ortometrik mi elipsoit yüksekliği mi olduğu bilinmez (ADR 0169'un GNSS kuralı gibi),
+yerine tahmin konmaz. `.kcad` şema 16: `survey`'in
+`groundHeight`'ı ve §4'ün `reduceToGrid`'i (yalnız açıkken yazılır); yazıcı 16'yı yalnız bunlardan biri varken yazar.
 
 ### 3. Ölçek çarpanları
 
@@ -65,6 +68,23 @@ Proje ayarları › Ölçme'de “Uzunlukları projeksiyona indir” (`reduceToG
 ölçülen yatay (zemin) uzunlukları düzleme çevirir (istasyonla hedefin çizgisinin ölçeği ve yükseklik çarpanıyla), Aplikasyon
 düzlemdeki uzunluğu zemine çevirerek verir; pencereler ve raporları çarpanları yazar. Ortalama yükseklik yoksa ayar açılamaz,
 nedeni söylenir. Kapalıyken bugünkü sonuçlar değişmez.
+
+### 4a. Mesafe ölç ve Alan hesapla
+
+Projenin sistemi ve ortalama elipsoit yüksekliği varken Mesafe ölç'ün toplamından ve Alan hesapla'nın sonucundan (İçine
+tıkla dahil) sonra komut geçmişine, ikinci sistemin satırından (ADR 0167 §2) önce, iki satır yazılır:
+
+- `Elipsoit üstünde: Toplam uzunluk 69.994 m   Ölçek 1.00009093` (alanda `Alan 999.82 m²   Çevre 129.988 m   Ölçek …`);
+  coğrafi projede ölçek yoktur.
+- `Zeminde (h = 850 m): Toplam uzunluk 70.003 m   Yükseklik çarpanı 0.99986672` (alanda `Alan …   Çevre …   Yükseklik
+  çarpanı …`).
+
+Yüksekliği yazılmamış projede bu satırlar gelmez: durum çubuğu son iletiyi gösterir, ölçümün kendi sonucu orada kalmalıdır
+(her ölçümde “yükseklik yok” demek de gürültüdür; ayarın kendi açıklaması satırları söyler). Uzunluk ve alan projenin
+basamaklarıyla, çarpanlar sekiz basamakla (ADR 0149'un kuralı). Ölçülen yerin bir noktası sisteme ulaşmıyorsa elipsoit satırı
+bunu söyler, zemin satırı yazılmaz. Sabit ilk noktalı ölçümün ışınları yalnız düzlemi (ve ikinci
+sistemi) söyler; ışın ışın zemin uzunluğu Aplikasyon'undur (§4). Satırların kuralı iki platformda aynıdır
+(`kentos_interaction::ground`, `model/groundMeasures.ts`); ortak iz `ground-measures.json`.
 
 ### 5. Ortak çekirdek ve başvuru
 
@@ -90,7 +110,8 @@ GeographicLib'in köşe çokgeniyle onun yuvarlama payı içinde uyuşur.
    `point_scale`, `line_scale`, `line_factors`, `ground_measures`; çağrılar `crsPointScale`, `crsLineFactors`,
    `crsGroundMeasures`); `geographiclib-rs` (sahibin onayı, 4 Ekim) `libm`'li kopyasıyla (§5); bağımsız başvuru
    `ground_cases.py` (`fixtures/geodesy/v1/ground.json`), dondurulmuş yanıtlar `ground-answers.json`.
-2. Mesafe ölç ve Alan hesapla'nın satırları iki platformda; `groundHeight` proje ayarı (`.kcad` şeması).
+2. Mesafe ölç ve Alan hesapla'nın satırları iki platformda (§4a); `groundHeight` proje ayarı ve Ölçme'deki alanı; `.kcad` şema 16
+   (`groundHeight`, `reduceToGrid`).
 3. Hesap pencereleri: `reduceToGrid`, Kutupsal alım, Poligon hesabı, Aplikasyon.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

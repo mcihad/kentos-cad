@@ -81,6 +81,7 @@ use crate::Vec2;
 use crate::adjoin;
 use crate::faces;
 use crate::format::Format;
+use crate::ground;
 use crate::junctions;
 use crate::log::Level;
 use crate::overlap;
@@ -1132,9 +1133,13 @@ fn js_parse_int(text: &str) -> Option<u64> {
 /// The perimeter of a region as İçine tıkla says it: its outer ring's and its
 /// islands', as a polygon's (`measure::polygon_perimeter`, holes included as in
 /// GIS): the region drawn with Alan olarak çiz shows the same in Öznitelikler.
-/// Mesafe ölç's and Alan hesapla's measure in the second system's plane, or
-/// why there is none, when the project has a second system (docs/adr/0167 §2).
+/// Mesafe ölç's and Alan hesapla's measure on the ellipsoid and on the ground
+/// (docs/adr/0171 §4a), then in the second system's plane, or why there is
+/// none, when the project has a second system (docs/adr/0167 §2).
 fn say_second(rings: &[Ring], closed: bool, cx: &mut Context<'_>) {
+    for line in ground::lines(cx.doc.settings(), rings, closed, &cx.format()) {
+        cx.say(Level::Info, line);
+    }
     if let Some(second) = Second::of(cx.doc.settings()) {
         let line = second.measures_line(rings, closed, &cx.format());
         cx.say(Level::Info, line);
