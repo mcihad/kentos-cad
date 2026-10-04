@@ -1,0 +1,1586 @@
+{
+  "answers": [
+    {
+      "answer": 1.0000000000000002,
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 500000.0,
+          "y": 4429529.030236589
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.000201911341204,
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 628093.3589603386,
+          "y": 4430606.951569739
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.000225310098046,
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 364749.6505408334,
+          "y": 3986583.437251684
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.000084429758983,
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 582851.2097329019,
+          "y": 4652120.695739145
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.0001810457310751,
+      "args": [
+        {
+          "centralMeridian": 33,
+          "datum": "ED50",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 621284.9575010622,
+          "y": 4319509.409732805
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 0.999601769042499,
+      "args": [
+        {
+          "centralMeridian": 33,
+          "datum": "WGS84",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 0.9996
+        },
+        {
+          "x": 488012.40529644216,
+          "y": 4420374.733892243
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.0004547272301265,
+      "args": [
+        {
+          "centralMeridian": 33,
+          "datum": "WGS84",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 0.9996
+        },
+        {
+          "x": 236578.6239628854,
+          "y": 4210063.033966323
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.0013917431313302,
+      "args": [
+        {
+          "centralMeridian": 39,
+          "datum": "ED50",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 0.9996
+        },
+        {
+          "x": 881402.3077518588,
+          "y": 4270568.4023832
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 0.9999484319337487,
+      "args": [
+        {
+          "centralMeridian": 34.5,
+          "datum": "TUREF",
+          "falseEasting": 200000.0,
+          "falseNorthing": 100000.0,
+          "kind": "tm",
+          "latitudeOfOrigin": 36.0,
+          "scaleFactor": 0.9999
+        },
+        {
+          "x": 262707.9594551308,
+          "y": 155704.13382296587
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.0000910511906425,
+      "args": [
+        {
+          "centralMeridian": 33.0,
+          "datum": {
+            "ellipsoid": {
+              "inverseFlattening": 299.1528128,
+              "name": "Bessel 1841",
+              "semiMajor": 6377397.155
+            },
+            "name": "Bessel datumu",
+            "toWgs84": {
+              "accuracy": 1.5,
+              "convention": "positionVector",
+              "rotation": [
+                0.202,
+                0.045,
+                -2.455
+              ],
+              "scale": 6.7,
+              "translation": [
+                598.1,
+                73.7,
+                418.2
+              ]
+            }
+          },
+          "falseEasting": 500000.0,
+          "falseNorthing": 0.0,
+          "kind": "tm",
+          "scaleFactor": 1.0
+        },
+        {
+          "x": 586003.9360800098,
+          "y": 4374053.297527414
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 0.999988710898478,
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "TUREF",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "east": 492345.678,
+            "kind": "similarity",
+            "north": 4422345.678,
+            "rotation": 12.5,
+            "scale": 1.000012
+          }
+        },
+        {
+          "x": 100.0,
+          "y": 200.0
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 0.9999882942583133,
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "TUREF",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "east": 492345.678,
+            "kind": "similarity",
+            "north": 4422345.678,
+            "rotation": 12.5,
+            "scale": 1.000012
+          }
+        },
+        {
+          "x": 2500.0,
+          "y": -1500.0
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": 1.0003894174011674,
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 34.5,
+            "datum": "TUREF",
+            "falseEasting": 200000.0,
+            "falseNorthing": 100000.0,
+            "kind": "tm",
+            "latitudeOfOrigin": 36.0,
+            "scaleFactor": 0.9999
+          },
+          "kind": "local",
+          "plane": {
+            "east": 1000.0,
+            "kind": "similarity",
+            "north": 2000.0,
+            "rotation": -3.25,
+            "scale": 1.0
+          }
+        },
+        {
+          "x": -350.0,
+          "y": 820.0
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": null,
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "ED50",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "a": 1.00002,
+            "b": -0.0003,
+            "c": 492000.0,
+            "d": 0.00025,
+            "e": 0.99998,
+            "f": 4422500.0,
+            "kind": "affine"
+          }
+        },
+        {
+          "x": 100.0,
+          "y": 200.0
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": null,
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        {
+          "x": 32.8597,
+          "y": 39.9334
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": null,
+      "args": [
+        {
+          "kind": "mercator"
+        },
+        {
+          "x": 3225000.0,
+          "y": 5010000.0
+        }
+      ],
+      "op": "crsPointScale"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 999.3124714926419,
+        "heightFactor": 1,
+        "scale": 1.0000000000000002
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 500000.0,
+          "y": 4429529.030236589
+        },
+        {
+          "x": 500000.0,
+          "y": 4430528.342708083
+        },
+        0.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 9991.08054698905,
+        "heightFactor": 0.9998434558969537,
+        "scale": 1.0001857953735234
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 617845.5267245518,
+          "y": 4430441.362508251
+        },
+        {
+          "x": 627837.1619841923,
+          "y": 4430602.6435732525
+        },
+        1000.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 4994.860610964622,
+        "heightFactor": 0.9996856163531649,
+        "scale": 1.0001860479876272
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 377031.5633786624,
+          "y": 4208423.05769288
+        },
+        {
+          "x": 377106.76161447965,
+          "y": 4213418.2816015845
+        },
+        2000.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 3082.345666940911,
+        "heightFactor": 0.9998666598618613,
+        "scale": 0.9996031664881556
+      },
+      "args": [
+        {
+          "centralMeridian": 33,
+          "datum": "WGS84",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 0.9996
+        },
+        {
+          "x": 482903.1765619609,
+          "y": 4416677.433527335
+        },
+        {
+          "x": 485044.6306592184,
+          "y": 4418892.71909377
+        },
+        850.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 1424.0814970993906,
+        "heightFactor": 1.0000047101057465,
+        "scale": 1.000004122065029
+      },
+      "args": [
+        {
+          "centralMeridian": 36,
+          "datum": "ED50",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        {
+          "x": 517849.6558627329,
+          "y": 4074400.717878857
+        },
+        {
+          "x": 518739.7029305313,
+          "y": 4075512.4017577907
+        },
+        -30.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 1390.914857527046,
+        "heightFactor": 0.9999217047269606,
+        "scale": 0.9999885919223557
+      },
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "TUREF",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "east": 492345.678,
+            "kind": "similarity",
+            "north": 4422345.678,
+            "rotation": 12.5,
+            "scale": 1.000012
+          }
+        },
+        {
+          "x": 100.0,
+          "y": 200.0
+        },
+        {
+          "x": 1350.0,
+          "y": -410.0
+        },
+        500.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 3403.6077983089463,
+        "scale": 1.0000937825000158
+      },
+      "args": [
+        {
+          "centralMeridian": 33.0,
+          "datum": {
+            "ellipsoid": {
+              "inverseFlattening": 299.1528128,
+              "name": "Bessel 1841",
+              "semiMajor": 6377397.155
+            },
+            "name": "Bessel datumu",
+            "toWgs84": {
+              "accuracy": 1.5,
+              "convention": "positionVector",
+              "rotation": [
+                0.202,
+                0.045,
+                -2.455
+              ],
+              "scale": 6.7,
+              "translation": [
+                598.1,
+                73.7,
+                418.2
+              ]
+            }
+          },
+          "falseEasting": 500000.0,
+          "falseNorthing": 0.0,
+          "kind": "tm",
+          "scaleFactor": 1.0
+        },
+        {
+          "x": 586003.9360800098,
+          "y": 4374053.297527414
+        },
+        {
+          "x": 588558.7100515707,
+          "y": 4376302.708329421
+        },
+        null
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 1019.2432679128684,
+        "heightFactor": 0.9999843249161303
+      },
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        {
+          "x": 32.85,
+          "y": 39.93
+        },
+        {
+          "x": 32.86,
+          "y": 39.935
+        },
+        100.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 1067.0203293660666,
+        "heightFactor": 1
+      },
+      "args": [
+        {
+          "kind": "mercator"
+        },
+        {
+          "x": 3225000.0,
+          "y": 5010000.0
+        },
+        {
+          "x": 3226000.0,
+          "y": 5011000.0
+        },
+        0.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "why": "unreachable"
+      },
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        {
+          "x": 32.85,
+          "y": 39.93
+        },
+        {
+          "x": 32.86,
+          "y": 95.0
+        },
+        100.0
+      ],
+      "op": "crsLineFactors"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 110.68739740433736,
+        "planeLength": 110.69744397500835,
+        "scale": 1.000090765262411
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414117.75597542897,
+                "y": 4541999.210810093
+              },
+              {
+                "x": 414142.25597542897,
+                "y": 4541956.585810093
+              }
+            ]
+          }
+        ],
+        false,
+        null
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 110.68739740433736,
+        "groundLength": 110.68913268088308,
+        "heightFactor": 0.9999843229727825,
+        "planeLength": 110.69744397500835,
+        "scale": 1.000090765262411
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414117.75597542897,
+                "y": 4541999.210810093
+              },
+              {
+                "x": 414142.25597542897,
+                "y": 4541956.585810093
+              }
+            ]
+          }
+        ],
+        false,
+        100.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 73.09741731032292,
+        "groundLength": 73.10715879059681,
+        "heightFactor": 0.9998667506652558,
+        "planeLength": 73.10405480877574,
+        "scale": 1.0000908034606015
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": [
+              0.0,
+              0.4
+            ],
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4542016.710810093
+              }
+            ]
+          }
+        ],
+        false,
+        850.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 999.8183721879032,
+        "ellipsoidLength": 129.9881936350758,
+        "groundArea": 999.8183721879032,
+        "groundLength": 129.9881936350758,
+        "heightFactor": 1,
+        "planeArea": 1000,
+        "planeLength": 130,
+        "scale": 1.0000908262786694
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4542011.710810093
+              },
+              {
+                "x": 414057.50597542897,
+                "y": 4542011.710810093
+              }
+            ]
+          }
+        ],
+        true,
+        0.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 999.8183721879032,
+        "ellipsoidLength": 129.9881936350758,
+        "groundArea": 1000.1320596028341,
+        "groundLength": 130.00857456050957,
+        "heightFactor": 0.9998431647038623,
+        "planeArea": 1000,
+        "planeLength": 130,
+        "scale": 1.0000908262786694
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414097.50597542897,
+                "y": 4542011.710810093
+              },
+              {
+                "x": 414057.50597542897,
+                "y": 4542011.710810093
+              }
+            ]
+          }
+        ],
+        true,
+        1000.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 9509.315316922852,
+        "ellipsoidLength": 483.39648261755804,
+        "groundArea": 9512.00077504598,
+        "groundLength": 483.464708761554,
+        "heightFactor": 0.9998588284549612,
+        "planeArea": 9526.182289684437,
+        "planeLength": 483.82501667599274,
+        "scale": 1.0008864728666074
+      },
+      "args": [
+        {
+          "centralMeridian": 36,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": [
+              0.0,
+              0.25,
+              0.0,
+              -0.1
+            ],
+            "pts": [
+              {
+                "x": 231553.4217273632,
+                "y": 4426858.9286117945
+              },
+              {
+                "x": 231673.4217273632,
+                "y": 4426858.9286117945
+              },
+              {
+                "x": 231673.4217273632,
+                "y": 4426938.9286117945
+              },
+              {
+                "x": 231553.4217273632,
+                "y": 4426938.9286117945
+              }
+            ]
+          },
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 231593.4217273632,
+                "y": 4426888.9286117945
+              },
+              {
+                "x": 231613.4217273632,
+                "y": 4426888.9286117945
+              },
+              {
+                "x": 231613.4217273632,
+                "y": 4426908.9286117945
+              },
+              {
+                "x": 231593.4217273632,
+                "y": 4426908.9286117945
+              }
+            ]
+          }
+        ],
+        true,
+        900.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 999619.7070954293,
+        "ellipsoidLength": 3999.239333672461,
+        "groundArea": 1000090.2178875209,
+        "groundLength": 4000.180423510782,
+        "heightFactor": 0.9997647381522159,
+        "planeArea": 1000000,
+        "planeLength": 4000,
+        "scale": 1.0001902007029881
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 623823.4173178353,
+                "y": 4430536.278251616
+              },
+              {
+                "x": 624823.4173178353,
+                "y": 4430536.278251616
+              },
+              {
+                "x": 624823.4173178353,
+                "y": 4431536.278251616
+              },
+              {
+                "x": 623823.4173178353,
+                "y": 4431536.278251616
+              }
+            ]
+          }
+        ],
+        true,
+        1500.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 1000797.2272718493,
+        "ellipsoidLength": 4001.594128673012,
+        "groundArea": 1001095.5578854354,
+        "groundLength": 4002.1905077631454,
+        "heightFactor": 0.9998509868311335,
+        "planeArea": 1000000,
+        "planeLength": 4000,
+        "scale": 0.9996016245450897
+      },
+      "args": [
+        {
+          "centralMeridian": 33,
+          "datum": "WGS84",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 0.9996
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 488012.40529644216,
+                "y": 4420374.733892243
+              },
+              {
+                "x": 489012.40529644216,
+                "y": 4420374.733892243
+              },
+              {
+                "x": 489012.40529644216,
+                "y": 4421374.733892243
+              },
+              {
+                "x": 488012.40529644216,
+                "y": 4421374.733892243
+              }
+            ]
+          }
+        ],
+        true,
+        950.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 648.8407066954181,
+        "groundLength": 648.837655068199,
+        "heightFactor": 1.0000047032215151,
+        "planeLength": 649.4149601475978,
+        "scale": 1.0008850453528175
+      },
+      "args": [
+        {
+          "centralMeridian": 36,
+          "datum": "ED50",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 231541.28721162642,
+                "y": 4426934.860856561
+              },
+              {
+                "x": 231791.28721162642,
+                "y": 4426974.860856561
+              },
+              {
+                "x": 231941.28721162642,
+                "y": 4426814.860856561
+              },
+              {
+                "x": 232061.28721162642,
+                "y": 4426944.860856561
+              }
+            ]
+          }
+        ],
+        false,
+        -30.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 949055.2957630157,
+        "ellipsoidLength": 3930.163074109586
+      },
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 32.85,
+                "y": 39.93
+              },
+              {
+                "x": 32.86,
+                "y": 39.93
+              },
+              {
+                "x": 32.86,
+                "y": 39.94
+              },
+              {
+                "x": 32.85,
+                "y": 39.94
+              }
+            ]
+          }
+        ],
+        true,
+        null
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 949055.2957630157,
+        "ellipsoidLength": 3930.163074109586,
+        "groundArea": 949412.6587317217,
+        "groundLength": 3930.9031383228094,
+        "heightFactor": 0.9998117801569291
+      },
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 32.85,
+                "y": 39.93
+              },
+              {
+                "x": 32.86,
+                "y": 39.93
+              },
+              {
+                "x": 32.86,
+                "y": 39.94
+              },
+              {
+                "x": 32.85,
+                "y": 39.94
+              }
+            ]
+          }
+        ],
+        true,
+        1200.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 2275.6185498833656,
+        "ellipsoidLength": 196.19402812959234,
+        "groundArea": 2275.6542453523316,
+        "groundLength": 196.19556619291714,
+        "heightFactor": 0.9999921570666945,
+        "planeArea": 4000,
+        "planeLength": 260,
+        "scale": 1.3258068636601374
+      },
+      "args": [
+        {
+          "kind": "mercator"
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 3225860.7320037987,
+                "y": 5013551.237222597
+              },
+              {
+                "x": 3225940.7320037987,
+                "y": 5013551.237222597
+              },
+              {
+                "x": 3225940.7320037987,
+                "y": 5013601.237222597
+              },
+              {
+                "x": 3225860.7320037987,
+                "y": 5013601.237222597
+              }
+            ]
+          }
+        ],
+        true,
+        50.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 6450.145705208182,
+        "ellipsoidLength": 321.5609821278559,
+        "groundArea": 6450.145705208182,
+        "groundLength": 321.5609821278559,
+        "heightFactor": 1,
+        "planeArea": 6450,
+        "planeLength": 321.55735038478497,
+        "scale": 0.9999887052139826
+      },
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "TUREF",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "east": 492345.678,
+            "kind": "similarity",
+            "north": 4422345.678,
+            "rotation": 12.5,
+            "scale": 1.000012
+          }
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 100,
+                "y": 200
+              },
+              {
+                "x": 180,
+                "y": 210
+              },
+              {
+                "x": 175,
+                "y": 290
+              },
+              {
+                "x": 95,
+                "y": 280
+              }
+            ]
+          }
+        ],
+        true,
+        0.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 6450.145705208182,
+        "ellipsoidLength": 321.5609821278559,
+        "groundArea": 6451.157639549154,
+        "groundLength": 321.58620695569647,
+        "heightFactor": 0.9999215664781534,
+        "planeArea": 6450,
+        "planeLength": 321.55735038478497,
+        "scale": 0.9999887052139826
+      },
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "TUREF",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "east": 492345.678,
+            "kind": "similarity",
+            "north": 4422345.678,
+            "rotation": 12.5,
+            "scale": 1.000012
+          }
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 100,
+                "y": 200
+              },
+              {
+                "x": 180,
+                "y": 210
+              },
+              {
+                "x": 175,
+                "y": 290
+              },
+              {
+                "x": 95,
+                "y": 280
+              }
+            ]
+          }
+        ],
+        true,
+        500.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 565.368277642082,
+        "groundLength": 565.3860075476964,
+        "heightFactor": 0.9999686410604831,
+        "planeLength": 565.363606237024,
+        "scale": 0.9999917374121563
+      },
+      "args": [
+        {
+          "base": {
+            "centralMeridian": 33,
+            "datum": "ED50",
+            "falseEasting": 500000,
+            "falseNorthing": 0,
+            "kind": "tm",
+            "scaleFactor": 1
+          },
+          "kind": "local",
+          "plane": {
+            "a": 1.00002,
+            "b": -0.0003,
+            "c": 492000.0,
+            "d": 0.00025,
+            "e": 0.99998,
+            "f": 4422500.0,
+            "kind": "affine"
+          }
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 100,
+                "y": 200
+              },
+              {
+                "x": 400,
+                "y": 260
+              },
+              {
+                "x": 520,
+                "y": 30
+              }
+            ]
+          }
+        ],
+        false,
+        200.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 59989.037209723145,
+        "ellipsoidLength": 999.9086391229336,
+        "groundArea": 59994.684895641985,
+        "groundLength": 999.9556875774396,
+        "heightFactor": 0.999952930673374,
+        "planeArea": 60000,
+        "planeLength": 1000,
+        "scale": 1.0000913691065856
+      },
+      "args": [
+        {
+          "centralMeridian": 33.0,
+          "datum": {
+            "ellipsoid": {
+              "inverseFlattening": 299.1528128,
+              "name": "Bessel 1841",
+              "semiMajor": 6377397.155
+            },
+            "name": "Bessel datumu",
+            "toWgs84": {
+              "accuracy": 1.5,
+              "convention": "positionVector",
+              "rotation": [
+                0.202,
+                0.045,
+                -2.455
+              ],
+              "scale": 6.7,
+              "translation": [
+                598.1,
+                73.7,
+                418.2
+              ]
+            }
+          },
+          "falseEasting": 500000.0,
+          "falseNorthing": 0.0,
+          "kind": "tm",
+          "scaleFactor": 1.0
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 586003.9360800098,
+                "y": 4374053.297527414
+              },
+              {
+                "x": 586303.9360800098,
+                "y": 4374053.297527414
+              },
+              {
+                "x": 586303.9360800098,
+                "y": 4374253.297527414
+              },
+              {
+                "x": 586003.9360800098,
+                "y": 4374253.297527414
+              }
+            ]
+          }
+        ],
+        true,
+        300.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidLength": 0,
+        "groundLength": 0,
+        "planeLength": 0
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              },
+              {
+                "x": 414057.50597542897,
+                "y": 4541986.710810093
+              }
+            ]
+          }
+        ],
+        false,
+        100.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 1254.411319994045,
+        "ellipsoidLength": 125.5523697486604,
+        "groundArea": 1254.804933522039,
+        "groundLength": 125.57206633235486,
+        "heightFactor": 0.9998431451813791,
+        "planeArea": 1256.6370614359173,
+        "planeLength": 125.66370614359172,
+        "scale": 1.000886772536483
+      },
+      "args": [
+        {
+          "centralMeridian": 36,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": [
+              1.0,
+              1.0
+            ],
+            "pts": [
+              {
+                "x": 231553.4217273632,
+                "y": 4426858.9286117945
+              },
+              {
+                "x": 231593.4217273632,
+                "y": 4426858.9286117945
+              }
+            ]
+          }
+        ],
+        true,
+        1000.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "ellipsoidArea": 99959169.01931381,
+        "ellipsoidLength": 39991.82477416582,
+        "groundArea": 99959169.01931381,
+        "groundLength": 39991.82477416582,
+        "heightFactor": 1,
+        "planeArea": 100000000,
+        "planeLength": 40000,
+        "scale": 1.000204217443548
+      },
+      "args": [
+        {
+          "centralMeridian": 30,
+          "datum": "TUREF",
+          "falseEasting": 500000,
+          "falseNorthing": 0,
+          "kind": "tm",
+          "scaleFactor": 1
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 623823.4173178353,
+                "y": 4430536.278251616
+              },
+              {
+                "x": 633823.4173178353,
+                "y": 4430536.278251616
+              },
+              {
+                "x": 633823.4173178353,
+                "y": 4440536.278251616
+              },
+              {
+                "x": 623823.4173178353,
+                "y": 4440536.278251616
+              }
+            ]
+          }
+        ],
+        true,
+        0.0
+      ],
+      "op": "crsGroundMeasures"
+    },
+    {
+      "answer": {
+        "why": "unreachable"
+      },
+      "args": [
+        {
+          "datum": "TUREF",
+          "kind": "geographic"
+        },
+        [
+          {
+            "bulges": null,
+            "pts": [
+              {
+                "x": 32.85,
+                "y": 39.93
+              },
+              {
+                "x": 32.86,
+                "y": 95.0
+              }
+            ]
+          }
+        ],
+        false,
+        100.0
+      ],
+      "op": "crsGroundMeasures"
+    }
+  ],
+  "format": "kentos.ground-answers",
+  "version": 1
+}

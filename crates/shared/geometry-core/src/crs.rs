@@ -12,6 +12,7 @@
 //! for bit equal. Heights are 0 on both sides: 2D, as the ADRs say.
 
 mod datum;
+pub mod ground;
 pub mod measure;
 pub mod ntv2;
 mod plane;

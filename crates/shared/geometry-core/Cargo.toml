@@ -10,11 +10,14 @@ publish.workspace = true
 # wasm32) and never reach for the file system, the network or a runtime
 # (CLAUDE.md §14). rust_decimal carries exact decimals for the numeric
 # policy (§23); libm gives every target the same transcendental functions
-# (§23.4). Objects cross the WASM boundary through the crate's own small
-# JSON module (api/json.rs, docs/adr/0008); serde is only for the tests.
+# (§23.4). geographiclib-rs gives geodesics and their polygons' areas on the
+# ellipsoid (docs/adr/0171). Objects cross the WASM boundary through the
+# crate's own small JSON module (api/json.rs, docs/adr/0008); serde is only
+# for the tests.
 [dependencies]
 rust_decimal = { workspace = true }
 libm = { workspace = true }
+geographiclib-rs = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

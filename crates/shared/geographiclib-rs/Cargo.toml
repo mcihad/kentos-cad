@@ -1,0 +1,25 @@
+# geographiclib-rs 0.2.7 from crates.io with libm's functions on every target
+# (docs/adr/0171; written by scripts/vendor/geographiclib.py, do not edit).
+# Not a workspace member: the release's own code, linted by its authors.
+[package]
+name = "geographiclib-rs"
+version = "0.2.7"
+edition = "2018"
+rust-version = "1.70.0"
+description = "A port of geographiclib in Rust (KentOS: libm's functions on every target)."
+license = "MIT"
+repository = "https://github.com/georust/geographiclib-rs"
+publish = false
+
+[features]
+default = ["accurate"]
+test_full = []
+test_short = []
+
+[lib]
+name = "geographiclib_rs"
+path = "src/lib.rs"
+
+[dependencies]
+accurate = { version = "0.3", optional = true, default-features = false }
+libm = "0.2.8"

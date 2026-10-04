@@ -97,6 +97,9 @@ default-members = [
     "crates/server/application",
     "apps/api",
 ]
+# GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
+# dependency of the geometry core but not a member (its tests run by hand, its lints its authors').
+exclude = ["crates/shared/geographiclib-rs"]
 
 [workspace.package]
 version = "0.1.0"
@@ -118,6 +121,12 @@ libm = "=0.2.16"
 # image decoders, so nothing new is downloaded.
 miniz_oxide = { version = "=0.9.1", default-features = false, features = ["with-alloc"] }
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
+# Geodesics and areas on the ellipsoid (Karney 2013): the measurements' ellipsoid and ground values
+# (docs/adr/0171, the owner's approval of 4 October). The crates.io release with libm's functions
+# on every target (crates/shared/geographiclib-rs, written by scripts/vendor/geographiclib.py):
+# the release calls Rust's own float methods, and the desktop and the web parted far beyond the
+# last bits. Not a workspace member (excluded below).
+geographiclib-rs = { path = "crates/shared/geographiclib-rs", version = "=0.2.7" }
 # Persistent object identity (docs/adr/0014): a v1 drawing's objects get ids derived from
 # the sha256 of its canonical text through UUIDv5 (SHA-1). Both were locked already (axum
 # and sqlx use them); the 0.10 line shares one `digest`. The `uuid` crate's `v5` feature

@@ -231,6 +231,8 @@ python3 scripts/fixtures/field_sniff_cases.py --check   # karne biçiminin içer
 python3 scripts/fixtures/field_samples.py   # Karne editörünün resimleri ve akış testleri için aynı karnenin elle yazılmış örneklerini tek gözlem tablosundan yeniden yaz: sample.gsi (GSI-16), sample.sdr (SDR33), sample.gt7 (GTS-7), sample-nikon.raw (Nikon RAW), sample.jxl (JobXML, derecede); her biçimin örneği aynı karneyi verir (fixtures/field/v1)
 python3 scripts/fixtures/field_gts7_cases.py --check   # Topcon GTS-7 okuyucusunu (denetim sözcükleri, UNITS, DDD.MMSS ve gon, eksi yatay okuma, STN ve XYZ, BS/FS/SS, HV/SD, HD ve OFFSET, bozuk sayılar) Topcon Link kılavuzunun Ek C'sinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gts7.json (ADR 0169 §1)
 python3 scripts/fixtures/gnss_gpx_cases.py --check   # GPX 1.1 okuyucusunu (yol, rota ve iz noktaları, ele ve geoidheight'tan elipsoit yüksekliği, fix, uydu, HDOP, fix none, bozuk konum ve değerler, XML değil, derin) şemadan yazılmış, expat'le okuyan başvurudan denetle; durumlar fixtures/gnss/v1/gpx.json (ADR 0169 §1)
+python3 scripts/vendor/geographiclib.py --check   # GeographicLib'in libm'li kopyasını (crates/shared/geographiclib-rs) crates.io sürümünden ve kuraldan denetle; değişince yeniden yaz (ADR 0171 §5)
+python3 scripts/fixtures/ground_cases.py --check   # zemin, elipsoit ve düzlemi (noktanın ve çizginin ölçeği PROJ'un get_factors'ıyla, jeodezik uzunluk GeographicLib'in C'siyle, yükseklik çarpanı mpmath'le, alanlar sık sınırla eşit alanlı izdüşümde; areaNoise köşe çokgeninin yuvarlama payı) bağımsız başvurudan denetle; durumlar fixtures/geodesy/v1/ground.json (ADR 0171)
 python3 scripts/fixtures/gnss_nmea_cases.py --check   # NMEA 0183 okuyucusunu (GGA ve RMC, sağlama toplamı, kayıt öneki, kalite ve adları, ddmm.mmmm konum, birimler, geoit ayrımı, tarihli ve tarihsiz zaman) cümlelerden yazılmış başvurudan denetle; durumlar fixtures/gnss/v1/nmea.json (ADR 0169 §1)
 python3 scripts/fixtures/field_write_cases.py --check   # cihaza gönderilen koordinat dosyalarını (Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV; taşınamayan ad, kod ve değerler) biçimlerin belgelerinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/write.json (ADR 0169 §4)
 python3 scripts/fixtures/gnss_import_cases.py --check   # GNSS içe aktarmanın noktalarını (WGS 84'ten projenin sistemine, adlar, kot elipsoit yüksekliği, öznitelikler, dönüşümün doğruluk metni) PROJ'la denetle; durumlar fixtures/gnss/v1/import.json (ADR 0169 §6)
@@ -776,7 +778,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   yolundan tek adım, yeni ya da var olan katman) tamam; 6. adım bitti. 7. adım cihaza gönderme: 7a yazıcılar (`formats::field::write`,
   `writeField`; başvuru `field_write_cases.py`) ve 7b Cihaza gönder penceresi (`field.send`; `exchange/field_send.rs`,
   `ui/io/FieldSendDialog.ts`; seçili noktalar, Aplikasyon, Nokta editörü) tamam; Sokkia SDR33 yazımı sahibin bir SDR33 dosyasını ya da
-  Sokkia'nın belgesini bekliyor (iş kaydının kodları). `HYB-13` bundan başka bitti; sıradaki `HYB-14`. 4 Ekim: derleme ve test süreleri
+  Sokkia'nın belgesini bekliyor (iş kaydının kodları). `HYB-13` bundan başka bitti. `HYB-14` zemin, elipsoit ve düzlem
+  ([ADR 0171](docs/adr/0171-ground-ellipsoid-plane.md); sahibin kararları 4 Ekim: `geographiclib-rs`, projenin ortalama elipsoit
+  yüksekliği, “Uzunlukları projeksiyona indir” kapalı başlar): 1. adım (çekirdek `crs::ground`: noktanın ve çizginin ölçeği,
+  `geodesy::tm_scale`, yükseklik çarpanı, jeodezik uzunluk, köşe çokgeni ve yayların alanı; başvuru `ground_cases.py`, PROJ ve
+  GeographicLib'in C'si, alanlar eşit alanlı izdüşümde) tamam; sıradaki 2. adım (Mesafe ölç ve Alan hesapla'nın satırları,
+  `groundHeight`). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

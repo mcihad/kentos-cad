@@ -66,6 +66,7 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::geodesy::OPS,
     crate::crs::OPS,
     crate::crs::measure::OPS,
+    crate::crs::ground::OPS,
     crate::crs::text::OPS,
     crate::tools::locks::OPS,
     crate::survey::fieldbook::OPS,

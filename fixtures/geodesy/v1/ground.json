@@ -1,0 +1,1492 @@
+{
+ "format": "kentos.ground",
+ "version": 1,
+ "proj": "9.7.1",
+ "chord": 0.0001,
+ "scales": [
+  {
+   "name": "TUREF / TM30, orta meridyende",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    500000.0,
+    4429529.030236589
+   ],
+   "expect": 1.0000000000053901
+  },
+  {
+   "name": "TUREF / TM30, doğu kenarında",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    628093.3589603386,
+    4430606.951569739
+   ],
+   "expect": 1.000201911355234
+  },
+  {
+   "name": "TUREF / TM30, batı kenarında, güneyde",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    364749.6505408334,
+    3986583.437251684
+   ],
+   "expect": 1.000225310112011
+  },
+  {
+   "name": "TUREF / TM30, kuzeyde",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    582851.2097329019,
+    4652120.695739145
+   ],
+   "expect": 1.0000844297694342
+  },
+  {
+   "name": "ED50 / TM33",
+   "system": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    621284.9575010622,
+    4319509.409732805
+   ],
+   "expect": 1.0001810457471774
+  },
+  {
+   "name": "WGS 84 / UTM 36N, Ankara",
+   "system": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    488012.40529644216,
+    4420374.733892243
+   ],
+   "expect": 0.9996017690476332
+  },
+  {
+   "name": "WGS 84 / UTM 36N, dilimin batı kenarı",
+   "system": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    236578.6239628854,
+    4210063.033966323
+   ],
+   "expect": 1.0004547272446982
+  },
+  {
+   "name": "ED50 / UTM 37N, dilimin dışında (Van)",
+   "system": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 39,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "point": [
+    881402.3077518588,
+    4270568.4023832
+   ],
+   "expect": 1.0013917431458652
+  },
+  {
+   "name": "başlangıcı ve ölçeği farklı TM",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 34.5,
+    "scaleFactor": 0.9999,
+    "falseEasting": 200000.0,
+    "falseNorthing": 100000.0,
+    "latitudeOfOrigin": 36.0
+   },
+   "point": [
+    262707.9594551308,
+    155704.13382296587
+   ],
+   "expect": 0.9999484319488662
+  },
+  {
+   "name": "Bessel datumlu TM33",
+   "system": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "point": [
+    586003.9360800098,
+    4374053.297527414
+   ],
+   "expect": 1.0000910511964942
+  },
+  {
+   "name": "yerel sistem, benzerlikle TM33'e",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "point": [
+    100.0,
+    200.0
+   ],
+   "expect": 0.9999887109059907
+  },
+  {
+   "name": "yerel sistem, benzerlikle TM33'e, uzakta",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "point": [
+    2500.0,
+    -1500.0
+   ],
+   "expect": 0.999988294267331
+  },
+  {
+   "name": "yerel sistem, özel TM'ye",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 34.5,
+     "scaleFactor": 0.9999,
+     "falseEasting": 200000.0,
+     "falseNorthing": 100000.0,
+     "latitudeOfOrigin": 36.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 1000.0,
+     "north": 2000.0,
+     "rotation": -3.25,
+     "scale": 1.0
+    }
+   },
+   "point": [
+    -350.0,
+    820.0
+   ],
+   "expect": 1.0003894174137464
+  },
+  {
+   "name": "yerel sistem, afinle: tek ölçeği yok",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "affine",
+     "a": 1.00002,
+     "b": -0.0003,
+     "c": 492000.0,
+     "d": 0.00025,
+     "e": 0.99998,
+     "f": 4422500.0
+    }
+   },
+   "point": [
+    100.0,
+    200.0
+   ],
+   "expect": null
+  },
+  {
+   "name": "coğrafi: düzlemi yok",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "point": [
+    32.8597,
+    39.9334
+   ],
+   "expect": null
+  },
+  {
+   "name": "Pseudo-Mercator: tek ölçeği yok",
+   "system": {
+    "kind": "mercator"
+   },
+   "point": [
+    3225000.0,
+    5010000.0
+   ],
+   "expect": null
+  }
+ ],
+ "lines": [
+  {
+   "name": "TM30'un orta meridyeninde 1 km, h 0",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "a": [
+    500000.0,
+    4429529.030236589
+   ],
+   "b": [
+    500000.0,
+    4430528.342708083
+   ],
+   "height": 0.0,
+   "expect": {
+    "ellipsoidLength": 999.3124714933482,
+    "scale": 1.000000000010278,
+    "heightFactor": 1.0
+   }
+  },
+  {
+   "name": "TM30'un doğu kenarında 10 km doğu-batı, h 1000",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "a": [
+    617845.5267245518,
+    4430441.362508251
+   ],
+   "b": [
+    627837.1619841923,
+    4430602.6435732525
+   ],
+   "height": 1000.0,
+   "expect": {
+    "ellipsoidLength": 9991.080546988744,
+    "scale": 1.0001857953801847,
+    "heightFactor": 0.9998434558969537
+   }
+  },
+  {
+   "name": "TM30'un batı kenarında 5 km kuzey-güney, h 2000",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "a": [
+    377031.5633786624,
+    4208423.05769288
+   ],
+   "b": [
+    377106.76161447965,
+    4213418.2816015845
+   ],
+   "height": 2000.0,
+   "expect": {
+    "ellipsoidLength": 4994.860610964622,
+    "scale": 1.0001860480032152,
+    "heightFactor": 0.9996856163531649
+   }
+  },
+  {
+   "name": "UTM 36N'de 3 km çapraz, h 850",
+   "system": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "a": [
+    482903.1765619609,
+    4416677.433527335
+   ],
+   "b": [
+    485044.6306592184,
+    4418892.71909377
+   ],
+   "height": 850.0,
+   "expect": {
+    "ellipsoidLength": 3082.3456669409097,
+    "scale": 0.999603166493753,
+    "heightFactor": 0.9998666598618613
+   }
+  },
+  {
+   "name": "ED50 / TM36'da, h −30",
+   "system": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "a": [
+    517849.6558627329,
+    4074400.717878857
+   ],
+   "b": [
+    518739.7029305313,
+    4075512.4017577907
+   ],
+   "height": -30.0,
+   "expect": {
+    "ellipsoidLength": 1424.0814970976248,
+    "scale": 1.0000041220802374,
+    "heightFactor": 1.0000047101057465
+   }
+  },
+  {
+   "name": "yerel sistemde, h 500",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "a": [
+    100.0,
+    200.0
+   ],
+   "b": [
+    1350.0,
+    -410.0
+   ],
+   "height": 500.0,
+   "expect": {
+    "ellipsoidLength": 1390.9148575270458,
+    "scale": 0.9999885919319208,
+    "heightFactor": 0.9999217047269606
+   }
+  },
+  {
+   "name": "Bessel datumlu TM33'te, yükseklik yok",
+   "system": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "a": [
+    586003.9360800098,
+    4374053.297527414
+   ],
+   "b": [
+    588558.7100515707,
+    4376302.708329421
+   ],
+   "height": null,
+   "expect": {
+    "ellipsoidLength": 3403.6077983093005,
+    "scale": 1.0000937825106215
+   }
+  },
+  {
+   "name": "coğrafide, h 100",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "a": [
+    32.85,
+    39.93
+   ],
+   "b": [
+    32.86,
+    39.935
+   ],
+   "height": 100.0,
+   "expect": {
+    "ellipsoidLength": 1019.2432679114538,
+    "heightFactor": 0.9999843249161303
+   }
+  },
+  {
+   "name": "Pseudo-Mercator'da, h 0",
+   "system": {
+    "kind": "mercator"
+   },
+   "a": [
+    3225000.0,
+    5010000.0
+   ],
+   "b": [
+    3226000.0,
+    5011000.0
+   ],
+   "height": 0.0,
+   "expect": {
+    "ellipsoidLength": 1067.02032936642,
+    "heightFactor": 1.0
+   }
+  },
+  {
+   "name": "coğrafide kutbun ötesi",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "a": [
+    32.85,
+    39.93
+   ],
+   "b": [
+    32.86,
+    95.0
+   ],
+   "height": 100.0,
+   "expect": null
+  }
+ ],
+ "measures": [
+  {
+   "name": "açık yol, üç köşe",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414117.75597542897,
+       4541999.210810093
+      ],
+      [
+       414142.25597542897,
+       4541956.585810093
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": null,
+   "expect": {
+    "planeLength": 110.69744397500834,
+    "ellipsoidLength": 110.68739740486623,
+    "scale": 1.0000907652576325
+   }
+  },
+  {
+   "name": "açık yol, üç köşe, h 100",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414117.75597542897,
+       4541999.210810093
+      ],
+      [
+       414142.25597542897,
+       4541956.585810093
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": 100.0,
+   "expect": {
+    "planeLength": 110.69744397500834,
+    "ellipsoidLength": 110.68739740486623,
+    "groundLength": 110.68913268141195,
+    "scale": 1.0000907652576325,
+    "heightFactor": 0.9999843229727825
+   }
+  },
+  {
+   "name": "açık yol, yaylı kenarla, h 850",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4542016.710810093
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.4
+     ]
+    }
+   ],
+   "closed": false,
+   "height": 850.0,
+   "expect": {
+    "planeLength": 73.10405480877574,
+    "ellipsoidLength": 73.09741730754754,
+    "groundLength": 73.10715878782105,
+    "scale": 1.0000908034985734,
+    "heightFactor": 0.9998667506652559
+   }
+  },
+  {
+   "name": "kapalı alan, 40 × 25 m, h 0",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4542011.710810093
+      ],
+      [
+       414057.50597542897,
+       4542011.710810093
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 0.0,
+   "expect": {
+    "planeLength": 130.0,
+    "planeArea": 1000.0,
+    "ellipsoidLength": 129.98819363604628,
+    "ellipsoidArea": 999.8183718729802,
+    "groundLength": 129.98819363604628,
+    "groundArea": 999.8183718729802,
+    "scale": 1.0000908264361739,
+    "heightFactor": 1.0
+   },
+   "areaNoise": 2.138083800673485e-06
+  },
+  {
+   "name": "kapalı alan, 40 × 25 m, h 1000",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4541986.710810093
+      ],
+      [
+       414097.50597542897,
+       4542011.710810093
+      ],
+      [
+       414057.50597542897,
+       4542011.710810093
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 1000.0,
+   "expect": {
+    "planeLength": 130.0,
+    "planeArea": 1000.0,
+    "ellipsoidLength": 129.98819363604628,
+    "ellipsoidArea": 999.8183718729802,
+    "groundLength": 130.00857456148023,
+    "groundArea": 1000.1320592878124,
+    "scale": 1.0000908264361739,
+    "heightFactor": 0.9998431647038623
+   },
+   "areaNoise": 2.138083800673485e-06
+  },
+  {
+   "name": "kapalı alan, yaylı kenarlı ve delikli, h 900",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       231553.4217273632,
+       4426858.9286117945
+      ],
+      [
+       231673.4217273632,
+       4426858.9286117945
+      ],
+      [
+       231673.4217273632,
+       4426938.9286117945
+      ],
+      [
+       231553.4217273632,
+       4426938.9286117945
+      ]
+     ],
+     "bulges": [
+      0.0,
+      0.25,
+      0.0,
+      -0.1
+     ]
+    },
+    {
+     "pts": [
+      [
+       231593.4217273632,
+       4426888.9286117945
+      ],
+      [
+       231613.4217273632,
+       4426888.9286117945
+      ],
+      [
+       231613.4217273632,
+       4426908.9286117945
+      ],
+      [
+       231593.4217273632,
+       4426908.9286117945
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 900.0,
+   "expect": {
+    "planeLength": 483.82501667599274,
+    "planeArea": 9526.182289684437,
+    "ellipsoidLength": 483.39648262349675,
+    "ellipsoidArea": 9509.315319201718,
+    "groundLength": 483.46470876749356,
+    "groundArea": 9512.000777325493,
+    "scale": 1.0008864727466782,
+    "heightFactor": 0.9998588284549612
+   },
+   "areaNoise": 1.760711893439293e-05
+  },
+  {
+   "name": "TM30'un doğu kenarında 1 km'lik parsel, h 1500",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       623823.4173178353,
+       4430536.278251616
+      ],
+      [
+       624823.4173178353,
+       4430536.278251616
+      ],
+      [
+       624823.4173178353,
+       4431536.278251616
+      ],
+      [
+       623823.4173178353,
+       4431536.278251616
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 1500.0,
+   "expect": {
+    "planeLength": 4000.0,
+    "planeArea": 1000000.0,
+    "ellipsoidLength": 3999.2393336742716,
+    "ellipsoidArea": 999619.7070972399,
+    "groundLength": 4000.1804235125933,
+    "groundArea": 1000090.2178893323,
+    "scale": 1.0001902007020824,
+    "heightFactor": 0.9997647381522159
+   },
+   "areaNoise": 5.185604095458984e-06
+  },
+  {
+   "name": "UTM 36N'de 1 km'lik parsel, h 950",
+   "system": {
+    "kind": "tm",
+    "datum": "WGS84",
+    "centralMeridian": 33,
+    "scaleFactor": 0.9996,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       488012.40529644216,
+       4420374.733892243
+      ],
+      [
+       489012.40529644216,
+       4420374.733892243
+      ],
+      [
+       489012.40529644216,
+       4421374.733892243
+      ],
+      [
+       488012.40529644216,
+       4421374.733892243
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 950.0,
+   "expect": {
+    "planeLength": 4000.0,
+    "planeArea": 1000000.0,
+    "ellipsoidLength": 4001.5941286691286,
+    "ellipsoidArea": 1000797.2272698865,
+    "groundLength": 4002.190507759261,
+    "groundArea": 1001095.5578834722,
+    "scale": 0.9996016245460699,
+    "heightFactor": 0.9998509868311335
+   },
+   "areaNoise": 7.633119821548462e-06
+  },
+  {
+   "name": "ED50 / TM36'da yol, h -30",
+   "system": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       231541.28721162642,
+       4426934.860856561
+      ],
+      [
+       231791.28721162642,
+       4426974.860856561
+      ],
+      [
+       231941.28721162642,
+       4426814.860856561
+      ],
+      [
+       232061.28721162642,
+       4426944.860856561
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": -30.0,
+   "expect": {
+    "planeLength": 649.4149601475976,
+    "ellipsoidLength": 648.8407066970076,
+    "groundLength": 648.8376550697885,
+    "scale": 1.0008850453503655,
+    "heightFactor": 1.0000047032215151
+   }
+  },
+  {
+   "name": "coğrafide 0,01°'lik dörtgen",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       32.85,
+       39.93
+      ],
+      [
+       32.86,
+       39.93
+      ],
+      [
+       32.86,
+       39.94
+      ],
+      [
+       32.85,
+       39.94
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": null,
+   "expect": {
+    "ellipsoidLength": 3930.1630741102954,
+    "ellipsoidArea": 949055.295762002
+   },
+   "areaNoise": 5.7220458984375e-06
+  },
+  {
+   "name": "coğrafide 0,01°'lik dörtgen, h 1200",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       32.85,
+       39.93
+      ],
+      [
+       32.86,
+       39.93
+      ],
+      [
+       32.86,
+       39.94
+      ],
+      [
+       32.85,
+       39.94
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 1200.0,
+   "expect": {
+    "ellipsoidLength": 3930.1630741102954,
+    "ellipsoidArea": 949055.295762002,
+    "groundLength": 3930.9031383235197,
+    "groundArea": 949412.6587307075,
+    "heightFactor": 0.999811780156929
+   },
+   "areaNoise": 5.7220458984375e-06
+  },
+  {
+   "name": "Pseudo-Mercator'da parsel, h 50",
+   "system": {
+    "kind": "mercator"
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       3225860.7320037987,
+       5013551.237222597
+      ],
+      [
+       3225940.7320037987,
+       5013551.237222597
+      ],
+      [
+       3225940.7320037987,
+       5013601.237222597
+      ],
+      [
+       3225860.7320037987,
+       5013601.237222597
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 50.0,
+   "expect": {
+    "planeLength": 260.0,
+    "planeArea": 4000.0,
+    "ellipsoidLength": 196.19402813301647,
+    "ellipsoidArea": 2275.618549989594,
+    "groundLength": 196.19556619634128,
+    "groundArea": 2275.6542454585615,
+    "scale": 1.3258068636291924,
+    "heightFactor": 0.9999921570666946
+   },
+   "areaNoise": 4.0651684685144573e-07
+  },
+  {
+   "name": "yerel sistemde (benzerlik) parsel, h 0",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       100,
+       200
+      ],
+      [
+       180,
+       210
+      ],
+      [
+       175,
+       290
+      ],
+      [
+       95,
+       280
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 0.0,
+   "expect": {
+    "planeLength": 321.55735038478497,
+    "planeArea": 6450.0,
+    "ellipsoidLength": 321.56098212926867,
+    "ellipsoidArea": 6450.145696557533,
+    "groundLength": 321.56098212926867,
+    "groundArea": 6450.145696557533,
+    "scale": 0.999988705884553,
+    "heightFactor": 1.0
+   },
+   "areaNoise": 3.826618194580078e-05
+  },
+  {
+   "name": "yerel sistemde (benzerlik) parsel, h 500",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       100,
+       200
+      ],
+      [
+       180,
+       210
+      ],
+      [
+       175,
+       290
+      ],
+      [
+       95,
+       280
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 500.0,
+   "expect": {
+    "planeLength": 321.55735038478497,
+    "planeArea": 6450.0,
+    "ellipsoidLength": 321.56098212926867,
+    "ellipsoidArea": 6450.145696557533,
+    "groundLength": 321.58620695710937,
+    "groundArea": 6451.157630897145,
+    "scale": 0.999988705884553,
+    "heightFactor": 0.9999215664781534
+   },
+   "areaNoise": 3.826618194580078e-05
+  },
+  {
+   "name": "yerel sistemde (afin) yol, h 200",
+   "system": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "ED50",
+     "centralMeridian": 33,
+     "scaleFactor": 1,
+     "falseEasting": 500000,
+     "falseNorthing": 0
+    },
+    "plane": {
+     "kind": "affine",
+     "a": 1.00002,
+     "b": -0.0003,
+     "c": 492000.0,
+     "d": 0.00025,
+     "e": 0.99998,
+     "f": 4422500.0
+    }
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       100,
+       200
+      ],
+      [
+       400,
+       260
+      ],
+      [
+       520,
+       30
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": 200.0,
+   "expect": {
+    "planeLength": 565.363606237024,
+    "ellipsoidLength": 565.3682776442013,
+    "groundLength": 565.3860075498156,
+    "scale": 0.9999917374084081,
+    "heightFactor": 0.9999686410604832
+   }
+  },
+  {
+   "name": "Bessel datumlu TM33'te parsel, h 300",
+   "system": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       586003.9360800098,
+       4374053.297527414
+      ],
+      [
+       586303.9360800098,
+       4374053.297527414
+      ],
+      [
+       586303.9360800098,
+       4374253.297527414
+      ],
+      [
+       586003.9360800098,
+       4374253.297527414
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 300.0,
+   "expect": {
+    "planeLength": 1000.0,
+    "planeArea": 60000.0,
+    "ellipsoidLength": 999.9086391242041,
+    "ellipsoidArea": 59989.037209660724,
+    "groundLength": 999.95568757871,
+    "groundArea": 59994.68489557955,
+    "scale": 1.0000913691071058,
+    "heightFactor": 0.9999529306733741
+   },
+   "areaNoise": 3.1348317861557007e-06
+  },
+  {
+   "name": "aynı noktada iki köşeli yol, h 100",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       414057.50597542897,
+       4541986.710810093
+      ],
+      [
+       414057.50597542897,
+       4541986.710810093
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": 100.0,
+   "expect": {
+    "planeLength": 0.0,
+    "ellipsoidLength": 0.0,
+    "groundLength": 0.0
+   }
+  },
+  {
+   "name": "daire, 20 m yarıçaplı (iki yaylı kenar), h 1000",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       231553.4217273632,
+       4426858.9286117945
+      ],
+      [
+       231593.4217273632,
+       4426858.9286117945
+      ]
+     ],
+     "bulges": [
+      1.0,
+      1.0
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 1000.0,
+   "expect": {
+    "planeLength": 125.66370614359172,
+    "planeArea": 1256.6370614359173,
+    "ellipsoidLength": 125.55236975354708,
+    "ellipsoidArea": 1254.4113200016811,
+    "groundLength": 125.5720663372423,
+    "groundArea": 1254.8049335296773,
+    "scale": 1.0008867725334365,
+    "heightFactor": 0.9998431451813791
+   },
+   "areaNoise": 0.0
+  },
+  {
+   "name": "TM30'un doğu kenarında 10 km'lik büyük alan, h 0",
+   "system": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30,
+    "scaleFactor": 1,
+    "falseEasting": 500000,
+    "falseNorthing": 0
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       623823.4173178353,
+       4430536.278251616
+      ],
+      [
+       633823.4173178353,
+       4430536.278251616
+      ],
+      [
+       633823.4173178353,
+       4440536.278251616
+      ],
+      [
+       623823.4173178353,
+       4440536.278251616
+      ]
+     ]
+    }
+   ],
+   "closed": true,
+   "height": 0.0,
+   "expect": {
+    "planeLength": 40000.0,
+    "planeArea": 100000000.0,
+    "ellipsoidLength": 39991.82477416748,
+    "ellipsoidArea": 99959169.01930472,
+    "groundLength": 39991.82477416748,
+    "groundArea": 99959169.01930472,
+    "scale": 1.0002042174435934,
+    "heightFactor": 1.0
+   },
+   "areaNoise": 0.00011396408081054688
+  },
+  {
+   "name": "coğrafide kutbun ötesinde köşe, h 100",
+   "system": {
+    "kind": "geographic",
+    "datum": "TUREF"
+   },
+   "rings": [
+    {
+     "pts": [
+      [
+       32.85,
+       39.93
+      ],
+      [
+       32.86,
+       95.0
+      ]
+     ]
+    }
+   ],
+   "closed": false,
+   "height": 100.0,
+   "expect": null,
+   "why": "unreachable"
+  }
+ ]
+}

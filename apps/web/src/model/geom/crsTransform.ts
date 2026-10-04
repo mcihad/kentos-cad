@@ -132,6 +132,44 @@ export type PlaneMeasures =
 export const crsPlaneMeasures =
   op<(from: System, to: System, rings: readonly PlaneRing[], closed: boolean, choices?: readonly DatumChoice[]) => PlaneMeasures>('crsPlaneMeasures');
 
+/**
+ * What a path or an area measures in the project's plane, on its ellipsoid and on the ground at the project's mean
+ * ellipsoidal height (docs/adr/0171 §1): a path's area values and a value without its ground (no height) or its plane
+ * (a geographic system) are missing; `scale` is the plane's over the ellipsoid's (an area's ratio's square root),
+ * `heightFactor` the ellipsoid's over the ground's; or why there is none.
+ */
+export type GroundMeasures =
+  | {
+      readonly planeLength?: number;
+      readonly planeArea?: number;
+      readonly ellipsoidLength: number;
+      readonly ellipsoidArea?: number;
+      readonly groundLength?: number;
+      readonly groundArea?: number;
+      readonly scale?: number;
+      readonly heightFactor?: number;
+    }
+  | { readonly why: 'unreachable' };
+
+/**
+ * A path (`closed` false: the first ring) or an area's rings (the first the outer, the others its holes) in the
+ * project's `system`, in its plane, on its ellipsoid (geodesics, GeographicLib's polygon and the arcs beside it) and,
+ * with the project's mean ellipsoidal `height` (m), on the ground (crs::ground).
+ */
+export const crsGroundMeasures =
+  op<(system: System, rings: readonly PlaneRing[], closed: boolean, height: number | null) => GroundMeasures>('crsGroundMeasures');
+
+/** The projection's scale at a point of the system's plane (docs/adr/0171 §3); null where it has no one scale. */
+export const crsPointScale = op<(system: System, p: Vec2) => number | null>('crsPointScale');
+
+/** A line's geodesic length, its scale (Simpson's of its ends' and middle's) and, with a height, R/(R + h) at its middle. */
+export type LineFactors =
+  | { readonly ellipsoidLength: number; readonly scale?: number; readonly heightFactor?: number }
+  | { readonly why: 'unreachable' };
+
+/** The line from `a` to `b` in the project's `system`: its factors between grid and ground (docs/adr/0171 §3). */
+export const crsLineFactors = op<(system: System, a: Vec2, b: Vec2, height: number | null) => LineFactors>('crsLineFactors');
+
 /** A latitude or longitude as 40°45′12.3456″K (seconds with `decimals` places; K/G, D/B). */
 export const formatDms = op<(deg: number, latitude: boolean, decimals: number) => string>('formatDms');
 
