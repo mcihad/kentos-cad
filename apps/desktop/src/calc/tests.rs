@@ -375,6 +375,10 @@ fn screens() {
                 "hesap-onden",
                 "hesap-geriden",
                 "hesap-aplikasyon",
+                // Uzunlukları projeksiyona indir at 850 m (docs/adr/0171 §4).
+                "hesap-poligon-zemin",
+                "hesap-kutupsal-zemin",
+                "hesap-aplikasyon-zemin",
             ] {
                 if !only.is_empty() && !only.split(',').any(|o| o == name) {
                     continue;
@@ -392,7 +396,17 @@ fn screens() {
                 let calc = |app: &mut App, e: Event| {
                     let _ = app.update(Message::Calc(e));
                 };
-                match name {
+                if name.ends_with("-zemin") {
+                    let doc = app.document.as_mut().expect("open");
+                    let mut settings = doc.settings().clone();
+                    settings.survey = Some(kentos_contracts::SurveySettings {
+                        ground_height: Some(850.0),
+                        reduce_to_grid: Some(true),
+                        ..Default::default()
+                    });
+                    doc.model.set_settings(settings);
+                }
+                match name.trim_end_matches("-zemin") {
                     "hesap-poligon" | "hesap-poligon-tolerans" => {
                         use traverse::{ANGLE, DISTANCE};
                         // A connected traverse worked out from the points'
@@ -503,4 +517,131 @@ fn screens() {
             }
         }
     }
+}
+
+/// Uzunlukları projeksiyona indir (docs/adr/0171 §4) in a TM36 project at
+/// 850 m: Kutupsal alım places its point by the length taken to the grid,
+/// as the core does with the project's grid; Aplikasyon gives the ground
+/// distance; Poligon hesabı's leg keeps its measured length beside the
+/// grid's; the reports name the factors. Without the switch, nothing of it.
+#[test]
+fn the_survey_windows_take_lengths_to_the_grid() {
+    use kentos_geometry_core::survey::polar::{PolarInput, Shot, polar_survey};
+    use kentos_interaction::Vec2;
+    use polar::{DISTANCE, NAME, READING};
+
+    let mut app = app_with_drawing();
+    let doc = app.document.as_mut().expect("open");
+    let mut settings = doc.settings().clone();
+    settings.survey = Some(kentos_contracts::SurveySettings {
+        ground_height: Some(850.0),
+        reduce_to_grid: Some(true),
+        ..Default::default()
+    });
+    doc.model.set_settings(settings.clone());
+    let grid = kentos_interaction::ground::survey_grid(&settings).expect("the project's grid");
+
+    let _ = app.run("calc.polar");
+    calc(
+        &mut app,
+        Event::Known(Field::Station, "486500,4420200".into()),
+    );
+    calc(&mut app, Event::Known(Field::Back, "486500,4420700".into()));
+    calc(&mut app, Event::Cell(0, NAME, "K1".into()));
+    calc(&mut app, Event::Cell(0, READING, "100".into()));
+    calc(&mut app, Event::Cell(0, DISTANCE, "1000".into()));
+    let doc = app.document.as_ref().expect("open");
+    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    let core = polar_survey(&PolarInput {
+        unit: "grad".to_owned(),
+        station: Vec2::new(486500.0, 4420200.0),
+        back: Vec2::new(486500.0, 4420700.0),
+        back_reading: 0.0,
+        station_z: None,
+        instrument_height: None,
+        shots: vec![Shot {
+            reading: 100.0,
+            distance: 1000.0,
+            zenith: None,
+            target_height: None,
+        }],
+        refraction: Some(0.13),
+        grid: Some(grid.clone()),
+    })
+    .expect("the core computes");
+    assert_eq!(points, core);
+    let grid_length = points[0].grid.expect("a grid length");
+    // TM36 some 30 km west of its meridian at 850 m: the grid is shorter.
+    assert!(
+        (grid_length - 1000.0).abs() > 0.05 && grid_length < 1000.0,
+        "{grid_length}"
+    );
+    let format = kentos_interaction::Format::of(doc.settings());
+    let report = app
+        .calc
+        .polar
+        .report(&doc.model, &format)
+        .expect("a report");
+    assert_eq!(
+        report[1],
+        [
+            "Nokta",
+            "Semt",
+            "Yatay uzunluk",
+            "Düzlemde",
+            "Y",
+            "X",
+            "Z",
+            "Ölçek",
+            "Yükseklik çarpanı"
+        ]
+    );
+
+    let _ = app.run("calc.stakeout");
+    calc(
+        &mut app,
+        Event::Known(Field::Station, "486500,4420200".into()),
+    );
+    calc(&mut app, Event::Known(Field::Back, "486500,4420700".into()));
+    calc(&mut app, Event::Cell(0, 0, "487500,4420200".into()));
+    let doc = app.document.as_ref().expect("open");
+    let stakes = app
+        .calc
+        .stakeout
+        .compute(&doc.model)
+        .stakes
+        .expect("values");
+    let s = &stakes[0];
+    let factor = s.scale.expect("a scale") * s.height_factor.expect("a factor");
+    assert!((s.ground.expect("a ground distance") - s.distance / factor).abs() < 1e-9);
+    assert!(s.ground.expect("ground") > s.distance);
+
+    let doc = app.document.as_ref().expect("open");
+    let form = traverse::Form {
+        kind: traverse::Kind::Open,
+        start: "486500,4420200".into(),
+        back: "486500,4420700".into(),
+        first: [String::new(), "100".into(), "500".into()],
+        rows: vec![["Y1".into(), String::new(), String::new()]],
+        ..Default::default()
+    };
+    let r = form.compute(&doc.model).result.expect("a traverse");
+    assert_eq!(r.legs[0].ground, Some(500.0));
+    assert!(
+        (r.legs[0].distance - 500.0).abs() > 0.02,
+        "{}",
+        r.legs[0].distance
+    );
+
+    // Without the switch the lengths are the grid's already.
+    let doc = app.document.as_mut().expect("open");
+    settings.survey = Some(kentos_contracts::SurveySettings {
+        ground_height: Some(850.0),
+        ..Default::default()
+    });
+    doc.model.set_settings(settings);
+    let doc = app.document.as_ref().expect("open");
+    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    assert_eq!(points[0].grid, None);
+    assert!((points[0].p.x - 487500.0).abs() < 1e-9);
 }

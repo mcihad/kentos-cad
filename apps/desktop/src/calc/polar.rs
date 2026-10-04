@@ -9,6 +9,7 @@
 use iced::widget::{column, row};
 use iced::{Element, Fill};
 use kentos_domain::Document as Model;
+use kentos_interaction::ground::{grid_note, survey_grid};
 use kentos_interaction::{Format, fixed};
 use kentos_ui::label;
 use kentos_ui::widget::Dialog;
@@ -100,6 +101,7 @@ impl Form {
             |t| resolve_point(model, t),
             unit_name(model.settings().angle_unit),
             Some(model.settings().refraction()),
+            survey_grid(model.settings()),
         )
     }
 
@@ -123,21 +125,39 @@ impl Form {
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         let read = self.compute(model);
         let points = read.points?;
+        // With the project's grid: the length on it and the line's factors (docs/adr/0171 §4).
+        let reduced = points.iter().any(|p| p.grid.is_some());
+        let mut head = vec!["Nokta", "Semt", "Yatay uzunluk"];
+        if reduced {
+            head.push("Düzlemde");
+        }
+        head.extend(["Y", "X", "Z"]);
+        if reduced {
+            head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
         let mut lines = vec![
             vec![TITLE.to_owned()],
-            ["Nokta", "Semt", "Yatay uzunluk", "Y", "X", "Z"]
-                .map(str::to_owned)
-                .to_vec(),
+            head.into_iter().map(str::to_owned).collect(),
         ];
         for (p, name) in points.iter().zip(&read.names) {
-            lines.push(vec![
+            let mut row = vec![
                 name.clone(),
                 fixed(p.bearing, 4),
                 format.length_bare(p.horizontal),
+            ];
+            if reduced {
+                row.push(p.grid.map(|g| format.length_bare(g)).unwrap_or_default());
+            }
+            row.extend([
                 format.coord(p.p.x),
                 format.coord(p.p.y),
                 p.z.map(|z| format.length_bare(z)).unwrap_or_default(),
             ]);
+            if reduced {
+                row.push(p.scale.map(|k| fixed(k, 8)).unwrap_or_default());
+                row.push(p.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
+            }
+            lines.push(row);
         }
         Some(lines)
     }
@@ -226,6 +246,13 @@ impl Form {
                     Line::Ok,
                     format!("{} nokta hesaplandı{heights}.", points.len()),
                 )];
+                if let Some(h) = model
+                    .settings()
+                    .ground_height()
+                    .filter(|_| points.iter().any(|p| p.grid.is_some()))
+                {
+                    lines.push((Line::Info, grid_note(h)));
+                }
                 if points.iter().any(|p| p.dz.is_some()) && read_number(&self.station_z).is_none() {
                     lines.push((
                         Line::Info,
@@ -240,14 +267,27 @@ impl Form {
             body = body.push(summary);
         }
         if let Some(points) = &read.points {
+            // With the project's grid the length on it and the line's factor come too (docs/adr/0171 §4).
+            let reduced = points.iter().any(|p| p.grid.is_some());
             let rows = points
                 .iter()
                 .zip(&read.names)
                 .map(|(p, name)| {
-                    vec![
+                    let mut row = vec![
                         name.clone(),
                         angle_text(format, p.bearing),
                         format.length_bare(p.horizontal),
+                    ];
+                    if reduced {
+                        row.push(p.grid.map(|g| format.length_bare(g)).unwrap_or_default());
+                        row.push(
+                            p.scale
+                                .zip(p.height_factor)
+                                .map(|(k, h)| fixed(k * h, 8))
+                                .unwrap_or_default(),
+                        );
+                    }
+                    row.extend([
                         format.coord(p.p.x),
                         format.coord(p.p.y),
                         match (p.z, p.dz) {
@@ -255,27 +295,40 @@ impl Form {
                             (None, Some(dz)) => format!("Δ {}", format.length_bare(dz)),
                             (None, None) => "—".to_owned(),
                         },
-                    ]
+                    ]);
+                    row
                 })
                 .collect();
-            body = body.push(
-                column![
-                    label::strong("Sonuç"),
-                    result_table(
-                        &[
-                            "Nokta",
-                            "Semt",
-                            "Yatay uzunluk (m)",
-                            "Y (sağa)",
-                            "X (yukarı)",
-                            "Z (m)"
-                        ],
-                        rows,
-                        &[false, true, true, true, true, true],
-                    ),
-                ]
-                .spacing(6),
-            );
+            let table = if reduced {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Zeminde (m)",
+                        "Düzlemde (m)",
+                        "Çarpan",
+                        "Y (sağa)",
+                        "X (yukarı)",
+                        "Z (m)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true, true, true],
+                )
+            } else {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Yatay uzunluk (m)",
+                        "Y (sağa)",
+                        "X (yukarı)",
+                        "Z (m)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true],
+                )
+            };
+            body = body.push(column![label::strong("Sonuç"), table].spacing(6));
         }
         let done = read.points.is_some();
         footer(

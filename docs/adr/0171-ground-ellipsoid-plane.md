@@ -79,6 +79,16 @@ yay-kiriş düzeltmesi yapılmaz (1 km'lik kenarda, dilim kenarında 1″'den k�
 yanında zemindeki verilir: düzlem ÷ (ölçek × yükseklik çarpanı). Çekirdeğin çağrılarına isteğe bağlı `grid` (projenin sistemi ve
 ortalama yükseklik) eklenir; yoksa sonuçlar bugünküdür, bit bit.
 
+Ayar, Ölçme'nin Zemin grubunda “Hesap pencereleri” satırındaki anahtardır. Üç koşulla açılır, açılamadığında satırın açıklaması
+nedenini söyler: ortalama yükseklik yazılmış (“Ortalama elipsoit yüksekliği yazılınca açılır.”), projenin bir koordinat sistemi
+var (yerel projede yok) ve sistemde bir noktanın tek ölçeği var: TM ya da ona benzerlikle bağlı yerel sistem; coğrafi sistem,
+Pseudo-Mercator (elipsoit üstünde açı korumaz) ve afinle bağlı yerel sistem doğrultuya göre değişen ölçekleriyle dışarıda kalır
+(`has_point_scale`, `crsHasPointScale`). Koşul tutmazken kaydedilen ayar `reduceToGrid`'i yazmaz. Pencereler indirgeme yaptığında
+tabloları zemin ve düzlem uzunluklarını yan yana, çarpanla (ölçek × yükseklik çarpanı) gösterir; raporlar ölçeği ve yükseklik
+çarpanını ayrı sütunlarda yazar; özet bir satırla yüksekliği ve ayarın yerini söyler (Aplikasyon'da “Arazide zemindekini ölçün.”).
+Kural iki platformda aynıdır (`kentos_interaction::ground::{survey_grid, why_not_grid}`, `model/groundMeasures.ts`'in `surveyGrid`,
+`whyNotGrid`'i).
+
 ### 4a. Mesafe ölç ve Alan hesapla
 
 Projenin sistemi ve ortalama elipsoit yüksekliği varken Mesafe ölç'ün toplamından ve Alan hesapla'nın sonucundan (İçine
@@ -126,7 +136,9 @@ GeographicLib'in köşe çokgeniyle onun yuvarlama payı içinde uyuşur.
    `grid_factor`, `survey::polar` (`PolarInput.grid`, `PolarPoint.grid`, `scale`, `heightFactor`; Aplikasyon'un `ground`'u),
    `survey::traverse` (`TraverseInput.grid`, kenarın `ground`'u ve çarpanları); bağımsız başvuru `ground_survey_cases.py`
    (`fixtures/geodesy/v1/ground-survey.json`: bilinen düzlem noktaları, PROJ ve GeographicLib'in çarpanlarıyla zemin uzunlukları).
-   3b: ayar ve pencereler iki platformda.
+   3b: ayar ve pencereler iki platformda: Ölçme'de anahtar ve koşulları, Kutupsal alım, Aplikasyon ve Poligon hesabının tabloları,
+   özetleri ve raporları (masaüstü `calc/{polar,stakeout,traverse}.rs`, web `ui/calc/{Polar,Stakeout,Traverse}Dialog.ts`);
+   resimler `hesap-*-zemin`, `olcme-ayar-indir` ve web'in `ground` grubu. Bitti (5 Ekim).
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

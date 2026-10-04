@@ -195,6 +195,8 @@ pub enum Event {
     Grid(crate::grids::Event),
     /// Ölçme: a field typed (docs/adr/0169 §3).
     Survey(survey_form::Field, String),
+    /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
+    Reduce(bool),
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -234,6 +236,12 @@ impl State {
     #[cfg(test)]
     pub(super) fn draft_survey(&self) -> Option<kentos_contracts::SurveySettings> {
         self.settings.survey.clone()
+    }
+
+    /// The draft's settings as they stand.
+    #[cfg(test)]
+    pub(super) fn draft_settings(&self) -> ProjectSettings {
+        self.settings.clone()
     }
 
     /// Whether Ölçme has a text to put right: Kaydet waits.
@@ -353,6 +361,13 @@ impl App {
                     s.reduce,
                 );
             }
+            Event::Reduce(on) => {
+                s.reduce = on;
+                d.survey = survey_form::with_reduction(
+                    survey_form::read(&s.survey, d.angle_unit).survey,
+                    s.reduce,
+                );
+            }
             Event::DrawingUnit(u) => d.drawing_unit = (u != DrawingUnit::M).then_some(u),
             Event::ResetSection => {
                 reset_section(s.section, d);
@@ -451,6 +466,16 @@ impl App {
         if settings.has_system() {
             settings.drawing_unit = None;
         }
+        // A reduction to the grid the project cannot take is not kept (docs/adr/0171 §4).
+        if kentos_interaction::ground::why_not_grid(&settings).is_some()
+            && let Some(survey) = settings.survey.take()
+        {
+            settings.survey = kentos_contracts::SurveySettings {
+                reduce_to_grid: None,
+                ..survey
+            }
+            .sanitized();
+        }
         doc.model.set_settings(settings);
         // The project's system, a definition's too (docs/adr/0168 §1).
         let assigned = (s.settings.srid, s.settings.custom_crs.as_ref())
@@ -521,9 +546,14 @@ impl App {
             Section::General => self.general(s, doc),
             Section::Crs => self.crs_section(s),
             Section::Units => units(s),
-            Section::Survey => super::survey::view(&s.survey, s.settings.angle_unit, |f, t| {
-                event(Event::Survey(f, t))
-            }),
+            Section::Survey => super::survey::view(
+                &s.survey,
+                s.settings.angle_unit,
+                s.reduce,
+                kentos_interaction::ground::why_not_grid(&s.settings),
+                |f, t| event(Event::Survey(f, t)),
+                |on| event(Event::Reduce(on)),
+            ),
         };
         let content = column![
             text(s.section.label())

@@ -35,7 +35,8 @@
 // survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
-// fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates).
+// fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
+// Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -4085,6 +4086,96 @@ SCENES.fieldsend = [
   { id: 'fieldsend-gsi16', open: (ui) => fieldSendOpen(ui, 'gsi16'), close: fieldSendClose },
   { id: 'fieldsend-jobxml', open: (ui) => fieldSendOpen(ui, 'jobxml'), close: fieldSendClose },
   { id: 'fieldsend-gsi8', open: (ui) => fieldSendOpen(ui, 'gsi8'), close: async (ui) => (await fieldSendClose(ui), await ui.eval(`(() => { const s = document.querySelector('.dialog--io select[aria-label="Biçim"]'); if (s) { s.value = 'gsi16'; s.dispatchEvent(new Event('change', { bubbles: true })); } })()`)) },
+];
+
+/**
+ * Uzunlukları projeksiyona indir (docs/adr/0171 §4): Proje ayarları' Ölçme with the mean ellipsoidal height typed and the
+ * switch on, then Kutupsal alım, Aplikasyon and Poligon hesabı with the project reducing to TM36 at 850 m: the ground and
+ * the grid lengths side by side with their factors. The desktop's are `project::survey::tests::screens` (olcme-ayar-indir)
+ * and `calc::tests::screens` (hesap-*-zemin).
+ */
+const GROUND_SURVEY = '{ groundHeight: 850, reduceToGrid: true }';
+const groundClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ survey: null })`));
+const setInput = (sel, text) =>
+  `(() => { const el = document.querySelector(${JSON.stringify(sel)}); el.value = ${JSON.stringify(text)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`;
+SCENES.ground = [
+  {
+    id: 'ground-settings',
+    open: async (ui) => {
+      await surveyOpen(ui, [['Ortalama elipsoit yüksekliği', '850']]);
+      await ui.clickSel('[aria-label="Uzunlukları projeksiyona indir"]');
+      await ui.sleep(250);
+    },
+    close: (ui) => ui.escapeAll(3),
+  },
+  {
+    id: 'ground-polar',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.settings.assign({ survey: ${GROUND_SURVEY} })`);
+      const fill = {
+        station: '486513.341,4420189.522',
+        back: '486535.757,4420188.723',
+        backReading: '0',
+        stationZ: '812,40',
+        instrumentHeight: '1.55',
+        rows: [
+          { name: 'K1', reading: '327.7849', distance: '17.727', zenith: '98.4410', target: '1.70' },
+          { name: 'K2', reading: '372,1872', distance: '18.225' },
+          { name: 'K3', reading: '288.3598', distance: '25.661', zenith: '101.2215', target: '1.70' },
+        ],
+      };
+      await ui.eval(`import('/src/ui/calc/PolarDialog.ts').then((m) => m.openPolarWith(window.kentos, ${JSON.stringify(fill)}))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--calc .io-summary')`);
+      await bodyToEnd(ui, '.dialog--calc');
+      await ui.sleep(400);
+    },
+    close: groundClose,
+  },
+  {
+    id: 'ground-stakeout',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.settings.assign({ survey: ${GROUND_SURVEY} })`);
+      await ui.eval(`import('/src/ui/calc/StakeoutDialog.ts').then((m) => m.openStakeout(window.kentos))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--calc .calc-grid')`);
+      await ui.eval(setInput('.dialog--calc input[data-key="station"]', '486513.341,4420189.522'));
+      await ui.eval(setInput('.dialog--calc input[data-key="back"]', '486535.757,4420188.723'));
+      await ui.eval(setInput('.dialog--calc .calc-grid input[data-row="0"][data-key="point"]', '486538.221,4420218.986'));
+      await ui.eval(setInput('.dialog--calc .calc-grid input[data-row="1"][data-key="point"]', '486514.344 4420220.532'));
+      await ui.sleep(300);
+      await bodyToEnd(ui, '.dialog--calc');
+      await ui.sleep(300);
+    },
+    close: async (ui) => {
+      await ui.eval(setInput('.dialog--calc .calc-grid input[data-row="0"][data-key="point"]', ''));
+      await ui.eval(setInput('.dialog--calc .calc-grid input[data-row="1"][data-key="point"]', ''));
+      await groundClose(ui);
+    },
+  },
+  {
+    id: 'ground-traverse',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.doc.settings.assign({ survey: ${GROUND_SURVEY} })`);
+      const fill = {
+        kind: 'connected',
+        endOriented: true,
+        start: '486513.341,4420189.522',
+        back: '486535.757,4420188.723',
+        end: '486538.221,4420218.986',
+        fore: '486514.344,4420220.532',
+        first: { name: '', angle: '330.3870', distance: '13.304' },
+        rows: [
+          { name: 'Y1', angle: '224.5472', distance: '10.905' },
+          { name: 'Y2', angle: '188.9591', distance: '14.809' },
+        ],
+        last: { name: '', angle: '57.9557', distance: '' },
+      };
+      await ui.eval(`import('/src/ui/calc/TraverseDialog.ts').then((m) => m.openTraverseWith(window.kentos, ${JSON.stringify(fill)}))`);
+      await ui.waitFor(`!!document.querySelector('.dialog--calc .io-summary')`);
+      await bodyToEnd(ui, '.dialog--calc');
+      await ui.sleep(400);
+    },
+    close: groundClose,
+  },
 ];
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */

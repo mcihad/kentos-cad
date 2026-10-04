@@ -11,7 +11,7 @@ use iced::{Center, Element};
 use kentos_contracts::AngleUnit;
 use kentos_project::survey_form::{self, Field};
 use kentos_ui::theme::typography;
-use kentos_ui::widget::Banner;
+use kentos_ui::widget::{Banner, Switch};
 use kentos_ui::{label, style};
 
 use super::{group, setting};
@@ -45,11 +45,17 @@ fn field<'a>(
     c.into()
 }
 
-/// The section: k, then the three tolerances in the project's angle unit.
+/// The section: k, the ground's height and the reduction to the grid
+/// (docs/adr/0171 §2, §4), then the tolerances in the project's angle unit.
+/// `reduce` is the switch as kept beside the texts; `why_not`, why it
+/// cannot be turned on with these settings.
 pub(super) fn view<'a>(
     texts: &'a [String; 8],
     unit: AngleUnit,
+    reduce: bool,
+    why_not: Option<&'static str>,
     on: impl Fn(Field, String) -> Message + Copy + 'a,
+    on_reduce: impl Fn(bool) -> Message + 'a,
 ) -> Element<'a, Message> {
     let read = survey_form::read(texts, unit);
     let mark = survey_form::angle_mark(unit);
@@ -70,11 +76,22 @@ pub(super) fn view<'a>(
         ),
         group(
             "Zemin",
-            setting(
-                "Ortalama elipsoit yüksekliği",
-                Some("Mesafe ölç ve Alan hesapla zemin uzunluk ve alanlarını bu yükseklikte verir. Noktaların kotları kullanılmaz; boş bırakılırsa zemin değeri verilmez."),
-                typed(Field::GroundHeight, "", "m"),
-            ),
+            Column::new()
+                .spacing(10)
+                .push(setting(
+                    "Ortalama elipsoit yüksekliği",
+                    Some("Mesafe ölç ve Alan hesapla zemin uzunluk ve alanlarını bu yükseklikte verir. Noktaların kotları kullanılmaz; boş bırakılırsa zemin değeri verilmez."),
+                    typed(Field::GroundHeight, "", "m"),
+                ))
+                .push(setting(
+                    "Hesap pencereleri",
+                    Some(why_not.unwrap_or("Kutupsal alım ve Poligon hesabı ölçülen yatay uzunlukları düzleme indirir, Aplikasyon zemin uzunluklarını da verir; ölçek ve yükseklik çarpanı raporda.")),
+                    match why_not {
+                        None => Switch::new(reduce, on_reduce),
+                        Some(_) => Switch::disabled(false),
+                    }
+                    .label("Uzunlukları projeksiyona indir"),
+                )),
         ),
         group(
             "Toleranslar",
@@ -246,6 +263,42 @@ mod tests {
         );
     }
 
+    /// Uzunlukları projeksiyona indir (docs/adr/0171 §4): turned on with a
+    /// height, saved; a project without a system to take lengths to cannot
+    /// keep it (its reason said under the switch), the height stays.
+    #[test]
+    fn the_reduction_needs_a_height_and_a_scale() {
+        use kentos_interaction::ground::{NEEDS_HEIGHT, NEEDS_SYSTEM, why_not_grid};
+
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.update(Message::Run("file.settings"));
+        send(&mut app, SettingsEvent::Section(Section::Survey));
+        let Some(crate::project::Window::Settings(s)) = &app.project else {
+            panic!("Proje ayarları is open");
+        };
+        assert_eq!(why_not_grid(&s.draft_settings()), Some(NEEDS_HEIGHT));
+        typed(&mut app, Field::GroundHeight, "850");
+        let Some(crate::project::Window::Settings(s)) = &app.project else {
+            panic!("Proje ayarları is open");
+        };
+        assert_eq!(why_not_grid(&s.draft_settings()), None);
+        send(&mut app, SettingsEvent::Reduce(true));
+        send(&mut app, SettingsEvent::Save);
+        let settings = app.document.as_ref().expect("a drawing").settings().clone();
+        assert!(settings.reduces_to_grid());
+        // A local project has no grid to take lengths to.
+        let _ = app.update(Message::Run("file.settings"));
+        send(&mut app, SettingsEvent::Crs(0));
+        let Some(crate::project::Window::Settings(s)) = &app.project else {
+            panic!("Proje ayarları is open");
+        };
+        assert_eq!(why_not_grid(&s.draft_settings()), Some(NEEDS_SYSTEM));
+        send(&mut app, SettingsEvent::Save);
+        let settings = app.document.as_ref().expect("a drawing").settings().clone();
+        assert!(!settings.reduces_to_grid());
+        assert_eq!(settings.ground_height(), Some(850.0));
+    }
+
     /// Kutupsal alım computes its heights with the project's k: the same as
     /// the core's with that refraction (docs/adr/0169 §3).
     #[test]
@@ -308,7 +361,8 @@ mod tests {
     }
 
     /// Ölçme's pictures, in the light theme at 1440×900 and the dark at
-    /// 1100×650: empty, typed, and with what does not hold.
+    /// 1100×650: empty, typed, with what does not hold, and the height typed
+    /// with the reduction to the grid on (docs/adr/0171 §4).
     #[test]
     #[ignore = "writes pictures: cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture"]
     fn screens() {
@@ -317,7 +371,7 @@ mod tests {
 
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
         std::fs::create_dir_all(&out).expect("a folder for the pictures");
-        let shots: [(&str, &[(Field, &str)]); 3] = [
+        let shots: [(&str, &[(Field, &str)]); 4] = [
             ("bos", &[]),
             (
                 "dolu",
@@ -343,6 +397,7 @@ mod tests {
                     (Field::TraverseCoord, "-2"),
                 ],
             ),
+            ("indir", &[(Field::GroundHeight, "850")]),
         ];
         for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
             for (name, fields) in shots {
@@ -355,6 +410,9 @@ mod tests {
                 send(&mut app, SettingsEvent::Section(Section::Survey));
                 for (f, t) in fields {
                     typed(&mut app, *f, t);
+                }
+                if name == "indir" {
+                    send(&mut app, SettingsEvent::Reduce(true));
                 }
                 app.follow.flash = None;
                 let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

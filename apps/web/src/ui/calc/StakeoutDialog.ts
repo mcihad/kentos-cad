@@ -19,6 +19,7 @@ import {
 import { readStakeout } from './read';
 import type { FieldPoint } from '../../contracts/generated/FieldPoint';
 import { fixed } from '../../core/displayNumber';
+import { stakeNote, surveyGrid } from '../../model/groundMeasures';
 
 /**
  * Aplikasyon: the values to set out known points from a station: bearing
@@ -114,7 +115,12 @@ class StakeoutDialog implements Picker {
   /** The fields read and computed (read.ts); the values, or the errors shown. */
   private recompute(): void {
     const { ctx } = this;
-    const read = readStakeout({ station: state.station.text, back: state.back.text, rows: state.rows }, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value);
+    const read = readStakeout(
+      { station: state.station.text, back: state.back.text, rows: state.rows },
+      (text) => resolvePoint(ctx, text),
+      ctx.doc.settings.angleUnit.value,
+      surveyGrid(ctx.doc.settings),
+    );
     this.result = read.stakes ? { stakes: read.stakes, names: read.names } : null;
     const res = this.result;
     this.copy.disabled = !res;
@@ -124,15 +130,27 @@ class StakeoutDialog implements Picker {
       return;
     }
     const f = ctx.format;
+    // With the project's grid the distance to set out on the ground comes too (docs/adr/0171 §4).
+    const reduced = res.stakes.some((s) => s.ground !== undefined);
+    const height = ctx.doc.settings.groundHeight;
     summary(this.summaryBox, [
       summaryLine('ok', `${res.stakes.length} nokta için semt ve uzunluk hesaplandı.`),
+      reduced && height !== null ? summaryLine('info', stakeNote(height)) : null,
       read.back ? null : summaryLine('info', 'Bakılan nokta verilmedi: dönülecek açılar yok, aleti semte göre yöneltin.'),
     ]);
-    const rows = res.stakes.map((s, i) => [res.names[i], angleText(ctx, s.bearing), f.length(s.distance, false), s.angle != null ? angleText(ctx, s.angle) : '—']);
+    const rows = res.stakes.map((s, i) => [
+      res.names[i],
+      angleText(ctx, s.bearing),
+      f.length(s.distance, false),
+      ...(reduced ? [s.ground !== undefined ? f.length(s.ground, false) : '', s.scale !== undefined && s.heightFactor !== undefined ? fixed(s.scale * s.heightFactor, 8) : ''] : []),
+      s.angle != null ? angleText(ctx, s.angle) : '—',
+    ]);
     replaceChildren(
       this.results,
       h('h3', { class: 'calc-results__title' }, 'Aplikasyon değerleri'),
-      resultTable(['Nokta', 'Semt', 'Yatay uzunluk (m)', 'Bakılan noktadan açı'], rows, [false, true, true, true]),
+      reduced
+        ? resultTable(['Nokta', 'Semt', 'Düzlemde (m)', 'Zeminde (m)', 'Çarpan', 'Bakılan noktadan açı'], rows, [false, true, true, true, true, true])
+        : resultTable(['Nokta', 'Semt', 'Yatay uzunluk (m)', 'Bakılan noktadan açı'], rows, [false, true, true, true]),
     );
   }
 
@@ -167,8 +185,22 @@ class StakeoutDialog implements Picker {
     const res = this.result;
     if (!res) return;
     const f = this.ctx.format;
-    const lines: string[][] = [[TITLE], ['Nokta', 'Semt', 'Yatay uzunluk', 'Açı']];
-    res.stakes.forEach((s, i) => lines.push([res.names[i], fixed(s.bearing, 4), f.length(s.distance, false), s.angle != null ? fixed(s.angle, 4) : '']));
+    // With the project's grid: the distance on the ground and the line's factors (docs/adr/0171 §4).
+    const reduced = res.stakes.some((s) => s.ground !== undefined);
+    const lines: string[][] = [
+      [TITLE],
+      ['Nokta', 'Semt', 'Yatay uzunluk', ...(reduced ? ['Zeminde'] : []), 'Açı', ...(reduced ? ['Ölçek', 'Yükseklik çarpanı'] : [])],
+    ];
+    res.stakes.forEach((s, i) =>
+      lines.push([
+        res.names[i],
+        fixed(s.bearing, 4),
+        f.length(s.distance, false),
+        ...(reduced ? [s.ground !== undefined ? f.length(s.ground, false) : ''] : []),
+        s.angle != null ? fixed(s.angle, 4) : '',
+        ...(reduced ? [s.scale !== undefined ? fixed(s.scale, 8) : '', s.heightFactor !== undefined ? fixed(s.heightFactor, 8) : ''] : []),
+      ]),
+    );
     copyReport(this.ctx, TITLE, lines);
   }
 }

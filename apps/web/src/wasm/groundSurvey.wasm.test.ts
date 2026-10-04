@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { surveyPolar, surveyStakeout, surveyTraverse, type Grid, type TraverseInput } from '../model/geom/surveyCalc';
 import type { Vec2 } from '../model/geometry';
+import { readPolar, readStakeout } from '../ui/calc/read';
 
 /**
  * The survey windows with the project's grid (docs/adr/0171 §4) against fixtures/geodesy/v1/ground-survey.json (written by
@@ -68,6 +69,25 @@ describe('survey windows on the grid (docs/adr/0171 §4)', () => {
       }),
     );
     expect(wrong).toEqual([]);
+  });
+
+  it("the windows' readers hand the grid to the core", () => {
+    const c = file.polar[0]!;
+    const resolve = (text: string) => {
+      if (!text.trim()) return null;
+      const [x, y] = text.split(',').map(Number);
+      return { p: { x: x!, y: y! }, name: text };
+    };
+    const xy = (p: Vec2) => `${p.x},${p.y}`;
+    const shot = c.input.shots[0]!;
+    const form = { station: xy(c.input.station), back: xy(c.input.back), backReading: '0', stationZ: '', instrumentHeight: '', rows: [{ name: 'K1', reading: String(shot.reading), distance: String(shot.distance) }] };
+    const read = readPolar(form, resolve, c.input.unit, null, c.input.grid);
+    expect(read.errors).toEqual([]);
+    expect(Math.abs(read.points![0]!.p.x - c.expect[0]!.p[0])).toBeLessThan(1e-6);
+    expect(readPolar(form, resolve, c.input.unit, null, null).points![0]!.grid).toBeUndefined();
+    const s = file.stakeout[0]!;
+    const stakes = readStakeout({ station: xy(s.input.station), back: xy(s.input.back), rows: s.input.targets.map((t) => ({ point: xy(t) })) }, resolve, s.input.unit, s.input.grid);
+    expect(Math.abs(stakes.stakes![0]!.ground! - s.expect[0]!.ground)).toBeLessThan(1e-6);
   });
 
   it('Poligon hesabı gives its points back with no misclosure', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Formatter } from '../app/format';
 import type { Vec2 } from '../model/geometry';
-import { groundLines, trimmedHeight, UNREACHED } from '../model/groundMeasures';
+import { groundLines, NEEDS_HEIGHT, NEEDS_SCALE, NEEDS_SYSTEM, surveyGrid, trimmedHeight, UNREACHED, whyNotGrid } from '../model/groundMeasures';
 import { ProjectSettings } from '../model/projectSettings';
 
 /**
@@ -36,6 +36,22 @@ describe('groundLines', () => {
     const local = new ProjectSettings({ srid: 0, angleUnit: 'deg', survey: { groundHeight: 850 } });
     expect(groundLines(local, [square({ x: 0, y: 0 }, 40)], true, new Formatter(local))).toEqual([]);
     expect(UNREACHED).toContain('değer yazılmadı');
+  });
+
+  it('gives the survey windows the grid only when asked for, with a height and one scale at a point (docs/adr/0171 §4)', () => {
+    const s = tm30();
+    expect(surveyGrid(s)).toBeNull();
+    s.assign({ survey: { groundHeight: 850, reduceToGrid: true } });
+    const grid = surveyGrid(s);
+    expect(grid?.height).toBe(850);
+    expect(grid?.system.kind).toBe('tm');
+    s.assign({ survey: { groundHeight: 850 } });
+    expect(surveyGrid(s)).toBeNull();
+    expect(whyNotGrid({ srid: 5254 }, null)).toBe(NEEDS_HEIGHT);
+    expect(whyNotGrid({ srid: 0 }, 850)).toBe(NEEDS_SYSTEM);
+    expect(whyNotGrid({ srid: 5252 }, 850)).toBe(NEEDS_SCALE);
+    expect(whyNotGrid({ srid: 3857 }, 850)).toBe(NEEDS_SCALE);
+    expect(whyNotGrid({ srid: 32636 }, 850)).toBeNull();
   });
 
   it('writes a height as the form does', () => {

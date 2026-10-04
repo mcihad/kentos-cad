@@ -159,6 +159,9 @@ export type GroundMeasures =
 export const crsGroundMeasures =
   op<(system: System, rings: readonly PlaneRing[], closed: boolean, height: number | null) => GroundMeasures>('crsGroundMeasures');
 
+/** Whether the system has one scale at a point, so that lengths can be taken to its grid (docs/adr/0171 §3). */
+export const crsHasPointScale = op<(system: System) => boolean>('crsHasPointScale');
+
 /** The projection's scale at a point of the system's plane (docs/adr/0171 §3); null where it has no one scale. */
 export const crsPointScale = op<(system: System, p: Vec2) => number | null>('crsPointScale');
 

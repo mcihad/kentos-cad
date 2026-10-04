@@ -13,6 +13,7 @@ use std::fmt;
 use iced::widget::{column, row};
 use iced::{Element, Fill};
 use kentos_domain::Document as Model;
+use kentos_interaction::ground::{grid_note, survey_grid};
 use kentos_interaction::survey::traverse::{TraverseInput, TraverseResult, traverse};
 use kentos_interaction::{Format, Vec2, fixed, js_trim};
 use kentos_ui::label;
@@ -261,7 +262,7 @@ impl Form {
                 fore,
                 angles,
                 distances,
-                grid: None,
+                grid: survey_grid(model.settings()),
             }) {
                 Ok(r) => {
                     result = Some(r);
@@ -304,17 +305,31 @@ impl Form {
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         let c = self.compute(model);
         let r = c.result.as_ref()?;
+        // With the project's grid: the length on the ground as measured and the leg's factors (docs/adr/0171 §4).
+        let reduced = r.legs.iter().any(|l| l.ground.is_some());
+        let mut head = vec!["Nokta", "Semt"];
+        if reduced {
+            head.push("Zeminde");
+        }
+        head.extend(["Kenar", "ΔY", "ΔX", "vY", "vX", "Y", "X"]);
+        if reduced {
+            head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
         let mut lines = vec![
             vec![TITLE.to_owned()],
-            ["Nokta", "Semt", "Kenar", "ΔY", "ΔX", "vY", "vX", "Y", "X"]
-                .map(str::to_owned)
-                .to_vec(),
+            head.into_iter().map(str::to_owned).collect(),
         ];
         for (i, leg) in r.legs.iter().enumerate() {
             let p = c.leg_point(r, i);
-            lines.push(vec![
-                c.leg_name(i),
-                fixed(leg.bearing, 4),
+            let mut row = vec![c.leg_name(i), fixed(leg.bearing, 4)];
+            if reduced {
+                row.push(
+                    leg.ground
+                        .map(|g| format.length_bare(g))
+                        .unwrap_or_default(),
+                );
+            }
+            row.extend([
                 format.length_bare(leg.distance),
                 format.length_bare(leg.dy),
                 format.length_bare(leg.dx),
@@ -323,6 +338,11 @@ impl Form {
                 p.map(|p| format.coord(p.x)).unwrap_or_default(),
                 p.map(|p| format.coord(p.y)).unwrap_or_default(),
             ]);
+            if reduced {
+                row.push(leg.scale.map(|k| fixed(k, 8)).unwrap_or_default());
+                row.push(leg.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
+            }
+            lines.push(row);
         }
         // Each misclosure's row ends with its verdict against the project's
         // tolerance (docs/adr/0169 §3).
@@ -408,6 +428,12 @@ impl Form {
             },
         ));
         lines.extend(closure_lines(r, settings));
+        if let Some(h) = settings
+            .ground_height()
+            .filter(|_| r.legs.iter().any(|l| l.ground.is_some()))
+        {
+            lines.push((Line::Info, grid_note(h)));
+        }
         lines
     }
 
@@ -503,42 +529,63 @@ impl Form {
             body = body.push(summary);
         }
         if let Some(r) = &c.result {
+            // With the project's grid the measured length comes before the grid's (docs/adr/0171 §4).
+            let reduced = r.legs.iter().any(|l| l.ground.is_some());
             let rows = r
                 .legs
                 .iter()
                 .enumerate()
                 .map(|(i, leg)| {
                     let p = c.leg_point(r, i);
-                    vec![
-                        c.leg_name(i),
-                        angle_text(format, leg.bearing),
+                    let mut row = vec![c.leg_name(i), angle_text(format, leg.bearing)];
+                    if reduced {
+                        row.push(
+                            leg.ground
+                                .map(|g| format.length_bare(g))
+                                .unwrap_or_default(),
+                        );
+                    }
+                    row.extend([
                         format.length_bare(leg.distance),
                         format.length_bare(leg.dy),
                         format.length_bare(leg.dx),
                         p.map_or_else(|| "bilinen".to_owned(), |p| format.coord(p.x)),
                         p.map_or_else(|| "bilinen".to_owned(), |p| format.coord(p.y)),
-                    ]
+                    ]);
+                    row
                 })
                 .collect();
-            body = body.push(
-                column![
-                    label::strong("Sonuç"),
-                    result_table(
-                        &[
-                            "Nokta",
-                            "Semt",
-                            "Kenar (m)",
-                            "ΔY (m)",
-                            "ΔX (m)",
-                            "Y (sağa)",
-                            "X (yukarı)"
-                        ],
-                        rows,
-                        &[false, true, true, true, true, true, true],
-                    ),
-                ]
-                .spacing(6),
-            );
+            let table = if reduced {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Zeminde (m)",
+                        "Düzlemde (m)",
+                        "ΔY (m)",
+                        "ΔX (m)",
+                        "Y (sağa)",
+                        "X (yukarı)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true, true, true],
+                )
+            } else {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Kenar (m)",
+                        "ΔY (m)",
+                        "ΔX (m)",
+                        "Y (sağa)",
+                        "X (yukarı)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true, true],
+                )
+            };
+            body = body.push(column![label::strong("Sonuç"), table].spacing(6));
         }
         let new_points = c.result.as_ref().is_some_and(|r| !r.points.is_empty());
         footer(

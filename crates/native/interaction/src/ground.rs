@@ -7,7 +7,7 @@
 //! project without a coordinate system has no ellipsoid.
 
 use kentos_contracts::ProjectSettings;
-use kentos_geometry_core::crs::ground::ground_measures;
+use kentos_geometry_core::crs::ground::{Grid, ground_measures, has_point_scale};
 use kentos_geometry_core::crs::measure::Ring;
 use kentos_geometry_core::display::fixed;
 use kentos_project::systems;
@@ -17,9 +17,57 @@ use crate::format::Format;
 /// Said in place of both when a point is beyond the project's system.
 pub const UNREACHED: &str = "Elipsoit üstünde: ölçülen yerin bir noktası projenin sisteminin ulaştığı yerin dışında; değer yazılmadı.";
 
+/// The grid the survey windows take measured lengths to (docs/adr/0171 §4):
+/// the project asks for it (Uzunlukları projeksiyona indir, with a height)
+/// and its system has one scale at a point; none otherwise.
+pub fn survey_grid(settings: &ProjectSettings) -> Option<Grid> {
+    if !settings.reduces_to_grid() || why_not_grid(settings).is_some() {
+        return None;
+    }
+    Some(Grid {
+        system: systems::own(settings)?.system?,
+        height: settings.ground_height()?,
+    })
+}
+
+/// Why Uzunlukları projeksiyona indir cannot be turned on (docs/adr/0171 §4).
+pub const NEEDS_HEIGHT: &str = "Ortalama elipsoit yüksekliği yazılınca açılır.";
+pub const NEEDS_SYSTEM: &str =
+    "Projenin koordinat sistemi yok: uzunluklar projeksiyona indirilemez.";
+pub const NEEDS_SCALE: &str = "Projenin sisteminde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem): uzunluklar projeksiyona indirilemez.";
+
+/// Why the survey windows cannot take lengths to the grid with these
+/// settings, or none: a height, a system, and one scale at a point in it.
+pub fn why_not_grid(settings: &ProjectSettings) -> Option<&'static str> {
+    if settings.ground_height().is_none() {
+        return Some(NEEDS_HEIGHT);
+    }
+    match systems::own(settings).and_then(|n| n.system) {
+        None => Some(NEEDS_SYSTEM),
+        Some(s) if !has_point_scale(&s) => Some(NEEDS_SCALE),
+        Some(_) => None,
+    }
+}
+
+/// What Kutupsal alım and Poligon hesabı say when they take lengths to the grid.
+pub fn grid_note(height: f64) -> String {
+    format!(
+        "Ölçülen uzunluklar projeksiyona indirildi: ortalama elipsoit yüksekliği {} m, çizginin ölçeği ve yükseklik çarpanıyla (Proje ayarları › Ölçme).",
+        trimmed(height)
+    )
+}
+
+/// What Aplikasyon says when it gives the ground's distances.
+pub fn stake_note(height: f64) -> String {
+    format!(
+        "Zemin uzunlukları da verildi: ortalama elipsoit yüksekliği {} m, çizginin ölçeği ve yükseklik çarpanıyla (Proje ayarları › Ölçme). Arazide zemindekini ölçün.",
+        trimmed(height)
+    )
+}
+
 /// A height as the form writes it: the display rule's four decimals without
 /// trailing zeros or a bare point.
-fn trimmed(v: f64) -> String {
+pub fn trimmed(v: f64) -> String {
     let s = fixed(v, 4);
     let s = if s.contains('.') {
         s.trim_end_matches('0').trim_end_matches('.')

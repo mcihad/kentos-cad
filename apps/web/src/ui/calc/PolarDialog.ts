@@ -23,6 +23,7 @@ import {
 } from './common';
 import { readPolar } from './read';
 import { fixed } from '../../core/displayNumber';
+import { gridNote, surveyGrid } from '../../model/groundMeasures';
 
 /**
  * Kutupsal alım (takeometri): points surveyed from a known station. The
@@ -156,7 +157,7 @@ class PolarDialog implements Picker {
   private recompute(): void {
     const { ctx } = this;
     const form = { station: state.station.text, back: state.back.text, backReading: state.backReading, stationZ: state.stationZ, instrumentHeight: state.instrumentHeight, rows: state.rows };
-    const read = readPolar(form, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value, ctx.doc.settings.refraction);
+    const read = readPolar(form, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value, ctx.doc.settings.refraction, surveyGrid(ctx.doc.settings));
     this.result = read.points ? { points: read.points, names: read.names } : null;
     this.show(read.errors);
   }
@@ -173,15 +174,29 @@ class PolarDialog implements Picker {
       return;
     }
     const withZ = res.points.filter((p) => p.z != null).length;
+    // With the project's grid the length on it and the line's factor come too (docs/adr/0171 §4).
+    const reduced = res.points.some((p) => p.grid !== undefined);
+    const height = ctx.doc.settings.groundHeight;
     summary(this.summaryBox, [
       summaryLine('ok', `${res.points.length} nokta hesaplandı${withZ ? `, ${withZ} noktanın kotu ile` : ''}.`),
+      reduced && height !== null ? summaryLine('info', gridNote(height)) : null,
       res.points.some((p) => p.dz != null) && readNumber(state.stationZ) === null ? summaryLine('info', 'İstasyon kotu verilmedi: yükseklik farkları hesaplandı, kotlar yazılmadı.') : null,
     ]);
-    const rows = res.points.map((p, i) => [res.names[i], angleText(ctx, p.bearing), f.length(p.horizontal, false), f.coord(p.p.x), f.coord(p.p.y), p.z != null ? f.length(p.z, false) : p.dz != null ? `Δ ${f.length(p.dz, false)}` : '—']);
+    const rows = res.points.map((p, i) => [
+      res.names[i],
+      angleText(ctx, p.bearing),
+      f.length(p.horizontal, false),
+      ...(reduced ? [p.grid !== undefined ? f.length(p.grid, false) : '', p.scale !== undefined && p.heightFactor !== undefined ? fixed(p.scale * p.heightFactor, 8) : ''] : []),
+      f.coord(p.p.x),
+      f.coord(p.p.y),
+      p.z != null ? f.length(p.z, false) : p.dz != null ? `Δ ${f.length(p.dz, false)}` : '—',
+    ]);
     replaceChildren(
       this.results,
       h('h3', { class: 'calc-results__title' }, 'Sonuç'),
-      resultTable(['Nokta', 'Semt', 'Yatay uzunluk (m)', 'Y (sağa)', 'X (yukarı)', 'Z (m)'], rows, [false, true, true, true, true, true]),
+      reduced
+        ? resultTable(['Nokta', 'Semt', 'Zeminde (m)', 'Düzlemde (m)', 'Çarpan', 'Y (sağa)', 'X (yukarı)', 'Z (m)'], rows, [false, true, true, true, true, true, true, true])
+        : resultTable(['Nokta', 'Semt', 'Yatay uzunluk (m)', 'Y (sağa)', 'X (yukarı)', 'Z (m)'], rows, [false, true, true, true, true, true]),
     );
   }
 
@@ -203,8 +218,24 @@ class PolarDialog implements Picker {
     const res = this.result;
     if (!res) return;
     const f = this.ctx.format;
-    const lines: string[][] = [[TITLE], ['Nokta', 'Semt', 'Yatay uzunluk', 'Y', 'X', 'Z']];
-    res.points.forEach((p, i) => lines.push([res.names[i], fixed(p.bearing, 4), f.length(p.horizontal, false), f.coord(p.p.x), f.coord(p.p.y), p.z != null ? f.length(p.z, false) : '']));
+    // With the project's grid: the length on it and the line's factors (docs/adr/0171 §4).
+    const reduced = res.points.some((p) => p.grid !== undefined);
+    const lines: string[][] = [
+      [TITLE],
+      ['Nokta', 'Semt', 'Yatay uzunluk', ...(reduced ? ['Düzlemde'] : []), 'Y', 'X', 'Z', ...(reduced ? ['Ölçek', 'Yükseklik çarpanı'] : [])],
+    ];
+    res.points.forEach((p, i) =>
+      lines.push([
+        res.names[i],
+        fixed(p.bearing, 4),
+        f.length(p.horizontal, false),
+        ...(reduced ? [p.grid !== undefined ? f.length(p.grid, false) : ''] : []),
+        f.coord(p.p.x),
+        f.coord(p.p.y),
+        p.z != null ? f.length(p.z, false) : '',
+        ...(reduced ? [p.scale !== undefined ? fixed(p.scale, 8) : '', p.heightFactor !== undefined ? fixed(p.heightFactor, 8) : ''] : []),
+      ]),
+    );
     copyReport(this.ctx, TITLE, lines);
   }
 }

@@ -26,6 +26,7 @@ import {
   type Row,
 } from './common';
 import { fixed } from '../../core/displayNumber';
+import { gridNote, surveyGrid } from '../../model/groundMeasures';
 
 /**
  * Poligon hesabı: from a known point oriented on a known back point, through
@@ -267,7 +268,7 @@ class TraverseDialog implements Picker {
     const names = rows.map((r, i) => r.name?.trim() || `P${i + 1}`);
     if (!errors.length && start && back) {
       try {
-        const r = surveyTraverse({ unit: ctx.doc.settings.angleUnit.value, start, back, end, fore, angles, distances });
+        const r = surveyTraverse({ unit: ctx.doc.settings.angleUnit.value, start, back, end, fore, angles, distances, grid: surveyGrid(ctx.doc.settings) });
         const endName = state.kind === 'closed' ? this.nameOf(state.start.text, 'A') : this.nameOf(state.end.text, 'B');
         this.result = { r, names, endName: this.hasEndRow() ? endName : null, start };
       } catch (e) {
@@ -319,6 +320,9 @@ class TraverseDialog implements Picker {
     }
     const { r } = res;
     const ratio = r.linearMisclosure ? Math.round(r.length / r.linearMisclosure) : null;
+    // With the project's grid the measured length comes before the grid's (docs/adr/0171 §4).
+    const reduced = r.legs.some((l) => l.ground !== undefined);
+    const height = ctx.doc.settings.groundHeight;
     summary(this.summaryBox, [
       r.angleMisclosure != null
         ? summaryLine('info', `Açı kapanma hatası fβ = ${smallAngleText(ctx, r.angleMisclosure)}; her açıya ${smallAngleText(ctx, r.angleCorrection ?? 0)} düzeltme verildi.`)
@@ -332,17 +336,29 @@ class TraverseDialog implements Picker {
           )
         : summaryLine('info', `Açık poligon: kapanma denetimi ve dengeleme yok (toplam ${f.length(r.length)}).`),
       ...this.closureLines(r),
+      reduced && height !== null ? summaryLine('info', gridNote(height)) : null,
     ]);
     const endPts = [...r.points, ...(res.endName !== null ? [null] : [])];
     const rows = r.legs.map((leg, i) => {
       const name = i < res.names.length ? res.names[i] : (res.endName ?? '');
       const p = endPts[i];
-      return [name, angleText(ctx, leg.bearing), f.length(leg.distance, false), f.length(leg.dy, false), f.length(leg.dx, false), p ? f.coord(p.x) : 'bilinen', p ? f.coord(p.y) : 'bilinen'];
+      return [
+        name,
+        angleText(ctx, leg.bearing),
+        ...(reduced ? [leg.ground !== undefined ? f.length(leg.ground, false) : ''] : []),
+        f.length(leg.distance, false),
+        f.length(leg.dy, false),
+        f.length(leg.dx, false),
+        p ? f.coord(p.x) : 'bilinen',
+        p ? f.coord(p.y) : 'bilinen',
+      ];
     });
     replaceChildren(
       this.results,
       h('h3', { class: 'calc-results__title' }, 'Sonuç'),
-      resultTable(['Nokta', 'Semt', 'Kenar (m)', 'ΔY (m)', 'ΔX (m)', 'Y (sağa)', 'X (yukarı)'], rows, [false, true, true, true, true, true, true]),
+      reduced
+        ? resultTable(['Nokta', 'Semt', 'Zeminde (m)', 'Düzlemde (m)', 'ΔY (m)', 'ΔX (m)', 'Y (sağa)', 'X (yukarı)'], rows, [false, true, true, true, true, true, true, true])
+        : resultTable(['Nokta', 'Semt', 'Kenar (m)', 'ΔY (m)', 'ΔX (m)', 'Y (sağa)', 'X (yukarı)'], rows, [false, true, true, true, true, true, true]),
     );
   }
 
@@ -367,13 +383,19 @@ class TraverseDialog implements Picker {
     const { ctx } = this;
     const f = ctx.format;
     const { r } = res;
-    const lines: string[][] = [[TITLE], ['Nokta', 'Semt', 'Kenar', 'ΔY', 'ΔX', 'vY', 'vX', 'Y', 'X']];
+    // With the project's grid: the length as measured and the leg's factors (docs/adr/0171 §4).
+    const reduced = r.legs.some((l) => l.ground !== undefined);
+    const lines: string[][] = [
+      [TITLE],
+      ['Nokta', 'Semt', ...(reduced ? ['Zeminde'] : []), 'Kenar', 'ΔY', 'ΔX', 'vY', 'vX', 'Y', 'X', ...(reduced ? ['Ölçek', 'Yükseklik çarpanı'] : [])],
+    ];
     const endPts = [...r.points, ...(res.endName !== null ? [null] : [])];
     r.legs.forEach((leg, i) => {
       const p = endPts[i];
       lines.push([
         i < res.names.length ? res.names[i] : (res.endName ?? ''),
         fixed(leg.bearing, 4),
+        ...(reduced ? [leg.ground !== undefined ? f.length(leg.ground, false) : ''] : []),
         f.length(leg.distance, false),
         f.length(leg.dy, false),
         f.length(leg.dx, false),
@@ -381,6 +403,7 @@ class TraverseDialog implements Picker {
         fixed(leg.vx, 4),
         p ? f.coord(p.x) : '',
         p ? f.coord(p.y) : '',
+        ...(reduced ? [leg.scale !== undefined ? fixed(leg.scale, 8) : '', leg.heightFactor !== undefined ? fixed(leg.heightFactor, 8) : ''] : []),
       ]);
     });
     // Each misclosure's row ends with its verdict against the project's tolerance (docs/adr/0169 §3).

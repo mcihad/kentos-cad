@@ -5,6 +5,7 @@
 
 use kentos_contracts::Entity;
 use kentos_domain::Document as Model;
+use kentos_geometry_core::crs::ground::Grid;
 use kentos_interaction::survey::polar::{
     PolarInput, PolarPoint, Shot, Stake, StakeoutInput, polar_survey, stakeout,
 };
@@ -220,6 +221,7 @@ pub fn read_polar(
     resolve: impl Fn(&str) -> Known,
     unit: &str,
     refraction: Option<f64>,
+    grid: Option<Grid>,
 ) -> PolarRead {
     use super::polar::{DISTANCE, NAME, READING, TARGET, ZENITH};
     let mut errors = Vec::new();
@@ -310,7 +312,7 @@ pub fn read_polar(
         instrument_height,
         shots,
         refraction,
-        grid: None,
+        grid,
     }) {
         Ok(points) => Some(points),
         Err(e) => {
@@ -345,6 +347,7 @@ pub fn read_stakeout(
     rows: &[String],
     resolve: impl Fn(&str) -> Known,
     unit: &str,
+    grid: Option<Grid>,
 ) -> StakeoutRead {
     let mut errors = Vec::new();
     let st = resolve(station);
@@ -398,7 +401,7 @@ pub fn read_stakeout(
         station,
         back: back_point,
         targets,
-        grid: None,
+        grid,
     }) {
         Ok(stakes) => out(errors, Some(stakes)),
         Err(e) => {
@@ -455,12 +458,12 @@ mod tests {
             &[],
             &[(NAME, "3"), (READING, "100"), (DISTANCE, "0")],
         ]);
-        let read = read_polar(&form, resolve, "grad", None);
+        let read = read_polar(&form, resolve, "grad", None, None);
         assert_eq!(read.points, None);
         assert_eq!(read.errors, ["3. noktanın uzunluğu sıfırdan büyük olmalı."]);
         let form = polar(&[&[], &[], &[(READING, "0"), (DISTANCE, "10"), (ZENITH, "0")]]);
         assert_eq!(
-            read_polar(&form, resolve, "grad", None).errors,
+            read_polar(&form, resolve, "grad", None, None).errors,
             [
                 "3. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."
             ]
@@ -477,7 +480,7 @@ mod tests {
         let mut form = polar(&[&[(READING, "0"), (DISTANCE, "10")]]);
         form.station_z = "12a".to_owned();
         form.instrument_height = "x".to_owned();
-        let read = read_polar(&form, resolve, "grad", None);
+        let read = read_polar(&form, resolve, "grad", None, None);
         assert_eq!(read.points, None);
         assert_eq!(
             read.errors,
@@ -502,7 +505,7 @@ mod tests {
         ]]);
         form.station_z = "100".to_owned();
         form.instrument_height = "1,5".to_owned();
-        let read = read_polar(&form, resolve, "grad", None);
+        let read = read_polar(&form, resolve, "grad", None, None);
         assert!(read.errors.is_empty(), "{:?}", read.errors);
         assert_eq!(read.names, ["A"]);
         let points = read.points.expect("a point");

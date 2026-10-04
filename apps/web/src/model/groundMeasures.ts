@@ -1,6 +1,7 @@
 import { fixed } from '../core/displayNumber';
-import { crsGroundMeasures, type PlaneRing } from './geom/crsTransform';
-import { crsSettings, ownSystem } from './projectCrs';
+import { crsGroundMeasures, crsHasPointScale, type PlaneRing } from './geom/crsTransform';
+import type { Grid } from './geom/surveyCalc';
+import { crsSettings, ownSystem, type CrsSettings } from './projectCrs';
 import type { ProjectSettings } from './projectSettings';
 
 /**
@@ -46,3 +47,36 @@ export function groundLines(settings: ProjectSettings, rings: readonly PlaneRing
   const factor = m.heightFactor !== undefined ? `   Yükseklik çarpanı ${fixed(m.heightFactor, 8)}` : '';
   return [ellipsoid, `Zeminde (h = ${trimmedHeight(height)} m): ${what(m.groundArea, m.groundLength ?? 0)}${factor}`];
 }
+
+/** Why Uzunlukları projeksiyona indir cannot be turned on (docs/adr/0171 §4); the desktop's `kentos_interaction::ground`'s. */
+export const NEEDS_HEIGHT = 'Ortalama elipsoit yüksekliği yazılınca açılır.';
+export const NEEDS_SYSTEM = 'Projenin koordinat sistemi yok: uzunluklar projeksiyona indirilemez.';
+export const NEEDS_SCALE =
+  'Projenin sisteminde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem): uzunluklar projeksiyona indirilemez.';
+
+/** Why the survey windows cannot take lengths to the grid with these systems and this height, or null. */
+export function whyNotGrid(crs: CrsSettings, height: number | null | undefined): string | null {
+  if (height === null || height === undefined) return NEEDS_HEIGHT;
+  const system = ownSystem(crs)?.system;
+  if (!system) return NEEDS_SYSTEM;
+  return crsHasPointScale(system) ? null : NEEDS_SCALE;
+}
+
+/**
+ * The grid the survey windows take measured lengths to (docs/adr/0171 §4): the project asks for it (Uzunlukları
+ * projeksiyona indir, with a height) and its system has one scale at a point; null otherwise.
+ */
+export function surveyGrid(settings: ProjectSettings): Grid | null {
+  const height = settings.groundHeight;
+  if (!settings.reducesToGrid || height === null || whyNotGrid(crsSettings(settings), height)) return null;
+  const system = ownSystem(crsSettings(settings))?.system;
+  return system ? { system, height } : null;
+}
+
+/** What Kutupsal alım and Poligon hesabı say when they take lengths to the grid. */
+export const gridNote = (height: number): string =>
+  `Ölçülen uzunluklar projeksiyona indirildi: ortalama elipsoit yüksekliği ${trimmedHeight(height)} m, çizginin ölçeği ve yükseklik çarpanıyla (Proje ayarları › Ölçme).`;
+
+/** What Aplikasyon says when it gives the ground's distances. */
+export const stakeNote = (height: number): string =>
+  `Zemin uzunlukları da verildi: ortalama elipsoit yüksekliği ${trimmedHeight(height)} m, çizginin ölçeği ve yükseklik çarpanıyla (Proje ayarları › Ölçme). Arazide zemindekini ölçün.`;

@@ -2,14 +2,14 @@ import type { AppContext } from '../../app/context';
 import { Formatter } from '../../app/format';
 import { Signal } from '../../core/signal';
 import { crsBySrid, crsTitle, LOCAL_SRID } from '../../geo/crs';
-import { PROJECT_SETTINGS_DEFAULTS, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
+import { PROJECT_SETTINGS_DEFAULTS, sanitizeSurvey, secondAllowed, type DrawingUnit, type ProjectSettingsData } from '../../model/projectSettings';
 import { datumChoices, definitionTitle, DEFINITION_CODE, ownSystem } from '../../model/projectCrs';
 import { secondChoices, secondTitle } from '../../model/secondCrs';
 import { h, replaceChildren, type Child } from '../dom';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PLOT_SCALES } from '../ribbon/fields';
-import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
+import { note, segmented, settingRow, stepper, textField, toggleSwitch } from '../widgets/controls';
 import { askRemove } from '../widgets/confirm';
 import { gridLine } from '../../app/gridLibrary';
 import type { Convention } from '../../contracts/generated/Convention';
@@ -24,6 +24,7 @@ import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 import { fixed } from '../../core/displayNumber';
 import { angleMark, readSurvey, SURVEY_FIELDS, surveyTexts, withReduction, type SurveyField, type SurveyTexts } from '../../model/surveyForm';
+import { whyNotGrid } from '../../model/groundMeasures';
 import type { AngleUnit } from '../../model/projectSettings';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
@@ -170,7 +171,10 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
         secondSrid: settings.secondSrid ?? null,
         secondCustomCrs: settings.secondCustomCrs ?? null,
         datumTransforms: settings.datumTransforms ?? [],
-        survey: settings.survey ?? null,
+        // A reduction to the grid the project cannot take is not kept (docs/adr/0171 §4).
+        survey: whyNotGrid({ ...settings, customCrs: ownOf(settings) }, settings.survey?.groundHeight)
+          ? sanitizeSurvey(settings.survey ? { ...settings.survey, reduceToGrid: undefined } : null)
+          : (settings.survey ?? null),
       });
       // The project's system, a definition's too (docs/adr/0168 §1).
       const own = ownOf(draft);
@@ -502,9 +506,28 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
   }
   state.unit = unit;
   const problems = new Map<SurveyField, HTMLElement>();
+  // Uzunlukları projeksiyona indir (docs/adr/0171 §4): on only with a height and a system that has one scale at a point;
+  // its row says why not, as the height is typed.
+  const REDUCE_HELP = 'Kutupsal alım ve Poligon hesabı ölçülen yatay uzunlukları düzleme indirir, Aplikasyon zemin uzunluklarını da verir; ölçek ve yükseklik çarpanı raporda.';
+  const whyNow = whyNotGrid(d, read.survey?.groundHeight);
+  const reduceSwitch = toggleSwitch({
+    label: 'Uzunlukları projeksiyona indir',
+    checked: state.reduce && whyNow === null,
+    disabled: whyNow !== null,
+    onChange: () => {
+      state.reduce = !state.reduce;
+      api.set('survey', withReduction(readSurvey(state.texts, unit).survey, state.reduce) ?? undefined);
+    },
+  });
+  const reduceRow = settingRow('Hesap pencereleri', whyNow ?? REDUCE_HELP, h('div', { class: 'io-check' }, reduceSwitch, 'Uzunlukları projeksiyona indir'));
   const paint = () => {
     const now = readSurvey(state.texts, unit);
     for (const [f, el] of problems) el.textContent = now.problems[f] ?? '';
+    const why = whyNotGrid(d, now.survey?.groundHeight);
+    reduceSwitch.disabled = why !== null;
+    reduceSwitch.setAttribute('aria-checked', String(state.reduce && why === null));
+    const desc = reduceRow.querySelector('.srow__desc');
+    if (desc) desc.textContent = why ?? REDUCE_HELP;
     return now;
   };
   const field = (f: SurveyField, label: string, mark: string, placeholder = '') => {
@@ -539,6 +562,7 @@ function surveySection(api: DraftApi<ProjectDraft>, state: SurveyState): Child {
         'Mesafe ölç ve Alan hesapla zemin uzunluk ve alanlarını bu yükseklikte verir. Noktaların kotları kullanılmaz; boş bırakılırsa zemin değeri verilmez.',
         field('groundHeight', 'Ortalama elipsoit yüksekliği', 'm'),
       ),
+      reduceRow,
     ),
     group(
       'Toleranslar',

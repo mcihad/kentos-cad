@@ -1,7 +1,7 @@
 import type { Vec2 } from '../../model/geometry';
 import type { CadDocument } from '../../model/document';
 import type { AngleUnit } from '../../model/projectSettings';
-import { surveyPolar, surveyStakeout, type PolarPoint, type Stake } from '../../model/geom/surveyCalc';
+import { surveyPolar, surveyStakeout, type Grid, type PolarPoint, type Stake } from '../../model/geom/surveyCalc';
 
 /**
  * What the Hesap windows read from their fields, without the page: known
@@ -66,7 +66,13 @@ export function atTableRow(message: string, rowOf: (shot: number) => number | un
 }
 
 /** Kutupsal alım's fields read and computed: the points and their names, or why not (the errors in order). */
-export function readPolar(form: PolarForm, resolve: (text: string) => Known, unit: AngleUnit, refraction: number | null = null): { errors: string[]; points: PolarPoint[] | null; names: string[] } {
+export function readPolar(
+  form: PolarForm,
+  resolve: (text: string) => Known,
+  unit: AngleUnit,
+  refraction: number | null = null,
+  grid: Grid | null = null,
+): { errors: string[]; points: PolarPoint[] | null; names: string[] } {
   const errors: string[] = [];
   const known = (text: string, label: string): Vec2 | null => {
     const r = resolve(text);
@@ -100,7 +106,7 @@ export function readPolar(form: PolarForm, resolve: (text: string) => Known, uni
   const names = rows.map(({ r, i }) => r.name?.trim() || `${i + 1}`);
   if (errors.length || !station || !back) return { errors, points: null, names };
   try {
-    const points = surveyPolar({ unit, station, back, backReading, stationZ, instrumentHeight: ih, shots, refraction });
+    const points = surveyPolar({ unit, station, back, backReading, stationZ, instrumentHeight: ih, shots, refraction, grid });
     return { errors, points, names };
   } catch (e) {
     errors.push(atTableRow((e as Error).message, (shot) => (rows[shot - 1] ? rows[shot - 1].i + 1 : undefined)));
@@ -120,7 +126,12 @@ export interface StakeoutForm {
  * Aplikasyon's fields read and computed: the values and the targets' names,
  * or why not. A target at the station has no bearing: its row says so.
  */
-export function readStakeout(form: StakeoutForm, resolve: (text: string) => Known, unit: AngleUnit): { errors: string[]; stakes: Stake[] | null; names: string[]; back: boolean } {
+export function readStakeout(
+  form: StakeoutForm,
+  resolve: (text: string) => Known,
+  unit: AngleUnit,
+  grid: Grid | null = null,
+): { errors: string[]; stakes: Stake[] | null; names: string[]; back: boolean } {
   const errors: string[] = [];
   const st = resolve(form.station);
   const bk = resolve(form.back);
@@ -144,7 +155,7 @@ export function readStakeout(form: StakeoutForm, resolve: (text: string) => Know
   const back = !!bk && 'p' in bk;
   if (errors.length || !station) return { errors, stakes: null, names, back };
   try {
-    const stakes = surveyStakeout({ unit, station, back: bk && 'p' in bk ? bk.p : null, targets });
+    const stakes = surveyStakeout({ unit, station, back: bk && 'p' in bk ? bk.p : null, targets, grid });
     return { errors, stakes, names, back };
   } catch (e) {
     errors.push((e as Error).message);

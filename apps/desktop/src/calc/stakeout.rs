@@ -7,6 +7,7 @@
 use iced::widget::{button, column, row};
 use iced::{Center, Element, Fill};
 use kentos_domain::Document as Model;
+use kentos_interaction::ground::{stake_note, survey_grid};
 use kentos_interaction::{Format, fixed, js_trim};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
@@ -94,28 +95,42 @@ impl Form {
             &self.rows,
             |t| resolve_point(model, t),
             unit_name(model.settings().angle_unit),
+            survey_grid(model.settings()),
         )
     }
 
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         let read = self.compute(model);
         let stakes = read.stakes?;
+        // With the project's grid: the distance on the ground and the line's factors (docs/adr/0171 §4).
+        let reduced = stakes.iter().any(|s| s.ground.is_some());
+        let mut head = vec!["Nokta", "Semt", "Yatay uzunluk"];
+        if reduced {
+            head.push("Zeminde");
+        }
+        head.push("Açı");
+        if reduced {
+            head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
         let mut lines = vec![
             vec![TITLE.to_owned()],
-            vec![
-                "Nokta".into(),
-                "Semt".into(),
-                "Yatay uzunluk".into(),
-                "Açı".into(),
-            ],
+            head.into_iter().map(str::to_owned).collect(),
         ];
         for (s, name) in stakes.iter().zip(&read.names) {
-            lines.push(vec![
+            let mut row = vec![
                 name.clone(),
                 fixed(s.bearing, 4),
                 format.length_bare(s.distance),
-                s.angle.map(|a| fixed(a, 4)).unwrap_or_default(),
-            ]);
+            ];
+            if reduced {
+                row.push(s.ground.map(|g| format.length_bare(g)).unwrap_or_default());
+            }
+            row.push(s.angle.map(|a| fixed(a, 4)).unwrap_or_default());
+            if reduced {
+                row.push(s.scale.map(|k| fixed(k, 8)).unwrap_or_default());
+                row.push(s.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
+            }
+            lines.push(row);
         }
         Some(lines)
     }
@@ -174,6 +189,13 @@ impl Form {
                     Line::Ok,
                     format!("{} nokta için semt ve uzunluk hesaplandı.", stakes.len()),
                 )];
+                if let Some(h) = model
+                    .settings()
+                    .ground_height()
+                    .filter(|_| stakes.iter().any(|s| s.ground.is_some()))
+                {
+                    lines.push((Line::Info, stake_note(h)));
+                }
                 if !read.back {
                     lines.push((
                         Line::Info,
@@ -188,30 +210,54 @@ impl Form {
             body = body.push(summary);
         }
         if let Some(stakes) = &read.stakes {
+            // With the project's grid the distance to set out on the ground comes too (docs/adr/0171 §4).
+            let reduced = stakes.iter().any(|s| s.ground.is_some());
             let rows = stakes
                 .iter()
                 .zip(&read.names)
                 .map(|(s, name)| {
-                    vec![
+                    let mut row = vec![
                         name.clone(),
                         angle_text(format, s.bearing),
                         format.length_bare(s.distance),
+                    ];
+                    if reduced {
+                        row.push(s.ground.map(|g| format.length_bare(g)).unwrap_or_default());
+                        row.push(
+                            s.scale
+                                .zip(s.height_factor)
+                                .map(|(k, h)| fixed(k * h, 8))
+                                .unwrap_or_default(),
+                        );
+                    }
+                    row.push(
                         s.angle
                             .map_or_else(|| "—".to_owned(), |a| angle_text(format, a)),
-                    ]
+                    );
+                    row
                 })
                 .collect();
-            body = body.push(
-                column![
-                    label::strong("Aplikasyon değerleri"),
-                    result_table(
-                        &["Nokta", "Semt", "Yatay uzunluk (m)", "Bakılan noktadan açı"],
-                        rows,
-                        &[false, true, true, true],
-                    ),
-                ]
-                .spacing(6),
-            );
+            let table = if reduced {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Düzlemde (m)",
+                        "Zeminde (m)",
+                        "Çarpan",
+                        "Bakılan noktadan açı",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true],
+                )
+            } else {
+                result_table(
+                    &["Nokta", "Semt", "Yatay uzunluk (m)", "Bakılan noktadan açı"],
+                    rows,
+                    &[false, true, true, true],
+                )
+            };
+            body = body.push(column![label::strong("Aplikasyon değerleri"), table].spacing(6));
         }
         let done = read.stakes.is_some();
         Dialog::new(TITLE)

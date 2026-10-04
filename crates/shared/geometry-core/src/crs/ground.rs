@@ -187,6 +187,20 @@ pub fn point_scale(system: &System, p: Vec2) -> Option<f64> {
     }
 }
 
+/// Whether the system has one scale at a point, so that lengths can be
+/// taken to its grid (docs/adr/0171 §3): a transverse Mercator, or a local
+/// system on one by a similarity.
+pub fn has_point_scale(system: &System) -> bool {
+    match system {
+        System::Tm { .. } => true,
+        System::Local {
+            base,
+            plane: Plane::Similarity { scale, .. },
+        } => *scale > 0.0 && has_point_scale(base),
+        _ => false,
+    }
+}
+
 /// The projection's scale along the line from `a` to `b`: Simpson's rule
 /// over its ends and its middle.
 pub fn line_scale(system: &System, a: Vec2, b: Vec2) -> Option<f64> {
@@ -559,6 +573,9 @@ pub(crate) static OPS: &[Op] = &[
             Answer(ground_measures(&system, &rings, closed, height))
         }
     ),
+    op!("crsHasPointScale", |system: System| {
+        has_point_scale(&system)
+    }),
     op!("crsPointScale", |system: System, p: Vec2| {
         point_scale(&system, p)
     }),

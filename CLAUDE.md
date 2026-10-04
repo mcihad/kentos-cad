@@ -38,8 +38,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   istasyon zinciri ve iki yönden kenarları), Kutupsal alım'a ve Poligon hesabı'na aktar; Proje ayarları › Ölçme: k (0,13), iki durumun
   ve poligonun toleransları (`.kcad` şema 14, 15), Kutupsal alım da k'yı uygular, Poligon hesabı kapanmaları toleranslarla karşılaştırır;
   zemin, elipsoit ve düzlem: Proje ayarları › Ölçme'de ortalama elipsoit yüksekliği (`.kcad` şema 16), yazılıyken Mesafe ölç ve Alan
-  hesapla'nın elipsoit üstündeki (jeodezikler, düzlemin ölçeği) ve zemindeki (yükseklik çarpanı) satırları; çekirdekte noktanın ve
-  çizginin ölçeği, GeographicLib'in libm'li kopyası (ADR 0171);
+  hesapla'nın elipsoit üstündeki (jeodezikler, düzlemin ölçeği) ve zemindeki (yükseklik çarpanı) satırları; “Uzunlukları projeksiyona
+  indir” açıkken Kutupsal alım ve Poligon hesabı ölçülen uzunlukları düzleme indirir, Aplikasyon zemin uzunluklarını da verir (ölçek ve
+  yükseklik çarpanı raporda); çekirdekte noktanın ve çizginin ölçeği, GeographicLib'in libm'li kopyası (ADR 0171);
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
   numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
   noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
@@ -791,7 +792,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   hesapla'nın elipsoit ve zemin satırları, `kentos_interaction::ground`, `model/groundMeasures.ts`; ortak iz `ground-measures.json`)
   tamam; 3. adım (Hesap pencerelerinde “Uzunlukları projeksiyona indir”) iki parçada: 3a çekirdek (`crs::ground::Grid`,
   `grid_factor`; `survey::polar`, `survey::traverse` isteğe bağlı `grid` ile, iki ve üç geçiş; başvuru `ground_survey_cases.py`)
-  tamam; sıradaki 3b (ayar ve pencereler iki platformda). 4 Ekim: derleme ve test süreleri
+  ve 3b (Ölçme'de anahtar: yükseklik, sistem ve noktanın tek ölçeğiyle açılır, `survey_grid`, `why_not_grid`, `surveyGrid`,
+  `whyNotGrid`; pencerelerin tabloları, özetleri ve raporları iki platformda) tamam; `HYB-14` bitti (5 Ekim). Sıradaki `HYB-15`
+  köşe tablosu düzenleme. 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
