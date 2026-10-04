@@ -112,6 +112,24 @@ pub fn resolve_point(doc: &Model, text: &str) -> Known {
     }
 }
 
+/// The drawing's point named `text` (its label, else its Ad; Turkish case),
+/// as [`resolve_point`] finds it: Cihaza gönder takes its code and elevation.
+pub fn point_named<'a>(doc: &'a Model, text: &str) -> Option<&'a Entity> {
+    let key = upper_tr(js_trim(text));
+    doc.entities().find(|e| match e {
+        Entity::Point(pt) => {
+            let name = pt
+                .base
+                .label
+                .as_deref()
+                .or_else(|| pt.base.attrs.get("Ad").map(String::as_str))
+                .unwrap_or("");
+            upper_tr(name) == key
+        }
+        _ => false,
+    })
+}
+
 /// The name a point object at exactly `p` has, if any (the web's `nameAt`):
 /// a picked point snapped to a named point is given by its name.
 pub fn name_at(doc: &Model, p: Vec2) -> Option<String> {

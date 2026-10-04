@@ -51,11 +51,13 @@ fn bar_button<'a>(
 }
 
 /// The batch operations as a menu lists them (İşlemler ▾, a row's menu):
-/// each sends `on(kind)`, then Dışa aktar `export`; none without rows.
+/// each sends `on(kind)`, then Dışa aktar `export` and Cihaza gönder `send`;
+/// none without rows.
 fn batch_items(
     menu: Menu<Message>,
     on: impl Fn(Kind) -> Message,
     export: Message,
+    send: Message,
     any: bool,
 ) -> Menu<Message> {
     [
@@ -89,6 +91,9 @@ fn batch_items(
     .item(texts::EXPORT, any.then_some(export))
     .icon(from_web(Some("export")))
     .detail(texts::EXPORT_HINT)
+    .item(texts::SEND, any.then_some(send))
+    .icon(from_web(Some("fieldSend")))
+    .detail(texts::SEND_HINT)
 }
 
 /// A row's menu's header when the row is not selected: the point by its
@@ -120,6 +125,7 @@ fn row_menu(at: usize, header: String) -> Menu<Message> {
         menu,
         |k| on(RowAction::Batch(k)),
         on(RowAction::Export),
+        on(RowAction::Send),
         true,
     )
     .separator()
@@ -236,6 +242,7 @@ impl App {
                         Menu::new().header(header.clone()),
                         |k| msg(Event::Batch(k)),
                         msg(Event::Export),
+                        msg(Event::Send),
                         any,
                     )
                     .item(texts::IMPORT, Some(msg(Event::Import)))

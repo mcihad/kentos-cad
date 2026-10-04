@@ -17,6 +17,7 @@ import {
   type Row,
 } from './common';
 import { readStakeout } from './read';
+import type { FieldPoint } from '../../contracts/generated/FieldPoint';
 import { fixed } from '../../core/displayNumber';
 
 /**
@@ -45,6 +46,7 @@ class StakeoutDialog implements Picker {
   private readonly results = h('div', { class: 'calc-section' });
   private readonly summaryBox = h('div', { class: 'io-summary' });
   private readonly copy = h('button', { class: 'btn btn--primary', type: 'button' }, 'Raporu kopyala');
+  private readonly send = h('button', { class: 'btn', type: 'button' }, 'Cihaza gönder…');
   private readonly dialog: Dialog;
   private grid: Grid | null = null;
   private result: { stakes: Stake[]; names: string[] } | null = null;
@@ -57,10 +59,11 @@ class StakeoutDialog implements Picker {
       width: 860,
       className: 'dialog--io dialog--calc',
       content: [this.form, this.table, this.summaryBox, this.results],
-      footer: [h('span', { class: 'io-status' }), this.copy, close],
+      footer: [h('span', { class: 'io-status' }), this.send, this.copy, close],
     });
     close.addEventListener('click', () => this.dialog.close());
     this.copy.addEventListener('click', () => this.copyReport());
+    this.send.addEventListener('click', () => this.sendToInstrument());
     this.render();
   }
 
@@ -130,6 +133,33 @@ class StakeoutDialog implements Picker {
       this.results,
       h('h3', { class: 'calc-results__title' }, 'Aplikasyon değerleri'),
       resultTable(['Nokta', 'Semt', 'Yatay uzunluk (m)', 'Bakılan noktadan açı'], rows, [false, true, true, true]),
+    );
+  }
+
+  /**
+   * Cihaza gönder (docs/adr/0169 §4): the table's points as an instrument's coordinate file, the drawing's with their
+   * codes and elevations; a point typed as Y,X has no name, and the window says so.
+   */
+  private sendToInstrument(): void {
+    const { ctx } = this;
+    void import('../io/FieldSendDialog').then(
+      ({ fieldPoint, openFieldSend }) => {
+        const points: FieldPoint[] = [];
+        for (const r of state.rows) {
+          const text = (r.point ?? '').trim();
+          const k = resolvePoint(ctx, text);
+          if (!k || 'error' in k) continue;
+          const key = text.toLocaleUpperCase('tr-TR');
+          const e = k.name ? [...ctx.doc.all()].find((x) => x.kind === 'point' && (x.label ?? x.attrs['Ad'] ?? '').toLocaleUpperCase('tr-TR') === key) : undefined;
+          points.push((e && fieldPoint(e)) || { name: k.name, east: k.p.x, north: k.p.y });
+        }
+        if (!points.length) {
+          ctx.log.warn('Tabloda gönderilecek nokta yok: noktaları adlarıyla ya da Y,X olarak yazın.');
+          return;
+        }
+        openFieldSend(ctx, points, `Aplikasyon tablosunun ${points.length} noktası`);
+      },
+      (e: Error) => ctx.log.error(`Cihaza gönder penceresi yüklenemedi: ${e.message}. Bağlantınızı denetleyip yeniden deneyin.`),
     );
   }
 

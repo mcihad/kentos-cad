@@ -81,6 +81,7 @@
     "file.import.shp",
     "file.export.geojson",
     "file.import.gnss",
+    "field.send",
     "tool.stretch",
     "tool.array",
     "tool.arrayPolar",

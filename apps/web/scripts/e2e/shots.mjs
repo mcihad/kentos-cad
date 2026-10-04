@@ -34,7 +34,8 @@
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
 // survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
-// gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system).
+// gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
+// fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -4051,6 +4052,29 @@ SCENES.gnss = [
     open: async (ui) => (await ui.eval(`window.kentos.doc.settings.assign({ srid: 0 })`), await gnssOpen(ui, 'sample.gpx')),
     close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256 })`)),
   },
+];
+
+/**
+ * Cihaza gönder (docs/adr/0169 §4): the sample's points from Nokta editörü's rows as Leica GSI-16 and as Trimble JobXML,
+ * and the selected points as Leica GSI-8, whose eight digits do not hold TM coordinates. The desktop's are
+ * `exchange::field_send_tests::screens` (cihaza-*).
+ */
+const fieldSendOpen = async (ui, format) => {
+  await ui.eval(`(() => {
+    const k = window.kentos;
+    const ids = [...k.doc.all()].filter((e) => e.kind === 'point').slice(0, 40).map((e) => e.id);
+    k.selection.set(ids);
+    k.commands.execute('field.send');
+  })()`);
+  await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary .io-summary__line')`);
+  await ui.eval(`(() => { const s = document.querySelector('.dialog--io select[aria-label="Biçim"]'); s.value = '${format}'; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await ui.sleep(500);
+};
+const fieldSendClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.selection.set([])`));
+SCENES.fieldsend = [
+  { id: 'fieldsend-gsi16', open: (ui) => fieldSendOpen(ui, 'gsi16'), close: fieldSendClose },
+  { id: 'fieldsend-jobxml', open: (ui) => fieldSendOpen(ui, 'jobxml'), close: fieldSendClose },
+  { id: 'fieldsend-gsi8', open: (ui) => fieldSendOpen(ui, 'gsi8'), close: async (ui) => (await fieldSendClose(ui), await ui.eval(`(() => { const s = document.querySelector('.dialog--io select[aria-label="Biçim"]'); if (s) { s.value = 'gsi16'; s.dispatchEvent(new Event('change', { bubbles: true })); } })()`)) },
 ];
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */

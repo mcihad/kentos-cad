@@ -307,6 +307,18 @@ pub fn when(text: &str, zone: &Zone) -> String {
     )
 }
 
+/// A moment (seconds since 1970) in the device's zone as a time stamp to the
+/// second, “2026-10-04T10:15:00” (Trimble JobXML's, docs/adr/0169 §4).
+pub fn iso_local(t: i64, zone: &Zone) -> String {
+    let (year, month, day, secs) = civil(t + i64::from(zone.offset_at(t)));
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}",
+        secs / 3600,
+        secs % 3600 / 60,
+        secs % 60
+    )
+}
+
 /// A moment (milliseconds since 1970) as the time of day in the device's
 /// zone, tr-TR: “14:05:09” (the web's `toLocaleTimeString`).
 pub fn clock(ms: u64, zone: &Zone) -> String {

@@ -20,6 +20,9 @@ pub(crate) mod coord_import;
 mod dimension_tests;
 pub(crate) mod drawing_import;
 mod dxf_export;
+pub(crate) mod field_send;
+#[cfg(test)]
+mod field_send_tests;
 mod geojson_export;
 mod gis_import;
 #[cfg(test)]
@@ -83,6 +86,8 @@ pub enum Window {
     GeoJsonExport(geojson_export::State),
     /// Boxed: the plan it holds.
     GnssImport(Box<gnss_import::State>),
+    /// Cihaza gönder (docs/adr/0169 §4); boxed: the points and the file.
+    FieldSend(Box<field_send::State>),
 }
 
 #[derive(Debug, Clone)]
@@ -99,6 +104,7 @@ pub enum Event {
     GisImport(gis_import::Event),
     GeoJsonExport(geojson_export::Event),
     GnssImport(gnss_import::Event),
+    FieldSend(field_send::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -106,7 +112,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 10] = [
+pub const COMMANDS: [&str; 11] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -117,6 +123,7 @@ pub const COMMANDS: [&str; 10] = [
     "file.import.shp",
     "file.export.geojson",
     "file.import.gnss",
+    "field.send",
 ];
 
 fn message(event: Event) -> Message {
@@ -147,6 +154,7 @@ impl App {
             "file.import.geojson" => self.pick(Kind::GeoJson),
             "file.import.shp" => self.pick(Kind::Shapefile),
             "file.import.gnss" => self.pick(Kind::Gnss),
+            "field.send" => self.field_send_selection(),
             "file.export.dxf" => {
                 let state = dxf_export::State::new(self);
                 self.open_window(Window::DxfExport(state));
@@ -304,6 +312,7 @@ impl App {
             Event::GisImport(e) => self.gis_import_event(e),
             Event::GeoJsonExport(e) => self.geojson_export_event(e),
             Event::GnssImport(e) => self.gnss_import_event(e),
+            Event::FieldSend(e) => self.field_send_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -317,9 +326,14 @@ impl App {
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }
+        // Cihaza gönder opened from Aplikasyon goes back to it.
+        let back = match &self.exchange {
+            Some(Window::FieldSend(s)) => s.back,
+            _ => None,
+        };
         self.exchange = None;
         if self.dialog == Some(Dialog::Exchange) {
-            self.dialog = None;
+            self.dialog = back;
         }
     }
 
@@ -332,6 +346,7 @@ impl App {
             Some(Window::GisImport(s)) => self.gis_import_view(s),
             Some(Window::GeoJsonExport(s)) => self.geojson_export_view(s),
             Some(Window::GnssImport(s)) => self.gnss_import_view(s),
+            Some(Window::FieldSend(s)) => self.field_send_view(s),
             None => iced::widget::text("").into(),
         }
     }
@@ -413,6 +428,7 @@ impl App {
             Some(Window::DxfExport(_)) => self.dxf_export_written(outcome),
             Some(Window::CoordExport(_)) => self.coord_export_written(outcome),
             Some(Window::GeoJsonExport(_)) => self.geojson_export_written(outcome),
+            Some(Window::FieldSend(_)) => self.field_send_written(outcome),
             _ => Task::none(),
         }
     }

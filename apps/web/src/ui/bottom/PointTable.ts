@@ -59,7 +59,7 @@ export const POINT_TEXTS = {
   show: 'Göster',
   showHint: 'Seçili noktalara yakınlaştırır',
   actions: 'İşlemler',
-  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar. İçe aktar koordinat listesinden nokta alır.',
+  actionsHint: 'Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, Cihaza gönder. İçe aktar koordinat listesinden nokta alır.',
   rename: 'Yeniden adlandır…',
   renameHint: 'Adların başına önek ekler ya da baştaki öneki kaldırır',
   number: 'Sıralı numara ver…',
@@ -70,6 +70,8 @@ export const POINT_TEXTS = {
   dedupeHint: 'Aynı adlı ya da aynı yerdeki noktalardan birini tutar, ötekileri siler',
   exportList: 'Dışa aktar…',
   exportHint: 'Noktaları tablonun sırasıyla koordinat listesi olarak yazar (NCN, TXT, CSV)',
+  send: 'Cihaza gönder…',
+  sendHint: 'Noktaları tablonun sırasıyla ölçüm cihazına koordinat dosyası olarak yazar (Leica GSI, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV)',
   importList: 'İçe aktar…',
   importHint: 'Koordinat listesinden nokta alır; adları çizimde de varsa Çift noktaları ayıkla Aynı ad ile açılır',
   groupsHint: 'Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.',
@@ -299,6 +301,7 @@ export class PointTable extends Component {
       item('dedupe', POINT_TEXTS.dedupe, 'pointDedupe', POINT_TEXTS.dedupeHint),
       { kind: 'separator' },
       { label: POINT_TEXTS.exportList, icon: 'export', detail: POINT_TEXTS.exportHint, disabled: this.ids.length === 0, run: () => (first(), this.exportList()) },
+      { label: POINT_TEXTS.send, icon: 'fieldSend', detail: POINT_TEXTS.sendHint, disabled: this.ids.length === 0, run: () => (first(), this.sendToInstrument()) },
     ];
   }
 
@@ -352,6 +355,25 @@ export class PointTable extends Component {
     const selected = this.ids.some((id) => this.ctx.selection.has(id));
     import('../io/CoordExportDialog').then(
       (m) => m.openCoordExport(this.ctx, { table: { ids, selected } }),
+      (e: Error) => this.loadFailed(e),
+    );
+  }
+
+  /** Cihaza gönder (docs/adr/0169 §4): the target rows, in the table's order, as an instrument's coordinate file. */
+  private sendToInstrument(): void {
+    const { ids } = this.targets();
+    const selected = this.ids.some((id) => this.ctx.selection.has(id));
+    import('../io/FieldSendDialog').then(
+      (m) =>
+        m.openFieldSend(
+          this.ctx,
+          ids.flatMap((id) => {
+            const e = this.ctx.doc.get(id);
+            const p = e ? m.fieldPoint(e) : null;
+            return p ? [p] : [];
+          }),
+          selected ? `Nokta editöründe seçili ${ids.length} satır` : `Nokta editörünün ${ids.length} satırı`,
+        ),
       (e: Error) => this.loadFailed(e),
     );
   }

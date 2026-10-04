@@ -135,6 +135,9 @@ pub const PORTED: &[&str] = &[
     // GNSS içe aktar (exchange/gnss_import.rs, docs/adr/0169 §6): a receiver's GPX or
     // NMEA positions moved from WGS 84 into the project's system, with their accuracy.
     "file.import.gnss",
+    // Cihaza gönder (exchange/field_send.rs, docs/adr/0169 §4): the selected points as an
+    // instrument's coordinate file, through the shared writer.
+    "field.send",
     // Modify tools, round 3 (docs/adr/0047, part 2): stretch through cad.entities.edit,
     // the arrays through cad.entities.array, align through cad.entities.transform.
     "tool.stretch",

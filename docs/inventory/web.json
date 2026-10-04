@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 294,
-      "implemented": 282,
+      "total": 295,
+      "implemented": 283,
       "partial": 0,
       "pending": 12
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 92,
-      "implemented": 92,
+      "total": 93,
+      "implemented": 93,
       "partial": 0,
       "pending": 0
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 222,
+    "commandsOnDesktop": 223,
     "desktop": {
       "commands": {
-        "total": 294,
-        "implemented": 222,
+        "total": 295,
+        "implemented": 223,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 92,
-        "implemented": 74,
+        "total": 93,
+        "implemented": 75,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -2309,6 +2309,41 @@
         "apps/web/src/app/sheet/sheetApp.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs"
+      ]
+    },
+    {
+      "id": "field.send",
+      "title": "Cihaza gönder…",
+      "short": "Cihaza gönder",
+      "category": "Hesap",
+      "icon": "fieldSend",
+      "description": "Seçili noktaları ölçüm cihazına koordinat dosyası olarak yazar: Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV. Ad, kod ve kot taşınır; biçimin taşıyamadığı nokta nedeniyle söylenir, kırpılmaz. Aplikasyon penceresinden ve Nokta editöründen de açılır.",
+      "aliases": [
+        "CIHAZAGONDER",
+        "CİHAZAGÖNDER",
+        "ALETEGONDER",
+        "GONDER",
+        "GÖNDER"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Hesap › Saha"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Ölçme",
+        "CBS › Ölçme › Saha"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
       ]
     },
     {
@@ -18619,6 +18654,18 @@
       "desktopWhere": "apps/desktop/src/exchange/dxf_export.rs (ADR 0048)"
     },
     {
+      "id": "apps/web/src/ui/io/FieldSendDialog.ts#openFieldSend",
+      "name": "openFieldSend",
+      "role": "window",
+      "source": "apps/web/src/ui/io/FieldSendDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/exchange/field_send.rs (ADR 0169 §4)"
+    },
+    {
       "id": "apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport",
       "name": "openGeoJsonExport",
       "role": "window",
@@ -19652,7 +19699,8 @@
             "label": "Saha",
             "items": [
               "calc.fieldbook",
-              "file.import.gnss"
+              "file.import.gnss",
+              "field.send"
             ]
           },
           {
@@ -21275,11 +21323,15 @@
             "items": [
               {
                 "command": "calc.fieldbook",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "file.import.gnss",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "field.send",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -22542,6 +22594,7 @@
               "overflow": [
                 "calc.fieldbook",
                 "file.import.gnss",
+                "field.send",
                 "calc.traverse",
                 "calc.polar",
                 "calc.stakeout",
@@ -25228,11 +25281,15 @@
               "items": [
                 {
                   "command": "calc.fieldbook",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "file.import.gnss",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "field.send",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -25885,6 +25942,7 @@
     "parallel": "<path d=\"M2 14 9 7h9\" stroke-dasharray=\"2.4 1.6\"/><path d=\"M2 10.46 7.96 4.5H18M2 17.54 10.04 9.5H18\"/>",
     "perpIn": "<path d=\"M3 16h14M10 4v12M10 13.3h2.7V16\"/><path d=\"m8 8.5 2 2 2-2\"/><rect x=\"8.5\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "surveyTraverse": "<path d=\"m3 15 4.5-7 5 3.5L17 4\"/><path d=\"M9.3 9.6a2.4 2.4 0 0 1-2.1 1\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.5\" cy=\"8\" r=\"1.1\"/><circle cx=\"12.5\" cy=\"11.5\" r=\"1.1\"/>",
+    "fieldSend": "<rect x=\"9.5\" y=\"3.5\" width=\"5.5\" height=\"6\" rx=\"1\"/><circle cx=\"12.25\" cy=\"6.5\" r=\"1.1\"/><path d=\"M12.25 9.5 9 17.5M12.25 9.5l3.25 8M12.25 9.5v8\"/><path d=\"M1.8 6.5h5.4M5.2 4.5l2 2-2 2\"/>",
     "fieldBook": "<rect x=\"5\" y=\"2.5\" width=\"11\" height=\"15\" rx=\"1.5\"/><path d=\"M5 6H3.5M5 10H3.5M5 14H3.5\"/><path d=\"M8 6.5h5M8 9.5h5\"/><path d=\"M8 14.5l4-2.6M8 14.5h4.5\"/>",
     "surveyPolar": "<path d=\"M5 15 15 5M5 15l11 1\"/><path d=\"M5 15 4 3.5\" stroke-dasharray=\"2 1.5\"/><path d=\"M4.6 10.4a4.6 4.6 0 0 1 3.7 1.3\"/><rect x=\"3.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15\" cy=\"5\" r=\"1.3\"/><circle cx=\"16\" cy=\"16\" r=\"1.3\"/>",
     "surveyStakeout": "<path d=\"M4 15 13 8.2\" stroke-dasharray=\"2.4 1.6\"/><path d=\"M15 4.5v10.5M13 15h4\"/><path d=\"m10.3 7.9 2.7.3-1 2.5\"/><rect x=\"2.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",

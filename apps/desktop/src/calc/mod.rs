@@ -121,6 +121,8 @@ pub enum Event {
     Layer(usize),
     AddPoints,
     CopyReport,
+    /// Aplikasyon's Cihaza gönder: its table's points as an instrument's file (docs/adr/0169 §4).
+    SendToDevice,
     /// A table's cell (row, column) typed, pasted, Enter in it; rows added and removed.
     Cell(usize, usize, String),
     Paste(usize, usize, String),
@@ -311,6 +313,7 @@ impl App {
             Event::Convert(e) => self.convert_event(e),
             Event::FieldBook(e) => self.fieldbook_event(e),
             Event::CopyReport => self.calc_copy_report(window),
+            Event::SendToDevice => self.calc_send_stakeout(),
             Event::AddPoints => {
                 self.calc_add_points(window);
                 Task::none()
@@ -513,6 +516,39 @@ impl App {
     }
 
     /// The report, tab-separated lines, to the system clipboard (the web's `copyReport`).
+    /// Cihaza gönder (docs/adr/0169 §4): Aplikasyon's table as an instrument's
+    /// coordinate file, the drawing's points with their codes and elevations;
+    /// a point typed as Y,X has no name, and the window says so.
+    fn calc_send_stakeout(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let mut points = Vec::new();
+        for text in &self.calc.stakeout.rows {
+            if let read::Known::Point { p, name } = read::resolve_point(&doc.model, text) {
+                let of_drawing = (!name.is_empty())
+                    .then(|| read::point_named(&doc.model, text))
+                    .flatten()
+                    .and_then(crate::exchange::field_send::field_point);
+                points.push(of_drawing.unwrap_or(kentos_contracts::FieldPoint {
+                    name,
+                    east: p.x,
+                    north: p.y,
+                    elevation: None,
+                    code: None,
+                }));
+            }
+        }
+        if points.is_empty() {
+            self.warn(
+                "Tabloda gönderilecek nokta yok: noktaları adlarıyla ya da Y,X olarak yazın.",
+            );
+            return Task::none();
+        }
+        let from = format!("Aplikasyon tablosunun {} noktası", points.len());
+        self.open_field_send(points, from)
+    }
+
     fn calc_copy_report(&mut self, window: Window) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();

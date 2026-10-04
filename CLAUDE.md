@@ -38,7 +38,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   istasyon zinciri ve iki yönden kenarları), Kutupsal alım'a ve Poligon hesabı'na aktar; Proje ayarları › Ölçme: k (0,13), iki durumun
   ve poligonun toleransları (`.kcad` şema 14, 15), Kutupsal alım da k'yı uygular, Poligon hesabı kapanmaları toleranslarla karşılaştırır;
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
-  numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz (ADR 0169);
+  numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
+  noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
+  nokta nedeniyle söylenir (SDR33 sahibin örneğini bekliyor) (ADR 0169);
   özel koordinat sistemi: projenin ya da ikinci sistemin tanımı (TM, coğrafi, taban sisteme bağlı yerel; kayıttaki ya da projenin datumu, WGS 84'e 7 parametre; `.kcad` şema 13), projenin datum dönüşümleri (7 parametre ya da cihazın NTv2 ızgarası), Izgaralar; Özel koordinat sistemi penceresi: WKT ve PROJ'dan al ve kopyala, Kayıttakini seç, Deneme noktası, Ortak noktalardan hesapla (ADR 0168);
   izleyerek çizim: yol aracının İzle (İ) düğmesi açıkken çizgiye yakın tık çizginin üstüne oturur, iki nokta arası görünen çizgiler boyunca kısa yoldan, köşeleri ve yaylarıyla; Birleştir'in Zincir (Z) seçeneği tıklanan çizginin bağlı zincirini tek çoklu çizgi yapar; yol aracının Akış (A) düğmesi açıkken imleç Adım boyu (B) kadar ilerledikçe köşe bırakır (ADR 0161);
   toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
@@ -230,9 +232,10 @@ python3 scripts/fixtures/field_samples.py   # Karne editörünün resimleri ve a
 python3 scripts/fixtures/field_gts7_cases.py --check   # Topcon GTS-7 okuyucusunu (denetim sözcükleri, UNITS, DDD.MMSS ve gon, eksi yatay okuma, STN ve XYZ, BS/FS/SS, HV/SD, HD ve OFFSET, bozuk sayılar) Topcon Link kılavuzunun Ek C'sinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gts7.json (ADR 0169 §1)
 python3 scripts/fixtures/gnss_gpx_cases.py --check   # GPX 1.1 okuyucusunu (yol, rota ve iz noktaları, ele ve geoidheight'tan elipsoit yüksekliği, fix, uydu, HDOP, fix none, bozuk konum ve değerler, XML değil, derin) şemadan yazılmış, expat'le okuyan başvurudan denetle; durumlar fixtures/gnss/v1/gpx.json (ADR 0169 §1)
 python3 scripts/fixtures/gnss_nmea_cases.py --check   # NMEA 0183 okuyucusunu (GGA ve RMC, sağlama toplamı, kayıt öneki, kalite ve adları, ddmm.mmmm konum, birimler, geoit ayrımı, tarihli ve tarihsiz zaman) cümlelerden yazılmış başvurudan denetle; durumlar fixtures/gnss/v1/nmea.json (ADR 0169 §1)
-python3 scripts/fixtures/field_write_cases.py --check   # alete gönderilen koordinat dosyalarını (Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV; taşınamayan ad, kod ve değerler) biçimlerin belgelerinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/write.json (ADR 0169 §4)
+python3 scripts/fixtures/field_write_cases.py --check   # cihaza gönderilen koordinat dosyalarını (Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV; taşınamayan ad, kod ve değerler) biçimlerin belgelerinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/write.json (ADR 0169 §4)
 python3 scripts/fixtures/gnss_import_cases.py --check   # GNSS içe aktarmanın noktalarını (WGS 84'ten projenin sistemine, adlar, kot elipsoit yüksekliği, öznitelikler, dönüşümün doğruluk metni) PROJ'la denetle; durumlar fixtures/gnss/v1/import.json (ADR 0169 §6)
 python3 scripts/fixtures/gnss_samples.py   # GNSS içe aktar penceresinin resimleri ve akış testleri için örnek GPX ve NMEA'yı (fixtures/gnss/v1/sample.*, örnek çizimin parsel köşeleri) PROJ'la yeniden yaz; --check farkı arar
+cargo test -p kentos-desktop exchange::field_send_tests::screens -- --ignored --nocapture   # Cihaza gönder penceresinin resimleri, .run/shots/cihaza-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs fieldsend))
 cargo test -p kentos-desktop exchange::gnss_tests::screens -- --ignored --nocapture   # GNSS içe aktar penceresinin resimleri, .run/shots/gnss-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs gnss))
 python3 scripts/fixtures/field_jobxml_cases.py --check   # Trimble JobXML okuyucusunu (FieldBook'un istasyon, prizma ve nokta kayıtları, ham yöntemler, silinmiş ve ortalanmış kayıtlar, bulunmayan istasyon ve prizma, XML değil, 256 düzeyden derin) şema 5.3'ten yazılmış, Python'un expat'iyle okuyan başvurudan denetle; durumlar fixtures/field/v1/jobxml.json (ADR 0169 §1)
 python3 scripts/fixtures/field_nikon_cases.py --check   # Nikon RAW okuyucusunu (CO kayıtlarından birimler, DDDMMSS ve gon, Zenith ve Horizon, koordinat kayıtları ve ST, F1/F2/SS/CP/SO, bozuk sayılar) Nivo kılavuzundan yazılmış başvurudan denetle; durumlar fixtures/field/v1/nikon.json (ADR 0169 §1)
@@ -770,8 +773,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `formats::xml`) tamam; 5. adım bitti. 6. adım GNSS: 6a okuyucular (`formats::gnss`, `readGnss`; GPX 1.1 ve NMEA 0183, başvurular
   `gnss_gpx_cases.py`, `gnss_nmea_cases.py`) ve 6b GNSS içe aktar (`file.import.gnss`; kurallar `kentos_interaction::gnss`,
   `model/gnssImport.ts`, başvuru `gnss_import_cases.py`; pencere `exchange/gnss_import.rs`, `ui/io/GnssImportDialog.ts`; içe aktarma
-  yolundan tek adım, yeni ya da var olan katman) tamam; 6. adım bitti. Sıradaki 7. adım alete gönderme (okunan biçimlerin koordinat
-  kayıtları ve CSV). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  yolundan tek adım, yeni ya da var olan katman) tamam; 6. adım bitti. 7. adım cihaza gönderme: 7a yazıcılar (`formats::field::write`,
+  `writeField`; başvuru `field_write_cases.py`) ve 7b Cihaza gönder penceresi (`field.send`; `exchange/field_send.rs`,
+  `ui/io/FieldSendDialog.ts`; seçili noktalar, Aplikasyon, Nokta editörü) tamam; Sokkia SDR33 yazımı sahibin bir SDR33 dosyasını ya da
+  Sokkia'nın belgesini bekliyor (iş kaydının kodları). `HYB-13` bundan başka bitti; sıradaki `HYB-14`. 4 Ekim: derleme ve test süreleri
+  ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

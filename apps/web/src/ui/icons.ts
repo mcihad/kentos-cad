@@ -193,6 +193,8 @@ export const ICONS = {
   perpIn: `<path d="M3 16h14M10 4v12M10 13.3h2.7V16"/><path d="m8 8.5 2 2 2-2"/>${grip(10, 4)}`,
   surveyTraverse: `<path d="m3 15 4.5-7 5 3.5L17 4"/><path d="M9.3 9.6a2.4 2.4 0 0 1-2.1 1"/>${grip(3, 15)}${grip(17, 4)}<circle cx="7.5" cy="8" r="1.1"/><circle cx="12.5" cy="11.5" r="1.1"/>`,
   // A field book: its binding, two lines of readings and an angle.
+  // Cihaza gönder: an arrow into a total station on its tripod.
+  fieldSend: `<rect x="9.5" y="3.5" width="5.5" height="6" rx="1"/><circle cx="12.25" cy="6.5" r="1.1"/><path d="M12.25 9.5 9 17.5M12.25 9.5l3.25 8M12.25 9.5v8"/><path d="M1.8 6.5h5.4M5.2 4.5l2 2-2 2"/>`,
   fieldBook: `<rect x="5" y="2.5" width="11" height="15" rx="1.5"/><path d="M5 6H3.5M5 10H3.5M5 14H3.5"/><path d="M8 6.5h5M8 9.5h5"/><path d="M8 14.5l4-2.6M8 14.5h4.5"/>`,
   surveyPolar: `<path d="M5 15 15 5M5 15l11 1"/><path d="M5 15 4 3.5" stroke-dasharray="2 1.5"/><path d="M4.6 10.4a4.6 4.6 0 0 1 3.7 1.3"/>${grip(5, 15)}<circle cx="15" cy="5" r="1.3"/><circle cx="16" cy="16" r="1.3"/>`,
   surveyStakeout: `<path d="M4 15 13 8.2" stroke-dasharray="2.4 1.6"/><path d="M15 4.5v10.5M13 15h4"/><path d="m10.3 7.9 2.7.3-1 2.5"/>${grip(4, 15)}`,

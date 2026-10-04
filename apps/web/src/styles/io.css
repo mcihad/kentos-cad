@@ -132,6 +132,21 @@
   color: var(--c-accent-text);
 }
 
+/* Cihaza gönder (docs/adr/0169 §4): the file's first lines as written, in the code face, scrolling sideways. */
+.send-preview {
+  margin: 0;
+  max-height: calc(240px * var(--ui-scale));
+  overflow: auto;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  white-space: pre;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+
 /* GNSS içe aktar (docs/adr/0169 §6): the kinds of points in a row, the unnamed points' prefix and first number side by
    side, the numbers of the preview right-aligned. */
 .gnss-kinds {

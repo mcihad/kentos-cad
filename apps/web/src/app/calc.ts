@@ -23,6 +23,36 @@ export function registerCalcCommands(ctx: AppContext): void {
       run: () => void import('../ui/calc/FieldBookDialog').then((m) => m.openFieldBook(ctx)).catch(failed),
     },
     {
+      // Cihaza gönder (docs/adr/0169 §4; the owner's name, 4 October): the selected points as an instrument's coordinate file.
+      id: 'field.send',
+      title: 'Cihaza gönder…',
+      short: 'Cihaza gönder',
+      category: 'Hesap',
+      icon: 'fieldSend',
+      description:
+        'Seçili noktaları ölçüm cihazına koordinat dosyası olarak yazar: Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV. Ad, kod ve kot taşınır; biçimin taşıyamadığı nokta nedeniyle söylenir, kırpılmaz. Aplikasyon penceresinden ve Nokta editöründen de açılır.',
+      aliases: ['CIHAZAGONDER', 'CİHAZAGÖNDER', 'ALETEGONDER', 'GONDER', 'GÖNDER'],
+      run: () => {
+        const points = [...ctx.selection.ids.value].map((id) => ctx.doc.get(id)).filter((e) => e?.kind === 'point');
+        if (!points.length) {
+          ctx.log.warn('Seçili nokta yok: cihaza gönderilecek noktaları seçin ya da Nokta editöründen veya Aplikasyon penceresinden gönderin.');
+          return;
+        }
+        void import('../ui/io/FieldSendDialog')
+          .then((m) =>
+            m.openFieldSend(
+              ctx,
+              points.flatMap((e) => {
+                const p = e ? m.fieldPoint(e) : null;
+                return p ? [p] : [];
+              }),
+              `Çizimde seçili ${points.length} nokta`,
+            ),
+          )
+          .catch(failed);
+      },
+    },
+    {
       id: 'calc.traverse',
       title: 'Poligon hesabı…',
       short: 'Poligon',

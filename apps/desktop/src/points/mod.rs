@@ -80,7 +80,7 @@ pub mod texts {
     pub const REMOVE: &str = "Sil";
     pub const SHOW: &str = "Göster";
     pub const ACTIONS: &str = "İşlemler";
-    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar. İçe aktar koordinat listesinden nokta alır.";
+    pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, Cihaza gönder. İçe aktar koordinat listesinden nokta alır.";
     pub const RENAME: &str = "Yeniden adlandır…";
     pub const RENAME_HINT: &str = "Adların başına önek ekler ya da baştaki öneki kaldırır";
     pub const NUMBER: &str = "Sıralı numara ver…";
@@ -92,6 +92,8 @@ pub mod texts {
     pub const EXPORT: &str = "Dışa aktar…";
     pub const EXPORT_HINT: &str =
         "Noktaları tablonun sırasıyla koordinat listesi olarak yazar (NCN, TXT, CSV)";
+    pub const SEND: &str = "Cihaza gönder…";
+    pub const SEND_HINT: &str = "Noktaları tablonun sırasıyla ölçüm cihazına koordinat dosyası olarak yazar (Leica GSI, Topcon GTS-7, Trimble JobXML, Nikon RAW, CSV)";
     pub const IMPORT: &str = "İçe aktar…";
     pub const IMPORT_HINT: &str = "Koordinat listesinden nokta alır; adları çizimde de varsa Çift noktaları ayıkla Aynı ad ile açılır";
     pub const GROUPS_HINT: &str = "Tablo çift noktaların gruplarını gösteriyor; Sıra grubun numarasıdır. Süzgeci kaldırmak için tıklayın.";
@@ -197,6 +199,8 @@ pub enum RowAction {
     Batch(batch::Kind),
     /// Dışa aktar.
     Export,
+    /// Cihaza gönder.
+    Send,
 }
 
 /// The cell edited: a point's, or the draft's.
@@ -239,6 +243,8 @@ pub enum Event {
     Batch(batch::Kind),
     /// Dışa aktar: the coordinate list window over the target rows.
     Export,
+    /// Cihaza gönder: the target rows as an instrument's coordinate file.
+    Send,
     /// İçe aktar: a coordinate list read, then Çift noktaları ayıkla by name.
     Import,
     /// A row's menu, by the row's place: a row not selected is selected alone first.
@@ -528,6 +534,7 @@ impl App {
             Event::Remove => return self.update(Message::Run("tool.erase")),
             Event::Batch(kind) => return self.open_point_batch(kind),
             Event::Export => return self.export_point_rows(),
+            Event::Send => return self.send_point_rows(),
             Event::Import => return self.import_table_points(),
             Event::Row(at, action) => {
                 let Some(&slot) = self.shown_points().get(at) else {
@@ -545,6 +552,7 @@ impl App {
                     RowAction::Remove => self.update(Message::Run("tool.erase")),
                     RowAction::Batch(kind) => self.open_point_batch(kind),
                     RowAction::Export => self.export_point_rows(),
+                    RowAction::Send => self.send_point_rows(),
                 };
             }
             Event::Window(event) => return self.point_batch_event(event),
@@ -563,6 +571,31 @@ impl App {
             return Task::none();
         }
         self.export_table_points(crate::exchange::TableRows { slots, selected })
+    }
+
+    /// Cihaza gönder (docs/adr/0169 §4): the target rows, in the table's
+    /// order, as an instrument's coordinate file.
+    fn send_point_rows(&mut self) -> Task<Message> {
+        let shown = self.shown_points();
+        let selected = shown.iter().any(|&s| self.selection.contains(s));
+        let (slots, _) = batch::targets(&shown, |s| self.selection.contains(s));
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let points: Vec<_> = slots
+            .iter()
+            .filter_map(|&slot| doc.model.get(slot))
+            .filter_map(crate::exchange::field_send::field_point)
+            .collect();
+        if points.is_empty() {
+            return Task::none();
+        }
+        let from = if selected {
+            format!("Nokta editöründe seçili {} satır", points.len())
+        } else {
+            format!("Nokta editörünün {} satırı", points.len())
+        };
+        self.open_field_send(points, from)
     }
 
     /// The cell edited from now (none: no editor), its text the value's.

@@ -161,7 +161,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'calc',
     label: 'Hesap',
-    items: [sec('Saha'), 'calc.fieldbook', 'file.import.gnss', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection'],
+    items: [sec('Saha'), 'calc.fieldbook', 'file.import.gnss', 'field.send', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection'],
   },
   {
     id: 'analysis',

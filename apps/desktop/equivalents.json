@@ -179,6 +179,7 @@
     "apps/web/src/ui/io/GisImportDialog.ts#openGeoJsonImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)" },
     "apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)" },
     "apps/web/src/ui/io/GnssImportDialog.ts#openGnssImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/gnss_import.rs (ADR 0169 §6)" },
+    "apps/web/src/ui/io/FieldSendDialog.ts#openFieldSend": { "desktop": "implemented", "where": "apps/desktop/src/exchange/field_send.rs (ADR 0169 §4)" },
     "apps/web/src/ui/layers/LayersPanel.ts#LayersPanel": { "desktop": "implemented", "where": "apps/desktop/src/layer_tree.rs (ADR 0072, 0075)" },
     "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel": { "desktop": "implemented", "where": "apps/desktop/src/processing/panel.rs (ADR 0084)" },
     "apps/web/src/ui/processing/ToolDialog.ts#openModelDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084)" },

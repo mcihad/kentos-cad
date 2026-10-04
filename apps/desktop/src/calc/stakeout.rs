@@ -217,6 +217,11 @@ impl Form {
         Dialog::new(TITLE)
             .scroll(body)
             .action(footer_button(
+                "Cihaza gönder…",
+                Some(event(Event::SendToDevice)),
+                false,
+            ))
+            .action(footer_button(
                 "Raporu kopyala",
                 done.then(|| event(Event::CopyReport)),
                 true,

@@ -46,7 +46,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
 
 - **Karne editörü** (iki platformda): dosya aç (biçim içerikten tanınır; tanınmazsa sorulur), istasyonlar ve gözlemler tablosu, iki durumun eşleşmesi, farklar ve toleranslar, Kullan; Kutupsal alım'a ve Poligon hesabı'na aktar; noktaları çizime yaz (tek geri alma adımı).
 - **GNSS:** içe aktarmanın biçimleri arasında GPX ve NMEA: noktalar ölçü noktası olarak, çözüm türü, uydu sayısı, HDOP ve zaman öznitelik olarak; dönüşümün doğruluğu raporda.
-- **Alete gönder:** Aplikasyon penceresinde ve nokta editöründe (ADR 0153) biçim seçilerek dosyaya.
+- **Cihaza gönder** (arayüzdeki adı sahibin seçimi, 4 Ekim): Aplikasyon penceresinde ve nokta editöründe (ADR 0153) biçim seçilerek dosyaya.
 
 ### 7. Kapsam dışı ve sahibin kararları
 
@@ -237,7 +237,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    komutuna ayrı işlem eklenmedi. Koordinat sistemi olmayan projede (yerel ya da dönüşümde kullanılamayan tanım) nedeni yazılır,
    İçe aktar kapalıdır. Örnekler `gnss_samples.py` (örnek çizimin parsel köşeleri, PROJ ile WGS 84'e); resimler `gnss-*` (masaüstü),
    `shots.mjs gnss` (web). Kapsam satırı iki platformda projenin türünün eksen adlarıyla yazılır (CAD'de “X (sağa)”).
-7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV. İki parçada: 7a yazıcılar (biçim çekirdeğinde, iki platformda),
+7. Cihaza gönderme (arayüzde “Cihaza gönder”): okunan biçimlerin koordinat kayıtları ve CSV. İki parçada: 7a yazıcılar (biçim çekirdeğinde, iki platformda),
    7b pencere (Aplikasyon, Nokta editörü ve seçili noktalar).
 
    Plan (4 Ekim). Yazıcı `formats::field::write` (web'e `writeField`): noktalar (ad, doğu, kuzey, kot, kod) sırasıyla, biçimin kaydıyla;
@@ -257,7 +257,16 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    Trimble JobXML, Nikon RAW ve CSV, yukarıdaki kurallarla. Bağımsız başvuru `field_write_cases.py` (`write.json`, 14 durum: her biçimde
    örnek çizimin aplikasyon noktaları ve taşınamayan adlar, kodlar ve değerler; iş adının reddi) ve 4000 rastgele durumda Rust ile birebir.
    Sokkia SDR33 bekliyor: iş kaydının (10) seçenek kodları (nokta adı türü: sayısal 4 ya da harfli 14, kot) eldeki belgelerde
-   doğrulanamadı; tahminle yazılmaz.
+   doğrulanamadı; tahminle yazılmaz. Sahibin kararı (4 Ekim): bir SDR33 koordinat dosyası ya da Sokkia'nın arayüz belgesi
+   gelene dek bekler; öbür beş biçimle devam edilir.
+
+   *(4 Ekim: 7b tamam.)* Cihaza gönder (`field.send`, “Cihaza gönder…”; adı sahibin seçimi) iki platformda: Hesap › Saha ve CAD'de Giriş ›
+   Ölçme ▾ seçili noktalarla; Aplikasyon penceresinin altlığında tablonun noktalarıyla (çizimdeki adlı noktalar kodlarıyla ve kotlarıyla,
+   Y,X yazılan adsızdır ve söylenir; masaüstünde pencere kapanınca Aplikasyon'a dönülür); Nokta editörünün İşlemler ▾'ünde ve satırın
+   menüsünde tablonun sırasıyla. Pencere (`exchange/field_send.rs`, `ui/io/FieldSendDialog.ts`): noktaların sayısı ve kaynağı, biçim
+   (oturum boyunca hatırlanır), iş adı (JobXML ve Nikon RAW'a), dosyanın ilk 14 satırı, yazılacak sayı ve milimetre notu, taşınamayan
+   noktalar nedenleriyle; Kaydet… biçimin uzantısıyla (`.gsi`, `.xyz`, `.jxl`, `.raw`, `.csv`). Noktanın adı etiketi, yoksa Ad
+   özniteliği; kodu Kod özniteliği; kotu z. Resimler `cihaza-*` (masaüstü), `shots.mjs fieldsend` (web).
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
