@@ -1,5 +1,8 @@
 import type { AppContext } from '../../app/context';
-import { CRS_REGISTRY, crsBySrid, DATUM_LABEL, DEFAULT_SRID, type CrsDef } from '../../geo/crs';
+import { CRS_REGISTRY, crsBySrid, crsTitle, DATUM_LABEL, DEFAULT_SRID, LOCAL_SRID } from '../../geo/crs';
+import { systemOf, type System } from '../../model/geom/crsTransform';
+import { crsSettings, datumChoices, DEFINITION_CODE, ownSystem, secondSystem } from '../../model/projectCrs';
+import type { ProjectSettings } from '../../model/projectSettings';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
@@ -15,7 +18,8 @@ import { convertPoint, convertRows, csvText, errorText, fieldNames, type Convert
  * Koordinat dönüştür (`crs.transform`, docs/adr/0167 §4): a point typed or shown on the drawing, or a list pasted, from
  * one coordinate system to another; the source is the project's and the target its second system at first. Each
  * answer says how sure it is (EPSG's operations, ±m). Nothing is written to the drawing; the values are copied, the
- * list also saved as CSV. What is typed stays while the page is open. The desktop's is `apps/desktop/src/calc/convert.rs`.
+ * list also saved as CSV. What is typed stays while the page is open. The project's own definitions are listed first,
+ * its datum choices taken where they apply (docs/adr/0168 §9 3c). The desktop's is `apps/desktop/src/calc/convert.rs`.
  */
 export function openConvert(ctx: AppContext): void {
   new ConvertDialog(ctx);
@@ -23,9 +27,41 @@ export function openConvert(ctx: AppContext): void {
 
 type Mode = 'point' | 'list';
 
+/** A system the window converts between: one of the registry's by its code, or the project's own definition or its second. */
+type Pick = number | 'own' | 'second';
+
+/** A chosen system: what the list calls it, as the transforms read it. */
+interface Side {
+  readonly pick: Pick;
+  readonly name: string;
+  readonly title: string;
+  readonly system: System;
+}
+
+/** WGS 84's latitudes and longitudes, whatever the registry holds. */
+const WGS84_SIDE: Side = { pick: 4326, name: 'WGS 84', title: 'WGS 84 (EPSG:4326)', system: { kind: 'geographic', datum: 'WGS84' } };
+
+/** The system a pick names in this project; null for what it does not have, or the transforms do not read. */
+function sideOf(pick: Pick, settings: ProjectSettings): Side | null {
+  if (typeof pick === 'number') {
+    const c = crsBySrid(pick);
+    const system = c && c.kind !== 'local' ? systemOf(c) : null;
+    return c && system ? { pick, name: c.name, title: crsTitle(c), system } : null;
+  }
+  const s = crsSettings(settings);
+  const named = pick === 'own' ? (s.srid === LOCAL_SRID ? ownSystem(s) : null) : s.secondSrid === null ? secondSystem(s) : null;
+  return named?.system ? { pick, name: named.name, title: named.title, system: named.system } : null;
+}
+
+/** The project's own system as the window picks it; null without one. */
+const ownPick = (s: ProjectSettings): Pick | null => (s.crs.value.srid !== LOCAL_SRID ? s.crs.value.srid : s.customCrs.value ? 'own' : null);
+
+/** The project's second system as the window picks it; null without one. */
+const secondPick = (s: ProjectSettings): Pick | null => s.secondSrid.value ?? (s.hasSystem && s.secondCustomCrs.value ? 'second' : null);
+
 const state = {
-  from: null as number | null,
-  to: null as number | null,
+  from: null as Pick | null,
+  to: null as Pick | null,
   mode: 'point' as Mode,
   a: '',
   b: '',
@@ -34,9 +70,12 @@ const state = {
 
 const TITLE = 'Koordinat dönüştür';
 
-/** The systems one may convert between, a group for each datum, as the registry lists them (no local system). */
-function systemItems(current: number, choose: (srid: number) => void): MenuItem[] {
+/** The systems one may convert between: the project's own definitions, then a group for each datum, as the registry lists them (no local system). */
+function systemItems(settings: ProjectSettings, current: Pick, choose: (pick: Pick) => void): MenuItem[] {
   const out: MenuItem[] = [];
+  const defined = (['own', 'second'] as const).map((p) => sideOf(p, settings)).filter((d): d is Side => d !== null);
+  if (defined.length) out.push({ kind: 'header', label: 'Projenin tanımları' });
+  for (const d of defined) out.push({ label: d.name, hint: DEFINITION_CODE, radio: true, checked: d.pick === current, run: () => choose(d.pick) });
   let datum = '';
   for (const c of CRS_REGISTRY) {
     if (c.kind === 'local') continue;
@@ -60,9 +99,8 @@ class ConvertDialog {
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
-    const project = ctx.doc.crs.value;
-    state.from ??= project.kind === 'local' ? DEFAULT_SRID : project.srid;
-    state.to ??= ctx.doc.settings.secondSrid.value ?? (crsBySrid(state.from)?.kind === 'geographic' ? DEFAULT_SRID : 4326);
+    state.from ??= ownPick(ctx.doc.settings) ?? DEFAULT_SRID;
+    state.to ??= secondPick(ctx.doc.settings) ?? (this.from.system.kind === 'geographic' ? DEFAULT_SRID : 4326);
     const close = h('button', { class: 'btn', type: 'button' }, 'Kapat');
     this.dialog = new Dialog({
       title: TITLE,
@@ -78,12 +116,13 @@ class ConvertDialog {
     this.render();
   }
 
-  private get from(): CrsDef {
-    return crsBySrid(state.from ?? DEFAULT_SRID) ?? crsBySrid(DEFAULT_SRID)!;
+  private get from(): Side {
+    const settings = this.ctx.doc.settings;
+    return sideOf(state.from ?? DEFAULT_SRID, settings) ?? sideOf(DEFAULT_SRID, settings) ?? WGS84_SIDE;
   }
 
-  private get to(): CrsDef {
-    return crsBySrid(state.to ?? 4326) ?? crsBySrid(4326)!;
+  private get to(): Side {
+    return sideOf(state.to ?? 4326, this.ctx.doc.settings) ?? WGS84_SIDE;
   }
 
   /** The project's axes' names and length digits, the user's notation for latitudes and longitudes. */
@@ -97,10 +136,9 @@ class ConvertDialog {
       const dd = new Dropdown({
         ariaLabel: which === 'from' ? 'Kaynak sistem' : 'Hedef sistem',
         width: 300,
-        items: () => systemItems(which === 'from' ? this.from.srid : this.to.srid, (srid) => ((state[which] = srid), this.render())),
+        items: () => systemItems(this.ctx.doc.settings, which === 'from' ? this.from.pick : this.to.pick, (pick) => ((state[which] = pick), this.render())),
       });
-      const c = which === 'from' ? this.from : this.to;
-      dd.set(`${c.name} (EPSG:${c.srid})`);
+      dd.set((which === 'from' ? this.from : this.to).title);
       return dd.el;
     };
     const swap = h('button', { class: 'btn btn--icon calc-swap', type: 'button', 'aria-label': 'Kaynakla hedefi değiştir' }, icon('reverse', 16));
@@ -130,14 +168,14 @@ class ConvertDialog {
 
   /** Tek nokta: the two values, and the point shown on the drawing when the source is the project's system. */
   private renderPoint(): void {
-    const [a, b] = fieldNames(this.from, this.format);
+    const [a, b] = fieldNames(this.from.system, this.format);
     const recompute = () => this.recompute();
-    const geographic = this.from.kind === 'geographic';
+    const geographic = this.from.system.kind === 'geographic';
     const first = textField({ label: a, value: state.a, placeholder: geographic ? '40 45 12.3456' : '', onChange: (v) => ((state.a = v), recompute()) });
     const second = textField({ label: b, value: state.b, placeholder: geographic ? '29 55 01.2345' : '', onChange: (v) => ((state.b = v), recompute()) });
     first.classList.add('calc-num');
     second.classList.add('calc-num');
-    const own = this.from.srid === this.ctx.doc.crs.value.srid;
+    const own = this.from.pick === ownPick(this.ctx.doc.settings);
     const show = h('button', { class: 'btn calc-known__pick', type: 'button', disabled: !own }, icon('snap', 14), 'Çizimden');
     tooltip(show, () => ({
       title: 'Çizimden seç',
@@ -158,12 +196,13 @@ class ConvertDialog {
 
   /** Liste: name and two values a row; a paste fills down and right. */
   private renderList(): void {
-    const [a, b] = fieldNames(this.from, this.format);
+    const [a, b] = fieldNames(this.from.system, this.format);
+    const numeric = this.from.system.kind !== 'geographic';
     const model: GridModel = {
       columns: [
         { key: 'name', label: 'Ad' },
-        { key: 'a', label: a, numeric: this.from.kind !== 'geographic' },
-        { key: 'b', label: b, numeric: this.from.kind !== 'geographic' },
+        { key: 'a', label: a, numeric },
+        { key: 'b', label: b, numeric },
       ],
       rows: () => state.rows,
       readonly: () => false,
@@ -183,23 +222,24 @@ class ConvertDialog {
   private recompute(): void {
     const f = this.format;
     const [from, to] = [this.from, this.to];
-    const [ta, tb] = fieldNames(to, f);
+    const [ta, tb] = fieldNames(to.system, f);
+    const choices = datumChoices(crsSettings(this.ctx.doc.settings));
     this.converted = null;
     this.listed = null;
-    if (from.srid === to.srid) {
+    if (from.pick === to.pick) {
       summary(this.summaryBox, [summaryLine('warn', 'Kaynak ve hedef aynı sistem: başka bir hedef seçin.')]);
       replaceChildren(this.results);
     } else if (state.mode === 'point') {
-      const got = state.a.trim() || state.b.trim() ? convertPoint(from, to, state.a, state.b, f) : null;
+      const got = state.a.trim() || state.b.trim() ? convertPoint(from.system, to.system, choices, state.a, state.b, f) : null;
       if (got === null) {
         summary(this.summaryBox, [summaryLine('info', 'Noktanın iki değerini yazın ya da çizimden seçin.')]);
         replaceChildren(this.results);
       } else if (typeof got === 'string') {
-        summary(this.summaryBox, [summaryLine('warn', errorText(got, from, f))]);
+        summary(this.summaryBox, [summaryLine('warn', errorText(got, from.system, f))]);
         replaceChildren(this.results);
       } else {
         this.converted = got;
-        summary(this.summaryBox, [summaryLine(to.datum === from.datum ? 'ok' : 'info', `${to.name}: ${got.accuracy}.`)]);
+        summary(this.summaryBox, [summaryLine(got.exact ? 'ok' : 'info', `${to.name}: ${got.accuracy}.`)]);
         replaceChildren(
           this.results,
           h(
@@ -210,7 +250,7 @@ class ConvertDialog {
         );
       }
     } else {
-      const rows = convertRows(from, to, state.rows, f);
+      const rows = convertRows(from.system, to.system, choices, state.rows, f);
       const good = rows.filter((r) => typeof r.result !== 'string');
       const bad = rows.filter((r) => typeof r.result === 'string');
       const heading = ['Ad', ta, tb];
@@ -223,7 +263,7 @@ class ConvertDialog {
       summary(this.summaryBox, [
         rows.length ? null : summaryLine('info', 'Dönüştürülecek satır yok: tabloya yazın ya da yapıştırın.'),
         good.length ? summaryLine('ok', `${good.length} nokta dönüştürüldü. ${to.name}: ${first!.accuracy}.`) : null,
-        ...bad.slice(0, 6).map((r) => summaryLine('warn', `Satır ${r.row}: ${errorText(r.result as Exclude<typeof r.result, Converted>, from, f)}`)),
+        ...bad.slice(0, 6).map((r) => summaryLine('warn', `Satır ${r.row}: ${errorText(r.result as Exclude<typeof r.result, Converted>, from.system, f)}`)),
         bad.length > 6 ? summaryLine('warn', `${bad.length - 6} satır daha okunamadı.`) : null,
       ]);
       replaceChildren(this.results, good.length ? resultTable(heading, table, [false, true, true]) : null);
@@ -246,7 +286,7 @@ class ConvertDialog {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `koordinatlar-${this.to.srid}.csv`;
+    a.download = `koordinatlar-${typeof this.to.pick === 'number' ? this.to.pick : 'ozel'}.csv`;
     document.body.append(a);
     a.click();
     a.remove();

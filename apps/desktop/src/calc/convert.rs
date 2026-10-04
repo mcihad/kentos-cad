@@ -11,18 +11,22 @@
 //! geographic one is the latitude, then the longitude, in decimal degrees,
 //! degrees and minutes, or degrees minutes seconds. Values are written with
 //! the project's length digits, or in the user's notation with fixed digits.
-//! The readings and writings pass the shared cases
-//! (`fixtures/crs/v1/convert.json`, `scripts/fixtures/crs_convert_cases.py`:
-//! PROJ).
+//! The project's own definitions are listed first, and its datum choices
+//! taken where they apply (docs/adr/0168 §9 3c). The readings and writings
+//! pass the shared cases (`fixtures/crs/v1/convert.json`,
+//! `scripts/fixtures/crs_convert_cases.py`: PROJ).
 
 use std::path::PathBuf;
 
 use iced::widget::{button, column, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
 use kentos_contracts::ProjectSettings;
-use kentos_geometry_core::crs::{format_dd, format_dms, parse_angle, transform};
+use kentos_geometry_core::crs::{
+    self as core, Unreached, format_dd, format_dms, parse_angle, transform_in,
+};
 use kentos_interaction::second::{Notation, accuracy_text};
 use kentos_interaction::{Format, Level, Vec2, fixed};
+use kentos_project::systems::{self, DEFINITION_CODE, Named};
 use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
@@ -62,11 +66,92 @@ impl std::fmt::Display for Mode {
     }
 }
 
+/// A system the window converts between: one of the registry's by its
+/// code, or the project's own definition or its second (docs/adr/0168 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pick {
+    Srid(u32),
+    Own,
+    Second,
+}
+
+/// A chosen system: what the list calls it, as the transforms read it.
+#[derive(Clone, Debug)]
+pub struct Side {
+    pub pick: Pick,
+    pub name: String,
+    pub title: String,
+    pub system: core::System,
+}
+
+impl Side {
+    fn registry(s: &System) -> Option<Self> {
+        Some(Self {
+            pick: Pick::Srid(s.srid),
+            name: s.name.clone(),
+            title: crs::title(s),
+            system: s.transform_system()?,
+        })
+    }
+
+    fn named(pick: Pick, n: Named) -> Option<Self> {
+        Some(Self {
+            pick,
+            name: n.name,
+            title: n.title,
+            system: n.system?,
+        })
+    }
+
+    /// The system a pick names in this project; none for what it does not
+    /// have, or the transforms do not read.
+    fn of(pick: Pick, settings: &ProjectSettings) -> Option<Self> {
+        match pick {
+            Pick::Srid(srid) => crs::system(srid)
+                .filter(|s| !s.is_local())
+                .and_then(Side::registry),
+            Pick::Own => systems::own(settings)
+                .filter(|_| settings.srid == crs::LOCAL_SRID)
+                .and_then(|n| Side::named(pick, n)),
+            Pick::Second => systems::second(settings)
+                .filter(|_| settings.second().is_none())
+                .and_then(|n| Side::named(pick, n)),
+        }
+    }
+
+    /// WGS 84's latitudes and longitudes, whatever the registry holds.
+    fn wgs84() -> Self {
+        Self {
+            pick: Pick::Srid(WGS84),
+            name: "WGS 84".to_owned(),
+            title: "WGS 84 (EPSG:4326)".to_owned(),
+            system: core::System::Geographic {
+                datum: core::Datum::Wgs84,
+            },
+        }
+    }
+}
+
+/// The project's own system as the window picks it; none without one.
+fn own_pick(settings: &ProjectSettings) -> Option<Pick> {
+    match settings.srid {
+        crs::LOCAL_SRID => settings.custom_crs.as_ref().map(|_| Pick::Own),
+        srid => Some(Pick::Srid(srid)),
+    }
+}
+
+/// The project's second system as the window picks it; none without one.
+fn second_pick(settings: &ProjectSettings) -> Option<Pick> {
+    settings.second().map(Pick::Srid).or_else(|| {
+        (settings.has_system() && settings.second_custom_crs.is_some()).then_some(Pick::Second)
+    })
+}
+
 /// What the window asks for.
 #[derive(Clone, Debug)]
 pub enum Event {
-    From(u32),
-    To(u32),
+    From(Pick),
+    To(Pick),
     /// The source and the target change places.
     Swap,
     Mode(Mode),
@@ -87,13 +172,29 @@ fn message(e: Event) -> Message {
 }
 
 /// Why a point was not converted: a field unread, a latitude or longitude
-/// out of range, a point the target does not reach.
+/// out of range, a point the target does not reach; a datum of the
+/// project's with no way to WGS 84 between them, a grid choice not on this
+/// device, a point outside its grid (docs/adr/0168 §2–§4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConvertError {
     A,
     B,
     Range,
     Unreachable,
+    NoLink,
+    NoGrid,
+    OutsideGrid,
+}
+
+impl From<Unreached> for ConvertError {
+    fn from(why: Unreached) -> Self {
+        match why {
+            Unreached::Outside => ConvertError::Unreachable,
+            Unreached::NoLink => ConvertError::NoLink,
+            Unreached::NoGrid => ConvertError::NoGrid,
+            Unreached::OutsideGrid => ConvertError::OutsideGrid,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -105,6 +206,9 @@ impl ConvertError {
             ConvertError::B => "b",
             ConvertError::Range => "range",
             ConvertError::Unreachable => "unreachable",
+            ConvertError::NoLink => "noLink",
+            ConvertError::NoGrid => "noGrid",
+            ConvertError::OutsideGrid => "outsideGrid",
         }
     }
 }
@@ -131,21 +235,23 @@ impl ConvertFormat {
     }
 }
 
-/// A converted point: its values with their names, how sure they are.
+/// A converted point: its values with their names, how sure they are, and
+/// whether only the projection changed (one datum).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Converted {
     pub point: Vec2,
     pub values: [(&'static str, String); 2],
     pub accuracy: String,
+    pub exact: bool,
 }
 
-fn geographic(sys: &System) -> bool {
-    sys.kind == "geographic"
+fn geographic(sys: &core::System) -> bool {
+    matches!(sys, core::System::Geographic { .. })
 }
 
 /// The two fields' names in a system: east and north as the project names
 /// them, or latitude and longitude.
-pub fn field_names(sys: &System, f: &ConvertFormat) -> [&'static str; 2] {
+pub fn field_names(sys: &core::System, f: &ConvertFormat) -> [&'static str; 2] {
     if geographic(sys) {
         ["Enlem", "Boylam"]
     } else {
@@ -155,7 +261,7 @@ pub fn field_names(sys: &System, f: &ConvertFormat) -> [&'static str; 2] {
 
 /// A typed point in `sys`'s own order (x east or longitude, y north or
 /// latitude), or why there is none.
-pub fn read_point(sys: &System, a: &str, b: &str) -> Result<Vec2, ConvertError> {
+pub fn read_point(sys: &core::System, a: &str, b: &str) -> Result<Vec2, ConvertError> {
     if geographic(sys) {
         let lat = parse_angle(a).ok_or(ConvertError::A)?;
         let lon = parse_angle(b).ok_or(ConvertError::B)?;
@@ -175,7 +281,7 @@ pub fn read_point(sys: &System, a: &str, b: &str) -> Result<Vec2, ConvertError> 
 }
 
 /// A point of `sys` (its own order) as the window writes it.
-pub fn write_point(sys: &System, p: Vec2, f: &ConvertFormat) -> [(&'static str, String); 2] {
+pub fn write_point(sys: &core::System, p: Vec2, f: &ConvertFormat) -> [(&'static str, String); 2] {
     if geographic(sys) {
         let write = |deg: f64, latitude: bool| match f.notation {
             Notation::Dd => format_dd(deg, latitude, 7),
@@ -189,29 +295,28 @@ pub fn write_point(sys: &System, p: Vec2, f: &ConvertFormat) -> [(&'static str, 
     ]
 }
 
-/// `a` and `b` typed in `from`, taken to `to` and written; or why not.
+/// `a` and `b` typed in `from`, taken to `to` with the project's datum
+/// choices and written; or why not.
 pub fn convert_point(
-    from: &System,
-    to: &System,
+    from: &core::System,
+    to: &core::System,
+    choices: &[core::Choice],
     a: &str,
     b: &str,
     f: &ConvertFormat,
 ) -> Result<Converted, ConvertError> {
     let p = read_point(from, a, b)?;
-    let moved = match (from.transform_system(), to.transform_system()) {
-        (Some(s), Some(t)) => transform(&s, &t, p),
-        _ => None,
-    }
-    .ok_or(ConvertError::Unreachable)?;
+    let moved = transform_in(from, to, p, choices)?;
     Ok(Converted {
         point: moved.point,
         values: write_point(to, moved.point, f),
         accuracy: accuracy_text(&moved),
+        exact: moved.via.is_empty(),
     })
 }
 
 /// What went wrong with a point, in a sentence that says how to put it right.
-pub fn error_text(e: ConvertError, from: &System, f: &ConvertFormat) -> String {
+pub fn error_text(e: ConvertError, from: &core::System, f: &ConvertFormat) -> String {
     let [a, b] = field_names(from, f);
     let how = if geographic(from) {
         "40 45 12.3456, 40°45′12.3456″K ya da 40.7534293 biçiminde yazın"
@@ -227,13 +332,23 @@ pub fn error_text(e: ConvertError, from: &System, f: &ConvertFormat) -> String {
         ConvertError::Unreachable => {
             "Nokta hedef sistemin ulaştığı yerin dışında; değer yazılmadı.".to_owned()
         }
+        ConvertError::NoLink => {
+            "Datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.".to_owned()
+        }
+        ConvertError::NoGrid => {
+            "Datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.".to_owned()
+        }
+        ConvertError::OutsideGrid => {
+            "Nokta datum dönüşümünün ızgarasının dışında; değer yazılmadı.".to_owned()
+        }
     }
 }
 
 /// A list converted: each filled row's name, number (1 first) and result.
 pub fn convert_rows(
-    from: &System,
-    to: &System,
+    from: &core::System,
+    to: &core::System,
+    choices: &[core::Choice],
     rows: &[[String; 3]],
     f: &ConvertFormat,
 ) -> Vec<(String, usize, Result<Converted, ConvertError>)> {
@@ -247,7 +362,7 @@ pub fn convert_rows(
                 "" => (i + 1).to_string(),
                 n => n.to_owned(),
             };
-            (name, i + 1, convert_point(from, to, a, b, f))
+            (name, i + 1, convert_point(from, to, choices, a, b, f))
         })
         .collect()
 }
@@ -276,8 +391,8 @@ pub fn csv_text(heading: &[&str], rows: &[Vec<String>]) -> String {
 #[derive(Clone, Debug)]
 pub struct Form {
     /// The source and the target; none: the project's, and its second system.
-    pub from: Option<u32>,
-    pub to: Option<u32>,
+    pub from: Option<Pick>,
+    pub to: Option<Pick>,
     pub mode: Mode,
     pub a: String,
     pub b: String,
@@ -372,11 +487,28 @@ const fn col(label: &'static str, numeric: bool) -> Col {
     }
 }
 
-/// The systems one may convert between, a heading for each datum, as the
-/// registry lists them (no local system); each choice's system.
-fn system_choices() -> (Vec<Choice>, Vec<Option<u32>>) {
+/// The systems one may convert between: the project's own definitions,
+/// then a heading for each datum, as the registry lists them (no local
+/// system); each choice's system.
+fn system_choices(settings: &ProjectSettings) -> (Vec<Choice>, Vec<Option<Pick>>) {
     let mut choices = Vec::new();
-    let mut srids = Vec::new();
+    let mut picks = Vec::new();
+    let defined: Vec<Side> = [Pick::Own, Pick::Second]
+        .into_iter()
+        .filter_map(|p| Side::of(p, settings))
+        .collect();
+    if !defined.is_empty() {
+        choices.push(Choice::header("Projenin tanımları"));
+        picks.push(None);
+        for side in defined {
+            choices.push(
+                Choice::new(side.name.clone())
+                    .detail(DEFINITION_CODE)
+                    .shown(side.title.clone()),
+            );
+            picks.push(Some(side.pick));
+        }
+    }
     let mut datum = "";
     for s in crs::systems() {
         if s.is_local() {
@@ -386,40 +518,36 @@ fn system_choices() -> (Vec<Choice>, Vec<Option<u32>>) {
         if label != datum {
             datum = label;
             choices.push(Choice::header(label));
-            srids.push(None);
+            picks.push(None);
         }
         choices.push(
             Choice::new(s.name.clone())
                 .detail(format!("EPSG:{}", s.srid))
                 .shown(crs::title(s)),
         );
-        srids.push(Some(s.srid));
+        picks.push(Some(Pick::Srid(s.srid)));
     }
-    (choices, srids)
+    (choices, picks)
 }
 
 impl Form {
     /// The source and the target in use: as chosen, or the project's and its
     /// second system (WGS 84 when it has none; a geographic source goes to
     /// the default grid).
-    pub fn systems(&self, settings: &ProjectSettings) -> (&'static System, &'static System) {
-        let fallback = |srid: u32| crs::system(srid).or_else(|| crs::system(DEFAULT_SRID));
-        let own = (settings.srid != crs::LOCAL_SRID).then_some(settings.srid);
-        let from = self
-            .from
-            .or(own)
-            .and_then(crs::system)
-            .or_else(|| fallback(DEFAULT_SRID));
-        let to_default = settings.second().unwrap_or(match from {
-            Some(s) if geographic(s) => DEFAULT_SRID,
-            _ => WGS84,
+    pub fn systems(&self, settings: &ProjectSettings) -> (Side, Side) {
+        let side = |pick: Option<Pick>, fallback: u32| {
+            pick.and_then(|p| Side::of(p, settings))
+                .or_else(|| Side::of(Pick::Srid(fallback), settings))
+                .unwrap_or_else(Side::wgs84)
+        };
+        let from = side(self.from.or_else(|| own_pick(settings)), DEFAULT_SRID);
+        let to_default = second_pick(settings).unwrap_or(if geographic(&from.system) {
+            Pick::Srid(DEFAULT_SRID)
+        } else {
+            Pick::Srid(WGS84)
         });
-        let to = self.to.or(Some(to_default)).and_then(crs::system);
-        match (from, to.or_else(|| fallback(WGS84))) {
-            (Some(from), Some(to)) => (from, to),
-            // The registry always has both defaults; the first two systems otherwise.
-            _ => (&crs::systems()[1], &crs::systems()[2]),
-        }
+        let to = side(self.to.or(Some(to_default)), WGS84);
+        (from, to)
     }
 
     /// The point converted, when both values are typed.
@@ -432,7 +560,15 @@ impl Form {
             return None;
         }
         let (from, to) = self.systems(settings);
-        Some(convert_point(from, to, &self.a, &self.b, f))
+        let choices = systems::choices(settings);
+        Some(convert_point(
+            &from.system,
+            &to.system,
+            &choices,
+            &self.a,
+            &self.b,
+            f,
+        ))
     }
 
     /// The list's converted rows as the results table and the CSV give them:
@@ -443,14 +579,16 @@ impl Form {
         f: &ConvertFormat,
     ) -> Option<(Vec<&'static str>, Vec<Vec<String>>)> {
         let (from, to) = self.systems(settings);
-        let [a, b] = field_names(to, f);
-        let rows: Vec<Vec<String>> = convert_rows(from, to, &self.rows, f)
-            .into_iter()
-            .filter_map(|(name, _, r)| {
-                r.ok()
-                    .map(|c| vec![name, c.values[0].1.clone(), c.values[1].1.clone()])
-            })
-            .collect();
+        let [a, b] = field_names(&to.system, f);
+        let choices = systems::choices(settings);
+        let rows: Vec<Vec<String>> =
+            convert_rows(&from.system, &to.system, &choices, &self.rows, f)
+                .into_iter()
+                .filter_map(|(name, _, r)| {
+                    r.ok()
+                        .map(|c| vec![name, c.values[0].1.clone(), c.values[1].1.clone()])
+                })
+                .collect();
         (!rows.is_empty()).then(|| (vec!["Ad", a, b], rows))
     }
 
@@ -460,12 +598,13 @@ impl Form {
         f: &ConvertFormat,
     ) -> Element<'a, Message> {
         let (from, to) = self.systems(settings);
-        let (choices, srids) = system_choices();
-        let at = |srid: u32| srids.iter().position(|s| *s == Some(srid));
-        let pick = |which: fn(u32) -> Event, selected: u32| {
-            let srids = srids.clone();
+        let datum_choices = systems::choices(settings);
+        let (choices, picks) = system_choices(settings);
+        let at = |pick: Pick| picks.iter().position(|p| *p == Some(pick));
+        let pick = |which: fn(Pick) -> Event, selected: Pick| {
+            let picks = picks.clone();
             container(Select::new(choices.clone(), at(selected), move |i| {
-                message(which(srids.get(i).copied().flatten().unwrap_or(selected)))
+                message(which(picks.get(i).copied().flatten().unwrap_or(selected)))
             }))
             .width(300)
         };
@@ -480,11 +619,11 @@ impl Form {
         let systems = row![
             column![
                 label::caption("Kaynak sistem"),
-                pick(Event::From, from.srid)
+                pick(Event::From, from.pick)
             ]
             .spacing(4),
             swap,
-            column![label::caption("Hedef sistem"), pick(Event::To, to.srid)].spacing(4),
+            column![label::caption("Hedef sistem"), pick(Event::To, to.pick)].spacing(4),
         ]
         .spacing(10)
         .align_y(iced::Bottom);
@@ -496,11 +635,11 @@ impl Form {
         ]
         .spacing(4);
         let mut body = column![systems, mode].spacing(16);
-        let [a, b] = field_names(from, f);
+        let [a, b] = field_names(&from.system, f);
         let mut lines: Vec<(Line, String)> = Vec::new();
         match self.mode {
             Mode::Point => {
-                let own = from.srid == settings.srid;
+                let own = Some(from.pick) == own_pick(settings);
                 let show = button(
                     row![
                         icon(crate::icons::from_web(Some("snap"))).size(14.0),
@@ -521,7 +660,7 @@ impl Form {
                     }),
                     iced::widget::tooltip::Position::Top,
                 );
-                let geographic = geographic(from);
+                let geographic = geographic(&from.system);
                 body = body.push(
                     row![
                         container(wide_field(
@@ -548,7 +687,7 @@ impl Form {
                         Line::Info,
                         "Noktanın iki değerini yazın ya da çizimden seçin.".to_owned(),
                     )),
-                    Some(Err(e)) => lines.push((Line::Warn, error_text(e, from, f))),
+                    Some(Err(e)) => lines.push((Line::Warn, error_text(e, &from.system, f))),
                     Some(Ok(c)) => {
                         let values =
                             iced::widget::Row::with_children(c.values.iter().map(|(name, v)| {
@@ -564,18 +703,14 @@ impl Form {
                                 .style(style::container::bordered),
                         );
                         lines.push((
-                            if from.datum == to.datum {
-                                Line::Ok
-                            } else {
-                                Line::Info
-                            },
+                            if c.exact { Line::Ok } else { Line::Info },
                             format!("{}: {}.", to.name, c.accuracy),
                         ));
                     }
                 }
             }
             Mode::List => {
-                let columns: &'static [Col] = if geographic(from) {
+                let columns: &'static [Col] = if geographic(&from.system) {
                     &COLUMNS_GEOGRAPHIC
                 } else if f.east == "X" {
                     &COLUMNS_CAD
@@ -591,7 +726,7 @@ impl Form {
                     ]
                     .spacing(8),
                 );
-                let rows = convert_rows(from, to, &self.rows, f);
+                let rows = convert_rows(&from.system, &to.system, &datum_choices, &self.rows, f);
                 let good: Vec<&(String, usize, Result<Converted, ConvertError>)> =
                     rows.iter().filter(|r| r.2.is_ok()).collect();
                 let bad: Vec<&(String, usize, Result<Converted, ConvertError>)> =
@@ -617,7 +752,7 @@ impl Form {
                     if let Err(e) = r {
                         lines.push((
                             Line::Warn,
-                            format!("Satır {n}: {}", error_text(*e, from, f)),
+                            format!("Satır {n}: {}", error_text(*e, &from.system, f)),
                         ));
                     }
                 }
@@ -677,14 +812,14 @@ impl App {
     pub(crate) fn convert_event(&mut self, e: Event) -> Task<Message> {
         let form = &mut self.calc.convert;
         match e {
-            Event::From(srid) => form.from = Some(srid),
-            Event::To(srid) => form.to = Some(srid),
+            Event::From(pick) => form.from = Some(pick),
+            Event::To(pick) => form.to = Some(pick),
             Event::Swap => {
                 if let Some((settings, _)) = self.convert_format() {
                     let (from, to) = self.calc.convert.systems(&settings);
                     let form = &mut self.calc.convert;
-                    form.from = Some(to.srid);
-                    form.to = Some(from.srid);
+                    form.from = Some(to.pick);
+                    form.to = Some(from.pick);
                 }
             }
             Event::Mode(mode) => form.mode = mode,
@@ -697,12 +832,10 @@ impl App {
             Event::Copy => return self.convert_copy(),
             Event::SaveCsv => {
                 let name = match self.convert_format() {
-                    Some((settings, _)) => {
-                        format!(
-                            "koordinatlar-{}.csv",
-                            self.calc.convert.systems(&settings).1.srid
-                        )
-                    }
+                    Some((settings, _)) => match self.calc.convert.systems(&settings).1.pick {
+                        Pick::Srid(srid) => format!("koordinatlar-{srid}.csv"),
+                        Pick::Own | Pick::Second => "koordinatlar-ozel.csv".to_owned(),
+                    },
                     None => "koordinatlar.csv".to_owned(),
                 };
                 return Task::perform(
@@ -799,6 +932,7 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kentos_geometry_core::api::json::{FromJson, Json};
     use serde_json::Value;
 
     fn fixture() -> Value {
@@ -809,13 +943,18 @@ mod tests {
         serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON")
     }
 
-    /// The readings and writings as the shared cases say (PROJ), exactly.
+    fn core_json<T: FromJson>(v: &Value) -> T {
+        T::from_json(&Json::parse(&v.to_string()).expect("JSON")).expect("the core reads it")
+    }
+
+    /// The readings and writings as the shared cases say (PROJ), exactly: the
+    /// registry's systems and the project's, with its datum choices.
     #[test]
     fn reads_and_writes_as_the_shared_cases_say() {
         let file = fixture();
         assert_eq!(file["format"], "kentos.crs-convert");
         let cases = file["cases"].as_array().expect("cases");
-        assert!(cases.len() >= 15);
+        assert!(cases.len() >= 23);
         for case in cases {
             let name = case["name"].as_str().expect("name");
             let cad = case["axes"] == "cad";
@@ -825,11 +964,19 @@ mod tests {
                 decimals: case["decimals"].as_u64().expect("decimals") as usize,
                 notation: Notation::parse(case["notation"].as_str().expect("notation")),
             };
-            let system = |key: &str| {
-                crs::system(case[key].as_u64().expect("srid") as u32).expect("a system")
-            };
+            let system = |key: &str| core_json::<core::System>(&case[key]);
+            let choices: Vec<core::Choice> = case["choices"]
+                .as_array()
+                .map_or_else(Vec::new, |list| list.iter().map(core_json).collect());
             let input = |i: usize| case["input"][i].as_str().expect("input");
-            let got = convert_point(system("fromSrid"), system("toSrid"), input(0), input(1), &f);
+            let got = convert_point(
+                &system("from"),
+                &system("to"),
+                &choices,
+                input(0),
+                input(1),
+                &f,
+            );
             match case["error"].as_str() {
                 Some(error) => assert_eq!(got.map_err(ConvertError::as_str), Err(error), "{name}"),
                 None => {
@@ -862,6 +1009,43 @@ mod tests {
         }
     }
 
+    /// A project whose system and second system are its own definitions:
+    /// they come first in the lists, under their own heading, and are the
+    /// window's source and target at first (docs/adr/0168 §9 3c).
+    #[test]
+    fn the_projects_definitions_come_first() {
+        let settings: ProjectSettings = serde_json::from_str(
+            r#"{"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,
+                "customCrs":{"name":"Şantiye","system":{"kind":"local","base":{"srid":5256},
+                "plane":{"kind":"similarity","east":120.0,"north":-80.0,"rotation":0.0,"scale":1.0}}},
+                "secondCustomCrs":{"name":"Belediye sistemi","system":{"kind":"local","base":{"srid":5256},
+                "plane":{"kind":"similarity","east":486000.0,"north":4419800.0,"rotation":-15.0,"scale":1.0}}}}"#,
+        )
+        .expect("settings");
+        let (_, picks) = system_choices(&settings);
+        assert_eq!(&picks[..3], &[None, Some(Pick::Own), Some(Pick::Second)]);
+        let (from, to) = Form::default().systems(&settings);
+        assert_eq!(
+            (from.pick, from.name.as_str(), to.pick, to.title.as_str()),
+            (
+                Pick::Own,
+                "Şantiye",
+                Pick::Second,
+                "Belediye sistemi (özel sistem)"
+            )
+        );
+        // Without its definitions the project lists the registry alone, and starts from the default grid.
+        let plain = ProjectSettings {
+            custom_crs: None,
+            second_custom_crs: None,
+            ..settings
+        };
+        assert_eq!(system_choices(&plain).1[0], None);
+        assert_eq!(system_choices(&plain).1[1], Some(Pick::Srid(5253)));
+        let (from, to) = Form::default().systems(&plain);
+        assert_eq!((from.pick, to.pick), (Pick::Srid(5256), Pick::Srid(4326)));
+    }
+
     /// The words the web writes too (`convert.test.ts`), a list with a row it
     /// cannot read, and CSV.
     #[test]
@@ -872,13 +1056,21 @@ mod tests {
             decimals: 3,
             notation: Notation::Dms,
         };
-        let system = |srid| crs::system(srid).expect("a system");
+        let system = |srid| {
+            crs::system(srid)
+                .and_then(System::transform_system)
+                .expect("a system")
+        };
         assert_eq!(
-            error_text(ConvertError::A, system(5254), &f),
+            error_text(ConvertError::A, &system(5254), &f),
             "Y okunamadı: bir sayı yazın, ör. 414120.512."
         );
         assert_eq!(
-            error_text(ConvertError::B, system(4326), &f),
+            error_text(ConvertError::NoGrid, &system(5254), &f),
+            "Datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı."
+        );
+        assert_eq!(
+            error_text(ConvertError::B, &system(4326), &f),
             "Boylam okunamadı: 40 45 12.3456, 40°45′12.3456″K ya da 40.7534293 biçiminde yazın."
         );
         let rows = [
@@ -892,7 +1084,7 @@ mod tests {
         ];
         // A row's name, its number and its values or why there are none.
         type Row = (String, usize, Result<Vec<String>, &'static str>);
-        let got: Vec<Row> = convert_rows(system(5254), system(2320), &rows, &f)
+        let got: Vec<Row> = convert_rows(&system(5254), &system(2320), &[], &rows, &f)
             .into_iter()
             .map(|(n, i, r)| {
                 (
@@ -929,9 +1121,12 @@ mod tests {
 
 /// Koordinat dönüştür's pictures over the sample drawing (TUREF TM36), its
 /// second system ED50 TM36: a point to ED50 TM36 and to WGS 84 in degrees,
-/// minutes and seconds, a list with a row it cannot read, at 1440 × 900 and
-/// 1100 × 650 in both themes; `.run/shots/donustur-*` (the web's:
-/// `(cd apps/web && node scripts/e2e/shots.mjs convert)`):
+/// minutes and seconds, a list with a row it cannot read; a project whose
+/// system is its own definition (“Şantiye”), its second ED50 TM36 by the
+/// project's datum choice, and the source's list with the project's
+/// definitions first (docs/adr/0168 §9 3c); at 1440 × 900 and 1100 × 650 in
+/// both themes; `.run/shots/donustur-*` (the web's: `(cd apps/web && node
+/// scripts/e2e/shots.mjs convert)`):
 ///
 /// ```text
 /// cargo test -p kentos-desktop calc::convert::screens -- --ignored --nocapture
@@ -954,7 +1149,7 @@ mod screens {
         std::fs::create_dir_all(&out).expect("a folder for the pictures");
         for (theme, suffix) in [("dark", ""), ("light", "-acik")] {
             for (w, h) in [(1440.0, 900.0), (1100.0, 650.0)] {
-                for name in ["nokta", "wgs84", "liste"] {
+                for name in ["nokta", "wgs84", "liste", "ozel", "ozel-sistemler"] {
                     let mut app = crate::files_testing::app_with_drawing();
                     let _ = app
                         .settings
@@ -963,12 +1158,29 @@ mod screens {
                     let _ = app.update(Message::SecondCrs(crate::second_crs::Event::Choose(Some(
                         2322,
                     ))));
+                    if name.starts_with("ozel") {
+                        // The project's own definition, its second system by the project's datum choice.
+                        let doc = app.document.as_mut().expect("a drawing");
+                        let settings: ProjectSettings = serde_json::from_value(serde_json::json!({
+                            "srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2",
+                            "angleUnit": "grad", "plotScale": 1000, "secondSrid": 2322,
+                            "customCrs": {"name": "Şantiye", "system": {"kind": "local", "base": {"srid": 5256},
+                                "plane": {"kind": "similarity", "east": 120.0, "north": -80.0, "rotation": 0.0, "scale": 1.0}}},
+                            "datumTransforms": [{"from": "ED50", "to": "TUREF", "name": "ED50 → TUREF: örnek parametreler",
+                                "helmert": {"translation": [-84.1, -101.8, -129.7], "rotation": [0.0, 0.0, 0.468],
+                                "scale": 1.05, "convention": "positionVector", "accuracy": 0.3}}]
+                        }))
+                        .expect("settings");
+                        doc.model.set_settings(settings);
+                        app.calc.convert.from = None;
+                        app.calc.convert.to = None;
+                    }
                     app.follow.flash = None;
                     let _ = app.update(Message::Run("crs.transform"));
                     send(&mut app, Event::A("486512.34".into()));
                     send(&mut app, Event::B("4420187.52".into()));
                     match name {
-                        "wgs84" => send(&mut app, Event::To(4326)),
+                        "wgs84" => send(&mut app, Event::To(Pick::Srid(4326))),
                         "liste" => {
                             send(&mut app, Event::Mode(Mode::List));
                             app.calc.convert.rows = vec![
@@ -984,6 +1196,21 @@ mod screens {
                         let _ = app.update(message);
                     };
                     snapshot.settle(&mut app, App::view, &mut update);
+                    // The source's list open: the project's definitions first.
+                    if name == "ozel-sistemler"
+                        && let Some(at) = crate::files_testing::find_text(
+                            &mut snapshot,
+                            &app,
+                            "Şantiye (özel sistem)",
+                        )
+                    {
+                        snapshot.input(
+                            &mut app,
+                            App::view,
+                            &mut update,
+                            kentos_ui::snapshot::Input::Click(at.center()),
+                        );
+                    }
                     let file = out.join(format!("donustur-{name}-{w}{suffix}.png"));
                     snapshot
                         .render(app.view(), &app.theme())

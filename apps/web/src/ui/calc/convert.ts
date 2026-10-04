@@ -1,7 +1,6 @@
-import type { CrsDef } from '../../geo/crs';
 import { fixed } from '../../core/displayNumber';
 import type { Vec2 } from '../../model/geometry';
-import { crsTransform, formatDd, formatDms, parseAngle, systemOf } from '../../model/geom/crsTransform';
+import { crsTransformIn, formatDd, formatDms, parseAngle, type DatumChoice, type System, type Unreached } from '../../model/geom/crsTransform';
 import { accuracyText, type GeographicNotation } from '../../model/secondCrs';
 import { readNumber } from './read';
 
@@ -13,11 +12,18 @@ import { readNumber } from './read';
  * A projected system's point is two numbers, east first, named as the project's type names its axes, read as the Hesap
  * windows read numbers; a geographic one is the latitude, then the longitude, in decimal degrees, degrees and minutes,
  * or degrees minutes seconds (spaces or ° ′ ″ ' "; a closing hemisphere letter). Values are written with the project's
- * length digits, or in the user's notation with fixed digits.
+ * length digits, or in the user's notation with fixed digits. The systems are the core's (the registry's or the
+ * project's definitions), the project's datum choices taken where they apply (docs/adr/0168 §9 3c).
  */
 
-/** Why a point was not converted: a field unread, a latitude or longitude out of range, a point the target does not reach. */
-export type ConvertError = 'a' | 'b' | 'range' | 'unreachable';
+/**
+ * Why a point was not converted: a field unread, a latitude or longitude out of range, a point the target does not
+ * reach; a datum of the project's with no way to WGS 84 between them, a grid choice not on this device, a point outside
+ * its grid (docs/adr/0168 §2–§4).
+ */
+export type ConvertError = 'a' | 'b' | 'range' | 'unreachable' | 'noLink' | 'noGrid' | 'outsideGrid';
+
+const BY_REASON: Record<Unreached, ConvertError> = { outside: 'unreachable', noLink: 'noLink', noGrid: 'noGrid', outsideGrid: 'outsideGrid' };
 
 /** How the window reads and writes: the project's axes' names and length digits, the user's notation. */
 export interface ConvertFormat {
@@ -27,22 +33,23 @@ export interface ConvertFormat {
   readonly notation: GeographicNotation;
 }
 
-/** A converted point: its values with their names, how sure they are. */
+/** A converted point: its values with their names, how sure they are, and whether only the projection changed (one datum). */
 export interface Converted {
   readonly point: Vec2;
   readonly values: readonly [readonly [string, string], readonly [string, string]];
   readonly accuracy: string;
+  readonly exact: boolean;
 }
 
-const geographic = (c: CrsDef) => c.kind === 'geographic';
+const geographic = (s: System) => s.kind === 'geographic';
 
 /** The two fields' names in a system: east and north as the project names them, or latitude and longitude. */
-export function fieldNames(sys: CrsDef, f: ConvertFormat): [string, string] {
+export function fieldNames(sys: System, f: ConvertFormat): [string, string] {
   return geographic(sys) ? ['Enlem', 'Boylam'] : [f.east, f.north];
 }
 
 /** A typed point in `sys`'s own order (x east or longitude, y north or latitude), or why there is none. */
-export function readPoint(sys: CrsDef, a: string, b: string): Vec2 | ConvertError {
+export function readPoint(sys: System, a: string, b: string): Vec2 | ConvertError {
   if (geographic(sys)) {
     const lat = parseAngle(a);
     if (lat === null) return 'a';
@@ -58,7 +65,7 @@ export function readPoint(sys: CrsDef, a: string, b: string): Vec2 | ConvertErro
 }
 
 /** A point of `sys` (its own order) as the window writes it. */
-export function writePoint(sys: CrsDef, p: Vec2, f: ConvertFormat): Converted['values'] {
+export function writePoint(sys: System, p: Vec2, f: ConvertFormat): Converted['values'] {
   if (geographic(sys)) {
     const write = (deg: number, latitude: boolean) => (f.notation === 'dd' ? formatDd(deg, latitude, 7) : formatDms(deg, latitude, 4));
     return [
@@ -72,18 +79,17 @@ export function writePoint(sys: CrsDef, p: Vec2, f: ConvertFormat): Converted['v
   ];
 }
 
-/** `a` and `b` typed in `from`, taken to `to` and written; or why not. */
-export function convertPoint(from: CrsDef, to: CrsDef, a: string, b: string, f: ConvertFormat): Converted | ConvertError {
+/** `a` and `b` typed in `from`, taken to `to` with the project's datum choices and written; or why not. */
+export function convertPoint(from: System, to: System, choices: readonly DatumChoice[], a: string, b: string, f: ConvertFormat): Converted | ConvertError {
   const p = readPoint(from, a, b);
   if (typeof p === 'string') return p;
-  const [s, t] = [systemOf(from), systemOf(to)];
-  const moved = s && t ? crsTransform(s, t, p) : null;
-  if (!moved) return 'unreachable';
-  return { point: moved.point, values: writePoint(to, moved.point, f), accuracy: accuracyText(moved) };
+  const moved = crsTransformIn(from, to, p, choices);
+  if ('error' in moved) return BY_REASON[moved.error];
+  return { point: moved.point, values: writePoint(to, moved.point, f), accuracy: accuracyText(moved), exact: !moved.via };
 }
 
 /** What went wrong with a point, in a sentence that says how to put it right. */
-export function errorText(e: ConvertError, from: CrsDef, f: ConvertFormat): string {
+export function errorText(e: ConvertError, from: System, f: ConvertFormat): string {
   const [a, b] = fieldNames(from, f);
   const how = geographic(from) ? '40 45 12.3456, 40°45′12.3456″K ya da 40.7534293 biçiminde yazın' : 'bir sayı yazın, ör. 414120.512';
   switch (e) {
@@ -95,6 +101,12 @@ export function errorText(e: ConvertError, from: CrsDef, f: ConvertFormat): stri
       return 'Enlem −90° ile 90°, boylam −180° ile 180° arasında olmalı.';
     case 'unreachable':
       return 'Nokta hedef sistemin ulaştığı yerin dışında; değer yazılmadı.';
+    case 'noLink':
+      return "Datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.";
+    case 'noGrid':
+      return 'Datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.';
+    case 'outsideGrid':
+      return 'Nokta datum dönüşümünün ızgarasının dışında; değer yazılmadı.';
   }
 }
 
@@ -106,11 +118,17 @@ export interface ConvertRow {
 }
 
 /** A list converted: each filled row's result or its problem, numbered as the table numbers rows (1 first). */
-export function convertRows(from: CrsDef, to: CrsDef, rows: readonly ConvertRow[], f: ConvertFormat): { name: string; result: Converted | ConvertError; row: number }[] {
+export function convertRows(
+  from: System,
+  to: System,
+  choices: readonly DatumChoice[],
+  rows: readonly ConvertRow[],
+  f: ConvertFormat,
+): { name: string; result: Converted | ConvertError; row: number }[] {
   return rows.flatMap((r, i) => {
     const [name, a, b] = [r.name?.trim() ?? '', r.a ?? '', r.b ?? ''];
     if (!name && !a.trim() && !b.trim()) return [];
-    return [{ name: name || String(i + 1), result: convertPoint(from, to, a, b, f), row: i + 1 }];
+    return [{ name: name || String(i + 1), result: convertPoint(from, to, choices, a, b, f), row: i + 1 }];
   });
 }
 

@@ -573,6 +573,358 @@
     ""
    ],
    "error": "b"
+  },
+  {
+   "name": "şantiye sisteminden TUREF TM33'e: yalnız düzlem",
+   "from": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "1234.567",
+    "-876.543"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "493740.716"
+     ],
+     [
+      "X",
+      "4421757.115"
+     ]
+    ],
+    "accuracy": "kesin, yalnız projeksiyon"
+   }
+  },
+  {
+   "name": "TUREF TM33'ten şantiye sistemine, CAD'in eksenleriyle",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "local",
+    "base": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    },
+    "plane": {
+     "kind": "similarity",
+     "east": 492345.678,
+     "north": 4422345.678,
+     "rotation": 12.5,
+     "scale": 1.000012
+    }
+   },
+   "choices": [],
+   "axes": "cad",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "512345.678",
+    "4423456.789"
+   ],
+   "expect": {
+    "values": [
+     [
+      "X",
+      "19766.171"
+     ],
+     [
+      "Y",
+      "-3243.980"
+     ]
+    ],
+    "accuracy": "kesin, yalnız projeksiyon"
+   }
+  },
+  {
+   "name": "Bessel datumlu TM'den WGS 84'e, ondalık derece",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bessel datumu",
+     "ellipsoid": {
+      "name": "Bessel 1841",
+      "semiMajor": 6377397.155,
+      "inverseFlattening": 299.1528128
+     },
+     "toWgs84": {
+      "translation": [
+       598.1,
+       73.7,
+       418.2
+      ],
+      "rotation": [
+       0.202,
+       0.045,
+       -2.455
+      ],
+      "scale": 6.7,
+      "convention": "positionVector",
+      "accuracy": 1.5
+     }
+    },
+    "latitudeOfOrigin": 0.0,
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "geographic",
+    "datum": "WGS84"
+   },
+   "choices": [],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dd",
+   "input": [
+    "512345.678",
+    "4423456.789"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Enlem",
+      "39.9495838°K"
+     ],
+     [
+      "Boylam",
+      "33.1406526°D"
+     ]
+    ],
+    "accuracy": "±1.5 m, Bessel datumu"
+   }
+  },
+  {
+   "name": "TUREF TM30'dan ED50 TM30'a, projenin bölge parametreleriyle",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "412345.678",
+    "4512345.678"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "412380.155"
+     ],
+     [
+      "X",
+      "4512531.561"
+     ]
+    ],
+    "accuracy": "±0.3 m, ED50 → TUREF: Bölge 7"
+   }
+  },
+  {
+   "name": "aynısı, doğruluğu yazılmamış parametrelerle",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: Bölge 7",
+     "helmert": {
+      "translation": [
+       -158.785,
+       -109.965,
+       -50.768
+      ],
+      "rotation": [
+       1.4275,
+       -3.0873,
+       0.5505
+      ],
+      "scale": -5.1814,
+      "convention": "coordinateFrame"
+     }
+    }
+   ],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "412345.678",
+    "4512345.678"
+   ],
+   "expect": {
+    "values": [
+     [
+      "Y",
+      "412380.155"
+     ],
+     [
+      "X",
+      "4512531.561"
+     ]
+    ],
+    "accuracy": "doğruluğu bilinmiyor, ED50 → TUREF: Bölge 7"
+   }
+  },
+  {
+   "name": "aynısı, ızgarası bu cihazda olmayan seçimle",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "abababababababababababababababababababababababababababababababab"
+     }
+    }
+   ],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "412345.678",
+    "4512345.678"
+   ],
+   "error": "noGrid"
+  },
+  {
+   "name": "bağsız datumlu TM'den TUREF TM33'e",
+   "from": {
+    "kind": "tm",
+    "datum": {
+     "name": "Bağsız datum",
+     "ellipsoid": {
+      "name": "Clarke 1880 (RGS)",
+      "semiMajor": 6378249.145,
+      "inverseFlattening": 293.465
+     }
+    },
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [],
+   "axes": "gis",
+   "decimals": 3,
+   "notation": "dms",
+   "input": [
+    "512345.678",
+    "4423456.789"
+   ],
+   "error": "noLink"
   }
  ]
 }

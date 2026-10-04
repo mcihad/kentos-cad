@@ -3620,7 +3620,9 @@ SCENES.customcrs = [
 /**
  * Koordinat dönüştür (docs/adr/0167 §4) over the demo drawing (TUREF TM36), its second system ED50 TM36: a point typed,
  * converted to ED50 TM36 and to WGS 84 in degrees, minutes and seconds; the target's list of systems; a list with a
- * row it cannot read. The desktop's are `calc::convert::tests::screens` (donustur-*).
+ * row it cannot read; a project whose system is its own definition (“Şantiye”), its second ED50 TM36 by the project's
+ * datum choice, and the source's list with the project's definitions first (docs/adr/0168 §9 3c). The desktop's are
+ * `calc::convert::tests::screens` (donustur-*).
  */
 const OPEN_CONVERT = `window.kentos.commands.execute('crs.transform')`;
 const CONVERT_OPEN = `!!document.querySelector('.dialog--calc .calc-convert-systems')`;
@@ -3642,8 +3644,29 @@ const convertPoint = async (ui) => {
   await ui.eval(typeInto('.dialog--calc .calc-convert-point input', 1, '4420187.52'));
   await ui.sleep(250);
 };
+// The window keeps its systems while the page is open: the scene chooses the project's definition as the source.
+const convertCustom = async (ui) => {
+  await ui.eval(customOwn);
+  await ui.eval(OPEN_CONVERT);
+  await ui.waitFor(CONVERT_OPEN);
+  await ui.clickSel('.dialog--calc .calc-convert-systems > :first-child .dropdown');
+  await ui.clickText('.menu__item', 'Şantiye');
+  await ui.sleep(250);
+  await chooseTarget(ui, 'EPSG:2322');
+  await ui.clickText('.dialog--calc .seg__opt', 'Tek nokta');
+  await ui.eval(typeInto('.dialog--calc .calc-convert-point input', 0, '486512.34'));
+  await ui.eval(typeInto('.dialog--calc .calc-convert-point input', 1, '4420187.52'));
+  await ui.sleep(250);
+};
+const convertCustomClose = customClose;
 SCENES.convert = [
   { id: 'convert-point', open: convertPoint, close: secondClose },
+  { id: 'convert-custom', open: convertCustom, close: convertCustomClose },
+  {
+    id: 'convert-custom-systems',
+    open: async (ui) => (await convertCustom(ui), await ui.clickSel('.dialog--calc .calc-convert-systems > :first-child .dropdown'), await ui.sleep(300)),
+    close: convertCustomClose,
+  },
   { id: 'convert-wgs84', open: async (ui) => (await convertPoint(ui), await chooseTarget(ui, 'EPSG:4326')), close: secondClose },
   {
     id: 'convert-systems',

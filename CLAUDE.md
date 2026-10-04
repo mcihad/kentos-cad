@@ -212,7 +212,7 @@ python3 scripts/fixtures/crs_text_cases.py --check   # WKT 1, WKT 2 ve PROJ dize
 python3 scripts/fixtures/project_crs_cases.py --check   # projenin sistemlerinin çözümünü (kayıttaki ya da tanım, ikinci sistem, datum seçimleri; adları ve kodları) kurallardan ve kayıttan denetle; durumlar fixtures/geodesy/v1/project.json (ADR 0168 §9 3b)
 cargo test -p kentos-desktop second_crs::tests::custom_screens -- --ignored --nocapture   # projenin tanımlarının resimleri, .run/shots/ozel-sistem-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs customcrs); ADR 0168)
 python3 scripts/fixtures/ntv2_cases.py --check   # NTv2 ızgaralarını (KentOS kodu olmadan yazılan Türkiye, büyük uçlu ve iç içe ızgaralar, bozuk dosyalar) ve kaymalarını PROJ'un hgridshift'iyle denetle; durumlar fixtures/geodesy/v1/ntv2.json (ADR 0168 §4)
-python3 scripts/fixtures/crs_convert_cases.py --check   # Koordinat dönüştür'ün okuma ve yazmasını (eksen adları, sayı ve açı dilbilgisi, DMS ve DD, doğruluk metni, hatalar) PROJ'la denetle; durumlar fixtures/crs/v1/convert.json (ADR 0167 §4)
+python3 scripts/fixtures/crs_convert_cases.py --check   # Koordinat dönüştür'ün okuma ve yazmasını (eksen adları, sayı ve açı dilbilgisi, DMS ve DD, doğruluk metni, hatalar; projenin tanımları ve datum seçimleri) PROJ'la denetle; durumlar fixtures/crs/v1/convert.json (ADR 0167 §4, 0168 §9 3c)
 python3 scripts/fixtures/tm_cases.py --check   # ileri TM izdüşümünün durumlarını (TUREF ve ED50 TM3, UTM; dilim kenarları) PROJ'un tmerc'iyle denetle; durumlar fixtures/geodesy/v1 (ADR 0165 §3)
 python3 scripts/fixtures/fit_parameters.py --check   # Vektör oturtma'nın Parametrelerle'sini (Y ve X ölçeği, dönüklük → afinin doğrusal parçası) kuraldan denetle (ADR 0156 §7)
 cargo test -p kentos-desktop calc::fit::tests::screens -- --ignored --nocapture   # Vektör oturtma penceresinin resimleri, .run/shots/oturt-* (web'inkiler: node apps/web/scripts/e2e/shots.mjs vectorfit; ADR 0156 §7)
@@ -705,8 +705,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve 2. adım (NTv2 ızgarası `crs::ntv2`, PROJ'un hgridshift'i birebir; başvuru `ntv2_cases.py`) ve 3a (sözleşme
   `kentos_contracts::crs`, ayarlar `customCrs`, `secondCustomCrs`, `datumTransforms`, `ProjectSettings::sanitized`; `.kcad` şema 13 ve
   bağımsız Python okuyucu ve yazıcısı) ve 3b (çözücü `kentos_project::systems`, `model/projectCrs.ts`, başvuru `project_crs_cases.py`;
-  ikinci sistem tanımlar ve seçimlerle; tanımın adı; tanımlı proje sistemli sayılır) tamam; sıradaki 3c (dönüştürücüde tanımlar) ve 3d
-  (cihazın ızgara kitaplığı). 3 Ekim:
+  ikinci sistem tanımlar ve seçimlerle; tanımın adı; tanımlı proje sistemli sayılır) ve 3c (dönüştürücüde projenin tanımları ve seçimleri)
+  tamam; sıradaki 3d (cihazın ızgara kitaplığı), sonra 4. adım (arayüz). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

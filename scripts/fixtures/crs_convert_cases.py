@@ -14,6 +14,11 @@ as the window writes it.
   DD with 7.
 - How sure the values are: “±{accuracy} m, {operations}”, with “; resmî dönüşüm değil” when either side is ED50, or
   “kesin, yalnız projeksiyon” within one datum.
+- The systems the project defines and its datum choices (docs/adr/0168 §9 3c) are taken the way crs_custom_cases.py's
+  PROJ pipelines take them: the accuracy is the steps' sum (“doğruluğu bilinmiyor, …” when one is not written), what it
+  rests on the operations' and the project's names, “resmî dönüşüm değil” when an EPSG operation of ED50 was used. A
+  choice whose grid the device does not have leaves no value (`noGrid`), as does a datum of the project's with no way
+  to WGS 84 (`noLink`).
 
 The desktop (apps/desktop/src/calc/convert.rs) and the web (apps/web/src/ui/calc/convert.ts) must give exactly the
 expected texts.
@@ -27,8 +32,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import crs_custom_cases as custom  # noqa: E402  (the project's systems and choices as PROJ pipelines)
 import crs_transform_cases as reference  # noqa: E402  (the EPSG paths, the angle grammar, DMS and DD)
 import numeric_display  # noqa: E402  (the display rule)
+from pyproj import Transformer  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "crs" / "v1" / "convert.json"
@@ -105,6 +112,66 @@ CASES = [
 ]
 
 
+# The project's systems and choices (ADR 0168): name, from, to, choices, axes, notation, a, b.
+GRID_REGION = {"from": "ED50", "to": "TUREF", "name": "ED50 → TUREF: ızgara", "grid": {"id": "ab" * 32}}
+CUSTOM_CASES = [
+    ("şantiye sisteminden TUREF TM33'e: yalnız düzlem", custom.SITE, custom.TUREF_TM33, [], "gis", "dms", "1234.567",
+     "-876.543"),
+    ("TUREF TM33'ten şantiye sistemine, CAD'in eksenleriyle", custom.TUREF_TM33, custom.SITE, [], "cad", "dms",
+     "512345.678", "4423456.789"),
+    ("Bessel datumlu TM'den WGS 84'e, ondalık derece", custom.BESSEL_TM, custom.WGS84_GEO, [], "gis", "dd",
+     "512345.678", "4423456.789"),
+    ("TUREF TM30'dan ED50 TM30'a, projenin bölge parametreleriyle", custom.TUREF_TM30, custom.ED50_TM30,
+     [custom.REGION], "gis", "dms", "412345.678", "4512345.678"),
+    ("aynısı, doğruluğu yazılmamış parametrelerle", custom.TUREF_TM30, custom.ED50_TM30, [custom.REGION_UNKNOWN],
+     "gis", "dms", "412345.678", "4512345.678"),
+    ("aynısı, ızgarası bu cihazda olmayan seçimle", custom.TUREF_TM30, custom.ED50_TM30, [GRID_REGION], "gis", "dms",
+     "412345.678", "4512345.678"),
+    ("bağsız datumlu TM'den TUREF TM33'e", custom.LONE_TM, custom.TUREF_TM33, [], "gis", "dms", "512345.678",
+     "4423456.789"),
+]
+
+
+def custom_accuracy(acc, via, unofficial):
+    if not via:
+        return "kesin, yalnız projeksiyon"
+    sure = "doğruluğu bilinmiyor" if acc is None else f"±{acc:g} m"
+    return f"{sure}, {via}" + ("; resmî dönüşüm değil" if unofficial else "")
+
+
+def grid_between(src, dst, choices):
+    """Whether the way between the two systems' registry datums is a grid choice (not loaded on the device)."""
+    a, b = custom.datum_of(src), custom.datum_of(dst)
+    return isinstance(a, str) and isinstance(b, str) and any(
+        "grid" in c and {c["from"], c["to"]} == {a, b} for c in choices)
+
+
+def build_custom():
+    cases = []
+    for name, src, dst, choices, axes, notation, a, b in CUSTOM_CASES:
+        case = {"name": name, "from": src, "to": dst, "choices": choices, "axes": axes, "decimals": 3,
+                "notation": notation, "input": [a, b]}
+        p, why = read(src, a, b)
+        if p is None:
+            case["error"] = why
+        elif grid_between(src, dst, choices):
+            case["error"] = "noGrid"
+        else:
+            try:
+                text, acc, via, unofficial = custom.pipeline(src, dst, choices)
+            except custom.NoLink:
+                case["error"] = "noLink"
+            else:
+                q = Transformer.from_pipeline(text).transform(*p)
+                if not all(math.isfinite(v) for v in q):
+                    case["error"] = "unreachable"
+                else:
+                    case["expect"] = {"values": write(dst, q, axes, 3, notation),
+                                      "accuracy": custom_accuracy(acc, via, unofficial)}
+        cases.append(case)
+    return cases
+
+
 def build():
     registry = json.loads(reference.REGISTRY.read_text(encoding="utf-8"))
     entries = {e["srid"]: e for e in registry["systems"] if e["kind"] != "local"}
@@ -124,6 +191,7 @@ def build():
             else:
                 case["expect"] = {"values": write(dst, q, axes, 3, notation), "accuracy": accuracy(src, dst)}
         cases.append(case)
+    cases += build_custom()
     return {"format": "kentos.crs-convert", "version": 1, "proj": __import__("pyproj").proj_version_str, "cases": cases}
 
 
