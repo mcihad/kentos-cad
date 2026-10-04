@@ -356,3 +356,39 @@ describe('Formatter', () => {
     expect([f.unit, f.length(0.12), 'drawingUnit' in doc.settings.toJSON()]).toEqual(['m', '0.120 m', false]);
   });
 });
+
+describe('The second coordinate system (docs/adr/0167 §1)', () => {
+  it('is another system than the project’s own, written only when there is one', () => {
+    const doc = makeDoc();
+    doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    expect([doc.settings.secondSrid.value, doc.settings.second?.name, doc.settings.toJSON().secondSrid]).toEqual([2320, 'ED50 / TM30', 2320]);
+    // A partial patch keeps it; null removes it.
+    doc.settings.assign({ areaDecimals: 3 });
+    expect(doc.settings.secondSrid.value).toBe(2320);
+    doc.settings.assign({ secondSrid: null });
+    expect([doc.settings.secondSrid.value, 'secondSrid' in doc.settings.toJSON()]).toEqual([null, false]);
+  });
+  it('goes when the project takes it as its own, or becomes local', () => {
+    const doc = makeDoc();
+    doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    doc.settings.assign({ srid: 2320 });
+    expect(doc.settings.secondSrid.value).toBe(null);
+    doc.settings.assign({ srid: 5254, secondSrid: 4326 });
+    doc.settings.assign({ srid: 0 });
+    expect(doc.settings.secondSrid.value).toBe(null);
+    expect(new CadDocument({ name: 'x', layers: new LayerStore([{ id: 'a', name: 'A' }], 'a'), origin: { x: 0, y: 0 }, settings: { srid: 5254, secondSrid: 5254 } }).settings.secondSrid.value).toBe(null);
+  });
+  it('follows the server’s whole settings: one it does not name is none, as is the unit', () => {
+    const doc = makeDoc();
+    doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    const whole = doc.settings.toJSON();
+    doc.applyExternal({ meta: { settings: { ...whole, secondSrid: 4326 } } });
+    expect(doc.settings.secondSrid.value).toBe(4326);
+    const { secondSrid: _, ...none } = whole;
+    doc.applyExternal({ meta: { settings: none } });
+    expect(doc.settings.secondSrid.value).toBe(null);
+    doc.settings.assign({ srid: 0, drawingUnit: 'mm' });
+    doc.applyExternal({ meta: { settings: { ...none, srid: 0 } } });
+    expect(doc.settings.drawingUnit.value).toBe('m');
+  });
+});

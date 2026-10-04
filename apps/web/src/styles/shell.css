@@ -711,6 +711,25 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
+/* The second coordinate system's values (docs/adr/0167 §2): its name dim, its values as the cursor's; they share the
+   message's room, before it. */
+.status__slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+.status__second {
+  border-right: 1px solid var(--c-line);
+  text-align: left;
+}
+.status__second-name {
+  color: var(--c-text-3);
+}
+.status__second .status__axis:empty {
+  display: none;
+}
 .status__sel {
   color: var(--c-accent-text);
 }
@@ -816,7 +835,8 @@
 /*
  * A narrow window (DESIGN.md §7.7): the status bar's cells give way in order until the message has room,
  * each keeping its tooltip and click (StatusBar.ts): the engine's name, the CRS (also in the title bar),
- * the screen scale, the cloud cells' words (their lamps stay), the mode's name, the aids' padding.
+ * the screen scale, the cloud cells' words (their lamps stay), the mode's name, the aids' padding. The second
+ * system's values share the message's room (StatusBar.ts `fitSecond`).
  */
 .status[data-fit-renderer] .status__renderer-name,
 .status[data-fit-crs] .status__crs,

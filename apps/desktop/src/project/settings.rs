@@ -139,6 +139,8 @@ pub enum Event {
     AngleUnit(AngleUnit),
     /// A local project's drawing unit (docs/adr/0165 §2); metres are kept as none.
     DrawingUnit(DrawingUnit),
+    /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok.
+    Second(Option<u32>),
     /// The shown section's own values back to their defaults (the web's
     /// “Bu bölümü varsayılana döndür”).
     ResetSection,
@@ -197,6 +199,7 @@ impl App {
                 }
                 s.query = query;
             }
+            Event::Second(second) => d.second_srid = second,
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
             Event::AreaUnit(u) => d.area_unit = u,
@@ -205,6 +208,8 @@ impl App {
             Event::ResetSection => reset_section(s.section, d),
             Event::OpenApp | Event::Save => {}
         }
+        // The project's own system, or none, is no second system (docs/adr/0167 §1).
+        d.second_srid = d.second();
     }
 
     /// Kaydet: the draft goes into the drawing (the web's `onSave`).
@@ -226,6 +231,8 @@ impl App {
         }
         doc.model.set_settings(settings);
         let assigned = (s.settings.srid != s.initial.srid).then_some(s.settings.srid);
+        let second = doc.settings().second_srid;
+        let second_changed = second != s.initial.second_srid;
         self.close_project_window();
         if let Some(srid) = assigned {
             self.say(
@@ -234,6 +241,18 @@ impl App {
                     "Proje koordinat sistemi {} olarak atandı. Koordinat değerleri değiştirilmedi.",
                     crs::title_of(srid)
                 ),
+            );
+        }
+        if second_changed {
+            self.say(
+                Level::Success,
+                match second {
+                    None => "İkinci koordinat sistemi kaldırıldı.".to_owned(),
+                    Some(srid) => format!(
+                        "İkinci koordinat sistemi: {}. Çizim dönüştürülmedi.",
+                        crs::title_of(srid)
+                    ),
+                },
             );
         }
         self.say(
@@ -405,6 +424,7 @@ impl App {
                 |srid| event(Event::Crs(srid)),
                 |q| event(Event::Search(q)),
             ),
+            second_group(s),
             group(
                 "Yeni projeler",
                 row![
@@ -423,6 +443,51 @@ impl App {
         .spacing(16)
         .into()
     }
+}
+
+/// İkinci koordinat sistemi (docs/adr/0167 §1): the registry's systems but
+/// the project's own, grouped by datum, and Yok (the web's `secondGroup`).
+/// Its values show beside the project's in the status bar and Koordinat
+/// oku; the drawing is not transformed.
+fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
+    let d = &s.settings;
+    let what = "Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.";
+    if d.srid == crate::crs::LOCAL_SRID {
+        return group(
+            "İkinci koordinat sistemi",
+            setting(
+                "İkinci sistem",
+                Some(
+                    "Yerel projenin ikinci sistemi olmaz; önce projeye bir koordinat sistemi atayın.",
+                ),
+                label::body("Yok"),
+            ),
+        );
+    }
+    // Each row's system; none for Yok and the datums' headers.
+    let mut rows: Vec<Option<u32>> = vec![None];
+    let mut list = vec![Choice::new("Yok")];
+    for (datum, systems) in crate::second_crs::choices(d.srid) {
+        rows.push(None);
+        list.push(Choice::header(datum));
+        for c in systems {
+            rows.push(Some(c.srid));
+            list.push(
+                Choice::new(c.name.clone())
+                    .detail(format!("EPSG:{}", c.srid))
+                    .shown(crate::crs::title(c)),
+            );
+        }
+    }
+    let current = d.second();
+    let selected = rows.iter().position(|r| *r == current);
+    let pick = Select::new(list, selected, move |i| {
+        event(Event::Second(rows.get(i).copied().flatten()))
+    });
+    group(
+        "İkinci koordinat sistemi",
+        setting("İkinci sistem", Some(what), container(pick).width(300)),
+    )
 }
 
 fn units<'a>(s: &'a State) -> Element<'a, Message> {

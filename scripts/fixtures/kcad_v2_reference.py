@@ -168,6 +168,9 @@ def enum(values):
 
 
 def settings(s):
+    second = s.get("secondSrid")
+    # A second coordinate system is another system than the project's own; a local project has none (docs/adr/0167 §1).
+    assert second is None or (second != 0 and s["srid"] != 0 and second != s["srid"]), "ikinci sistem projeninkinden başka olmalı"
     return cmap(
         fields(
             s,
@@ -181,6 +184,7 @@ def settings(s):
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 "drawingUnit": (enum(("mm", "cm", "m")), False),
+                "secondSrid": (uint, False),
             },
             "settings",
         )
@@ -426,8 +430,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 11 with a local project's drawing unit (docs/adr/0165 §2), 10 with a
-    layer's own snapping (docs/adr/0163 §4), 9 with one of
+    """The oldest schema that holds the drawing: 12 with a second coordinate system (docs/adr/0167 §1), 11 with a local
+    project's drawing unit (docs/adr/0165 §2), 10 with a layer's own snapping (docs/adr/0163 §4), 9 with one of
     schema 9's dimension kinds, a dimension's mask or a
     slope's elevations, in the drawing or a block definition (docs/adr/0147), 8 with a leader, in the drawing or a
     block definition (docs/adr/0146), 7 with a text's or an attribute definition's alignment, width factor or mask
@@ -437,6 +441,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    if settings and "secondSrid" in settings:
+        return 12
     if settings and "drawingUnit" in settings:
         return 11
     if snaps(layers):
@@ -647,7 +653,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-12.kcad"] = container(root(cmap(parts), version=b"\x0c"))
+    files["schema-version-13.kcad"] = container(root(cmap(parts), version=b"\x0d"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -825,6 +831,13 @@ def broken(minimal_content, minimal_file):
     # mm, cm and m are units.
     files["drawing-unit-in-schema-10.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), "drawingUnit": text("mm")})}), version=uint(10)))
     files["drawing-unit-unknown.kcad"] = container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), "drawingUnit": text("km")})}), version=uint(11)))
+    # A second coordinate system is schema 12's (docs/adr/0167 §1): in schema 11 it is an unknown field; it is another
+    # system than the project's own, and a local project has none.
+    with_second = lambda second, **more: cmap({**parts, "settings": cmap({**settings_parts({**m["settings"], **more}), "secondSrid": uint(second)})})
+    files["second-srid-in-schema-11.kcad"] = container(root(with_second(2322), version=uint(11)))
+    files["second-srid-zero.kcad"] = container(root(with_second(0), version=uint(12)))
+    files["second-srid-same.kcad"] = container(root(with_second(m["settings"]["srid"]), version=uint(12)))
+    files["second-srid-local.kcad"] = container(root(with_second(2322, srid=0), version=uint(12)))
     files["srid-range.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "srid": uint(1 << 32)})}))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
@@ -864,6 +877,7 @@ def build():
     out["dimensions.kcad"] = container(document(load("dimensions.json")))
     out["layer-snap.kcad"] = container(document(load("layer-snap.json")))
     out["drawing-unit.kcad"] = container(document(load("drawing-unit.json")))
+    out["second-crs.kcad"] = container(document(load("second-crs.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

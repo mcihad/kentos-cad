@@ -23,7 +23,9 @@
 // tool's methods and a family under their split buttons, the folded ribbon open); types (docs/adr/0165 §6: every tab
 // of a CAD and of a CBS project's ribbon); tools (docs/adr/0140: the tabs of
 // the new drawing and editing tools, their split buttons, each tool at work); blocks (docs/adr/0144: DXF içe aktar
-// over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel).
+// over a file with blocks read a second time, Blokları patlat clicked, the imported blocks in the Bloklar panel);
+// secondcrs (docs/adr/0167: the second system's values in the status bar, the coordinate system's menu, Koordinat oku,
+// Proje ayarları' field).
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -3508,6 +3510,59 @@ SCENES.scene = [
     id: 'scale-field',
     open: async (ui) => (await ui.eval(CAD_PLATE), await ui.sleep(400), await ui.clickSel('.status__zoom'), await ui.sleep(200), await ui.clickText('.menu__item', 'Ölçek yaz…'), await ui.sleep(300)),
     close: async (ui) => await ui.escapeAll(1),
+  },
+];
+
+/**
+ * The second coordinate system (docs/adr/0167 §1–§2): its values beside the cursor's in the status bar (ED50 TM36; WGS 84
+ * in degrees, minutes and seconds), the coordinate system's right-click menu with İkinci sistem open, Koordinat oku's
+ * reading and Proje ayarları' field. The desktop's are `second_crs::tests::screens` (ikinci-sistem-*).
+ */
+// The second system set, and the status bar's message put out: the values take their room back (StatusBar.ts).
+const SECOND = (srid) =>
+  `(() => { window.kentos.doc.settings.assign({ secondSrid: ${srid} }); document.querySelector('.status__flash')?.removeAttribute('data-show'); })()`;
+const NO_SECOND = `(() => { const k = window.kentos; k.doc.settings.assign({ secondSrid: null }); k.prefs.geographic.set('dms'); })()`;
+const overDrawing = async (ui) => {
+  const [w, h] = await ui.eval(`[innerWidth, innerHeight]`);
+  await ui.move(Math.round(w * 0.42), Math.round(h * 0.48));
+  await ui.sleep(300);
+};
+const secondClose = async (ui) => (await ui.escapeAll(2), await ui.eval(NO_SECOND));
+SCENES.secondcrs = [
+  { id: 'second-status', open: async (ui) => (await ui.eval(SECOND(2322)), await overDrawing(ui)), close: secondClose },
+  { id: 'second-wgs84', open: async (ui) => (await ui.eval(SECOND(4326)), await overDrawing(ui)), close: secondClose },
+  {
+    id: 'second-menu',
+    open: async (ui) => {
+      await ui.eval(SECOND(2322));
+      const at = await ui.eval(`(() => { const r = document.querySelector('.ribbon__crs').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      await ui.contextClick(...at);
+      await ui.hoverText('.menu__item', 'İkinci sistem');
+    },
+    close: secondClose,
+  },
+  {
+    id: 'second-read',
+    open: async (ui) => {
+      await ui.eval(SECOND(2322));
+      await ui.eval(`window.kentos.commands.execute('crs.query')`);
+      const [w, h] = await ui.eval(`[innerWidth, innerHeight]`);
+      await ui.clickAt(Math.round(w * 0.42), Math.round(h * 0.48));
+      await ui.sleep(300);
+      await ui.eval(`document.querySelector('.status__flash')?.removeAttribute('data-show')`);
+      await ui.sleep(200);
+    },
+    close: secondClose,
+  },
+  {
+    id: 'second-settings',
+    open: async (ui) => {
+      await ui.eval(`${SECOND(2322)}; import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'crs'))`);
+      await ui.waitFor(`!!document.querySelector('.settings__content')`);
+      await ui.eval(`[...document.querySelectorAll('.sgroup__title')].find((e) => e.textContent === 'İkinci koordinat sistemi')?.scrollIntoView({ block: 'center' })`);
+      await ui.sleep(300);
+    },
+    close: secondClose,
   },
 ];
 

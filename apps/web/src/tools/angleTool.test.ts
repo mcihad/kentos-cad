@@ -99,6 +99,26 @@ describe('Koordinat oku', () => {
     expect([...h.doc.all()]).toHaveLength(2);
   });
 
+  it('says the point in the second coordinate system too, with how sure it is (docs/adr/0167 §2, §5)', () => {
+    const h = toolHarness();
+    h.doc.settings.assign({ srid: 5254, secondSrid: 2320 });
+    const tool = h.use(new CoordinateReadTool(h.ctx));
+    // The values from PROJ (ED50 to ETRS89 (9) and TUREF to ETRS89 (1) reversed).
+    expect(tool.input('414120.512,4540398.207')).toBe(true);
+    expect(h.said().slice(-2)).toEqual(['Y=414120.512, X=4540398.207', 'ED50 TM30: Y=414154.869, X=4540584.350 (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil)']);
+    // A geographic second system: latitude first, in the user's notation.
+    h.doc.settings.assign({ secondSrid: 4326 });
+    tool.input('414120.512,4540398.207');
+    expect(h.said().at(-1)).toBe('WGS 84: 40°59′38.0581″K, 28°58′45.7302″D (±1 m, EPSG:5261)');
+    h.ctx.prefs.geographic.set('dd');
+    h.doc.settings.assign({ secondSrid: 5252 });
+    tool.input('414120.512,4540398.207');
+    expect(h.said().at(-1)).toBe('TUREF: 40.9939050°K, 28.9793695°D (kesin, yalnız projeksiyon)');
+    const r = recorder();
+    tool.draw(r.g, r.view);
+    expect(r.calls).toContain('fillText');
+  });
+
   it('reads a typed coordinate too; Enter ends the tool', () => {
     const h = toolHarness();
     const tool = h.use(new CoordinateReadTool(h.ctx));

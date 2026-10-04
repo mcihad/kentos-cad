@@ -135,3 +135,34 @@ fn a_drawing_unit_is_a_local_projects() {
         (1000.0, "cm")
     );
 }
+
+/// The second coordinate system (docs/adr/0167 §1): written only when there
+/// is one, read back as written; a local project and the project's own
+/// system have none.
+#[test]
+fn a_second_system_is_another_system() {
+    use kentos_contracts::ProjectSettings;
+    let read = |json: &str| -> ProjectSettings { serde_json::from_str(json).expect("settings") };
+    let base = r#""lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000"#;
+    let tm30 = read(&format!(r#"{{"srid":5254,{base},"secondSrid":2320}}"#));
+    assert_eq!((tm30.second_srid, tm30.second()), (Some(2320), Some(2320)));
+    assert!(
+        serde_json::to_string(&tm30)
+            .expect("json")
+            .contains(r#""secondSrid":2320"#)
+    );
+    let none = read(&format!(r#"{{"srid":5254,{base}}}"#));
+    assert_eq!((none.second_srid, none.second()), (None, None));
+    assert!(
+        !serde_json::to_string(&none)
+            .expect("json")
+            .contains("secondSrid")
+    );
+    let own = ProjectSettings {
+        second_srid: Some(5254),
+        ..tm30.clone()
+    };
+    assert_eq!(own.second(), None);
+    let local = ProjectSettings { srid: 0, ..tm30 };
+    assert_eq!(local.second(), None);
+}

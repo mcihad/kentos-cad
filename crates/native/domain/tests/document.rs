@@ -537,3 +537,26 @@ fn a_reading_copy_holds_the_drawing_as_it_is_without_its_undo() {
     assert!(matches!(copy.get(a), Some(Entity::Point(p)) if p.p.x == 1.0));
     assert!(copy.get(b).is_some());
 }
+
+/// The second coordinate system (docs/adr/0167 §1), as the web's settings
+/// keep it: another system than the project's own, never a local project's;
+/// one that is not goes when the settings are set.
+#[test]
+fn a_second_system_is_another_system_than_the_projects() {
+    let mut doc = empty();
+    let with = |doc: &Document, srid: u32, second: Option<u32>| {
+        kentos_domain::contracts::ProjectSettings {
+            srid,
+            second_srid: second,
+            ..doc.settings().clone()
+        }
+    };
+    doc.set_settings(with(&doc, 5254, Some(2320)));
+    assert_eq!(doc.settings().second_srid, Some(2320));
+    doc.set_settings(with(&doc, 2320, Some(2320)));
+    assert_eq!(doc.settings().second_srid, None, "the project's own");
+    doc.set_settings(with(&doc, 0, Some(4326)));
+    assert_eq!(doc.settings().second_srid, None, "a local project's");
+    doc.set_settings(with(&doc, 5254, Some(0)));
+    assert_eq!(doc.settings().second_srid, None, "no system");
+}

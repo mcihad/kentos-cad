@@ -35,8 +35,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Görünüm',
       icon: 'appearance',
       title: 'Görünüm',
-      lead: 'Tema, vurgu rengi, yazı tipi, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'accent', 'uiFont', 'textSize', 'corners', 'shadows', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
+      lead: 'Tema, vurgu rengi, yazı tipi, yazı boyutu, artı imleç, coğrafi koordinatlar ve fare yardımcıları.',
+      keys: ['theme', 'accent', 'uiFont', 'textSize', 'corners', 'shadows', 'crosshair', 'geographic', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
       render: (api) => appearance(api),
     },
     {
@@ -261,6 +261,22 @@ function appearance(api: DraftApi<AppDraft>) {
             { value: 'full', label: 'Tam ekran' },
           ],
           onChange: (v) => api.set('crosshair', v),
+        }),
+      ),
+    ),
+    group(
+      'Koordinatlar',
+      settingRow(
+        'Coğrafi koordinatlar',
+        'İkinci koordinat sistemi coğrafiyken (WGS 84, TUREF) enlem ve boylamın yazılışı, sabit basamaklarla: saniyenin 4 basamağı ya da derecenin 7 basamağı.',
+        segmented({
+          label: 'Coğrafi koordinatlar',
+          value: d.geographic,
+          options: [
+            { value: 'dms', label: '40°45′12.3456″K', hint: 'Derece, dakika, saniye' },
+            { value: 'dd', label: '40.7534293°K', hint: 'Ondalık derece' },
+          ],
+          onChange: (v) => api.set('geographic', v),
         }),
       ),
     ),

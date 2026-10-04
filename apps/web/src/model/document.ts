@@ -764,7 +764,8 @@ export class CadDocument {
       const m = changes.meta;
       if (m?.layers) this.layers.reset(m.layers, m.activeLayer ?? this.layers.active.value);
       else if (m?.activeLayer) this.layers.reset(this.layers.tree, m.activeLayer);
-      if (m?.settings) this.settings.assign(m.settings);
+      // The server's settings are whole: a unit or a second system it does not name is none (docs/adr/0165 §2, 0167 §1).
+      if (m?.settings) this.settings.assign({ ...m.settings, drawingUnit: m.settings.drawingUnit ?? 'm', secondSrid: m.settings.secondSrid ?? null });
       if (m?.name !== undefined) this.name.set(m.name);
       if (m?.styles) this.styles.set(m.styles);
     } finally {

@@ -4866,6 +4866,9 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        second_srid: The project's second coordinate system (docs/adr/0167 §1): its
+            coordinates are shown beside the project's own; absent: none. Never
+            the project's own system, never a local project's.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -4878,6 +4881,7 @@ class ProjectSettings(_Model):
     plot_scale: float
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    second_srid: int | None | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4892,6 +4896,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.second_srid is not UNSET:
+            out["secondSrid"] = self.second_srid
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -4907,6 +4913,7 @@ class ProjectSettings(_Model):
             plot_scale=float(data["plotScale"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            second_srid=data.get("secondSrid", UNSET),
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 

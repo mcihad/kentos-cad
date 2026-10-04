@@ -188,9 +188,11 @@ impl Document {
                 self.forget_tree_history();
             }
             if let Some(settings) = meta.settings {
-                // The former Hibrit mode is a type not asked yet (docs/adr/0165 §1).
+                // The former Hibrit mode is a type not asked yet (docs/adr/0165 §1); a
+                // second system that is not another one is none (docs/adr/0167 §1).
                 self.settings = ProjectSettings {
                     workspace: settings.project_type(),
+                    second_srid: settings.second(),
                     ..settings
                 };
             }

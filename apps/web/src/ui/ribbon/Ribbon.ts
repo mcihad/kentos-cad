@@ -18,6 +18,7 @@ import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { commandMenu, quickAccessMenu, RIBBON_TEXTS, ribbonMenu, withQuickAccess, type RibbonRow } from './ribbonPlan';
 import { RibbonSearch } from './search';
 import { crsTitle } from '../../geo/crs';
+import { crsMenu } from '../statusbar/secondMenu';
 
 /**
  * A contextual tab another part of the app owns (the sheet layouts' Pafta
@@ -147,7 +148,14 @@ export class Ribbon extends Component {
     this.d.add(ctx.doc.dirty.subscribe((v) => dirty.toggleAttribute('hidden', !v), true));
     this.d.add(ctx.doc.crs.subscribe((c) => (crs.querySelector('.ribbon__crs-name')!.textContent = c.name), true));
     this.d.add(listen(crs, 'click', () => ctx.commands.execute('crs.set')));
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Değiştirmek için tıklayın.` })));
+    // The second system on its right-click menu, as on the status bar's cell (docs/adr/0167 §1).
+    this.d.add(
+      listen<MouseEvent>(crs, 'contextmenu', (e) => {
+        e.preventDefault();
+        PopupMenu.open(crsMenu(ctx), { x: e.clientX, y: e.clientY }, { placement: 'point' });
+      }),
+    );
+    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.` })));
     this.d.add(
       listen<PointerEvent>(help, 'pointerdown', (e) => {
         if (e.button !== 0) return;

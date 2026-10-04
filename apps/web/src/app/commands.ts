@@ -680,7 +680,8 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       short: 'Koordinat oku',
       category: K,
       icon: 'crsQuery',
-      description: 'Tıklanan (kenetli) noktanın Y ve X’ini, noktanın kotu varsa onu da iletiye yazar; her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz.',
+      description:
+        'Tıklanan (kenetli) noktanın Y ve X’ini, noktanın kotu varsa onu da, projenin ikinci koordinat sistemi varsa o sistemdeki değerlerini de doğruluğuyla iletiye yazar; her tıklama bir okumadır, Esc bitirir. Çizime bir şey yazılmaz.',
       aliases: ['KOORDINATOKU', 'ID', 'NOKTAOKU', 'XYZSOR'],
       run: () => tools.run(new CoordinateReadTool(ctx), 'Koordinat oku'),
     },

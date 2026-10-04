@@ -146,6 +146,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_unit: Option<DrawingUnit>,
+    /// The project's second coordinate system (docs/adr/0167 §1): its
+    /// coordinates are shown beside the project's own; absent: none. Never
+    /// the project's own system, never a local project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub second_srid: Option<u32>,
 }
 
 impl ProjectSettings {
@@ -163,6 +169,13 @@ impl ProjectSettings {
         } else {
             DrawingUnit::M
         }
+    }
+
+    /// The second coordinate system's SRID, when the project may have one: a
+    /// system other than its own, and the project has one (docs/adr/0167 §1).
+    pub fn second(&self) -> Option<u32> {
+        self.second_srid
+            .filter(|s| *s != 0 && *s != self.srid && self.srid != 0)
     }
 }
 

@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(15);
+    expect(valid).toBe(16);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -181,6 +181,8 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['blocks.json', 'blocks.kcad'],
       // Schema 11: a local project's drawing unit, kept by the page's head (docs/adr/0165 §2).
       ['drawing-unit.json', 'drawing-unit.kcad'],
+      // Schema 12: the project's second coordinate system, kept by the page's head (docs/adr/0167 §1).
+      ['second-crs.json', 'second-crs.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

@@ -74,6 +74,13 @@ describe('.kcad snapshots', () => {
     const r = readSnapshot(JSON.stringify(good));
     expect(r.ok && r.content.settings.drawingUnit).toBe('mm');
   });
+  it('reads the second coordinate system; a file without one has none and writes none (docs/adr/0167 §1)', () => {
+    const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
+    expect('secondSrid' in good.settings).toBe(false);
+    Object.assign(good.settings, { srid: 5254, secondSrid: 2320 });
+    const r = readSnapshot(JSON.stringify(good));
+    expect(r.ok && r.content.settings.secondSrid).toBe(2320);
+  });
   it('refuses what it does not know, saying what and where', () => {
     const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
     const err = (mutate: (d: any) => void) => {
@@ -89,6 +96,9 @@ describe('.kcad snapshots', () => {
     expect(err((d) => (d.settings.workspace = 'bim'))).toContain('Proje ayarları › proje türü');
     expect(err((d) => (d.settings.drawingFont = 'comic-sans'))).toContain('Proje ayarları › çizim yazı tipi');
     expect(err((d) => Object.assign(d.settings, { srid: 0, drawingUnit: 'inch' }))).toContain('Proje ayarları › çizim birimi');
+    expect(err((d) => Object.assign(d.settings, { srid: 5254, secondSrid: 5254 }))).toContain('Proje ayarları › ikinci koordinat sistemi: projeninkinden başka');
+    expect(err((d) => Object.assign(d.settings, { srid: 0, secondSrid: 2320 }))).toContain('yerel projenin ikinci sistemi olmaz');
+    expect(err((d) => Object.assign(d.settings, { srid: 5254, secondSrid: 2320.5 }))).toContain('bir EPSG kodu olmalı');
     expect(err((d) => (d.entities[0].kind = 'blok'))).toContain('Nesne 1 › tür');
     expect(err((d) => (d.entities[1].layerId = 'yok'))).toContain('“yok” katmanı dosyada yok');
     expect(err((d) => (d.entities[1].a.x = '486512.34'))).toContain('a.x: sonlu bir sayı olmalı');

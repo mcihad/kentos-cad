@@ -439,8 +439,10 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             plot_scale: rng.float(),
             workspace: rng.chance(50).then_some(Workspace::Gis),
             drawing_font: rng.chance(50).then_some(DrawingFont::ArchitectsDaughter),
-            // A drawing unit is put on by `with_schema` (schema 11), from a stream of its own.
+            // A drawing unit and a second system are put on by `with_schema` (schemas 11
+            // and 12), from a stream of its own.
             drawing_unit: None,
+            second_srid: None,
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {
@@ -471,13 +473,18 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
 /// gives it block definitions, each holding some of its objects and an insert
 /// of the one before, and inserts of them (schema 6). Returns the schema the
 /// drawing needs. A quarter of them, of every mode, are then a local
-/// project in millimetres (schema 11, docs/adr/0165 §2).
+/// project in millimetres (schema 11, docs/adr/0165 §2), and a quarter of the
+/// rest have a second coordinate system (schema 12, docs/adr/0167 §1).
 fn with_schema(doc: &mut DocumentSnapshotV2, mode: u64, rng: &mut Rng) -> u8 {
     let schema = with_features(doc, mode, rng);
     if rng.chance(25) {
         doc.settings.srid = 0;
         doc.settings.drawing_unit = Some(DrawingUnit::Mm);
         return 11;
+    }
+    if rng.chance(25) && doc.settings.srid != 0 {
+        doc.settings.second_srid = Some(doc.settings.srid.wrapping_add(1).max(1));
+        return 12;
     }
     schema
 }

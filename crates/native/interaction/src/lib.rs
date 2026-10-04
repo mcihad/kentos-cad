@@ -167,6 +167,7 @@ pub mod revcloud;
 pub mod rotate;
 pub mod rotated;
 pub mod scale;
+pub mod second;
 pub mod sector;
 pub mod select;
 pub mod select_circle;

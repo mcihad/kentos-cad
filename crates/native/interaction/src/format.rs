@@ -447,6 +447,7 @@ mod tests {
             workspace: Some(Workspace::Cad),
             drawing_font: None,
             drawing_unit: None,
+            second_srid: None,
         };
         let cad = Format::of(&settings);
         assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
@@ -510,6 +511,7 @@ mod tests {
             workspace: None,
             drawing_font: None,
             drawing_unit: Some(DrawingUnit::Mm),
+            second_srid: None,
         };
         let f = Format::of(&settings);
         assert_eq!(f.coord(0.1), "100.000");

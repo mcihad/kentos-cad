@@ -73,6 +73,8 @@ SCHEMA_WITH_DIMENSIONS = 9
 SCHEMA_WITH_LAYER_SNAP = 10
 # Schema 11: schema 10 and a local project's drawing unit, the settings' `drawingUnit` (docs/adr/0165 §2).
 SCHEMA_WITH_DRAWING_UNIT = 11
+# Schema 12: schema 11 and the project's second coordinate system, the settings' `secondSrid` (docs/adr/0167 §1).
+SCHEMA_WITH_SECOND_SRID = 12
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
@@ -84,7 +86,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -480,6 +482,7 @@ class _Schema:
         self.dimensions = version >= SCHEMA_WITH_DIMENSIONS
         self.layer_snap = version >= SCHEMA_WITH_LAYER_SNAP
         self.drawing_unit = version >= SCHEMA_WITH_DRAWING_UNIT
+        self.second_srid = version >= SCHEMA_WITH_SECOND_SRID
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -522,19 +525,26 @@ class _Schema:
         return out
 
     def settings(self, v):
-        return self.fields(
+        s = self.fields(
             {
                 "srid": (self.uint(32), True),
                 "areaUnit": (self.enum(("m2", "donum", "ha")), True),
                 "angleUnit": (self.enum(("grad", "deg")), True),
                 "plotScale": (self.float, True),
                 "workspace": (self.enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
+                **({"secondSrid": (self.uint(32), False)} if self.second_srid else {}),
                 "drawingFont": (self.enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 **({"drawingUnit": (self.enum(("mm", "cm", "m")), False)} if self.drawing_unit else {}),
                 "areaDecimals": (self.uint(32), True),
                 "lengthDecimals": (self.uint(32), True),
             }
         )(v)
+        # A second coordinate system is another system than the project's own; a local project has none.
+        second = s.get("secondSrid")
+        if second is not None and (second == 0 or s["srid"] == 0 or second == s["srid"]):
+            self.path.append("secondSrid")
+            self.fail("bad_value", "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz")
+        return s
 
     def source(self, v):
         s = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "sourceSha256": (self.sha256, True)})(v)

@@ -27,4 +27,10 @@ drawingFont?: DrawingFont,
  * A local project's unit (docs/adr/0165 §2); absent: metres. Only a
  * project without a coordinate system (SRID 0) has another.
  */
-drawingUnit?: DrawingUnit, };
+drawingUnit?: DrawingUnit, 
+/**
+ * The project's second coordinate system (docs/adr/0167 §1): its
+ * coordinates are shown beside the project's own; absent: none. Never
+ * the project's own system, never a local project's.
+ */
+secondSrid?: number, };

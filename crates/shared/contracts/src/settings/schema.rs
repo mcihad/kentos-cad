@@ -60,6 +60,7 @@ fn groups() -> Vec<SettingGroup> {
             "Görünüm",
             "Tema, vurgu rengi, yazı tipi ve yazı boyutu.",
         ),
+        group("display", "Gösterim", "Koordinatların yazılışı."),
         group(
             "newProjects",
             "Yeni projeler",
@@ -447,6 +448,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Başlangıç ekranı",
                 "Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir.",
             ),
+        // ── Display ─────────────────────────────────────────────────────
+        // How a geographic second system's latitude and longitude are written
+        // (docs/adr/0167 §1): fixed digits, not the project's angle digits.
+        choice(
+            "display.geographic",
+            "dms",
+            &[("dms", "Derece, dakika, saniye"), ("dd", "Ondalık derece")],
+        )
+        .hosts(&[Web, Desktop])
+        .text(
+            "Coğrafi koordinatlar",
+            "İkinci koordinat sistemi coğrafiyken enlem ve boylamın yazılışı: 40°45′12.3456″K ya da 40.7534293°K.",
+        ),
         // ── New projects ────────────────────────────────────────────────
         integer("newProjects.srid", 5256)
             .range(1.0, 999_999.0)

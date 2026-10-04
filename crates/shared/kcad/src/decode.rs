@@ -262,7 +262,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
                 )?)
             }
             "homeView" => home_view = Some(bounds(r)?),
-            "settings" => settings_ = Some(settings(r, has.drawing_unit)?),
+            "settings" => settings_ = Some(settings(r, has)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "migratedFrom" => migrated_from = Some(source(r)?),
@@ -295,10 +295,11 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     })
 }
 
-/// The settings; `unit`: the schema has the drawing unit (11 and up).
-fn settings(r: &mut Reader<'_>, unit: bool) -> Result<ProjectSettings, KcadError> {
+/// The settings; `has` says whether the schema has the drawing unit (11 and
+/// up) and the second coordinate system (12 and up).
+fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
-    let mut drawing_unit = None;
+    let (mut drawing_unit, mut second_srid) = (None, None);
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -348,7 +349,7 @@ fn settings(r: &mut Reader<'_>, unit: bool) -> Result<ProjectSettings, KcadError
                     ],
                 )?)
             }
-            "drawingUnit" if unit => {
+            "drawingUnit" if has.drawing_unit => {
                 drawing_unit = Some(named(
                     r,
                     &[
@@ -357,6 +358,19 @@ fn settings(r: &mut Reader<'_>, unit: bool) -> Result<ProjectSettings, KcadError
                         ("m", DrawingUnit::M),
                     ],
                 )?)
+            }
+            // `srid` comes first in the encoded order: the project's own system is known.
+            "secondSrid" if has.second_srid => {
+                let at = r.position();
+                let second = r.uint(u64::from(u32::MAX))? as u32;
+                if second == 0 || srid == Some(0) || srid == Some(second) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz",
+                    ));
+                }
+                second_srid = Some(second);
             }
             "areaDecimals" => area_decimals = Some(r.uint(u64::from(u32::MAX))? as u32),
             "lengthDecimals" => length_decimals = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -374,6 +388,7 @@ fn settings(r: &mut Reader<'_>, unit: bool) -> Result<ProjectSettings, KcadError
         workspace,
         drawing_font,
         drawing_unit,
+        second_srid,
     })
 }
 

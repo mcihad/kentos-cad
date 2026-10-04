@@ -112,6 +112,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             workspace: None,
             drawing_font: None,
             drawing_unit: None,
+            second_srid: None,
         },
         origin: Vec2 {
             x: 486_000.0,

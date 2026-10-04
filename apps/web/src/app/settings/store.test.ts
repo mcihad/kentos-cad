@@ -110,6 +110,8 @@ const MIGRATED: PreferencesData = {
   symbolSize: 'screen',
   lineWeights: false,
   startScreen: false,
+  // Newer than the old store (docs/adr/0167 §1): the schema's default.
+  geographic: 'dms',
 };
 
 const values = (store: SettingsStore): PreferencesData => Object.fromEntries(Object.entries(PREF_KEYS).map(([f, k]) => [f, store.requested(k)])) as unknown as PreferencesData;

@@ -66,7 +66,7 @@ export function toolHarness() {
       overlapLast: new Signal<'layer' | 'layers'>('layer'),
       overlapLayers: new Signal<ReadonlySet<string>>(new Set()),
     },
-    prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15) },
+    prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15), geographic: new Signal<'dms' | 'dd'>('dms') },
     view: {
       palette,
       requestOverlay: () => {},

@@ -283,6 +283,8 @@ impl App {
                     .fold(menu.separator(), |menu, id| self.command_item(menu, id))
             });
         let full = self.fullscreen;
+        // The coordinate system's right-click menu: Koordinat sistemi…, İkinci sistem ▸ (docs/adr/0167 §1).
+        let crs_menu = self.crs_cell_menu();
         // Komut ara between the name and the coordinate system (ribbon_search.rs).
         let query = self.ribbon_search.clone();
         let found = self.search_rows();
@@ -356,7 +358,12 @@ impl App {
             .spacing(4)
             .align_y(iced::Center);
             if let Some((srid, crs)) = crs {
-                row = row.push(crs_button(srid, crs, crs_named));
+                // The second system on its right-click menu, as on the status bar's cell.
+                let menu = crs_menu.clone();
+                row = row.push(ContextMenu::new(
+                    crs_button(srid, crs, crs_named),
+                    move |_| menu.clone(),
+                ));
             }
             // The area is the tab row's height: the row sits in its middle.
             container(
@@ -942,14 +949,17 @@ impl App {
     }
 
     /// The status bar, as the web's (`StatusBar.ts`, DESIGN.md §7.7): the
-    /// cursor's coordinates, the newest message for its few seconds, then at
+    /// cursor's coordinates and, with a second coordinate system, its values
+    /// (second_crs.rs), the newest message for its few seconds, then at
     /// the right the selection, the drafting aids, the screen scale, the
     /// work mode, the coordinate system, the cloud cells and the engine. In a
     /// narrow window the least needed cell gives way first (the web's
-    /// `STEPS`) until the message has room for a short line (15 × the type
+    /// `STEPS`) until the message has room for a short line (10 × the type
     /// size): the engine's name, the coordinate system (also in the tab
     /// row), the screen scale, the cloud cells' words (their lamps stay),
-    /// the mode's name, the drafting aids' padding. Every cell keeps its tip.
+    /// the mode's name, the drafting aids' padding. Every cell keeps its
+    /// tip. The second system's values share the message's room: they show
+    /// while no message does, or there is room for both.
     pub(crate) fn status_bar(&self) -> Element<'_, Message> {
         // A sheet in front: its cells (sheets.rs).
         if self.sheets.is_active() {
@@ -965,18 +975,30 @@ impl App {
                 .into();
         }
         container(iced::widget::responsive(move |size| {
-            let least = 15.0 * kentos_ui::theme::typography::body();
+            // A short message: ten letters' room and more (what the bar left it before its
+            // estimate counted the drafting aids' lamps right, docs/adr/0167 §2).
+            let least = 10.0 * kentos_ui::theme::typography::body();
+            // The message's room holds the second system's values too (docs/adr/0167 §2): the
+            // cells give way until it is as wide as they are; they show while no message does,
+            // or there is room for both. The steps do not follow the message: the bar stays still.
+            let second_width = self.second_width();
+            // The widths are estimates: room for a few letters more keeps the bar's end in view.
+            let need = least.max(second_width + 4.0 * kentos_ui::theme::typography::body());
             let fit = (0..=STATUS_STEPS)
-                .find(|&level| self.status_width(level) + least <= size.width)
+                .find(|&level| self.status_width(level) + need <= size.width)
                 .unwrap_or(STATUS_STEPS);
-            self.status_bar_at(fit)
+            let room = size.width - self.status_width(fit);
+            let second = second_width > 0.0
+                && room >= second_width + if self.flashing() { least } else { 0.0 };
+            self.status_bar_at(fit, second)
         }))
         .height(kentos_ui::widget::status_bar::height())
         .into()
     }
 
-    /// The status bar with `fit` of its narrow-window steps taken.
-    fn status_bar_at(&self, fit: u8) -> Element<'_, Message> {
+    /// The status bar with `fit` of its narrow-window steps taken, and the
+    /// second system's values when `second`.
+    fn status_bar_at(&self, fit: u8, second: bool) -> Element<'_, Message> {
         // Where the tools take the cursor to be (a snap, Karelaj's node), as
         // the web shows it; the plain world point when the cursor moved since.
         let cursor = self.viewport.cursor.map(|raw| match self.cursor_point {
@@ -1004,18 +1026,20 @@ impl App {
             _ => "Y —   X —".to_owned(),
         };
         let f = self.format();
-        let mut bar = StatusBar::new()
-            .push(
-                Readout::new(label::mono(coordinates))
-                    .icon(Icon::Crosshair)
-                    .tip(format!(
-                        "İmleç koordinatı: {} sağa (doğu), {} yukarı (kuzey)",
-                        f.east_label(),
-                        f.north_label()
-                    )),
-            )
-            .separator()
-            .push(self.flash_cell());
+        let mut bar = StatusBar::new().push(
+            Readout::new(label::mono(coordinates))
+                .icon(Icon::Crosshair)
+                .tip(format!(
+                    "İmleç koordinatı: {} sağa (doğu), {} yukarı (kuzey)",
+                    f.east_label(),
+                    f.north_label()
+                )),
+        );
+        // The second coordinate system's values, before the message (docs/adr/0167 §2).
+        if second && let Some(cell) = self.second_cell(cursor) {
+            bar = bar.separator().push(cell);
+        }
+        bar = bar.separator().push(self.flash_cell());
         if !self.selection.is_empty() {
             // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
             let n = self.selection.len();
@@ -1053,18 +1077,20 @@ impl App {
             }
             bar = bar.separator().push(self.mode_cell(fit < 5));
             if fit < 2 {
-                // Clicked, Proje ayarları on its coordinate system page (the web's cell).
-                bar = bar.separator().push(
-                    Readout::new(label::muted(crs_label(srid)))
-                        .icon(crate::icons::from_web(Some("crs")))
-                        .on_press(Message::Run("crs.set"))
-                        .tip(Tip::new("Koordinat sistemi").body(format!(
-                            "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın.",
-                            crate::crs::title_of(srid),
-                            f.east_label(),
-                            f.north_label()
-                        ))),
-                );
+                // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
+                // system on its right-click menu (docs/adr/0167 §1).
+                let cell = Readout::new(label::muted(crs_label(srid)))
+                    .icon(crate::icons::from_web(Some("crs")))
+                    .on_press(Message::Run("crs.set"))
+                    .tip(Tip::new("Koordinat sistemi").body(format!(
+                        "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.",
+                        crate::crs::title_of(srid),
+                        f.east_label(),
+                        f.north_label()
+                    )));
+                bar = bar
+                    .separator()
+                    .push(ContextMenu::new(cell, move |_| self.crs_cell_menu()));
             }
         }
         // The cloud: the save cell and the server cell with its account menu (docs/adr/0113).
@@ -1203,12 +1229,13 @@ impl App {
         if !self.selection.is_empty() {
             width += SEPARATOR + cell(&format!("{} seçili", self.selection.len()), false);
         }
-        // A lamp and its gap, and the padding (less once the bar is tight).
+        // A lamp, its gap and the row's spacing (14, measured on the pictures),
+        // and the padding (less once the bar is tight).
         let pad = if fit >= 6 { 12.0 } else { 18.0 };
         width += SEPARATOR
             + STATUS_AIDS
                 .iter()
-                .map(|(_, name)| text(name) + 7.0 + pad)
+                .map(|(_, name)| text(name) + 14.0 + pad)
                 .sum::<f32>();
         if let Some(doc) = &self.document {
             let srid = doc.settings().srid;
@@ -1435,7 +1462,10 @@ const STATUS_AIDS: [(&str, &str); 9] = [
     ("view.lineWeights", "Kalınlık"),
 ];
 
-/// The status bar's narrow-window steps (the web's `STEPS`).
+/// The status bar's narrow-window steps (the web's `STEPS`): the engine's
+/// name, the coordinate system, the screen scale, the cloud cells' words,
+/// the mode's name, the aids' padding. The second system's values share
+/// the message's room.
 const STATUS_STEPS: u8 = 6;
 
 /// A launcher's message: another tab, or a command the desktop runs.
@@ -1595,7 +1625,7 @@ fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message>
             .padding([4, 8])
             .style(style::button::flat),
         Tip::new("Koordinat sistemi").body(format!(
-            "{}. Değiştirmek için tıklayın.",
+            "{}. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.",
             crate::crs::title_of(srid)
         )),
         iced::widget::tooltip::Position::Bottom,

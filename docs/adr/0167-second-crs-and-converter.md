@@ -32,7 +32,7 @@ PROJ (9.7) ED50 → TUREF için varsayılan olarak ETRS89 üstünden 2,1 m'lik y
 
 ### 2. Nerede görünür
 
-- **Durum çubuğu:** imlecin koordinatlarının yanında ikinci sistemin değerleri, sistemin kısa adıyla (“ED50 TM30 Y … X …”, “WGS 84 40°… 29°…”); dar pencerede ilk çekilen hücrelerden.
+- **Durum çubuğu:** imlecin koordinatlarının yanında ikinci sistemin değerleri, sistemin kısa adıyla (“ED50 TM30 Y … X …”, “WGS 84 40°… 29°…”). Değerler iletinin yerini paylaşır (4 Ekim, 2. adımda): ikinci sistem varken öbür hücreler o yer değerler kadar olana dek çekilir; ileti yokken değerler, ikisine yer yetmezse ileti gösterildiği birkaç saniye onların yerinde. Basamaklar iletiye bağlı değildir, çubuk kıpırdamaz. 1440 piksellik pencerede görünür, 1100'de çekilir.
 - **Koordinat oku:** tıklanan noktanın ikinci sistemdeki değerleri de satır olarak.
 - **Mesafe ölç ve Alan hesapla:** ikinci sistem projeksiyonluysa (TM, UTM) uzunluk ve alan ikinci sistemin düzleminde de verilir: köşeler (eğri ve elips 0,1 mm'lik açık sınırla, ADR 0149) dönüştürülür, düzlemde ölçülür. Coğrafi ikinci sistemde uzunluk ve alan verilmez (elipsoit üstü ölçüler `HYB-14`'tür).
 - **Dönüştürücü** (§4).
@@ -43,7 +43,7 @@ PROJ (9.7) ED50 → TUREF için varsayılan olarak ETRS89 üstünden 2,1 m'lik y
 
 - **Projeksiyon:** TM ve UTM ileri (var olan, 6. derece) ve geri (yeni, Karney 2011'in 6. derece serisi); Pseudo-Mercator küresel formülüyle.
 - **Datum:** coğrafi → yer merkezli (elipsoidin kendisiyle, yükseklik 0) → Helmert (konum vektörü) → yer merkezli → coğrafi. TUREF ile WGS 84 arasında sıfır dönüşüm (EPSG:5261), ED50 ile WGS 84 arasında EPSG:1784; ED50 ile TUREF arasında PROJ'un (ve QGIS'in) varsayılan yolu: ED50 → ETRS89 (9) (EPSG:1783, aynı yedi parametre, 2 m) ve TUREF → ETRS89 (1)'in tersi (EPSG:5260, yedi parametreli Helmert: tx 0,023, ty 0,036, tz −0,068 m, rx 0,00176″, ry 0,00912″, rz −0,01136″, ds 0,00439 ppm; 0,1 m), toplam 2,1 m. Kullanıcı değerleri QGIS'tekilerle karşılaştırabilsin diye her çift PROJ'un varsayılan yolunu izler; ED50 → WGS 84 ile ED50 → TUREF bu yüzden santimetrelerle ayrışır (TUREF ile WGS 84 arası sıfır dönüşümdür).
-- Her dönüşüm sonucu doğruluğunu ve dayanağını taşır (“±2 m, EPSG:1784”); aynı datumda yalnız projeksiyon değişiyorsa “kesin (projeksiyon)”.
+- Her dönüşüm sonucu doğruluğunu ve dayanağını taşır (“±2 m, EPSG:1784”); aynı datumda yalnız projeksiyon değişiyorsa “kesin, yalnız projeksiyon”.
 - Yükseklik ve epoch yoktur (2B, yükseklik 0 alınır: yatayda 1 mm'nin altında etkisi); `NUM-07`'nin yükseklik ve epoch senaryoları ayrı iştir.
 
 ### 4. Dönüştürücü
@@ -80,6 +80,17 @@ PROJ (9.7) ED50 → TUREF için varsayılan olarak ETRS89 üstünden 2,1 m'lik y
    - **Kayıttan sistem:** web `systemOf`, masaüstü `kentos_project::crs::System::transform_system`; ikisi başvurudaki sistemlerle sınanır.
    - **Başvuru:** `scripts/fixtures/crs_transform_cases.py` (`fixtures/geodesy/v1/transform.json`, PROJ 9.7.1): 18 sistem çiftinde 40 dönüşüm (TM, UTM, coğrafi, Pseudo-Mercator; dilim kenarları; üç datum yolu), 48 yazılış (DMS 2 ve 4 basamak, DD 7 basamak; taşma, işaret), 19 okunuş. Çekirdek (yerli ve çağrı tablosu) ve web (WASM): ızgara noktaları 1e-6 m, enlem ve boylam 1e-11° içinde; ilk ölçümde fark nanometre düzeyindedir.
 2. Proje ayarı `secondSrid` ve `.kcad` şema 12 (spesifikasyon, kodek, Python okuyucu ve yazıcı, örnek dosyalar); `display.geographic`; Proje ayarları ve durum çubuğu hücresinin menüsü; durum çubuğunda ikinci değerler; Koordinat oku. İki platformda, resimleriyle.
+
+   *(4 Ekim: tamam.)*
+   - **Sözleşme:** `ProjectSettings::second_srid` (`secondSrid`, yalnız varken yazılır) ve `second()`: projeninkinden başka bir sistem, yerel projede yok. Ayarlar kurulurken (masaüstü `Document::set_settings`, açılış ve dışarıdan gelen ayarlar; web `ProjectSettings.assign`) geçersiz ikinci sistem düşer; sunucunun bütün ayarlarında olmayan ikinci sistem yoktur (web'de çizim birimi de böyle).
+   - **`.kcad` şema 12:** spesifikasyon §6.1 ve §6.4; Rust kodeği, `tools/kcad/kcad.py`, bağımsız yazıcı; `second-crs.kcad` ve bozuk dosyalar: şema 11'de `secondSrid` (`unknown_field`), 0, projeninkiyle aynı ve yerel projede (`bad_value`). Yazıcı geçersiz ikinci sistemi yazmaz, `bad_value` ile reddeder. Web'in v1 ve v2 başı da aynı kuralla okur; kayıtta olmayan sistem korunur, değerleri gösterilmez.
+   - **`display.geographic`:** ayar şemasında yeni “Gösterim” grubu; Uygulama ayarları › Görünüm › Koordinatlar ve İkinci sistem menüsünün Coğrafi değerler'i.
+   - **Okunuş:** masaüstü `kentos_interaction::second::Second`, web `app/secondCrs.ts`: kısa ad (“ED50 TM30”), değerler (projeksiyonluda türün eksen adları ve uzunluk basamakları, coğrafide enlem önce), doğruluk (“±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil”, “±1 m, EPSG:5261”, “kesin, yalnız projeksiyon”).
+   - **Durum çubuğu:** §2'nin kuralı; hücrenin ipucu doğruluğu söyler, tıklamak İkinci sistem listesini açar. Masaüstünün genişlik tahmininde çizim yardımcılarının lambası, aralığı ve dolgusu ölçülerek düzeltildi (önceden eksik sayılan ~60 piksel iletinin payını yiyordu); iletinin en az yeri masaüstünde 10 harftir, ikinci sistem yokken çubuk eskisi gibidir.
+   - **Menüler:** koordinat sistemi hücresinin ve sekme satırındaki sistem düğmesinin sağ tık menüsü: Koordinat sistemi…, İkinci sistem ▸ (Yok, datum başına alt menü, seçili olan yanında; Coğrafi değerler); yeni simge `crsSecond` (küre ve küçük 2).
+   - **Proje ayarları › Koordinat sistemi:** “İkinci koordinat sistemi” alanı (kayıttaki sistemler datumlarıyla ve Yok; yerel projede yok); Kaydet söyler.
+   - **Koordinat oku:** ikinci satır “ED50 TM30: Y=…, X=… (±2.1 m, …)”, etikette sistemin adı ve iki değeri; dışarıda kalan nokta için uyarı. Ortak iz `fixtures/interaction/v1/second-crs.json` (kesin metinler, PROJ'un değerleri) iki platformda geçer.
+   - **Resimler:** masaüstü `second_crs::tests::screens` (`.run/shots/ikinci-sistem-*`), web `shots.mjs secondcrs`.
 3. Mesafe ölç ve Alan hesapla'nın ikinci sistem değerleri; ortak iz.
 4. Koordinat dönüştür penceresi (tek nokta, liste, çizimden seç), `crs.transform`; iki platformda, resimleriyle.
 

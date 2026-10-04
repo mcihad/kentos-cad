@@ -234,6 +234,7 @@ mod tests {
             workspace: Some(kentos_contracts::Workspace::Gis),
             drawing_font: None,
             drawing_unit: None,
+            second_srid: None,
         })
     }
 

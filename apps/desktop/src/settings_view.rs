@@ -24,7 +24,7 @@ use crate::settings::schema;
 use crate::settings_sections::Section;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 44] = [
+pub const KEYS: [&str; 45] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -65,6 +65,7 @@ pub const KEYS: [&str; 44] = [
     "appearance.corners",
     "appearance.shadows",
     "appearance.startScreen",
+    "display.geographic",
     "newProjects.srid",
     "newProjects.workspace",
     "newProjects.drawingUnit",

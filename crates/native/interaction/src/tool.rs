@@ -200,6 +200,9 @@ pub struct Draft {
     /// Kalınlık, the web's `ctx.settings.lineWeight`; docs/adr/0139); `None`:
     /// the layer's (“Katmana göre”).
     pub line_weight: Option<f64>,
+    /// How a geographic second system's values are written
+    /// (`display.geographic`, docs/adr/0167 §1).
+    pub geographic: crate::second::Notation,
 }
 
 impl Default for Draft {
@@ -227,6 +230,7 @@ impl Default for Draft {
             overlap: Overlap::Allow,
             color: None,
             line_weight: None,
+            geographic: crate::second::Notation::Dms,
         }
     }
 }

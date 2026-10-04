@@ -45,7 +45,16 @@ export interface ProjectSettingsData {
   drawingFont: DrawingFont;
   /** A local project's unit (docs/adr/0165 §2): lengths are typed and read in it; absent: metres. */
   drawingUnit?: DrawingUnit;
+  /** The project's second coordinate system (docs/adr/0167 §1): its values are shown beside the project's; absent: none. */
+  secondSrid?: number;
 }
+
+/** A change to some settings: absent fields are kept; a null `secondSrid` removes the second system. */
+export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid'>> & { secondSrid?: number | null };
+
+/** Whether `second` may be the second system of a project in `crs`: another system, and the project has one (docs/adr/0167 §1). */
+export const secondAllowed = (crs: CrsDef, second: number | null | undefined): second is number =>
+  typeof second === 'number' && second !== 0 && second !== crs.srid && crs.kind !== 'local';
 
 export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
   srid: DEFAULT_SRID,
@@ -75,6 +84,8 @@ export class ProjectSettings {
   readonly drawingFont: Signal<DrawingFont>;
   /** A local project's drawing unit; metres when none is set (and for any project with a coordinate system). */
   readonly drawingUnit: Signal<DrawingUnit>;
+  /** The second coordinate system's SRID, or null: never the project's own, never a local project's (docs/adr/0167 §1). */
+  readonly secondSrid: Signal<number | null>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -89,8 +100,10 @@ export class ProjectSettings {
     this.workspace = new Signal(typeOf(d.workspace));
     this.drawingFont = new Signal(d.drawingFont);
     this.drawingUnit = new Signal(d.drawingUnit ?? 'm');
-    watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont, this.drawingUnit], () =>
-      this.changed.update((v) => v + 1),
+    this.secondSrid = new Signal(secondAllowed(this.crs.value, d.secondSrid) ? d.secondSrid : null);
+    watchAll(
+      [this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont, this.drawingUnit, this.secondSrid],
+      () => this.changed.update((v) => v + 1),
     );
   }
 
@@ -107,7 +120,15 @@ export class ProjectSettings {
       drawingFont: this.drawingFont.value,
       // Metres are not written: a file names a unit only when it has another (KCAD schema 11).
       ...(this.drawingUnit.value !== 'm' ? { drawingUnit: this.drawingUnit.value } : {}),
+      // Written only when there is one (KCAD schema 12).
+      ...(this.secondSrid.value !== null ? { secondSrid: this.secondSrid.value } : {}),
     };
+  }
+
+  /** The second coordinate system, when the project has one the registry knows (docs/adr/0167 §1). */
+  get second(): CrsDef | null {
+    const srid = this.secondSrid.value;
+    return srid === null ? null : (crsBySrid(srid) ?? null);
   }
 
   /** The unit lengths are typed and read in: a local project's own, metres for any other (docs/adr/0165 §2). */
@@ -117,13 +138,17 @@ export class ProjectSettings {
 
   /** Takes a whole snapshot's settings: one without a type has its type not asked yet. */
   replace(data: ProjectSettingsData): void {
-    this.assign(data);
+    this.assign({ ...data, secondSrid: data.secondSrid ?? null });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
   }
 
-  /** Applies a (partial) snapshot. Unknown SRIDs are rejected, not guessed. */
-  assign(data: Partial<ProjectSettingsData>): void {
+  /**
+   * Applies a (partial) snapshot. Unknown SRIDs are rejected, not guessed. A
+   * second system that is no longer another system than the project's own,
+   * or is a local project's, goes (docs/adr/0167 §1).
+   */
+  assign(data: ProjectSettingsPatch): void {
     if (data.srid !== undefined) {
       const crs = crsBySrid(data.srid);
       if (!crs) throw new Error(`EPSG:${data.srid} tanımlı değil`);
@@ -138,5 +163,7 @@ export class ProjectSettings {
     if (data.workspace !== undefined) this.workspace.set(typeOf(data.workspace));
     if (data.drawingFont !== undefined) this.drawingFont.set(data.drawingFont);
     if (data.drawingUnit !== undefined) this.drawingUnit.set(data.drawingUnit);
+    const second = data.secondSrid === undefined ? this.secondSrid.value : data.secondSrid;
+    this.secondSrid.set(secondAllowed(this.crs.value, second) ? second : null);
   }
 }

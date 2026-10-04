@@ -401,6 +401,8 @@ export const ICONS = {
   parcelReport: '<path d="M4.5 2.5h8l3 3v12h-11z"/><path d="M12.5 2.5v3h3"/><path d="M7 9.5h6M7 12.5h6M7 15.5h3.5"/><path d="M10 9.5v6" stroke-dasharray="1.2 1.2"/>',
   crsTransform: '<circle cx="7" cy="7" r="4.5"/><path d="M2.5 7h9M7 2.5c-1.6 1.3-1.6 7.7 0 9"/><path d="M11.5 13.5h6M15.5 11.5l2 2-2 2M17.5 17h-6M13.5 15l-2 2 2 2"/>',
   crsQuery: '<path d="M10 2.5v4M10 13.5v4M2.5 10h4M13.5 10h4"/><circle cx="10" cy="10" r="4.5"/><circle cx="10" cy="10" r=".9" fill="currentColor" stroke="none"/>',
+  // The project's second coordinate system (docs/adr/0167 §1): a globe and a small 2.
+  crsSecond: '<circle cx="8.5" cy="11.5" r="5.5"/><path d="M3 11.5h11M8.5 6c-2 1.6-2 9.4 0 11M8.5 6c2 1.6 2 9.4 0 11"/><path d="M13.8 4.5a1.9 1.9 0 0 1 3.7.4c0 1.2-1.2 1.9-3.7 3.4h3.9"/>',
   volume: '<path d="m10 2.8 6.8 3.7v7L10 17.2l-6.8-3.7v-7z"/><path d="m3.2 6.5 6.8 3.7 6.8-3.7M10 10.2v7"/><path d="m10 10.2 6.8-3.7v7L10 17.2z" fill="currentColor" fill-opacity=".18" stroke="none"/>',
   slope: '<path d="M2.5 16.5h15L17.5 5.5z" fill="currentColor" fill-opacity=".14"/><path d="M2.5 16.5h15V5.5z"/><path d="M8 16.5a5.6 5.6 0 0 0-.9-3.1"/>',
   server: '<rect x="3" y="3" width="14" height="5.5" rx="1"/><rect x="3" y="11.5" width="14" height="5.5" rx="1"/><path d="M6 5.75h.01M6 14.25h.01" stroke-width="2"/><path d="M9.5 5.75h4.5M9.5 14.25h4.5"/>',

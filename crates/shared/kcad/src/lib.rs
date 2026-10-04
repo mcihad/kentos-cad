@@ -130,8 +130,16 @@ pub const SCHEMA_WITH_LAYER_SNAP: u32 = 10;
 /// refuses a drawing that names one rather than read its millimetres as metres.
 pub const SCHEMA_WITH_DRAWING_UNIT: u32 = 11;
 
+/// Document schema 12 (docs/specs/kcad-v2.md §6.1): schema 11 and the
+/// project's second coordinate system, the settings' `secondSrid`
+/// (docs/adr/0167 §1). A writer writes it only when the project has one: any
+/// other drawing stays 11 or older, byte for byte, and a reader of those still
+/// opens it; one of those refuses a drawing that has one rather than drop it
+/// unseen at the next save.
+pub const SCHEMA_WITH_SECOND_SRID: u32 = 12;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 10] = [
+pub const SCHEMAS: [u32; 11] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -142,6 +150,7 @@ pub const SCHEMAS: [u32; 10] = [
     SCHEMA_WITH_DIMENSIONS,
     SCHEMA_WITH_LAYER_SNAP,
     SCHEMA_WITH_DRAWING_UNIT,
+    SCHEMA_WITH_SECOND_SRID,
 ];
 
 /// The file a drawing is saved as.

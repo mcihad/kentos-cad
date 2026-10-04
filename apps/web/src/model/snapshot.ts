@@ -257,6 +257,13 @@ const bool = (v: unknown, where: string): boolean => (typeof v === 'boolean' ? v
 const oneOf = <T extends string>(v: unknown, values: readonly T[], where: string): T => (values.includes(v as T) ? (v as T) : fail(where, `şunlardan biri olmalı: ${values.join(', ')}`));
 const vec = (v: unknown, where: string) => (isObj(v) ? { x: num(v.x, `${where}.x`), y: num(v.y, `${where}.y`) } : fail(where, 'nokta ({x, y}) olmalı'));
 const opt = <T>(v: unknown, read: (v: unknown) => T): T | undefined => (v === undefined ? undefined : read(v));
+/** A second coordinate system's SRID: a whole number, another system than the project's own, never a local project's (docs/adr/0167 §1). */
+const second = (v: unknown, srid: number): number => {
+  const where = 'Proje ayarları › ikinci koordinat sistemi';
+  const s = num(v, where);
+  if (!Number.isInteger(s) || s <= 0 || s > 0xffffffff) fail(where, 'bir EPSG kodu olmalı');
+  return s === srid || srid === 0 ? fail(where, 'projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz') : s;
+};
 // An object's fields, checked in place: the message is made only when a check fails.
 const numAt = (v: unknown, w: string, f: string): number => (finite(v) ? v : num(v, at(w, f)));
 const strAt = (v: unknown, w: string, f: string): string => (typeof v === 'string' ? v : str(v, at(w, f)));
@@ -337,6 +344,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         drawingFont: settings.drawingFont === undefined ? 'barlow' : oneOf(settings.drawingFont, DRAWING_FONT_IDS, 'Proje ayarları › çizim yazı tipi'),
         // A local project's unit (docs/adr/0165 §2); none: metres.
         ...(settings.drawingUnit === undefined ? {} : { drawingUnit: oneOf(settings.drawingUnit, DRAWING_UNIT_IDS, 'Proje ayarları › çizim birimi') }),
+        // The second coordinate system (docs/adr/0167 §1): another system than the project's own, never a local project's.
+        // One the registry does not know is kept, not shown (it is a display aid, nothing is guessed from it).
+        ...(settings.secondSrid === undefined ? {} : { secondSrid: second(settings.secondSrid, srid) }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

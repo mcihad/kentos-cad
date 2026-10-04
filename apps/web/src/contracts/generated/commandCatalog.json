@@ -1911,6 +1911,15 @@
                 "format": "double",
                 "type": "number"
               },
+              "secondSrid": {
+                "description": "The project's second coordinate system (docs/adr/0167 §1): its\ncoordinates are shown beside the project's own; absent: none. Never\nthe project's own system, never a local project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
               "srid": {
                 "format": "uint32",
                 "minimum": 0,
@@ -2988,6 +2997,15 @@
                 "description": "Plot scale denominator (1:1000 → 1000).",
                 "format": "double",
                 "type": "number"
+              },
+              "secondSrid": {
+                "description": "The project's second coordinate system (docs/adr/0167 §1): its\ncoordinates are shown beside the project's own; absent: none. Never\nthe project's own system, never a local project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
               },
               "srid": {
                 "format": "uint32",
@@ -5090,6 +5108,15 @@
                 "description": "Plot scale denominator (1:1000 → 1000).",
                 "format": "double",
                 "type": "number"
+              },
+              "secondSrid": {
+                "description": "The project's second coordinate system (docs/adr/0167 §1): its\ncoordinates are shown beside the project's own; absent: none. Never\nthe project's own system, never a local project's.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
               },
               "srid": {
                 "format": "uint32",

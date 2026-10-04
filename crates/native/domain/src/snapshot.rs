@@ -125,9 +125,11 @@ impl Document {
             blocks,
             ..
         } = parts.snapshot;
-        // The former Hibrit mode is held as a type not asked yet, as the web holds it (docs/adr/0165 §1).
+        // The former Hibrit mode is held as a type not asked yet, as the web holds it (docs/adr/0165 §1),
+        // and a second system that is not another one as none (docs/adr/0167 §1).
         let settings = ProjectSettings {
             workspace: settings.project_type(),
+            second_srid: settings.second(),
             ..settings
         };
         let largest = entities.iter().map(|e| e.base().id).max().unwrap_or(0);

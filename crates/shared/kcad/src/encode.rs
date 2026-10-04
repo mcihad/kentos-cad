@@ -30,7 +30,7 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_TEXT_EXTRAS,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -271,7 +271,8 @@ impl<'d> Encoder<'d> {
         let n = 6
             + usize::from(s.workspace.is_some())
             + usize::from(s.drawing_font.is_some())
-            + usize::from(s.drawing_unit.is_some());
+            + usize::from(s.drawing_unit.is_some())
+            + usize::from(s.second_srid.is_some());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -284,6 +285,19 @@ impl<'d> Encoder<'d> {
         if let Some(w) = s.workspace {
             self.key("workspace");
             self.w.text(workspace(w));
+        }
+        if let Some(second) = s.second_srid {
+            self.key("secondSrid");
+            self.at(Seg::Name("secondSrid"), |e| {
+                if s.second() != Some(second) {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz",
+                    ));
+                }
+                e.w.uint(u64::from(second));
+                Ok(())
+            })?;
         }
         if let Some(f) = s.drawing_font {
             self.key("drawingFont");
@@ -557,6 +571,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
+    if doc.settings.second_srid.is_some() {
+        return SCHEMA_WITH_SECOND_SRID;
+    }
     if doc.settings.drawing_unit.is_some() {
         return SCHEMA_WITH_DRAWING_UNIT;
     }
@@ -672,6 +689,7 @@ mod tests {
                 "angleUnit",
                 "plotScale",
                 "workspace",
+                "secondSrid",
                 "drawingFont",
                 "drawingUnit",
                 "areaDecimals",

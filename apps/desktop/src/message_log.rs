@@ -276,6 +276,15 @@ impl App {
     /// The status bar's message (the web's `status__flash`): the newest line
     /// the bar shows, with its level's icon, fading in and out; the text is
     /// cut with “…” where the cell ends.
+    /// Whether the status bar shows a message now (the second system's
+    /// values leave it their room when both do not fit, docs/adr/0167 §2).
+    pub(crate) fn flashing(&self) -> bool {
+        self.follow
+            .flash
+            .as_ref()
+            .is_some_and(|flash| flash.alpha(Instant::now()) > 0.0)
+    }
+
     pub(crate) fn flash_cell(&self) -> Element<'_, Message> {
         let now = Instant::now();
         let Some(flash) = &self.follow.flash else {

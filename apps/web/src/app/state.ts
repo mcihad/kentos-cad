@@ -6,6 +6,7 @@ import type { LineType } from '../model/layers';
 import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './layoutPlan';
 import type { SettingsStore } from './settings/store';
 import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
+import type { GeographicNotation } from './secondCrs';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 
@@ -227,6 +228,8 @@ export interface PreferencesData {
   lineWeights: boolean;
   /** The start screen (Başlangıç: new, open, cloud, recent files) shows when the app opens. */
   startScreen: boolean;
+  /** How a geographic second system's latitude and longitude are written (docs/adr/0167 §1). */
+  geographic: GeographicNotation;
 }
 
 /** The typed setting behind each preference (settingsSchema.json). */
@@ -271,6 +274,7 @@ export const PREF_KEYS = {
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',
   startScreen: 'appearance.startScreen',
+  geographic: 'display.geographic',
 } as const satisfies Record<keyof PreferencesData, string>;
 
 /** The defaults, from the settings schema. */

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10` ya da `11`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11` ya da `12`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -217,7 +217,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 11**, şema 10'un kendisi ve yerel projenin çizim birimidir: proje ayarlarının `drawingUnit` alanı (§6.4; ADR 0165 §2). Yazıcı `11`'i **yalnız ayarlar bir birim adlandırırken** yazar (uygulamalar metreyi yazmaz). Başka her çizim şema 2–10'dur ve eskisiyle bayt bayt aynıdır. Şema 2–10 yükünde `drawingUnit` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/drawing-unit-in-schema-10.kcad`): eski okuyucu milimetreyle yazılıp okunan bir çizimin sayılarını sessizce metre diye göstermez, dosyayı açmaz. Geometri her şemada metrededir; birim yalnız yazılan ve gösterilen sayıların birimidir. Şema 11 şema 10'u kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: çizim birimi adlandıran çizim 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 12**, şema 11'in kendisi ve projenin ikinci koordinat sistemidir: proje ayarlarının `secondSrid` alanı (§6.4; ADR 0167 §1). Yazıcı `12`'yi **yalnız projenin ikinci sistemi varken** yazar. Başka her çizim şema 2–11'dir ve eskisiyle bayt bayt aynıdır. Şema 2–11 yükünde `secondSrid` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/second-srid-in-schema-11.kcad`): eski okuyucu dosyayı açıp bir sonraki kayıtta ikinci sistemi sessizce düşürmez, dosyayı açmaz. Şema 12 şema 11'i kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -265,6 +267,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
 | `workspace` | numaralı metin | | projenin türü: `cad`, `gis`, `plan3d`, `disaster`; eski dosyaların `hybrid`'i (kalkan Hibrit modu) okunur ve olduğu gibi yazılır, alanın yokluğu gibi türü sorulmamış proje demektir (ADR 0165 §1) |
 | `drawingFont` | numaralı metin | | `barlow`, `arimo`, `overpass`, `quicksand`, `architects-daughter`, `courier-prime`, `plex-mono` |
+| `secondSrid` | u32 | | şema 12'de: projenin ikinci koordinat sisteminin EPSG kodu; koordinatları projeninkilerin yanında gösterilir, çizim dönüştürülmez (ADR 0167 §1). 0 olamaz, `srid` ile aynı olamaz, yerel projede (`srid` 0) bulunmaz; değilse `bad_value` (`broken/second-srid-zero.kcad`, `broken/second-srid-same.kcad`, `broken/second-srid-local.kcad`). Okuyucu sistemi tanımasa da alanı korur; değerleri gösterilmez |
 | `drawingUnit` | numaralı metin | | şema 11'de: yerel projenin çizim birimi, `mm`, `cm`, `m` (yokluğu metre). Uzunluklar ve koordinatlar bu birimle yazılır ve gösterilir; geometri metrede saklanır. Koordinat sistemi olan projede birim sistemindir (ADR 0165 §2) |
 | `areaDecimals` | u32 | evet | alan gösterim basamağı |
 | `lengthDecimals` | u32 | evet | uzunluk gösterim basamağı |

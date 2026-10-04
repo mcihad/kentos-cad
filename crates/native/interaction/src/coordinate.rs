@@ -3,8 +3,10 @@
 //! project's formats: `Y=487012.000, X=4420000.000`, with the elevation
 //! after them when the snapped point is one that has one, a point object or
 //! a vertex of a line, a polyline or an area (docs/adr/0142): `, Z=12.500`.
-//! Beside the cursor the same numbers follow it. Nothing is written; Esc,
-//! Enter or a quick right click ends.
+//! With a second coordinate system the point is said in it too, with how
+//! sure the values are (docs/adr/0167 §2, §5): `ED50 TM30: Y=…, X=… (±2.1
+//! m, …)`. Beside the cursor the same numbers follow it. Nothing is
+//! written; Esc, Enter or a quick right click ends.
 
 use kentos_domain::Slot;
 
@@ -13,6 +15,7 @@ use crate::elevation;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
+use crate::second::Second;
 use crate::tool::{Context, Flow, Marker, MarkerShape, Pointer, Preview, Tag, Tone, Tool};
 use kentos_geometry_core::store::snap::SnapHit;
 
@@ -25,6 +28,8 @@ pub const LABEL: &str = "Koordinat oku";
 pub struct CrsQuery {
     /// Where the pointer is, and its elevation when it stands on a point that has one.
     hover: Option<(Vec2, Option<f64>)>,
+    /// The pointer's place in the second coordinate system: its name and values.
+    hover_second: Vec<String>,
     /// The point read last, ringed.
     last: Option<Vec2>,
     format: Format,
@@ -43,6 +48,27 @@ impl CrsQuery {
             return None;
         }
         elevation::elevation_at(cx.doc.get(Slot(hit.id as u32))?, hit.point)
+    }
+
+    /// The tag's lines of `p` in the second coordinate system: its name,
+    /// then its two values; none without one, or where it does not reach.
+    fn second_lines(p: Vec2, cx: &Context<'_>) -> Vec<String> {
+        let Some(second) = Second::of(cx.doc.settings()) else {
+            return Vec::new();
+        };
+        let Some(t) = second.point(p) else {
+            return Vec::new();
+        };
+        let f = cx.format();
+        let [a, b] = second.values(t.point, &f, cx.draft.geographic);
+        let value = |(name, v): (&str, String)| {
+            if second.geographic() {
+                v
+            } else {
+                format!("{name} {v}")
+            }
+        };
+        vec![second.short(), value(a), value(b)]
     }
 }
 
@@ -71,6 +97,7 @@ impl Tool for CrsQuery {
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.format = cx.format();
         self.hover = Some((p.world, Self::elevation(p.snap, cx)));
+        self.hover_second = Self::second_lines(p.world, cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -88,6 +115,26 @@ impl Tool for CrsQuery {
             text.push_str(&format!(", Z={}", f.length_bare(z)));
         }
         cx.say(Level::Info, text);
+        // The second coordinate system's values, and how sure they are (docs/adr/0167 §2, §5).
+        if let Some(second) = Second::of(cx.doc.settings()) {
+            match second.point(p.world) {
+                Some(t) => {
+                    let reading = second.reading(t.point, &f, cx.draft.geographic);
+                    let sure = second.accuracy(&t);
+                    cx.say(
+                        Level::Info,
+                        format!("{}: {reading} ({sure})", second.short()),
+                    );
+                }
+                None => cx.say(
+                    Level::Warn,
+                    format!(
+                        "{}: nokta bu sistemin ulaştığı yerin dışında; değeri yazılmadı.",
+                        second.short()
+                    ),
+                ),
+            }
+        }
         self.last = Some(p.world);
     }
 
@@ -124,6 +171,7 @@ impl Tool for CrsQuery {
                 if let Some(z) = z {
                     lines.push(format!("Z {}", f.length_bare(z)));
                 }
+                lines.extend(self.hover_second.iter().cloned());
                 Tag { at, lines }
             }),
             ..Preview::default()

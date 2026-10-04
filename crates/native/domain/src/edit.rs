@@ -403,8 +403,11 @@ impl Document {
 
     /// Replaces the project settings (web `settings.assign`): an edit when
     /// any differs, never an undo step. A new coordinate system is assigned,
-    /// never a transformation of the coordinates (CLAUDE.md §5).
-    pub fn set_settings(&mut self, settings: ProjectSettings) {
+    /// never a transformation of the coordinates (CLAUDE.md §5). A second
+    /// system that is not another system than the project's own, or is a
+    /// local project's, goes (docs/adr/0167 §1).
+    pub fn set_settings(&mut self, mut settings: ProjectSettings) {
+        settings.second_srid = settings.second();
         if self.settings != settings {
             self.settings = settings;
             self.mark_edited();

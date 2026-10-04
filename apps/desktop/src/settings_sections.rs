@@ -77,7 +77,7 @@ impl Section {
     pub fn lead(self) -> &'static str {
         match self {
             Self::Appearance => {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç ve fare yardımcıları."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar ve fare yardımcıları."
             }
             Self::Snap => {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
@@ -107,6 +107,7 @@ impl Section {
                 "appearance.shadows",
                 "appearance.crosshair",
                 "appearance.drawingBackground",
+                "display.geographic",
                 "drafting.cursorInput",
                 "drafting.commandBar",
                 "drafting.hoverInfo",
@@ -409,7 +410,14 @@ impl App {
                 Fields::title("appearance.crosshair"),
                 choices("appearance.crosshair", &f.value("appearance.crosshair")),
             )
-            .help(Fields::help("appearance.crosshair"));
+            .help(Fields::help("appearance.crosshair"))
+            // How a geographic second system's values are written (docs/adr/0167 §1).
+            .section("Koordinatlar")
+            .field(
+                Fields::title("display.geographic"),
+                choices("display.geographic", &f.value("display.geographic")),
+            )
+            .help(Fields::help("display.geographic"));
         let rest = [
             "drafting.cursorInput",
             "drafting.commandBar",

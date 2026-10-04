@@ -1,0 +1,18 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "second-crs",
+  "title": "İkinci koordinat sistemi (ADR 0167 §2, §5): TUREF TM30 projesinde ikinci sistem ED50 TM30; Koordinat oku kenetli tıklanan R1'in Y ve X'ini, ardından ED50 TM30'daki değerlerini doğruluğu ve dayanağıyla (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil) söyler; çizime bir şey yazılmaz",
+  "source": "Web'in CoordinateReadTool'u (coordinateTool.ts) ve SecondCrs'i (app/secondCrs.ts), masaüstünün kentos_interaction::coordinate ve ::second'ı; değerler PROJ'dan (scripts/fixtures/crs_transform_cases.py), ADR 0167",
+  "covers": ["HYB-11", "UX-01"],
+  "document": "second-crs.kcad",
+  "view": {"center": [414150, 4540380], "metresPerPixel": 0.125},
+  "draft": {"snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false},
+  "clickTolerance": 0.125,
+  "steps": [
+    {"run": "crs.query", "expect": {"points": 0, "entities": 2}},
+    {"move": [-29.4, 18.1], "note": "İmlecin yanında projenin ve ikinci sistemin değerleri."},
+    {"click": [-29.488, 18.207], "note": "Kenetli tık R1'in tam yeridir: önce projenin, sonra ED50 TM30'un değerleri; sayılar projenin üç ondalığıyla.", "expect": {"log": "info", "logged": ["Y=414120.512, X=4540398.207", "ED50 TM30: Y=414154.869, X=4540584.350 (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil)"], "entities": 2, "canUndo": false}},
+    {"key": "Esc", "expect": {"tool": "select", "entities": 2, "canUndo": false}}
+  ]
+}

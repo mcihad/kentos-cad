@@ -365,6 +365,9 @@ pub enum Message {
     Snap(crate::snap_menu::Event),
     /// The status bar's scale selector (screen_scale.rs, docs/adr/0165 §5).
     ScreenScale(crate::screen_scale::Event),
+    /// İkinci sistem: the project's second coordinate system, how geographic
+    /// values are written (second_crs.rs, docs/adr/0167 §1).
+    SecondCrs(crate::second_crs::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -1250,6 +1253,7 @@ impl App {
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
+            Message::SecondCrs(event) => self.second_crs_event(event),
         }
         Task::none()
     }
@@ -1279,6 +1283,7 @@ impl App {
             // The session's, not settings: kept through a settings change.
             color: self.draft.color,
             line_weight: self.draft.line_weight,
+            geographic: kentos_interaction::second::Notation::parse(&s.text("display.geographic")),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");

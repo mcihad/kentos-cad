@@ -20,6 +20,8 @@ import { accountMenu, saveCell } from './cloudCells';
 import { crsTitle } from '../../geo/crs';
 import { scaleText } from '../../model/newProjectWizard';
 import { offeredScales, typedScale } from './scaleSelector';
+import { SecondCrs } from '../../app/secondCrs';
+import { crsMenu, secondMenu } from './secondMenu';
 
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
 
@@ -29,6 +31,8 @@ export class StatusBar extends Component {
   private flashTimer = 0;
   /** Fits the bar again after a cell's text changed (set once the bar is built). */
   private refit = () => {};
+  /** Shows the second system's values, or leaves their room to a message (set once the bar is built). */
+  private fitSecond = () => {};
 
   constructor(ctx: AppContext) {
     super();
@@ -39,6 +43,23 @@ export class StatusBar extends Component {
     const east = h('span', { class: 'status__axis' }, 'Y');
     const north = h('span', { class: 'status__axis' }, 'X');
     const coords = h('div', { class: 'status__coords', 'aria-live': 'off' }, east, y, north, x);
+    // The second coordinate system's values (docs/adr/0167 §2): its name, then its two values with their names.
+    const secondName = h('span', { class: 'status__second-name' });
+    const secondA = h('span', { class: 'status__axis' });
+    const secondAValue = h('span', { class: 'status__value num' });
+    const secondB = h('span', { class: 'status__axis' });
+    const secondBValue = h('span', { class: 'status__value num' });
+    const second = h(
+      'button',
+      { class: 'status__cell status__btn status__second', type: 'button', 'aria-haspopup': 'menu', hidden: true },
+      secondName,
+      secondA,
+      secondAValue,
+      secondB,
+      secondBValue,
+    );
+    second.addEventListener('click', () => PopupMenu.open(secondMenu(ctx), second.getBoundingClientRect(), { placement: 'below', owner: second }));
+    let secondCrs: SecondCrs | null = null;
     const flash = h('div', { class: 'status__flash', 'aria-live': 'polite' });
     const selCount = h('span', { class: 'status__cell status__sel num' });
 
@@ -61,6 +82,11 @@ export class StatusBar extends Component {
 
     const crs = h('button', { class: 'status__cell status__btn status__crs', type: 'button' }, icon('crs', 14), h('span'));
     crs.addEventListener('click', () => ctx.commands.execute('crs.set'));
+    // The second system on the cell's right-click menu (docs/adr/0167 §1).
+    crs.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      PopupMenu.open(crsMenu(ctx), { x: e.clientX, y: e.clientY }, { placement: 'point' });
+    });
     // The scale selector (docs/adr/0165 §5): the view's screen scale, chosen from the type's scales or typed.
     const zoomText = h('span', { class: 'status__zoom-text num' });
     const zoom = h('button', { class: 'status__cell status__btn status__zoom', type: 'button', 'aria-haspopup': 'menu' }, zoomText, icon('chevronUp', 12));
@@ -162,7 +188,27 @@ export class StatusBar extends Component {
     server.addEventListener('click', () => accountMenu(ctx, server));
     const save = saveCell(ctx, this.d);
 
-    this.el = h('footer', { class: 'status' }, coords, flash, selCount, toggles, zoom, scaleEdit, mode, crs, save, server, renderer);
+    // The second system's values and the message share the room after the coordinates (docs/adr/0167 §2): the values
+    // show while there is no message, or there is room for both; a message too long for both takes it for its seconds.
+    const slot = h('div', { class: 'status__slot' }, second, flash);
+    this.el = h('footer', { class: 'status' }, coords, slot, selCount, toggles, zoom, scaleEdit, mode, crs, save, server, renderer);
+
+    // A short message's room: 15 times its type size.
+    const least = () => 15 * parseFloat(getComputedStyle(flash).fontSize);
+    // The second system's cell as wide as it is with the drawing's origin's values: it does not change as the cursor
+    // comes and goes. The cells give way until the room after the coordinates holds it; it shows while no message
+    // does, or there is room for both (the steps do not follow the message: the bar stays still).
+    let secondWidth = 0;
+    this.fitSecond = () => {
+      second.hidden = !secondCrs || slot.getBoundingClientRect().width < secondWidth + (flash.hasAttribute('data-show') ? least() : 0);
+    };
+    const room = new ResizeObserver(() => this.fitSecond());
+    room.observe(slot);
+    this.d.add(() => room.disconnect());
+    // A message comes and goes: the values give it their room, then take it back.
+    const shown = new MutationObserver(() => this.fitSecond());
+    shown.observe(flash, { attributes: true, attributeFilter: ['data-show'] });
+    this.d.add(() => shown.disconnect());
 
     // Narrower windows (DESIGN.md §7.7): the least needed cell gives way first, until the message has
     // room. Every name stays in the cell's tooltip; the CRS is also in the title bar.
@@ -172,7 +218,7 @@ export class StatusBar extends Component {
       STEPS.length,
       (level) => STEPS.forEach((s, i) => this.el.toggleAttribute(`data-fit-${s}`, i < level)),
       // The message cell takes what is left: it should hold a short message (15 × its type size).
-      () => flash.getBoundingClientRect().width >= 15 * parseFloat(getComputedStyle(flash).fontSize) && this.el.scrollWidth <= this.el.clientWidth,
+      () => slot.getBoundingClientRect().width >= Math.max(least(), secondWidth) && this.el.scrollWidth <= this.el.clientWidth,
     );
     this.d.add(fit.dispose);
     this.refit = () => fit.refit();
@@ -183,10 +229,55 @@ export class StatusBar extends Component {
     this.d.add(ctx.prefs.uiFont.subscribe(() => fit.refit()));
     this.d.add(listen(document.fonts, 'loadingdone', () => fit.refit()));
 
+    // The second system, taken again when the project's settings change; its values follow the cursor.
+    const showSecond = (p = ctx.view.cursorWorld.value) => {
+      const t = p && secondCrs ? secondCrs.point(p) : null;
+      if (!secondCrs) return;
+      const values = t ? secondCrs.values(t.point, ctx.format, ctx.prefs.geographic.value) : null;
+      const named = !secondCrs.geographic;
+      secondA.textContent = named ? (values?.[0][0] ?? ctx.format.eastLabel) : '';
+      secondB.textContent = named ? (values?.[1][0] ?? ctx.format.northLabel) : '';
+      secondAValue.textContent = values?.[0][1] ?? '—';
+      secondBValue.textContent = values?.[1][1] ?? '—';
+    };
+    const takeSecond = () => {
+      secondCrs = SecondCrs.of(ctx.doc.settings);
+      secondName.textContent = secondCrs?.short ?? '';
+      secondWidth = 0;
+      if (secondCrs) {
+        showSecond(ctx.doc.origin);
+        second.hidden = false;
+        secondWidth = second.getBoundingClientRect().width;
+      }
+      showSecond();
+      fit.refit();
+      this.fitSecond();
+    };
+    this.d.add(watchAll([ctx.doc.settings.changed, ctx.prefs.geographic, ctx.prefs.uiFont, ctx.prefs.textSize], takeSecond));
+    this.d.add(listen(document.fonts, 'loadingdone', takeSecond));
+    takeSecond();
+    this.d.add(
+      tooltip(
+        second,
+        () => {
+          if (!secondCrs) return { title: 'İkinci koordinat sistemi' };
+          const p = ctx.view.cursorWorld.value;
+          const t = p ? secondCrs.point(p) : null;
+          const sure = t ? `${secondCrs.accuracy(t)}.` : p ? 'İmleç bu sistemin ulaştığı yerin dışında; değer yazılmadı.' : '';
+          return {
+            title: `İkinci koordinat sistemi: ${secondCrs.system.name}`,
+            description: `${secondCrs.system.name} (EPSG:${secondCrs.system.srid}) değerleri, projeninkilerden dönüştürülerek. ${sure} Sistemi değiştirmek ya da kaldırmak için tıklayın.`,
+          };
+        },
+        'top',
+      ),
+    );
+
     this.d.add(
       ctx.view.cursorWorld.subscribe((p) => {
         y.textContent = p ? ctx.format.coord(p.x) : '—';
         x.textContent = p ? ctx.format.coord(p.y) : '—';
+        showSecond();
       }, true),
     );
     this.d.add(
@@ -203,7 +294,16 @@ export class StatusBar extends Component {
         this.refit();
       }, true),
     );
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `${crsTitle(ctx.doc.crs.value)}. ${ctx.format.eastLabel} sağa, ${ctx.format.northLabel} yukarı değerdir. Değiştirmek için tıklayın.` }), 'top'));
+    this.d.add(
+      tooltip(
+        crs,
+        () => ({
+          title: 'Koordinat sistemi',
+          description: `${crsTitle(ctx.doc.crs.value)}. ${ctx.format.eastLabel} sağa, ${ctx.format.northLabel} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.`,
+        }),
+        'top',
+      ),
+    );
     const syncRenderer = () => {
       const k = ctx.view.backendKind.value;
       rendererName.textContent = k === 'webgpu' ? 'WebGPU' : k === 'webgl2' ? 'WebGL2' : ctx.view.backendLabel.value;

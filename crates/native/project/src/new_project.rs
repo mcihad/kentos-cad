@@ -64,6 +64,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         workspace: Some(Workspace::Gis),
         drawing_font: Some(DrawingFont::Barlow),
         drawing_unit: None,
+        second_srid: None,
     }
 }
 

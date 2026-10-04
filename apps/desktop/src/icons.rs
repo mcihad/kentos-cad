@@ -90,9 +90,8 @@ fn closest(name: &str) -> Icon {
         "table" | "parcelReport" => Icon::Table,
         "fieldCalc" | "processing" => Icon::Hash,
         "contours" | "profile" | "slope" | "volume" => Icon::Cube,
-        "crs" | "crsQuery" | "crsTransform" | "cloud" | "server" | "signIn" | "signOut" => {
-            Icon::Globe
-        }
+        "crs" | "crsQuery" | "crsTransform" | "crsSecond" | "cloud" | "server" | "signIn"
+        | "signOut" => Icon::Globe,
         "projectType" | "modeCad" | "modeGis" | "modePlan3d" | "modeDisaster" => Icon::Layout,
         // Help and settings
         "info" => Icon::Info,

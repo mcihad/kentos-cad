@@ -84,6 +84,7 @@ fn opened(n: usize) -> Opened {
         workspace: None,
         drawing_font: None,
         drawing_unit: None,
+        second_srid: None,
     };
     let layers = vec![LayerNode {
         id: "parsel".into(),
