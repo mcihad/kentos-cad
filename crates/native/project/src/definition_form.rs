@@ -2,10 +2,12 @@
 //! the web's `model/definitionForm.ts`): what is typed turned into the
 //! project's definition (`CrsDefinition`) or, field by field, what is wrong;
 //! a definition the registry has already is said; a WKT or PROJ text read
-//! into one, or why not; a definition written as WKT and PROJ. The shared
-//! cases are fixtures/crs/v1/definition-form.json and definition-text.json
-//! (scripts/fixtures/crs_definition_form_cases.py and
-//! crs_definition_text_cases.py, from the ADR's rules).
+//! into one, or why not; a definition written as WKT and PROJ; a local
+//! system's plane from points known in both systems. The shared cases are
+//! fixtures/crs/v1/definition-form.json, definition-text.json and
+//! definition-fit.json (scripts/fixtures/crs_definition_form_cases.py,
+//! crs_definition_text_cases.py and crs_definition_fit_cases.py, from the
+//! ADR's rules).
 
 use std::collections::BTreeMap;
 
@@ -15,6 +17,9 @@ use kentos_contracts::{
 };
 
 use kentos_geometry_core::crs::text::{self as core_text, Refusal};
+use kentos_geometry_core::jsmath::{PI, atan2, js_hypot};
+use kentos_geometry_core::ops::fit::{self as solver, FitError, FitKind, FitPair};
+use kentos_geometry_core::vec2::Vec2;
 
 use crate::crs::{system, systems};
 use crate::systems::{definition_from, definition_system};
@@ -145,6 +150,14 @@ pub const READ_UNSUPPORTED: &str = "“{detail}” okunmuyor: yalnız Transverse
 pub const READ_UNIT: &str = "Birim “{detail}”: yalnız metre ve derece okunur.";
 pub const READ_MERIDIAN: &str = "Başlangıç meridyeni “{detail}”: yalnız Greenwich okunur.";
 pub const READ_GRID: &str = "Izgarası EPSG:{srid} ({name}) ile aynı; datumu metnin kendi datumu.";
+
+/// What Ortak noktalardan hesapla says: rows left out, and why there is no
+/// plane; `{rows}`, `{kind}`, `{need}` and `{n}` are filled in.
+pub const FIT_SKIPPED: &str = "Satır {rows} hesaba katılmadı: dört değer de sayı olmalı (bu sistemde ve tabanda sağa ve yukarı).";
+pub const FIT_TOO_FEW: &str = "{kind} için en az {need} kullanılan ortak nokta gerekir; şimdi {n}.";
+pub const FIT_COINCIDENT: &str = "Bu sistemdeki noktaların hepsi aynı yerde; düzlem bulunamaz.";
+pub const FIT_COLLINEAR: &str =
+    "Bu sistemdeki noktalar bir doğru üstünde; afin bulunamaz. Doğrunun dışında bir nokta ekleyin.";
 
 /// A number as the Hesap windows read one: trimmed, its first comma a
 /// point, `^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$`; none for anything else.
@@ -449,6 +462,126 @@ pub fn read(text: &str) -> Result<Imported, String> {
     })
 }
 
+/// A row of Ortak noktalardan hesapla as typed: this system's east and
+/// north, the base's east and north, and Kullan ("0" leaves it out).
+pub type FitRow = [String; 5];
+
+/// The plane the common points give (this system → its base), the rows its
+/// pairs came from, each pair's residual (transformed point less the base's:
+/// east, north, length; metres) and m0 (none without redundancy).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlaneFit {
+    pub plane: CrsPlane,
+    pub rows: Vec<usize>,
+    pub residuals: Vec<[f64; 3]>,
+    pub m0: Option<f64>,
+}
+
+/// A row's four values when all read as numbers; none for an empty row or
+/// one being typed.
+fn pair_values(r: &FitRow) -> Option<[f64; 4]> {
+    let v: Option<Vec<f64>> = r[..4].iter().map(|v| number(v)).collect();
+    v.and_then(|v| v.try_into().ok())
+}
+
+/// The rows with something typed that are not pairs: left out of the
+/// solution, as Vektör oturtma leaves a row being typed, and named.
+pub fn unread_rows(rows: &[FitRow]) -> Vec<usize> {
+    rows.iter()
+        .enumerate()
+        .filter(|(_, r)| r[..4].iter().any(|v| !v.trim().is_empty()) && pair_values(r).is_none())
+        .map(|(i, _)| i)
+        .collect()
+}
+
+/// “Satır 3, 5 hesaba katılmadı: …”; none when every row is read.
+pub fn skipped_text(rows: &[usize]) -> Option<String> {
+    (!rows.is_empty()).then(|| {
+        let named: Vec<String> = rows.iter().map(|r| (r + 1).to_string()).collect();
+        FIT_SKIPPED.replace("{rows}", &named.join(", "))
+    })
+}
+
+/// Ortak noktalardan hesapla (docs/adr/0168 §1, §6): the least-squares
+/// similarity or affine through the used pairs, as Vektör oturtma solves
+/// them (`ops::fit`, its pairs' centred frames), written as the window's
+/// plane; or what stops it. Rows that are not pairs are left out.
+pub fn fit_plane(rows: &[FitRow], kind: PlaneKind) -> Result<PlaneFit, String> {
+    let mut pairs = Vec::new();
+    let mut at = Vec::new();
+    for (i, r) in rows.iter().enumerate() {
+        let Some(v) = pair_values(r) else {
+            continue;
+        };
+        pairs.push(FitPair {
+            source: Vec2::new(v[0], v[1]),
+            target: Vec2::new(v[2], v[3]),
+            used: r[4].trim() != "0",
+        });
+        at.push(i);
+    }
+    let (solved_by, word) = match kind {
+        PlaneKind::Similarity => (FitKind::Helmert, "Benzerlik"),
+        PlaneKind::Affine => (FitKind::Affine, "Afin"),
+    };
+    let fit = solver::fit(&pairs, solved_by).map_err(|why| match why {
+        FitError::TooFew(need) => FIT_TOO_FEW
+            .replace("{kind}", word)
+            .replace("{need}", &need.to_string())
+            .replace("{n}", &pairs.iter().filter(|p| p.used).count().to_string()),
+        FitError::Coincident => FIT_COINCIDENT.to_owned(),
+        FitError::Collinear | FitError::Singular => FIT_COLLINEAR.to_owned(),
+    })?;
+    // The centred solution un-centred: base = to + M·(p − from).
+    let (o, t) = (fit.from, fit.to);
+    let plane = match *fit.params.as_slice() {
+        [a, b] => CrsPlane::Similarity {
+            east: t.x - (a * o.x - b * o.y),
+            north: t.y - (b * o.x + a * o.y),
+            rotation: atan2(b, a) * (180.0 / PI),
+            scale: js_hypot(a, b),
+        },
+        [a, b, c, d] => CrsPlane::Affine {
+            a,
+            b: c,
+            c: t.x - a * o.x - c * o.y,
+            d: b,
+            e: d,
+            f: t.y - b * o.x - d * o.y,
+        },
+        _ => return Err(FIT_COLLINEAR.to_owned()),
+    };
+    Ok(PlaneFit {
+        plane,
+        rows: at,
+        residuals: fit.residuals,
+        m0: fit.m0,
+    })
+}
+
+/// A plane's values as the form's fields write them.
+pub fn plane_texts(form: &mut Form, plane: &CrsPlane) {
+    let text = |v: f64| format!("{v}");
+    match *plane {
+        CrsPlane::Similarity {
+            east,
+            north,
+            rotation,
+            scale,
+        } => {
+            form.plane = PlaneKind::Similarity;
+            form.east = text(east);
+            form.north = text(north);
+            form.rotation = text(rotation);
+            form.scale = text(scale);
+        }
+        CrsPlane::Affine { a, b, c, d, e, f } => {
+            form.plane = PlaneKind::Affine;
+            form.affine = [a, b, c, d, e, f].map(text);
+        }
+    }
+}
+
 /// A definition as WKT: WKT 1, a local system WKT 2 over its base, named as
 /// the registry or the base's definition names it (docs/adr/0168 §5).
 pub fn wkt(d: &CrsDefinition) -> Option<String> {
@@ -707,6 +840,129 @@ mod tests {
                     assert_eq!(got.note.as_deref(), case["note"].as_str(), "{name}");
                 }
             }
+        }
+    }
+
+    /// The common points' plane as the shared cases say (the web reads the
+    /// same file, `wasm/definitionFit.wasm.test.ts`): within the file's
+    /// tolerances, or the same words.
+    #[test]
+    fn the_common_points_give_the_shared_cases_plane() {
+        let file: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/crs/v1/definition-fit.json"
+        ))
+        .expect("the cases read");
+        assert_eq!(file["format"], "kentos.crs-definition-fit");
+        for (key, text) in [
+            ("skipped", FIT_SKIPPED),
+            ("tooFew", FIT_TOO_FEW),
+            ("coincident", FIT_COINCIDENT),
+            ("collinear", FIT_COLLINEAR),
+        ] {
+            assert_eq!(file["texts"][key], text, "{key}");
+        }
+        let tol = &file["tolerance"];
+        let (metres, relative, degrees) = (
+            tol["metres"].as_f64().expect("metres"),
+            tol["relative"].as_f64().expect("relative"),
+            tol["degrees"].as_f64().expect("degrees"),
+        );
+        let near = |got: f64, want: &Value, abs: f64, what: &str| {
+            let want = want.as_f64().unwrap_or_else(|| panic!("{what}"));
+            assert!(
+                (got - want).abs() <= abs.max(relative * want.abs()),
+                "{what}: {got} ≠ {want}"
+            );
+        };
+        let cases = file["cases"].as_array().expect("cases");
+        assert!(cases.len() >= 13);
+        for case in cases {
+            let name = case["name"].as_str().expect("a name");
+            let kind = match case["plane"].as_str() {
+                Some("affine") => PlaneKind::Affine,
+                _ => PlaneKind::Similarity,
+            };
+            let rows: Vec<FitRow> = case["typed"]
+                .as_array()
+                .expect("rows")
+                .iter()
+                .map(|r| std::array::from_fn(|i| r[i].as_str().expect("a text").to_owned()))
+                .collect();
+            let got = fit_plane(&rows, kind);
+            if let Some(p) = case.get("problem") {
+                assert_eq!(got.err().as_deref(), p.as_str(), "{name}");
+                continue;
+            }
+            let got = got.unwrap_or_else(|e| panic!("{name}: {e}"));
+            let want = &case["expect"];
+            let p = &want["plane"];
+            match got.plane {
+                CrsPlane::Similarity {
+                    east,
+                    north,
+                    rotation,
+                    scale,
+                } => {
+                    assert_eq!(p["kind"], "similarity", "{name}");
+                    near(east, &p["east"], metres, name);
+                    near(north, &p["north"], metres, name);
+                    near(rotation, &p["rotation"], degrees, name);
+                    near(scale, &p["scale"], 0.0, name);
+                }
+                CrsPlane::Affine { a, b, c, d, e, f } => {
+                    assert_eq!(p["kind"], "affine", "{name}");
+                    for (k, v, abs) in [
+                        ("a", a, 0.0),
+                        ("b", b, 0.0),
+                        ("c", c, metres),
+                        ("d", d, 0.0),
+                        ("e", e, 0.0),
+                        ("f", f, metres),
+                    ] {
+                        near(v, &p[k], abs.max(1e-15), &format!("{name}: {k}"));
+                    }
+                }
+            }
+            let rows_want: Vec<usize> = want["rows"]
+                .as_array()
+                .expect("rows")
+                .iter()
+                .map(|v| v.as_u64().expect("a row") as usize)
+                .collect();
+            assert_eq!(got.rows, rows_want, "{name}");
+            let skipped: Vec<usize> = want["skipped"]
+                .as_array()
+                .expect("skipped")
+                .iter()
+                .map(|v| v.as_u64().expect("a row") as usize)
+                .collect();
+            assert_eq!(unread_rows(&rows), skipped, "{name}");
+            for (g, w) in got
+                .residuals
+                .iter()
+                .zip(want["residuals"].as_array().expect("residuals"))
+            {
+                for k in 0..3 {
+                    near(g[k], &w[k], metres, name);
+                }
+            }
+            match (got.m0, want["m0"].as_f64()) {
+                (Some(g), Some(_)) => near(g, &want["m0"], metres, name),
+                (g, w) => assert_eq!(g, w, "{name}: m0"),
+            }
+            // The plane goes into the fields and builds again from them.
+            let mut form = Form {
+                name: "Ortak".to_owned(),
+                kind: Kind::Local,
+                base: "5254".to_owned(),
+                ..Form::default()
+            };
+            plane_texts(&mut form, &got.plane);
+            let (built, _) = build(&form).unwrap_or_else(|e| panic!("{name}: {e:?}"));
+            let CrsSystem::Local(l) = built.system else {
+                panic!("{name}: a local system");
+            };
+            assert_eq!(l.plane, got.plane, "{name}: the fields give it back");
         }
     }
 

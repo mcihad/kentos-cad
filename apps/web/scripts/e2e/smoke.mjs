@@ -2923,6 +2923,40 @@ try {
       );
       await b.eval(`[...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Vazgeç')?.click()`);
       await sleep(200);
+
+      // Ortak noktalardan hesapla (docs/adr/0168 §6): five points pasted from a spreadsheet give the plane with its residuals
+      // and m0 (fixtures/crs/v1/definition-fit.json's case), a point left out is solved without, Düzleme yaz fills the fields.
+      await b.eval(`window.kentos.commands.execute('crs.set')`);
+      await b.waitFor(`!!document.querySelector('.crs-list__action')`, 3000).catch(() => {});
+      await press('.crs-list__action');
+      await b.waitFor(`!!document.querySelector('.dialog--custom-crs')`, 3000).catch(() => {});
+      await typeIn('Ad', 'Belediye yerel');
+      await b.eval(`[...document.querySelectorAll('.dialog--custom-crs [aria-label="Tür"] .seg__opt')].find((x) => x.textContent.startsWith('Yerel'))?.setAttribute('data-smoke-local', '')`);
+      await press('.dialog--custom-crs [data-smoke-local]');
+      await press('.dialog--custom-crs [aria-label="Taban sistem"]');
+      await b.eval(`[...document.querySelectorAll('.menu__item')].find((x) => x.textContent.includes('TUREF / TM30'))?.setAttribute('data-smoke-base', '')`);
+      await press('.menu__item[data-smoke-base]');
+      await b.eval(`(() => {
+        const cell = document.querySelector('.dialog--custom-crs .calc-grid input[data-row="0"][data-key="le"]');
+        const data = new DataTransfer();
+        data.setData('text/plain', ${JSON.stringify("1000.000\t2000.000\t412984.400\t4523008.270\n1250.500\t2010.250\t413234.809\t4523020.495\n1240.000\t2300.750\t413222.031\t4523310.900\n990.125\t2280.500\t412972.316\t4523288.690\n1120.000\t2150.000\t413103.218\t4523159.214")});
+        cell.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+      })()`);
+      await sleep(150);
+      const solved = await b.eval(`({ rows: document.querySelectorAll('.dialog--custom-crs .calc-grid tbody tr').length, said: document.querySelector('.dialog--custom-crs .custom-crs__fit')?.textContent ?? '' })`);
+      await press('.dialog--custom-crs .calc-grid tr[data-row="2"] input[type="checkbox"]');
+      await b.eval(`[...document.querySelectorAll('.dialog--custom-crs .btn')].find((x) => x.textContent === 'Düzleme yaz')?.setAttribute('data-smoke-write', '')`);
+      await press('.dialog--custom-crs [data-smoke-write]');
+      const written = await b.eval(`({ said: document.querySelector('.dialog--custom-crs .custom-crs__fit')?.textContent ?? '', east: document.querySelector('.dialog--custom-crs [aria-label="Sağa öteleme (m)"]')?.value, scale: document.querySelector('.dialog--custom-crs [aria-label="Ölçek"]')?.value, ok: !document.querySelector('.dialog--custom-crs .dialog__foot .btn--primary')?.disabled })`);
+      check(
+        'Özel koordinat sistemi: common points pasted from a spreadsheet give the local plane (m0 ±3.0 mm, then ±2.7 mm with one left out); Düzleme yaz fills the fields',
+        solved.rows === 5 && solved.said.startsWith('m0 = ±3.0 mm (5 nokta') && written.said.startsWith('m0 = ±2.7 mm (4 nokta') && written.east?.startsWith('412000.16') && written.scale?.startsWith('1.0000072') && written.ok,
+        JSON.stringify({ solved, written }),
+      );
+      await b.eval(`[...document.querySelectorAll('.dialog--custom-crs .dialog__foot .btn')].find((x) => x.textContent === 'Vazgeç')?.click()`);
+      await sleep(150);
+      await b.eval(`[...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Vazgeç')?.click()`);
+      await sleep(200);
     }
 
     // Kenar yumuşatma (TODOS.md AA-01/02, SET-03/05): the counts come from the context, a preset only fills

@@ -8,10 +8,16 @@ import {
   definitionWkt,
   ELLIPSOIDS,
   emptyForm,
+  fitPlane,
   formOf,
   PARAMETERS,
+  planeTexts,
   readDefinition,
   sameSrid,
+  skippedText,
+  unreadRows,
+  type FitRow,
+  type PlaneFit,
   type Coefficient,
   type DatumPick,
   type DefinitionForm,
@@ -22,6 +28,8 @@ import {
 } from '../../model/definitionForm';
 import type { DatumChoice, System } from '../../model/geom/crsTransform';
 import { definitionSystem } from '../../model/projectCrs';
+import { fixed } from '../../core/displayNumber';
+import { Grid, mmText, type GridColumn, type Row } from '../calc/common';
 import { convertPoint, errorText, type ConvertFormat } from '../calc/convert';
 import { h, replaceChildren, type Child } from '../dom';
 import { Dialog } from '../widgets/Dialog';
@@ -37,8 +45,9 @@ import { note, segmented, textField } from '../widgets/controls';
  * (model/definitionForm.ts, the shared cases'), and a definition the registry has is said, with Kayıttakini seç. A WKT
  * or PROJ text pasted, or a `.prj` file, fills the fields (docs/adr/0168 §5); the definition is copied as WKT or PROJ; a
  * Deneme noktası shows where a point typed in it is in WGS 84 and in the project's other system, with the project's
- * datum choices. It opens over Proje ayarları: Tamam puts the definition in its draft, Kaydet there assigns it; the
- * drawing is not transformed.
+ * datum choices. A local system's plane is found from points known in both systems (Ortak noktalardan hesapla: Vektör
+ * oturtma's solution, its residuals and m0). It opens over Proje ayarları: Tamam puts the definition in its draft,
+ * Kaydet there assigns it; the drawing is not transformed.
  */
 export interface CustomCrsOptions {
   /** Whose definition: the project's own system or its second. */
@@ -60,6 +69,22 @@ export interface TrialContext {
   readonly choices: readonly DatumChoice[];
   readonly format: ConvertFormat;
 }
+
+/** The common points' columns: Kullan, this system's east and north, the base's, the residuals (mm); named as the project's type names its axes. */
+const pointColumns = (eastFirst: 'Y' | 'X'): GridColumn[] => {
+  const [e, n] = eastFirst === 'Y' ? ['Y', 'X'] : ['X', 'Y'];
+  return [
+    { key: 'use', label: 'Kullan', check: true },
+    { key: 'le', label: `Yerel ${e}`, numeric: true },
+    { key: 'ln', label: `Yerel ${n}`, numeric: true },
+    { key: 'be', label: `Taban ${e}`, numeric: true },
+    { key: 'bn', label: `Taban ${n}`, numeric: true },
+    { key: 've', label: `v${e}`, unit: 'mm', numeric: true },
+    { key: 'vn', label: `v${n}`, unit: 'mm', numeric: true },
+    { key: 'v', label: 'v', unit: 'mm', numeric: true },
+  ];
+};
+const RESIDUALS = new Set(['ve', 'vn', 'v']);
 
 /** The largest `.prj` file read (a definition is a few hundred bytes). */
 const PRJ_LIMIT = 1 << 20;
@@ -112,6 +137,12 @@ export function openCustomCrs(o: CustomCrsOptions): void {
   const file = h('input', { type: 'file', accept: '.prj,.PRJ,.wkt,.WKT,.txt,.TXT', hidden: true }) as HTMLInputElement;
   const readSaid = h('div', { class: 'custom-crs__read' });
   const trialOut = h('div', { class: 'custom-crs__trial' });
+  // Ortak noktalardan hesapla: the rows (the Hesap windows' table, made once), their solution, the rows left out.
+  const points: Row[] = [{}, {}, {}, {}];
+  let fit: PlaneFit | { readonly problem: string } | null = null;
+  let skipped: number[] = [];
+  const fitSaid = h('div', { class: 'custom-crs__fit' });
+  const fitWrite = h('button', { class: 'btn btn--small', type: 'button', disabled: true }, 'Düzleme yaz');
 
   const check = () => {
     const got = buildDefinition(f);
@@ -178,6 +209,70 @@ export function openCustomCrs(o: CustomCrsOptions): void {
     if (redraw) render();
     else paint();
   };
+  /** The used pair with the largest residual: its row (none without redundancy). */
+  const worst = (): number | null => {
+    if (!fit || 'problem' in fit || fit.m0 === null) return null;
+    let at: number | null = null;
+    let most = -1;
+    fit.rows.forEach((row, i) => {
+      if (points[row]?.use === '0' || fit === null || 'problem' in fit) return;
+      if (fit.residuals[i]![2] > most) [at, most] = [row, fit.residuals[i]![2]];
+    });
+    return at;
+  };
+  const paintFit = () => {
+    const lines: HTMLElement[] = [];
+    if (fit && 'problem' in fit) lines.push(h('div', { 'data-error': '' }, fit.problem));
+    else if (fit) {
+      const solved = fit;
+      const used = solved.rows.filter((r) => points[r]?.use !== '0').length;
+      const need = f.plane === 'similarity' ? 2 : 3;
+      lines.push(
+        h('div', null, solved.m0 === null ? `${used} nokta tam geçer; m0 için en az bir fazla nokta gerekir (serbestlik 0).` : `m0 = ±${mmText(solved.m0)} (${used} nokta, serbestlik ${2 * (used - need)}).`),
+      );
+    }
+    const left = skippedText(skipped);
+    if (left) lines.push(h('div', { 'data-error': '' }, left));
+    replaceChildren(fitSaid, lines);
+    fitWrite.disabled = !fit || 'problem' in fit;
+  };
+  const table = new Grid(
+    {
+      columns: pointColumns(o.trial.format.east === 'X' ? 'X' : 'Y'),
+      rows: () => points,
+      addLabel: 'Nokta ekle',
+      readonly: (_r, key) => RESIDUALS.has(key),
+      mark: (r) => (points[r]?.use === '0' ? 'off' : worst() === r ? 'worst' : null),
+      canInsertAfter: () => true,
+      insertAfter: (r) => points.splice(r + 1, 0, {}),
+      canRemove: () => points.length > 1,
+      remove: (r) => points.splice(r, 1),
+    },
+    () => solvePoints(),
+  );
+  /** The rows solved again, the residuals into their cells (mm). */
+  function solvePoints(): void {
+    for (const r of points) r.ve = r.vn = r.v = '';
+    const rows: FitRow[] = points.map((r) => [r.le ?? '', r.ln ?? '', r.be ?? '', r.bn ?? '', r.use ?? '']);
+    skipped = unreadRows(rows);
+    const any = rows.some((r, i) => !skipped.includes(i) && r.slice(0, 4).some((v) => v.trim()));
+    fit = any ? fitPlane(rows, f.plane) : null;
+    if (fit && !('problem' in fit)) {
+      const solved = fit;
+      solved.rows.forEach((row, i) => {
+        const [vx, vy, v] = solved.residuals[i]!;
+        Object.assign(points[row]!, { ve: fixed(vx * 1000, 1), vn: fixed(vy * 1000, 1), v: fixed(v * 1000, 1) });
+      });
+    }
+    table.refresh();
+    paintFit();
+  }
+  fitWrite.addEventListener('click', () => {
+    if (!fit || 'problem' in fit) return;
+    planeTexts(f, fit.plane);
+    changed(true);
+  });
+
   /** A text read into the fields, or why not (the shared cases'). */
   const takeText = (text: string) => {
     const got = readDefinition(text);
@@ -315,19 +410,29 @@ export function openCustomCrs(o: CustomCrsOptions): void {
         { value: 'similarity', label: 'Benzerlik' },
         { value: 'affine', label: 'Afin' },
       ],
-      onChange: (p) => ((f.plane = p), changed(true)),
+      onChange: (p) => ((f.plane = p), solvePoints(), changed(true)),
     });
     const out: Child[] = [heading('Taban ve düzlem'), row(control('Taban sistem', base.el, 'base', 'base'), control('Düzlem dönüşümü', planes))];
+    const common: Child[] = [
+      heading('Ortak noktalardan hesapla'),
+      words(
+        `Hem bu sistemde hem tabanda koordinatı bilinen noktalar: ${f.plane === 'similarity' ? 'Benzerlik' : 'Afin'} düzlemi en küçük karelerle, Vektör oturtma'nın çözümüyle bulunur. Satırları elektronik tablodan yapıştırabilirsiniz.`,
+      ),
+      table.el,
+      fitSaid,
+      h('div', { class: 'custom-crs__actions' }, fitWrite),
+    ];
     if (f.plane === 'similarity')
       return [
         ...out,
         row(
           field('east', 'Sağa öteleme (m)', f.east, (v) => (f.east = v), 'scale'),
           field('north', 'Yukarı öteleme (m)', f.north, (v) => (f.north = v), 'scale'),
-          field('rotation', 'Dönüklük (°)', f.rotation, (v) => (f.rotation = v)),
-          field('scale', 'Ölçek', f.scale, (v) => (f.scale = v)),
+          field('rotation', 'Dönüklük (°)', f.rotation, (v) => (f.rotation = v), 'scale'),
+          field('scale', 'Ölçek', f.scale, (v) => (f.scale = v), 'scale'),
         ),
         words("Bu sistemin noktası saat yönünün tersine döndürülür, ölçeklenir, sonra ötelenir: tabandaki yeri çıkar. Boş dönüklük 0, boş ölçek 1'dir."),
+        ...common,
       ];
     const coefficient = (k: Coefficient) => field(k, k, f[k], (v) => (f[k] = v), 'coefficient');
     return [
@@ -335,6 +440,7 @@ export function openCustomCrs(o: CustomCrsOptions): void {
       row(AFFINE.slice(0, 3).map(coefficient)),
       row(AFFINE.slice(3).map(coefficient)),
       words('Tabanda sağa = a·sağa + b·yukarı + c, tabanda yukarı = d·sağa + e·yukarı + f; sağa ve yukarı bu sistemin koordinatlarıdır.'),
+      ...common,
     ];
   };
 
@@ -401,7 +507,8 @@ export function openCustomCrs(o: CustomCrsOptions): void {
     }
   };
 
-  const dialog = new Dialog({ title: 'Özel koordinat sistemi', width: 760, className: 'dialog--custom-crs', stack: true, content: [body], footer: [wkt, proj, h('div', { class: 'dialog__spacer' }), cancel, ok] });
+  // As wide as Proje ayarları: the common points' national coordinates fit their columns.
+  const dialog = new Dialog({ title: 'Özel koordinat sistemi', width: 900, className: 'dialog--custom-crs', stack: true, content: [body], footer: [wkt, proj, h('div', { class: 'dialog__spacer' }), cancel, ok] });
   cancel.addEventListener('click', () => dialog.close());
   ok.addEventListener('click', () => {
     if (kept) {

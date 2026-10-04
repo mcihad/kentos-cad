@@ -6,6 +6,7 @@ import type { CustomDatum } from '../contracts/generated/CustomDatum';
 import type { RegistryDatum } from '../contracts/generated/RegistryDatum';
 import { CRS_REGISTRY, crsBySrid } from '../geo/crs';
 import { crsReadText, crsWriteProj, crsWriteWkt } from './geom/crsText';
+import { fitTransform, type FitPair } from './ops/fit';
 import { systemOf } from './geom/crsTransform';
 import { definitionFrom, definitionSystem } from './projectCrs';
 
@@ -13,9 +14,10 @@ import { definitionFrom, definitionSystem } from './projectCrs';
  * The Özel koordinat sistemi window's rules (docs/adr/0168 §1–§2, §5–§6; the desktop's
  * `kentos_project::definition_form`): what is typed turned into the project's definition (`CrsDefinition`) or, field by
  * field, what is wrong; a definition the registry has already is said; a WKT or PROJ text read into one, or why not; a
- * definition written as WKT and PROJ. The shared cases are fixtures/crs/v1/definition-form.json and
- * definition-text.json (scripts/fixtures/crs_definition_form_cases.py and crs_definition_text_cases.py, from the ADR's
- * rules).
+ * definition written as WKT and PROJ; a local system's plane from points known in both systems. The shared cases are
+ * fixtures/crs/v1/definition-form.json, definition-text.json and definition-fit.json
+ * (scripts/fixtures/crs_definition_form_cases.py, crs_definition_text_cases.py and crs_definition_fit_cases.py, from the
+ * ADR's rules).
  */
 
 export type Kind = 'tm' | 'geographic' | 'local';
@@ -277,6 +279,89 @@ export function readDefinition(text: string): Imported | { readonly problem: str
     same: sameSrid(definition),
     note: shared ? READ_TEXTS.grid.replaceAll('{srid}', String(shared.srid)).replaceAll('{name}', () => shared.name) : null,
   };
+}
+
+/** What Ortak noktalardan hesapla says: rows left out, and why there is no plane. */
+export const FIT_TEXTS = {
+  skipped: 'Satır {rows} hesaba katılmadı: dört değer de sayı olmalı (bu sistemde ve tabanda sağa ve yukarı).',
+  tooFew: '{kind} için en az {need} kullanılan ortak nokta gerekir; şimdi {n}.',
+  coincident: 'Bu sistemdeki noktaların hepsi aynı yerde; düzlem bulunamaz.',
+  collinear: 'Bu sistemdeki noktalar bir doğru üstünde; afin bulunamaz. Doğrunun dışında bir nokta ekleyin.',
+} as const;
+
+/** A row of Ortak noktalardan hesapla as typed: this system's east and north, the base's east and north, Kullan ("0" leaves it out). */
+export type FitRow = readonly [string, string, string, string, string];
+
+/**
+ * The plane the common points give (this system → its base), the rows its pairs came from, each pair's residual
+ * (transformed point less the base's: east, north, length; metres) and m0 (null without redundancy).
+ */
+export interface PlaneFit {
+  readonly plane: CrsPlane;
+  readonly rows: readonly number[];
+  readonly residuals: readonly (readonly [number, number, number])[];
+  readonly m0: number | null;
+}
+
+/** A row's four values when all read as numbers; null for an empty row or one being typed. */
+function pairValues(r: FitRow): [number, number, number, number] | null {
+  const v = r.slice(0, 4).map(number);
+  return v.every((x) => x !== null) ? (v as [number, number, number, number]) : null;
+}
+
+/** The rows with something typed that are not pairs: left out of the solution, as Vektör oturtma leaves a row being typed, and named. */
+export const unreadRows = (rows: readonly FitRow[]): number[] => rows.flatMap((r, i) => (r.slice(0, 4).some((v) => v.trim()) && !pairValues(r) ? [i] : []));
+
+/** “Satır 3, 5 hesaba katılmadı: …”; null when every row is read. */
+export const skippedText = (rows: readonly number[]): string | null => (rows.length ? FIT_TEXTS.skipped.replaceAll('{rows}', rows.map((r) => r + 1).join(', ')) : null);
+
+/**
+ * Ortak noktalardan hesapla (docs/adr/0168 §1, §6): the least-squares similarity or affine through the used pairs, as
+ * Vektör oturtma solves them (the core's `ops::fit`, its pairs' centred frames), written as the window's plane; or what
+ * stops it. Rows that are not pairs are left out. The desktop's `definition_form::fit_plane`.
+ */
+export function fitPlane(rows: readonly FitRow[], kind: PlaneKind): PlaneFit | { readonly problem: string } {
+  const pairs: FitPair[] = [];
+  const at: number[] = [];
+  rows.forEach((r, i) => {
+    const v = pairValues(r);
+    if (!v) return;
+    pairs.push({ source: { x: v[0], y: v[1] }, target: { x: v[2], y: v[3] }, used: r[4].trim() !== '0' });
+    at.push(i);
+  });
+  const got = fitTransform(pairs, kind === 'similarity' ? 'helmert' : 'affine');
+  if ('error' in got) {
+    if (got.error === 'too_few')
+      return {
+        problem: FIT_TEXTS.tooFew
+          .replaceAll('{kind}', kind === 'similarity' ? 'Benzerlik' : 'Afin')
+          .replaceAll('{need}', String(got.need))
+          .replaceAll('{n}', String(pairs.filter((p) => p.used).length)),
+      };
+    return { problem: got.error === 'coincident' ? FIT_TEXTS.coincident : FIT_TEXTS.collinear };
+  }
+  // The centred solution un-centred: base = to + M·(p − from).
+  const { from: o, to: t, params } = got;
+  let plane: CrsPlane;
+  if (params.length === 2) {
+    const [a, b] = params as [number, number];
+    plane = { kind: 'similarity', east: t.x - (a * o.x - b * o.y), north: t.y - (b * o.x + a * o.y), rotation: Math.atan2(b, a) * (180 / Math.PI), scale: Math.hypot(a, b) };
+  } else {
+    const [a, b, c, d] = params as [number, number, number, number];
+    plane = { kind: 'affine', a, b: c, c: t.x - a * o.x - c * o.y, d: b, e: d, f: t.y - b * o.x - d * o.y };
+  }
+  return { plane, rows: at, residuals: got.residuals, m0: got.m0 };
+}
+
+/** A plane's values as the form's fields write them. */
+export function planeTexts(f: DefinitionForm, plane: CrsPlane): void {
+  if (plane.kind === 'similarity') {
+    f.plane = 'similarity';
+    [f.east, f.north, f.rotation, f.scale] = [plane.east, plane.north, plane.rotation, plane.scale].map(String) as [string, string, string, string];
+  } else {
+    f.plane = 'affine';
+    for (const k of AFFINE) f[k] = String(plane[k]);
+  }
 }
 
 /** A definition as WKT: WKT 1, a local system WKT 2 over its base, named as the registry or the base's definition names it (§5). */

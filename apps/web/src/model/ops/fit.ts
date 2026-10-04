@@ -42,8 +42,16 @@ export interface FitFailure {
   need?: number;
 }
 
-/** The transform of `kind` that best carries the used pairs' sources onto their targets, or why there is none. */
-export const fitTransform = op<(pairs: readonly FitPair[], kind: FitKind) => Fit | FitFailure>('fitTransform');
+const solve = op<(pairs: readonly FitPair[], kind: FitKind) => Fit | FitFailure>('fitTransform');
+
+/**
+ * The transform of `kind` that best carries the used pairs' sources onto their targets, or why there is none. The core
+ * leaves m0 out without redundancy; it is null here, as the type says.
+ */
+export function fitTransform(pairs: readonly FitPair[], kind: FitKind): Fit | FitFailure {
+  const got = solve(pairs, kind);
+  return 'error' in got ? got : { ...got, m0: got.m0 ?? null };
+}
 
 /**
  * Parametrelerle (docs/adr/0156 §7): the linear part that scales east (Y) by `east` and north (X) by `north`, then

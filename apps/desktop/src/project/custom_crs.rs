@@ -9,7 +9,9 @@
 //! seç. A WKT or PROJ text pasted, or a `.prj` file, fills the fields
 //! (docs/adr/0168 §5); the definition is copied as WKT or PROJ; a Deneme
 //! noktası shows where a point typed in it is in WGS 84 and in the project's
-//! other system, with the project's datum choices. It opens over Proje
+//! other system, with the project's datum choices. A local system's plane is
+//! found from points known in both systems (Ortak noktalardan hesapla:
+//! Vektör oturtma's solution, its residuals and m0). It opens over Proje
 //! ayarları, which waits under it: Tamam puts the definition in its draft,
 //! Kaydet there assigns it; the drawing is not transformed.
 
@@ -17,11 +19,12 @@ use std::fmt;
 use std::path::PathBuf;
 
 use iced::widget::{Column, column, container, row, text_editor};
-use iced::{Element, Fill, Length};
+use iced::{Element, Fill, Length, Task};
 use kentos_contracts::{Convention, CrsDefinition, CrsSystem, RegistryDatum};
 use kentos_geometry_core::crs as core;
 use kentos_project::definition_form::{
-    self, AFFINE, DatumPick, ELLIPSOIDS, Form, Kind, PARAMETERS, PlaneKind, Problems,
+    self, AFFINE, DatumPick, ELLIPSOIDS, FitRow, Form, Kind, PARAMETERS, PlaneFit, PlaneKind,
+    Problems,
 };
 use kentos_project::systems::definition_system;
 use kentos_ui::theme::typography;
@@ -33,6 +36,8 @@ use kentos_ui::{label, style};
 use super::choices::{CAPTIONS, Rule, field};
 use crate::app::Message;
 use crate::calc::convert::{ConvertFormat, convert_point, error_text};
+use crate::calc::grid::{self, Col, Mark, Owner, Table};
+use crate::calc::traverse::mm_text;
 use crate::exchange::words;
 
 /// The largest `.prj` file read (a definition is a few hundred bytes).
@@ -93,6 +98,16 @@ pub enum Event {
     Registry,
     /// Deneme noktası's two values.
     Trial(usize, String),
+    /// Ortak noktalardan hesapla's table: a cell typed, a paste (the field's
+    /// own, then the clipboard's lines), Enter, a row added or removed; and
+    /// Düzleme yaz.
+    Point(usize, usize, String),
+    PointPaste(usize, usize, String),
+    PointPasted(usize, usize, Option<String>),
+    PointSubmit(usize, usize),
+    PointAdd,
+    PointRemove(usize),
+    FitWrite,
     Done,
     Cancel,
 }
@@ -114,6 +129,8 @@ pub enum Outcome {
     PickFile,
     Copy(String, &'static str),
     Registry(Target, u32),
+    /// The keyboard moved, or the clipboard read, in the common points' table.
+    Focus(Task<Message>),
 }
 
 /// Where a trial point is compared: the project's other system (named),
@@ -145,6 +162,197 @@ pub struct Editor {
     grid: Option<String>,
     trial: [String; 2],
     context: Context,
+    /// Ortak noktalardan hesapla's rows and their solution.
+    points: Points,
+}
+
+/// The common points' columns: Kullan, this system's east and north, the
+/// base's, the residuals (mm); named as the project's type names its axes.
+const POINT_COLUMNS_YX: [Col; 8] = [
+    point_col("Kullan", None, false),
+    point_col("Yerel Y", None, true),
+    point_col("Yerel X", None, true),
+    point_col("Taban Y", None, true),
+    point_col("Taban X", None, true),
+    point_col("vY", Some("mm"), true),
+    point_col("vX", Some("mm"), true),
+    point_col("v", Some("mm"), true),
+];
+const POINT_COLUMNS_XY: [Col; 8] = [
+    point_col("Kullan", None, false),
+    point_col("Yerel X", None, true),
+    point_col("Yerel Y", None, true),
+    point_col("Taban X", None, true),
+    point_col("Taban Y", None, true),
+    point_col("vX", Some("mm"), true),
+    point_col("vY", Some("mm"), true),
+    point_col("v", Some("mm"), true),
+];
+const USE: usize = 0;
+const RESIDUAL: usize = 5;
+
+const fn point_col(label: &'static str, unit: Option<&'static str>, numeric: bool) -> Col {
+    Col {
+        label,
+        unit,
+        numeric,
+    }
+}
+
+/// Ortak noktalardan hesapla's table (the Hesap windows' `grid`): the rows
+/// as typed with their residuals, the solution, the rows left out.
+#[derive(Debug)]
+pub struct Points {
+    rows: Vec<[String; 8]>,
+    fit: Option<Result<PlaneFit, String>>,
+    skipped: Vec<usize>,
+}
+
+impl Default for Points {
+    fn default() -> Self {
+        Self {
+            rows: vec![Default::default(); 4],
+            fit: None,
+            skipped: Vec::new(),
+        }
+    }
+}
+
+impl Points {
+    /// The rows as the shared rules read them.
+    fn typed(&self) -> Vec<FitRow> {
+        self.rows
+            .iter()
+            .map(|r| {
+                [
+                    r[1].clone(),
+                    r[2].clone(),
+                    r[3].clone(),
+                    r[4].clone(),
+                    r[USE].clone(),
+                ]
+            })
+            .collect()
+    }
+
+    /// The rows solved again, the residuals into their cells (mm).
+    fn solve(&mut self, kind: PlaneKind) {
+        for r in &mut self.rows {
+            for cell in &mut r[RESIDUAL..] {
+                cell.clear();
+            }
+        }
+        let typed = self.typed();
+        self.skipped = definition_form::unread_rows(&typed);
+        let any = typed.len() > self.skipped.len()
+            && typed
+                .iter()
+                .any(|r| r[..4].iter().any(|v| !v.trim().is_empty()));
+        self.fit = any.then(|| definition_form::fit_plane(&typed, kind));
+        if let Some(Ok(fit)) = &self.fit {
+            for (&r, [vx, vy, v]) in fit.rows.iter().zip(&fit.residuals) {
+                let row = &mut self.rows[r];
+                row[RESIDUAL] = kentos_interaction::fixed(vx * 1000.0, 1);
+                row[RESIDUAL + 1] = kentos_interaction::fixed(vy * 1000.0, 1);
+                row[RESIDUAL + 2] = kentos_interaction::fixed(v * 1000.0, 1);
+            }
+        }
+    }
+
+    /// The used pair with the largest residual: its row.
+    fn worst(&self) -> Option<usize> {
+        let fit = self.fit.as_ref()?.as_ref().ok()?;
+        fit.m0?;
+        fit.rows
+            .iter()
+            .zip(&fit.residuals)
+            .filter(|(r, _)| self.rows.get(**r).is_some_and(|row| row[USE] != "0"))
+            .max_by(|a, b| a.1[2].total_cmp(&b.1[2]))
+            .map(|(r, _)| *r)
+    }
+}
+
+impl Table for Points {
+    fn columns(&self) -> usize {
+        8
+    }
+
+    fn rows(&self) -> usize {
+        self.rows.len()
+    }
+
+    fn get(&self, row: usize, col: usize) -> &str {
+        self.rows.get(row).map_or("", |r| r[col].as_str())
+    }
+
+    fn set(&mut self, row: usize, col: usize, text: String) {
+        if let Some(r) = self.rows.get_mut(row) {
+            r[col] = text;
+        }
+    }
+
+    fn readonly(&self, _row: usize, col: usize) -> bool {
+        col >= RESIDUAL
+    }
+
+    fn check(&self, col: usize) -> bool {
+        col == USE
+    }
+
+    fn mark(&self, row: usize) -> Option<Mark> {
+        if self.rows.get(row).is_some_and(|r| r[USE] == "0") {
+            return Some(Mark::Off);
+        }
+        (self.worst() == Some(row)).then_some(Mark::Worst)
+    }
+
+    fn insert_after(&mut self, row: usize) {
+        let at = (row + 1).min(self.rows.len());
+        self.rows.insert(at, Default::default());
+    }
+
+    fn can_remove(&self, _row: usize) -> bool {
+        self.rows.len() > 1
+    }
+
+    fn remove(&mut self, row: usize) {
+        if self.rows.len() > 1 && row < self.rows.len() {
+            self.rows.remove(row);
+        }
+    }
+}
+
+/// The common points' table as Proje ayarları' window owns it: its cells
+/// and messages.
+#[derive(Clone, Copy, Debug)]
+struct CommonPoints;
+
+fn point_message(e: Event) -> Message {
+    crate::project::settings_message(crate::project::SettingsEvent::Custom(e))
+}
+
+impl Owner for CommonPoints {
+    fn cell_id(self, row: usize, col: usize) -> iced::widget::Id {
+        iced::widget::Id::from(format!("ozel-crs-nokta-{row}-{col}"))
+    }
+    fn cell(self, row: usize, col: usize, text: String) -> Message {
+        point_message(Event::Point(row, col, text))
+    }
+    fn paste(self, row: usize, col: usize, text: String) -> Message {
+        point_message(Event::PointPaste(row, col, text))
+    }
+    fn submit(self, row: usize, col: usize) -> Message {
+        point_message(Event::PointSubmit(row, col))
+    }
+    fn remove_row(self, row: usize) -> Message {
+        point_message(Event::PointRemove(row))
+    }
+    fn add_row(self) -> Message {
+        point_message(Event::PointAdd)
+    }
+    fn add_label(self) -> &'static str {
+        "Nokta ekle"
+    }
 }
 
 impl Editor {
@@ -165,6 +373,7 @@ impl Editor {
             grid: None,
             trial: Default::default(),
             context,
+            points: Points::default(),
         };
         // A new window says nothing before anything is typed; a definition is checked as it is.
         if existing.is_some() && editor.kept.is_none() {
@@ -268,7 +477,10 @@ impl Editor {
             }
             Event::Convention(c) => f.convention = c,
             Event::Base(srid) => f.base = srid.to_string(),
-            Event::Plane(p) => f.plane = p,
+            Event::Plane(p) => {
+                f.plane = p;
+                self.points.solve(p);
+            }
             Event::Affine(k, t) => {
                 if let Some(c) = f.affine.get_mut(k) {
                     *c = t;
@@ -329,6 +541,47 @@ impl Editor {
                     *v = t;
                 }
                 return Outcome::Keep;
+            }
+            Event::Point(row, col, t) => {
+                self.points.set(row, col, t);
+                self.points.solve(self.form.plane);
+                return Outcome::Keep;
+            }
+            Event::PointPaste(row, col, contents) => {
+                // The field's own paste stands until the clipboard says it held a table.
+                self.points.set(row, col, contents);
+                self.points.solve(self.form.plane);
+                return Outcome::Focus(
+                    iced::clipboard::read()
+                        .map(move |t| point_message(Event::PointPasted(row, col, t))),
+                );
+            }
+            Event::PointPasted(row, col, raw) => {
+                let at = raw.and_then(|raw| grid::paste(&mut self.points, row, col, &raw));
+                self.points.solve(self.form.plane);
+                return match at {
+                    Some(at) => Outcome::Focus(iced::widget::operation::focus(
+                        CommonPoints.cell_id(at, col),
+                    )),
+                    None => Outcome::Keep,
+                };
+            }
+            Event::PointSubmit(row, col) => {
+                let task = grid::submit(&mut self.points, CommonPoints, row, col);
+                return Outcome::Focus(task);
+            }
+            Event::PointAdd => return Outcome::Focus(grid::add(&mut self.points, CommonPoints)),
+            Event::PointRemove(row) => {
+                self.points.remove(row);
+                self.points.solve(self.form.plane);
+                return Outcome::Keep;
+            }
+            Event::FitWrite => {
+                let Some(Ok(fit)) = &self.points.fit else {
+                    return Outcome::Keep;
+                };
+                let plane = fit.plane.clone();
+                definition_form::plane_texts(f, &plane);
             }
             Event::Cancel => return Outcome::Close,
             Event::Done => {
@@ -590,7 +843,8 @@ pub fn view<'a>(
                 "Tamam",
                 editor.ready().then(|| on(Event::Done)),
             ))
-            .width(760.0)
+            // As wide as Proje ayarları: the common points' national coordinates fit their columns.
+            .width(900.0)
             .max_height(760.0),
     )
 }
@@ -857,7 +1111,7 @@ fn local<'a>(
             move |p: PlaneName| on(Event::Plane(p.0))
         },
     );
-    let c = column![
+    let c: Column<'a, Message> = column![
         section("Taban ve düzlem"),
         row![
             base,
@@ -866,15 +1120,15 @@ fn local<'a>(
         .spacing(16),
     ]
     .spacing(10);
-    match f.plane {
+    let plane: Element<'a, Message> = match f.plane {
         PlaneKind::Similarity => {
             let value = |at, caption, key, width| text(editor, on.clone(), at, caption, key, width);
             c.push(
                 row![
                     value(Field::East, "Sağa öteleme (m)", "east", 150.0),
                     value(Field::North, "Yukarı öteleme (m)", "north", 150.0),
-                    value(Field::Rotation, "Dönüklük (°)", "rotation", 110.0),
-                    value(Field::Scale, "Ölçek", "scale", 110.0),
+                    value(Field::Rotation, "Dönüklük (°)", "rotation", 150.0),
+                    value(Field::Scale, "Ölçek", "scale", 150.0),
                 ]
                 .spacing(12),
             )
@@ -901,7 +1155,77 @@ fn local<'a>(
                 ))
                 .into()
         }
+    };
+    column![plane, common_points(editor, on)].spacing(16).into()
+}
+
+/// Ortak noktalardan hesapla (docs/adr/0168 §1, §6): points known in this
+/// system and in the base, the plane through them by least squares
+/// (Vektör oturtma's solution), each one's residual and m0; Düzleme yaz
+/// puts the plane in the fields above.
+fn common_points<'a>(
+    editor: &'a Editor,
+    on: impl Fn(Event) -> Message + Clone + 'a,
+) -> Element<'a, Message> {
+    let p = &editor.points;
+    let columns: &'static [Col] = if editor.context.format.east == "X" {
+        &POINT_COLUMNS_XY
+    } else {
+        &POINT_COLUMNS_YX
+    };
+    let table = grid::view_with(
+        CommonPoints,
+        columns,
+        p,
+        |_, _| String::new(),
+        0,
+        |_| Vec::new(),
+    );
+    let kind = match editor.form.plane {
+        PlaneKind::Similarity => "Benzerlik",
+        PlaneKind::Affine => "Afin",
+    };
+    let mut c = column![
+        section("Ortak noktalardan hesapla"),
+        label::caption(format!(
+            "Hem bu sistemde hem tabanda koordinatı bilinen noktalar: {kind} düzlemi en küçük karelerle, Vektör oturtma'nın çözümüyle bulunur. Satırları elektronik tablodan yapıştırabilirsiniz."
+        )),
+        table,
+    ]
+    .spacing(8);
+    let used = p.fit.as_ref().and_then(|f| f.as_ref().ok()).map_or(0, |f| {
+        f.rows.iter().filter(|r| p.rows[**r][USE] != "0").count()
+    });
+    match &p.fit {
+        Some(Ok(fit)) => {
+            let need = if editor.form.plane == PlaneKind::Similarity {
+                2
+            } else {
+                3
+            };
+            c = c.push(label::caption(match fit.m0 {
+                None => format!(
+                    "{used} nokta tam geçer; m0 için en az bir fazla nokta gerekir (serbestlik 0)."
+                ),
+                Some(m0) => format!(
+                    "m0 = ±{} ({used} nokta, serbestlik {}).",
+                    mm_text(m0),
+                    2 * used.saturating_sub(need)
+                ),
+            }));
+        }
+        Some(Err(why)) => c = c.push(label::caption(why.clone()).style(style::text::danger)),
+        None => {}
     }
+    if let Some(note) = definition_form::skipped_text(&p.skipped) {
+        c = c.push(label::caption(note).style(style::text::danger));
+    }
+    let ready = matches!(p.fit, Some(Ok(_)));
+    c.push(row![words::secondary(
+        "Düzleme yaz",
+        ready.then(|| on(Event::FitWrite))
+    )])
+    .into()
 }
 
 #[cfg(test)]
@@ -1291,6 +1615,83 @@ mod tests {
         ));
     }
 
+    /// The shared case “benzerlik: beş nokta, gürültülü”'s rows.
+    fn five_points() -> Vec<[String; 5]> {
+        let file: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/crs/v1/definition-fit.json"
+        ))
+        .expect("the cases read");
+        let case = file["cases"]
+            .as_array()
+            .expect("cases")
+            .iter()
+            .find(|c| c["name"] == "benzerlik: beş nokta, gürültülü")
+            .expect("the case")
+            .clone();
+        case["typed"]
+            .as_array()
+            .expect("rows")
+            .iter()
+            .map(|r| std::array::from_fn(|i| r[i].as_str().expect("a text").to_owned()))
+            .collect()
+    }
+
+    /// Ortak noktalardan hesapla (docs/adr/0168 §1, §6): points typed and
+    /// pasted from a spreadsheet give the plane live, with residuals and m0;
+    /// a point left out reads faded, the worst residual is marked; Düzleme
+    /// yaz puts the plane in the fields, which build the definition.
+    #[test]
+    fn common_points_give_the_local_plane() {
+        let mut editor = Editor::new(Target::Own, None, context());
+        typed(&mut editor, Field::Name, "Belediye yerel");
+        editor.edit(Event::Kind(Kind::Local));
+        editor.edit(Event::Base(5254));
+        let rows = five_points();
+        // The first row typed cell by cell, the others pasted as a spreadsheet's lines.
+        for (col, v) in rows[0][..4].iter().enumerate() {
+            editor.edit(Event::Point(0, col + 1, v.clone()));
+        }
+        let lines: Vec<String> = rows[1..].iter().map(|r| r[..4].join("\t")).collect();
+        editor.edit(Event::PointPasted(1, 1, Some(lines.join("\n"))));
+        assert_eq!(editor.points.rows.len(), 5, "a row added for the fifth");
+        let Some(Ok(fit)) = &editor.points.fit else {
+            panic!("a plane: {:?}", editor.points.fit);
+        };
+        let m0 = fit.m0.expect("m0");
+        assert!((m0 - 0.003_004_520_808_648_213_6).abs() < 1e-9, "{m0}");
+        assert!(
+            !editor.points.rows[0][RESIDUAL + 2].is_empty(),
+            "residuals in mm"
+        );
+        let worst = editor.points.worst().expect("the worst residual");
+        assert_eq!(editor.points.mark(worst), Some(Mark::Worst));
+        // A point left out: faded, and the solution without it.
+        editor.edit(Event::Point(2, USE, "0".to_owned()));
+        assert_eq!(editor.points.mark(2), Some(Mark::Off));
+        let Some(Ok(fit)) = &editor.points.fit else {
+            panic!("a plane");
+        };
+        assert!((fit.m0.expect("m0") - 0.002_727_334_231_884_259_7).abs() < 1e-9);
+        assert!(matches!(editor.edit(Event::FitWrite), Outcome::Keep));
+        assert_eq!(editor.form.plane, PlaneKind::Similarity);
+        assert!(
+            editor.form.scale.starts_with("1.0000072"),
+            "{}",
+            editor.form.scale
+        );
+        assert!(editor.ready(), "{:?}", editor.problems);
+        let d = editor.definition().expect("whole");
+        let CrsSystem::Local(l) = &d.system else {
+            panic!("a local system");
+        };
+        assert_eq!(l.base.srid, Some(5254));
+        // An affine needs three: the plane changes kind and is solved again.
+        editor.edit(Event::Plane(PlaneKind::Affine));
+        assert!(matches!(editor.points.fit, Some(Ok(_))));
+        editor.edit(Event::FitWrite);
+        assert!(editor.ready(), "{:?}", editor.problems);
+    }
+
     /// Through Proje ayarları: a WKT read offers the registry's system, and
     /// Kayıttakini seç puts it in the draft in the window's place; a copy
     /// says so in the log.
@@ -1409,6 +1810,23 @@ mod tests {
                     Event::Read,
                 ],
                 false,
+            ),
+            (
+                "ortak",
+                {
+                    let mut events = vec![
+                        Event::Text(Field::Name, "Belediye yerel".to_owned()),
+                        Event::Kind(Kind::Local),
+                        Event::Base(5254),
+                    ];
+                    let rows = five_points();
+                    let lines: Vec<String> = rows.iter().map(|r| r[..4].join("\t")).collect();
+                    events.push(Event::PointPasted(0, 1, Some(lines.join("\n"))));
+                    events.push(Event::Point(2, USE, "0".to_owned()));
+                    events.push(Event::FitWrite);
+                    events
+                },
+                true,
             ),
             (
                 "deneme",

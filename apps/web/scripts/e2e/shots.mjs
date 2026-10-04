@@ -31,7 +31,7 @@
 // grid added, one a datum choice names that the device does not have, Kaldır's question); datums (Proje ayarları' Datum
 // dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
-// chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point).
+// chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3674,6 +3674,8 @@ SCENES.datums = [
  * `project::custom_crs::tests::screens` (ozel-crs-*).
  */
 const DEF = '.dialog--custom-crs';
+// fixtures/crs/v1/definition-fit.json's “benzerlik: beş nokta, gürültülü”, as a spreadsheet copies it.
+const COMMON_POINTS = "1000.000\t2000.000\t412984.400\t4523008.270\n1250.500\t2010.250\t413234.809\t4523020.495\n1240.000\t2300.750\t413222.031\t4523310.900\n990.125\t2280.500\t412972.316\t4523288.690\n1120.000\t2150.000\t413103.218\t4523159.214";
 const TM36_WKT =
   'PROJCS["TUREF_TM36",GEOGCS["GCS_TUREF",DATUM["D_Turkish_National_Reference_Frame",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",36.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]';
 const defOpen = async (ui) => {
@@ -3750,6 +3752,29 @@ SCENES.definitions = [
       await defType(ui, 'Deneme noktası X', '4421234.567');
       await ui.sleep(250);
       await ui.eval(`document.querySelector('${DEF} .custom-crs__trial')?.scrollIntoView({ block: 'end' })`);
+      await ui.sleep(200);
+    },
+    close: defClose,
+  },
+  {
+    id: 'definition-common',
+    open: async (ui) => {
+      await defOpen(ui);
+      await defType(ui, 'Ad', 'Belediye yerel');
+      await defChoose(ui, 'Tür', 'Yerel (taban sisteme bağlı)');
+      await defPick(ui, 'Taban sistem', 'TUREF / TM30');
+      // Five points pasted from a spreadsheet into the first cell, the third left out, the plane written.
+      await ui.eval(`(() => {
+        const cell = document.querySelector('${DEF} .calc-grid input[data-row="0"][data-key="le"]');
+        const data = new DataTransfer();
+        data.setData('text/plain', ${JSON.stringify(COMMON_POINTS)});
+        cell.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+      })()`);
+      await ui.sleep(200);
+      await ui.clickSel(`${DEF} .calc-grid tr[data-row="2"] input[type="checkbox"]`);
+      await ui.clickText(`${DEF} .btn`, 'Düzleme yaz');
+      await ui.sleep(250);
+      await ui.eval(`document.querySelector('${DEF} .custom-crs__fit')?.scrollIntoView({ block: 'end' })`);
       await ui.sleep(200);
     },
     close: defClose,

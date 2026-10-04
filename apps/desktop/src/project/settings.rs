@@ -367,6 +367,7 @@ impl App {
                 self.say(Level::Success, format!("{what} panoya kopyalandı."));
                 return iced::clipboard::write(text);
             }
+            Outcome::Focus(task) => return task,
         }
         // The project's own system, or none, is no second system (docs/adr/0167 §1).
         d.second_srid = d.second();
