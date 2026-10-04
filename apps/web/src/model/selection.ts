@@ -1,10 +1,13 @@
 import { Signal } from '../core/signal';
+import type { Vec2 } from './geometry';
 
 const sameSet = (a: ReadonlySet<number>, b: ReadonlySet<number>) => a.size === b.size && [...a].every((x) => b.has(x));
 
 export class Selection {
   readonly ids = new Signal<ReadonlySet<number>>(new Set(), sameSet);
   readonly hover = new Signal<number | null>(null);
+  /** The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3): ringed in the drawing. */
+  readonly vertices = new Signal<readonly Vec2[]>([]);
 
   get size(): number {
     return this.ids.value.size;

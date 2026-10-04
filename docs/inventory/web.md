@@ -12,7 +12,7 @@
 | Ayarlar | 80 | 80 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 330 | 330 | 0 | 0 |
-| Pencereler ve paneller | 93 | 93 | 0 | 0 |
+| Pencereler ve paneller | 94 | 94 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 77 | 0 | 2 | 0 | 1 | 80 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 330 | 0 | 0 | 0 | 0 | 330 |
-| Pencereler ve paneller | 75 | 2 | 15 | 0 | 1 | 93 |
+| Pencereler ve paneller | 76 | 2 | 15 | 0 | 1 | 94 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -180,7 +180,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 93)
+#### Pencereler ve paneller (17 / 94)
 
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog

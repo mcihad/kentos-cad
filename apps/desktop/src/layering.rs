@@ -135,6 +135,7 @@ impl App {
         // A click in the tree chooses its rows until the selection changes again.
         self.layers_follow = false;
         self.layers_keyboard = true;
+        self.vertices.keyboard = false;
         self.blocks_panel.keyboard = false;
         // The pressed row is in view already.
         self.layer_reveal = None;

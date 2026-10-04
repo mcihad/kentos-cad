@@ -134,6 +134,7 @@ mod tools_scenes;
 mod tools_screens;
 mod tracking;
 mod usage;
+mod vertices;
 mod view;
 mod view_commands;
 mod viewport;

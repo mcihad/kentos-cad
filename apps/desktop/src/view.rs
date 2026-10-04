@@ -635,6 +635,7 @@ impl App {
                     select: self.session.select_box(),
                     grips,
                     hot: self.session.active_grip(),
+                    marked: self.vertex_marks(),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),

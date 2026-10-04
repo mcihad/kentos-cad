@@ -682,6 +682,36 @@
   font-weight: 600;
 }
 
+/* ── Köşe tablosu (docs/adr/0172): the point editor's table over the coordinate list's foot ── */
+.vtable__hint {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.vtable__head {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.vtable th.num .vtable__head {
+  justify-content: flex-end;
+}
+.vtable td:nth-child(2) {
+  font-weight: inherit;
+}
+/* The columns keep their widths while a cell is edited: the first is the number's, the rest share the row. */
+.vtable table {
+  table-layout: fixed;
+}
+.vtable__foot {
+  flex: none;
+  position: static;
+}
+
 /* ── Shortcut sheet ──────────────────────────────────────────────── */
 .shortcuts {
   display: grid;

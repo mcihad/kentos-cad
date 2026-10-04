@@ -19,7 +19,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
@@ -560,6 +560,11 @@ export class ViewportController {
     return !!b;
   }
 
+  /** Brings `p` to the view's middle, its scale kept (Köşe tablosu's Göster, docs/adr/0172 §3). */
+  centerOn(p: Vec2): void {
+    this.navigation.navigate(() => this.camera.setView(p, this.camera.scale));
+  }
+
   /** Fits the view to a box the user showed (Pencere yakınlaştır), `paddingPx` clear round it. */
   zoomToBox(b: Bounds, paddingPx = 0): void {
     this.navigation.navigate(() => this.camera.fit(b, paddingPx));
@@ -700,6 +705,7 @@ export class ViewportController {
     const hl = () => this.requestHighlight();
     d.add(selection.ids.subscribe(hl));
     d.add(selection.hover.subscribe(hl));
+    d.add(selection.vertices.subscribe(() => this.requestOverlay()));
     d.add(
       this.camera.changed.subscribe(() => {
         this.requestRender();
@@ -1372,6 +1378,7 @@ export class ViewportController {
     const l1 = import.meta.env.DEV ? performance.now() : 0;
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);
+    drawMarkedVertices(g, this.ctx.selection.vertices.value, cam, pal);
     const d0 = import.meta.env.DEV ? performance.now() : 0;
     this.ctx.tools.active.draw?.(g, cam);
     // The digitizing locks over the tool's preview (docs/adr/0166 §6).

@@ -189,7 +189,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
 }
 
 /// A command's refusal: its error, when it wrote nothing.
-pub(super) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError> {
+pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError> {
     match result {
         CommandResult::Failed { error }
         | CommandResult::Conflict { error }
@@ -199,7 +199,7 @@ pub(super) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::C
 }
 
 /// Runs `write` as one undo step named `label`; a refusal is rolled back and returned.
-pub(super) fn in_step(
+pub(crate) fn in_step(
     doc: &mut Document,
     label: &str,
     write: impl FnOnce(&mut Document) -> Option<String>,

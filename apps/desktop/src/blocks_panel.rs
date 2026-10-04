@@ -195,6 +195,7 @@ impl App {
         self.blocks_panel.focused = Some(id);
         self.blocks_panel.keyboard = true;
         self.layers_keyboard = false;
+        self.vertices.keyboard = false;
         self.memory.block_insert = Some(id);
     }
 

@@ -140,6 +140,7 @@ impl App {
             return Task::none();
         };
         self.layers_keyboard = true;
+        self.vertices.keyboard = false;
         self.choose_row(first);
         crate::input::release_keyboard()
     }

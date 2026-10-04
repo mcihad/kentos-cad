@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 93,
-      "implemented": 93,
+      "total": 94,
+      "implemented": 94,
       "partial": 0,
       "pending": 0
     },
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 93,
-        "implemented": 75,
+        "total": 94,
+        "implemented": 76,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -18265,6 +18265,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/points/ (ADR 0153)"
+    },
+    {
+      "id": "apps/web/src/ui/bottom/VertexTable.ts#VertexTable",
+      "name": "VertexTable",
+      "role": "panel",
+      "source": "apps/web/src/ui/bottom/VertexTable.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/vertices/ (ADR 0172)"
     },
     {
       "id": "apps/web/src/ui/calc/ConvertDialog.ts#openConvert",

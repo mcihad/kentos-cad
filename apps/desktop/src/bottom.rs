@@ -7,7 +7,8 @@
 //! - Noktalar (`point.editor` opens it on this tab): every point of the
 //!   drawing in a table, sorted, searched and filtered (points/, docs/adr/0153);
 //! - Koordinat listesi (`view.coords` opens it on this tab): the selection's
-//!   points with Y, X, Z and layer, or the first object's vertices with each
+//!   points with Y, X, Z and layer; line work in Köşe tablosu (vertices/,
+//!   docs/adr/0172), which edits it; any other object's vertices with each
 //!   edge's length and bearing, and the outline's area or length; rows are
 //!   built only as they scroll into view (a contour has thousands);
 //! - Uyarılar: the warnings and errors; the tab's badge counts the ones not
@@ -343,6 +344,10 @@ impl App {
     }
 
     fn coordinate_list(&self) -> Element<'_, Message> {
+        // Line work in Köşe tablosu (vertices/, docs/adr/0172 §1).
+        if let Some(target) = self.vertex_target() {
+            return self.vertex_table(target);
+        }
         let format = self
             .document
             .as_ref()

@@ -36,7 +36,8 @@
 // book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
 // gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system);
 // fieldsend (Cihaza gönder: Leica GSI-16, Trimble JobXML, Leica GSI-8 over TM coordinates); ground (docs/adr/0171 §4:
-// Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m).
+// Ölçme's reduction to the grid switched on, Kutupsal alım, Aplikasyon and Poligon hesabı reducing at 850 m);
+// vertextable (docs/adr/0172: Köşe tablosu, a row selected, a value typed, a radius refused, a road, two objects).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -2416,6 +2417,104 @@ const openTextExtras = async (ui) => {
 // draws: the four arrowheads, one without a note, one masked, one turned and one in a block; the second selected so
 // that Öznitelikler shows it.
 const LEADERS = readFileSync(new URL('../../../../fixtures/interaction/v1/leaders.kcad', import.meta.url), 'utf8');
+// Köşe tablosu (docs/adr/0172) on fixtures/interaction/v1/vertex-table.kcad, the scenes the desktop's
+// `vertices::tests::screens` draws: the parcel's table with a row selected and its vertex ringed; a Y typed in place
+// (Enter writes it and goes down); a radius shorter than half the chord refused with the cell open; the road's arcs;
+// two objects selected (the first shown, not written).
+const VERTEX_TABLE = readFileSync(new URL('../../../../fixtures/interaction/v1/vertex-table.kcad', import.meta.url), 'utf8');
+const openVertexTable = async (ui, ids = [1]) => {
+  await ui.eval(`(async () => {
+    const k = window.kentos;
+    k.files.ask = async () => 'drop';
+    if (!(await k.files.load(${JSON.stringify(VERTEX_TABLE)}, null))) throw new Error('vertex-table.kcad did not load');
+    k.ui.bottomHeight.set(300);
+    k.selection.set(${JSON.stringify(ids)});
+    k.commands.execute('view.coords');
+    k.view.zoomExtents();
+    // A little room round the drawing.
+    const c = k.view.camera;
+    c.scale = c.scale * 0.8;
+    c.panBy(0, 0);
+  })()`);
+  await ui.sleep(700);
+};
+/** The centre of the table's row `i`, cell `j`. */
+const vertexCell = (ui, i, j) =>
+  ui.eval(`(() => { const td = document.querySelectorAll('.vtable tbody tr[data-at="${i}"] td')[${j}]; const r = td.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+/** A double click on row `i`'s cell `j` opens its editor with `whole`. */
+const editVertexCell = async (ui, i, j, whole) => {
+  const at = await vertexCell(ui, i, j);
+  await ui.clickAt(...at);
+  await ui.clickAt(...at, { clickCount: 2 });
+  await ui.waitFor(`document.activeElement?.classList.contains('ptable__edit')`, 3000);
+  const opened = await ui.eval(`document.activeElement.value`);
+  if (whole !== undefined && opened !== whole) throw new Error(`hücre açıldı: ${opened}`);
+};
+SCENES.vertextable = [
+  {
+    id: 'kose-tablosu',
+    open: async (ui) => {
+      await openVertexTable(ui);
+      await ui.clickAt(...(await vertexCell(ui, 2, 2)));
+      await ui.sleep(300);
+      const ringed = await ui.eval(`window.kentos.selection.vertices.value.length`);
+      if (ringed !== 1) throw new Error(`vurgulanan köşe: ${ringed}`);
+    },
+  },
+  {
+    id: 'kose-tablosu-duzenle',
+    open: async (ui) => {
+      await openVertexTable(ui);
+      // Köşe, Halka, Y: the second row's Y.
+      await editVertexCell(ui, 1, 2, '486760');
+      await ui.type('486761.5');
+      await ui.key('Enter');
+      await ui.sleep(300);
+      const written = await ui.eval(`window.kentos.doc.get(1).pts[1].x`);
+      if (written !== 486761.5) throw new Error(`Y yazılmadı: ${written}`);
+      const next = await ui.eval(`document.activeElement?.closest('tr')?.dataset.at`);
+      if (next !== '2') throw new Error(`Enter alttaki satıra geçmedi: ${next}`);
+      await ui.sleep(200);
+    },
+  },
+  {
+    id: 'kose-tablosu-yaricap',
+    open: async (ui) => {
+      await openVertexTable(ui);
+      // Köşe, Halka, Y, X, Z, Yarıçap: the first edge, 60.2 m long.
+      await editVertexCell(ui, 0, 5, '');
+      await ui.type('10');
+      await ui.key('Enter');
+      await ui.sleep(300);
+      const open = await ui.eval(`document.activeElement?.classList.contains('ptable__edit')`);
+      if (!open) throw new Error('reddedilen yarıçapın hücresi kapandı');
+    },
+    close: (ui) => ui.key('Escape'),
+  },
+  {
+    // Satır ekle under the first row: Y, Tab, X, Enter writes the vertex; the next draft opens under it.
+    id: 'kose-tablosu-satir-ekle',
+    open: async (ui) => {
+      await openVertexTable(ui);
+      await ui.clickAt(...(await vertexCell(ui, 0, 2)));
+      await ui.clickText('.vtable .ptable__btn', 'Satır ekle');
+      await ui.waitFor(`document.activeElement?.classList.contains('ptable__edit')`, 3000);
+      for (const [text, key] of [['486730', 'Tab'], ['4420190', 'Enter']]) {
+        await ui.type(text);
+        await ui.key(key);
+        await ui.sleep(150);
+      }
+      const n = await ui.eval(`window.kentos.doc.get(1).pts.length`);
+      if (n !== 6) throw new Error(`Satır ekle: ${n} köşe`);
+      const draft = await ui.eval(`document.querySelector('.vtable .ptable__draft')?.dataset.at`);
+      if (draft !== '2') throw new Error(`sonraki taslak: ${draft}`);
+      await ui.sleep(200);
+    },
+    close: (ui) => ui.key('Escape'),
+  },
+  { id: 'kose-tablosu-yol', open: (ui) => openVertexTable(ui, [2]) },
+  { id: 'kose-tablosu-coklu', open: (ui) => openVertexTable(ui, [1, 2]) },
+];
 // Vektör oturtma (docs/adr/0156 §7) on fixtures/interaction/v1/vector-fit.kcad, the scenes the desktop's
 // `calc::fit::tests::screens` draws: a parcel surveyed in a local system and the same points measured in TUREF (P5 with a
 // 15 cm blunder); Adla eşle fills the pairs, P5 shows as the worst residual and is left out, Uygula fits the local layer.

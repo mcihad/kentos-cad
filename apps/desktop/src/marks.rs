@@ -79,6 +79,8 @@ pub struct Marks {
     pub grips: Vec<GripSet>,
     /// The grip being moved.
     pub hot: Option<(Slot, usize)>,
+    /// The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3).
+    pub marked: Vec<Vec2>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -175,6 +177,7 @@ impl Marks {
         self.snap.is_none()
             && self.select.is_none()
             && self.grips.is_empty()
+            && self.marked.is_empty()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -195,6 +198,7 @@ impl<Message> canvas::Program<Message> for Marks {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let accent = Tokens::of(theme).accent;
         grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
+        marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
         }
@@ -284,6 +288,32 @@ fn grips(
             edge(1.5, accent),
         );
     }
+}
+
+/// The web's `drawMarkedVertices` (docs/adr/0172 §3): an accent ring round
+/// each vertex Köşe tablosu's selected rows name, on a halo so it shows on
+/// any drawing; at most 2 000.
+fn marked(
+    frame: &mut canvas::Frame,
+    pts: &[Vec2],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    if pts.is_empty() {
+        return;
+    }
+    let rings = Path::new(|b| {
+        for &p in pts.iter().take(2000) {
+            let s = camera.world_to_screen(p);
+            let c = Point::new(s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5);
+            b.circle(c, 8.0);
+        }
+    });
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    frame.stroke(&rings, stroke(4.0, colors.halo));
+    frame.stroke(&rings, stroke(2.0, accent));
 }
 
 /// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the

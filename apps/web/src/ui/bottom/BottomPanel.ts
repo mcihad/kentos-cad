@@ -14,6 +14,8 @@ import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
 import { PointTable } from './PointTable';
+import { isEditable } from './vertexEdit';
+import { VERTEX_TEXTS, VertexTable } from './VertexTable';
 import { BOTTOM_TABS, BOTTOM_TEXTS, FOLLOW_WITHIN, ICON_SIZE, LEVEL_ICON, listedIn, logTime } from './logPlan';
 import { seenNow, unseenWarnings } from './warnings';
 
@@ -36,6 +38,8 @@ export class BottomPanel extends Component {
   private rows: VirtualRows | null = null;
   /** Noktalar, the point editor (docs/adr/0153), while its tab is on screen. */
   private points: PointTable | null = null;
+  /** Köşe tablosu (docs/adr/0172), while the coordinate list shows line work: it follows its object's changes itself. */
+  private vertices: VertexTable | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -114,9 +118,11 @@ export class BottomPanel extends Component {
     );
     this.d.add(watchAll([ctx.log.entries], () => this.onLog()));
     this.d.add(watchAll([ctx.selection.ids, ctx.format.changed], () => ui.bottomTab.value === 'coords' && this.renderContent()));
-    this.d.add(ctx.doc.events.on('changed', () => ui.bottomTab.value === 'coords' && this.renderContent()));
+    // Köşe tablosu follows its object itself (an edit keeps its cell going); anything else builds the list again.
+    this.d.add(ctx.doc.events.on('changed', () => ui.bottomTab.value === 'coords' && !this.vertices?.alive && this.renderContent()));
     this.d.add(() => this.rows?.dispose());
     this.d.add(() => this.points?.dispose());
+    this.d.add(() => this.vertices?.dispose());
   }
 
   /**
@@ -170,6 +176,8 @@ export class BottomPanel extends Component {
     this.rows = null;
     this.points?.dispose();
     this.points = null;
+    this.vertices?.dispose();
+    this.vertices = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -222,6 +230,13 @@ export class BottomPanel extends Component {
     }
 
     const e = ents.find((x) => x.kind !== 'point' && x.kind !== 'text') ?? ents[0];
+    // Line work in Köşe tablosu (docs/adr/0172 §1): it writes for one object off a locked layer.
+    if (isEditable(e)) {
+      const locked = doc.layers.isLocked(e.layerId);
+      const note = ents.length > 1 ? VERTEX_TEXTS.manyNote : locked ? VERTEX_TEXTS.lockedNote : '';
+      this.vertices = new VertexTable(this.ctx, e.id, { writes: ents.length === 1 && !locked, note });
+      return this.vertices.el;
+    }
     // Edges within each ring; the area and length are the object's own (./coordinates).
     const { pts, next: after, area, length } = vertexListing(e);
     // Rows are formatted when they scroll into view (a contour has hundreds of vertices).

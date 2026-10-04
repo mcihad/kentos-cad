@@ -12,16 +12,19 @@ import type { Elevated } from './elevation';
 /** The object's kind: its paths say the rest. */
 export type VertexKind = 'line' | 'polyline' | 'polygon';
 
-/** A vertex as the table shows it: its path and place in it, where it is, its elevation, and the edge leaving it. */
+/**
+ * A vertex as the table shows it: its path and place in it, where it is, its elevation, and the edge leaving it. What
+ * a vertex has not (an elevation, an edge, an arc) is left out.
+ */
 export interface VertexRow {
   path: number;
   index: number;
   p: Vec2;
-  z: number | null;
+  z?: number | null;
   /** The edge's chord to the next vertex (none past an open path's end). */
-  chord: number | null;
+  chord?: number | null;
   /** The edge's signed radius: plus turns left (counter-clockwise); none for a straight edge. */
-  radius: number | null;
+  radius?: number | null;
 }
 
 /** Why a write is refused (`least`: half the chord, the shortest radius). */

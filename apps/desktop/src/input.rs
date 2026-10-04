@@ -318,6 +318,7 @@ impl App {
                 self.line_focused = false;
                 self.layers_keyboard = false;
                 self.blocks_panel.keyboard = false;
+                self.vertices.keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
                 let running = self.session.is_running();
@@ -422,6 +423,15 @@ impl App {
                 crate::points::Walk::Right
             };
             return self.points_event(crate::points::Event::Finish(Some(walk)));
+        }
+        // Köşe tablosu's cell editor, the same way (vertices/).
+        if self.vertices.editing() && press.named() == Some(Named::Tab) {
+            let walk = if press.modifiers.shift() {
+                crate::vertices::Walk::Left
+            } else {
+                crate::vertices::Walk::Right
+            };
+            return self.vertices_event(crate::vertices::Event::Finish(Some(walk)));
         }
         // Esc closes the status bar's scale field first (screen_scale.rs).
         if self.scale_field.is_some() && press.named() == Some(Named::Escape) {
@@ -592,6 +602,11 @@ impl App {
             && let Some(task) = self.blocks_key(&press)
         {
             return task;
+        }
+        // 1. So has Köşe tablosu, once a row was pressed: Delete removes the
+        // selected rows' vertices, not the object (vertices/).
+        if self.vertices.keyboard && press.named() == Some(Named::Delete) {
+            return self.vertices_event(crate::vertices::Event::Remove);
         }
         // 3. An option letter of the running command beats the shortcuts.
         if self.session.is_running()

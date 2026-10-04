@@ -1,0 +1,243 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Köşe tablosu",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 486650,
+  "y": 4420180
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E63DD",
+    "lineType": "continuous",
+    "lineWeight": 0.35
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#E5484D",
+    "lineType": "continuous",
+    "lineWeight": 0.5
+   },
+   "children": []
+  },
+  {
+   "id": "kilitli",
+   "name": "Kilitli",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "#8E8C99",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "1244",
+    "Parsel": "12"
+   },
+   "label": "12",
+   "pts": [
+    {
+     "x": 486700.0,
+     "y": 4420200.0
+    },
+    {
+     "x": 486760.0,
+     "y": 4420195.0
+    },
+    {
+     "x": 486780.0,
+     "y": 4420250.0
+    },
+    {
+     "x": 486730.0,
+     "y": 4420280.5
+    },
+    {
+     "x": 486690.0,
+     "y": 4420245.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.0,
+    0.3,
+    0.0,
+    -0.2
+   ],
+   "zs": [
+    850.1,
+    850.2,
+    850.3,
+    850.4,
+    850.5
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 486720.0,
+       "y": 4420220.0
+      },
+      {
+       "x": 486740.0,
+       "y": 4420220.0
+      },
+      {
+       "x": 486740.0,
+       "y": 4420240.0
+      },
+      {
+       "x": 486720.0,
+       "y": 4420240.0
+      }
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 486800.0,
+       "y": 4420200.0
+      },
+      {
+       "x": 486830.0,
+       "y": 4420200.0
+      },
+      {
+       "x": 486830.0,
+       "y": 4420230.0
+      },
+      {
+       "x": 486800.0,
+       "y": 4420230.0
+      }
+     ],
+     "zs": [
+      849.0,
+      null,
+      849.5,
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486500.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 486540.0,
+     "y": 4420110.0
+    },
+    {
+     "x": 486575.5,
+     "y": 4420150.25
+    },
+    {
+     "x": 486610.0,
+     "y": 4420140.0
+    },
+    {
+     "x": 486650.0,
+     "y": 4420180.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.25,
+    -0.4,
+    1.5,
+    0.0
+   ],
+   "zs": [
+    800.0,
+    801.25,
+    null,
+    802.5,
+    803.0
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 3,
+   "layerId": "yol",
+   "attrs": {},
+   "a": {
+    "x": 486500.0,
+    "y": 4420200.0
+   },
+   "b": {
+    "x": 486560.0,
+    "y": 4420240.0
+   },
+   "za": 812.4
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "kilitli",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486600.0,
+     "y": 4420260.0
+    },
+    {
+     "x": 486640.0,
+     "y": 4420262.0
+    },
+    {
+     "x": 486650.0,
+     "y": 4420290.0
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

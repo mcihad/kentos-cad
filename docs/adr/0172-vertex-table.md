@@ -144,8 +144,10 @@ Python ve MCP aynısını nesnenin geometrisini yazarak yapar.
    (`model/ops/vertexTable.ts`); bağımsız başvuru `vertex_table_cases.py` (`fixtures/vertex-table/v1/cases.json`, 5 nesnenin satırları,
    48 yazma). Bitti (5 Ekim).
 2. Tablo iki platformda: düzenlenen Koordinat listesi, Halka ve Yarıçap sütunları, satır seçimi ve çizimdeki vurgu, Göster, yerinde
-   düzenleme (Y, X, Z, Yarıçap), “Köşe düzenle”; ortak durumlar `edits.json`.
-3. Satır ekle ve Sil, Topoloji açıkken komşular; takma adlar; resimler ve kullanım.
+   düzenleme (Y, X, Z, Yarıçap; “Köşe düzenle”), Satır ekle (“Köşe ekle”) ve Sil (Delete; “Köşe sil”); web `ui/bottom/VertexTable.ts`,
+   `vertexEdit.ts`, masaüstü `vertices/`; ortak durumlar `edits.json` (`vertex_edit_cases.py`, 53 durum); resimler `kose-tablosu-*`
+   (masaüstü `vertices::tests::screens`, web `shots.mjs vertextable`), sahne `fixtures/interaction/v1/vertex-table.kcad`. Bitti (5 Ekim).
+3. Topoloji açıkken komşular (§6), takma adlar ve kullanım senaryosu.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

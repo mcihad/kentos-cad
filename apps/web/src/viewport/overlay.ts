@@ -310,6 +310,30 @@ export function drawGrips(g: CanvasRenderingContext2D, sets: readonly GripSet[],
   g.restore();
 }
 
+/**
+ * The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3): an accent ring round each grip, on a halo so it
+ * shows on any drawing; at most 2 000 (a selection of a contour's every row stays light).
+ */
+export function drawMarkedVertices(g: CanvasRenderingContext2D, pts: readonly Vec2[], cam: Camera, pal: CanvasPalette): void {
+  if (!pts.length) return;
+  g.save();
+  const ring = (width: number, color: string) => {
+    g.lineWidth = width;
+    g.strokeStyle = color;
+    g.beginPath();
+    for (const p of pts.slice(0, 2000)) {
+      const s = cam.worldToScreen(p);
+      const [x, y] = [Math.round(s.x) + 0.5, Math.round(s.y) + 0.5];
+      g.moveTo(x + 8, y);
+      g.arc(x, y, 8, 0, Math.PI * 2);
+    }
+    g.stroke();
+  };
+  ring(4, pal.labelHalo);
+  ring(2, pal.accent);
+  g.restore();
+}
+
 /** The snap marker; `label` is what it says instead of its kind's name (“Uzantı 12.063 m”, docs/adr/0163 §2). */
 export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera, pal: CanvasPalette, label?: string): void {
   const s = cam.worldToScreen(hit.point);

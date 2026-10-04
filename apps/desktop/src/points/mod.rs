@@ -41,7 +41,7 @@ pub mod batch;
 #[cfg(test)]
 mod batch_tests;
 mod batch_view;
-mod cell;
+pub(crate) mod cell;
 pub mod edit;
 #[cfg(test)]
 mod tests;
@@ -358,7 +358,7 @@ fn layer_name(doc: &kentos_domain::Document, id: &str) -> String {
 }
 
 /// The keyboard to the editor's field, its text chosen.
-fn focus_field() -> Task<Message> {
+pub(crate) fn focus_field() -> Task<Message> {
     let id = iced::widget::Id::new(cell::FIELD);
     Task::batch([
         iced::widget::operation::focus(id.clone()),

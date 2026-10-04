@@ -237,6 +237,8 @@ pub enum Message {
     BottomTab(crate::bottom::BottomTab),
     /// The Noktalar tab (points/, docs/adr/0153).
     Points(crate::points::Event),
+    /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
+    Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
     BottomResized(f32),
     /// The bottom panel's top edge double-clicked: its first height again.
@@ -444,6 +446,8 @@ pub struct App {
     pub(crate) properties_cache: crate::properties::PanelCache,
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
     pub(crate) points: crate::points::PointsPanel,
+    /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
+    pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
     pub(crate) label_spots: crate::labels::Spots,
     /// The last left press's object with no command running, and when (a double click edits a text).
@@ -695,6 +699,7 @@ impl App {
             props_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
             points: Default::default(),
+            vertices: Default::default(),
             label_spots: Default::default(),
             last_click: None,
             log: {
@@ -1011,6 +1016,7 @@ impl App {
             self.close_text_field(true);
             self.layers_keyboard = false;
             self.blocks_panel.keyboard = false;
+            self.vertices.keyboard = false;
         }
         match message {
             Message::Run(id) => return self.run(id),
@@ -1054,6 +1060,7 @@ impl App {
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Points(event) => return self.points_event(event),
+            Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
@@ -1073,6 +1080,7 @@ impl App {
                     self.field = None;
                     self.layers_keyboard = false;
                     self.blocks_panel.keyboard = false;
+                    self.vertices.keyboard = false;
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
