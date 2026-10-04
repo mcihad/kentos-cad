@@ -55,6 +55,28 @@ pub fn call_op(id: u32, args: &str) -> Result<String, JsError> {
     .map_err(|e| JsError::new(&e))
 }
 
+/// Reads an NTv2 grid and keeps it in the core under `id` (the file's
+/// SHA-256) for the coordinate transforms (docs/adr/0168 §4): what the grid
+/// says as JSON, or why the file is refused (`{"error": …}`).
+#[wasm_bindgen(js_name = crsLoadGrid)]
+pub fn crs_load_grid(id: &str, bytes: &[u8]) -> String {
+    use kentos_geometry_core::crs::ntv2;
+    match ntv2::read(bytes) {
+        Ok(grid) => {
+            let info = grid.info_json();
+            ntv2::register(id, grid);
+            info
+        }
+        Err(e) => format!("{{\"error\":\"{}\"}}", e.as_str()),
+    }
+}
+
+/// Lets the grid kept under `id` go.
+#[wasm_bindgen(js_name = crsForgetGrid)]
+pub fn crs_forget_grid(id: &str) {
+    kentos_geometry_core::crs::ntv2::forget(id);
+}
+
 /// One expression's values for a table of objects
 /// (`kentos_expression::rows` has the table's layout).
 #[wasm_bindgen]

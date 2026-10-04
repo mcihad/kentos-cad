@@ -5,6 +5,8 @@ import {
   bearingGrad as wasmBearingGrad,
   callOp,
   cornerTexts as wasmCornerTexts,
+  crsForgetGrid as wasmCrsForgetGrid,
+  crsLoadGrid as wasmCrsLoadGrid,
   dist as wasmDist,
   distToSegment as wasmDistToSegment,
   exprEvaluate as wasmExprEvaluate,
@@ -473,6 +475,19 @@ export function exprEvaluate(source: string, n: number, texts: string, textLens:
  * four numbers per corner in `corners` (x, y, outward x and y), its text in
  * `texts`, measured in the drawing typeface `font`; x, y per corner come back.
  */
+/**
+ * Reads an NTv2 grid into the core under `id` (the file's SHA-256) for the coordinate transforms (docs/adr/0168 §4);
+ * the core's JSON of what it says, or of why it is refused. `model/geom/crsGrid.ts` reads it.
+ */
+export function crsLoadGrid(id: string, bytes: Uint8Array): unknown {
+  return typed(() => readResult(wasmCrsLoadGrid(id, bytes)));
+}
+
+/** Lets the grid kept under `id` go. */
+export function crsForgetGrid(id: string): void {
+  typed(() => wasmCrsForgetGrid(id));
+}
+
 export function cornerTexts(corners: Float64Array, texts: readonly string[], height: number, font: string): Float64Array {
   return typed(() => wasmCornerTexts(corners, [...texts], height, font));
 }

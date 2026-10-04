@@ -102,6 +102,7 @@ export class SecondCrs {
       if (m.why === 'geographic') return `${name} coğrafi bir sistem: uzunluk ve alan onun düzleminde verilmez.`;
       if (m.why === 'mercator') return `${name}: uzunluk ve alan verilmez, Pseudo-Mercator'un ölçeği her enlemde başkadır.`;
       if (m.why === 'noLink') return `${name}: datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.`;
+      if (m.why === 'noGrid') return `${name}: datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.`;
       return `${name}: ölçülen yerin bir noktası bu sistemin ulaştığı yerin dışında; değer yazılmadı.`;
     }
     return closed ? `${name} düzleminde: Alan ${f.area(m.area)}   Çevre ${f.length(m.length)}` : `${name} düzleminde: Toplam uzunluk ${f.length(m.length)}`;

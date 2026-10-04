@@ -141,6 +141,9 @@ impl Second {
             Err(NoPlane::NoLink) => {
                 format!("{name}: datumlardan birinin WGS 84'e dönüşümü yok; değer yazılmadı.")
             }
+            Err(NoPlane::NoGrid) => {
+                format!("{name}: datum dönüşümünün ızgarası bu cihazda yok; değer yazılmadı.")
+            }
         }
     }
 

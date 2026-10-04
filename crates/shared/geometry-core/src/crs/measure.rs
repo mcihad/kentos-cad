@@ -46,6 +46,8 @@ pub enum NoPlane {
     /// A datum of the project's with no way to WGS 84 stands between the
     /// systems (docs/adr/0168 §2).
     NoLink,
+    /// The project's datum choice is a grid this process does not have (§4).
+    NoGrid,
 }
 
 impl NoPlane {
@@ -56,6 +58,7 @@ impl NoPlane {
             NoPlane::Mercator => "mercator",
             NoPlane::Unreachable => "unreachable",
             NoPlane::NoLink => "noLink",
+            NoPlane::NoGrid => "noGrid",
         }
     }
 }
@@ -184,8 +187,9 @@ pub fn plane_measures_in(
             .map(|p| transform_in(from, to, p, choices).map(|t| t.point))
             .collect::<Result<Vec<Vec2>, Unreached>>()
             .map_err(|why| match why {
-                Unreached::Outside => NoPlane::Unreachable,
+                Unreached::Outside | Unreached::OutsideGrid => NoPlane::Unreachable,
                 Unreached::NoLink => NoPlane::NoLink,
+                Unreached::NoGrid => NoPlane::NoGrid,
             })?;
         measures.length += length(&moved, closed);
         if closed {

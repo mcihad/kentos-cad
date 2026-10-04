@@ -1,0 +1,693 @@
+{
+ "format": "kentos.ntv2",
+ "version": 1,
+ "proj": "9.7.1",
+ "grids": [
+  {
+   "file": "tr.gsb",
+   "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+   "from": "ED50",
+   "to": "TUREF",
+   "fromAxes": [
+    6378388.0,
+    6356911.9461279465
+   ],
+   "toAxes": [
+    6378137.0,
+    6356752.314140356
+   ],
+   "subgrids": 1,
+   "extent": [
+    25.5,
+    35.5,
+    45.5,
+    42.5
+   ]
+  },
+  {
+   "file": "tr-be.gsb",
+   "id": "d7392ed18c90caa32cfcda67501e62b430a5cf492a017feb1a012fdc5aecd565",
+   "from": "ED50",
+   "to": "TUREF",
+   "fromAxes": [
+    6378388.0,
+    6356911.9461279465
+   ],
+   "toAxes": [
+    6378137.0,
+    6356752.314140356
+   ],
+   "subgrids": 1,
+   "extent": [
+    25.5,
+    35.5,
+    45.5,
+    42.5
+   ]
+  },
+  {
+   "file": "ic-ice.gsb",
+   "id": "23b9329aa057f60d866bcbfabbdd63a8f5e937c36af5b83765f60d40fa47c535",
+   "from": "ED50",
+   "to": "TUREF",
+   "fromAxes": [
+    6378388.0,
+    6356911.9461279465
+   ],
+   "toAxes": [
+    6378137.0,
+    6356752.314140356
+   ],
+   "subgrids": 4,
+   "extent": [
+    29.5,
+    36.5,
+    37.5,
+    41.5
+   ]
+  }
+ ],
+ "broken": [
+  {
+   "file": "kisa.gsb",
+   "error": "notNtv2"
+  },
+  {
+   "file": "ntv2-degil.gsb",
+   "error": "notNtv2"
+  },
+  {
+   "file": "dakika.gsb",
+   "error": "notSeconds"
+  },
+  {
+   "file": "alt-baslik.gsb",
+   "error": "header"
+  },
+  {
+   "file": "alt-yok.gsb",
+   "error": "header"
+  },
+  {
+   "file": "kapsam.gsb",
+   "error": "extent"
+  },
+  {
+   "file": "sayi.gsb",
+   "error": "count"
+  },
+  {
+   "file": "kesik.gsb",
+   "error": "truncated"
+  },
+  {
+   "file": "sayi-degil.gsb",
+   "error": "values"
+  }
+ ],
+ "shifts": [
+  {
+   "name": "Türkiye ızgarası, ileri",
+   "file": "tr.gsb",
+   "reverse": false,
+   "points": [
+    [
+     32.8597,
+     39.9334
+    ],
+    [
+     43.3729,
+     38.5012
+    ],
+    [
+     26.5623,
+     41.6818
+    ],
+    [
+     30.1,
+     35.499999
+    ],
+    [
+     25.0,
+     39.0
+    ]
+   ],
+   "expect": [
+    [
+     32.86057106447379,
+     39.934158818450015
+    ],
+    [
+     43.37386019582877,
+     38.50193615315556
+    ],
+    [
+     26.563120510255573,
+     41.6826107162488
+    ],
+    [
+     30.100861366332833,
+     35.50070689643447
+    ],
+    null
+   ]
+  },
+  {
+   "name": "Türkiye ızgarası, geri",
+   "file": "tr.gsb",
+   "reverse": true,
+   "points": [
+    [
+     32.8606,
+     39.9342
+    ],
+    [
+     45.4999,
+     40.0
+    ],
+    [
+     28.9784,
+     41.0082
+    ]
+   ],
+   "expect": [
+    [
+     32.859728935292125,
+     39.93344118107245
+    ],
+    [
+     45.49892361987439,
+     39.999235957177646
+    ],
+    [
+     28.97756060273981,
+     41.00741051614473
+    ]
+   ]
+  },
+  {
+   "name": "büyük uçlu kopyası, ileri",
+   "file": "tr-be.gsb",
+   "reverse": false,
+   "points": [
+    [
+     32.8597,
+     39.9334
+    ],
+    [
+     43.3729,
+     38.5012
+    ]
+   ],
+   "expect": [
+    [
+     32.86057106447379,
+     39.934158818450015
+    ],
+    [
+     43.37386019582877,
+     38.50193615315556
+    ]
+   ]
+  },
+  {
+   "name": "büyük uçlu kopyası, geri",
+   "file": "tr-be.gsb",
+   "reverse": true,
+   "points": [
+    [
+     32.8606,
+     39.9342
+    ]
+   ],
+   "expect": [
+    [
+     32.859728935292125,
+     39.93344118107245
+    ]
+   ]
+  },
+  {
+   "name": "iç içe: torun, çocuk, öbür çocuk, yalnız ata, dışarısı",
+   "file": "ic-ice.gsb",
+   "reverse": false,
+   "points": [
+    [
+     32.85,
+     39.9
+    ],
+    [
+     33.3,
+     40.3
+    ],
+    [
+     32.5,
+     38.0
+    ],
+    [
+     30.0,
+     37.0
+    ],
+    [
+     38.0,
+     39.0
+    ]
+   ],
+   "expect": [
+    [
+     32.85088209031238,
+     39.90077227158647
+    ],
+    [
+     33.30086645310412,
+     40.300768069633996
+    ],
+    [
+     32.50087633017507,
+     38.000722057904575
+    ],
+    [
+     30.00085327745285,
+     37.000729166674915
+    ],
+    null
+   ]
+  },
+  {
+   "name": "iç içe, geri: torunun kenarında, çocukta, atada",
+   "file": "ic-ice.gsb",
+   "reverse": true,
+   "points": [
+    [
+     33.0001,
+     39.9
+    ],
+    [
+     33.3,
+     40.3
+    ],
+    [
+     30.0,
+     37.0
+    ]
+   ],
+   "expect": [
+    [
+     32.99923610884955,
+     39.899236555891214
+    ],
+    [
+     33.299133554445255,
+     40.29923193839054
+    ],
+    [
+     29.999146726549423,
+     36.99927083962673
+    ]
+   ]
+  }
+ ],
+ "transforms": [
+  {
+   "name": "ED50 TM30'dan TUREF TM30'a, projenin ızgarasıyla",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ],
+    [
+     530000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      412421.55106319307,
+      4512353.796172785
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    },
+    {
+     "point": [
+      530071.1963179222,
+      4400010.199254641
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "TUREF TM36'dan ED50 TM36'ya, aynı ızgaranın tersi",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 36.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 36.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     486512.34,
+     4420187.52
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      486434.97920912114,
+      4420179.917673189
+     ],
+     "accuracy": 0.3,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "doğruluğu yazılmamış ızgara",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a"
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      412421.55106319307,
+      4512353.796172785
+     ],
+     "accuracy": null,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "ızgaranın dışında",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     50000.0,
+     4400000.0
+    ]
+   ],
+   "expect": [
+    {
+     "error": "outsideGrid"
+    }
+   ]
+  },
+  {
+   "name": "iç içe ızgarayla: torun, çocuk, öbür çocuk, ata",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "23b9329aa057f60d866bcbfabbdd63a8f5e937c36af5b83765f60d40fa47c535",
+      "accuracy": 0.1
+     }
+    }
+   ],
+   "points": [
+    [
+     487171.674,
+     4418512.048
+    ],
+    [
+     525506.869,
+     4462960.356
+    ],
+    [
+     456081.669,
+     4207685.773
+    ],
+    [
+     589016.89,
+     4097045.32
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      487247.831736562,
+      4418522.0553764
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    },
+    {
+     "point": [
+      525579.08936746,
+      4462969.010529472
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    },
+    {
+     "point": [
+      456161.03413474874,
+      4207695.72784744
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    },
+    {
+     "point": [
+      589091.0179839694,
+      4097058.626857777
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "iç içe ızgaranın tersi",
+   "from": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 33.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "23b9329aa057f60d866bcbfabbdd63a8f5e937c36af5b83765f60d40fa47c535",
+      "accuracy": 0.1
+     }
+    }
+   ],
+   "points": [
+    [
+     487172.253,
+     4418436.434
+    ],
+    [
+     525505.714,
+     4462883.474
+    ]
+   ],
+   "expect": [
+    {
+     "point": [
+      487096.0907789089,
+      4418426.425820453
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    },
+    {
+     "point": [
+      525433.4892714736,
+      4462874.818641111
+     ],
+     "accuracy": 0.1,
+     "via": "ED50 → TUREF: ızgara",
+     "unofficial": false
+    }
+   ]
+  },
+  {
+   "name": "ızgarası yüklenmemiş seçim",
+   "from": {
+    "kind": "tm",
+    "datum": "ED50",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "to": {
+    "kind": "tm",
+    "datum": "TUREF",
+    "centralMeridian": 30.0,
+    "scaleFactor": 1.0,
+    "falseEasting": 500000.0,
+    "falseNorthing": 0.0
+   },
+   "choices": [
+    {
+     "from": "ED50",
+     "to": "TUREF",
+     "name": "ED50 → TUREF: ızgara",
+     "grid": {
+      "id": "0000000000000000000000000000000000000000000000000000000000000000",
+      "accuracy": 0.3
+     }
+    }
+   ],
+   "points": [
+    [
+     412345.678,
+     4512345.678
+    ]
+   ],
+   "expect": [
+    {
+     "error": "noGrid"
+    }
+   ]
+  }
+ ]
+}

@@ -13,11 +13,12 @@
 
 mod datum;
 pub mod measure;
+pub mod ntv2;
 mod plane;
 pub mod text;
 pub mod wkt;
 
-pub use datum::{Choice, Convention, CustomDatum, Datum, Ellipsoid, Helmert, Method, NoLink};
+pub use datum::{Choice, Convention, CustomDatum, Datum, Ellipsoid, Helmert, Method};
 pub use plane::Plane;
 
 use crate::api::Op;
@@ -191,6 +192,10 @@ pub enum Unreached {
     Outside,
     /// A datum of the project's with no way to WGS 84 stands between them.
     NoLink,
+    /// The project's datum choice is a grid this process does not have.
+    NoGrid,
+    /// The point is outside the project's grid.
+    OutsideGrid,
 }
 
 impl Unreached {
@@ -199,6 +204,8 @@ impl Unreached {
         match self {
             Unreached::Outside => "outside",
             Unreached::NoLink => "noLink",
+            Unreached::NoGrid => "noGrid",
+            Unreached::OutsideGrid => "outsideGrid",
         }
     }
 }
@@ -212,9 +219,14 @@ pub fn transform_in(
     choices: &[Choice],
 ) -> Result<Transformed, Unreached> {
     let (a, b) = (from.datum(), to.datum());
-    let way = datum::path(&a, &b, choices).map_err(|NoLink| Unreached::NoLink)?;
+    let way = datum::path(&a, &b, choices).map_err(|gap| match gap {
+        datum::Gap::NoLink => Unreached::NoLink,
+        datum::Gap::NoGrid => Unreached::NoGrid,
+    })?;
     let (lat, lon) = from.unproject(p).ok_or(Unreached::Outside)?;
-    let (lat, lon) = way.run(a.ellipsoid(), lat, lon);
+    let (lat, lon) = way
+        .run(a.ellipsoid(), lat, lon)
+        .ok_or(Unreached::OutsideGrid)?;
     Ok(Transformed {
         point: to.project(lat, lon).ok_or(Unreached::Outside)?,
         accuracy: way.accuracy,

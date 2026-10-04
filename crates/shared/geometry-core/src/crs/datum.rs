@@ -10,6 +10,9 @@
 //! `scripts/fixtures/crs_transform_cases.py` and
 //! `scripts/fixtures/crs_custom_cases.py` (PROJ).
 
+use std::sync::Arc;
+
+use super::ntv2::{self, Grid};
 use crate::api::json::{FromJson, Json, ToJson, read_field};
 use crate::jsmath::{PI, js_floor};
 
@@ -237,11 +240,21 @@ impl ToJson for Datum {
 }
 
 /// How the project shifts between two of the registry's datums instead of
-/// EPSG's way (docs/adr/0168 §3).
+/// EPSG's way (docs/adr/0168 §3): seven parameters, or an NTv2 grid kept
+/// under `id` (`ntv2::register`) with the accuracy the project gives it.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Method {
     Helmert(Helmert),
+    Grid { id: String, accuracy: Option<f64> },
 }
+
+/// A grid choice's JSON: `{"id": …, "accuracy": …}`.
+struct GridRef {
+    id: String,
+    accuracy: Option<f64>,
+}
+
+crate::json_struct!(GridRef { id, accuracy });
 
 /// The project's choice for a pair of the registry's datums: from which to
 /// which, its name (what values rest on) and its method. The pair's other
@@ -261,9 +274,18 @@ impl FromJson for Choice {
         if from.registry_name().is_none() || to.registry_name().is_none() || from.same(&to) {
             return Err("datum seçimi kayıttaki iki ayrı datum arasında olur".into());
         }
-        let method = match v.get("helmert") {
-            Json::Null => return Err("datum seçiminin yöntemi yok".into()),
-            h => Method::Helmert(Helmert::from_json(h).map_err(|e| format!("“helmert”: {e}"))?),
+        let method = match (v.get("helmert"), v.get("grid")) {
+            (Json::Null, Json::Null) => return Err("datum seçiminin yöntemi yok".into()),
+            (Json::Null, g) => {
+                let g = GridRef::from_json(g).map_err(|e| format!("“grid”: {e}"))?;
+                Method::Grid {
+                    id: g.id,
+                    accuracy: g.accuracy,
+                }
+            }
+            (h, _) => {
+                Method::Helmert(Helmert::from_json(h).map_err(|e| format!("“helmert”: {e}"))?)
+            }
         };
         Ok(Choice {
             from,
@@ -284,23 +306,38 @@ impl ToJson for Choice {
         field(out, &mut first, "name", &self.name);
         match &self.method {
             Method::Helmert(h) => field(out, &mut first, "helmert", h),
+            Method::Grid { id, accuracy } => field(
+                out,
+                &mut first,
+                "grid",
+                &GridRef {
+                    id: id.clone(),
+                    accuracy: *accuracy,
+                },
+            ),
         }
         out.push('}');
     }
 }
 
-/// A datum of the project's with no way to WGS 84 stands between the two:
-/// the point has no value in the other (docs/adr/0168 §2).
+/// Why there is no way between two datums: a datum of the project's with
+/// no way to WGS 84 stands between them (docs/adr/0168 §2), or the
+/// project's choice is a grid this process does not have (§4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct NoLink;
+pub enum Gap {
+    NoLink,
+    NoGrid,
+}
 
 /// One step of a shift.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum Step {
     /// A Helmert transformation on Earth-centred coordinates, forward or reversed.
     Helmert(Helmert, bool),
     /// TUREF to WGS 84 (1), EPSG:5261: latitude and longitude stay.
     Null,
+    /// An NTv2 grid on latitude and longitude, forward or reversed.
+    Grid(Arc<Grid>, bool),
 }
 
 /// The way from one datum to another: each step with the ellipsoid of the
@@ -334,15 +371,15 @@ impl Path {
     }
 
     /// A latitude and longitude (degrees) of the datum whose ellipsoid is
-    /// `from`, on the last step's datum.
-    pub fn run(&self, from: (f64, f64), lat: f64, lon: f64) -> (f64, f64) {
+    /// `from`, on the last step's datum; none where a grid does not reach.
+    pub fn run(&self, from: (f64, f64), lat: f64, lon: f64) -> Option<(f64, f64)> {
         enum State {
             Geographic(f64, f64, f64),
             Centred([f64; 3]),
         }
         let mut ellipsoid = from;
         let mut state = State::Geographic(lat, lon, 0.0);
-        for &(step, lands) in &self.steps {
+        for (step, lands) in &self.steps {
             state = match (step, state) {
                 (Step::Helmert(h, reverse), s) => {
                     let x = match s {
@@ -351,23 +388,33 @@ impl Path {
                         }
                         State::Centred(x) => x,
                     };
-                    State::Centred(if reverse { h.reverse(x) } else { h.forward(x) })
+                    State::Centred(if *reverse { h.reverse(x) } else { h.forward(x) })
                 }
                 (Step::Null, State::Centred(x)) => {
                     let (lat, lon, height) = from_geocentric(ellipsoid, x);
                     State::Geographic(lat, lon, height)
                 }
                 (Step::Null, s) => s,
+                (Step::Grid(grid, reverse), s) => {
+                    let (lat, lon, height) = match s {
+                        State::Geographic(lat, lon, height) => (lat, lon, height),
+                        State::Centred(x) => from_geocentric(ellipsoid, x),
+                    };
+                    // PROJ's grids work in radians.
+                    let (lam, phi) =
+                        grid.apply(lon * (PI / 180.0), lat * (PI / 180.0), *reverse)?;
+                    State::Geographic(phi * (180.0 / PI), lam * (180.0 / PI), height)
+                }
             };
-            ellipsoid = lands;
+            ellipsoid = *lands;
         }
-        match state {
+        Some(match state {
             State::Geographic(lat, lon, _) => (lat, lon),
             State::Centred(x) => {
                 let (lat, lon, _) = from_geocentric(ellipsoid, x);
                 (lat, lon)
             }
-        }
+        })
     }
 }
 
@@ -385,7 +432,7 @@ fn helmert_path(h: Helmert, reverse: bool, lands: (f64, f64), via: &str, unoffic
 
 /// Between two of the registry's datums: the project's choice for the pair,
 /// else EPSG's way (docs/adr/0167 §3).
-fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Path {
+fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> {
     let lands = b.ellipsoid();
     for c in choices {
         let reverse = if c.from.same(a) && c.to.same(b) {
@@ -395,10 +442,20 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Path {
         } else {
             continue;
         };
-        let Method::Helmert(h) = c.method;
-        return helmert_path(h, reverse, lands, &c.name, false);
+        return Ok(match &c.method {
+            Method::Helmert(h) => helmert_path(*h, reverse, lands, &c.name, false),
+            Method::Grid { id, accuracy } => Path {
+                steps: vec![(
+                    Step::Grid(ntv2::get(id).ok_or(Gap::NoGrid)?, reverse),
+                    lands,
+                )],
+                accuracy: *accuracy,
+                via: vec![c.name.clone()],
+                unofficial: false,
+            },
+        });
     }
-    match (a, b) {
+    Ok(match (a, b) {
         (Datum::Turef, Datum::Wgs84) | (Datum::Wgs84, Datum::Turef) => Path {
             steps: vec![(Step::Null, lands)],
             accuracy: Some(1.0),
@@ -427,13 +484,13 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Path {
             unofficial: true,
         },
         _ => Path::same(),
-    }
+    })
 }
 
 /// The way from datum `a` to datum `b`: none within a datum; the registry's
 /// ways and the project's choices between the registry's datums; through
 /// WGS 84 for a datum of the project's.
-pub(crate) fn path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, NoLink> {
+pub(crate) fn path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> {
     if a.same(b) {
         return Ok(Path::same());
     }
@@ -443,13 +500,13 @@ pub(crate) fn path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, NoL
     };
     let (ca, cb) = (custom(a), custom(b));
     if ca.is_none() && cb.is_none() {
-        return Ok(rounded(registry_path(a, b, choices)));
+        return Ok(rounded(registry_path(a, b, choices)?));
     }
     let mut way = Path::same();
     // From a datum of the project's to WGS 84.
     let hub = match &ca {
         Some(d) => {
-            let h = d.to_wgs84.ok_or(NoLink)?;
+            let h = d.to_wgs84.ok_or(Gap::NoLink)?;
             way = way.then(helmert_path(h, false, WGS84, &d.name, false));
             Datum::Wgs84
         }
@@ -457,15 +514,15 @@ pub(crate) fn path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, NoL
     };
     match &cb {
         Some(d) => {
-            let h = d.to_wgs84.ok_or(NoLink)?;
+            let h = d.to_wgs84.ok_or(Gap::NoLink)?;
             if !hub.same(&Datum::Wgs84) {
-                way = way.then(registry_path(&hub, &Datum::Wgs84, choices));
+                way = way.then(registry_path(&hub, &Datum::Wgs84, choices)?);
             }
             way = way.then(helmert_path(h, true, b.ellipsoid(), &d.name, false));
         }
         None => {
             if !hub.same(b) {
-                way = way.then(registry_path(&hub, b, choices));
+                way = way.then(registry_path(&hub, b, choices)?);
             }
         }
     }
@@ -572,7 +629,7 @@ mod tests {
             },
             to_wgs84: None,
         }));
-        assert_eq!(path(&lone, &Datum::Turef, &[]).err(), Some(NoLink));
+        assert_eq!(path(&lone, &Datum::Turef, &[]).err(), Some(Gap::NoLink));
         assert!(path(&lone, &lone.clone(), &[]).is_ok());
     }
 

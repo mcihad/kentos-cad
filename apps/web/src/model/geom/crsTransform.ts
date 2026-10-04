@@ -60,14 +60,16 @@ export type System =
   | { readonly kind: 'mercator' }
   | { readonly kind: 'local'; readonly base: System; readonly plane: Plane };
 
-/** The project's choice for a pair of the registry's datums instead of EPSG's way (docs/adr/0168 §3). */
-export interface DatumChoice {
+/**
+ * The project's choice for a pair of the registry's datums instead of EPSG's way (docs/adr/0168 §3): seven parameters,
+ * or an NTv2 grid loaded under `id` (its SHA-256, `crsLoadGrid`) with the accuracy the project gives it.
+ */
+export type DatumChoice = {
   readonly from: RegistryDatum;
   readonly to: RegistryDatum;
   /** What the values rest on: “ED50 → TUREF: Bölge 7”. */
   readonly name: string;
-  readonly helmert: Helmert;
-}
+} & ({ readonly helmert: Helmert } | { readonly grid: { readonly id: string; readonly accuracy?: number } });
 
 /** The core's system for a registry entry (the desktop's `transform_system`); null for the local one. */
 export function systemOf(crs: CrsDef): System | null {
@@ -97,8 +99,11 @@ export interface Transformed {
   readonly unofficial: boolean;
 }
 
-/** Why a point has no value in another system: a projection cannot take or give it, or a datum with no way to WGS 84 stands between. */
-export type Unreached = 'outside' | 'noLink';
+/**
+ * Why a point has no value in another system: a projection cannot take or give it, a datum with no way to WGS 84 stands
+ * between, the project's grid is not loaded here, or the point is outside it.
+ */
+export type Unreached = 'outside' | 'noLink' | 'noGrid' | 'outsideGrid';
 
 /** `p` of `from` in `to` (x east or longitude, y north or latitude); null where a projection cannot take or give it. */
 export const crsTransform = op<(from: System, to: System, p: Vec2) => Transformed | null>('crsTransform');
@@ -117,7 +122,7 @@ export interface PlaneRing {
 /** What a path (its length) or an area (its perimeter and net area) measures in a plane, or why there is none (docs/adr/0167 §2). */
 export type PlaneMeasures =
   | { readonly length: number; readonly area: number }
-  | { readonly why: 'geographic' | 'mercator' | 'unreachable' | 'noLink' };
+  | { readonly why: 'geographic' | 'mercator' | 'unreachable' | 'noLink' | 'noGrid' };
 
 /**
  * A path (`closed` false: the first ring) or an area's rings (the first the outer, the others its holes), given in
