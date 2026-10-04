@@ -33,6 +33,8 @@ export interface SettingsShellOptions<D extends object> {
   initial: D;
   defaults: D;
   section?: string;
+  /** Whether Kaydet waits: a field to put right (Datum dönüşümleri's, docs/adr/0168 §3). */
+  blocked?(): boolean;
   onSave(draft: D, initial: D): void;
 }
 
@@ -71,6 +73,7 @@ export class SettingsShell<D extends object> implements DraftApi<D> {
     reset.addEventListener('click', () => this.resetSection());
     cancel.addEventListener('click', () => this.dialog.close());
     this.saveBtn.addEventListener('click', () => {
+      if (opts.blocked?.()) return;
       opts.onSave(this.draft, this.initial);
       this.dialog.close();
     });
@@ -88,13 +91,18 @@ export class SettingsShell<D extends object> implements DraftApi<D> {
 
   set<K extends keyof D>(key: K, value: D[K], rerender = true): void {
     this.draft = { ...this.draft, [key]: value };
-    this.saveBtn.disabled = JSON.stringify(this.draft) === JSON.stringify(this.initial);
+    this.refreshSave();
     if (rerender) this.renderContent();
+  }
+
+  /** Kaydet: on when the draft changed and nothing is to put right. */
+  private refreshSave(): void {
+    this.saveBtn.disabled = JSON.stringify(this.draft) === JSON.stringify(this.initial) || !!this.opts.blocked?.();
   }
 
   private resetSection(): void {
     for (const k of this.section.keys) this.draft = { ...this.draft, [k]: this.opts.defaults[k] };
-    this.saveBtn.disabled = JSON.stringify(this.draft) === JSON.stringify(this.initial);
+    this.refreshSave();
     this.renderContent();
   }
 

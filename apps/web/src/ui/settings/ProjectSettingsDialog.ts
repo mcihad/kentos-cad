@@ -12,6 +12,9 @@ import { PLOT_SCALES } from '../ribbon/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
 import { askRemove } from '../widgets/confirm';
 import { gridLine } from '../../app/gridLibrary';
+import type { Convention } from '../../contracts/generated/Convention';
+import type { DatumTransform } from '../../contracts/generated/DatumTransform';
+import { buildChoice, datumName, epsgText, formOf, PAIRS, PARAMETERS, type ChoiceForm, type GridRef, type Method, type Parameter, type Problems } from '../../model/choiceForm';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { effectiveWorkspace } from '../../app/workspaces';
@@ -30,6 +33,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
   const doc = ctx.doc;
   const crsState = { query: '' };
   const initial: ProjectDraft = { ...doc.settings.toJSON(), name: doc.name.value };
+  // Datum dönüşümleri's forms as typed, and what is wrong in each (docs/adr/0168 §3).
+  const choiceState: ChoiceState = { forms: PAIRS.map((p) => formOf(p, initial.datumTransforms ?? [])), problems: PAIRS.map(() => ({})) };
 
   const sections: SectionDef<ProjectDraft>[] = [
     {
@@ -98,6 +103,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
             onChange: (srid, rerender) => api.set('srid', srid, rerender),
           }),
           secondGroup(api),
+          datumGroup(ctx, api, choiceState),
           gridsGroup(ctx, api),
           group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${crsTitle(def)}. Uygulama ayarlarından değiştirilir.` : null, openApp)),
         ];
@@ -121,6 +127,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
     initial,
     defaults: { ...PROJECT_SETTINGS_DEFAULTS, drawingUnit: 'm', srid: initial.srid, name: initial.name },
     section,
+    // A datum choice with something to put right keeps Kaydet waiting.
+    blocked: () => choiceState.problems.some((p) => Object.keys(p).length > 0),
     onSave: (draft, init) => {
       const name = draft.name.trim() || init.name;
       if (name !== init.name) doc.name.set(name);
@@ -133,6 +141,7 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
         drawingUnit: settings.srid === LOCAL_SRID && !settings.customCrs ? (settings.drawingUnit ?? 'm') : 'm',
         secondSrid: settings.secondSrid ?? null,
         secondCustomCrs: settings.secondCustomCrs ?? null,
+        datumTransforms: settings.datumTransforms ?? [],
       });
       if (draft.srid !== init.srid) {
         const c = crsBySrid(draft.srid)!;
@@ -185,6 +194,133 @@ function secondGroup(api: DraftApi<ProjectDraft>): Child {
   });
   pick.set(shown !== null ? secondTitle(shown) : defined ? definitionTitle(defined) : 'Yok');
   return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, pick.el));
+}
+
+/** Datum dönüşümleri's forms as typed, and what is wrong in each. */
+interface ChoiceState {
+  readonly forms: ChoiceForm[];
+  readonly problems: Problems[];
+}
+
+/** The seven parameters' captions. */
+const CAPTIONS: Record<Parameter, string> = { tx: 'ΔX (m)', ty: 'ΔY (m)', tz: 'ΔZ (m)', rx: 'rX (″)', ry: 'rY (″)', rz: 'rZ (″)', ds: 'Ölçek farkı (ppm)' };
+
+/**
+ * Datum dönüşümleri (docs/adr/0168 §3, §6): for each of the registry's three datum pairs, EPSG's way, the project's
+ * seven parameters or an NTv2 grid of the device's library. What is typed is checked field by field (model/choiceForm.ts,
+ * the shared cases'); while a form has something to put right, Kaydet waits (the desktop's `project/choices.rs`).
+ */
+function datumGroup(ctx: AppContext, api: DraftApi<ProjectDraft>, state: ChoiceState): Child {
+  // The grids a choice may name: the device's library, and the ones the project's choices name that it does not have.
+  const grids = (): GridRef[] => {
+    const out: GridRef[] = ctx.grids.entries.value.map((e) => ({ id: e.id, file: e.file, size: e.size }));
+    for (const t of api.initial.datumTransforms ?? []) if (t.grid && !out.some((g) => g.id === t.grid!.id)) out.push({ id: t.grid.id, file: t.grid.file, size: t.grid.size });
+    return out;
+  };
+  const problemNodes: { pair: number; key: keyof Problems; el: HTMLElement }[] = [];
+  const banner = note('warn', 'Datum dönüşümlerinde düzeltilecek alan var; düzeltilene dek Kaydet kapalı.');
+  const paintProblems = () => {
+    for (const p of problemNodes) p.el.textContent = state.problems[p.pair]![p.key] ?? '';
+    banner.hidden = !state.problems.some((x) => Object.keys(x).length > 0);
+  };
+  // The draft's choices built again from the forms that build; a text typed keeps its field (no new page).
+  const rebuild = (rerender: boolean) => {
+    const list: DatumTransform[] = [];
+    PAIRS.forEach((pair, i) => {
+      const got = buildChoice(pair, state.forms[i]!, grids());
+      if ('problems' in got) state.problems[i] = got.problems;
+      else {
+        state.problems[i] = {};
+        if (got.choice) list.push(got.choice);
+      }
+    });
+    api.set('datumTransforms', list, rerender);
+    if (!rerender) paintProblems();
+  };
+  const field = (i: number, key: keyof Problems, caption: string, value: string, onChange: (v: string) => void, size: 'wide' | 'number' | 'scale' = 'number') => {
+    const pairName = `${datumName(PAIRS[i]![0])} ↔ ${datumName(PAIRS[i]![1])}`;
+    const input = textField({ label: `${pairName} ${caption}`, value, onChange: (v) => (onChange(v), rebuild(false)) });
+    input.classList.add('datum-field__input');
+    const problem = h('div', { class: 'datum-field__problem' });
+    problemNodes.push({ pair: i, key, el: problem });
+    return h('label', { class: `datum-field datum-field--${size}` }, h('span', { class: 'datum-field__caption' }, caption), input, problem);
+  };
+  const pairs = PAIRS.map((pair, i) => {
+    const form = state.forms[i]!;
+    const pairName = `${datumName(pair[0])} ↔ ${datumName(pair[1])}`;
+    const ways = segmented<Method>({
+      label: `${pairName} yöntemi`,
+      value: form.method,
+      options: [
+        { value: 'epsg', label: 'EPSG' },
+        { value: 'helmert', label: '7 parametre' },
+        { value: 'grid', label: 'NTv2 ızgarası' },
+      ],
+      onChange: (m) => {
+        // A new choice starts named by its direction, for the user to finish.
+        if (form.method === 'epsg' && m !== 'epsg' && !form.name.trim()) {
+          const [from, to] = form.reversed ? [pair[1], pair[0]] : pair;
+          form.name = `${datumName(from)} → ${datumName(to)}: `;
+        }
+        form.method = m;
+        rebuild(true);
+      },
+    });
+    const head = h('div', { class: 'datum-pair__head' }, h('span', { class: 'datum-pair__name' }, pairName), ways);
+    if (form.method === 'epsg') return h('div', { class: 'datum-pair' }, head, h('p', { class: 'sgroup__note' }, `EPSG'nin yolu: ${epsgText(pair)}`));
+    const way = (reversed: boolean) => (reversed ? `${datumName(pair[1])} → ${datumName(pair[0])}` : `${datumName(pair[0])} → ${datumName(pair[1])}`);
+    const direction = segmented<'a' | 'b'>({
+      label: `${pairName} yönü`,
+      value: form.reversed ? 'b' : 'a',
+      options: [
+        { value: 'a', label: way(false) },
+        { value: 'b', label: way(true) },
+      ],
+      onChange: (v) => ((form.reversed = v === 'b'), rebuild(true)),
+    });
+    const top = h(
+      'div',
+      { class: 'datum-fields' },
+      field(i, 'name', 'Ad', form.name, (v) => (form.name = v), 'wide'),
+      h('div', { class: 'datum-field' }, h('span', { class: 'datum-field__caption' }, 'Yön'), direction),
+    );
+    const accuracy = field(i, 'accuracy', 'Doğruluk (m)', form.accuracy, (v) => (form.accuracy = v));
+    if (form.method === 'helmert') {
+      // The translations on a row, the rotations and the scale difference under them (the desktop's rows).
+      const parameter = (k: Parameter) => field(i, k, CAPTIONS[k], form.parameters[k], (v) => (form.parameters[k] = v), k === 'ds' ? 'scale' : 'number');
+      const parameters = [h('div', { class: 'datum-fields' }, PARAMETERS.slice(0, 3).map(parameter)), h('div', { class: 'datum-fields' }, PARAMETERS.slice(3).map(parameter))];
+      const rule = segmented<Convention>({
+        label: `${pairName} dönüklüklerin kuralı`,
+        value: form.convention,
+        options: [
+          { value: 'positionVector', label: 'Konum vektörü (9606)' },
+          { value: 'coordinateFrame', label: 'Koordinat çerçevesi (9607)' },
+        ],
+        onChange: (c) => ((form.convention = c), rebuild(true)),
+      });
+      const bottom = h('div', { class: 'datum-fields' }, h('div', { class: 'datum-field' }, h('span', { class: 'datum-field__caption' }, 'Dönüklüklerin kuralı'), rule), accuracy);
+      return h('div', { class: 'datum-pair' }, head, top, parameters, bottom);
+    }
+    const list = grids();
+    const chosen = list.find((g) => g.id === form.grid);
+    const pick = new Dropdown({
+      ariaLabel: `${pairName} ızgarası`,
+      width: 300,
+      items: (): MenuItem[] => list.map((g) => ({ label: g.file, hint: g.id.slice(0, 12), radio: true, checked: g.id === form.grid, run: () => ((form.grid = g.id), rebuild(true)) })),
+    });
+    pick.set(chosen ? chosen.file : 'Izgara seçin…');
+    const gridProblem = h('div', { class: 'datum-field__problem' });
+    problemNodes.push({ pair: i, key: 'grid', el: gridProblem });
+    const bottom = h('div', { class: 'datum-fields' }, h('div', { class: 'datum-field datum-field--wide' }, h('span', { class: 'datum-field__caption' }, 'Izgara'), pick.el, gridProblem), accuracy);
+    return h('div', { class: 'datum-pair' }, head, top, bottom);
+  });
+  paintProblems();
+  return group(
+    'Datum dönüşümleri',
+    h('p', { class: 'sgroup__note' }, "Kayıttaki datumlar arasında EPSG'nin yolu yerine projenin seçimi: yedi parametre ya da bu cihazdaki bir NTv2 ızgarası. Seçim yalnız kendi çiftini değiştirir; ters yönü aynı dönüşümün tersidir."),
+    banner,
+    pairs,
+  );
 }
 
 /**

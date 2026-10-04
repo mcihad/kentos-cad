@@ -999,3 +999,56 @@
   color: var(--c-text-3);
   font-size: var(--fs-2xs);
 }
+
+/* Datum dönüşümleri (docs/adr/0168 §3, §6): a pair's way, then the fields of the one chosen. */
+.datum-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.datum-pair__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.datum-pair__name {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+}
+.datum-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: flex-start;
+}
+.datum-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.datum-field--wide {
+  width: 300px;
+}
+.datum-field--number {
+  width: 110px;
+}
+.datum-field--scale {
+  width: 140px;
+}
+.datum-field__caption {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.datum-field__input {
+  width: 100%;
+}
+.datum-field__problem {
+  color: var(--c-danger);
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+}
+.datum-field__problem:empty {
+  display: none;
+}

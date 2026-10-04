@@ -124,6 +124,8 @@ pub struct State {
     query: String,
     /// The grid whose Kaldır asks in its row (Izgaralar).
     removing: Option<String>,
+    /// Datum dönüşümleri's forms as typed (docs/adr/0168 §3).
+    choices: super::choices::Choices,
 }
 
 #[derive(Debug, Clone)]
@@ -148,6 +150,8 @@ pub enum Event {
     SecondDefined,
     /// Kaldır on a grid's row: asked in the row; none: Vazgeç.
     GridAsk(Option<String>),
+    /// Datum dönüşümleri: a pair's form changed.
+    Choice(usize, super::choices::Edit),
     /// Izgaralar's library (grids.rs).
     Grid(crate::grids::Event),
     /// The shown section's own values back to their defaults (the web's
@@ -172,6 +176,7 @@ impl State {
             initial: doc.settings().clone(),
             query: String::new(),
             removing: None,
+            choices: super::choices::Choices::of(&doc.settings().datum_transforms),
         }
     }
 }
@@ -188,6 +193,8 @@ impl App {
             self.dialog_under = Some(crate::app::Dialog::Project);
             return Task::none();
         }
+        // The grids a datum choice may name, before the window is borrowed.
+        let grids = self.choice_grids();
         let Some(Window::Settings(s)) = &mut self.project else {
             return Task::none();
         };
@@ -219,6 +226,7 @@ impl App {
             }
             Event::SecondDefined => {}
             Event::GridAsk(id) => s.removing = id,
+            Event::Choice(i, edit) => s.choices.edit(i, edit, &grids, &mut d.datum_transforms),
             Event::Grid(_) => {}
             Event::LengthDecimals(n) => d.length_decimals = n.min(4),
             Event::AreaDecimals(n) => d.area_decimals = n.min(4),
@@ -238,6 +246,10 @@ impl App {
         let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
             return;
         };
+        // A datum choice with something to put right is not saved (its button waits too).
+        if s.choices.blocked() {
+            return;
+        }
         let name = s.name.trim();
         let name = if name.is_empty() {
             s.initial_name.clone()
@@ -355,7 +367,11 @@ impl App {
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),
                 ))
-                .action(words::primary("Kaydet", Some(event(Event::Save))))
+                // A datum choice with something to put right keeps it waiting (choices.rs).
+                .action(words::primary(
+                    "Kaydet",
+                    (!s.choices.blocked()).then(|| event(Event::Save)),
+                ))
                 .width(900.0)
                 .max_height(760.0),
         )
@@ -452,6 +468,9 @@ impl App {
                 |q| event(Event::Search(q)),
             ),
             second_group(s),
+            super::choices::view(&s.choices, self.choice_grids(), |i, e| {
+                event(Event::Choice(i, e))
+            }),
             self.grids_group(s),
             group(
                 "Yeni projeler",

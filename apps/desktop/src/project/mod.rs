@@ -8,6 +8,7 @@
 //! transformation of the coordinates (CLAUDE.md §5).
 
 mod ask_type;
+mod choices;
 mod content;
 pub(crate) mod settings;
 mod wizard;
@@ -258,6 +259,52 @@ mod tests {
 
     fn send(app: &mut App, event: Event) {
         let _ = app.update(Message::Project(Box::new(event)));
+    }
+
+    /// Datum dönüşümleri (docs/adr/0168 §3): seven parameters chosen for
+    /// ED50–TUREF, named by their direction at once; Kaydet waits while the
+    /// translations are not typed, then the project takes the choice, and
+    /// the second system's values rest on it.
+    #[test]
+    fn a_datum_choice_is_typed_checked_and_saved() {
+        use super::choices::Edit;
+        use kentos_project::choice_form::Method;
+
+        let mut app = app_with_drawing();
+        let _ = app.update(Message::Run("crs.set"));
+        let choice =
+            |app: &mut App, edit: Edit| send(app, Event::Settings(Settings::Choice(0, edit)));
+        choice(&mut app, Edit::Method(Method::Helmert));
+        send(&mut app, Event::Settings(Settings::Save));
+        let doc = app.document.as_ref().expect("a drawing");
+        assert!(doc.settings().datum_transforms.is_empty());
+        assert!(
+            app.project.is_some(),
+            "the window stays while the choice is not whole"
+        );
+        choice(&mut app, Edit::Name("ED50 → TUREF: Bölge 7".to_owned()));
+        for (k, v) in ["-84.1", "-101.8", "-129.7", "0", "0", "0.468", "1.05"]
+            .into_iter()
+            .enumerate()
+        {
+            choice(&mut app, Edit::Parameter(k, v.to_owned()));
+        }
+        choice(&mut app, Edit::Accuracy("0,3".to_owned()));
+        send(&mut app, Event::Settings(Settings::Second(Some(2322))));
+        send(&mut app, Event::Settings(Settings::Save));
+        assert!(app.project.is_none());
+        let settings = app.document.as_ref().expect("a drawing").settings().clone();
+        assert_eq!(settings.datum_transforms.len(), 1);
+        let c = &settings.datum_transforms[0];
+        assert_eq!(
+            (c.name.as_str(), c.helmert.as_ref().and_then(|h| h.accuracy)),
+            ("ED50 → TUREF: Bölge 7", Some(0.3))
+        );
+        let second = kentos_interaction::second::Second::of(&settings).expect("ED50 TM36");
+        let t = second
+            .point(kentos_interaction::Vec2::new(486_512.34, 4_420_187.52))
+            .expect("in the zone");
+        assert_eq!(second.accuracy(&t), "±0.3 m, ED50 → TUREF: Bölge 7");
     }
 
     /// Yeni proje's note about the drawing on screen: the web's cases

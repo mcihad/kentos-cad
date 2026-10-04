@@ -28,7 +28,8 @@
 // Proje ayarları' field); convert (Koordinat dönüştür: a point to the second system and to WGS 84, the systems, a list);
 // customcrs (docs/adr/0168: a second system the project defines, its menu; a project whose system is its own
 // definition, its second system by the project's datum choice, Koordinat oku); grids (Proje ayarları' Izgaralar: a
-// grid added, one a datum choice names that the device does not have, Kaldır's question).
+// grid added, one a datum choice names that the device does not have, Kaldır's question); datums (Proje ayarları' Datum
+// dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3624,6 +3625,42 @@ SCENES.grids = [
     id: 'grids-remove',
     open: async (ui) => (await gridsOpen(ui), await ui.clickText('.grid-library .btn', 'Kaldır'), await ui.sleep(300)),
     close: gridsClose,
+  },
+];
+
+/**
+ * Proje ayarları' Datum dönüşümleri (docs/adr/0168 §3, §6): ED50–TUREF by seven parameters with ΔZ still to type
+ * (Kaydet waits), ED50–WGS 84 by the test grid of the device's library, TUREF–WGS 84 EPSG's way. The desktop's are
+ * `project::choices::tests::screens` (datum-donusumleri-*).
+ */
+const byLabel = (label, text) =>
+  `(() => { const el = document.querySelector(${JSON.stringify(`[aria-label="${label}"]`)}); el.value = ${JSON.stringify(text)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`;
+const clickIn = (group, option) =>
+  `[...document.querySelectorAll(${JSON.stringify(`[aria-label="${group}"] .seg__opt`)})].find((b) => b.textContent === ${JSON.stringify(option)})?.click()`;
+SCENES.datums = [
+  {
+    id: 'datum-choices',
+    open: async (ui) => {
+      await ui.eval(`(async () => { await window.kentos.grids.add('tr.gsb', Uint8Array.from(atob('${TR_GSB.toString('base64')}'), (c) => c.charCodeAt(0))); })()`);
+      await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'crs'))`);
+      await ui.waitFor(`!!document.querySelector('.settings__content')`);
+      await ui.eval(clickIn('ED50 ↔ TUREF yöntemi', '7 parametre'));
+      await ui.sleep(200);
+      await ui.eval(byLabel('ED50 ↔ TUREF Ad', 'ED50 → TUREF: Bölge 7'));
+      for (const [caption, v] of [['ΔX (m)', '-158.785'], ['ΔY (m)', '-109.965'], ['rX (″)', '1.4275'], ['rY (″)', '-3.0873'], ['rZ (″)', '0.5505'], ['Ölçek farkı (ppm)', '-5.1814'], ['Doğruluk (m)', '0.3']])
+        await ui.eval(byLabel(`ED50 ↔ TUREF ${caption}`, v));
+      await ui.eval(clickIn('ED50 ↔ TUREF dönüklüklerin kuralı', 'Koordinat çerçevesi (9607)'));
+      await ui.sleep(200);
+      await ui.eval(clickIn('ED50 ↔ WGS 84 yöntemi', 'NTv2 ızgarası'));
+      await ui.sleep(200);
+      await ui.clickSel('[aria-label="ED50 ↔ WGS 84 ızgarası"]');
+      await ui.clickText('.menu__item', 'tr.gsb');
+      await ui.sleep(200);
+      await ui.eval(byLabel('ED50 ↔ WGS 84 Doğruluk (m)', '0.5'));
+      await ui.eval(`[...document.querySelectorAll('.sgroup__title')].find((e) => e.textContent === 'Datum dönüşümleri')?.scrollIntoView({ block: 'start' })`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.grids.remove('${TR_ID}')`)),
   },
 ];
 

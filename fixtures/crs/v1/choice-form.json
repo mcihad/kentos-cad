@@ -1,0 +1,314 @@
+{
+ "format": "kentos.crs-choice-form",
+ "version": 1,
+ "texts": {
+  "name": "Adını yazın: değerlerin yanında dayanağı olarak görünür.",
+  "number": "Sayı yazın, ör. -84.1.",
+  "accuracy": "0 ya da büyük bir sayı yazın; bilinmiyorsa boş bırakın.",
+  "grid": "Bir ızgara seçin; listede yoksa Izgaralar'dan ekleyin."
+ },
+ "epsg": [
+  {
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "text": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil"
+  },
+  {
+   "pair": [
+    "ED50",
+    "WGS84"
+   ],
+   "text": "±2 m, EPSG:1784; resmî dönüşüm değil"
+  },
+  {
+   "pair": [
+    "TUREF",
+    "WGS84"
+   ],
+   "text": "±1 m, EPSG:5261"
+  }
+ ],
+ "library": [
+  {
+   "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+   "file": "tr.gsb",
+   "size": 37952
+  }
+ ],
+ "cases": [
+  {
+   "name": "EPSG'nin yolu: seçim yok",
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "form": {
+    "method": "epsg",
+    "reversed": false,
+    "name": "",
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "grid": "",
+    "accuracy": ""
+   },
+   "choice": null
+  },
+  {
+   "name": "yedi parametre, virgüllü sayı ve boşluklar",
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "form": {
+    "method": "helmert",
+    "reversed": false,
+    "name": " ED50 → TUREF: Bölge 7 ",
+    "parameters": {
+     "tx": "-158.785",
+     "ty": "-109,965",
+     "tz": " -50.768 ",
+     "rx": "1.4275",
+     "ry": "-3.0873",
+     "rz": "0.5505",
+     "ds": "-5.1814"
+    },
+    "convention": "coordinateFrame",
+    "grid": "",
+    "accuracy": "0.3"
+   },
+   "choice": {
+    "from": "ED50",
+    "to": "TUREF",
+    "name": "ED50 → TUREF: Bölge 7",
+    "helmert": {
+     "translation": [
+      -158.785,
+      -109.965,
+      -50.768
+     ],
+     "rotation": [
+      1.4275,
+      -3.0873,
+      0.5505
+     ],
+     "scale": -5.1814,
+     "convention": "coordinateFrame",
+     "accuracy": 0.3
+    }
+   }
+  },
+  {
+   "name": "üç parametre: dönüklük ve ölçek boş",
+   "pair": [
+    "ED50",
+    "WGS84"
+   ],
+   "form": {
+    "method": "helmert",
+    "reversed": false,
+    "name": "ED50 → WGS 84: saha",
+    "parameters": {
+     "tx": "-87",
+     "ty": "-98",
+     "tz": "-121",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "grid": "",
+    "accuracy": ""
+   },
+   "choice": {
+    "from": "ED50",
+    "to": "WGS84",
+    "name": "ED50 → WGS 84: saha",
+    "helmert": {
+     "translation": [
+      -87.0,
+      -98.0,
+      -121.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": 0.0,
+     "convention": "positionVector"
+    }
+   }
+  },
+  {
+   "name": "ters yönde, doğruluğu yazılmamış",
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "form": {
+    "method": "helmert",
+    "reversed": true,
+    "name": "TUREF → ED50: ters",
+    "parameters": {
+     "tx": "-158.785",
+     "ty": "-109,965",
+     "tz": " -50.768 ",
+     "rx": "1.4275",
+     "ry": "-3.0873",
+     "rz": "0.5505",
+     "ds": "-5.1814"
+    },
+    "convention": "coordinateFrame",
+    "grid": "",
+    "accuracy": ""
+   },
+   "choice": {
+    "from": "TUREF",
+    "to": "ED50",
+    "name": "TUREF → ED50: ters",
+    "helmert": {
+     "translation": [
+      -158.785,
+      -109.965,
+      -50.768
+     ],
+     "rotation": [
+      1.4275,
+      -3.0873,
+      0.5505
+     ],
+     "scale": -5.1814,
+     "convention": "coordinateFrame"
+    }
+   }
+  },
+  {
+   "name": "adsız ve okunmayan öteleme",
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "form": {
+    "method": "helmert",
+    "reversed": false,
+    "name": "  ",
+    "parameters": {
+     "tx": "-158.785",
+     "ty": "yüz",
+     "tz": " -50.768 ",
+     "rx": "1.4275",
+     "ry": "-3.0873",
+     "rz": "0.5505",
+     "ds": "-5.1814"
+    },
+    "convention": "positionVector",
+    "grid": "",
+    "accuracy": ""
+   },
+   "problems": {
+    "name": "Adını yazın: değerlerin yanında dayanağı olarak görünür.",
+    "ty": "Sayı yazın, ör. -84.1."
+   }
+  },
+  {
+   "name": "eksi doğruluk",
+   "pair": [
+    "ED50",
+    "TUREF"
+   ],
+   "form": {
+    "method": "helmert",
+    "reversed": false,
+    "name": "Bölge",
+    "parameters": {
+     "tx": "-158.785",
+     "ty": "-109,965",
+     "tz": " -50.768 ",
+     "rx": "1.4275",
+     "ry": "-3.0873",
+     "rz": "0.5505",
+     "ds": "-5.1814"
+    },
+    "convention": "positionVector",
+    "grid": "",
+    "accuracy": "-1"
+   },
+   "problems": {
+    "accuracy": "0 ya da büyük bir sayı yazın; bilinmiyorsa boş bırakın."
+   }
+  },
+  {
+   "name": "kitaplıktaki ızgara, doğruluğuyla",
+   "pair": [
+    "TUREF",
+    "WGS84"
+   ],
+   "form": {
+    "method": "grid",
+    "reversed": false,
+    "name": "TUREF → WGS 84: ızgara",
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "grid": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+    "accuracy": "0,05"
+   },
+   "choice": {
+    "from": "TUREF",
+    "to": "WGS84",
+    "name": "TUREF → WGS 84: ızgara",
+    "grid": {
+     "id": "b328bc7d133b48ffdacab572e7ccad7510e49fd7a78eb1194f81912711659b4a",
+     "file": "tr.gsb",
+     "size": 37952,
+     "accuracy": 0.05
+    }
+   }
+  },
+  {
+   "name": "ızgara seçilmemiş",
+   "pair": [
+    "ED50",
+    "WGS84"
+   ],
+   "form": {
+    "method": "grid",
+    "reversed": false,
+    "name": "ED50 → WGS 84: ızgara",
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "grid": "",
+    "accuracy": ""
+   },
+   "problems": {
+    "grid": "Bir ızgara seçin; listede yoksa Izgaralar'dan ekleyin."
+   }
+  }
+ ]
+}
