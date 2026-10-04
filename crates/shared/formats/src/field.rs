@@ -1,5 +1,5 @@
 //! Field books (docs/adr/0169 §1–§2, §6): an instrument's own file ([`gsi`],
-//! told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
+//! [`sdr`], told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
 //! columns the user maps (istasyon, alet yüksekliği, nokta, yatay açı,
 //! başucu açısı, eğik uzunluk, prizma yüksekliği, kod), read into stations
 //! and observations as the instrument wrote them; every line that is not
@@ -12,6 +12,7 @@ use kentos_contracts::{FieldBookRead, FieldCsvOptions, FieldObservation, FieldSt
 use crate::text;
 
 pub mod gsi;
+pub mod sdr;
 
 /// What is said of a line not read; `{line}`, `{what}`, `{text}` and `{target}` are filled in.
 pub const ROW: &str = "Satır {line}: {what} “{text}” sayı değil; satır okunmadı.";
@@ -76,33 +77,54 @@ fn number(text: &str, comma: bool) -> Option<f64> {
 /// A field book's format by its content (`scripts/fixtures/field_sniff_cases.py`):
 /// `gsi` when its first line that is not blank begins, without a leading
 /// `*`, with a GSI word (two ASCII digits, four digits or dots, then `+` or
-/// `-`, eight characters at least); none for a text book.
+/// `-`, eight characters at least); `sdr` when one of its first five lines
+/// that are neither blank nor a transmission's frame (STX, ETX) is a Sokkia
+/// SDR header (`00`, two capital letters, `SDR`; records before it are said
+/// by the reader); none for a text book.
 pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
     let (enc, bom) = text::sniff(bytes);
     let body = text::decode(&bytes[bom..], enc);
-    let first = body
+    let mut lines = body
         .split(['\n', '\r'])
         .map(str::trim)
-        .find(|l| !l.is_empty())?;
+        .filter(|l| !l.is_empty());
+    let first = lines.next()?;
     let word = first
         .strip_prefix('*')
         .unwrap_or(first)
         .split_whitespace()
-        .next()?;
+        .next()
+        .unwrap_or_default();
     let c: Vec<char> = word.chars().take(8).collect();
     let gsi = c.len() == 8
         && c[..2].iter().all(char::is_ascii_digit)
         && c[2..6].iter().all(|c| c.is_ascii_digit() || *c == '.')
         && matches!(c[6], '+' | '-');
-    gsi.then_some("gsi")
+    if gsi {
+        return Some("gsi");
+    }
+    let sdr = std::iter::once(first)
+        .chain(lines)
+        .filter(|l| !l.starts_with(['\u{2}', '\u{3}']))
+        .take(5)
+        .any(|l| {
+            let h: Vec<char> = l.chars().take(7).collect();
+            h.len() == 7
+                && h[..2] == ['0', '0']
+                && h[2..4].iter().all(char::is_ascii_uppercase)
+                && h[4..] == ['S', 'D', 'R']
+        });
+    sdr.then_some("sdr")
 }
 
-/// Reads a field book: Leica GSI by its content; otherwise a text book with
-/// the user's column mapping, or without one only its first line's cells
-/// (the columns to map).
+/// Reads a field book: an instrument's file by its content (Leica GSI,
+/// Sokkia SDR); otherwise a text book with the user's column mapping, or
+/// without one only its first line's cells (the columns to map).
 pub fn read(bytes: &[u8], csv: Option<&FieldCsvOptions>) -> FieldBookRead {
-    if sniff(bytes) == Some("gsi") {
-        return gsi::read(bytes);
+    match sniff(bytes) {
+        Some("gsi") => return gsi::read(bytes),
+        Some("sdr") => return sdr::read(bytes),
+        _ => {}
     }
     match csv {
         Some(opts) => read_csv(bytes, opts),

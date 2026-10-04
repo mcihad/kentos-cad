@@ -1,7 +1,8 @@
 //! How a field book's format is told by its content (docs/adr/0169 §1, §6)
 //! against fixtures/field/v1/sniff.json (scripts/fixtures/field_sniff_cases.py,
-//! from the rules alone): Leica GSI by its first line's first word, anything
-//! else a text book; the one entry reads each as its format. The web runs
+//! from the rules alone): Leica GSI by its first line's first word, Sokkia
+//! SDR by its header, anything else a text book; the one entry reads each as
+//! its format. The web runs
 //! the same file through WASM (`apps/web/src/io/formats.wasm.test.ts`).
 
 use kentos_formats::field::{read, sniff};

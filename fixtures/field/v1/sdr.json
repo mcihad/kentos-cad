@@ -1,0 +1,278 @@
+{
+  "format": "kentos.field-sdr",
+  "version": 1,
+  "source": "scripts/fixtures/field_sdr_cases.py (docs/adr/0169 §1; Interfacing with the SOKKIA SDR Electronic Field Book, 1999)",
+  "texts": {
+    "before": "Satır {line}: SDR başlık kaydından (00) önce; başlığa kadar kayıtlar okunmadı.",
+    "angleUnit": "Satır {line}: SDR işinin açı birimi ({unit}) okunmuyor; yalnız derece ve gon; iş okunmadı.",
+    "distanceUnit": "Satır {line}: SDR işinin uzunluk birimi ({unit}) okunmuyor; yalnız metre; iş okunmadı.",
+    "direction": "Satır {line}: SDR işinin açı yönü seçeneği ({option}) okunmuyor; yalnız 1 (sağa); iş okunmadı.",
+    "mixed": "Satır {line}: SDR işinin açı birimi karnenin birimiyle aynı değil; iş okunmadı.",
+    "value": "Satır {line}: “{data}” sayı değil; satır okunmadı.",
+    "turn": "Satır {line}: açı “{data}” sıfırla bir tam dönüş arasında değil; satır okunmadı.",
+    "negative": "Satır {line}: eğik uzunluk “{data}” sıfırdan küçük; satır okunmadı.",
+    "target": "Satır {line}: gözlemin hedef noktası yok; satır okunmadı.",
+    "horizontal": "Satır {line}: {target} gözleminin yatay açısı yok; satır okunmadı.",
+    "zenith": "Satır {line}: işte alet kaydı (01) yok; düşey açılar başucu açısı sayıldı.",
+    "corrected": "Satır {line}: düzeltilmiş gözlemler (09MC, {count} kayıt) okunmadı; ham gözlemler (F1, F2) okunur.",
+    "coordinates": "Satır {line}: koordinat kayıtları (08, {count} kayıt) karne gözlemi değil; okunmadı."
+  },
+  "cases": [
+    {
+      "name": "SDR33: 14 karakterlik adlar, gon, iki durum, kod, prizma yüksekliği",
+      "text": "\u0002\r\n00NMSDR33 V04-04.02 000004-Oct-26 10:00 211111\r\n10NMKARNE           121111\r\n01NM:SET             000000SET             000000310.00000000      0.00000000      0.00000000      \r\n02TPST1             4521800.0000    412350.0000     105.2000        1.5520          IST             \r\n07TPST1             P2              12.34560000     0.00120000      \r\n03NM1.70000000      \r\n09F1ST1             P2                                              0.00120000      BS              \r\n09F1ST1             101             63.2140         101.23450000    87.43210000     BINA            \r\n09F2ST1             101             63.2160         298.76710000    287.43370000    BINA            \r\n03NM2.00000000      \r\n09MDST1             102             82.4410         100.44000000    120.55500000    \r\n09MCST1             101             63.2150         101.23370000    112.33333333    \r\n08TP101             4521850.1       412410.2        104.1           BINA            \r\n02TPST2             4521742.2080    412410.5120     104.8750        1.4800          \r\n09F1ST2             ST1             83.3920         100.33400000    0.00000000      \r\n\u000309436\r\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "ST1",
+            "instrumentHeight": 1.552,
+            "east": 412350.0,
+            "north": 4521800.0,
+            "height": 105.2,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 0.0012,
+                "targetHeight": 1.7,
+                "code": "BS",
+                "line": 8
+              },
+              {
+                "target": "101",
+                "hz": 87.4321,
+                "zenith": 101.2345,
+                "slope": 63.214,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 9
+              },
+              {
+                "target": "101",
+                "hz": 287.4337,
+                "zenith": 298.7671,
+                "slope": 63.216,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 10
+              },
+              {
+                "target": "102",
+                "hz": 120.555,
+                "zenith": 100.44,
+                "slope": 82.441,
+                "targetHeight": 2.0,
+                "line": 12
+              }
+            ]
+          },
+          {
+            "station": "ST2",
+            "instrumentHeight": 1.48,
+            "east": 412410.512,
+            "north": 4521742.208,
+            "height": 104.875,
+            "observations": [
+              {
+                "target": "ST1",
+                "hz": 0.0,
+                "zenith": 100.334,
+                "slope": 83.392,
+                "targetHeight": 2.0,
+                "line": 16
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 13,
+            "problem": "Satır 13: düzeltilmiş gözlemler (09MC, 1 kayıt) okunmadı; ham gözlemler (F1, F2) okunur."
+          },
+          {
+            "line": 14,
+            "problem": "Satır 14: koordinat kayıtları (08, 1 kayıt) karne gözlemi değil; okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "SDR2x: 4 haneli numaralar, bitişik alanlar, derece, ufuktan düşey açı, koordinat ve MC kayıtları",
+      "text": "00NMSDR20 V03-05    000004-Oct-26 10:00 113111\n10NM20261004\n01NM:                000000                000000320.000000000.000000000.00000000\n02TP00010.000000000.00000000100.0000001.59500000\n03NM1.47400000\n09F10001999928.95000005.27500000121.855555\n09F1000110011234.56781355.9888881.00000000BAUM\n09F2000110011234.56791184.011111181.000000\n08TP100029.1755686-4.00952570.00963371FIT-TEST\n08TP10024.594338146.41467510-0.4376595FIT-TEST2\n09MC000110011234.5678694.01111101.00000000\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "0001",
+            "instrumentHeight": 1.595,
+            "east": 0.0,
+            "north": 0.0,
+            "height": 100.0,
+            "observations": [
+              {
+                "target": "9999",
+                "hz": 121.855555,
+                "zenith": 84.725,
+                "slope": 28.95,
+                "targetHeight": 1.474,
+                "line": 6
+              },
+              {
+                "target": "1001",
+                "hz": 1.0,
+                "zenith": 94.011112,
+                "slope": 1234.56781,
+                "targetHeight": 1.474,
+                "code": "BAUM",
+                "line": 7
+              },
+              {
+                "target": "1001",
+                "hz": 181.0,
+                "zenith": 265.988889,
+                "slope": 1234.56791,
+                "targetHeight": 1.474,
+                "line": 8
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 9,
+            "problem": "Satır 9: koordinat kayıtları (08, 2 kayıt) karne gözlemi değil; okunmadı."
+          },
+          {
+            "line": 11,
+            "problem": "Satır 11: düzeltilmiş gözlemler (09MC, 1 kayıt) okunmadı; ham gözlemler (F1, F2) okunur."
+          }
+        ]
+      }
+    },
+    {
+      "name": "alet kaydı yok, başlıktan önce kayıtlar, istasyonsuz gözlemler",
+      "text": "09F1000110011234.56789.0000000.000000\n13NMBEFORE THE HEADER\n00NMSDR20 V03-05    000004-Oct-26 10:00 211111\n09F10007000810.0000000100.000000200.000000\n09F10007000910.0000000101.000000201.000000\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "0007",
+            "observations": [
+              {
+                "target": "0008",
+                "hz": 200.0,
+                "zenith": 100.0,
+                "slope": 10.0,
+                "line": 4
+              },
+              {
+                "target": "0009",
+                "hz": 201.0,
+                "zenith": 101.0,
+                "slope": 10.0,
+                "line": 5
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: SDR başlık kaydından (00) önce; başlığa kadar kayıtlar okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: işte alet kaydı (01) yok; düşey açılar başucu açısı sayıldı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "okunmayan işler (mil, ayak, açı yönü, başka birim) ve okunmayan değerler",
+      "text": "00NMSDR33 V04-04.02 000004-Oct-26 10:00 311111\n09F1S1              P1              10.0            90.0            10.0            \n00NMSDR33 V04-04.02 000004-Oct-26 10:00 121111\n00NMSDR33 V04-04.02 000004-Oct-26 10:00 111112\n00NMSDR33 V04-04.02 000004-Oct-26 10:00 111111\n01NM:SET             000000SET             00000031\n09F1S1              P1              10.0            90.0            10.0            \n00NMSDR33 V04-04.02 000004-Oct-26 10:00 211111\n09F1S1              P2              10.0            90.0            10.0            \n00NMSDR33 V04-04.02 000004-Oct-26 10:00 111111\n01NM:SET             000000SET             00000031\n09F1S1              P3              12a             90.0            10.0            \n09F1S1              P4              10.0            360.0           10.0            \n09F1S1              P5              -1.0            90.0            10.0            \n09F1S1                              10.0            90.0            10.0            \n09F1S1              P7              10.0            90.0                            \n09F1S1              P8              10.0            90.0            .5              \n09F1S1              P9              10              90.             +1.0            \n09F1S1              P10             10              90              359.99999999    \n02TPS2              1e3             2.0             3.0             1.5             \n09F1S1              P11             5.0             \n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "S1",
+            "observations": [
+              {
+                "target": "P1",
+                "hz": 10.0,
+                "zenith": 90.0,
+                "slope": 10.0,
+                "line": 7
+              }
+            ]
+          },
+          {
+            "station": "S1",
+            "observations": [
+              {
+                "target": "P10",
+                "hz": 359.99999999,
+                "zenith": 90.0,
+                "slope": 10.0,
+                "line": 19
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: SDR işinin açı birimi (3) okunmuyor; yalnız derece ve gon; iş okunmadı."
+          },
+          {
+            "line": 3,
+            "problem": "Satır 3: SDR işinin uzunluk birimi (2) okunmuyor; yalnız metre; iş okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: SDR işinin açı yönü seçeneği (2) okunmuyor; yalnız 1 (sağa); iş okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: SDR işinin açı birimi karnenin birimiyle aynı değil; iş okunmadı."
+          },
+          {
+            "line": 12,
+            "problem": "Satır 12: “12a” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 13,
+            "problem": "Satır 13: açı “360.0” sıfırla bir tam dönüş arasında değil; satır okunmadı."
+          },
+          {
+            "line": 14,
+            "problem": "Satır 14: eğik uzunluk “-1.0” sıfırdan küçük; satır okunmadı."
+          },
+          {
+            "line": 15,
+            "problem": "Satır 15: gözlemin hedef noktası yok; satır okunmadı."
+          },
+          {
+            "line": 16,
+            "problem": "Satır 16: P7 gözleminin yatay açısı yok; satır okunmadı."
+          },
+          {
+            "line": 17,
+            "problem": "Satır 17: “.5” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 18,
+            "problem": "Satır 18: “+1.0” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 20,
+            "problem": "Satır 20: “1e3” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 21,
+            "problem": "Satır 21: P11 gözleminin yatay açısı yok; satır okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -15,9 +15,17 @@ import { copyReport, Grid, readNumber, resolvePoint, summary, summaryLine, type 
 import { openPolarWith } from './PolarDialog';
 import { openTraverseWith } from './TraverseDialog';
 
+/** What the window asks for before a book is open. */
+const OPEN_HINT = 'Alet dosyasını (Leica GSI, Sokkia SDR) ya da sütunları eşlenecek bir CSV/TXT karneyi açın.';
+
+/** A book's format as the window names it (the desktop's `format_name`). */
+function formatName(format: string): string {
+  return format === 'gsi' ? 'Leica GSI' : format === 'sdr' ? 'Sokkia SDR' : 'Metin karne';
+}
+
 /**
  * Karne editörü (docs/adr/0169 §2–§3, §6; the desktop's `calc/fieldbook/`): a field book opened from an instrument's
- * file (Leica GSI, told by its content) or a text book whose columns are mapped here; its stations, their observations as
+ * file (Leica GSI, Sokkia SDR, told by its content) or a text book whose columns are mapped here; its stations, their observations as
  * the file has them, which may be left out (Kullan) and renamed; the station shown reduced as the shared core reduces it
  * (`fieldReduce`) with the project's k and tolerances: the faces paired and their differences, the horizontal distances
  * and the height differences, a difference above its tolerance in the warning colour. What is opened stays while the app
@@ -159,7 +167,7 @@ class FieldBookDialog {
   }
 
   private renderFile(): void {
-    const input = h('input', { type: 'file', accept: '.gsi,.GSI,.txt,.TXT,.csv,.CSV,.dat,.DAT', hidden: true }) as HTMLInputElement;
+    const input = h('input', { type: 'file', accept: '.gsi,.GSI,.sdr,.SDR,.txt,.TXT,.csv,.CSV,.dat,.DAT', hidden: true }) as HTMLInputElement;
     input.addEventListener('change', () => {
       const f = input.files?.[0];
       if (f) void this.open(f);
@@ -168,13 +176,13 @@ class FieldBookDialog {
     open.addEventListener('click', () => input.click());
     const book = state.book;
     const meta = book
-      ? `${book.format === 'gsi' ? 'Leica GSI' : 'Metin karne'} · ${this.unit() === 'grad' ? 'gon' : 'derece'} · ${book.stations.length} istasyon, ${book.stations.reduce((n, s) => n + s.observations.length, 0)} gözlem · ${book.encoding}`
+      ? `${formatName(book.format)} · ${this.unit() === 'grad' ? 'gon' : 'derece'} · ${book.stations.length} istasyon, ${book.stations.reduce((n, s) => n + s.observations.length, 0)} gözlem · ${book.encoding}`
       : '';
     replaceChildren(
       this.fileBox,
       open,
       input,
-      state.file && book ? fileLine(state.file, meta) : h('span', { class: 'io-field__hint' }, 'Leica GSI dosyasını ya da sütunları eşlenecek bir CSV/TXT karneyi açın.'),
+      state.file && book ? fileLine(state.file, meta) : h('span', { class: 'io-field__hint' }, OPEN_HINT),
       state.error ? h('p', { class: 'note note--warn' }, state.error) : null,
     );
   }

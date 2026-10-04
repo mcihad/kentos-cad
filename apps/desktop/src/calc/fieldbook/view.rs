@@ -88,11 +88,7 @@ impl Form {
         .style(style::button::secondary);
         let what = match (&self.file, &self.book) {
             (Some(file), Some(book)) => {
-                let kind = if book.format == "gsi" {
-                    "Leica GSI"
-                } else {
-                    "Metin karne"
-                };
+                let kind = super::format_name(&book.format);
                 let n: usize = book.stations.iter().map(|s| s.observations.len()).sum();
                 let unit = match unit {
                     AngleUnit::Grad => "gon",
@@ -104,9 +100,7 @@ impl Form {
                     book.encoding
                 )
             }
-            _ => {
-                "Leica GSI dosyasını ya da sütunları eşlenecek bir CSV/TXT karneyi açın.".to_owned()
-            }
+            _ => super::OPEN_HINT.to_owned(),
         };
         let mut body = Column::new()
             .spacing(14)

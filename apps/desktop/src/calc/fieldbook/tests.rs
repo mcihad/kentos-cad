@@ -10,7 +10,14 @@ use crate::calc::grid::Table;
 use crate::calc::{Event as CalcEvent, Window};
 
 fn sample() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/field/v1/sample.gsi")
+    sample_named("sample.gsi")
+}
+
+/// A sample book of fixtures/field/v1 (scripts/fixtures/field_samples.py).
+fn sample_named(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/field/v1")
+        .join(name)
 }
 
 fn send(app: &mut App, e: Event) {
@@ -82,6 +89,42 @@ fn a_gsi_book_is_read_reduced_and_edited() {
     assert_eq!(r.rows.len(), 5);
 }
 
+/// The same book from another instrument (docs/adr/0169 §1, step 5): the
+/// Sokkia SDR33 sample is told by its content, named so, and reduces into
+/// the GSI sample's rows, station by station.
+#[test]
+fn an_sdr_book_reduces_as_the_gsi_book() {
+    let mut app = opened();
+    let rows = |app: &App| {
+        let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+        r.rows
+            .iter()
+            .map(|x| {
+                (
+                    x.target.clone(),
+                    x.faces,
+                    x.hz,
+                    x.zenith,
+                    x.horizontal,
+                    x.dh,
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    let gsi = [rows(&app), {
+        send(&mut app, Event::Station(1));
+        rows(&app)
+    }];
+    send(&mut app, Event::Picked(Some(sample_named("sample.sdr"))));
+    let book = app.calc.fieldbook.book.as_ref().expect("read");
+    assert_eq!((book.format.as_str(), book.stations.len()), ("sdr", 2));
+    assert_eq!(super::format_name(&book.format), "Sokkia SDR");
+    send(&mut app, Event::Station(0));
+    assert_eq!(rows(&app), gsi[0]);
+    send(&mut app, Event::Station(1));
+    assert_eq!(rows(&app), gsi[1]);
+}
+
 /// A text book is read only to its first line until its point and
 /// horizontal reading are mapped; the mapping is remembered.
 #[test]
@@ -130,7 +173,8 @@ fn with_traverse_tolerances(app: &mut App) {
 }
 
 /// Karne editörü's pictures: the sample book in the light theme at
-/// 1440×900 and the dark at 1100×650, a text book's mapping, Kutupsal alım
+/// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33
+/// file, a text book's mapping, Kutupsal alım
 /// filled from the first station, the traverse's leg above its two-way
 /// tolerance and Poligon hesabı filled from both stations.
 #[test]
@@ -150,7 +194,7 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "csv", "polar", "kenar", "poligon"] {
+        for name in ["gsi", "sdr", "csv", "polar", "kenar", "poligon"] {
             let mut app = opened();
             let _ = app
                 .settings
@@ -169,6 +213,9 @@ fn screens() {
             if name == "csv" {
                 app.calc.fieldbook.mapping = super::Mapping::default();
                 send(&mut app, Event::Picked(Some(csv.clone())));
+            }
+            if name == "sdr" {
+                send(&mut app, Event::Picked(Some(sample_named("sample.sdr"))));
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

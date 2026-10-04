@@ -98,7 +98,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    seçimi, Alet yüksekliği, dosyadaki koordinatlar; Gözlemler tablosu (Kullan, Nokta düzeltilir; Durum, Yatay açı, Başucu açısı, Eğik
    uzunluk, Prizma, Kod, Satır), İndirgenmiş tablo (farklar cc ya da ″ ve mm ile; toleransı aşan kırmızı), özet (okunmayan satırlar,
    durum olmayan gözlemler, toleranslar ve aşımlar, k), Raporu kopyala. Resimler ve akış testleri `fixtures/field/v1/sample.gsi` ile
-   (`field_sample_gsi.py`'nin elle yazılmış GSI-16 karnesi).
+   (`field_sample_gsi.py`'nin elle yazılmış GSI-16 karnesi; 5. adımda `field_samples.py`, her biçimde aynı karne).
 
    *(4 Ekim: 3c tamam; 3. adım bitti.)* Kutupsal alım'a aktarma: çekirdekte `survey::fieldbook::polar_transfer` (web'e `fieldPolar`):
    seçilen indirgenmiş satır geri bakıştır (hedefi ve okuması yöneltme), eğik uzunluğu ve başucu açısı olan her öbür satır bir
@@ -134,7 +134,23 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    aşan kenarın Fark'ı uyarı rengindedir, altta toleranslar ve “n kenarda iki yönden fark toleransı aşıldı.”; Poligon hesabı'nda
    kapanma satırlarının altında toleransla karşılaştırma (aşıyor uyarı, içinde bilgi), raporun kapanma satırları Tolerans, değeri ve
    aşıyor ya da içinde ile biter; tolerans verilmediyse “Hata sınırı verilmedi (Proje ayarları › Ölçme) …”. Aktarma toleransla durmaz.
-5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.
+5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW. Dört parçada (5a SDR, 5b GTS-7, 5c JobXML, 5d Nikon RAW), her biri
+   üreticinin belgesinden yazılmış bağımsız başvurusuyla; örnek karne tek gözlem tablosundan her biçimde yazılır (`field_samples.py`),
+   her biçimin örneği GSI örneğiyle aynı karneyi verir (testleri değer değer).
+
+   *(4 Ekim: 5a tamam.)* Sokkia SDR: kaynak “Interfacing with the SOKKIA SDR Electronic Field Book” (yazılım 04-04.xx, Sokkia
+   Technology, Ekim 1999), bölüm 3'ün kayıt düzenleri (3.6.1 SDR2x, 3.6.2 SDR33). Çekirdekte `formats::field::sdr` (web'e
+   `readFieldBook`, biçim `sdr`; `FORMATS_VERSION` 22): satırlar sabit alanlıdır (sondaki boşluklar kesilmiş olabilir), başlığın sürümü
+   “SDR33” ile başlıyorsa 16 karakterlik alanlar, değilse SDR2x'in 4 haneli numaraları ve 10 karakterlik sayıları; işin birimleri
+   başlıkta (açı 1 derece, 2 gon; uzunluk 1 metre; açı yönü 1): mil, ayak, başka yön ve karnenin biriminden başka birimli iş söylenir,
+   okunmaz. Sayılar belgenin biçimiyle (isteğe bağlı eksi, rakam, nokta ve rakam), ondalığın en yakın float64'ü; açı sıfırla tam dönüş
+   arasında; eğik uzunluk eksi olamaz. İstasyon (02) koordinatları ve alet yüksekliğiyle, prizma yüksekliği (03) iş boyunca sürer, ham
+   gözlemler 09 F1, F2 ve MD; alet kaydının (01) düşey açı seçeneği 2 ise başucu = çeyrek tur − okuma (tam sayılarla, tek yuvarlama);
+   alet kaydı yoksa düşey açılar başucu sayılır ve bir kez söylenir. Düzeltilmiş gözlemler (09MC) ve koordinat kayıtları (08) ham gözlem
+   değildir: ilk satırlarında sayılarıyla bir kez söylenir. STX ve ETX çerçeve satırları atlanır. İçerikten tanıma: ilk dolu satırı GSI
+   sözcüğü değilse, çerçeve olmayan ilk beş satırdan biri SDR başlığıysa (`00`, iki büyük harf, `SDR`). Bağımsız başvuru
+   `field_sdr_cases.py` (`sdr.json`, 4 durum) ve 3000 rastgele karnede Rust ile birebir; tanıma `field_sniff_cases.py`'de. Karne
+   editörü biçimi “Sokkia SDR” diye adlandırır, dosya süzgecinde `.sdr`; resimler `karne-sdr-*`, `fieldbook-sdr-*`.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 

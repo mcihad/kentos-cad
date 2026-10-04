@@ -52,7 +52,8 @@ use crate::layer::LineType;
 /// 19: the field book (docs/adr/0169): `readFieldCsv`, `FieldCsvOptions` → `FieldBookRead`.
 /// 20: Leica GSI (`readFieldGsi`); the book's angle unit, a station's coordinates.
 /// 21: one entry for field books (`readFieldBook`), the book's format.
-pub const FORMATS_VERSION: u32 = 21;
+/// 22: Sokkia SDR2x and SDR33 field books (`readFieldBook`, format `sdr`).
+pub const FORMATS_VERSION: u32 = 22;
 
 // ── Every import ────────────────────────────────────────────────────────
 
