@@ -256,7 +256,14 @@ fn polar_points_come_with_their_heights() {
     assert_eq!(points.len(), 1);
     assert_eq!(points[0].name, "K1");
     assert!((points[0].p.x - 10.0).abs() < 1e-9 && points[0].p.y.abs() < 1e-9);
-    assert!(points[0].z.is_some_and(|z| (z - 100.0).abs() < 1e-9));
+    // Level at 10 m: the height has the earth's curvature and refraction with
+    // the project's k, (1 − k)·D²/2R (docs/adr/0169 §3).
+    let curvature = (1.0 - 0.13) * 10.0 * 10.0 / (2.0 * 6_371_000.0);
+    assert!(
+        points[0]
+            .z
+            .is_some_and(|z| (z - 100.0 - curvature).abs() < 1e-9)
+    );
     calc(&mut app, Event::AddPoints);
     assert_eq!(
         last_said(&app),
@@ -266,7 +273,7 @@ fn polar_points_come_with_their_heights() {
     let Some(Entity::Point(p)) = app.selection.ids().first().and_then(|&s| doc.model.get(s)) else {
         panic!("the new point, selected");
     };
-    assert!(p.z.is_some_and(|z| (z - 100.0).abs() < 1e-9));
+    assert!(p.z.is_some_and(|z| (z - 100.0 - curvature).abs() < 1e-9));
     assert_eq!(
         p.base.attrs.get("Z (m)").map(String::as_str),
         Some("100.000")
