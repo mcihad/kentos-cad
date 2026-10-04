@@ -164,7 +164,7 @@ const HOME_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = {
 };
 const VIEW_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = { Görünüş: { command: 'tools.options', args: 'appearance', title: 'Uygulama ayarları: görünüm' } };
 const AIDS_LAUNCHER: Readonly<Record<string, RibbonLauncher>> = { 'Çizim yardımcıları': { command: 'tools.options', args: 'snap', title: 'Uygulama ayarları: kenetleme' } };
-const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.ncn'];
+const IMPORTS = ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', 'file.import.ncn', 'file.import.gnss'];
 const EXPORTS = ['file.export.dxf', 'file.export.pdf', 'file.export.geojson', 'file.export.ncn'];
 const SHEET_LAYOUTS = ['sheet.new', 'sheet.fromTemplate'];
 const SELECTION_TAB: RibbonTabSpec = RIBBON_TABS.find((t) => t.contextual === 'selection')!;
@@ -188,7 +188,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { builtin: 'layers' },
       { pick: 'Blok', icon: 'blockInsert', commands: ['tool.blockInsert', 'tool.blockDefine', 'block.panel'], more: 'insert' },
       { builtin: 'properties' },
-      { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.fieldbook', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'] },
+      { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.fieldbook', 'file.import.gnss', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'] },
     ],
     lead: ['edit.paste'],
     keep: ['Çizim', 'Değiştir'],

@@ -80,6 +80,7 @@
     "file.import.geojson",
     "file.import.shp",
     "file.export.geojson",
+    "file.import.gnss",
     "tool.stretch",
     "tool.array",
     "tool.arrayPolar",

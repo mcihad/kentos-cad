@@ -16,7 +16,7 @@ const textAlign = (x: number, y: number) =>
 /**
  * A file kind brought in or written out: the page, the arrow into or out of it on the left, the kind's emblem on it
  * (DXF a line between grips, NCZ an N, Shapefile a polygon, GeoJSON braces, a coordinate list its rows, PDF a P,
- * SVG a curve with its handle, PNG a picture, .kpafta a sheet with its title block).
+ * SVG a curve with its handle, PNG a picture, .kpafta a sheet with its title block, a GNSS file a position's pin).
  */
 const filePage = '<path d="M7.5 2.5H14l3.5 3.5v11.5h-10z" stroke-width="1.2"/><path d="M14 2.5V6h3.5" stroke-width="1.1"/>';
 const fileIn = (emblem: string) => `${filePage}<path d="M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14"/>${emblem}`;
@@ -33,6 +33,7 @@ const EMBLEM = {
   svg: `<path d="M9.5 15C10 11 12 9.5 15.5 9.5" stroke-width="1.1"/><path d="M12.5 9.5h3" stroke-width="1"/>${grip(9.5, 15)}${dot(15.5, 9.5, 0.9)}`,
   png: `<path d="m9.4 15.2 2.4-3.2 1.7 2 1.1-1.3 1.4 2.5z" fill="currentColor" fill-opacity=".3" stroke-width="1"/>${dot(14.3, 9.6, 0.9)}`,
   kpafta: '<rect x="9.4" y="8.6" width="6.4" height="7" stroke-width="1"/><path d="M9.4 13.4h6.4M13 13.4v2.2" stroke-width="1"/>',
+  gnss: `<path d="M12.7 15.8c-1.9-2.1-2.9-3.6-2.9-4.8a2.9 2.9 0 0 1 5.8 0c0 1.2-1 2.7-2.9 4.8z" stroke-width="1.1"/>${dot(12.7, 11, 0.9)}`,
 };
 
 // Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
@@ -348,6 +349,7 @@ export const ICONS = {
   importGeojson: fileIn(EMBLEM.geojson),
   importNcn: fileIn(EMBLEM.ncn),
   importKpafta: fileIn(EMBLEM.kpafta),
+  importGnss: fileIn(EMBLEM.gnss),
   exportDxf: fileOut(EMBLEM.dxf),
   exportGeojson: fileOut(EMBLEM.geojson),
   exportNcn: fileOut(EMBLEM.ncn),

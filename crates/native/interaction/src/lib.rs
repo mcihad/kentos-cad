@@ -126,6 +126,7 @@ mod faces;
 mod fence;
 pub mod find_replace;
 mod format;
+pub mod gnss;
 pub mod grip_menu;
 pub mod hatch;
 mod junctions;

@@ -132,6 +132,9 @@ pub const PORTED: &[&str] = &[
     "file.import.geojson",
     "file.import.shp",
     "file.export.geojson",
+    // GNSS içe aktar (exchange/gnss_import.rs, docs/adr/0169 §6): a receiver's GPX or
+    // NMEA positions moved from WGS 84 into the project's system, with their accuracy.
+    "file.import.gnss",
     // Modify tools, round 3 (docs/adr/0047, part 2): stretch through cad.entities.edit,
     // the arrays through cad.entities.array, align through cad.entities.transform.
     "tool.stretch",

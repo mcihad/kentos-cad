@@ -78,7 +78,7 @@ export const MAIN_MENU: TopMenu[] = [
       'cloud.rename',
       'cloud.delete',
       sec('Dosya alışverişi'),
-      { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn'] },
+      { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn', 'file.import.gnss'] },
       { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf', '-', 'file.export.ncn'] },
       sec('Çıktı'),
       'file.print',
@@ -161,7 +161,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'calc',
     label: 'Hesap',
-    items: [sec('Saha'), 'calc.fieldbook', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection'],
+    items: [sec('Saha'), 'calc.fieldbook', 'file.import.gnss', sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection'],
   },
   {
     id: 'analysis',

@@ -78,10 +78,10 @@ export function reportLines(items: readonly ReportItem[], kind: 'warn' | 'info',
   return lines;
 }
 
-/** Where the data lies, in the project's units ("Y 452 345.123 – 452 360.000"). */
+/** Where the data lies, in the project's units and axes ("Y (sağa) 452 345.123 – 452 360.000"; a CAD project's "X (sağa)", docs/adr/0165 §4). */
 export function extentLine(ctx: AppContext, b: Bounds): HTMLElement {
   const f = ctx.format;
-  return summaryLine('info', `Kapsam: Y (sağa) ${f.coord(b.minX)} – ${f.coord(b.maxX)}, X (yukarı) ${f.coord(b.minY)} – ${f.coord(b.maxY)}.`);
+  return summaryLine('info', f.axesText(`Kapsam: Y (sağa) ${f.coord(b.minX)} – ${f.coord(b.maxX)}, X (yukarı) ${f.coord(b.minY)} – ${f.coord(b.maxY)}.`));
 }
 
 const byDatum = (): Map<Datum, CrsDef[]> => {

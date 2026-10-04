@@ -1,0 +1,471 @@
+{
+  "format": "kentos.gnss-import",
+  "version": 1,
+  "source": "scripts/fixtures/gnss_import_cases.py (docs/adr/0169 §6; PROJ)",
+  "tolerance": {
+    "metres": 1e-06
+  },
+  "cases": [
+    {
+      "name": "TUREF / TM30: bütün türler, adsızlar G1'den",
+      "srid": 5254,
+      "options": {
+        "kinds": [
+          "wpt",
+          "rtept",
+          "trkpt",
+          "gga"
+        ],
+        "prefix": "G",
+        "start": 1
+      },
+      "points": [
+        {
+          "kind": "wpt",
+          "name": "N1",
+          "lat": 40.7539083,
+          "lon": 29.38539,
+          "height": 105.234,
+          "geoid": 36.123,
+          "ellipsoidal": 141.357,
+          "time": "2026-10-04T10:15:00Z",
+          "fix": "3B",
+          "satellites": 14,
+          "hdop": 0.6,
+          "line": 3
+        },
+        {
+          "kind": "trkpt",
+          "lat": 40.754,
+          "lon": 29.3854,
+          "height": 104.9,
+          "time": "2026-10-04T10:16:00Z",
+          "line": 12
+        },
+        {
+          "kind": "gga",
+          "lat": 40.753909166666666,
+          "lon": 29.385390833333332,
+          "height": 105.24,
+          "geoid": 36.123,
+          "ellipsoidal": 141.363,
+          "time": "2026-10-04T10:15:01.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.95,
+          "line": 3
+        },
+        {
+          "kind": "rtept",
+          "name": "ANK",
+          "lat": 39.9334,
+          "lon": 32.8597,
+          "line": 9
+        },
+        {
+          "kind": "gga",
+          "lat": 36.8969,
+          "lon": 30.7133,
+          "fix": "DGPS",
+          "satellites": 8,
+          "hdop": 1.25,
+          "line": 6
+        }
+      ],
+      "expect": [
+        {
+          "name": "N1",
+          "p": [
+            448097.67290360364,
+            4513426.1628419785
+          ],
+          "z": 141.357,
+          "attrs": {
+            "Ad": "N1",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX yol noktası",
+            "Çözüm": "3B",
+            "Uydu": "14",
+            "HDOP": "0.6",
+            "Zaman": "2026-10-04T10:15:00Z",
+            "Enlem": "40.753908300°K",
+            "Boylam": "29.385390000°D",
+            "Elipsoit yüksekliği (m)": "141.357",
+            "Yükseklik (dosyada, m)": "105.234",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+          }
+        },
+        {
+          "name": "G1",
+          "p": [
+            448098.58869634976,
+            4513436.340223483
+          ],
+          "attrs": {
+            "Ad": "G1",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX iz noktası",
+            "Zaman": "2026-10-04T10:16:00Z",
+            "Enlem": "40.754000000°K",
+            "Boylam": "29.385400000°D",
+            "Yükseklik (dosyada, m)": "104.900",
+            "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+          }
+        },
+        {
+          "name": "G2",
+          "p": [
+            448097.74395097926,
+            4513426.258592587
+          ],
+          "z": 141.363,
+          "attrs": {
+            "Ad": "G2",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "RTK kayan",
+            "Uydu": "12",
+            "HDOP": "1.0",
+            "Zaman": "2026-10-04T10:15:01.00Z",
+            "Enlem": "40.753909167°K",
+            "Boylam": "29.385390833°D",
+            "Elipsoit yüksekliği (m)": "141.363",
+            "Yükseklik (dosyada, m)": "105.240",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+          }
+        },
+        {
+          "name": "ANK",
+          "p": [
+            744455.9528009866,
+            4426051.867710871
+          ],
+          "attrs": {
+            "Ad": "ANK",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX rota noktası",
+            "Enlem": "39.933400000°K",
+            "Boylam": "32.859700000°D",
+            "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+          }
+        },
+        {
+          "name": "G3",
+          "p": [
+            563578.1100176874,
+            4085306.889067485
+          ],
+          "attrs": {
+            "Ad": "G3",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "DGPS",
+            "Uydu": "8",
+            "HDOP": "1.3",
+            "Enlem": "36.896900000°K",
+            "Boylam": "30.713300000°D",
+            "Dönüşüm": "WGS 84 → TUREF / TM30: ±1 m, EPSG:5261"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ED50 / TM30: yalnız yol noktaları ve GGA, GPS-7'den; resmî olmayan yol",
+      "srid": 2320,
+      "options": {
+        "kinds": [
+          "wpt",
+          "gga"
+        ],
+        "prefix": "GPS-",
+        "start": 7
+      },
+      "points": [
+        {
+          "kind": "wpt",
+          "name": "N1",
+          "lat": 40.7539083,
+          "lon": 29.38539,
+          "height": 105.234,
+          "geoid": 36.123,
+          "ellipsoidal": 141.357,
+          "time": "2026-10-04T10:15:00Z",
+          "fix": "3B",
+          "satellites": 14,
+          "hdop": 0.6,
+          "line": 3
+        },
+        {
+          "kind": "trkpt",
+          "lat": 40.754,
+          "lon": 29.3854,
+          "height": 104.9,
+          "time": "2026-10-04T10:16:00Z",
+          "line": 12
+        },
+        {
+          "kind": "gga",
+          "lat": 40.753909166666666,
+          "lon": 29.385390833333332,
+          "height": 105.24,
+          "geoid": 36.123,
+          "ellipsoidal": 141.363,
+          "time": "2026-10-04T10:15:01.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.95,
+          "line": 3
+        },
+        {
+          "kind": "rtept",
+          "name": "ANK",
+          "lat": 39.9334,
+          "lon": 32.8597,
+          "line": 9
+        },
+        {
+          "kind": "gga",
+          "lat": 36.8969,
+          "lon": 30.7133,
+          "fix": "DGPS",
+          "satellites": 8,
+          "hdop": 1.25,
+          "line": 6
+        }
+      ],
+      "expect": [
+        {
+          "name": "N1",
+          "p": [
+            448132.5320194902,
+            4513612.398582389
+          ],
+          "z": 141.357,
+          "attrs": {
+            "Ad": "N1",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX yol noktası",
+            "Çözüm": "3B",
+            "Uydu": "14",
+            "HDOP": "0.6",
+            "Zaman": "2026-10-04T10:15:00Z",
+            "Enlem": "40.753908300°K",
+            "Boylam": "29.385390000°D",
+            "Elipsoit yüksekliği (m)": "141.357",
+            "Yükseklik (dosyada, m)": "105.234",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil"
+          }
+        },
+        {
+          "name": "GPS-7",
+          "p": [
+            448132.60306739673,
+            4513612.494333391
+          ],
+          "z": 141.363,
+          "attrs": {
+            "Ad": "GPS-7",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "RTK kayan",
+            "Uydu": "12",
+            "HDOP": "1.0",
+            "Zaman": "2026-10-04T10:15:01.00Z",
+            "Enlem": "40.753909167°K",
+            "Boylam": "29.385390833°D",
+            "Elipsoit yüksekliği (m)": "141.363",
+            "Yükseklik (dosyada, m)": "105.240",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil"
+          }
+        },
+        {
+          "name": "GPS-8",
+          "p": [
+            563613.045077895,
+            4085490.4409624957
+          ],
+          "attrs": {
+            "Ad": "GPS-8",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "DGPS",
+            "Uydu": "8",
+            "HDOP": "1.3",
+            "Enlem": "36.896900000°K",
+            "Boylam": "30.713300000°D",
+            "Dönüşüm": "WGS 84 → ED50 / TM30: ±2 m, EPSG:1784; resmî dönüşüm değil"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WGS 84 / UTM 35N: yalnız izdüşüm",
+      "srid": 32635,
+      "options": {
+        "kinds": [
+          "wpt",
+          "rtept",
+          "trkpt",
+          "gga"
+        ],
+        "prefix": "",
+        "start": 100
+      },
+      "points": [
+        {
+          "kind": "wpt",
+          "name": "N1",
+          "lat": 40.7539083,
+          "lon": 29.38539,
+          "height": 105.234,
+          "geoid": 36.123,
+          "ellipsoidal": 141.357,
+          "time": "2026-10-04T10:15:00Z",
+          "fix": "3B",
+          "satellites": 14,
+          "hdop": 0.6,
+          "line": 3
+        },
+        {
+          "kind": "trkpt",
+          "lat": 40.754,
+          "lon": 29.3854,
+          "height": 104.9,
+          "time": "2026-10-04T10:16:00Z",
+          "line": 12
+        },
+        {
+          "kind": "gga",
+          "lat": 40.753909166666666,
+          "lon": 29.385390833333332,
+          "height": 105.24,
+          "geoid": 36.123,
+          "ellipsoidal": 141.363,
+          "time": "2026-10-04T10:15:01.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.95,
+          "line": 3
+        },
+        {
+          "kind": "rtept",
+          "name": "ANK",
+          "lat": 39.9334,
+          "lon": 32.8597,
+          "line": 9
+        },
+        {
+          "kind": "gga",
+          "lat": 36.8969,
+          "lon": 30.7133,
+          "fix": "DGPS",
+          "satellites": 8,
+          "hdop": 1.25,
+          "line": 6
+        }
+      ],
+      "expect": [
+        {
+          "name": "N1",
+          "p": [
+            701367.9637680531,
+            4514176.422304069
+          ],
+          "z": 141.357,
+          "attrs": {
+            "Ad": "N1",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX yol noktası",
+            "Çözüm": "3B",
+            "Uydu": "14",
+            "HDOP": "0.6",
+            "Zaman": "2026-10-04T10:15:00Z",
+            "Enlem": "40.753908300°K",
+            "Boylam": "29.385390000°D",
+            "Elipsoit yüksekliği (m)": "141.357",
+            "Yükseklik (dosyada, m)": "105.234",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
+          }
+        },
+        {
+          "name": "100",
+          "p": [
+            701368.5311617312,
+            4514186.625715958
+          ],
+          "attrs": {
+            "Ad": "100",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX iz noktası",
+            "Zaman": "2026-10-04T10:16:00Z",
+            "Enlem": "40.754000000°K",
+            "Boylam": "29.385400000°D",
+            "Yükseklik (dosyada, m)": "104.900",
+            "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
+          }
+        },
+        {
+          "name": "101",
+          "p": [
+            701368.0315052612,
+            4514176.520433855
+          ],
+          "z": 141.363,
+          "attrs": {
+            "Ad": "101",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "RTK kayan",
+            "Uydu": "12",
+            "HDOP": "1.0",
+            "Zaman": "2026-10-04T10:15:01.00Z",
+            "Enlem": "40.753909167°K",
+            "Boylam": "29.385390833°D",
+            "Elipsoit yüksekliği (m)": "141.363",
+            "Yükseklik (dosyada, m)": "105.240",
+            "Geoit ayrımı (m)": "36.123",
+            "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
+          }
+        },
+        {
+          "name": "ANK",
+          "p": [
+            1000822.2698194484,
+            4436835.643104436
+          ],
+          "attrs": {
+            "Ad": "ANK",
+            "Tür": "GNSS noktası",
+            "Kaynak": "GPX rota noktası",
+            "Enlem": "39.933400000°K",
+            "Boylam": "32.859700000°D",
+            "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
+          }
+        },
+        {
+          "name": "102",
+          "p": [
+            830905.5609005142,
+            4089878.2061077734
+          ],
+          "attrs": {
+            "Ad": "102",
+            "Tür": "GNSS noktası",
+            "Kaynak": "NMEA GGA",
+            "Çözüm": "DGPS",
+            "Uydu": "8",
+            "HDOP": "1.3",
+            "Enlem": "36.896900000°K",
+            "Boylam": "30.713300000°D",
+            "Dönüşüm": "WGS 84 → WGS 84 / UTM 35N: kesin, yalnız projeksiyon"
+          }
+        }
+      ]
+    }
+  ]
+}

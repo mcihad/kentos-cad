@@ -132,6 +132,27 @@
   color: var(--c-accent-text);
 }
 
+/* GNSS içe aktar (docs/adr/0169 §6): the kinds of points in a row, the unnamed points' prefix and first number side by
+   side, the numbers of the preview right-aligned. */
+.gnss-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+}
+.gnss-naming {
+  display: flex;
+  gap: 6px;
+}
+.gnss-prefix {
+  width: calc(96px * var(--ui-scale));
+}
+.gnss-start {
+  width: calc(80px * var(--ui-scale));
+}
+.gnss-table td.num {
+  text-align: right;
+}
+
 /* Preview table: the first rows as written, a column role picker on each column. */
 .io-table-wrap {
   max-height: calc(260px * var(--ui-scale));

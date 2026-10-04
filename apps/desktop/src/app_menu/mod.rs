@@ -100,7 +100,7 @@ struct Format {
     badge: &'static str,
 }
 
-const IMPORTS: [Format; 5] = [
+const IMPORTS: [Format; 6] = [
     Format {
         id: "file.import.dxf",
         label: "DXF",
@@ -131,6 +131,12 @@ const IMPORTS: [Format; 5] = [
         label: "GeoJSON",
         detail: "RFC 7946; özellikler öznitelik olur",
         badge: "JSON",
+    },
+    Format {
+        id: "file.import.gnss",
+        label: "GNSS",
+        detail: "GPX ya da NMEA; WGS 84'ten projenin sistemine",
+        badge: "GNSS",
     },
 ];
 

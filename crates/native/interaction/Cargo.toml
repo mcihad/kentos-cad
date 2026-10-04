@@ -17,3 +17,7 @@ kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }
+
+# The shared cases' JSON in tests (fixtures/gnss/v1/import.json); not in the library.
+[dev-dependencies]
+serde_json = { workspace = true }

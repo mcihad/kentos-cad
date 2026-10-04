@@ -2667,6 +2667,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-project",
+ "serde_json",
 ]
 
 [[package]]

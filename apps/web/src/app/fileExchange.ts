@@ -5,7 +5,7 @@ import type { FileKind, PickedFile } from './fileIO';
 
 /**
  * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV), DXF and
- * GeoJSON in and out, Shapefile and Netcad NCZ in (docs/adr/0046, 0138). The dialogs, the formats worker and its Rust modules load on first
+ * GeoJSON in and out, Shapefile, Netcad NCZ and GNSS (GPX, NMEA) in (docs/adr/0046, 0138, 0169). The dialogs, the formats worker and its Rust modules load on first
  * use (CLAUDE.md §20): nothing of them is in the start-up bundle. Reading
  * and writing run in the worker (§6.2 rule 6); the source coordinate system
  * is always asked, never guessed, and nothing is reprojected (§5).
@@ -16,6 +16,8 @@ export const NCZ_FILES: FileKind = { description: 'Netcad çizimi (NCZ)', accept
 export const GEOJSON_FILES: FileKind = { description: 'GeoJSON', accept: { 'application/geo+json': ['.geojson', '.json'] } };
 /** A Shapefile layer's files, chosen together (a .zip is not read: docs/adr/0046). */
 export const SHAPEFILE_FILES: FileKind = { description: 'Shapefile katmanı (.shp, .shx, .dbf, .prj, .cpg)', accept: { 'application/x-shapefile': ['.shp', '.shx', '.dbf', '.prj', '.cpg'] } };
+/** A receiver's file: GPX, or an NMEA log under any of the names receivers give it (docs/adr/0169 §6). */
+export const GNSS_FILES: FileKind = { description: 'GNSS dosyası (GPX, NMEA)', accept: { 'application/gpx+xml': ['.gpx'], 'text/plain': ['.nmea', '.nma', '.txt', '.log'] } };
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -93,6 +95,17 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       description: describeImport,
       aliases: ['NCN', 'KOORDINATAL', 'NOKTAAL', 'IMPORTXYZ'],
       run: coordImport,
+    },
+    {
+      // GNSS içe aktar (docs/adr/0169 §6): a receiver's positions from WGS 84 into the project's system.
+      id: 'file.import.gnss',
+      title: 'GNSS (GPX, NMEA)…',
+      category: 'Dosya',
+      icon: 'importGnss',
+      description:
+        "GNSS alıcısının GPX ya da NMEA dosyasındaki konumları nokta olarak içe aktarır: WGS 84'ten projenin koordinat sistemine, doğruluğu ve dayanağı yazılarak çevrilir. Çözüm türü, uydu sayısı, HDOP, zaman ve yükseklikler öznitelik olur; kot elipsoit yüksekliğidir. Koordinat sistemi olmayan projeye alınmaz.",
+      aliases: ['GNSS', 'GPX', 'NMEA', 'GNSSAL', 'GPXAL', 'GPS'],
+      run: () => importWith(ctx, GNSS_FILES, 'GNSS', () => import('../ui/io/GnssImportDialog'), (m, file) => m.openGnssImport(ctx, file, GNSS_FILES)),
     },
     {
       id: 'crs.points',

@@ -33,7 +33,8 @@
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
 // survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
-// book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both).
+// book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station, Poligon hesabı from both);
+// gnss (GNSS içe aktar: a GPX and an NMEA file, the points imported, a project without a coordinate system).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -4021,6 +4022,36 @@ SCENES.types = Object.entries(TYPE_TABS).flatMap(([type, tabs]) =>
     close: (ui) => ribbonOff(ui),
   })),
 );
+
+/**
+ * GNSS içe aktar (docs/adr/0169 §6): fixtures/gnss/v1/sample.gpx and sample.nmea (the sample drawing's parcel corners
+ * measured by a receiver, scripts/fixtures/gnss_samples.py) into the TUREF / TM36 sample; the GPX's points imported
+ * onto the drawing; the same window in a project without a coordinate system. The desktop's are
+ * `exchange::gnss_tests::screens` (gnss-*).
+ */
+const gnssOpen = async (ui, name) => {
+  const bytes = readFileSync(new URL(`../../../../fixtures/gnss/v1/${name}`, import.meta.url)).toString('base64');
+  await ui.eval(
+    `import('/src/ui/io/GnssImportDialog.ts').then((m) => m.openGnssImport(window.kentos, { name: '${name}', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'GNSS', accept: {} }))`,
+  );
+  await ui.waitFor(`!!document.querySelector('.dialog--io .io-summary') && !document.querySelector('.dialog--io .io-summary')?.textContent?.includes('okunuyor')`);
+  await ui.sleep(400);
+};
+const gnssUndo = `(() => { const k = window.kentos; while (k.doc.canUndo.value) k.doc.undo(); })()`;
+SCENES.gnss = [
+  { id: 'gnss-gpx', open: (ui) => gnssOpen(ui, 'sample.gpx'), close: (ui) => ui.escapeAll(2) },
+  {
+    id: 'gnss-imported',
+    open: async (ui) => (await gnssOpen(ui, 'sample.gpx'), await ui.clickText('.dialog--io .btn', 'İçe aktar'), await ui.sleep(600)),
+    close: async (ui) => (await ui.escapeAll(1), await ui.eval(gnssUndo)),
+  },
+  { id: 'gnss-nmea', open: (ui) => gnssOpen(ui, 'sample.nmea'), close: (ui) => ui.escapeAll(2) },
+  {
+    id: 'gnss-nosystem',
+    open: async (ui) => (await ui.eval(`window.kentos.doc.settings.assign({ srid: 0 })`), await gnssOpen(ui, 'sample.gpx')),
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256 })`)),
+  },
+];
 
 /** Closer in: the view centred on `x`, `y` at `times` the whole scene's scale. */
 const closeIn = (x, y, times) => `(() => { const c = window.kentos.view.camera; c.center = { x: ${x}, y: ${y} }; c.scale = c.scale * ${times}; c.panBy(0, 0); window.kentos.view.requestRender(); })()`;

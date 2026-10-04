@@ -1,7 +1,8 @@
 //! File exchange (the web's `app/fileExchange.ts` and `ui/io/`): coordinate
 //! lists (Netcad NCN, TXT, CSV) and DXF, in and out; Netcad NCZ in
 //! (docs/adr/0138); GeoJSON in and out and Shapefile in, from its files or a
-//! zip archive; through the shared
+//! zip archive; GNSS (GPX, NMEA) in, moved from WGS 84 into the project's
+//! system (docs/adr/0169 §6); through the shared
 //! readers and writers (`crates/shared/formats`, the ones the web runs in its
 //! formats worker; CLAUDE.md §9.7, docs/adr/0009). Files are read and
 //! written off the UI thread. The source coordinate system is always asked,
@@ -23,6 +24,9 @@ mod geojson_export;
 mod gis_import;
 #[cfg(test)]
 mod gis_tests;
+mod gnss_import;
+#[cfg(test)]
+mod gnss_tests;
 #[cfg(test)]
 mod tests;
 pub(crate) mod words;
@@ -62,6 +66,8 @@ pub enum Kind {
     GeoJson,
     /// A Shapefile layer's files chosen together, or its zip archive.
     Shapefile,
+    /// A receiver's GPX or NMEA file (docs/adr/0169 §6).
+    Gnss,
 }
 
 /// The open exchange window.
@@ -75,6 +81,8 @@ pub enum Window {
     /// Boxed: the largest window's state.
     GisImport(Box<gis_import::State>),
     GeoJsonExport(geojson_export::State),
+    /// Boxed: the plan it holds.
+    GnssImport(Box<gnss_import::State>),
 }
 
 #[derive(Debug, Clone)]
@@ -90,6 +98,7 @@ pub enum Event {
     CoordExport(coord_export::Event),
     GisImport(gis_import::Event),
     GeoJsonExport(geojson_export::Event),
+    GnssImport(gnss_import::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -97,7 +106,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 9] = [
+pub const COMMANDS: [&str; 10] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -107,6 +116,7 @@ pub const COMMANDS: [&str; 9] = [
     "file.import.geojson",
     "file.import.shp",
     "file.export.geojson",
+    "file.import.gnss",
 ];
 
 fn message(event: Event) -> Message {
@@ -136,6 +146,7 @@ impl App {
             "file.import.ncn" | "crs.points" => self.pick(Kind::Coords),
             "file.import.geojson" => self.pick(Kind::GeoJson),
             "file.import.shp" => self.pick(Kind::Shapefile),
+            "file.import.gnss" => self.pick(Kind::Gnss),
             "file.export.dxf" => {
                 let state = dxf_export::State::new(self);
                 self.open_window(Window::DxfExport(state));
@@ -204,6 +215,11 @@ impl App {
                 "Shapefile katmanı (.shp, .shx, .dbf, .prj, .cpg) ya da .zip",
                 &["shp", "shx", "dbf", "prj", "cpg", "zip"],
             ),
+            Kind::Gnss => (
+                "GNSS içe aktar",
+                "GNSS dosyası (GPX, NMEA)",
+                &["gpx", "nmea", "nma", "txt", "log"],
+            ),
         };
         if kind == Kind::Shapefile {
             // A layer's parts are chosen together.
@@ -268,6 +284,7 @@ impl App {
             Event::Picked(Kind::Shapefile, Some(Ok(file))) => {
                 self.gis_import_picked(gis_import::shapefile_source(vec![file]))
             }
+            Event::Picked(Kind::Gnss, Some(Ok(file))) => self.gnss_import_picked(file),
             Event::PickedMany(_, None) => Task::none(),
             Event::PickedMany(_, Some(Err(e))) => {
                 self.error(e);
@@ -286,6 +303,7 @@ impl App {
             Event::CoordExport(e) => self.coord_export_event(e),
             Event::GisImport(e) => self.gis_import_event(e),
             Event::GeoJsonExport(e) => self.geojson_export_event(e),
+            Event::GnssImport(e) => self.gnss_import_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -313,6 +331,7 @@ impl App {
             Some(Window::CoordExport(s)) => self.coord_export_view(s),
             Some(Window::GisImport(s)) => self.gis_import_view(s),
             Some(Window::GeoJsonExport(s)) => self.geojson_export_view(s),
+            Some(Window::GnssImport(s)) => self.gnss_import_view(s),
             None => iced::widget::text("").into(),
         }
     }

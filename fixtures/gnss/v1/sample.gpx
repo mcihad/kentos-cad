@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="KentOS örnek" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>101/7 parseli</name><time>2026-10-04T09:30:00Z</time></metadata>
+  <wpt lat="39.915760683" lon="35.842247366">
+    <ele>1061.284</ele><time>2026-10-04T09:31:10Z</time><geoidheight>36.874</geoidheight>
+    <name>101/7-1</name><fix>3d</fix><sat>15</sat><hdop>0.6</hdop>
+  </wpt>
+  <wpt lat="39.915771718" lon="35.842520993">
+    <ele>1061.902</ele><time>2026-10-04T09:32:10Z</time><geoidheight>36.874</geoidheight>
+    <name>101/7-2</name><fix>3d</fix><sat>14</sat><hdop>0.7</hdop>
+  </wpt>
+  <wpt lat="39.916044306" lon="35.842549422">
+    <ele>1063.418</ele><time>2026-10-04T09:33:10Z</time><geoidheight>36.874</geoidheight>
+    <name>101/7-3</name><fix>3d</fix><sat>13</sat><hdop>0.8</hdop>
+  </wpt>
+  <wpt lat="39.916058057" lon="35.842269912">
+    <ele>1062.775</ele><time>2026-10-04T09:34:10Z</time>
+    <name>101/7-4</name><fix>3d</fix><sat>12</sat><hdop>0.9</hdop>
+  </wpt>
+  <wpt lat="39.915873263" lon="35.842453520"><name>KONUMSUZ</name><fix>none</fix></wpt>
+  <wpt lat="39,93" lon="35,84"><name>BOZUK</name></wpt>
+  <trk><name>Batı sınırı</name><trkseg>
+    <trkpt lat="39.916035122" lon="35.842266011"><ele>1062.60</ele><time>2026-10-04T09:40:00Z</time></trkpt>
+    <trkpt lat="39.915967568" lon="35.842261488"><ele>1062.28</ele><time>2026-10-04T09:40:05Z</time></trkpt>
+    <trkpt lat="39.915900015" lon="35.842256964"><ele>1061.96</ele><time>2026-10-04T09:40:10Z</time></trkpt>
+    <trkpt lat="39.915832461" lon="35.842252441"><ele>1061.64</ele><time>2026-10-04T09:40:15Z</time></trkpt>
+    <trkpt lat="39.915764907" lon="35.842247917"><ele>1061.32</ele><time>2026-10-04T09:40:20Z</time></trkpt>
+  </trkseg></trk>
+</gpx>

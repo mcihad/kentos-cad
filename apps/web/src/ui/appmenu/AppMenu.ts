@@ -53,6 +53,7 @@ const FORMATS: Record<'import' | 'export', readonly { id: string; label: string;
     { id: 'file.import.ncz', label: 'Netcad çizimi', detail: 'Netcad NCZ dosyası', badge: 'NCZ' },
     { id: 'file.import.shp', label: 'Shapefile', detail: 'SHP, SHX, DBF, PRJ ve CPG birlikte; öznitelikleriyle', badge: 'SHP' },
     { id: 'file.import.geojson', label: 'GeoJSON', detail: 'RFC 7946; özellikler öznitelik olur', badge: 'JSON' },
+    { id: 'file.import.gnss', label: 'GNSS', detail: "GPX ya da NMEA; WGS 84'ten projenin sistemine", badge: 'GNSS' },
   ],
   export: [
     { id: 'file.export.dxf', label: 'DXF', detail: 'AutoCAD 2007: ölçüler DXF ölçüsü, Türkçe yazılar UTF-8', badge: 'DXF' },

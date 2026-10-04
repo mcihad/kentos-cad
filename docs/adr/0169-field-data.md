@@ -213,6 +213,22 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    ayrı tutar; 6b noktanın kotuna yalnız elipsoit yüksekliğini yazar, öbürlerini öznitelik yapar, tahmin etmez. Bağımsız başvurular
    `gnss_gpx_cases.py` (şemadan, expat ile; `fixtures/gnss/v1/gpx.json`, 5 durum) ve `gnss_nmea_cases.py` (cümlelerden;
    `nmea.json`, 2 durum) ve 6000 rastgele dosyada Rust ile birebir.
+
+   *(4 Ekim: 6b tamam.)* GNSS içe aktar (`file.import.gnss`, “GNSS (GPX, NMEA)…”; Dosya › İçe aktar, Hesap › Saha, CAD'de Giriş ›
+   Ölçme ▾ ve Ekle › İçe aktar, CBS'de Veri ve Ölçme). Kurallar `kentos_interaction::gnss` ve `model/gnssImport.ts`: seçili türlerin
+   noktaları dosyanın sırasıyla WGS 84'ten (enlem, boylam) projenin sistemine Koordinat dönüştür'ün yoluyla (`transform_in`, projenin datum
+   seçimleri); ad dosyanınki, yoksa ön ek ve ilk numaradan sırayla; kot yalnız elipsoit yüksekliği (yükseklik + geoit ayrımı), yoksa boş;
+   öznitelikler Ad, Tür “GNSS noktası”, Kaynak, Çözüm, Uydu, HDOP (1 basamak), Zaman, Enlem ve Boylam (9 basamaklı ondalık derece),
+   Elipsoit yüksekliği, Yükseklik (dosyada), Geoit ayrımı (3 basamak), Dönüşüm (“WGS 84 → {sistem}: {doğruluk}”, ADR 0167'nin metni);
+   sistemin ulaşmadığı nokta satırı ve nedeniyle söylenir, alınmaz. Bağımsız başvuru `gnss_import_cases.py` (PROJ ile;
+   `fixtures/gnss/v1/import.json`, 3 durum: TUREF ve ED50 TM30, UTM 35N). Pencere iki platformda (`exchange/gnss_import.rs`,
+   `ui/io/GnssImportDialog.ts`): dosyanın biçimi ve konum sayısı, türlerin kutuları sayılarıyla, adsızların ön eki ve ilk numarası,
+   yazılacak noktaların önizlemesi (satır, ad, kaynak, projenin eksenlerinde koordinatlar, kot, çözüm, uydu, HDOP, zaman), dönüşümün
+   doğruluğu (ED50 yolunda uyarı), kot kuralı, okunmayan kayıtlar, kapsam, hedef katman. Noktalar öbür içe aktarmalar gibi içe aktarma
+   yolundan (`apply_import`, `applyImport`) yeni ya da var olan katmana, “GNSS: {dosya}” adlı tek geri alma adımında yazılır; ürün
+   komutuna ayrı işlem eklenmedi. Koordinat sistemi olmayan projede (yerel ya da dönüşümde kullanılamayan tanım) nedeni yazılır,
+   İçe aktar kapalıdır. Örnekler `gnss_samples.py` (örnek çizimin parsel köşeleri, PROJ ile WGS 84'e); resimler `gnss-*` (masaüstü),
+   `shots.mjs gnss` (web). Kapsam satırı iki platformda projenin türünün eksen adlarıyla yazılır (CAD'de “X (sağa)”).
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

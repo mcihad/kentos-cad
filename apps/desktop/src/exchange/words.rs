@@ -101,7 +101,7 @@ pub fn field<'a, Message: 'a>(
 /// A check box with its text (the web's `checkField` without its label).
 pub fn check<'a, Message: Clone + 'a>(
     checked: bool,
-    words: &'a str,
+    words: impl iced::widget::text::IntoFragment<'a>,
     on_toggle: Option<Message>,
 ) -> Element<'a, Message> {
     let state = if checked {
@@ -180,15 +180,16 @@ pub fn count(counts: &mut Vec<(&'static str, u32)>, kind: &'static str) {
     }
 }
 
-/// Where the data lies, in the project's units (“Kapsam: Y (sağa) 452 345.123 – …”).
+/// Where the data lies, in the project's units and axes (“Kapsam: Y (sağa)
+/// 452 345.123 – …”; a CAD project's “X (sağa)”, docs/adr/0165 §4).
 pub fn extent_text(format: &Format, b: &Bounds) -> String {
-    format!(
+    format.axes_text(&format!(
         "Kapsam: Y (sağa) {} – {}, X (yukarı) {} – {}.",
         format.coord(b.min_x),
         format.coord(b.max_x),
         format.coord(b.min_y),
         format.coord(b.max_y)
-    )
+    ))
 }
 
 /// A name without its extension (“noktalar.ncn” → “noktalar”).
