@@ -1,0 +1,726 @@
+{
+ "format": "kentos.crs-definition-form",
+ "version": 1,
+ "texts": {
+  "name": "Adını yazın: sistem bu adla görünür.",
+  "number": "Sayı yazın.",
+  "meridian": "−180 ile 180 arasında bir derece yazın.",
+  "latitude": "−90 ile 90 arasında bir derece yazın.",
+  "positive": "0'dan büyük bir sayı yazın.",
+  "datumName": "Datumun adını yazın.",
+  "semiMajor": "Büyük yarı ekseni metre olarak, 0'dan büyük yazın.",
+  "inverseFlattening": "Ters basıklığı 1'den büyük yazın.",
+  "accuracy": "0 ya da büyük bir sayı yazın; bilinmiyorsa boş bırakın.",
+  "base": "Kayıttaki projeksiyonlu bir sistem seçin.",
+  "folds": "Bu katsayılar düzlemi katlıyor (a·e − b·d = 0)."
+ },
+ "ellipsoids": [
+  {
+   "name": "GRS 1980",
+   "semiMajor": 6378137.0,
+   "inverseFlattening": 298.257222101
+  },
+  {
+   "name": "WGS 84",
+   "semiMajor": 6378137.0,
+   "inverseFlattening": 298.257223563
+  },
+  {
+   "name": "International 1924",
+   "semiMajor": 6378388.0,
+   "inverseFlattening": 297.0
+  },
+  {
+   "name": "Bessel 1841",
+   "semiMajor": 6377397.155,
+   "inverseFlattening": 299.1528128
+  },
+  {
+   "name": "Krasovski 1940",
+   "semiMajor": 6378245.0,
+   "inverseFlattening": 298.3
+  },
+  {
+   "name": "Clarke 1880 (RGS)",
+   "semiMajor": 6378249.145,
+   "inverseFlattening": 293.465
+  }
+ ],
+ "cases": [
+  {
+   "name": "başlangıcı ve ölçeği farklı TM, TUREF'te",
+   "form": {
+    "name": "Kent TM",
+    "kind": "tm",
+    "latitudeOfOrigin": "36",
+    "centralMeridian": "34,5",
+    "scaleFactor": "0.9999",
+    "falseEasting": "200000",
+    "falseNorthing": "100000",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "Kent TM",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "latitudeOfOrigin": 36.0,
+     "centralMeridian": 34.5,
+     "scaleFactor": 0.9999,
+     "falseEasting": 200000.0,
+     "falseNorthing": 100000.0
+    }
+   }
+  },
+  {
+   "name": "kayıttaki TM30 ile aynı: söylenir",
+   "form": {
+    "name": "TM30 kopyası",
+    "kind": "tm",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "30",
+    "scaleFactor": "",
+    "falseEasting": "500000",
+    "falseNorthing": "0",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "TM30 kopyası",
+    "system": {
+     "kind": "tm",
+     "datum": "TUREF",
+     "centralMeridian": 30.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   },
+   "note": "EPSG:5254 (TUREF / TM30) ile aynı; kayıttakini seçin."
+  },
+  {
+   "name": "Bessel datumlu TM, iki kuraldan konum vektörü, doğruluklu",
+   "form": {
+    "name": "Bessel TM",
+    "kind": "tm",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "33",
+    "scaleFactor": "",
+    "falseEasting": "500000",
+    "falseNorthing": "0",
+    "datum": "custom",
+    "datumName": "Bessel datumu",
+    "ellipsoid": "Bessel 1841",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "598.1",
+     "ty": "73,7",
+     "tz": "418.2",
+     "rx": "0.202",
+     "ry": "0.045",
+     "rz": "-2.455",
+     "ds": "6.7"
+    },
+    "convention": "positionVector",
+    "accuracy": "1.5",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "Bessel TM",
+    "system": {
+     "kind": "tm",
+     "customDatum": {
+      "name": "Bessel datumu",
+      "ellipsoid": {
+       "name": "Bessel 1841",
+       "semiMajor": 6377397.155,
+       "inverseFlattening": 299.1528128
+      },
+      "toWgs84": {
+       "translation": [
+        598.1,
+        73.7,
+        418.2
+       ],
+       "rotation": [
+        0.202,
+        0.045,
+        -2.455
+       ],
+       "scale": 6.7,
+       "convention": "positionVector",
+       "accuracy": 1.5
+      }
+     },
+     "centralMeridian": 33.0,
+     "scaleFactor": 1.0,
+     "falseEasting": 500000.0,
+     "falseNorthing": 0.0
+    }
+   }
+  },
+  {
+   "name": "elipsoidi yazılan, WGS 84'e bağı olmayan coğrafi sistem",
+   "form": {
+    "name": "Eski coğrafi",
+    "kind": "geographic",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "custom",
+    "datumName": "Bağsız datum",
+    "ellipsoid": "custom",
+    "semiMajor": "6378249.145",
+    "inverseFlattening": "293.465",
+    "linked": false,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "Eski coğrafi",
+    "system": {
+     "kind": "geographic",
+     "customDatum": {
+      "name": "Bağsız datum",
+      "ellipsoid": {
+       "name": "a=6378249.145, 1/f=293.465",
+       "semiMajor": 6378249.145,
+       "inverseFlattening": 293.465
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "TUREF coğrafi: kayıttaki ile aynı",
+   "form": {
+    "name": "TUREF coğrafi",
+    "kind": "geographic",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "TUREF coğrafi",
+    "system": {
+     "kind": "geographic",
+     "datum": "TUREF"
+    }
+   },
+   "note": "EPSG:5252 (TUREF) ile aynı; kayıttakini seçin."
+  },
+  {
+   "name": "ED50 coğrafi: kayıtta yok, söylenmez",
+   "form": {
+    "name": "ED50 coğrafi",
+    "kind": "geographic",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "ED50",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "ED50 coğrafi",
+    "system": {
+     "kind": "geographic",
+     "datum": "ED50"
+    }
+   }
+  },
+  {
+   "name": "benzerlikle TM33'e bağlı yerel sistem, dönüklük ve ölçek boş",
+   "form": {
+    "name": "Şantiye",
+    "kind": "local",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "5255",
+    "plane": "similarity",
+    "east": "492345.678",
+    "north": "4422345.678",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "definition": {
+    "name": "Şantiye",
+    "system": {
+     "kind": "local",
+     "base": {
+      "srid": 5255
+     },
+     "plane": {
+      "kind": "similarity",
+      "east": 492345.678,
+      "north": 4422345.678,
+      "rotation": 0.0,
+      "scale": 1.0
+     }
+    }
+   }
+  },
+  {
+   "name": "afinle TM30'a bağlı yerel sistem",
+   "form": {
+    "name": "Belediye",
+    "kind": "local",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "5254",
+    "plane": "affine",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "1.00002",
+    "b": "-0.0003",
+    "c": "1250",
+    "d": "0.00025",
+    "e": "0.99998",
+    "f": "-830.5"
+   },
+   "definition": {
+    "name": "Belediye",
+    "system": {
+     "kind": "local",
+     "base": {
+      "srid": 5254
+     },
+     "plane": {
+      "kind": "affine",
+      "a": 1.00002,
+      "b": -0.0003,
+      "c": 1250.0,
+      "d": 0.00025,
+      "e": 0.99998,
+      "f": -830.5
+     }
+    }
+   }
+  },
+  {
+   "name": "adsız, okunmayan orta meridyen, sıfır ölçek",
+   "form": {
+    "name": "  ",
+    "kind": "tm",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "otuz",
+    "scaleFactor": "0",
+    "falseEasting": "500000",
+    "falseNorthing": "0",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "problems": {
+    "name": "Adını yazın: sistem bu adla görünür.",
+    "centralMeridian": "Sayı yazın.",
+    "scaleFactor": "0'dan büyük bir sayı yazın."
+   }
+  },
+  {
+   "name": "sınır dışı enlem ve meridyen",
+   "form": {
+    "name": "Şantiye",
+    "kind": "tm",
+    "latitudeOfOrigin": "95",
+    "centralMeridian": "190",
+    "scaleFactor": "",
+    "falseEasting": "0",
+    "falseNorthing": "0",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "problems": {
+    "latitudeOfOrigin": "−90 ile 90 arasında bir derece yazın.",
+    "centralMeridian": "−180 ile 180 arasında bir derece yazın."
+   }
+  },
+  {
+   "name": "özel datumun adı, ekseni ve ötelemesi eksik",
+   "form": {
+    "name": "Şantiye",
+    "kind": "geographic",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "custom",
+    "datumName": "",
+    "ellipsoid": "custom",
+    "semiMajor": "-1",
+    "inverseFlattening": "0.5",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "1",
+     "tz": "2",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "-0.1",
+    "base": "",
+    "plane": "similarity",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "problems": {
+    "datumName": "Datumun adını yazın.",
+    "semiMajor": "Büyük yarı ekseni metre olarak, 0'dan büyük yazın.",
+    "inverseFlattening": "Ters basıklığı 1'den büyük yazın.",
+    "tx": "Sayı yazın.",
+    "accuracy": "0 ya da büyük bir sayı yazın; bilinmiyorsa boş bırakın."
+   }
+  },
+  {
+   "name": "tabanı coğrafi ya da kayıtta yok",
+   "form": {
+    "name": "Şantiye",
+    "kind": "local",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "4326",
+    "plane": "similarity",
+    "east": "0",
+    "north": "0",
+    "rotation": "",
+    "scale": "",
+    "a": "",
+    "b": "",
+    "c": "",
+    "d": "",
+    "e": "",
+    "f": ""
+   },
+   "problems": {
+    "base": "Kayıttaki projeksiyonlu bir sistem seçin."
+   }
+  },
+  {
+   "name": "katlanan afin",
+   "form": {
+    "name": "Şantiye",
+    "kind": "local",
+    "latitudeOfOrigin": "",
+    "centralMeridian": "",
+    "scaleFactor": "",
+    "falseEasting": "",
+    "falseNorthing": "",
+    "datum": "TUREF",
+    "datumName": "",
+    "ellipsoid": "GRS 1980",
+    "semiMajor": "",
+    "inverseFlattening": "",
+    "linked": true,
+    "parameters": {
+     "tx": "",
+     "ty": "",
+     "tz": "",
+     "rx": "",
+     "ry": "",
+     "rz": "",
+     "ds": ""
+    },
+    "convention": "positionVector",
+    "accuracy": "",
+    "base": "5254",
+    "plane": "affine",
+    "east": "",
+    "north": "",
+    "rotation": "",
+    "scale": "",
+    "a": "1",
+    "b": "2",
+    "c": "0",
+    "d": "2",
+    "e": "4",
+    "f": "0"
+   },
+   "problems": {
+    "a": "Bu katsayılar düzlemi katlıyor (a·e − b·d = 0)."
+   }
+  }
+ ]
+}

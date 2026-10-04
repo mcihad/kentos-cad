@@ -16,6 +16,8 @@ import type { Convention } from '../../contracts/generated/Convention';
 import type { DatumTransform } from '../../contracts/generated/DatumTransform';
 import { buildChoice, datumName, epsgText, formOf, PAIRS, PARAMETERS, type ChoiceForm, type GridRef, type Method, type Parameter, type Problems } from '../../model/choiceForm';
 import { crsPicker } from './crsPicker';
+import { CONVENTIONS, openCustomCrs, PARAMETER_CAPTIONS } from './CustomCrsDialog';
+import type { CrsDefinition } from '../../contracts/generated/CrsDefinition';
 import { workspacePicker } from './workspacePicker';
 import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontPicker } from './appearancePickers';
@@ -35,6 +37,9 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
   const initial: ProjectDraft = { ...doc.settings.toJSON(), name: doc.name.value };
   // Datum dönüşümleri's forms as typed, and what is wrong in each (docs/adr/0168 §3).
   const choiceState: ChoiceState = { forms: PAIRS.map((p) => formOf(p, initial.datumTransforms ?? [])), problems: PAIRS.map(() => ({})) };
+  // The project's own definition and its second's (docs/adr/0168 §1), kept while another system is chosen: their rows
+  // stay in the lists until Kaydet, which keeps only the chosen (the desktop's `State.defined`).
+  const defined: Defined = { own: initial.srid === LOCAL_SRID ? (initial.customCrs ?? null) : null, second: initial.secondCustomCrs ?? null };
 
   const sections: SectionDef<ProjectDraft>[] = [
     {
@@ -100,9 +105,14 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
             defaultSrid: ctx.prefs.defaultSrid.value,
             mode: 'assign',
             state: crsState,
-            onChange: (srid, rerender) => api.set('srid', srid, rerender),
+            onChange: (srid, rerender) => {
+              // A system of the registry takes the definition's place (docs/adr/0168 §1).
+              api.set('customCrs', undefined, false);
+              api.set('srid', srid, rerender);
+            },
+            defined: ownDefined(api, defined),
           }),
-          secondGroup(api),
+          secondGroup(api, defined),
           datumGroup(ctx, api, choiceState),
           gridsGroup(ctx, api),
           group('Yeni projeler', settingRow('Yeni projelerin varsayılanı', def ? `${crsTitle(def)}. Uygulama ayarlarından değiştirilir.` : null, openApp)),
@@ -138,15 +148,16 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       // another system.
       doc.settings.assign({
         ...settings,
+        customCrs: ownOf(settings),
         drawingUnit: settings.srid === LOCAL_SRID && !settings.customCrs ? (settings.drawingUnit ?? 'm') : 'm',
         secondSrid: settings.secondSrid ?? null,
         secondCustomCrs: settings.secondCustomCrs ?? null,
         datumTransforms: settings.datumTransforms ?? [],
       });
-      if (draft.srid !== init.srid) {
-        const c = crsBySrid(draft.srid)!;
-        ctx.log.success(`Proje koordinat sistemi ${crsTitle(c)} olarak atandı. Koordinat değerleri değiştirilmedi.`);
-      }
+      // The project's system, a definition's too (docs/adr/0168 §1).
+      const own = ownOf(draft);
+      if (draft.srid !== init.srid || JSON.stringify(own) !== JSON.stringify(ownOf(init)))
+        ctx.log.success(`Proje koordinat sistemi ${own ? definitionTitle(own) : crsTitle(crsBySrid(draft.srid)!)} olarak atandı. Koordinat değerleri değiştirilmedi.`);
       const second = doc.settings.secondSrid.value;
       const defined = doc.settings.secondCustomCrs.value;
       if (second !== (init.secondSrid ?? null) || JSON.stringify(defined) !== JSON.stringify(init.secondCustomCrs ?? null))
@@ -162,38 +173,80 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
   });
 }
 
+/** The project's own definition and its second's as the window knows them. */
+interface Defined {
+  own: CrsDefinition | null;
+  second: CrsDefinition | null;
+}
+
+/** A draft's own definition: only without an EPSG code (docs/adr/0168 §1). */
+const ownOf = (d: ProjectSettingsData): CrsDefinition | null => (d.srid === LOCAL_SRID ? (d.customCrs ?? null) : null);
+
+/** The picker's definition (docs/adr/0168 §6): its row, Özel sistem… under the list, Düzenle on its card. */
+function ownDefined(api: DraftApi<ProjectDraft>, defined: Defined) {
+  const done = (d: CrsDefinition) => {
+    defined.own = d;
+    api.set('srid', LOCAL_SRID, false);
+    api.set('customCrs', d);
+  };
+  return {
+    definition: defined.own,
+    chosen: ownOf(api.draft) !== null,
+    was: ownOf(api.initial) !== null,
+    changed: api.draft.srid !== api.initial.srid || JSON.stringify(ownOf(api.draft)) !== JSON.stringify(ownOf(api.initial)),
+    onPick: () => defined.own && done(defined.own),
+    onNew: () => openCustomCrs({ target: 'own', existing: null, onDone: done }),
+    onEdit: () => openCustomCrs({ target: 'own', existing: defined.own, onDone: done }),
+  };
+}
+
 /**
- * İkinci koordinat sistemi (docs/adr/0167 §1): the project's second definition when it has one (docs/adr/0168 §1), the
- * systems of the registry but the project's own, grouped by datum, and Yok. Its values show beside the project's in the
- * status bar and Koordinat oku; the drawing is not transformed.
+ * İkinci koordinat sistemi (docs/adr/0167 §1): the registry's systems but the project's own, grouped by datum, the
+ * project's second definition (docs/adr/0168 §1) and Yok; Özel sistem… under the list defines one, Düzenle beside it
+ * edits the one chosen. Its values show beside the project's in the status bar and Koordinat oku; the drawing is not
+ * transformed (the desktop's `second_group`).
  */
-function secondGroup(api: DraftApi<ProjectDraft>): Child {
+function secondGroup(api: DraftApi<ProjectDraft>, defined: Defined): Child {
   const project = crsBySrid(api.draft.srid);
   const custom = !!api.draft.customCrs && api.draft.srid === LOCAL_SRID;
   const what = 'Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.';
   if (!project || (project.kind === 'local' && !custom))
     return group('İkinci koordinat sistemi', settingRow('İkinci sistem', 'Yerel projenin ikinci sistemi olmaz; önce projeye bir koordinat sistemi atayın.', h('span', { class: 'srow__value' }, 'Yok')));
   const shown = secondAllowed(project, api.draft.secondSrid, custom) ? api.draft.secondSrid : null;
-  const defined = shown === null ? (api.draft.secondCustomCrs ?? null) : null;
+  const chosen = shown === null ? (api.draft.secondCustomCrs ?? null) : null;
   // A system of the registry, or Yok, takes the place of a second definition.
   const choose = (srid: number | undefined) => {
     api.set('secondCustomCrs', undefined, false);
     api.set('secondSrid', srid);
   };
+  const done = (d: CrsDefinition) => {
+    defined.second = d;
+    api.set('secondSrid', undefined, false);
+    api.set('secondCustomCrs', d);
+  };
   const pick = new Dropdown({
     ariaLabel: 'İkinci koordinat sistemi',
     width: 260,
     items: (): MenuItem[] => [
-      { label: 'Yok', radio: true, checked: shown === null && defined === null, run: () => choose(undefined) },
-      ...(defined ? [{ label: defined.name, hint: DEFINITION_CODE, radio: true, checked: true, run: () => {} } satisfies MenuItem] : []),
+      { label: 'Yok', radio: true, checked: shown === null && chosen === null, run: () => choose(undefined) },
+      ...(defined.second ? [{ label: defined.second.name, hint: DEFINITION_CODE, radio: true, checked: chosen !== null, run: () => defined.second && done(defined.second) } satisfies MenuItem] : []),
+      // At the head of the long list, where it is seen without scrolling (the desktop's list keeps it under the rows).
+      { label: 'Özel sistem…', icon: 'plus', run: () => openCustomCrs({ target: 'second', existing: null, onDone: done }) },
+      { kind: 'separator' },
       ...secondChoices(project).flatMap(({ datum, systems }): MenuItem[] => [
         { kind: 'header', label: datum },
         ...systems.map((c) => ({ label: c.name, hint: `EPSG:${c.srid}`, radio: true, checked: c.srid === shown, run: () => choose(c.srid) })),
       ]),
     ],
   });
-  pick.set(shown !== null ? secondTitle(shown) : defined ? definitionTitle(defined) : 'Yok');
-  return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, pick.el));
+  pick.set(shown !== null ? secondTitle(shown) : chosen ? definitionTitle(chosen) : 'Yok');
+  let control: Child = pick.el;
+  if (chosen) {
+    const edit = h('button', { class: 'btn btn--small', type: 'button' }, 'Düzenle');
+    edit.addEventListener('click', () => openCustomCrs({ target: 'second', existing: defined.second, onDone: done }));
+    control = h('div', { class: 'second-crs__control' }, pick.el, edit);
+  }
+  return group('İkinci koordinat sistemi', settingRow('İkinci sistem', what, control));
 }
 
 /** Datum dönüşümleri's forms as typed, and what is wrong in each. */
@@ -202,8 +255,6 @@ interface ChoiceState {
   readonly problems: Problems[];
 }
 
-/** The seven parameters' captions. */
-const CAPTIONS: Record<Parameter, string> = { tx: 'ΔX (m)', ty: 'ΔY (m)', tz: 'ΔZ (m)', rx: 'rX (″)', ry: 'rY (″)', rz: 'rZ (″)', ds: 'Ölçek farkı (ppm)' };
 
 /**
  * Datum dönüşümleri (docs/adr/0168 §3, §6): for each of the registry's three datum pairs, EPSG's way, the project's
@@ -287,15 +338,12 @@ function datumGroup(ctx: AppContext, api: DraftApi<ProjectDraft>, state: ChoiceS
     const accuracy = field(i, 'accuracy', 'Doğruluk (m)', form.accuracy, (v) => (form.accuracy = v));
     if (form.method === 'helmert') {
       // The translations on a row, the rotations and the scale difference under them (the desktop's rows).
-      const parameter = (k: Parameter) => field(i, k, CAPTIONS[k], form.parameters[k], (v) => (form.parameters[k] = v), k === 'ds' ? 'scale' : 'number');
+      const parameter = (k: Parameter) => field(i, k, PARAMETER_CAPTIONS[k], form.parameters[k], (v) => (form.parameters[k] = v), k === 'ds' ? 'scale' : 'number');
       const parameters = [h('div', { class: 'datum-fields' }, PARAMETERS.slice(0, 3).map(parameter)), h('div', { class: 'datum-fields' }, PARAMETERS.slice(3).map(parameter))];
       const rule = segmented<Convention>({
         label: `${pairName} dönüklüklerin kuralı`,
         value: form.convention,
-        options: [
-          { value: 'positionVector', label: 'Konum vektörü (9606)' },
-          { value: 'coordinateFrame', label: 'Koordinat çerçevesi (9607)' },
-        ],
+        options: CONVENTIONS,
         onChange: (c) => ((form.convention = c), rebuild(true)),
       });
       const bottom = h('div', { class: 'datum-fields' }, h('div', { class: 'datum-field' }, h('span', { class: 'datum-field__caption' }, 'Dönüklüklerin kuralı'), rule), accuracy);

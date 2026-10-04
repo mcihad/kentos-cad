@@ -117,7 +117,7 @@ impl fmt::Display for Way {
 
 /// A rotation convention as the segmented control writes it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Rule(Convention);
+pub(super) struct Rule(pub(super) Convention);
 
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -142,7 +142,7 @@ impl fmt::Display for Way2 {
 }
 
 /// The parameters' captions, in `PARAMETERS`' order.
-const CAPTIONS: [&str; 7] = [
+pub(super) const CAPTIONS: [&str; 7] = [
     "ΔX (m)",
     "ΔY (m)",
     "ΔZ (m)",
@@ -153,7 +153,7 @@ const CAPTIONS: [&str; 7] = [
 ];
 
 /// A typed field with its caption and, under it, what is wrong.
-fn field<'a>(
+pub(super) fn field<'a>(
     caption: &'a str,
     value: &'a str,
     width: f32,

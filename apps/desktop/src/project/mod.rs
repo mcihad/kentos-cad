@@ -10,6 +10,7 @@
 mod ask_type;
 mod choices;
 mod content;
+mod custom_crs;
 pub(crate) mod settings;
 mod wizard;
 
@@ -112,9 +113,16 @@ impl App {
         }
     }
 
-    /// Esc or × closed a project window (its state goes): the type question
-    /// says what that leaves.
+    /// Esc or × closed a project window (its state goes): Özel koordinat
+    /// sistemi over Proje ayarları, or a question in its row, closes first;
+    /// the type question says what closing it leaves.
     pub(crate) fn project_dismissed(&mut self) {
+        if let Some(Window::Settings(s)) = &mut self.project
+            && s.dismiss_inner()
+        {
+            self.dialog = Some(Dialog::Project);
+            return;
+        }
         if let Some(Window::Type(s)) = self.project.take() {
             self.type_left_unasked(&s.name);
         }

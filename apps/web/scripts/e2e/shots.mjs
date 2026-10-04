@@ -29,7 +29,9 @@
 // customcrs (docs/adr/0168: a second system the project defines, its menu; a project whose system is its own
 // definition, its second system by the project's datum choice, Koordinat oku); grids (Proje ayarları' Izgaralar: a
 // grid added, one a datum choice names that the device does not have, Kaldır's question); datums (Proje ayarları' Datum
-// dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way).
+// dönüşümleri: seven parameters with a translation still to type, a grid of the library, EPSG's way); definitions
+// (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
+// chosen in Proje ayarları, a second definition in its list).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3661,6 +3663,74 @@ SCENES.datums = [
       await ui.sleep(300);
     },
     close: async (ui) => (await ui.escapeAll(3), await ui.eval(`window.kentos.grids.remove('${TR_ID}')`)),
+  },
+];
+
+/**
+ * Özel koordinat sistemi (docs/adr/0168 §6) with the mouse and the keyboard: Proje ayarları' Özel sistem… opens the
+ * window: new; a TM on the project's own Bessel datum bound by seven parameters; what is wrong said under its field; a
+ * local system on TUREF TM30 by an affine; then Proje ayarları with the definition chosen (its card, Düzenle, its row)
+ * and the second system's list with a second definition and Özel sistem…. The desktop's are
+ * `project::custom_crs::tests::screens` (ozel-crs-*).
+ */
+const DEF = '.dialog--custom-crs';
+const defOpen = async (ui) => {
+  await ui.eval(`import('/src/ui/settings/ProjectSettingsDialog.ts').then((m) => m.openProjectSettings(window.kentos, 'crs'))`);
+  await ui.waitFor(`!!document.querySelector('.crs-list__action')`);
+  await ui.clickSel('.crs-list__action');
+  await ui.waitFor(`!!document.querySelector('${DEF}')`);
+  await ui.sleep(200);
+};
+const defType = async (ui, label, text) => (await ui.clickSel(`${DEF} [aria-label="${label}"]`), await ui.type(text));
+const defChoose = async (ui, group, option) => (await ui.clickText(`${DEF} [aria-label="${group}"] .seg__opt`, option), await ui.sleep(150));
+const defPick = async (ui, dropdown, item) => (await ui.clickSel(`${DEF} [aria-label="${dropdown}"]`), await ui.clickText('.menu__item', item), await ui.sleep(150));
+const defTm = async (ui) => {
+  await defType(ui, 'Ad', 'Bessel TM27');
+  for (const [label, v] of [['Orta meridyen (°)', '27'], ['Ölçek', '1'], ['Sağa öteleme (m)', '500000'], ['Yukarı öteleme (m)', '0']]) await defType(ui, label, v);
+  await defChoose(ui, 'Datum', 'Projenin datumu');
+  await defType(ui, 'Datumun adı', 'Bessel datumu');
+  await defPick(ui, 'Elipsoid', 'Bessel 1841');
+  for (const [label, v] of [['ΔX (m)', '674.374'], ['ΔY (m)', '15.056'], ['ΔZ (m)', '405.346'], ['Doğruluk (m)', '1']]) await defType(ui, label, v);
+};
+const defLocal = async (ui) => {
+  await defType(ui, 'Ad', 'Belediye yerel');
+  await defChoose(ui, 'Tür', 'Yerel (taban sisteme bağlı)');
+  await defPick(ui, 'Taban sistem', 'TUREF / TM30');
+  await defChoose(ui, 'Düzlem dönüşümü', 'Afin');
+  for (const [label, v] of [['a', '1.0000215'], ['b', '-0.0003871'], ['c', '412000'], ['d', '0.0003871'], ['e', '1.0000215'], ['f', '4521000']]) await defType(ui, label, v);
+};
+const defDone = async (ui) => (await ui.clickText(`${DEF} .btn`, 'Tamam'), await ui.sleep(300));
+const defClose = async (ui) => (
+  await ui.escapeAll(3), await ui.eval(`window.kentos.doc.settings.assign({ srid: 5256, customCrs: null, secondSrid: null, secondCustomCrs: null })`)
+);
+SCENES.definitions = [
+  { id: 'definition-new', open: defOpen, close: defClose },
+  { id: 'definition-tm', open: async (ui) => (await defOpen(ui), await defTm(ui)), close: defClose },
+  {
+    id: 'definition-problems',
+    open: async (ui) => {
+      await defOpen(ui);
+      for (const [label, v] of [['Ad', 'Şantiye'], ['Orta meridyen (°)', '300'], ['Ölçek', '0']]) await defType(ui, label, v);
+    },
+    close: defClose,
+  },
+  { id: 'definition-local', open: async (ui) => (await defOpen(ui), await defLocal(ui)), close: defClose },
+  { id: 'definition-chosen', open: async (ui) => (await defOpen(ui), await defTm(ui), await defDone(ui)), close: defClose },
+  {
+    id: 'definition-second',
+    open: async (ui) => {
+      await defOpen(ui);
+      await defTm(ui);
+      await defDone(ui);
+      await ui.clickSel('[aria-label="İkinci koordinat sistemi"]');
+      await ui.clickText('.menu__item', 'Özel sistem…');
+      await ui.waitFor(`!!document.querySelector('${DEF}')`);
+      await defLocal(ui);
+      await defDone(ui);
+      await ui.clickSel('[aria-label="İkinci koordinat sistemi"]');
+      await ui.sleep(250);
+    },
+    close: defClose,
   },
 ];
 

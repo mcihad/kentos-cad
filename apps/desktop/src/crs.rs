@@ -17,7 +17,10 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{Bounds, CrsDefinition, CrsSource, DeclaredCrs, ProjectSettings};
+use kentos_contracts::{
+    Bounds, Convention, CrsDefinition, CrsPlane, CrsSource, CrsSystem, DatumRef, DeclaredCrs,
+    ProjectSettings,
+};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
@@ -414,10 +417,28 @@ pub fn search(query: &str) -> Vec<&'static System> {
         .collect()
 }
 
-/// The searchable list of systems grouped by datum, the chosen one's card
-/// and its parameters, and the notes (the web's `crsPicker`): the open
-/// project's system, assigned on save, never a transformation. A new
-/// project chooses its system in the wizard (project/wizard/).
+/// The project's own definition in the picker (docs/adr/0168 §6): its row
+/// at the head of the list, chosen or not; Özel sistem… under the list
+/// defines one, Düzenle on the chosen one's card edits it.
+pub struct Defined<'a, Message> {
+    /// The definition the window knows; none: the project has none yet.
+    pub definition: Option<&'a CrsDefinition>,
+    /// It is the draft's system.
+    pub chosen: bool,
+    /// The project's system was a definition when the window opened.
+    pub was: bool,
+    /// The draft's system is another than the project's (an edited definition too).
+    pub changed: bool,
+    pub on_pick: Message,
+    pub on_new: Message,
+    pub on_edit: Message,
+}
+
+/// The searchable list of systems grouped by datum with the project's
+/// definition at its head, the chosen one's card and its parameters, and
+/// the notes (the web's `crsPicker`): the open project's system, assigned on
+/// save, never a transformation. A new project chooses its system in the
+/// wizard (project/wizard/).
 pub fn picker<'a, Message: Clone + 'a>(
     value: u32,
     initial: u32,
@@ -425,48 +446,57 @@ pub fn picker<'a, Message: Clone + 'a>(
     query: &str,
     on_pick: impl Fn(u32) -> Message + 'a,
     on_search: impl Fn(String) -> Message + 'a,
+    defined: Defined<'a, Message>,
 ) -> Element<'a, Message> {
     let Some(chosen) = system(value) else {
         return label::caption(format!("EPSG:{value} bu sürümde tanımlı değil.")).into();
     };
-    let changed = value != initial;
+    let own = defined.definition.filter(|_| defined.chosen);
+    let changed = defined.changed;
     let heading = if changed {
         "Kaydedince projeye atanacak sistem"
     } else {
         "Projenin koordinat sistemi"
     };
-    let current = container(
-        column![
-            label::caption(heading),
-            row![
-                text(chosen.name.clone())
-                    .font(typography::ui_strong())
-                    .size(typography::body()),
-                container(label::mono_caption(code(chosen)))
-                    .padding([1, 6])
-                    .style(style::container::badge),
-            ]
-            .spacing(8)
-            .align_y(Center),
-        ]
-        .spacing(4),
-    )
-    .padding([8, 10])
-    .width(Fill)
-    .style(move |theme: &iced::Theme| {
-        let base = style::container::bordered(theme);
-        if !changed {
-            return base;
-        }
-        // About to change: the web's amber edge (“değişecek”).
-        iced::widget::container::Style {
-            border: iced::Border {
-                color: kentos_ui::theme::Tokens::of(theme).warning,
-                ..base.border
-            },
-            ..base
-        }
-    });
+    let (name, code_text) = match own {
+        Some(d) => (d.name.clone(), DEFINITION_CODE.to_owned()),
+        None => (chosen.name.clone(), code(chosen)),
+    };
+    let mut face = row![
+        text(name.clone())
+            .font(typography::ui_strong())
+            .size(typography::body()),
+        container(label::mono_caption(code_text))
+            .padding([1, 6])
+            .style(style::container::badge),
+    ]
+    .spacing(8)
+    .align_y(Center);
+    if own.is_some() {
+        face = face.push(iced::widget::space::horizontal()).push(
+            button(label::body("Düzenle"))
+                .on_press(defined.on_edit.clone())
+                .padding([3, 12])
+                .style(style::button::secondary),
+        );
+    }
+    let current = container(column![label::caption(heading), face].spacing(4))
+        .padding([8, 10])
+        .width(Fill)
+        .style(move |theme: &iced::Theme| {
+            let base = style::container::bordered(theme);
+            if !changed {
+                return base;
+            }
+            // About to change: the web's amber edge (“değişecek”).
+            iced::widget::container::Style {
+                border: iced::Border {
+                    color: kentos_ui::theme::Tokens::of(theme).warning,
+                    ..base.border
+                },
+                ..base
+            }
+        });
 
     let found = search(query);
     let digits: String = query.chars().filter(char::is_ascii_digit).collect();
@@ -479,18 +509,32 @@ pub fn picker<'a, Message: Clone + 'a>(
             .all(|c| c.is_ascii_digit())
         && digits.parse::<u32>().ok().and_then(system).is_none();
     let mut list = Column::new().spacing(2);
+    let wanted = query.trim().to_lowercase();
+    if let Some(d) = defined
+        .definition
+        .filter(|d| wanted.is_empty() || d.name.to_lowercase().contains(&wanted))
+    {
+        list = list.push(group_label("Projenin tanımı"));
+        let face = row![
+            container(icon(Icon::Globe).size(14.0).tone(Tone::Muted)).width(52),
+            label::body(d.name.clone()).width(Fill),
+            label::caption(DEFINITION_CODE),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        list = list.push(
+            button(face)
+                .on_press(defined.on_pick.clone())
+                .padding([4, 6])
+                .width(Fill)
+                .style(style::button::list_item(defined.chosen)),
+        );
+    }
     let mut datum = "";
     for s in &found {
         if s.datum != datum {
             datum = &s.datum;
-            list = list.push(container(label::caption(datum_label(datum))).padding(
-                iced::Padding {
-                    top: 6.0,
-                    right: 4.0,
-                    bottom: 2.0,
-                    left: 4.0,
-                },
-            ));
+            list = list.push(group_label(datum_label(datum)));
         }
         let tag: Element<'a, Message> = if s.srid == default_srid {
             container(label::caption("varsayılan"))
@@ -515,7 +559,7 @@ pub fn picker<'a, Message: Clone + 'a>(
                 .on_press(on_pick(s.srid))
                 .padding([4, 6])
                 .width(Fill)
-                .style(style::button::list_item(s.srid == value)),
+                .style(style::button::list_item(own.is_none() && s.srid == value)),
         );
     }
     if found.is_empty() {
@@ -537,16 +581,121 @@ pub fn picker<'a, Message: Clone + 'a>(
             "EPSG:{digits} bu sürümde tanımlı değil. Listedeki sistemlerden birini seçin."
         )));
     }
+    // Özel sistem… under the list, as a list's command is (the Select's `action`).
+    let new = button(
+        row![
+            container(icon(Icon::Plus).size(13.0)).width(14),
+            label::body("Özel sistem…")
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .on_press(defined.on_new)
+    .width(Fill)
+    .padding([4, 6])
+    .style(style::button::menu_row);
     let browser = browser.push(
         container(
-            scrollable(list)
-                .direction(style::field::body_scrollbar())
-                .height(Length::Fixed(230.0)),
+            column![
+                scrollable(list)
+                    .direction(style::field::body_scrollbar())
+                    .height(Length::Fixed(230.0)),
+                iced::widget::rule::horizontal(1).style(style::field::hairline),
+                container(new).padding(2),
+            ]
+            .spacing(0),
         )
         .style(style::container::bordered),
     );
 
-    let mut details: Vec<(&str, String)> = vec![(
+    let mut details: Vec<(&str, String)> = match own {
+        Some(d) => definition_details(d),
+        None => registry_details(chosen),
+    };
+    let mut card = Column::new().spacing(4).push(
+        text(name.clone())
+            .font(typography::ui_strong())
+            .size(typography::body()),
+    );
+    details.retain(|(_, v)| !v.is_empty());
+    for (k, v) in details {
+        card = card.push(row![container(label::caption(k)).width(110), label::body(v)].spacing(8));
+    }
+    let projected = match own {
+        Some(d) => !matches!(d.system, CrsSystem::Geographic(_)),
+        None => chosen.kind == "projected",
+    };
+    if projected {
+        card = card.push(label::caption(
+            "Eksen sırası: Y sağa değer, X yukarı değer.",
+        ));
+    }
+    let card = container(card)
+        .padding(10)
+        .width(Fill)
+        .style(style::container::bordered);
+
+    let mut notes = Column::new().spacing(6);
+    if changed {
+        // A datum's change is said between the registry's systems only.
+        let before = system(initial).filter(|_| !defined.was);
+        let datum_note = match before {
+            Some(b) if own.is_none() && b.datum != chosen.datum => format!(
+                " {} → {} geçişi için datum dönüşümü gerekir (geliştirme aşamasında).",
+                datum_label(&b.datum),
+                datum_label(&chosen.datum)
+            ),
+            _ => String::new(),
+        };
+        notes = notes.push(Banner::warning(format!(
+            "Koordinatlar dönüştürülmez. Kaydettiğinizde proje yalnızca {name} olarak etiketlenir; mevcut Y/X değerleri aynı kalır.{datum_note}"
+        )));
+    }
+    let kind = match own {
+        Some(d) => match d.system {
+            CrsSystem::Geographic(_) => "geographic",
+            _ => "projected",
+        },
+        None => chosen.kind.as_str(),
+    };
+    if kind == "geographic" {
+        notes = notes.push(Banner::info(
+            "Coğrafi sistemlerde birim derecedir. Çizim ve ölçüm araçları metre cinsinden projeksiyonlu bir sistem bekler.",
+        ));
+    }
+    if own.is_none() && chosen.is_local() {
+        notes = notes.push(Banner::info(
+            "Yerel: koordinatlar bir konuma bağlı değildir (teknik çizim, başlangıç 0,0). Koordinat sistemi taşıyan CBS verisi olduğu gibi gelir; dışa aktarılan CBS dosyalarında koordinat sistemi yazılmaz. Gerçek konum için bir sistem seçin.",
+        ));
+    }
+    column![
+        current,
+        row![
+            container(browser).width(Length::FillPortion(3)),
+            container(card).width(Length::FillPortion(2))
+        ]
+        .spacing(12),
+        notes
+    ]
+    .spacing(10)
+    .into()
+}
+
+/// A datum's name above its systems in the list.
+fn group_label<'a, Message: 'a>(name: &'a str) -> Element<'a, Message> {
+    container(label::caption(name))
+        .padding(iced::Padding {
+            top: 6.0,
+            right: 4.0,
+            bottom: 2.0,
+            left: 4.0,
+        })
+        .into()
+}
+
+/// A registry system's card rows (the web's `detailsCard`).
+fn registry_details(chosen: &System) -> Vec<(&'static str, String)> {
+    let mut details: Vec<(&'static str, String)> = vec![(
         "Tür",
         match chosen.kind.as_str() {
             "projected" => "Projeksiyonlu (metre)",
@@ -581,61 +730,105 @@ pub fn picker<'a, Message: Clone + 'a>(
         details.push(("Sağa öteleme", format!("{} m", grouped(e))));
     }
     details.push(("Kapsam", chosen.area.clone().unwrap_or_default()));
-    let mut card = Column::new().spacing(4).push(
-        text(chosen.name.clone())
-            .font(typography::ui_strong())
-            .size(typography::body()),
-    );
-    for (k, v) in details {
-        card = card.push(row![container(label::caption(k)).width(110), label::body(v)].spacing(8));
-    }
-    if chosen.kind == "projected" {
-        card = card.push(label::caption(
-            "Eksen sırası: Y sağa değer, X yukarı değer.",
-        ));
-    }
-    let card = container(card)
-        .padding(10)
-        .width(Fill)
-        .style(style::container::bordered);
+    details
+}
 
-    let mut notes = Column::new().spacing(6);
-    if changed {
-        let before = system(initial);
-        let datum_note = match before {
-            Some(b) if b.datum != chosen.datum => format!(
-                " {} → {} geçişi için datum dönüşümü gerekir (geliştirme aşamasında).",
-                datum_label(&b.datum),
-                datum_label(&chosen.datum)
-            ),
-            _ => String::new(),
-        };
-        notes = notes.push(Banner::warning(format!(
-            "Koordinatlar dönüştürülmez. Kaydettiğinizde proje yalnızca {} olarak etiketlenir; mevcut Y/X değerleri aynı kalır.{datum_note}",
-            chosen.name
-        )));
+/// A definition's card rows (docs/adr/0168 §6; the web's `definitionCard`):
+/// its kind, its datum (a project's own with its ellipsoid and its link to
+/// WGS 84), its projection's values or a local system's base and plane.
+pub fn definition_details(d: &CrsDefinition) -> Vec<(&'static str, String)> {
+    let mut out: Vec<(&'static str, String)> = vec![(
+        "Tür",
+        match d.system {
+            CrsSystem::Tm(_) => "TM izdüşümü (metre)",
+            CrsSystem::Geographic(_) => "Coğrafi (derece)",
+            CrsSystem::Local(_) => "Yerel, taban sisteme bağlı (metre)",
+        }
+        .to_owned(),
+    )];
+    let datum = match &d.system {
+        CrsSystem::Tm(t) => t.datum(),
+        CrsSystem::Geographic(g) => g.datum(),
+        CrsSystem::Local(_) => None,
+    };
+    match datum {
+        Some(DatumRef::Registry(r)) => {
+            let id = match r {
+                kentos_contracts::RegistryDatum::Turef => "TUREF",
+                kentos_contracts::RegistryDatum::Ed50 => "ED50",
+                kentos_contracts::RegistryDatum::Wgs84 => "WGS84",
+            };
+            out.push(("Datum", datum_label(id).to_owned()));
+            if let Some(e) = systems()
+                .iter()
+                .find(|s| s.datum == id)
+                .and_then(|s| s.ellipsoid.clone())
+            {
+                out.push(("Elipsoid", e));
+            }
+        }
+        Some(DatumRef::Custom(c)) => {
+            out.push(("Datum", format!("{} (projenin)", c.name)));
+            out.push(("Elipsoid", c.ellipsoid.name.clone()));
+            out.push((
+                "WGS 84'e",
+                match &c.to_wgs84 {
+                    Some(h) => format!(
+                        "7 parametre, {}{}",
+                        match h.convention {
+                            Convention::PositionVector => "konum vektörü",
+                            Convention::CoordinateFrame => "koordinat çerçevesi",
+                        },
+                        h.accuracy
+                            .map(|a| format!(", ±{} m", js_number(a)))
+                            .unwrap_or_default()
+                    ),
+                    None => "bağı yok".to_owned(),
+                },
+            ));
+        }
+        None => {}
     }
-    if chosen.kind == "geographic" {
-        notes = notes.push(Banner::info(
-            "Coğrafi sistemlerde birim derecedir. Çizim ve ölçüm araçları metre cinsinden projeksiyonlu bir sistem bekler.",
-        ));
+    match &d.system {
+        CrsSystem::Tm(t) => {
+            out.push(("Projeksiyon", "Transverse Mercator".to_owned()));
+            out.push((
+                "Orta meridyen",
+                format!("{}° D", js_number(t.central_meridian)),
+            ));
+            out.push(("Ölçek faktörü", js_number(t.scale_factor)));
+            // A definition's values as typed: not rounded, the point their only separator.
+            out.push(("Sağa öteleme", format!("{} m", js_number(t.false_easting))));
+            if t.false_northing != 0.0 {
+                out.push((
+                    "Yukarı öteleme",
+                    format!("{} m", js_number(t.false_northing)),
+                ));
+            }
+            if let Some(lat) = t.latitude_of_origin {
+                out.push(("Başlangıç enlemi", format!("{}°", js_number(lat))));
+            }
+        }
+        CrsSystem::Geographic(_) => {}
+        CrsSystem::Local(l) => {
+            out.push((
+                "Taban",
+                match (&l.base.srid, &l.base.definition) {
+                    (_, Some(b)) => definition_title(b),
+                    (Some(srid), None) => title_of(*srid),
+                    (None, None) => String::new(),
+                },
+            ));
+            out.push((
+                "Düzlem",
+                match l.plane {
+                    CrsPlane::Similarity { .. } => "Benzerlik".to_owned(),
+                    CrsPlane::Affine { .. } => "Afin".to_owned(),
+                },
+            ));
+        }
     }
-    if chosen.is_local() {
-        notes = notes.push(Banner::info(
-            "Yerel: koordinatlar bir konuma bağlı değildir (teknik çizim, başlangıç 0,0). Koordinat sistemi taşıyan CBS verisi olduğu gibi gelir; dışa aktarılan CBS dosyalarında koordinat sistemi yazılmaz. Gerçek konum için bir sistem seçin.",
-        ));
-    }
-    column![
-        current,
-        row![
-            container(browser).width(Length::FillPortion(3)),
-            container(card).width(Length::FillPortion(2))
-        ]
-        .spacing(12),
-        notes
-    ]
-    .spacing(10)
-    .into()
+    out
 }
 
 /// A number as JavaScript writes it (`${27}` → “27”, `${0.9996}` → “0.9996”).

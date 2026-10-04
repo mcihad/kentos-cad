@@ -2866,6 +2866,44 @@ try {
     );
     await b.eval(`window.kentos.doc.settings.drawingFont.set('barlow')`);
 
+    // Özel koordinat sistemi (docs/adr/0168 §6): Özel sistem… under the list opens the window over Proje ayarları;
+    // typed with the keyboard, Tamam puts the definition in the draft (its card says so, with Düzenle), and Kaydet
+    // assigns it: SRID 0 with the definition, the drawing's coordinates as they were, the status bar names it.
+    {
+      const shape = `JSON.stringify([...window.kentos.doc.all()].slice(0, 5))`;
+      const before = await b.eval(shape);
+      await b.eval(`window.kentos.commands.execute('crs.set')`);
+      await b.waitFor(`!!document.querySelector('.crs-list__action')`, 3000).catch(() => {});
+      await press('.crs-list__action');
+      await b.waitFor(`!!document.querySelector('.dialog--custom-crs')`, 3000).catch(() => {});
+      const typeIn = async (label, text) => (await press(`.dialog--custom-crs [aria-label="${label}"]`), await b.type(text));
+      await typeIn('Ad', 'Şantiye');
+      const waiting = await b.eval(`[...document.querySelectorAll('.dialog--custom-crs .datum-field__problem')].filter((e) => e.textContent).length`);
+      await typeIn('Orta meridyen (°)', '30');
+      await typeIn('Sağa öteleme (m)', '500000');
+      await typeIn('Yukarı öteleme (m)', '-4000000');
+      await press('.dialog--custom-crs .dialog__foot .btn--primary');
+      const card = await b.eval(`(() => { const c = document.querySelector('.crs-current'); return { name: c?.querySelector('.crs-current__name')?.textContent, edit: !!c?.querySelector('.crs-current__edit'), open: !!document.querySelector('.dialog--custom-crs') }; })()`);
+      await saveDialog();
+      const got = await b.eval(`(() => { const s = window.kentos.doc.settings.toJSON(); return { srid: s.srid, name: s.customCrs?.name, kind: s.customCrs?.system.kind, said: window.kentos.log.entries.value.map((e) => e.text).filter((t) => t.startsWith('Proje koordinat sistemi')).at(-1) ?? '', cell: document.querySelector('.ribbon__crs')?.textContent ?? '' }; })()`);
+      const after = await b.eval(shape);
+      check(
+        'Özel koordinat sistemi: Özel sistem… opens it over Proje ayarları, what is missing is said as typed, Tamam puts the definition in the draft (Düzenle on its card), Kaydet assigns it with SRID 0 and the coordinates as they were',
+        waiting >= 3 &&
+          card.name === 'Şantiye' &&
+          card.edit &&
+          !card.open &&
+          got.srid === 0 &&
+          got.name === 'Şantiye' &&
+          got.kind === 'tm' &&
+          got.said === 'Proje koordinat sistemi Şantiye (özel sistem) olarak atandı. Koordinat değerleri değiştirilmedi.' &&
+          got.cell.includes('Şantiye') &&
+          after === before,
+        JSON.stringify({ waiting, card, got }),
+      );
+      await b.eval(`window.kentos.doc.settings.assign({ srid: 5256, customCrs: null })`);
+    }
+
     // Kenar yumuşatma (TODOS.md AA-01/02, SET-03/05): the counts come from the context, a preset only fills
     // values, a change applies live on the same canvas and backend, and a count the device lacks is kept as
     // asked while the nearest one it has draws, with the reason in the window.

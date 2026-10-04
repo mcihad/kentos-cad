@@ -208,6 +208,43 @@
   font-size: var(--fs-2xs);
   font-weight: 600;
 }
+/* Proje ayarları' list: Özel sistem… under it, inside its frame (docs/adr/0168 §6). */
+.crs-listbox {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  overflow: hidden;
+}
+.crs-listbox > .crs-list {
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+}
+.crs-list__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border-top: 1px solid var(--c-line);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+.crs-list__action:hover {
+  background: var(--c-hover);
+}
+.crs-row__code--icon {
+  display: flex;
+  color: var(--c-text-3);
+}
+.crs-current__edit {
+  margin-left: auto;
+  align-self: center;
+}
 .crs-list__empty {
   padding: 14px 12px;
   color: var(--c-text-3);
@@ -1051,4 +1088,50 @@
 }
 .datum-field__problem:empty {
   display: none;
+}
+.datum-field--coefficient {
+  width: 150px;
+}
+.datum-field--base {
+  width: 320px;
+}
+
+/* Özel koordinat sistemi (docs/adr/0168 §6): the definition's parts under their headings, Datum dönüşümleri's fields. */
+.custom-crs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* A choice keeps its own width in the column. */
+.custom-crs > .seg {
+  align-self: flex-start;
+}
+.custom-crs__heading {
+  margin-top: 6px;
+  color: var(--c-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.custom-crs__note {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.custom-crs__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.custom-crs__check input {
+  accent-color: var(--c-accent);
+}
+/* İkinci sistem's list with Düzenle beside the chosen definition. */
+.second-crs__control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

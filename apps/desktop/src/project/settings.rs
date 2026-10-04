@@ -8,7 +8,9 @@ use std::fmt;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, ProjectSettings, Workspace};
+use kentos_contracts::{
+    AngleUnit, AreaUnit, CrsDefinition, DrawingFont, DrawingUnit, ProjectSettings, Workspace,
+};
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::number::NumberInput;
@@ -17,6 +19,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Dialog, overlay};
 use kentos_ui::{label, style};
 
+use super::custom_crs::{self, Outcome, Target};
 use super::{Event as ProjectEvent, Window, group, message, modes, scales, setting};
 use crate::app::{App, Message};
 use crate::crs;
@@ -126,6 +129,13 @@ pub struct State {
     removing: Option<String>,
     /// Datum dönüşümleri's forms as typed (docs/adr/0168 §3).
     choices: super::choices::Choices,
+    /// Özel koordinat sistemi over this window (custom_crs.rs).
+    pub(super) custom: Option<custom_crs::Editor>,
+    /// The project's own definition and its second's (docs/adr/0168 §1),
+    /// kept while another system is chosen: their rows stay in the lists
+    /// until Kaydet, which keeps only the chosen.
+    defined: Option<CrsDefinition>,
+    second_defined: Option<CrsDefinition>,
 }
 
 #[derive(Debug, Clone)]
@@ -146,8 +156,16 @@ pub enum Event {
     /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok. Either takes
     /// the place of a second definition (docs/adr/0168 §1).
     Second(Option<u32>),
-    /// The second definition the project has, kept.
+    /// The second definition, chosen again.
     SecondDefined,
+    /// The project's own definition, chosen again.
+    Defined,
+    /// Özel sistem…: a new definition of the project's own system or of its second.
+    NewDefinition(Target),
+    /// Düzenle: the definition there is.
+    EditDefinition(Target),
+    /// Özel koordinat sistemi's fields and buttons.
+    Custom(custom_crs::Event),
     /// Kaldır on a grid's row: asked in the row; none: Vazgeç.
     GridAsk(Option<String>),
     /// Datum dönüşümleri: a pair's form changed.
@@ -177,7 +195,19 @@ impl State {
             query: String::new(),
             removing: None,
             choices: super::choices::Choices::of(&doc.settings().datum_transforms),
+            custom: None,
+            defined: doc
+                .settings()
+                .custom_crs
+                .clone()
+                .filter(|_| doc.settings().srid == crs::LOCAL_SRID),
+            second_defined: doc.settings().second_custom_crs.clone(),
         }
+    }
+
+    /// Esc: the window over this one, or the question in a row, goes first.
+    pub(super) fn dismiss_inner(&mut self) -> bool {
+        self.custom.take().is_some() || self.removing.take().is_some()
     }
 }
 
@@ -209,7 +239,11 @@ impl App {
             Event::Scale(v) => d.plot_scale = v,
             Event::Mode(w) => d.workspace = Some(w),
             Event::Font(f) => d.drawing_font = Some(f),
-            Event::Crs(srid) => d.srid = srid,
+            // A system of the registry takes the definition's place (docs/adr/0168 §1).
+            Event::Crs(srid) => {
+                d.srid = srid;
+                d.custom_crs = None;
+            }
             Event::Search(query) => {
                 let digits: String = query.chars().filter(char::is_ascii_digit).collect();
                 if let Ok(srid) = digits.parse::<u32>()
@@ -217,14 +251,51 @@ impl App {
                     && crs::system(srid).is_some()
                 {
                     d.srid = srid;
+                    d.custom_crs = None;
                 }
                 s.query = query;
+            }
+            Event::Defined => {
+                if let Some(def) = &s.defined {
+                    d.srid = crs::LOCAL_SRID;
+                    d.custom_crs = Some(def.clone());
+                }
             }
             Event::Second(second) => {
                 d.second_srid = second;
                 d.second_custom_crs = None;
             }
-            Event::SecondDefined => {}
+            Event::SecondDefined => {
+                if let Some(def) = &s.second_defined {
+                    d.second_srid = None;
+                    d.second_custom_crs = Some(def.clone());
+                }
+            }
+            Event::NewDefinition(target) => s.custom = Some(custom_crs::Editor::new(target, None)),
+            Event::EditDefinition(target) => {
+                let existing = match target {
+                    Target::Own => s.defined.as_ref(),
+                    Target::Second => s.second_defined.as_ref(),
+                };
+                s.custom = Some(custom_crs::Editor::new(target, existing));
+            }
+            Event::Custom(e) => match s.custom.as_mut().map(|editor| editor.edit(e)) {
+                Some(Outcome::Close) => s.custom = None,
+                // Tamam: the definition is the draft's (Kaydet assigns it).
+                Some(Outcome::Done(Target::Own, def)) => {
+                    s.custom = None;
+                    d.srid = crs::LOCAL_SRID;
+                    d.custom_crs = Some(def.clone());
+                    s.defined = Some(def);
+                }
+                Some(Outcome::Done(Target::Second, def)) => {
+                    s.custom = None;
+                    d.second_srid = None;
+                    d.second_custom_crs = Some(def.clone());
+                    s.second_defined = Some(def);
+                }
+                Some(Outcome::Keep) | None => {}
+            },
             Event::GridAsk(id) => s.removing = id,
             Event::Choice(i, edit) => s.choices.edit(i, edit, &grids, &mut d.datum_transforms),
             Event::Grid(_) => {}
@@ -263,19 +334,21 @@ impl App {
             settings.drawing_unit = None;
         }
         doc.model.set_settings(settings);
-        let assigned = (s.settings.srid != s.initial.srid).then_some(s.settings.srid);
+        // The project's system, a definition's too (docs/adr/0168 §1).
+        let assigned = (s.settings.srid, s.settings.custom_crs.as_ref())
+            != (s.initial.srid, s.initial.custom_crs.as_ref());
+        let title = crs::project_title(doc.settings());
         let second = doc.settings().second_srid;
         let defined = doc.settings().second_custom_crs.as_ref();
         let second_changed =
             (second, defined) != (s.initial.second_srid, s.initial.second_custom_crs.as_ref());
         let defined = defined.map(kentos_project::systems::definition_title);
         self.close_project_window();
-        if let Some(srid) = assigned {
+        if assigned {
             self.say(
                 Level::Success,
                 format!(
-                    "Proje koordinat sistemi {} olarak atandı. Koordinat değerleri değiştirilmedi.",
-                    crs::title_of(srid)
+                    "Proje koordinat sistemi {title} olarak atandı. Koordinat değerleri değiştirilmedi."
                 ),
             );
         }
@@ -304,6 +377,10 @@ impl App {
         let Some(doc) = &self.document else {
             return text("").into();
         };
+        // Özel koordinat sistemi over this window, which waits under it.
+        if let Some(editor) = &s.custom {
+            return custom_crs::view(editor, |e| event(Event::Custom(e)));
+        }
         let nav = Section::ALL
             .iter()
             .fold(Column::new().spacing(2).width(190), |nav, section| {
@@ -466,6 +543,16 @@ impl App {
                 &s.query,
                 |srid| event(Event::Crs(srid)),
                 |q| event(Event::Search(q)),
+                crs::Defined {
+                    definition: s.defined.as_ref(),
+                    chosen: s.settings.custom_crs.is_some() && s.settings.srid == crs::LOCAL_SRID,
+                    was: s.initial.custom_crs.is_some() && s.initial.srid == crs::LOCAL_SRID,
+                    changed: (s.settings.srid, s.settings.custom_crs.as_ref())
+                        != (s.initial.srid, s.initial.custom_crs.as_ref()),
+                    on_pick: event(Event::Defined),
+                    on_new: event(Event::NewDefinition(Target::Own)),
+                    on_edit: event(Event::EditDefinition(Target::Own)),
+                },
             ),
             second_group(s),
             super::choices::view(&s.choices, self.choice_grids(), |i, e| {
@@ -558,9 +645,11 @@ impl App {
 }
 
 /// İkinci koordinat sistemi (docs/adr/0167 §1): the registry's systems but
-/// the project's own, grouped by datum, and Yok (the web's `secondGroup`).
-/// Its values show beside the project's in the status bar and Koordinat
-/// oku; the drawing is not transformed.
+/// the project's own, grouped by datum, the project's second definition
+/// (docs/adr/0168 §1) and Yok (the web's `secondGroup`); Özel sistem… under
+/// the list defines one, Düzenle beside it edits the one chosen. Its values
+/// show beside the project's in the status bar and Koordinat oku; the
+/// drawing is not transformed.
 fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
     let d = &s.settings;
     let what = "Durum çubuğunda ve Koordinat oku’da projeninkilerin yanında bu sistemin değerleri de gösterilir; çizim dönüştürülmez. ED50 değerleri EPSG’nin ±2 m’lik dönüşümüyledir, resmî dönüşüm değildir.";
@@ -576,8 +665,7 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
             ),
         );
     }
-    // Each row's choice: Yok, the project's second definition (docs/adr/0168 §1), a datum's
-    // header, a system of the registry.
+    // Each row's choice: Yok, the project's second definition, a datum's header, a system of the registry.
     #[derive(Clone, Copy, PartialEq)]
     enum Pick {
         Yok,
@@ -585,13 +673,9 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
         Header,
         Srid(u32),
     }
-    let defined = d
-        .second_custom_crs
-        .as_ref()
-        .filter(|_| d.second().is_none());
     let mut rows = vec![Pick::Yok];
     let mut list = vec![Choice::new("Yok")];
-    if let Some(def) = defined {
+    if let Some(def) = &s.second_defined {
         rows.push(Pick::Defined);
         list.push(
             Choice::new(def.name.clone())
@@ -611,10 +695,11 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
             );
         }
     }
-    let current = match (d.second(), defined) {
-        (Some(srid), _) => Pick::Srid(srid),
-        (None, Some(_)) => Pick::Defined,
-        (None, None) => Pick::Yok,
+    let defined = d.second_custom_crs.is_some() && d.second().is_none();
+    let current = match d.second() {
+        Some(srid) => Pick::Srid(srid),
+        None if defined => Pick::Defined,
+        None => Pick::Yok,
     };
     let selected = rows.iter().position(|r| *r == current);
     let pick = Select::new(list, selected, move |i| {
@@ -623,10 +708,24 @@ fn second_group<'a>(s: &'a State) -> Element<'a, Message> {
             Some(Pick::Defined) => Event::SecondDefined,
             _ => Event::Second(None),
         })
-    });
+    })
+    .action(
+        kentos_ui::icon::Icon::Plus,
+        "Özel sistem…",
+        event(Event::NewDefinition(Target::Second)),
+    );
+    let mut value = row![container(pick).width(300)]
+        .spacing(8)
+        .align_y(iced::Center);
+    if defined {
+        value = value.push(words::secondary(
+            "Düzenle",
+            Some(event(Event::EditDefinition(Target::Second))),
+        ));
+    }
     group(
         "İkinci koordinat sistemi",
-        setting("İkinci sistem", Some(what), container(pick).width(300)),
+        setting("İkinci sistem", Some(what), value),
     )
 }
 

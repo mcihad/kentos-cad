@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 87,
-      "implemented": 87,
+      "total": 88,
+      "implemented": 88,
       "partial": 0,
       "pending": 0
     },
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 87,
-        "implemented": 69,
+        "total": 88,
+        "implemented": 70,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -983,7 +983,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/layout.mjs"
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ],
       "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Noktalar ve listeler `crs.transform` (Koordinat dönüştür) ile dönüştürülür; çizimin kendisi dönüştürülmez (ADR 0167)."
     },
@@ -18544,6 +18545,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/settings_view.rs (ADR 0023)"
+    },
+    {
+      "id": "apps/web/src/ui/settings/CustomCrsDialog.ts#openCustomCrs",
+      "name": "openCustomCrs",
+      "role": "window",
+      "source": "apps/web/src/ui/settings/CustomCrsDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/project/custom_crs.rs, Proje ayarları'nın üstünde (ADR 0168 §6)"
     },
     {
       "id": "apps/web/src/ui/settings/NewProjectWizard.ts#openNewProjectWizard",
