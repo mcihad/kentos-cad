@@ -126,12 +126,12 @@ impl Document {
             ..
         } = parts.snapshot;
         // The former Hibrit mode is held as a type not asked yet, as the web holds it (docs/adr/0165 §1),
-        // and a second system that is not another one as none (docs/adr/0167 §1).
+        // and the systems and choices as a project keeps them (docs/adr/0167 §1, 0168).
         let settings = ProjectSettings {
             workspace: settings.project_type(),
-            second_srid: settings.second(),
             ..settings
-        };
+        }
+        .sanitized();
         let largest = entities.iter().map(|e| e.base().id).max().unwrap_or(0);
         let mut store = Store::default();
         for (entity, uid) in entities.into_iter().zip(parts.uids) {

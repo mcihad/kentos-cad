@@ -166,3 +166,65 @@ fn a_second_system_is_another_system() {
     let local = ProjectSettings { srid: 0, ..tm30 };
     assert_eq!(local.second(), None);
 }
+
+/// A project's own definitions and datum choices (docs/adr/0168): read from
+/// and written as JSON; kept only where they may be (`sanitized`), each by
+/// its rules, a pair of datums chosen for at most once.
+#[test]
+fn a_projects_own_systems_keep_their_rules() {
+    use kentos_contracts::ProjectSettings;
+    let read = |json: &str| -> ProjectSettings { serde_json::from_str(json).expect("settings") };
+    let base = r#""lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000"#;
+    let site = r#"{"name":"Şantiye","system":{"kind":"local","base":{"srid":5255},"plane":{"kind":"similarity","east":1.0,"north":2.0,"rotation":12.5,"scale":1.0}}}"#;
+    let choice = r#"{"from":"ED50","to":"TUREF","name":"Bölge 7","helmert":{"translation":[1.0,2.0,3.0],"rotation":[0.0,0.0,0.5],"scale":1.0,"convention":"coordinateFrame"}}"#;
+    let own = read(&format!(
+        r#"{{"srid":0,{base},"customCrs":{site},"secondSrid":5255,"datumTransforms":[{choice}]}}"#
+    ));
+    assert!(own.has_system());
+    assert_eq!(own.second(), Some(5255));
+    assert_eq!(own.clone().sanitized(), own);
+    let json = serde_json::to_string(&own).expect("json");
+    assert!(json.contains(r#""customCrs":{"name":"Şantiye""#), "{json}");
+    assert_eq!(read(&json), own);
+    // A definition with an EPSG code goes; so does a second definition beside a second EPSG code.
+    let coded = ProjectSettings {
+        srid: 5254,
+        ..own.clone()
+    }
+    .sanitized();
+    assert_eq!(coded.custom_crs, None);
+    let both = ProjectSettings {
+        second_custom_crs: own.custom_crs.clone(),
+        ..own.clone()
+    }
+    .sanitized();
+    assert_eq!(
+        (both.second_srid, both.second_custom_crs),
+        (Some(5255), None)
+    );
+    // A plane that folds, or a pair chosen twice, is not kept.
+    let folding = site
+        .replace(
+            r#"{"kind":"similarity","east":1.0,"north":2.0,"rotation":12.5,"scale":1.0}"#,
+            r#"{"kind":"affine","a":1.0,"b":2.0,"c":0.0,"d":2.0,"e":4.0,"f":0.0}"#,
+        )
+        .replace("Şantiye", "Katlanan");
+    let folded = read(&format!(r#"{{"srid":0,{base},"customCrs":{folding}}}"#));
+    assert!(
+        folded
+            .custom_crs
+            .as_ref()
+            .and_then(|d| d.problem())
+            .is_some()
+    );
+    assert_eq!(folded.sanitized().custom_crs, None);
+    let reversed = choice.replace(
+        r#""from":"ED50","to":"TUREF""#,
+        r#""from":"TUREF","to":"ED50""#,
+    );
+    let twice = read(&format!(
+        r#"{{"srid":5254,{base},"datumTransforms":[{choice},{reversed}]}}"#
+    ));
+    assert!(kentos_contracts::crs::choices_problem(&twice.datum_transforms).is_some());
+    assert!(twice.sanitized().datum_transforms.is_empty());
+}

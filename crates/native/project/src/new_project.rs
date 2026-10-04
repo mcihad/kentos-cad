@@ -65,6 +65,9 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         drawing_font: Some(DrawingFont::Barlow),
         drawing_unit: None,
         second_srid: None,
+        custom_crs: None,
+        second_custom_crs: None,
+        datum_transforms: Vec::new(),
     }
 }
 

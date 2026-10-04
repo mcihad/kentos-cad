@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 268,
-      "implemented": 268,
+      "total": 320,
+      "implemented": 320,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 268,
-        "implemented": 268,
+        "total": 320,
+        "implemented": 320,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -14323,6 +14323,343 @@
       }
     },
     {
+      "id": "Convention",
+      "contract": "Convention",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "values": [
+        "positionVector",
+        "coordinateFrame"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsBase.definition",
+      "contract": "CrsBase",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "definition",
+      "type": "CrsDefinition",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsBase.srid",
+      "contract": "CrsBase",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "srid",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsDefinition.name",
+      "contract": "CrsDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsDefinition.system",
+      "contract": "CrsDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "system",
+      "type": "CrsSystem",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.a",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "a",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.b",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "b",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.c",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "c",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.d",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "d",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.e",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "e",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.east",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "east",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.f",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "f",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.kind",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "kind",
+      "type": "\"similarity\"",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.north",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "north",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.rotation",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "rotation",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsPlane.scale",
+      "contract": "CrsPlane",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "scale",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CrsSystem",
+      "contract": "CrsSystem",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "variants": [
+        {
+          "kind": "tm",
+          "type": "TmDefinition"
+        },
+        {
+          "kind": "geographic",
+          "type": "GeographicDefinition"
+        },
+        {
+          "kind": "local",
+          "type": "LocalDefinition"
+        }
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CustomDatum.ellipsoid",
+      "contract": "CustomDatum",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "ellipsoid",
+      "type": "Ellipsoid",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CustomDatum.name",
+      "contract": "CustomDatum",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "CustomDatum.toWgs84",
+      "contract": "CustomDatum",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "toWgs84",
+      "type": "Helmert",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DatumTransform.from",
+      "contract": "DatumTransform",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "from",
+      "type": "RegistryDatum",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DatumTransform.grid",
+      "contract": "DatumTransform",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "grid",
+      "type": "GridChoice",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DatumTransform.helmert",
+      "contract": "DatumTransform",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "helmert",
+      "type": "Helmert",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DatumTransform.name",
+      "contract": "DatumTransform",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DatumTransform.to",
+      "contract": "DatumTransform",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "to",
+      "type": "RegistryDatum",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.a",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -15094,6 +15431,45 @@
       }
     },
     {
+      "id": "Ellipsoid.inverseFlattening",
+      "contract": "Ellipsoid",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "inverseFlattening",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Ellipsoid.name",
+      "contract": "Ellipsoid",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Ellipsoid.semiMajor",
+      "contract": "Ellipsoid",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "semiMajor",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "Entity",
       "contract": "Entity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -15170,6 +15546,84 @@
       "contract": "EntityId",
       "rust": "crates/shared/contracts/src/identity.rs",
       "type": "string",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GeographicDefinition.customDatum",
+      "contract": "GeographicDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "customDatum",
+      "type": "CustomDatum",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GeographicDefinition.datum",
+      "contract": "GeographicDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "datum",
+      "type": "RegistryDatum",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GridChoice.accuracy",
+      "contract": "GridChoice",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "accuracy",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GridChoice.file",
+      "contract": "GridChoice",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "file",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GridChoice.id",
+      "contract": "GridChoice",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "id",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "GridChoice.size",
+      "contract": "GridChoice",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "size",
+      "type": "bigint",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -15354,6 +15808,71 @@
         "lines",
         "cross"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Helmert.accuracy",
+      "contract": "Helmert",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "accuracy",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Helmert.convention",
+      "contract": "Helmert",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "convention",
+      "type": "Convention",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Helmert.rotation",
+      "contract": "Helmert",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "rotation",
+      "type": "[number, number, number]",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Helmert.scale",
+      "contract": "Helmert",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "scale",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "Helmert.translation",
+      "contract": "Helmert",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "translation",
+      "type": "[number, number, number]",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -16282,6 +16801,32 @@
       }
     },
     {
+      "id": "LocalDefinition.base",
+      "contract": "LocalDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "base",
+      "type": "CrsBase",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LocalDefinition.plane",
+      "contract": "LocalDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "plane",
+      "type": "CrsPlane",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "MigrationSource.format",
       "contract": "MigrationSource",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -16685,6 +17230,32 @@
       }
     },
     {
+      "id": "ProjectSettings.customCrs",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "customCrs",
+      "type": "CrsDefinition",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.datumTransforms",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "datumTransforms",
+      "type": "Array<DatumTransform>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ProjectSettings.drawingFont",
       "contract": "ProjectSettings",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -16730,6 +17301,19 @@
       "field": "plotScale",
       "type": "number",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.secondCustomCrs",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "secondCustomCrs",
+      "type": "CrsDefinition",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -16795,6 +17379,21 @@
       "field": "items",
       "type": "unknown[]",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "RegistryDatum",
+      "contract": "RegistryDatum",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "values": [
+        "TUREF",
+        "ED50",
+        "WGS84"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -17156,6 +17755,97 @@
       "field": "widthFactor",
       "type": "number",
       "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.centralMeridian",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "centralMeridian",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.customDatum",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "customDatum",
+      "type": "CustomDatum",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.datum",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "datum",
+      "type": "RegistryDatum",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.falseEasting",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "falseEasting",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.falseNorthing",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "falseNorthing",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.latitudeOfOrigin",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "latitudeOfOrigin",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TmDefinition.scaleFactor",
+      "contract": "TmDefinition",
+      "rust": "crates/shared/contracts/src/crs.rs",
+      "field": "scaleFactor",
+      "type": "number",
+      "optional": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",

@@ -26,6 +26,7 @@ file and saving it as v2 must give on every platform.
 import hashlib
 import json
 import math
+import re
 import struct
 import sys
 from pathlib import Path
@@ -167,10 +168,106 @@ def enum(values):
     return encode
 
 
+# ── The project's coordinate systems and datum choices (schema 13, spec §6.4.1, docs/adr/0168) ──────────────────
+
+REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
+
+
+def finite(v):
+    assert isinstance(v, float) and math.isfinite(v), v
+    return f64(v)
+
+
+def three(v):
+    assert len(v) == 3, v
+    return array([finite(x) for x in v])
+
+
+def helmert(h):
+    assert h["convention"] in ("positionVector", "coordinateFrame"), h
+    assert "accuracy" not in h or h["accuracy"] >= 0, h
+    return cmap(fields(h, {"translation": (three, True), "rotation": (three, True), "scale": (finite, True),
+                           "convention": (text, True), "accuracy": (finite, False)}, "helmert"))
+
+
+def custom_datum(d):
+    e = d["ellipsoid"]
+    assert d["name"].strip() and e["name"].strip() and e["semiMajor"] > 0 and e["inverseFlattening"] > 1, d
+    ellipsoid = cmap(fields(e, {"name": (text, True), "semiMajor": (finite, True), "inverseFlattening": (finite, True)},
+                            "ellipsoid"))
+    return cmap(fields(d, {"name": (text, True), "ellipsoid": (lambda _: ellipsoid, True), "toWgs84": (helmert, False)},
+                       "customDatum"))
+
+
+def plane(p):
+    if p["kind"] == "similarity":
+        assert p["scale"] > 0, p
+        table = {k: (finite, True) for k in ("east", "north", "rotation", "scale")}
+    else:
+        assert p["kind"] == "affine" and p["a"] * p["e"] - p["b"] * p["d"] != 0, p
+        table = {k: (finite, True) for k in "abcdef"}
+    return cmap(fields(p, {"kind": (text, True), **table}, "plane"))
+
+
+def crs_base(b):
+    assert ("srid" in b) != ("definition" in b), b
+    if "srid" in b:
+        assert b["srid"] != 0, b
+        return cmap({"srid": uint(b["srid"])})
+    assert b["definition"]["system"]["kind"] == "tm", b
+    return cmap({"definition": crs_definition(b["definition"])})
+
+
+def crs_system(s):
+    kind = s["kind"]
+    if kind in ("tm", "geographic"):
+        assert ("datum" in s) != ("customDatum" in s), s
+    if kind == "tm":
+        assert s["scaleFactor"] > 0 and -180 <= s["centralMeridian"] <= 180 and -90 <= s.get("latitudeOfOrigin", 0.0) <= 90, s
+        table = {"kind": (text, True), "datum": (enum(REGISTRY_DATUMS), False), "customDatum": (custom_datum, False),
+                 "latitudeOfOrigin": (finite, False), "centralMeridian": (finite, True), "scaleFactor": (finite, True),
+                 "falseEasting": (finite, True), "falseNorthing": (finite, True)}
+    elif kind == "geographic":
+        table = {"kind": (text, True), "datum": (enum(REGISTRY_DATUMS), False), "customDatum": (custom_datum, False)}
+    else:
+        assert kind == "local", s
+        table = {"kind": (text, True), "base": (crs_base, True), "plane": (plane, True)}
+    return cmap(fields(s, table, "system"))
+
+
+def crs_definition(d):
+    assert d["name"].strip(), d
+    return cmap(fields(d, {"name": (text, True), "system": (crs_system, True)}, "definition"))
+
+
+def grid_choice(g):
+    assert re.fullmatch(r"[0-9a-f]{64}", g["id"]) and g["size"] > 0 and ("accuracy" not in g or g["accuracy"] >= 0), g
+    return cmap(fields(g, {"id": (text, True), "file": (text, True), "size": (uint, True), "accuracy": (finite, False)},
+                       "grid"))
+
+
+def datum_transforms(ts):
+    pairs = []
+    out = []
+    for t in ts:
+        assert t["from"] in REGISTRY_DATUMS and t["to"] in REGISTRY_DATUMS and t["from"] != t["to"], t
+        assert ("helmert" in t) != ("grid" in t) and t["name"].strip(), t
+        pair = frozenset((t["from"], t["to"]))
+        assert pair not in pairs, "bir datum çifti için en çok bir seçim"
+        pairs.append(pair)
+        out.append(cmap(fields(t, {"from": (text, True), "to": (text, True), "name": (text, True),
+                                   "helmert": (helmert, False), "grid": (grid_choice, False)}, "datumTransform")))
+    return array(out)
+
+
 def settings(s):
     second = s.get("secondSrid")
-    # A second coordinate system is another system than the project's own; a local project has none (docs/adr/0167 §1).
-    assert second is None or (second != 0 and s["srid"] != 0 and second != s["srid"]), "ikinci sistem projeninkinden başka olmalı"
+    has_system = s["srid"] != 0 or "customCrs" in s
+    # A second coordinate system is another system than the project's own; a project without one has none (docs/adr/0167
+    # §1; a definition of its own is one, 0168 §1).
+    assert second is None or (second != 0 and has_system and second != s["srid"]), "ikinci sistem projeninkinden başka olmalı"
+    assert "customCrs" not in s or s["srid"] == 0, "kendi tanımı yalnız srid 0 projede"
+    assert "secondCustomCrs" not in s or (second is None and has_system), "ikinci tanım ikinci EPSG koduyla birlikte olmaz"
     return cmap(
         fields(
             s,
@@ -185,6 +282,9 @@ def settings(s):
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 "drawingUnit": (enum(("mm", "cm", "m")), False),
                 "secondSrid": (uint, False),
+                "customCrs": (crs_definition, False),
+                "secondCustomCrs": (crs_definition, False),
+                "datumTransforms": (datum_transforms, False),
             },
             "settings",
         )
@@ -441,6 +541,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    if settings and any(k in settings for k in ("customCrs", "secondCustomCrs", "datumTransforms")):
+        return 13
     if settings and "secondSrid" in settings:
         return 12
     if settings and "drawingUnit" in settings:
@@ -653,7 +755,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-13.kcad"] = container(root(cmap(parts), version=b"\x0d"))
+    files["schema-version-14.kcad"] = container(root(cmap(parts), version=b"\x0e"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -839,6 +941,53 @@ def broken(minimal_content, minimal_file):
     files["second-srid-same.kcad"] = container(root(with_second(m["settings"]["srid"]), version=uint(12)))
     files["second-srid-local.kcad"] = container(root(with_second(2322, srid=0), version=uint(12)))
     files["srid-range.kcad"] = container(with_parts({**parts, "settings": cmap({**settings_parts(m["settings"]), "srid": uint(1 << 32)})}))
+    # The project's own systems and datum choices are schema 13's (docs/adr/0168): unknown fields in schema 12; a
+    # definition of the project's own only without an EPSG code, a second one only instead of a second EPSG code and with
+    # a system to be the second of; every definition and choice by its rules.
+    tm = {"kind": text("tm"), "datum": text("TUREF"), "centralMeridian": f64(30.0), "scaleFactor": f64(1.0),
+          "falseEasting": f64(200000.0), "falseNorthing": f64(0.0)}
+    definition = lambda system, name="Tanım": cmap({"name": text(name), "system": cmap(system)})
+    with_settings = lambda version, srid=0, **more: container(root(cmap({**parts, "settings": cmap(
+        {**settings_parts({**m["settings"], "srid": srid}), **more})}), version=uint(version)))
+    files["custom-crs-in-schema-12.kcad"] = with_settings(12, customCrs=definition(tm))
+    files["custom-crs-with-srid.kcad"] = with_settings(13, srid=5254, customCrs=definition(tm))
+    files["second-custom-with-second-srid.kcad"] = with_settings(13, srid=5254, secondSrid=uint(2320),
+                                                                 secondCustomCrs=definition(tm))
+    files["second-custom-without-system.kcad"] = with_settings(13, srid=0, secondCustomCrs=definition(tm))
+    files["custom-crs-kind-unknown.kcad"] = with_settings(13, customCrs=definition({**tm, "kind": text("lambert")}))
+    files["custom-crs-field-of-other-kind.kcad"] = with_settings(13, customCrs=definition(
+        {**tm, "plane": cmap({"kind": text("similarity"), "east": f64(0.0), "north": f64(0.0), "rotation": f64(0.0),
+                              "scale": f64(1.0)})}))
+    files["custom-crs-two-datums.kcad"] = with_settings(13, customCrs=definition({**tm, "customDatum": cmap(
+        {"name": text("D"), "ellipsoid": cmap({"name": text("E"), "semiMajor": f64(6378000.0),
+                                                "inverseFlattening": f64(298.0)})})}))
+    files["custom-crs-flat-ellipsoid.kcad"] = with_settings(13, customCrs=definition({**{k: v for k, v in tm.items() if k != "datum"},
+        "customDatum": cmap({"name": text("D"), "ellipsoid": cmap({"name": text("E"), "semiMajor": f64(6378000.0),
+                                                                    "inverseFlattening": f64(0.5)})})}))
+    folded = cmap({"kind": text("affine"), **{k: f64(v) for k, v in zip("abcdef", (1.0, 2.0, 0.0, 2.0, 4.0, 0.0))}})
+    files["custom-crs-folded-plane.kcad"] = with_settings(13, customCrs=definition(
+        {"kind": text("local"), "base": cmap({"srid": uint(5254)}), "plane": folded}))
+    local_base = cmap({"definition": definition({"kind": text("local"), "base": cmap({"srid": uint(5254)}),
+                                                  "plane": cmap({"kind": text("similarity"), "east": f64(0.0), "north": f64(0.0),
+                                                                 "rotation": f64(0.0), "scale": f64(1.0)})})})
+    files["custom-crs-local-base.kcad"] = with_settings(13, customCrs=definition(
+        {"kind": text("local"), "base": local_base, "plane": cmap({"kind": text("similarity"), "east": f64(0.0),
+                                                                   "north": f64(0.0), "rotation": f64(0.0), "scale": f64(1.0)})}))
+    files["custom-crs-rotation-two.kcad"] = with_settings(13, customCrs=definition({**{k: v for k, v in tm.items() if k != "datum"},
+        "customDatum": cmap({"name": text("D"), "ellipsoid": cmap({"name": text("E"), "semiMajor": f64(6378000.0),
+                                                                    "inverseFlattening": f64(298.0)}),
+                             "toWgs84": cmap({"translation": array([f64(1.0)] * 3), "rotation": array([f64(0.0)] * 2),
+                                              "scale": f64(0.0), "convention": text("positionVector")})})}))
+    seven = cmap({"translation": array([f64(1.0)] * 3), "rotation": array([f64(0.0)] * 3), "scale": f64(0.0),
+                  "convention": text("positionVector")})
+    choice = lambda a, b, **more: cmap({"from": text(a), "to": text(b), "name": text("Seçim"), **more})
+    files["datum-transform-same.kcad"] = with_settings(13, srid=5254, datumTransforms=array([choice("ED50", "ED50", helmert=seven)]))
+    files["datum-transform-twice.kcad"] = with_settings(13, srid=5254, datumTransforms=array(
+        [choice("ED50", "TUREF", helmert=seven), choice("TUREF", "ED50", helmert=seven)]))
+    files["datum-transform-both.kcad"] = with_settings(13, srid=5254, datumTransforms=array([choice(
+        "ED50", "TUREF", helmert=seven, grid=cmap({"id": text("a" * 64), "file": text("g.gsb"), "size": uint(10)}))]))
+    files["datum-transform-grid-id.kcad"] = with_settings(13, srid=5254, datumTransforms=array([choice(
+        "ED50", "TUREF", grid=cmap({"id": text("A" * 64), "file": text("g.gsb"), "size": uint(10)}))]))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -878,6 +1027,9 @@ def build():
     out["layer-snap.kcad"] = container(document(load("layer-snap.json")))
     out["drawing-unit.kcad"] = container(document(load("drawing-unit.json")))
     out["second-crs.kcad"] = container(document(load("second-crs.json")))
+    out["custom-crs.kcad"] = container(document(load("custom-crs.json")))
+    out["custom-second-crs.kcad"] = container(document(load("custom-second-crs.json")))
+    out["custom-geographic.kcad"] = container(document(load("custom-geographic.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

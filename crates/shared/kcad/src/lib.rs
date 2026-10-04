@@ -138,8 +138,16 @@ pub const SCHEMA_WITH_DRAWING_UNIT: u32 = 11;
 /// unseen at the next save.
 pub const SCHEMA_WITH_SECOND_SRID: u32 = 12;
 
+/// Document schema 13 (docs/specs/kcad-v2.md §6.1): schema 12 and the
+/// project's own coordinate systems and datum choices, the settings'
+/// `customCrs`, `secondCustomCrs` and `datumTransforms` (docs/adr/0168). A
+/// writer writes it only when the project has one of them: any other drawing
+/// stays 12 or older, byte for byte; a reader of those refuses a drawing that
+/// has one rather than open a project of its own system as one without any.
+pub const SCHEMA_WITH_CUSTOM_CRS: u32 = 13;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 11] = [
+pub const SCHEMAS: [u32; 12] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -151,6 +159,7 @@ pub const SCHEMAS: [u32; 11] = [
     SCHEMA_WITH_LAYER_SNAP,
     SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_CUSTOM_CRS,
 ];
 
 /// The file a drawing is saved as.

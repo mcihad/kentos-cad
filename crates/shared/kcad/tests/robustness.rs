@@ -443,6 +443,9 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             // and 12), from a stream of its own.
             drawing_unit: None,
             second_srid: None,
+            custom_crs: None,
+            second_custom_crs: None,
+            datum_transforms: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

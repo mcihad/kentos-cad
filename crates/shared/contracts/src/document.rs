@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::crs::{CrsDefinition, DatumTransform, choices_problem};
 use crate::entity::{Entity, Vec2};
 use crate::identity::{EntityId, ProjectId};
 use crate::layer::LayerNode;
@@ -152,6 +153,19 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub second_srid: Option<u32>,
+    /// The project's own coordinate system when it is a definition
+    /// (docs/adr/0168 §1); `srid` is then 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub custom_crs: Option<CrsDefinition>,
+    /// The second system when it is a definition (instead of `second_srid`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub second_custom_crs: Option<CrsDefinition>,
+    /// The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DatumTransform>>", optional))]
+    pub datum_transforms: Vec<DatumTransform>,
 }
 
 impl ProjectSettings {
@@ -161,13 +175,19 @@ impl ProjectSettings {
         self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
     }
 
-    /// The unit lengths are typed and read in: a local project's own, metres
-    /// for any other (docs/adr/0165 §2).
+    /// Whether the project has a coordinate system: the registry's, or its
+    /// own definition (docs/adr/0168 §1).
+    pub fn has_system(&self) -> bool {
+        self.srid != 0 || self.custom_crs.is_some()
+    }
+
+    /// The unit lengths are typed and read in: a project without a
+    /// coordinate system has its own, any other metres (docs/adr/0165 §2).
     pub fn unit(&self) -> DrawingUnit {
-        if self.srid == 0 {
-            self.drawing_unit.unwrap_or_default()
-        } else {
+        if self.has_system() {
             DrawingUnit::M
+        } else {
+            self.drawing_unit.unwrap_or_default()
         }
     }
 
@@ -175,7 +195,40 @@ impl ProjectSettings {
     /// system other than its own, and the project has one (docs/adr/0167 §1).
     pub fn second(&self) -> Option<u32> {
         self.second_srid
-            .filter(|s| *s != 0 && *s != self.srid && self.srid != 0)
+            .filter(|s| *s != 0 && *s != self.srid && self.has_system())
+    }
+
+    /// The settings as a project keeps them (docs/adr/0167 §1, 0168 §1–§3):
+    /// its own definition only without an EPSG code and where its rules
+    /// hold, a second system only where it may be (an EPSG code before a
+    /// definition), a unit only without a system, the datum choices only
+    /// when they all hold.
+    pub fn sanitized(mut self) -> Self {
+        if self.srid != 0
+            || self
+                .custom_crs
+                .as_ref()
+                .is_some_and(|d| d.problem().is_some())
+        {
+            self.custom_crs = None;
+        }
+        self.second_srid = self.second();
+        if self.second_srid.is_some()
+            || !self.has_system()
+            || self
+                .second_custom_crs
+                .as_ref()
+                .is_some_and(|d| d.problem().is_some())
+        {
+            self.second_custom_crs = None;
+        }
+        if self.custom_crs.is_some() {
+            self.drawing_unit = None;
+        }
+        if choices_problem(&self.datum_transforms).is_some() {
+            self.datum_transforms.clear();
+        }
+        self
     }
 }
 

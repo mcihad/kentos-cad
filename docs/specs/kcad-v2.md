@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3, 4 ya da 5 yazar, §6.1), KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–13 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -219,7 +219,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 12**, şema 11'in kendisi ve projenin ikinci koordinat sistemidir: proje ayarlarının `secondSrid` alanı (§6.4; ADR 0167 §1). Yazıcı `12`'yi **yalnız projenin ikinci sistemi varken** yazar. Başka her çizim şema 2–11'dir ve eskisiyle bayt bayt aynıdır. Şema 2–11 yükünde `secondSrid` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/second-srid-in-schema-11.kcad`): eski okuyucu dosyayı açıp bir sonraki kayıtta ikinci sistemi sessizce düşürmez, dosyayı açmaz. Şema 12 şema 11'i kapsar.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 13**, şema 12'nin kendisi ve projenin kendi koordinat sistemleriyle datum seçimleridir: proje ayarlarının `customCrs`, `secondCustomCrs` ve `datumTransforms` alanları (§6.4, §6.4.1; ADR 0168). Yazıcı `13`'ü **yalnız bu alanlardan biri varken** yazar. Başka her çizim şema 2–12'dir ve eskisiyle bayt bayt aynıdır. Şema 2–12 yükünde bu alanlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/custom-crs-in-schema-12.kcad`): eski okuyucu kendi sistemi olan bir projeyi koordinat sistemi yokmuş gibi açmaz. Şema 13 şema 12'yi kapsar.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -264,13 +266,40 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `srid` | u32 | evet | EPSG kodu; 0 yerel sistemdir (koordinat sistemi yok, ADR 0165 §2). Koordinat sistemi tahmin edilmez; SRID yalnız etikettir, dönüşüm değildir |
 | `areaUnit` | numaralı metin | evet | `m2`, `donum`, `ha` |
 | `angleUnit` | numaralı metin | evet | `grad`, `deg` |
+| `customCrs` | harita (§6.4.1) | | şema 13'te: projenin kendi sistemi bir tanımsa o (ADR 0168 §1); o zaman `srid` 0'dır, değilse `bad_value` (`broken/custom-crs-with-srid.kcad`). Böyle projenin ikinci sistemi olabilir (`secondSrid`), çizim birimi metredir |
 | `plotScale` | float | evet | çizim ölçeği paydası (1:1000 → `1000.0`) |
 | `workspace` | numaralı metin | | projenin türü: `cad`, `gis`, `plan3d`, `disaster`; eski dosyaların `hybrid`'i (kalkan Hibrit modu) okunur ve olduğu gibi yazılır, alanın yokluğu gibi türü sorulmamış proje demektir (ADR 0165 §1) |
 | `drawingFont` | numaralı metin | | `barlow`, `arimo`, `overpass`, `quicksand`, `architects-daughter`, `courier-prime`, `plex-mono` |
-| `secondSrid` | u32 | | şema 12'de: projenin ikinci koordinat sisteminin EPSG kodu; koordinatları projeninkilerin yanında gösterilir, çizim dönüştürülmez (ADR 0167 §1). 0 olamaz, `srid` ile aynı olamaz, yerel projede (`srid` 0) bulunmaz; değilse `bad_value` (`broken/second-srid-zero.kcad`, `broken/second-srid-same.kcad`, `broken/second-srid-local.kcad`). Okuyucu sistemi tanımasa da alanı korur; değerleri gösterilmez |
+| `secondSrid` | u32 | | şema 12'de: projenin ikinci koordinat sisteminin EPSG kodu; koordinatları projeninkilerin yanında gösterilir, çizim dönüştürülmez (ADR 0167 §1). 0 olamaz, `srid` ile aynı olamaz, koordinat sistemi olmayan projede (`srid` 0, `customCrs` yok) bulunmaz; değilse `bad_value` (`broken/second-srid-zero.kcad`, `broken/second-srid-same.kcad`, `broken/second-srid-local.kcad`). Okuyucu sistemi tanımasa da alanı korur; değerleri gösterilmez |
 | `drawingUnit` | numaralı metin | | şema 11'de: yerel projenin çizim birimi, `mm`, `cm`, `m` (yokluğu metre). Uzunluklar ve koordinatlar bu birimle yazılır ve gösterilir; geometri metrede saklanır. Koordinat sistemi olan projede birim sistemindir (ADR 0165 §2) |
 | `areaDecimals` | u32 | evet | alan gösterim basamağı |
 | `lengthDecimals` | u32 | evet | uzunluk gösterim basamağı |
+| `datumTransforms` | dizi (§6.4.1) | | şema 13'te: projenin datum seçimleri, kayıttaki her datum çifti için en çok biri (ADR 0168 §3); değilse `bad_value` (`broken/datum-transform-twice.kcad`) |
+| `secondCustomCrs` | harita (§6.4.1) | | şema 13'te: ikinci sistem bir tanımsa o (ADR 0168 §1); `secondSrid` ile birlikte bulunmaz, projenin bir sistemi olmalıdır (`srid` ya da `customCrs`); değilse `bad_value` (`broken/second-custom-with-second-srid.kcad`, `broken/second-custom-without-system.kcad`) |
+
+#### 6.4.1 Koordinat sistemi tanımları ve datum seçimleri
+
+Şema 13'te (ADR 0168). Bir **tanım** haritadır: `name` (boş olmayan metin) ve `system` (harita). Sistemin anahtarları, `kind`'ına göre:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `kind` | numaralı metin | evet | `tm`, `geographic`, `local` |
+| `datum` | numaralı metin | | `tm` ve `geographic`'te: kayıttaki datum, `TUREF`, `ED50`, `WGS84`; |
+| `customDatum` | harita | | ya da projenin datumu (aşağıda); ikisinden tam biri |
+| `scaleFactor` | float | `tm` | 0'dan büyük |
+| `falseEasting`, `falseNorthing` | float | `tm` | m |
+| `centralMeridian` | float | `tm` | derece, −180 ile 180 arası |
+| `latitudeOfOrigin` | float | | `tm`'de derece, −90 ile 90 arası; yokluğu 0 |
+| `base` | harita | `local` | `srid` (u32, kayıttaki projeksiyonlu bir sistem, 0 olamaz) ya da `definition` (yalnız `tm` olan bir tanım); tam biri |
+| `plane` | harita | `local` | `kind` `similarity` (`east`, `north`, `rotation` derece, saat yönünün tersine, `scale` 0'dan büyük) ya da `affine` (`a` … `f`, `a·e − b·d` 0 olamaz): bu sistemden tabana, taban x = a·x + b·y + c, taban y = d·x + e·y + f |
+
+Bir sistemde türünün olmayan anahtar `unknown_field`'dır (`broken/custom-crs-field-of-other-kind.kcad`).
+
+**Projenin datumu** haritadır: `name` (metin), `toWgs84` (isteğe bağlı yedi parametre; yoksa datum kendi içinde kalır) ve `ellipsoid` (`name`, `semiMajor` 0'dan büyük, `inverseFlattening` 1'den büyük). **Yedi parametre** (`toWgs84`, `helmert`) haritadır: `scale` (float, ppm), isteğe bağlı `accuracy` (float, m, 0 ya da büyük), `rotation` (3 float, ″), `convention` (`positionVector`, `coordinateFrame`), `translation` (3 float, m).
+
+Bir **datum seçimi** haritadır: `to` ve `from` (kayıttaki iki ayrı datum), `name` (metin) ve ya `helmert` (yedi parametre) ya `grid` (harita: `id` küçük harfli 64 onaltılık rakamla dosyanın SHA-256'sı, `file` metin, `size` u64 0'dan büyük, isteğe bağlı `accuracy`); tam biri. Izgaranın kendisi dosyada değildir, cihazın kitaplığındadır (ADR 0168 §4).
+
+Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/custom-crs-two-datums.kcad`, `custom-crs-flat-ellipsoid.kcad`, `custom-crs-folded-plane.kcad`, `custom-crs-local-base.kcad`, `custom-crs-rotation-two.kcad`, `datum-transform-same.kcad`, `datum-transform-both.kcad`, `datum-transform-grid-id.kcad`). Örnek dosyalar `custom-crs.kcad` (yerel sistem, kayıttaki taban, iki datum seçimi), `custom-second-crs.kcad` (ikinci sistemin tanımı: afin, projenin datumlu TM tabanı) ve `custom-geographic.kcad` (WGS 84'e bağı olmayan datumla coğrafi sistem).
 
 ### 6.5 Katman ağacı
 

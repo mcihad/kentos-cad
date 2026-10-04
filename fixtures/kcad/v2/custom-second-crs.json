@@ -1,0 +1,107 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Eski belediye paftası",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "secondCustomCrs": {
+      "name": "Belediye sistemi",
+      "system": {
+        "kind": "local",
+        "base": {
+          "definition": {
+            "name": "Bessel TM",
+            "system": {
+              "kind": "tm",
+              "customDatum": {
+                "name": "Bessel datumu",
+                "ellipsoid": {
+                  "name": "Bessel 1841",
+                  "semiMajor": 6377397.155,
+                  "inverseFlattening": 299.1528128
+                },
+                "toWgs84": {
+                  "translation": [
+                    598.1,
+                    73.7,
+                    418.2
+                  ],
+                  "rotation": [
+                    0.202,
+                    0.045,
+                    -2.455
+                  ],
+                  "scale": 6.7,
+                  "convention": "positionVector",
+                  "accuracy": 1.5
+                }
+              },
+              "latitudeOfOrigin": 36.0,
+              "centralMeridian": 34.5,
+              "scaleFactor": 0.9999,
+              "falseEasting": 200000.0,
+              "falseNorthing": 100000.0
+            }
+          }
+        },
+        "plane": {
+          "kind": "affine",
+          "a": 1.00002,
+          "b": -0.0003,
+          "c": 1250.0,
+          "d": 0.00025,
+          "e": 0.99998,
+          "f": -830.5
+        }
+      }
+    }
+  },
+  "origin": {
+    "x": 414000.0,
+    "y": 4540000.0
+  },
+  "layers": [
+    {
+      "id": "aplikasyon",
+      "name": "Aplikasyon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "aplikasyon",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "aplikasyon",
+      "attrs": {
+        "ad": "P1"
+      },
+      "p": {
+        "x": 414120.512,
+        "y": 4540398.207
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e51"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

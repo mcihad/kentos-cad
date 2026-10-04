@@ -1,4 +1,6 @@
 import { Signal, watchAll } from '../core/signal';
+import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
+import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { Workspace } from '../contracts/generated/Workspace';
@@ -6,7 +8,7 @@ import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
-export type { DrawingFont, DrawingUnit, Workspace };
+export type { CrsDefinition, DatumTransform, DrawingFont, DrawingUnit, Workspace };
 
 /** How many of a drawing unit make a metre (docs/adr/0165 §2). */
 export const UNIT_PER_METRE: Record<DrawingUnit, number> = { mm: 1000, cm: 100, m: 1 };
@@ -47,14 +49,30 @@ export interface ProjectSettingsData {
   drawingUnit?: DrawingUnit;
   /** The project's second coordinate system (docs/adr/0167 §1): its values are shown beside the project's; absent: none. */
   secondSrid?: number;
+  /** The project's own coordinate system when it is a definition (docs/adr/0168 §1); `srid` is then 0. */
+  customCrs?: CrsDefinition;
+  /** The second system when it is a definition (instead of `secondSrid`). */
+  secondCustomCrs?: CrsDefinition;
+  /** The project's datum choices (docs/adr/0168 §3); absent: EPSG's ways. */
+  datumTransforms?: DatumTransform[];
 }
 
-/** A change to some settings: absent fields are kept; a null `secondSrid` removes the second system. */
-export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid'>> & { secondSrid?: number | null };
+/**
+ * A change to some settings: absent fields are kept; a null `secondSrid`, `customCrs` or `secondCustomCrs` removes it,
+ * an empty `datumTransforms` the datum choices.
+ */
+export type ProjectSettingsPatch = Partial<Omit<ProjectSettingsData, 'secondSrid' | 'customCrs' | 'secondCustomCrs'>> & {
+  secondSrid?: number | null;
+  customCrs?: CrsDefinition | null;
+  secondCustomCrs?: CrsDefinition | null;
+};
 
-/** Whether `second` may be the second system of a project in `crs`: another system, and the project has one (docs/adr/0167 §1). */
-export const secondAllowed = (crs: CrsDef, second: number | null | undefined): second is number =>
-  typeof second === 'number' && second !== 0 && second !== crs.srid && crs.kind !== 'local';
+/**
+ * Whether `second` may be the second system of a project in `crs`: another system, and the project has one — the
+ * registry's or its own definition (`custom`; docs/adr/0167 §1, 0168 §1).
+ */
+export const secondAllowed = (crs: CrsDef, second: number | null | undefined, custom = false): second is number =>
+  typeof second === 'number' && second !== 0 && second !== crs.srid && (crs.kind !== 'local' || custom);
 
 export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
   srid: DEFAULT_SRID,
@@ -86,6 +104,12 @@ export class ProjectSettings {
   readonly drawingUnit: Signal<DrawingUnit>;
   /** The second coordinate system's SRID, or null: never the project's own, never a local project's (docs/adr/0167 §1). */
   readonly secondSrid: Signal<number | null>;
+  /** The project's own coordinate system when it is a definition, or null; only without an EPSG code (docs/adr/0168 §1). */
+  readonly customCrs: Signal<CrsDefinition | null>;
+  /** The second system's definition, or null; never with a second EPSG code, never without a system of the project's. */
+  readonly secondCustomCrs: Signal<CrsDefinition | null>;
+  /** The project's datum choices (docs/adr/0168 §3). */
+  readonly datumTransforms: Signal<readonly DatumTransform[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -100,9 +124,27 @@ export class ProjectSettings {
     this.workspace = new Signal(typeOf(d.workspace));
     this.drawingFont = new Signal(d.drawingFont);
     this.drawingUnit = new Signal(d.drawingUnit ?? 'm');
-    this.secondSrid = new Signal(secondAllowed(this.crs.value, d.secondSrid) ? d.secondSrid : null);
+    this.customCrs = new Signal(this.crs.value.kind === 'local' ? (d.customCrs ?? null) : null);
+    const custom = this.customCrs.value !== null;
+    this.secondSrid = new Signal(secondAllowed(this.crs.value, d.secondSrid, custom) ? d.secondSrid : null);
+    this.secondCustomCrs = new Signal(this.secondSrid.value === null && (this.crs.value.kind !== 'local' || custom) ? (d.secondCustomCrs ?? null) : null);
+    this.datumTransforms = new Signal<readonly DatumTransform[]>(d.datumTransforms ?? []);
     watchAll(
-      [this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont, this.drawingUnit, this.secondSrid],
+      [
+        this.crs,
+        this.lengthDecimals,
+        this.areaDecimals,
+        this.areaUnit,
+        this.angleUnit,
+        this.plotScale,
+        this.workspace,
+        this.drawingFont,
+        this.drawingUnit,
+        this.secondSrid,
+        this.customCrs,
+        this.secondCustomCrs,
+        this.datumTransforms,
+      ],
       () => this.changed.update((v) => v + 1),
     );
   }
@@ -122,6 +164,10 @@ export class ProjectSettings {
       ...(this.drawingUnit.value !== 'm' ? { drawingUnit: this.drawingUnit.value } : {}),
       // Written only when there is one (KCAD schema 12).
       ...(this.secondSrid.value !== null ? { secondSrid: this.secondSrid.value } : {}),
+      // Written only when there are (KCAD schema 13).
+      ...(this.customCrs.value ? { customCrs: this.customCrs.value } : {}),
+      ...(this.secondCustomCrs.value ? { secondCustomCrs: this.secondCustomCrs.value } : {}),
+      ...(this.datumTransforms.value.length ? { datumTransforms: [...this.datumTransforms.value] } : {}),
     };
   }
 
@@ -131,14 +177,25 @@ export class ProjectSettings {
     return srid === null ? null : (crsBySrid(srid) ?? null);
   }
 
-  /** The unit lengths are typed and read in: a local project's own, metres for any other (docs/adr/0165 §2). */
+  /** Whether the project has a coordinate system: the registry's, or its own definition (docs/adr/0168 §1). */
+  get hasSystem(): boolean {
+    return this.crs.value.kind !== 'local' || this.customCrs.value !== null;
+  }
+
+  /** The unit lengths are typed and read in: a project without a coordinate system has its own, any other metres (docs/adr/0165 §2). */
   get unit(): DrawingUnit {
-    return this.crs.value.kind === 'local' ? this.drawingUnit.value : 'm';
+    return this.hasSystem ? 'm' : this.drawingUnit.value;
   }
 
   /** Takes a whole snapshot's settings: one without a type has its type not asked yet. */
   replace(data: ProjectSettingsData): void {
-    this.assign({ ...data, secondSrid: data.secondSrid ?? null });
+    this.assign({
+      ...data,
+      secondSrid: data.secondSrid ?? null,
+      customCrs: data.customCrs ?? null,
+      secondCustomCrs: data.secondCustomCrs ?? null,
+      datumTransforms: data.datumTransforms ?? [],
+    });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
   }
@@ -163,7 +220,14 @@ export class ProjectSettings {
     if (data.workspace !== undefined) this.workspace.set(typeOf(data.workspace));
     if (data.drawingFont !== undefined) this.drawingFont.set(data.drawingFont);
     if (data.drawingUnit !== undefined) this.drawingUnit.set(data.drawingUnit);
+    // A definition of its own only without an EPSG code; a second system only where it may be, an EPSG code before a
+    // definition (docs/adr/0167 §1, 0168 §1).
+    const custom = data.customCrs === undefined ? this.customCrs.value : data.customCrs;
+    this.customCrs.set(this.crs.value.kind === 'local' ? custom : null);
     const second = data.secondSrid === undefined ? this.secondSrid.value : data.secondSrid;
-    this.secondSrid.set(secondAllowed(this.crs.value, second) ? second : null);
+    this.secondSrid.set(secondAllowed(this.crs.value, second, this.customCrs.value !== null) ? second : null);
+    const secondCustom = data.secondCustomCrs === undefined ? this.secondCustomCrs.value : data.secondCustomCrs;
+    this.secondCustomCrs.set(this.secondSrid.value === null && this.hasSystem ? secondCustom : null);
+    if (data.datumTransforms !== undefined) this.datumTransforms.set(data.datumTransforms);
   }
 }

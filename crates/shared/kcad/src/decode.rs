@@ -7,6 +7,7 @@
 //! the block definitions in `blocks.rs`.
 
 mod blocks;
+mod crs;
 mod objects;
 
 use kentos_contracts::{
@@ -296,10 +297,12 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
 }
 
 /// The settings; `has` says whether the schema has the drawing unit (11 and
-/// up) and the second coordinate system (12 and up).
+/// up), the second coordinate system (12 and up) and the project's own
+/// systems and datum choices (13).
 fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadError> {
     let (mut srid, mut area_unit, mut angle_unit, mut plot_scale) = (None, None, None, None);
     let (mut drawing_unit, mut second_srid) = (None, None);
+    let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -359,11 +362,21 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     ],
                 )?)
             }
-            // `srid` comes first in the encoded order: the project's own system is known.
+            "customCrs" if has.custom_crs => custom_crs = Some(crs::crs_definition(r)?),
+            "secondCustomCrs" if has.custom_crs => {
+                second_custom_crs = Some(crs::crs_definition(r)?)
+            }
+            "datumTransforms" if has.custom_crs => {
+                datum_transforms = crs::datum_transforms(r)?
+            }
+            // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
                 let second = r.uint(u64::from(u32::MAX))? as u32;
-                if second == 0 || srid == Some(0) || srid == Some(second) {
+                if second == 0
+                    || (srid == Some(0) && custom_crs.is_none())
+                    || srid == Some(second)
+                {
                     return Err(r.fail_at(
                         Code::BadValue,
                         at,
@@ -378,8 +391,33 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         }
         Ok(())
     })?;
+    let srid = required(r, srid, "srid")?;
+    // A definition of its own is the system of a project without an EPSG
+    // code; a second definition is no second EPSG code, and needs a system to
+    // be the second of (docs/adr/0168 §1).
+    let relation = |key: &'static str, what: &str, r: &mut Reader<'_>| {
+        r.push(Seg::Name(key));
+        let e = r.fail(Code::BadValue, what);
+        r.pop();
+        e
+    };
+    if custom_crs.is_some() && srid != 0 {
+        return Err(relation(
+            "customCrs",
+            "projenin kendi tanımı yalnız EPSG kodu olmayan (srid 0) projede olur",
+            r,
+        ));
+    }
+    if second_custom_crs.is_some() && (second_srid.is_some() || (srid == 0 && custom_crs.is_none()))
+    {
+        return Err(relation(
+            "secondCustomCrs",
+            "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz",
+            r,
+        ));
+    }
     Ok(ProjectSettings {
-        srid: required(r, srid, "srid")?,
+        srid,
         length_decimals: required(r, length_decimals, "lengthDecimals")?,
         area_decimals: required(r, area_decimals, "areaDecimals")?,
         area_unit: required(r, area_unit, "areaUnit")?,
@@ -389,6 +427,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         drawing_font,
         drawing_unit,
         second_srid,
+        custom_crs,
+        second_custom_crs,
+        datum_transforms,
     })
 }
 

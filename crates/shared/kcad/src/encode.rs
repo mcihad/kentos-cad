@@ -14,6 +14,7 @@
 //! names in `names.rs`.
 
 mod blocks;
+mod crs;
 mod names;
 mod objects;
 
@@ -28,7 +29,8 @@ use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, rend
 use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
-    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS,
+    SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
+    SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_TEXT_EXTRAS,
 };
@@ -267,12 +269,15 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
-    fn settings(&mut self, s: &ProjectSettings) -> Result<(), KcadError> {
+    fn settings(&mut self, s: &'d ProjectSettings) -> Result<(), KcadError> {
         let n = 6
             + usize::from(s.workspace.is_some())
             + usize::from(s.drawing_font.is_some())
             + usize::from(s.drawing_unit.is_some())
-            + usize::from(s.second_srid.is_some());
+            + usize::from(s.second_srid.is_some())
+            + usize::from(s.custom_crs.is_some())
+            + usize::from(s.second_custom_crs.is_some())
+            + usize::from(!s.datum_transforms.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -280,6 +285,18 @@ impl<'d> Encoder<'d> {
         self.w.text(area_unit(s.area_unit));
         self.key("angleUnit");
         self.w.text(angle_unit(s.angle_unit));
+        if let Some(d) = &s.custom_crs {
+            self.key("customCrs");
+            self.at(Seg::Name("customCrs"), |e| {
+                if s.srid != 0 {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "projenin kendi tanımı yalnız EPSG kodu olmayan (srid 0) projede olur",
+                    ));
+                }
+                e.crs_definition(d)
+            })?;
+        }
         self.key("plotScale");
         self.at(Seg::Name("plotScale"), |e| e.float(s.plot_scale))?;
         if let Some(w) = s.workspace {
@@ -311,6 +328,24 @@ impl<'d> Encoder<'d> {
         self.w.uint(u64::from(s.area_decimals));
         self.key("lengthDecimals");
         self.w.uint(u64::from(s.length_decimals));
+        if !s.datum_transforms.is_empty() {
+            self.key("datumTransforms");
+            self.at(Seg::Name("datumTransforms"), |e| {
+                e.datum_transforms(&s.datum_transforms)
+            })?;
+        }
+        if let Some(d) = &s.second_custom_crs {
+            self.key("secondCustomCrs");
+            self.at(Seg::Name("secondCustomCrs"), |e| {
+                if s.second_srid.is_some() || !s.has_system() {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz",
+                    ));
+                }
+                e.crs_definition(d)
+            })?;
+        }
         self.close();
         Ok(())
     }
@@ -571,6 +606,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
     }
+    let s = &doc.settings;
+    if s.custom_crs.is_some() || s.second_custom_crs.is_some() || !s.datum_transforms.is_empty() {
+        return SCHEMA_WITH_CUSTOM_CRS;
+    }
     if doc.settings.second_srid.is_some() {
         return SCHEMA_WITH_SECOND_SRID;
     }
@@ -668,7 +707,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 14] = [
+        let maps: [&[&str]; 26] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -687,6 +726,7 @@ mod tests {
                 "srid",
                 "areaUnit",
                 "angleUnit",
+                "customCrs",
                 "plotScale",
                 "workspace",
                 "secondSrid",
@@ -694,6 +734,8 @@ mod tests {
                 "drawingUnit",
                 "areaDecimals",
                 "lengthDecimals",
+                "datumTransforms",
+                "secondCustomCrs",
             ],
             &["format", "version", "sourceSha256"],
             &[
@@ -738,6 +780,28 @@ mod tests {
                 "description",
             ],
             &["p", "tag", "value", "height", "prompt", "rotation"],
+            // The project's own systems and datum choices (docs/adr/0168).
+            &["name", "system"],
+            &[
+                "kind",
+                "datum",
+                "customDatum",
+                "scaleFactor",
+                "falseEasting",
+                "falseNorthing",
+                "centralMeridian",
+                "latitudeOfOrigin",
+            ],
+            &["kind", "datum", "customDatum"],
+            &["base", "kind", "plane"],
+            &["srid", "definition"],
+            &["name", "toWgs84", "ellipsoid"],
+            &["name", "semiMajor", "inverseFlattening"],
+            &["scale", "accuracy", "rotation", "convention", "translation"],
+            &["east", "kind", "north", "scale", "rotation"],
+            &["a", "b", "c", "d", "e", "f", "kind"],
+            &["to", "from", "grid", "name", "helmert"],
+            &["id", "file", "size", "accuracy"],
         ];
         for keys in maps {
             assert!(

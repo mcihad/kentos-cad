@@ -700,8 +700,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   tamam; `HYB-11` bitti. `HYB-12` özel koordinat sistemi ([ADR 0168](docs/adr/0168-custom-crs-and-datum-transforms.md)):
   1a (çekirdek: projenin datumu, başlangıç enlemli TM, yerel sistem, projenin datum seçimleri; PROJ başvurusu
   `crs_custom_cases.py`) ve 1b (WKT ve PROJ okuma ve yazma, `crs::text`, `crs::wkt`; PROJ başvurusu `crs_text_cases.py`)
-  ve 2. adım (NTv2 ızgarası `crs::ntv2`, PROJ'un hgridshift'i birebir; başvuru `ntv2_cases.py`) tamam; sıradaki 3. adım
-  (sözleşme `crs`, `secondCrs`, `datumTransforms`, `.kcad` şema 13, cihazın ızgara kitaplığı). 3 Ekim:
+  ve 2. adım (NTv2 ızgarası `crs::ntv2`, PROJ'un hgridshift'i birebir; başvuru `ntv2_cases.py`) ve 3a (sözleşme
+  `kentos_contracts::crs`, ayarlar `customCrs`, `secondCustomCrs`, `datumTransforms`, `ProjectSettings::sanitized`; `.kcad` şema 13 ve
+  bağımsız Python okuyucu ve yazıcısı) tamam; sıradaki 3b (çözücü: projenin tanımları ve seçimleri çekirdeğin sistemlerine, durum
+  çubuğu, Koordinat oku, ölçüler, dönüştürücü; cihazın ızgara kitaplığı). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin
   kararı, [ADR 0155](docs/adr/0155-web-ribbon-only.md)). PDF, yazdırma ve pafta çıktısı (§16.4) en

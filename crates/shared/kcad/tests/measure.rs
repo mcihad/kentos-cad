@@ -74,6 +74,9 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,
+            custom_crs: None,
+            second_custom_crs: None,
+            datum_transforms: Vec::new(),
         },
         origin: Vec2 {
             x: 486_000.0,

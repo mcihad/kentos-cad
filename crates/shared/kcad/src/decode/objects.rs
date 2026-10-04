@@ -28,7 +28,7 @@ use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_ELEVATIONS,
     SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_TEXT_EXTRAS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -95,6 +95,9 @@ pub(super) struct Features {
     pub(super) drawing_unit: bool,
     /// Schema 12: the project's second coordinate system (the settings' `secondSrid`).
     pub(super) second_srid: bool,
+    /// Schema 13: the project's own systems and datum choices (the settings'
+    /// `customCrs`, `secondCustomCrs`, `datumTransforms`).
+    pub(super) custom_crs: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -113,6 +116,7 @@ impl Features {
             layer_snap: schema >= SCHEMA_WITH_LAYER_SNAP,
             drawing_unit: schema >= SCHEMA_WITH_DRAWING_UNIT,
             second_srid: schema >= SCHEMA_WITH_SECOND_SRID,
+            custom_crs: schema >= SCHEMA_WITH_CUSTOM_CRS,
             uids: true,
         }
     }

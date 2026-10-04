@@ -26,6 +26,7 @@ here.
 import hashlib
 import json
 import math
+import re
 import struct
 import sys
 from collections import Counter
@@ -75,6 +76,10 @@ SCHEMA_WITH_LAYER_SNAP = 10
 SCHEMA_WITH_DRAWING_UNIT = 11
 # Schema 12: schema 11 and the project's second coordinate system, the settings' `secondSrid` (docs/adr/0167 §1).
 SCHEMA_WITH_SECOND_SRID = 12
+# Schema 13: schema 12 and the project's own coordinate systems and datum choices, the settings' `customCrs`,
+# `secondCustomCrs` and `datumTransforms` (docs/adr/0168).
+SCHEMA_WITH_CUSTOM_CRS = 13
+REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
 # A dimension's kinds; schema 9 added the last five.
@@ -86,9 +91,105 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
+
+
+# ── The project's coordinate systems' rules (spec §6.4.1; kentos_contracts::crs) ────────────────────────────────
+
+
+def finite_all(values):
+    return all(math.isfinite(x) for x in values)
+
+
+def helmert_problem(h):
+    if not finite_all(h["translation"] + h["rotation"] + [h["scale"]]):
+        return "yedi parametre sonlu sayılar olmalı"
+    if "accuracy" in h and not (math.isfinite(h["accuracy"]) and h["accuracy"] >= 0):
+        return "doğruluk 0 ya da büyük bir sayı olmalı"
+    return None
+
+
+def datum_problem(s):
+    """A definition's datum: exactly one of `datum` and `customDatum`, the project's by its rules."""
+    if ("datum" in s) == ("customDatum" in s):
+        return "datum ya kayıttaki bir ad ya projenin datumu olur, yalnız biri"
+    if "datum" in s:
+        return None
+    d = s["customDatum"]
+    e = d["ellipsoid"]
+    if not d["name"].strip() or not e["name"].strip():
+        return "datumun ve elipsoidin adı boş olamaz"
+    ok = math.isfinite(e["semiMajor"]) and e["semiMajor"] > 0 and math.isfinite(e["inverseFlattening"]) and e["inverseFlattening"] > 1
+    if not ok:
+        return "elipsoidin büyük yarı ekseni 0'dan, ters basıklığı 1'den büyük olmalı"
+    return helmert_problem(d["toWgs84"]) if "toWgs84" in d else None
+
+
+def plane_problem(p):
+    if p["kind"] == "similarity":
+        if not finite_all([p["east"], p["north"], p["rotation"], p["scale"]]) or p["scale"] <= 0:
+            return "benzerliğin değerleri sonlu, ölçeği 0'dan büyük olmalı"
+        return None
+    if not finite_all([p[k] for k in "abcdef"]) or p["a"] * p["e"] - p["b"] * p["d"] == 0:
+        return "afinin katsayıları sonlu olmalı, düzlemi katlamamalı"
+    return None
+
+
+def crs_problem(d, base=False):
+    """What is wrong with a definition (kentos_contracts::CrsDefinition::problem), or None."""
+    if not d["name"].strip():
+        return "tanımın adı boş olamaz"
+    s = d["system"]
+    if s["kind"] == "tm":
+        lat0 = s.get("latitudeOfOrigin", 0.0)
+        if not finite_all([lat0, s["centralMeridian"], s["scaleFactor"], s["falseEasting"], s["falseNorthing"]]):
+            return "izdüşümün değerleri sonlu sayılar olmalı"
+        if s["scaleFactor"] <= 0:
+            return "ölçek 0'dan büyük olmalı"
+        if abs(s["centralMeridian"]) > 180 or abs(lat0) > 90:
+            return "orta meridyen ya da başlangıç enlemi aralık dışında"
+        return datum_problem(s)
+    if base:
+        return "yerel sistemin tabanı bir TM izdüşümü olmalı"
+    if s["kind"] == "geographic":
+        return datum_problem(s)
+    b = s["base"]
+    if ("srid" in b) == ("definition" in b):
+        return "yerel sistemin tabanı ya bir EPSG kodu ya bir tanımdır, yalnız biri"
+    if "srid" in b:
+        return "yerel sistemin tabanı kayıttaki bir sistem olmalı" if b["srid"] == 0 else plane_problem(s["plane"])
+    return crs_problem(b["definition"], True) or plane_problem(s["plane"])
+
+
+def choices_problem(choices):
+    """What is wrong with a project's datum choices together (kentos_contracts::crs::choices_problem), or None."""
+    pairs = []
+    for t in choices:
+        if t["from"] == t["to"]:
+            return "datum seçimi iki ayrı datum arasında olur"
+        if not t["name"].strip():
+            return "datum seçiminin adı boş olamaz"
+        if ("helmert" in t) == ("grid" in t):
+            return "datum seçimi ya yedi parametre ya ızgaradır, yalnız biri"
+        if "helmert" in t:
+            problem = helmert_problem(t["helmert"])
+            if problem:
+                return problem
+        else:
+            g = t["grid"]
+            if not re.fullmatch(r"[0-9a-f]{64}", g["id"]):
+                return "ızgaranın kimliği küçük harfli 64 onaltılık rakamla SHA-256 olmalı"
+            if g["size"] == 0:
+                return "ızgaranın boyu 0 olamaz"
+            if "accuracy" in g and not (math.isfinite(g["accuracy"]) and g["accuracy"] >= 0):
+                return "doğruluk 0 ya da büyük bir sayı olmalı"
+        pair = frozenset((t["from"], t["to"]))
+        if pair in pairs:
+            return "bir datum çifti için en çok bir seçim olur"
+        pairs.append(pair)
+    return None
 
 
 class KcadError(Exception):
@@ -483,6 +584,7 @@ class _Schema:
         self.layer_snap = version >= SCHEMA_WITH_LAYER_SNAP
         self.drawing_unit = version >= SCHEMA_WITH_DRAWING_UNIT
         self.second_srid = version >= SCHEMA_WITH_SECOND_SRID
+        self.custom_crs = version >= SCHEMA_WITH_CUSTOM_CRS
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -537,13 +639,30 @@ class _Schema:
                 **({"drawingUnit": (self.enum(("mm", "cm", "m")), False)} if self.drawing_unit else {}),
                 "areaDecimals": (self.uint(32), True),
                 "lengthDecimals": (self.uint(32), True),
+                **(
+                    {
+                        "customCrs": (self.crs_definition, False),
+                        "secondCustomCrs": (self.crs_definition, False),
+                        "datumTransforms": (self.datum_transforms, False),
+                    }
+                    if self.custom_crs
+                    else {}
+                ),
             }
         )(v)
-        # A second coordinate system is another system than the project's own; a local project has none.
+        # A second coordinate system is another system than the project's own; a project without one has none (a
+        # definition of its own is one, docs/adr/0168 §1).
+        has_system = s["srid"] != 0 or "customCrs" in s
         second = s.get("secondSrid")
-        if second is not None and (second == 0 or s["srid"] == 0 or second == s["srid"]):
+        if second is not None and (second == 0 or not has_system or second == s["srid"]):
             self.path.append("secondSrid")
             self.fail("bad_value", "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz")
+        if "customCrs" in s and s["srid"] != 0:
+            self.path.append("customCrs")
+            self.fail("bad_value", "projenin kendi tanımı yalnız EPSG kodu olmayan (srid 0) projede olur")
+        if "secondCustomCrs" in s and ("secondSrid" in s or not has_system):
+            self.path.append("secondCustomCrs")
+            self.fail("bad_value", "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz")
         return s
 
     def source(self, v):
@@ -569,6 +688,115 @@ class _Schema:
         if "snap" in n and n["type"] == "group":
             self.fail("bad_value", "grubun keneti olmaz; kenet yalnız katmanındır")
         return n
+
+    # The project's coordinate systems and datum choices (schema 13, spec §6.4.1, docs/adr/0168).
+
+    def three(self, v):
+        a = self.array(self.float)(v)
+        if len(a) != 3:
+            self.fail("bad_value", f"3 sayı olmalı, {len(a)} var")
+        return a
+
+    def helmert(self, v):
+        h = self.fields(
+            {
+                "scale": (self.float, True),
+                "accuracy": (self.float, False),
+                "rotation": (self.three, True),
+                "convention": (self.enum(("positionVector", "coordinateFrame")), True),
+                "translation": (self.three, True),
+            }
+        )(v)
+        return {k: h[k] for k in ("translation", "rotation", "scale", "convention", "accuracy") if k in h}
+
+    def custom_datum(self, v):
+        ellipsoid = self.fields({"name": (self.text, True), "semiMajor": (self.float, True), "inverseFlattening": (self.float, True)})
+        d = self.fields({"name": (self.text, True), "toWgs84": (self.helmert, False), "ellipsoid": (ellipsoid, True)})(v)
+        e = d["ellipsoid"]
+        out = {"name": d["name"], "ellipsoid": {"name": e["name"], "semiMajor": e["semiMajor"], "inverseFlattening": e["inverseFlattening"]}}
+        if "toWgs84" in d:
+            out["toWgs84"] = d["toWgs84"]
+        return out
+
+    def crs_plane(self, v):
+        similarity = ("east", "north", "rotation", "scale")
+        table = {"kind": (self.enum(("similarity", "affine")), True), **{k: (self.float, False) for k in "abcdef"},
+                 **{k: (self.float, False) for k in similarity}}
+        p = self.fields(table)(v)
+        affine = p["kind"] == "affine"
+        if any(k in p for k in (similarity if affine else tuple("abcdef"))):
+            self.fail("unknown_field", "düzlem dönüşümünde türünün olmayan bir alanı var")
+        for k in (tuple("abcdef") if affine else similarity):
+            if k not in p:
+                self.path.append(k)
+                self.fail("missing_field", "zorunlu alan yok")
+        return {"kind": p["kind"], **{k: p[k] for k in (tuple("abcdef") if affine else similarity)}}
+
+    def crs_base(self, v):
+        b = self.fields({"srid": (self.uint(32), False), "definition": (self.crs_definition_raw, False)})(v)
+        return {k: b[k] for k in ("srid", "definition") if k in b}
+
+    def crs_system(self, v):
+        allowed = {
+            "tm": ("kind", "datum", "customDatum", "latitudeOfOrigin", "centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"),
+            "geographic": ("kind", "datum", "customDatum"),
+            "local": ("kind", "base", "plane"),
+        }
+        s = self.fields(
+            {
+                "kind": (self.enum(("tm", "geographic", "local")), True),
+                "datum": (self.enum(REGISTRY_DATUMS), False),
+                "customDatum": (self.custom_datum, False),
+                "latitudeOfOrigin": (self.float, False),
+                "centralMeridian": (self.float, False),
+                "scaleFactor": (self.float, False),
+                "falseEasting": (self.float, False),
+                "falseNorthing": (self.float, False),
+                "base": (self.crs_base, False),
+                "plane": (self.crs_plane, False),
+            }
+        )(v)
+        kind = s["kind"]
+        stray = [k for k in s if k not in allowed[kind]]
+        if stray:
+            self.path.append(stray[0])
+            self.fail("unknown_field", f"“{kind}” sisteminde bu alan olmaz")
+        required = {"tm": ("centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"), "geographic": (), "local": ("base", "plane")}[kind]
+        for k in required:
+            if k not in s:
+                self.path.append(k)
+                self.fail("missing_field", "zorunlu alan yok")
+        return {"kind": kind, **{k: s[k] for k in allowed[kind][1:] if k in s}}
+
+    def crs_definition_raw(self, v):
+        d = self.fields({"name": (self.text, True), "system": (self.crs_system, True)})(v)
+        return {"name": d["name"], "system": d["system"]}
+
+    def crs_definition(self, v):
+        d = self.crs_definition_raw(v)
+        problem = crs_problem(d)
+        if problem:
+            self.fail("bad_value", problem)
+        return d
+
+    def datum_transform(self, v):
+        grid = self.fields({"id": (self.text, True), "file": (self.text, True), "size": (self.uint(64), True), "accuracy": (self.float, False)})
+        t = self.fields({"to": (self.enum(REGISTRY_DATUMS), True), "from": (self.enum(REGISTRY_DATUMS), True), "grid": (grid, False),
+                         "name": (self.text, True), "helmert": (self.helmert, False)})(v)
+        out = {"from": t["from"], "to": t["to"], "name": t["name"]}
+        if "helmert" in t:
+            out["helmert"] = t["helmert"]
+        if "grid" in t:
+            g = t["grid"]
+            out["grid"] = {k: g[k] for k in ("id", "file", "size", "accuracy") if k in g}
+        return out
+
+    def datum_transforms(self, v):
+        all_ = self.array(self.datum_transform)(v)
+        problem = choices_problem(all_)
+        if problem:
+            self.fail("bad_value", problem)
+        return all_
 
     def layer_snap_(self, v):
         """A layer's own snapping (schema 10): exactly one of `off` (true only) and a non-empty list of known,

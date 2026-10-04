@@ -106,6 +106,18 @@ CheckpointKindName = Literal["snapshot", "revision"]
 """The names of :class:`CheckpointKind`, for a plain string."""
 
 
+class Convention(_StrEnum):
+    """Which way a Helmert transformation's rotations turn: EPSG's position
+    vector convention (9606) or its coordinate frame convention (9607).
+    """
+    POSITION_VECTOR = "positionVector"
+    COORDINATE_FRAME = "coordinateFrame"
+
+
+ConventionName = Literal["positionVector", "coordinateFrame"]
+"""The names of :class:`Convention`, for a plain string."""
+
+
 class CreateOperation(_StrEnum):
     """The drawing tool or Hesap window whose step has its own name; without
     one the step is “Ekle”, as for every object a drawing tool adds.
@@ -535,6 +547,17 @@ PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "att
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
+class RegistryDatum(_StrEnum):
+    """One of the registry's datums."""
+    TUREF = "TUREF"
+    ED50 = "ED50"
+    WGS84 = "WGS84"
+
+
+RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
+"""The names of :class:`RegistryDatum`, for a plain string."""
+
+
 class TenantKind(_StrEnum):
     """A tenant is an organisation or a person's personal space (docs/adr/0015).
 
@@ -635,6 +658,51 @@ class BlockChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> BlockChange:
         return _variant(_BLOCK_CHANGE, "BlockChange", "op", data).from_json(data)
+
+
+class CrsPlane(_Union):
+    """A local system's coordinates to its base's: base x = a·x + b·y + c,
+    base y = d·x + e·y + f; a similarity turns counter-clockwise (degrees),
+    scales, then shifts.
+
+    One of:
+
+    - :class:`SimilarityCrsPlane` (``kind: similarity``)
+    - :class:`AffineCrsPlane` (``kind: affine``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsPlane:
+        return _variant(_CRS_PLANE, "CrsPlane", "kind", data).from_json(data)
+
+
+class CrsSystem(_Union):
+    """The kind of system a definition is.
+
+    One of:
+
+    - :class:`TmCrsSystem` (``kind: tm``)
+    - :class:`GeographicCrsSystem` (``kind: geographic``)
+    - :class:`LocalCrsSystem` (``kind: local``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsSystem:
+        return _variant(_CRS_SYSTEM, "CrsSystem", "kind", data).from_json(data)
 
 
 class Entity(_Union):
@@ -801,7 +869,16 @@ class Transform(_Union):
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
 
 
+_GeographicDefinitionT = TypeVar("_GeographicDefinitionT", bound="GeographicDefinition")
+
+
+_LocalDefinitionT = TypeVar("_LocalDefinitionT", bound="LocalDefinition")
+
+
 _PathEntityT = TypeVar("_PathEntityT", bound="PathEntity")
+
+
+_TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
 
 
 @dataclass(kw_only=True, slots=True)
@@ -1917,6 +1994,116 @@ class ConstructionEntity(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsBase(_Model):
+    """A local system's base: a projected system of the registry by its EPSG
+    code (`srid`), or a transverse Mercator the project defines
+    (`definition`); exactly one.
+    """
+    definition: CrsDefinition | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.definition is not UNSET:
+            out["definition"] = None if self.definition is None else self.definition.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsBase:
+        return cls(
+            definition=UNSET if "definition" not in data else None if data["definition"] is None else CrsDefinition.from_json(data["definition"]),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsDefinition(_Model):
+    """A coordinate system the project defines (docs/adr/0168 §1): its name
+    and what it is.
+    """
+    name: str
+    system: CrsSystem
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["system"] = self.system.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsDefinition:
+        return cls(
+            name=data["name"],
+            system=CrsSystem.from_json(data["system"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CustomDatum(_Model):
+    """A datum the project defines: its ellipsoid and, when it has one, its
+    seven parameters to WGS 84 (without them it stands alone).
+    """
+    name: str
+    ellipsoid: Ellipsoid
+    to_wgs84: Helmert | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["ellipsoid"] = self.ellipsoid.to_json()
+        if self.to_wgs84 is not UNSET:
+            out["toWgs84"] = None if self.to_wgs84 is None else self.to_wgs84.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CustomDatum:
+        return cls(
+            name=data["name"],
+            ellipsoid=Ellipsoid.from_json(data["ellipsoid"]),
+            to_wgs84=UNSET if "toWgs84" not in data else None if data["toWgs84"] is None else Helmert.from_json(data["toWgs84"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatumTransform(_Model):
+    """The project's choice for a pair of the registry's datums instead of
+    EPSG's way (docs/adr/0168 §3); the pair's other way is its reverse. It
+    shifts by seven parameters (`helmert`) or an NTv2 grid (`grid`); exactly
+    one.
+    Attributes:
+        name: What the values rest on: “ED50 → TUREF: Bölge 7”.
+    """
+    from_: RegistryDatum | RegistryDatumName
+    to: RegistryDatum | RegistryDatumName
+    name: str
+    grid: GridChoice | None | Unset = UNSET
+    helmert: Helmert | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = _enum_out(self.from_)
+        out["to"] = _enum_out(self.to)
+        out["name"] = self.name
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else self.grid.to_json()
+        if self.helmert is not UNSET:
+            out["helmert"] = None if self.helmert is None else self.helmert.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatumTransform:
+        return cls(
+            from_=_enum_in(RegistryDatum, data["from"]),
+            to=_enum_in(RegistryDatum, data["to"]),
+            name=data["name"],
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else GridChoice.from_json(data["grid"]),
+            helmert=UNSET if "helmert" not in data else None if data["helmert"] is None else Helmert.from_json(data["helmert"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -2075,6 +2262,29 @@ class EllipseEntity(Entity):
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Ellipsoid(_Model):
+    """An ellipsoid: its name, semi-major axis (m) and inverse flattening."""
+    name: str
+    semi_major: float
+    inverse_flattening: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["semiMajor"] = float(self.semi_major)
+        out["inverseFlattening"] = float(self.inverse_flattening)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Ellipsoid:
+        return cls(
+            name=data["name"],
+            semi_major=float(data["semiMajor"]),
+            inverse_flattening=float(data["inverseFlattening"]),
         )
 
 
@@ -2937,6 +3147,62 @@ class FileCommitted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GeographicDefinition(_Model):
+    """Latitude and longitude on a datum.
+    Attributes:
+        custom_datum: the project's own (exactly one of the two).
+        datum: The registry's datum by name; or
+    """
+    custom_datum: CustomDatum | None | Unset = UNSET
+    datum: RegistryDatum | RegistryDatumName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.custom_datum is not UNSET:
+            out["customDatum"] = None if self.custom_datum is None else self.custom_datum.to_json()
+        if self.datum is not UNSET:
+            out["datum"] = None if self.datum is None else _enum_out(self.datum)
+        return out
+
+    @classmethod
+    def from_json(cls: type[_GeographicDefinitionT], data: Mapping[str, Any]) -> _GeographicDefinitionT:
+        return cls(
+            custom_datum=UNSET if "customDatum" not in data else None if data["customDatum"] is None else CustomDatum.from_json(data["customDatum"]),
+            datum=UNSET if "datum" not in data else None if data["datum"] is None else _enum_in(RegistryDatum, data["datum"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridChoice(_Model):
+    """An NTv2 grid the project's datum choice names: its SHA-256 (the
+    device's grid library keeps it by that), the file's name and size, the
+    accuracy the project gives it.
+    """
+    id: str
+    file: str
+    size: int
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["file"] = self.file
+        out["size"] = self.size
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridChoice:
+        return cls(
+            id=data["id"],
+            file=data["file"],
+            size=data["size"],
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HatchEntity(Entity):
     """Fields every object has. `id` is the object's local id inside a v1 file.
     v1 keeps no persistent id: it is derived from the file's content when the
@@ -3022,6 +3288,38 @@ class HatchPattern(_Model):
             type=_enum_in(HatchPatternType, data["type"]),
             angle=float(data["angle"]),
             spacing=float(data["spacing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Helmert(_Model):
+    """Seven parameters: translations (m), rotations (″) in their convention,
+    the scale difference (ppm), and the accuracy (m) when it is given.
+    """
+    translation: list[float]
+    rotation: list[float]
+    scale: float
+    convention: Convention | ConventionName
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["translation"] = [float(e0) for e0 in self.translation]
+        out["rotation"] = [float(e0) for e0 in self.rotation]
+        out["scale"] = float(self.scale)
+        out["convention"] = _enum_out(self.convention)
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Helmert:
+        return cls(
+            translation=[float(e0) for e0 in data["translation"]],
+            rotation=[float(e0) for e0 in data["rotation"]],
+            scale=float(data["scale"]),
+            convention=_enum_in(Convention, data["convention"]),
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
         )
 
 
@@ -3589,6 +3887,26 @@ class LinePlan(_Model):
         return cls(
             entity=Entity.from_json(data["entity"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LocalDefinition(_Model):
+    """A local system: its base and the plane transform from it to the base."""
+    base: CrsBase
+    plane: CrsPlane
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base.to_json()
+        out["plane"] = self.plane.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls: type[_LocalDefinitionT], data: Mapping[str, Any]) -> _LocalDefinitionT:
+        return cls(
+            base=CrsBase.from_json(data["base"]),
+            plane=CrsPlane.from_json(data["plane"]),
         )
 
 
@@ -4863,9 +5181,13 @@ class ProjectSettings(_Model):
     """Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
     Attributes:
         plot_scale: Plot scale denominator (1:1000 → 1000).
+        custom_crs: The project's own coordinate system when it is a definition
+            (docs/adr/0168 §1); `srid` is then 0.
+        datum_transforms: The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
             the project's own system, never a local project's.
@@ -4879,8 +5201,11 @@ class ProjectSettings(_Model):
     area_unit: AreaUnit | AreaUnitName
     angle_unit: AngleUnit | AngleUnitName
     plot_scale: float
+    custom_crs: CrsDefinition | None | Unset = UNSET
+    datum_transforms: list[DatumTransform] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
@@ -4892,10 +5217,16 @@ class ProjectSettings(_Model):
         out["areaUnit"] = _enum_out(self.area_unit)
         out["angleUnit"] = _enum_out(self.angle_unit)
         out["plotScale"] = float(self.plot_scale)
+        if self.custom_crs is not UNSET:
+            out["customCrs"] = None if self.custom_crs is None else self.custom_crs.to_json()
+        if self.datum_transforms is not UNSET:
+            out["datumTransforms"] = [e0.to_json() for e0 in self.datum_transforms]
         if self.drawing_font is not UNSET:
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.second_custom_crs is not UNSET:
+            out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
         if self.workspace is not UNSET:
@@ -4911,8 +5242,11 @@ class ProjectSettings(_Model):
             area_unit=_enum_in(AreaUnit, data["areaUnit"]),
             angle_unit=_enum_in(AngleUnit, data["angleUnit"]),
             plot_scale=float(data["plotScale"]),
+            custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
+            datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
@@ -5269,6 +5603,49 @@ class TextEntity(Entity):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class TmDefinition(_Model):
+    """A transverse Mercator grid: its origin's latitude (0 when left out),
+    central meridian, scale and false origin.
+    Attributes:
+        custom_datum: the project's own (exactly one of the two).
+        datum: The registry's datum by name; or
+    """
+    central_meridian: float
+    scale_factor: float
+    false_easting: float
+    false_northing: float
+    custom_datum: CustomDatum | None | Unset = UNSET
+    datum: RegistryDatum | RegistryDatumName | None | Unset = UNSET
+    latitude_of_origin: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["centralMeridian"] = float(self.central_meridian)
+        out["scaleFactor"] = float(self.scale_factor)
+        out["falseEasting"] = float(self.false_easting)
+        out["falseNorthing"] = float(self.false_northing)
+        if self.custom_datum is not UNSET:
+            out["customDatum"] = None if self.custom_datum is None else self.custom_datum.to_json()
+        if self.datum is not UNSET:
+            out["datum"] = None if self.datum is None else _enum_out(self.datum)
+        if self.latitude_of_origin is not UNSET:
+            out["latitudeOfOrigin"] = None if self.latitude_of_origin is None else float(self.latitude_of_origin)
+        return out
+
+    @classmethod
+    def from_json(cls: type[_TmDefinitionT], data: Mapping[str, Any]) -> _TmDefinitionT:
+        return cls(
+            central_meridian=float(data["centralMeridian"]),
+            scale_factor=float(data["scaleFactor"]),
+            false_easting=float(data["falseEasting"]),
+            false_northing=float(data["falseNorthing"]),
+            custom_datum=UNSET if "customDatum" not in data else None if data["customDatum"] is None else CustomDatum.from_json(data["customDatum"]),
+            datum=UNSET if "datum" not in data else None if data["datum"] is None else _enum_in(RegistryDatum, data["datum"]),
+            latitude_of_origin=UNSET if "latitudeOfOrigin" not in data else None if data["latitudeOfOrigin"] is None else float(data["latitudeOfOrigin"]),
+        )
+
+
 class Vec2(NamedTuple):
     """A point in world units: x = east (Y, sağa), y = north (X, yukarı)."""
 
@@ -5444,6 +5821,91 @@ class DeleteBlockChange(BlockChange):
         return cls(
             id=data["id"],
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class SimilarityCrsPlane(CrsPlane):
+    TAG_VALUE: ClassVar[str] = "similarity"
+    east: float
+    north: float
+    rotation: float
+    scale: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "similarity"}
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        out["rotation"] = float(self.rotation)
+        out["scale"] = float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimilarityCrsPlane:
+        return cls(
+            east=float(data["east"]),
+            north=float(data["north"]),
+            rotation=float(data["rotation"]),
+            scale=float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AffineCrsPlane(CrsPlane):
+    TAG_VALUE: ClassVar[str] = "affine"
+    a: float
+    b: float
+    c: float
+    d: float
+    e: float
+    f: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "affine"}
+        out["a"] = float(self.a)
+        out["b"] = float(self.b)
+        out["c"] = float(self.c)
+        out["d"] = float(self.d)
+        out["e"] = float(self.e)
+        out["f"] = float(self.f)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AffineCrsPlane:
+        return cls(
+            a=float(data["a"]),
+            b=float(data["b"]),
+            c=float(data["c"]),
+            d=float(data["d"]),
+            e=float(data["e"]),
+            f=float(data["f"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TmCrsSystem(TmDefinition, CrsSystem):
+    """CrsSystem ``tm``: a :class:`TmDefinition`."""
+    TAG_VALUE: ClassVar[str] = "tm"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "tm", **TmDefinition.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class GeographicCrsSystem(GeographicDefinition, CrsSystem):
+    """CrsSystem ``geographic``: a :class:`GeographicDefinition`."""
+    TAG_VALUE: ClassVar[str] = "geographic"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "geographic", **GeographicDefinition.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class LocalCrsSystem(LocalDefinition, CrsSystem):
+    """CrsSystem ``local``: a :class:`LocalDefinition`."""
+    TAG_VALUE: ClassVar[str] = "local"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "local", **LocalDefinition.to_json(self)}
 
 
 @dataclass(kw_only=True, slots=True)
@@ -6396,6 +6858,12 @@ _ARRAY_LAYOUT: dict[str, type[ArrayLayout]] = {"grid": GridArrayLayout, "polar":
 _BLOCK_CHANGE: dict[str, type[BlockChange]] = {"create": CreateBlockChange, "update": UpdateBlockChange, "delete": DeleteBlockChange}
 
 
+_CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affine": AffineCrsPlane}
+
+
+_CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
+
+
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity}
 
 
@@ -6415,6 +6883,7 @@ __all__ = [
     "AccessSource",
     "AccessSourceName",
     "AddEntityEdit",
+    "AffineCrsPlane",
     "AffineTransform",
     "AlignTransform",
     "AngleUnit",
@@ -6455,10 +6924,18 @@ __all__ = [
     "CirclePlan",
     "CommitResult",
     "ConstructionEntity",
+    "Convention",
+    "ConventionName",
     "CreateBlockChange",
     "CreateFeatureChange",
     "CreateOperation",
     "CreateOperationName",
+    "CrsBase",
+    "CrsDefinition",
+    "CrsPlane",
+    "CrsSystem",
+    "CustomDatum",
+    "DatumTransform",
     "DeleteBlockChange",
     "DeleteFeatureChange",
     "DimensionEntity",
@@ -6473,6 +6950,7 @@ __all__ = [
     "EditOperationName",
     "EllipseEntity",
     "EllipseEntityGeometry",
+    "Ellipsoid",
     "EmptyInput",
     "EntitiesArray",
     "EntitiesArrayPlan",
@@ -6498,14 +6976,18 @@ __all__ = [
     "FeatureChange",
     "FileCommit",
     "FileCommitted",
+    "GeographicCrsSystem",
+    "GeographicDefinition",
     "GrantRole",
     "GrantRoleName",
     "GridArrayLayout",
+    "GridChoice",
     "HatchEntity",
     "HatchEntityGeometry",
     "HatchPattern",
     "HatchPatternType",
     "HatchPatternTypeName",
+    "Helmert",
     "InsertEntity",
     "InsertEntityGeometry",
     "InvitationChange",
@@ -6533,6 +7015,8 @@ __all__ = [
     "LinePlan",
     "LineType",
     "LineTypeName",
+    "LocalCrsSystem",
+    "LocalDefinition",
     "MirrorTransform",
     "MoveTransform",
     "NewObject",
@@ -6597,6 +7081,8 @@ __all__ = [
     "PropertiesOperationName",
     "RayEntity",
     "RayEntityGeometry",
+    "RegistryDatum",
+    "RegistryDatumName",
     "RemoveEntityEdit",
     "ReplaceEntityEdit",
     "RingGeometry",
@@ -6604,6 +7090,7 @@ __all__ = [
     "RubberLink",
     "RubbersheetTransform",
     "ScaleTransform",
+    "SimilarityCrsPlane",
     "SimilarityTransform",
     "SplineEntity",
     "SplineEntityGeometry",
@@ -6613,6 +7100,8 @@ __all__ = [
     "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
+    "TmCrsSystem",
+    "TmDefinition",
     "Transform",
     "UpdateBlockChange",
     "UpdateEntityEdit",

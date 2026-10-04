@@ -405,9 +405,11 @@ impl Document {
     /// any differs, never an undo step. A new coordinate system is assigned,
     /// never a transformation of the coordinates (CLAUDE.md §5). A second
     /// system that is not another system than the project's own, or is a
-    /// local project's, goes (docs/adr/0167 §1).
-    pub fn set_settings(&mut self, mut settings: ProjectSettings) {
-        settings.second_srid = settings.second();
+    /// local project's, goes (docs/adr/0167 §1); so do definitions and datum
+    /// choices the project may not keep (`ProjectSettings::sanitized`,
+    /// docs/adr/0168).
+    pub fn set_settings(&mut self, settings: ProjectSettings) {
+        let settings = settings.sanitized();
         if self.settings != settings {
             self.settings = settings;
             self.mark_edited();

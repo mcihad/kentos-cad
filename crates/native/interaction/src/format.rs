@@ -448,6 +448,9 @@ mod tests {
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,
+            custom_crs: None,
+            second_custom_crs: None,
+            datum_transforms: Vec::new(),
         };
         let cad = Format::of(&settings);
         assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
@@ -512,6 +515,9 @@ mod tests {
             drawing_font: None,
             drawing_unit: Some(DrawingUnit::Mm),
             second_srid: None,
+            custom_crs: None,
+            second_custom_crs: None,
+            datum_transforms: Vec::new(),
         };
         let f = Format::of(&settings);
         assert_eq!(f.coord(0.1), "100.000");

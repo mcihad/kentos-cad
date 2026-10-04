@@ -235,6 +235,9 @@ mod tests {
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,
+            custom_crs: None,
+            second_custom_crs: None,
+            datum_transforms: Vec::new(),
         })
     }
 

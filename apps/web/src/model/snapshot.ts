@@ -1,3 +1,5 @@
+import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
+import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
@@ -257,13 +259,19 @@ const bool = (v: unknown, where: string): boolean => (typeof v === 'boolean' ? v
 const oneOf = <T extends string>(v: unknown, values: readonly T[], where: string): T => (values.includes(v as T) ? (v as T) : fail(where, `şunlardan biri olmalı: ${values.join(', ')}`));
 const vec = (v: unknown, where: string) => (isObj(v) ? { x: num(v.x, `${where}.x`), y: num(v.y, `${where}.y`) } : fail(where, 'nokta ({x, y}) olmalı'));
 const opt = <T>(v: unknown, read: (v: unknown) => T): T | undefined => (v === undefined ? undefined : read(v));
-/** A second coordinate system's SRID: a whole number, another system than the project's own, never a local project's (docs/adr/0167 §1). */
-const second = (v: unknown, srid: number): number => {
+/**
+ * A second coordinate system's SRID: a whole number, another system than the project's own, never the second of a
+ * project without a system (docs/adr/0167 §1; a project's own definition is a system, 0168 §1).
+ */
+const second = (v: unknown, srid: number, custom: boolean): number => {
   const where = 'Proje ayarları › ikinci koordinat sistemi';
   const s = num(v, where);
   if (!Number.isInteger(s) || s <= 0 || s > 0xffffffff) fail(where, 'bir EPSG kodu olmalı');
-  return s === srid || srid === 0 ? fail(where, 'projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz') : s;
+  return s === srid || (srid === 0 && !custom) ? fail(where, 'projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz') : s;
 };
+/** A coordinate system definition of the project's (docs/adr/0168 §1): its shape here, its rules where it is written and read (the KCAD codec). */
+const definition = (v: unknown, where: string): CrsDefinition =>
+  isObj(v) && typeof v.name === 'string' && isObj(v.system) ? (v as unknown as CrsDefinition) : fail(where, 'bir koordinat sistemi tanımı ({name, system}) olmalı');
 // An object's fields, checked in place: the message is made only when a check fails.
 const numAt = (v: unknown, w: string, f: string): number => (finite(v) ? v : num(v, at(w, f)));
 const strAt = (v: unknown, w: string, f: string): string => (typeof v === 'string' ? v : str(v, at(w, f)));
@@ -346,7 +354,24 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
         ...(settings.drawingUnit === undefined ? {} : { drawingUnit: oneOf(settings.drawingUnit, DRAWING_UNIT_IDS, 'Proje ayarları › çizim birimi') }),
         // The second coordinate system (docs/adr/0167 §1): another system than the project's own, never a local project's.
         // One the registry does not know is kept, not shown (it is a display aid, nothing is guessed from it).
-        ...(settings.secondSrid === undefined ? {} : { secondSrid: second(settings.secondSrid, srid) }),
+        ...(settings.secondSrid === undefined ? {} : { secondSrid: second(settings.secondSrid, srid, settings.customCrs !== undefined) }),
+        // The project's own systems and datum choices (docs/adr/0168): a definition only without an EPSG code, a second one
+        // only instead of a second EPSG code.
+        ...(settings.customCrs === undefined
+          ? {}
+          : srid !== 0
+            ? fail('Proje ayarları › kendi sistemi', 'yalnız EPSG kodu olmayan (SRID 0) projede olur')
+            : { customCrs: definition(settings.customCrs, 'Proje ayarları › kendi sistemi') }),
+        ...(settings.secondCustomCrs === undefined
+          ? {}
+          : settings.secondSrid !== undefined || (srid === 0 && settings.customCrs === undefined)
+            ? fail('Proje ayarları › ikinci sistemin tanımı', 'ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz')
+            : { secondCustomCrs: definition(settings.secondCustomCrs, 'Proje ayarları › ikinci sistemin tanımı') }),
+        ...(settings.datumTransforms === undefined
+          ? {}
+          : Array.isArray(settings.datumTransforms) && settings.datumTransforms.every(isObj)
+            ? { datumTransforms: settings.datumTransforms as unknown as DatumTransform[] }
+            : fail('Proje ayarları › datum dönüşümleri', 'liste olmalı')),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,
