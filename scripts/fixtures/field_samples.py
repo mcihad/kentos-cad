@@ -99,12 +99,12 @@ def sdr():
 
 
 def gts7():
-    """Topcon GTS-7: the version, units (metres, gon), per station STN and XYZ, per observation SS with the target height
-    in force (GTS-7 writes it on every point) and its code, then SD."""
+    """Topcon GTS-7: the version, units (metres, gon), per station STN and XYZ (northing first, as Topcon's sample has
+    it), per observation SS with the target height in force (GTS-7 writes it on every point) and its code, then SD."""
     lines = ["GTS-700", "JOB         KARNE,", "UNITS       M,G"]
     for (name, e, n, h, hi), observations in BOOK:
         lines.append(f"STN         {name},{hi:.3f},")
-        lines.append(f"XYZ         {e:.3f},{n:.3f},{h:.3f}")
+        lines.append(f"XYZ         {n:.3f},{e:.3f},{h:.3f}")
         th_now = None
         for target, hz, v, sd, th, code in observations:
             th_now = th if th is not None else th_now

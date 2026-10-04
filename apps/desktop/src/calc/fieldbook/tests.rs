@@ -112,6 +112,24 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
             })
             .collect::<Vec<_>>()
     };
+    // The stations where they stand: names, coordinates and instrument
+    // heights (GTS-7's XYZ is northing first, docs/adr/0169 5b).
+    let stations = |app: &App| {
+        let book = app.calc.fieldbook.book.as_ref().expect("read");
+        book.stations
+            .iter()
+            .map(|s| {
+                (
+                    s.station.clone(),
+                    s.east,
+                    s.north,
+                    s.height,
+                    s.instrument_height,
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+    let gsi_stations = stations(&app);
     let gsi = [rows(&app), {
         send(&mut app, Event::Station(1));
         rows(&app)
@@ -125,6 +143,7 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
         let book = app.calc.fieldbook.book.as_ref().expect("read");
         assert_eq!((book.format.as_str(), book.stations.len()), (format, 2));
         assert_eq!(super::format_name(&book.format), name);
+        assert_eq!(stations(&app), gsi_stations, "{file}");
         send(&mut app, Event::Station(0));
         assert_eq!(rows(&app), gsi[0], "{file}");
         send(&mut app, Event::Station(1));

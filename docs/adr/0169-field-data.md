@@ -157,7 +157,7 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    ayrılmış alanları; UNITS'in ilk alanı M (metre; F ve başkası okunmaz), ikincisi D (derece, DDD.MMSS: kesrin ilk iki rakamı dakika,
    sonraki ikisi saniye, kalanı saniyenin kesri; eksik rakamlar sıfır) ya da G (gon, ondalık); UNITS'ten önceki ölçüler bir kez
    söylenir, okunmayan ya da karnenin biriminden başka birimli UNITS'ten sonrakiler atlanır. STN istasyonu (alet yüksekliğiyle)
-   başlatır, hemen ardından gelen XYZ (doğu, kuzey, kot) onun koordinatlarıdır; başka bir kayıttan sonraki XYZ bir noktanın
+   başlatır, hemen ardından gelen XYZ (kuzey, doğu, kot; aşağıdaki düzeltme) onun koordinatlarıdır; başka bir kayıttan sonraki XYZ bir noktanın
    hesaplanmış koordinatıdır, atlanır. BS, FS ve SS sonraki ölçülerin noktasını (prizma yüksekliği verilmezse istasyonun sonuncusu, FS
    ve SS'te kod) verir; HV ve SD bu noktanın gözlemidir (yatay açı, başucu, SD'de eğik uzunluk), HD indirgenmiş ölçüdür, söylenir;
    sıfır olmayan OFFSET önündeki gözlemi dışarıda bırakır, söylenir. Sayılar en çok 30 rakam; açılar kesin kesirden tek yuvarlamayla
@@ -166,6 +166,14 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    başlıyorsa. Bağımsız başvuru `field_gts7_cases.py` (`gts7.json`, 3 durum; Topcon'un örneği dahil) ve 6000 rastgele karnede Rust
    ile birebir; örnek `sample.gt7` GSI örneğiyle aynı karne; dosya süzgecinde `.gt7`, `.raw`; resimler `karne-gts7-*`,
    `fieldbook-gts7-*`.
+
+   *(4 Ekim düzeltmesi.)* XYZ kaydının sırası kuzey, doğu, kottur. Kılavuzun listesi “X(easting), Y(northing)” der, ama kendi
+   örneği öbürünü gösterir. Örnek işte MARK'tan (10, 10) ST1'e geri bakış semti 322°33'16", ST2'ye yatay okuma 7°56'17" ve ST1-1'den
+   MARK1'e 142°33'16"; bunlar yalnız ST1 kuzey 13,856 doğu 7,047'de, ST2 kuzey 14,870 doğu 10,679'da, MARK1 kuzey 10,033 doğu 9,975'te
+   iken tutar (doğu önce okunursa semtler 127° ve 82° çıkar). Aynı işin GTS-7 nokta, Name,E,N,Z, Name,N,E,Z ve enlem-boylam dosyaları
+   da bunu söyler; ham dosyanın XYZ kayıtları ise 13.856,7.047 ve 14.870,10.679 yazar, yani Topcon'un X'i kuzeydir. 5b'nin okuyucusu
+   ve bağımsız başvurusu listedeki etiketi izlemiş, istasyonun koordinatlarını ters okuyordu. İkisi ve `sample.gt7` düzeltildi;
+   başvurunun elle yazılmış durumunun satırı kuzey önce yazıldı, beklenen istasyon koordinatları aynı kaldı.
 
    *(4 Ekim: 5d tamam; JobXML'den, 5c'den önce.)* Nikon RAW: kaynak Total Station Nivo Series Instruction Manual (Nikon-Trimble),
    “Nikon raw record formats” ve “Data examples” (Nikon RAW data format V2.00). Çekirdekte `formats::field::nikon` (biçim `nikon`,

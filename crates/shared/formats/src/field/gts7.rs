@@ -1,8 +1,12 @@
 //! Topcon GTS-7 field books (docs/adr/0169 §1): a control word and its
 //! comma-separated fields per line, read into stations and observations as
 //! Topcon describes them (Topcon Link Reference Manual, P/N 7010-0522,
-//! Appendix C "GTS-7 Raw Format", with its sample file). Every record not
-//! read is named with the reason. The independent reference is
+//! Appendix C "GTS-7 Raw Format", with its sample file). An XYZ record is
+//! northing, easting, elevation, as the manual's sample has it (its back
+//! sight bearings and readings, and the same job's coordinate files, put
+//! the first value north; Topcon's X is the north), though the manual's
+//! list calls it “X(easting), Y(northing)”. Every record not read is named
+//! with the reason. The independent reference is
 //! `scripts/fixtures/field_gts7_cases.py` (fixtures/field/v1/gts7.json).
 //! A value is its exact decimal or sexagesimal value rounded once to the
 //! nearest float64 (CLAUDE.md §23).
@@ -202,7 +206,8 @@ impl Book {
                 if here == Some("STN")
                     && let Some(at) = self.station
                 {
-                    let (e, n, z) = (number(get(0))?, number(get(1))?, number(get(2))?);
+                    // Northing first (the module's note).
+                    let (n, e, z) = (number(get(0))?, number(get(1))?, number(get(2))?);
                     let s = &mut self.read.stations[at];
                     s.east = e.map(Exact::value).or(s.east);
                     s.north = n.map(Exact::value).or(s.north);

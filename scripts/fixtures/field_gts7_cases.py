@@ -19,9 +19,12 @@ The rules:
    rounded once to the nearest float64. A number that is not so, a DDD.MMSS angle whose minutes or seconds are 60 or more, or an
    angle of more than a full turn (its size) leaves its record out, said. A horizontal reading below zero is turned
    into its turn (−37.2644 is 322°33'16"); a zenith below zero is not read.
-4. STN ptno, ins ht, stn id: begins a station named ptno, its instrument height. XYZ easting, northing, elevation
+4. STN ptno, ins ht, stn id: begins a station named ptno, its instrument height. XYZ northing, easting, elevation
    right after STN gives its coordinates; an XYZ after any other record is a point's computed coordinates, passed
-   over.
+   over. The order is the manual's sample's, not its list's “X(easting), Y(northing)”: in the sample job the back
+   sight from MARK (10, 10) to ST1 has the bearing 322°33'16" and the reading to ST2 is 7°56'17", which hold only
+   with ST1 at north 13.856, east 7.047 and ST2 at north 14.870, east 10.679 (the same job's GTS-7 points, Name,E,N,Z
+   and latitude and longitude files say so too), and the XYZ records after them write 13.856,7.047 and 14.870,10.679.
 5. BS ptno[, target height], FS and SS ptno, target height, pt code[, string]: the point the next measurements are
    of, its target height (none given: the station's last), its code (FS, SS).
 6. HV HA, VA and SD HA, VA, SD: an observation of the point named last (none in the station: not read, said): its
@@ -31,6 +34,7 @@ The rules:
 """
 
 import argparse
+import math
 import json
 import re
 import sys
@@ -148,7 +152,7 @@ def read(text):
                 point, last_th = None, None
             elif word == "XYZ":
                 if here == "STN" and station is not None:
-                    e, n, z = number(get(0)), number(get(1)), number(get(2))
+                    n, e, z = number(get(0)), number(get(1)), number(get(2))
                     obs = station.pop("observations")
                     for key, v in (("east", e), ("north", n), ("height", z)):
                         if v is not None:
@@ -244,7 +248,7 @@ def cases():
             "GTS-700",
             "UNITS M,G",
             "STN ST1,1.552,IST",
-            "XYZ 412350.000,4521800.000,105.200",
+            "XYZ 4521800.000,412350.000,105.200",
             "BS P2,1.700",
             "HV 0.0012,99.8765",
             "SS 101,1.700,BINA",
@@ -293,7 +297,29 @@ def cases():
     ]
 
 
+def xyz_is_northing_first():
+    """Rule 4's order, worked out from the manual's sample job: from MARK (north 10, east 10, as the job's coordinate
+    files have it) the back sight to ST1 reads 322°33'16" and the shot to ST2 7°56'17"; the XYZ records after them write
+    13.856,7.047 and 14.870,10.679. The bearings hold within the millimetres' minute only when the first value is the
+    north; read east first, they are 127° and 82°, more than a degree off."""
+    def dms(text):
+        whole, fraction = text.split(".")
+        fraction = (fraction + "0000")[:4]
+        return int(whole) + int(fraction[:2]) / 60 + int(fraction[2:]) / 3600
+
+    def bearing(north, east):
+        return math.degrees(math.atan2(east - 10, north - 10)) % 360
+
+    def off(a, b):
+        return abs((a - b + 180) % 360 - 180)
+
+    for reading, (first, second) in (("322.3316", (13.856, 7.047)), ("7.5617", (14.870, 10.679))):
+        if off(bearing(first, second), dms(reading)) > 1 / 60 or off(bearing(second, first), dms(reading)) < 1:
+            raise SystemExit("the sample's bearings do not put XYZ's first value north; rule 4 is not the sample's")
+
+
 def build():
+    xyz_is_northing_first()
     out = [{"name": name, "text": text, "expect": read(text)} for name, text in cases()]
     return {"format": "kentos.field-gts7", "version": 1, "source": "scripts/fixtures/field_gts7_cases.py (docs/adr/0169 §1; Topcon Link Reference Manual, Appendix C)", "texts": TEXTS, "cases": out}
 
