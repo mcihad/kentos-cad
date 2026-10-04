@@ -9,6 +9,7 @@ traverse ends oriented on. Angles in gon, lengths in metres.
 
 - sample.gsi: Leica GSI-16 (GSI ONLINE for Leica TPS and DNA, 2003).
 - sample.sdr: Sokkia SDR33, 14-character names (Interfacing with the SOKKIA SDR Electronic Field Book, 1999).
+- sample.gt7: Topcon GTS-7 raw (Topcon Link Reference Manual, Appendix C), gon.
 """
 from pathlib import Path
 
@@ -94,7 +95,22 @@ def sdr():
     return "\r\n".join(l.rstrip() for l in lines) + "\r\n"
 
 
-for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr)):
+def gts7():
+    """Topcon GTS-7: the version, units (metres, gon), per station STN and XYZ, per observation SS with the target height
+    in force (GTS-7 writes it on every point) and its code, then SD."""
+    lines = ["GTS-700", "JOB         KARNE,", "UNITS       M,G"]
+    for (name, e, n, h, hi), observations in BOOK:
+        lines.append(f"STN         {name},{hi:.3f},")
+        lines.append(f"XYZ         {e:.3f},{n:.3f},{h:.3f}")
+        th_now = None
+        for target, hz, v, sd, th, code in observations:
+            th_now = th if th is not None else th_now
+            lines.append(f"SS          {target},{th_now:.3f},{code or ''}")
+            lines.append(f"SD          {hz:.4f},{v:.4f},{sd:.4f}")
+    return "\r\n".join(lines) + "\r\n"
+
+
+for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr), ("sample.gt7", gts7)):
     text = write()
     (DIR / name).write_text(text, encoding="ascii", newline="")
     print(DIR / name, text.count("\n"), "satır")

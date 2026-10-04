@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Independent reference of how a field book's format is told by its content (docs/adr/0169 §1, §6; steps 3b, 5).
 
-Writes fixtures/field/v1/sniff.json from the rules alone, no KentOS code: which files Karne editörü reads as Leica GSI or
-Sokkia SDR and which as a text book whose columns the user maps.
+Writes fixtures/field/v1/sniff.json from the rules alone, no KentOS code: which files Karne editörü reads as Leica GSI,
+Sokkia SDR or Topcon GTS-7 and which as a text book whose columns the user maps.
 
 The rules:
 
@@ -12,8 +12,10 @@ The rules:
    is "+" or "-". Then the book is GSI.
 3. Otherwise the book is Sokkia SDR when one of its first five lines that are neither blank nor a transmission's frame
    (beginning with STX, hex 02, or ETX, hex 03) is an SDR header: its first seven characters "00", two capital letters
-   A–Z (the derivation code) and "SDR" (records before it are said by the reader). Otherwise (or with no line at all)
-   the book is a text book.
+   A–Z (the derivation code) and "SDR" (records before it are said by the reader).
+4. Otherwise the book is Topcon GTS-7 when one of its first ten lines that are not blank begins with "GTS-7" (the version
+   record), or its first word (up to a blank) is UNITS or STN and the rest of the line holds a comma. Otherwise (or with
+   no line at all) the book is a text book.
 """
 
 import argparse
@@ -38,15 +40,21 @@ def sniff(text):
     w = words[0] if words else ""
     if len(w) >= 8 and all(c in DIGITS for c in w[:2]) and all(c in DIGITS or c == "." for c in w[2:6]) and w[6] in "+-":
         return "gsi"
-    records = [line for line in lines if line[0] not in "\x02\x03"][:5]
+    head = lines[:10]
+    records = [line for line in head if line[0] not in "\x02\x03"][:5]
     if any(len(h) >= 7 and h[:2] == "00" and all("A" <= c <= "Z" for c in h[2:4]) and h[4:7] == "SDR" for h in records):
         return "sdr"
+    for line in head:
+        parts = line.split(None, 1)
+        if line.startswith("GTS-7") or (len(parts) == 2 and parts[0] in ("UNITS", "STN") and "," in parts[1]):
+            return "gts7"
     return None
 
 
 def cases():
     gsi = json.loads((ROOT / "fixtures" / "field" / "v1" / "gsi.json").read_text(encoding="utf-8"))
     sdr = json.loads((ROOT / "fixtures" / "field" / "v1" / "sdr.json").read_text(encoding="utf-8"))
+    gts7 = json.loads((ROOT / "fixtures" / "field" / "v1" / "gts7.json").read_text(encoding="utf-8"))
     return [
         ("GSI-8", gsi["cases"][0]["text"]),
         ("GSI-16, CR LF", gsi["cases"][1]["text"]),
@@ -68,6 +76,12 @@ def cases():
         ("STX'ten sonra metin karne", "\x02\nİstasyon;Nokta;Hz\n"),
         ("başlıktan önce kayıt", "09F1000110011234.56789\n00NMSDR20 V03-05\n"),
         ("beşinci satırdan sonra başlık", "a\nb\nc\nd\ne\n00NMSDR20 V03-05\n"),
+        ("GTS-7, Topcon Link'in örneği", gts7["cases"][0]["text"]),
+        ("GTS-7, sürüm kaydıyla", gts7["cases"][1]["text"]),
+        ("GTS-7, UNITS'siz, STN ile", "JOB X,Y\nSTN S1,1.5\nSS A,1.6,\nSD 1.0000,90.0000,10.0\n"),
+        ("virgülsüz STN satırı", "STN 1 2 3\nSS 4 5 6\n"),
+        ("onuncu satırdan sonra UNITS", "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nUNITS M,D\n"),
+        ("küçük harfli units", "units M,D\nSTN; 1,5\n"),
     ]
 
 

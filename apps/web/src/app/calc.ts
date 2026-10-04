@@ -18,7 +18,7 @@ export function registerCalcCommands(ctx: AppContext): void {
       category: 'Hesap',
       icon: 'fieldBook',
       description:
-        'Total station karnesini açar: Leica GSI ve Sokkia SDR içeriğinden tanınır, CSV/TXT karnenin sütunları eşlenir. İstasyonlar ve gözlemleri görülür, gözlem kullanılmaz ya da nokta adı düzeltilir; iki durum eşlenip ortalanır, indeks hatası, yatay uzunluk ve kot farkı (yer eğriliği ve refraksiyonla) hesaplanır, toleransı aşan fark uyarı rengindedir.',
+        'Total station karnesini açar: Leica GSI, Sokkia SDR ve Topcon GTS-7 içeriğinden tanınır, CSV/TXT karnenin sütunları eşlenir. İstasyonlar ve gözlemleri görülür, gözlem kullanılmaz ya da nokta adı düzeltilir; iki durum eşlenip ortalanır, indeks hatası, yatay uzunluk ve kot farkı (yer eğriliği ve refraksiyonla) hesaplanır, toleransı aşan fark uyarı rengindedir.',
       aliases: ['KARNE', 'KARNEEDITORU', 'KARNEEDİTÖRÜ', 'GSI', 'FIELDBOOK'],
       run: () => void import('../ui/calc/FieldBookDialog').then((m) => m.openFieldBook(ctx)).catch(failed),
     },

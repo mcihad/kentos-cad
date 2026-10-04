@@ -102,6 +102,36 @@
       "name": "beşinci satırdan sonra başlık",
       "text": "a\nb\nc\nd\ne\n00NMSDR20 V03-05\n",
       "format": null
+    },
+    {
+      "name": "GTS-7, Topcon Link'in örneği",
+      "text": "TTools v1.0\nJOB           C:\\Download\\777.raw,Comment\nNAME          TopconTools\nINST          TS\nUNITS         M,D\nSCALE         1.000000,1.000000,0.000000\nDATE          00/00/00,00:00\nTEMP          0.000,000\nSTN           MARK,1.52000,STAT\nBKB           ST1,0.0000,322.33160\nXYZ           13.85600,7.04700,-0.25800\nBS            ST1,1.60000\nSD            -37.26440,97.57060,4.90200\nSS            ST1,1.60000,STAT\nSD            -37.26440,97.57060,4.90400\nXYZ           13.85600,7.04700,-0.25800\nSS            ST2,1.60000,STAT\nSD            7.56170,97.13460,4.95600\nXYZ           14.87000,10.67900,-0.20400\nSS            1,1.60000,TREE\nSD            91.02230,78.18030,3.44800\nSS            4,1.60000,TREE\nSD            -142.30250,90.11250,3.89200\n",
+      "format": "gts7"
+    },
+    {
+      "name": "GTS-7, sürüm kaydıyla",
+      "text": "GTS-700\r\nUNITS M,G\r\nSTN ST1,1.552,IST\r\nXYZ 412350.000,4521800.000,105.200\r\nBS P2,1.700\r\nHV 0.0012,99.8765\r\nSS 101,1.700,BINA\r\nSD 87.4321,101.2345,63.214\r\nSD 287.4337,298.7671,63.216\r\nOFFSET 0.000,0.000,0.000\r\nSS 102,2.000,\r\nSD 120.5550,100.4400,82.441\r\nOFFSET 0.150,0.000,0.000\r\nSTN ST2,1.480\r\nBS ST1\r\nSD 0.0000,100.3340,83.392\r\n",
+      "format": "gts7"
+    },
+    {
+      "name": "GTS-7, UNITS'siz, STN ile",
+      "text": "JOB X,Y\nSTN S1,1.5\nSS A,1.6,\nSD 1.0000,90.0000,10.0\n",
+      "format": "gts7"
+    },
+    {
+      "name": "virgülsüz STN satırı",
+      "text": "STN 1 2 3\nSS 4 5 6\n",
+      "format": null
+    },
+    {
+      "name": "onuncu satırdan sonra UNITS",
+      "text": "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nUNITS M,D\n",
+      "format": null
+    },
+    {
+      "name": "küçük harfli units",
+      "text": "units M,D\nSTN; 1,5\n",
+      "format": null
     }
   ]
 }

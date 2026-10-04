@@ -151,6 +151,21 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    sözcüğü değilse, çerçeve olmayan ilk beş satırdan biri SDR başlığıysa (`00`, iki büyük harf, `SDR`). Bağımsız başvuru
    `field_sdr_cases.py` (`sdr.json`, 4 durum) ve 3000 rastgele karnede Rust ile birebir; tanıma `field_sniff_cases.py`'de. Karne
    editörü biçimi “Sokkia SDR” diye adlandırır, dosya süzgecinde `.sdr`; resimler `karne-sdr-*`, `fieldbook-sdr-*`.
+
+   *(4 Ekim: 5b tamam.)* Topcon GTS-7: kaynak Topcon Link Reference Manual (P/N 7010-0522), Ek C “GTS-7 Raw Format” ve örnek
+   dosyası. Çekirdekte `formats::field::gts7` (biçim `gts7`, `FORMATS_VERSION` 23): her satır bir denetim sözcüğü ve virgülle
+   ayrılmış alanları; UNITS'in ilk alanı M (metre; F ve başkası okunmaz), ikincisi D (derece, DDD.MMSS: kesrin ilk iki rakamı dakika,
+   sonraki ikisi saniye, kalanı saniyenin kesri; eksik rakamlar sıfır) ya da G (gon, ondalık); UNITS'ten önceki ölçüler bir kez
+   söylenir, okunmayan ya da karnenin biriminden başka birimli UNITS'ten sonrakiler atlanır. STN istasyonu (alet yüksekliğiyle)
+   başlatır, hemen ardından gelen XYZ (doğu, kuzey, kot) onun koordinatlarıdır; başka bir kayıttan sonraki XYZ bir noktanın
+   hesaplanmış koordinatıdır, atlanır. BS, FS ve SS sonraki ölçülerin noktasını (prizma yüksekliği verilmezse istasyonun sonuncusu, FS
+   ve SS'te kod) verir; HV ve SD bu noktanın gözlemidir (yatay açı, başucu, SD'de eğik uzunluk), HD indirgenmiş ölçüdür, söylenir;
+   sıfır olmayan OFFSET önündeki gözlemi dışarıda bırakır, söylenir. Sayılar en çok 30 rakam; açılar kesin kesirden tek yuvarlamayla
+   (`field::exact`), eksi yatay okuma turuna çevrilir (Topcon'un örneğindeki −37.2644 = 322°33'16"), tam dönüşten büyük açı ve eksi
+   başucu okunmaz. İçerikten tanıma: boş olmayan ilk on satırdan biri `GTS-7` ile ya da UNITS veya STN sözcüğü ve virgüllü alanlarla
+   başlıyorsa. Bağımsız başvuru `field_gts7_cases.py` (`gts7.json`, 3 durum; Topcon'un örneği dahil) ve 6000 rastgele karnede Rust
+   ile birebir; örnek `sample.gt7` GSI örneğiyle aynı karne; dosya süzgecinde `.gt7`, `.raw`; resimler `karne-gts7-*`,
+   `fieldbook-gts7-*`.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 

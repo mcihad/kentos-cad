@@ -33,7 +33,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kenet ekleri: Ağırlık merkezi, Uzantı, Paralel ve Karelaj türleri (karelaj aralığı doğu ve kuzey), çizilmekte olan yola kenet, ölçek aralığında kenet; durum çubuğundaki Kenet hücresinin sağ tık menüsünde türler tek tek ve karelaj aralıkları; uçta durmak uzantısını, kenarda durmak doğrultusunu alır, yazılan mesafe uzantı ve paralel boyuncadır; Katmanlar'da katmanın kendi keneti (mıknatıs, Kenet ▸; `.kcad` şema 10) (ADR 0163);
   sayısallaştırma kilitleri: değer kartında sayı ve Tab ile uzunluk, `<açı` ile doğrultu (CBS'de semt), Sapma, Nesneye paralel ve dik (kenar ya da yay seçilerek), Kalıcı, Esc önce kilitleri kaldırır; Dik açı ve kapalı alanlarda Dik kapat (D); Referans noktası ve Yapım kipi; çizimde kesikli kılavuzlar, seçilen kenar ve “R”, sağ tıkta Kilit ▸ (ADR 0166);
   ikinci koordinat sistemi: projenin ayarı (`.kcad` şema 12), durum çubuğunda, Koordinat oku'da, Mesafe ölç ve Alan hesapla'da ikinci sistemin değerleri doğruluklarıyla (EPSG'nin yolları, “resmî dönüşüm değil”), coğrafide DMS ya da DD; Koordinat dönüştür (tek nokta, Çizimden, liste, panoya ve CSV; `crs.transform`) (ADR 0167);
-  saha verisi: Leica GSI, Sokkia SDR ve CSV/TXT karne (alet dosyası içerikten tanınır, metin karnede sütun eşleme), Karne editörü (gözlemler, Kullan, nokta adı;
+  saha verisi: Leica GSI, Sokkia SDR, Topcon GTS-7 ve CSV/TXT karne (alet dosyası içerikten tanınır, metin karnede sütun eşleme), Karne editörü (gözlemler, Kullan, nokta adı;
   iki durumun indirgenmesi, indeks hatası, yatay uzunluk ve kot farkı yer eğriliği ve refraksiyonla; toleransı aşan fark; poligonun
   istasyon zinciri ve iki yönden kenarları), Kutupsal alım'a ve Poligon hesabı'na aktar; Proje ayarları › Ölçme: k (0,13), iki durumun
   ve poligonun toleransları (`.kcad` şema 14, 15), Kutupsal alım da k'yı uygular, Poligon hesabı kapanmaları toleranslarla karşılaştırır (ADR 0169);
@@ -224,7 +224,8 @@ python3 scripts/fixtures/survey_form_cases.py --check   # Proje ayarları › Ö
 cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture   # Proje ayarları › Ölçme'nin resimleri, .run/shots/olcme-ayar-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs survey))
 python3 scripts/fixtures/field_traverse_cases.py --check   # karnenin poligonunu (istasyon zinciri, kırılma açıları, iki yönden kenarlar, eksik gözlemler, birim çevirisi) indirgemenin mpmath başvurusuyla kurallardan denetle; durumlar fixtures/field/v1/traverse.json (ADR 0169 §3)
 python3 scripts/fixtures/field_sniff_cases.py --check   # karne biçiminin içerikten tanınmasını (GSI sözcüğüyle başlayan ilk dolu satır, ilk beş kayıtta SDR başlığı; BOM, CR, STX, kod bloğu, metin karneler) kurallardan denetle; durumlar fixtures/field/v1/sniff.json (ADR 0169 §6)
-python3 scripts/fixtures/field_samples.py   # Karne editörünün resimleri ve akış testleri için aynı karnenin elle yazılmış örneklerini tek gözlem tablosundan yeniden yaz: sample.gsi (GSI-16), sample.sdr (SDR33); her biçimin örneği aynı karneyi verir (fixtures/field/v1)
+python3 scripts/fixtures/field_samples.py   # Karne editörünün resimleri ve akış testleri için aynı karnenin elle yazılmış örneklerini tek gözlem tablosundan yeniden yaz: sample.gsi (GSI-16), sample.sdr (SDR33), sample.gt7 (GTS-7); her biçimin örneği aynı karneyi verir (fixtures/field/v1)
+python3 scripts/fixtures/field_gts7_cases.py --check   # Topcon GTS-7 okuyucusunu (denetim sözcükleri, UNITS, DDD.MMSS ve gon, eksi yatay okuma, STN ve XYZ, BS/FS/SS, HV/SD, HD ve OFFSET, bozuk sayılar) Topcon Link kılavuzunun Ek C'sinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gts7.json (ADR 0169 §1)
 python3 scripts/fixtures/field_sdr_cases.py --check   # Sokkia SDR2x ve SDR33 okuyucusunu (sabit alanlar, işin birimleri, alet kaydının düşey açı seçeneği, prizma yüksekliği, F1/F2/MD, MC ve 08 sayıları, STX/ETX, bozuk değerler) Sokkia'nın belgesinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/sdr.json (ADR 0169 §1)
 cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture   # Karne editörünün resimleri, .run/shots/karne-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs fieldbook))
 python3 scripts/fixtures/field_gsi_cases.py --check   # Leica GSI-8 ve GSI-16 okuyucusunu (sözcükler, birim haneleri, DMS, karışık birimler, istasyon koordinatları, bozuk sözcük, mil, ayak, tam dönüşten büyük açı) Leica'nın belgesinden yazılmış başvurudan denetle; durumlar fixtures/field/v1/gsi.json (ADR 0169 §1)
@@ -746,9 +747,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   3. adım bitti. 4a (Poligon hesabı'na aktar: `traverse_transfer`, `fieldTraverse`, Poligon bölümü) ve 4b (toleranslar: kenarın iki
   yönden farkı, poligonun kapanmaları, `.kcad` şema 15; `BookLeg.over`, `survey::traverse::closure`) tamam; 4. adım bitti. 5. adım
   dört parçada, her biri üreticinin belgesinden bağımsız başvurusuyla ve aynı karnenin örneğiyle (`field_samples.py`): 5a Sokkia SDR2x ve
-  SDR33 (`formats::field::sdr`, başvuru `field_sdr_cases.py`; Sokkia'nın “Interfacing with the SOKKIA SDR Electronic Field Book”u) tamam;
-  sıradaki 5b Topcon GTS-7 (Topcon Link Reference Manual, Ek C), sonra 5c Trimble JobXML (şema 5.3) ve 5d Nikon RAW (Nivo kılavuzu); GTS-7 ve
-  Nikon'un başvuruları yazıldı, depoya girmedi (`field_gts7_cases.py`, `field_nikon_cases.py`). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  SDR33 (`formats::field::sdr`, başvuru `field_sdr_cases.py`; Sokkia'nın “Interfacing with the SOKKIA SDR Electronic Field Book”u) ve 5b
+  Topcon GTS-7 (`formats::field::gts7`, kesin değerler `field::exact`; başvuru `field_gts7_cases.py`, Topcon Link Reference Manual'ın Ek C'si)
+  tamam; sıradaki 5c Trimble JobXML (şema 5.3), sonra 5d Nikon RAW (Nivo kılavuzu; başvurusu yazıldı, depoya girmedi:
+  `field_nikon_cases.py`). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

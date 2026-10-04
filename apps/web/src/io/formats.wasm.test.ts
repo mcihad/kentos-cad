@@ -139,15 +139,18 @@ describe.skipIf(!loader)('formats WASM module', () => {
     }
   });
 
-  it('reads Sokkia SDR2x and SDR33 field books as the reference does (fixtures/field/v1/sdr.json, docs/adr/0169 §1)', async () => {
+  it.each([
+    ['sdr', 'Sokkia SDR2x and SDR33'],
+    ['gts7', 'Topcon GTS-7'],
+  ])('reads %s (%s) field books as the reference does (fixtures/field/v1, docs/adr/0169 §1)', async (format) => {
     const w = await load();
-    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL('../../../../fixtures/field/v1/sdr.json', import.meta.url)))) as {
+    const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL(`../../../../fixtures/field/v1/${format}.json`, import.meta.url)))) as {
       cases: { name: string; text: string; expect: { unit: string | null; stations: FieldStation[]; problems: { line: number; problem: string }[] } }[];
     };
-    expect(file.cases.length).toBeGreaterThanOrEqual(4);
+    expect(file.cases.length).toBeGreaterThanOrEqual(3);
     for (const c of file.cases) {
       const got = JSON.parse(new TextDecoder().decode(w.readFieldBook(new TextEncoder().encode(c.text), 'null'))) as FieldBookRead;
-      expect([got.format, got.unit ?? null], c.name).toEqual(['sdr', c.expect.unit]);
+      expect([got.format, got.unit ?? null], c.name).toEqual([format, c.expect.unit]);
       expect(got.stations, c.name).toEqual(c.expect.stations);
       expect(got.problems.map((p) => [p.line, p.message]), c.name).toEqual(c.expect.problems.map((p) => [p.line, p.problem]));
     }

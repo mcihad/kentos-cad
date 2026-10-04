@@ -1,0 +1,229 @@
+{
+  "format": "kentos.field-gts7",
+  "version": 1,
+  "source": "scripts/fixtures/field_gts7_cases.py (docs/adr/0169 §1; Topcon Link Reference Manual, Appendix C)",
+  "texts": {
+    "units": "Satır {line}: GTS-7 UNITS kaydı “{data}” okunmuyor; yalnız metre (M) ile derece (D) ya da gon (G); ölçüler okunmadı.",
+    "mixed": "Satır {line}: GTS-7 UNITS kaydının açı birimi karnenin birimiyle aynı değil; ölçüler okunmadı.",
+    "before": "Satır {line}: GTS-7 UNITS kaydından önce; birim bilinmediğinden ölçüler okunmadı.",
+    "value": "Satır {line}: “{data}” sayı değil; satır okunmadı.",
+    "dms": "Satır {line}: açı “{data}” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı.",
+    "turn": "Satır {line}: açı “{data}” bir tam dönüşten büyük; satır okunmadı.",
+    "zenith": "Satır {line}: başucu açısı “{data}” sıfırdan küçük; satır okunmadı.",
+    "negative": "Satır {line}: eğik uzunluk “{data}” sıfırdan küçük; satır okunmadı.",
+    "point": "Satır {line}: ölçüden önce nokta kaydı (BS, FS, SS) yok; satır okunmadı.",
+    "horizontal": "Satır {line}: {target} gözleminin yatay açısı yok; satır okunmadı.",
+    "reduced": "Satır {line}: HD kaydı indirgenmiş ölçü (yatay uzunluk, kot farkı); ham gözlem değil, satır okunmadı.",
+    "offset": "Satır {line}: dışmerkez ölçü (OFFSET) okunmuyor; {target} gözlemi (satır {at}) okunmadı."
+  },
+  "cases": [
+    {
+      "name": "Topcon Link'in örneği: derece (DDD.MMSS), eksi yatay açılar, XYZ kayıtları",
+      "text": "TTools v1.0\nJOB           C:\\Download\\777.raw,Comment\nNAME          TopconTools\nINST          TS\nUNITS         M,D\nSCALE         1.000000,1.000000,0.000000\nDATE          00/00/00,00:00\nTEMP          0.000,000\nSTN           MARK,1.52000,STAT\nBKB           ST1,0.0000,322.33160\nXYZ           13.85600,7.04700,-0.25800\nBS            ST1,1.60000\nSD            -37.26440,97.57060,4.90200\nSS            ST1,1.60000,STAT\nSD            -37.26440,97.57060,4.90400\nXYZ           13.85600,7.04700,-0.25800\nSS            ST2,1.60000,STAT\nSD            7.56170,97.13460,4.95600\nXYZ           14.87000,10.67900,-0.20400\nSS            1,1.60000,TREE\nSD            91.02230,78.18030,3.44800\nSS            4,1.60000,TREE\nSD            -142.30250,90.11250,3.89200\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "MARK",
+            "instrumentHeight": 1.52,
+            "observations": [
+              {
+                "target": "ST1",
+                "hz": 322.55444444444447,
+                "zenith": 97.95166666666667,
+                "slope": 4.902,
+                "targetHeight": 1.6,
+                "line": 13
+              },
+              {
+                "target": "ST1",
+                "hz": 322.55444444444447,
+                "zenith": 97.95166666666667,
+                "slope": 4.904,
+                "targetHeight": 1.6,
+                "code": "STAT",
+                "line": 15
+              },
+              {
+                "target": "ST2",
+                "hz": 7.938055555555556,
+                "zenith": 97.22944444444444,
+                "slope": 4.956,
+                "targetHeight": 1.6,
+                "code": "STAT",
+                "line": 18
+              },
+              {
+                "target": "1",
+                "hz": 91.03972222222222,
+                "zenith": 78.30083333333333,
+                "slope": 3.448,
+                "targetHeight": 1.6,
+                "code": "TREE",
+                "line": 21
+              },
+              {
+                "target": "4",
+                "hz": 217.49305555555554,
+                "zenith": 90.19027777777778,
+                "slope": 3.892,
+                "targetHeight": 1.6,
+                "code": "TREE",
+                "line": 23
+              }
+            ]
+          }
+        ],
+        "problems": []
+      }
+    },
+    {
+      "name": "gon, istasyon koordinatları, iki durum, yalnız açı, OFFSET",
+      "text": "GTS-700\r\nUNITS M,G\r\nSTN ST1,1.552,IST\r\nXYZ 412350.000,4521800.000,105.200\r\nBS P2,1.700\r\nHV 0.0012,99.8765\r\nSS 101,1.700,BINA\r\nSD 87.4321,101.2345,63.214\r\nSD 287.4337,298.7671,63.216\r\nOFFSET 0.000,0.000,0.000\r\nSS 102,2.000,\r\nSD 120.5550,100.4400,82.441\r\nOFFSET 0.150,0.000,0.000\r\nSTN ST2,1.480\r\nBS ST1\r\nSD 0.0000,100.3340,83.392\r\n",
+      "expect": {
+        "unit": "grad",
+        "stations": [
+          {
+            "station": "ST1",
+            "instrumentHeight": 1.552,
+            "east": 412350.0,
+            "north": 4521800.0,
+            "height": 105.2,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 0.0012,
+                "zenith": 99.8765,
+                "targetHeight": 1.7,
+                "line": 6
+              },
+              {
+                "target": "101",
+                "hz": 87.4321,
+                "zenith": 101.2345,
+                "slope": 63.214,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 8
+              },
+              {
+                "target": "101",
+                "hz": 287.4337,
+                "zenith": 298.7671,
+                "slope": 63.216,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 9
+              }
+            ]
+          },
+          {
+            "station": "ST2",
+            "instrumentHeight": 1.48,
+            "observations": [
+              {
+                "target": "ST1",
+                "hz": 0.0,
+                "zenith": 100.334,
+                "slope": 83.392,
+                "line": 16
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 13,
+            "problem": "Satır 13: dışmerkez ölçü (OFFSET) okunmuyor; 102 gözlemi (satır 12) okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "UNITS'ten önce ölçü, okunmayan birimler, HD, noktasız ölçü, bozuk sayılar ve açılar",
+      "text": "STN S1,1.5\nSS P1,1.6,\nSD 10.0000,90.0000,10.0\nUNITS F,D\nSD 10.0000,90.0000,10.0\nUNITS M,D\nSTN S2,1.5\nSD 10.0000,90.0000,10.0\nSS P2,1.6,\nHD 10.0000,9.9,0.5\nSD 10.6000,90.0000,10.0\nSD 10.0060,90.0000,10.0\nSD 360.0001,90.0000,10.0\nSD 10.0000,-1.0000,10.0\nSD 10.0000,90.0000,-2.0\nSD 10.0000,90.0000,1e3\nSD 10.0000,90.0000,.5\nSD 10.30,90.,+7\nSD ,90.0000,10.0\nUNITS M,G\nSD 10.0000,100.0000,10.0\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "S1",
+            "instrumentHeight": 1.5,
+            "observations": []
+          },
+          {
+            "station": "S2",
+            "instrumentHeight": 1.5,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 10.0,
+                "zenith": 90.0,
+                "slope": 0.5,
+                "targetHeight": 1.6,
+                "line": 17
+              },
+              {
+                "target": "P2",
+                "hz": 10.5,
+                "zenith": 90.0,
+                "slope": 7.0,
+                "targetHeight": 1.6,
+                "line": 18
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 3,
+            "problem": "Satır 3: GTS-7 UNITS kaydından önce; birim bilinmediğinden ölçüler okunmadı."
+          },
+          {
+            "line": 4,
+            "problem": "Satır 4: GTS-7 UNITS kaydı “F, D” okunmuyor; yalnız metre (M) ile derece (D) ya da gon (G); ölçüler okunmadı."
+          },
+          {
+            "line": 8,
+            "problem": "Satır 8: ölçüden önce nokta kaydı (BS, FS, SS) yok; satır okunmadı."
+          },
+          {
+            "line": 10,
+            "problem": "Satır 10: HD kaydı indirgenmiş ölçü (yatay uzunluk, kot farkı); ham gözlem değil, satır okunmadı."
+          },
+          {
+            "line": 11,
+            "problem": "Satır 11: açı “10.6000” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı."
+          },
+          {
+            "line": 12,
+            "problem": "Satır 12: açı “10.0060” DDD.MMSS değil (dakika ya da saniye 60'tan büyük); satır okunmadı."
+          },
+          {
+            "line": 13,
+            "problem": "Satır 13: açı “360.0001” bir tam dönüşten büyük; satır okunmadı."
+          },
+          {
+            "line": 14,
+            "problem": "Satır 14: başucu açısı “-1.0000” sıfırdan küçük; satır okunmadı."
+          },
+          {
+            "line": 15,
+            "problem": "Satır 15: eğik uzunluk “-2.0” sıfırdan küçük; satır okunmadı."
+          },
+          {
+            "line": 16,
+            "problem": "Satır 16: “1e3” sayı değil; satır okunmadı."
+          },
+          {
+            "line": 19,
+            "problem": "Satır 19: P2 gözleminin yatay açısı yok; satır okunmadı."
+          },
+          {
+            "line": 20,
+            "problem": "Satır 20: GTS-7 UNITS kaydının açı birimi karnenin birimiyle aynı değil; ölçüler okunmadı."
+          }
+        ]
+      }
+    }
+  ]
+}

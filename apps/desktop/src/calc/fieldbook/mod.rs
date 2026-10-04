@@ -1,6 +1,6 @@
 //! Karne editörü (docs/adr/0169 §2–§3, §6; the web's
 //! `ui/calc/FieldBookDialog.ts`): a field book opened from an instrument's
-//! file (Leica GSI, Sokkia SDR, told by its content) or a text book whose columns are
+//! file (Leica GSI, Sokkia SDR, Topcon GTS-7, told by its content) or a text book whose columns are
 //! mapped here; its stations, their observations as the file has them,
 //! which may be left out (Kullan) and renamed; the station shown reduced as
 //! the shared core reduces it (`survey::fieldbook::reduce`) with the
@@ -28,14 +28,14 @@ use crate::app::Message;
 pub const TITLE: &str = "Karne editörü";
 
 /// What the window asks for before a book is open.
-pub const OPEN_HINT: &str =
-    "Alet dosyasını (Leica GSI, Sokkia SDR) ya da sütunları eşlenecek bir CSV/TXT karneyi açın.";
+pub const OPEN_HINT: &str = "Alet dosyasını (Leica GSI, Sokkia SDR, Topcon GTS-7) ya da sütunları eşlenecek bir CSV/TXT karneyi açın.";
 
 /// A book's format as the window names it (the web's `formatName`).
 pub fn format_name(format: &str) -> &'static str {
     match format {
         "gsi" => "Leica GSI",
         "sdr" => "Sokkia SDR",
+        "gts7" => "Topcon GTS-7",
         _ => "Metin karne",
     }
 }

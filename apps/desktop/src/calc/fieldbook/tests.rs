@@ -89,9 +89,9 @@ fn a_gsi_book_is_read_reduced_and_edited() {
     assert_eq!(r.rows.len(), 5);
 }
 
-/// The same book from another instrument (docs/adr/0169 §1, step 5): the
-/// Sokkia SDR33 sample is told by its content, named so, and reduces into
-/// the GSI sample's rows, station by station.
+/// The same book from other instruments (docs/adr/0169 §1, step 5): the
+/// Sokkia SDR33 and Topcon GTS-7 samples are told by their content, named
+/// so, and reduce into the GSI sample's rows, station by station.
 #[test]
 fn an_sdr_book_reduces_as_the_gsi_book() {
     let mut app = opened();
@@ -115,14 +115,19 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
         send(&mut app, Event::Station(1));
         rows(&app)
     }];
-    send(&mut app, Event::Picked(Some(sample_named("sample.sdr"))));
-    let book = app.calc.fieldbook.book.as_ref().expect("read");
-    assert_eq!((book.format.as_str(), book.stations.len()), ("sdr", 2));
-    assert_eq!(super::format_name(&book.format), "Sokkia SDR");
-    send(&mut app, Event::Station(0));
-    assert_eq!(rows(&app), gsi[0]);
-    send(&mut app, Event::Station(1));
-    assert_eq!(rows(&app), gsi[1]);
+    for (file, format, name) in [
+        ("sample.sdr", "sdr", "Sokkia SDR"),
+        ("sample.gt7", "gts7", "Topcon GTS-7"),
+    ] {
+        send(&mut app, Event::Picked(Some(sample_named(file))));
+        let book = app.calc.fieldbook.book.as_ref().expect("read");
+        assert_eq!((book.format.as_str(), book.stations.len()), (format, 2));
+        assert_eq!(super::format_name(&book.format), name);
+        send(&mut app, Event::Station(0));
+        assert_eq!(rows(&app), gsi[0], "{file}");
+        send(&mut app, Event::Station(1));
+        assert_eq!(rows(&app), gsi[1], "{file}");
+    }
 }
 
 /// A text book is read only to its first line until its point and
@@ -173,8 +178,8 @@ fn with_traverse_tolerances(app: &mut App) {
 }
 
 /// Karne editörü's pictures: the sample book in the light theme at
-/// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33
-/// file, a text book's mapping, Kutupsal alım
+/// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33 and
+/// a Topcon GTS-7 file, a text book's mapping, Kutupsal alım
 /// filled from the first station, the traverse's leg above its two-way
 /// tolerance and Poligon hesabı filled from both stations.
 #[test]
@@ -194,7 +199,7 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "sdr", "csv", "polar", "kenar", "poligon"] {
+        for name in ["gsi", "sdr", "gts7", "csv", "polar", "kenar", "poligon"] {
             let mut app = opened();
             let _ = app
                 .settings
@@ -216,6 +221,9 @@ fn screens() {
             }
             if name == "sdr" {
                 send(&mut app, Event::Picked(Some(sample_named("sample.sdr"))));
+            }
+            if name == "gts7" {
+                send(&mut app, Event::Picked(Some(sample_named("sample.gt7"))));
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
