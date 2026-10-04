@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldReduce, type FieldStation, type Tolerances } from '../model/geom/surveyCalc';
+import { fieldPolar, fieldReduce, type FieldStation, type PolarTransfer, type Tolerances } from '../model/geom/surveyCalc';
 
 /**
  * The field book's reduction (docs/adr/0169 §3) through the WASM core the app calls, against
@@ -15,7 +15,7 @@ type Row = Record<string, number | string | number[] | null>;
 interface File {
   format: string;
   tolerance: { metres: number; angle: number };
-  cases: { name: string; unit: 'grad' | 'deg'; k: number; setup: FieldStation; tolerances?: Tolerances; expect: { rows: Row[]; problems: { observation: number }[]; faces: (number | null)[] } }[];
+  cases: { name: string; unit: 'grad' | 'deg'; k: number; setup: FieldStation; tolerances?: Tolerances; expect: { rows: Row[]; problems: { observation: number }[]; faces: (number | null)[]; polar: Record<'grad' | 'deg', PolarTransfer> | null } }[];
 }
 
 describe('Karne: indirgeme', () => {
@@ -39,6 +39,22 @@ describe('Karne: indirgeme', () => {
         expect(g.over, `${c.name}: over`).toEqual(w.over);
       });
       expect(got.faces, `${c.name}: faces`).toEqual(c.expect.faces);
+      // Kutupsal alım's fields with the first row the back sight, in either unit.
+      for (const to of ['grad', 'deg'] as const) {
+        const p = fieldPolar(c.setup, c.unit, c.k, c.tolerances ?? null, 0, to);
+        const w = c.expect.polar?.[to] ?? null;
+        if (!p || !w) {
+          expect(p, `${c.name}: polar ${to}`).toBe(w);
+          continue;
+        }
+        expect([p.back, p.left, p.shots.map((s) => s.name)], c.name).toEqual([w.back, w.left, w.shots.map((s) => s.name)]);
+        expect(Math.abs(p.backReading - w.backReading)).toBeLessThanOrEqual(file.tolerance.angle);
+        p.shots.forEach((s, i) => {
+          const ws = w.shots[i]!;
+          for (const [a, b, tol] of [[s.reading, ws.reading, file.tolerance.angle], [s.zenith, ws.zenith, file.tolerance.angle], [s.slope, ws.slope, file.tolerance.metres]] as const) expect(Math.abs(a - b), `${c.name}: ${to}`).toBeLessThanOrEqual(tol);
+          expect(s.targetHeight ?? null, c.name).toBe(ws.targetHeight ?? null);
+        });
+      }
       expect(got.problems.map((p) => p.observation), c.name).toEqual(c.expect.problems.map((p) => p.observation));
     }
   });

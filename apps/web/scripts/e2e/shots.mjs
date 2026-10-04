@@ -33,7 +33,7 @@
 // (Özel koordinat sistemi: new, a TM on the project's datum, what is wrong, a local system by an affine; the definition
 // chosen in Proje ayarları, a second definition in its list; a WKT read, a text not read, a trial point; common points);
 // survey (Proje ayarları' Ölçme: empty, k and the tolerances typed, what does not hold); fieldbook (Karne editörü: a GSI
-// book with a tolerance exceeded, a text book's columns).
+// book with a tolerance exceeded, a text book's columns, Kutupsal alım filled from a station).
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -3702,6 +3702,12 @@ const fieldBookClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`wind
 SCENES.fieldbook = [
   { id: 'fieldbook-gsi', open: (ui) => fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI), close: fieldBookClose },
   { id: 'fieldbook-csv', open: (ui) => fieldBookOpen(ui, 'arazi-karnesi.csv', Buffer.from('İstasyon;Alet;Nokta;Hz;V;SD;Prizma;Kod\nS1;1,55;A;10;99;100;1,6;POL\n')), close: fieldBookClose },
+  {
+    // Kutupsal alım'a aktar: Kutupsal alım filled from ST1, the station by the file's coordinates.
+    id: 'fieldbook-polar',
+    open: async (ui) => (await fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI), await ui.clickText('.dialog--fieldbook .btn', "Kutupsal alım'a aktar"), await ui.sleep(500)),
+    close: fieldBookClose,
+  },
 ];
 
 /**

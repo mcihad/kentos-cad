@@ -295,6 +295,100 @@ pub fn reduce(station: &Station, unit: Unit, k: f64, tolerances: &Tolerances) ->
     }
 }
 
+/// A shot for Kutupsal alım: the target, its reading, slope distance and
+/// zenith in the project's unit, its target height.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PolarShot {
+    pub name: String,
+    pub reading: f64,
+    pub slope: f64,
+    pub zenith: f64,
+    pub target_height: Option<f64>,
+}
+
+crate::json_struct!(out PolarShot {
+    name,
+    reading,
+    slope,
+    zenith,
+    target_height => "targetHeight"
+});
+
+/// Kutupsal alım's fields from a station's reduction (docs/adr/0169 §3):
+/// the back sight and its reading, the shots, and the targets left out
+/// (directions without a slope distance or a zenith).
+#[derive(Clone, Debug, PartialEq)]
+pub struct PolarTransfer {
+    pub back: String,
+    pub back_reading: f64,
+    pub shots: Vec<PolarShot>,
+    pub left: Vec<String>,
+}
+
+crate::json_struct!(out PolarTransfer {
+    back,
+    back_reading => "backReading",
+    shots,
+    left
+});
+
+/// Kutupsal alım's fields with the `back` row as the back sight, the
+/// angles turned from the book's unit into the project's (`to`); none
+/// when there is no such row.
+pub fn polar_transfer(
+    reduction: &Reduction,
+    back: usize,
+    from: Unit,
+    to: Unit,
+) -> Option<PolarTransfer> {
+    let b = reduction.rows.get(back)?;
+    let turn = |v: f64| {
+        if from.full() == to.full() {
+            v
+        } else {
+            v * to.full() / from.full()
+        }
+    };
+    let mut shots = Vec::new();
+    let mut left = Vec::new();
+    for (i, r) in reduction.rows.iter().enumerate() {
+        if i == back {
+            continue;
+        }
+        match (r.slope, r.zenith) {
+            (Some(slope), Some(zenith)) => shots.push(PolarShot {
+                name: r.target.clone(),
+                reading: turn(r.hz),
+                slope,
+                zenith: turn(zenith),
+                target_height: r.target_height,
+            }),
+            _ => left.push(r.target.clone()),
+        }
+    }
+    Some(PolarTransfer {
+        back: b.target.clone(),
+        back_reading: turn(b.hz),
+        shots,
+        left,
+    })
+}
+
+/// A station reduced and turned into Kutupsal alım's fields (the web's
+/// `fieldPolar`): the `back` row the back sight, the angles in `to`.
+fn polar_named(
+    station: &Station,
+    unit: &str,
+    k: f64,
+    tolerances: Option<Tolerances>,
+    back: usize,
+    to: &str,
+) -> Result<Option<PolarTransfer>, String> {
+    let from = Unit::parse(unit)?;
+    let reduction = reduce(station, from, k, &tolerances.unwrap_or_default());
+    Ok(polar_transfer(&reduction, back, from, Unit::parse(to)?))
+}
+
 /// A station reduced in the named unit (`"grad"` or `"deg"`), its pairs
 /// checked against the tolerances (none: none checked).
 fn reduce_named(
@@ -311,9 +405,19 @@ fn reduce_named(
     ))
 }
 
-pub(crate) static OPS: &[Op] = &[op!(
-    "fieldReduce",
-    |station: Station, unit: String, k: f64, tolerances: Option<Tolerances>| {
-        reduce_named(&station, &unit, k, tolerances)
-    }
-)];
+pub(crate) static OPS: &[Op] = &[
+    op!(
+        "fieldReduce",
+        |station: Station, unit: String, k: f64, tolerances: Option<Tolerances>| {
+            reduce_named(&station, &unit, k, tolerances)
+        }
+    ),
+    op!("fieldPolar", |station: Station,
+                       unit: String,
+                       k: f64,
+                       tolerances: Option<Tolerances>,
+                       back: usize,
+                       to: String| {
+        polar_named(&station, &unit, k, tolerances, back, &to)
+    }),
+];

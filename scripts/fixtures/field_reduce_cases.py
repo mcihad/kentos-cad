@@ -26,6 +26,10 @@ The rules:
 9. Tolerances (the project's, radians and metres; each may be absent) are checked on a pair: |d| against the faces'
    horizontal tolerance, |i| against the index error's, |S_I − S_II| against the faces' slope tolerance, each turned
    into the book's unit (an angle × full / 2π); a value above its tolerance is said (over), one equal is not.
+10. Kutupsal alım is filled from a reduction with a back sight (one of its rows): its target and reading are the
+   orientation; every other row with a slope distance and a zenith is a shot (its name, reading, slope distance, zenith
+   and target height); a row without them is left out, named. The angles go into the project's unit (gon to degrees
+   × 9/10, degrees to gon × 10/9).
 """
 
 import argparse
@@ -126,7 +130,26 @@ def reduce(setup, unit, k, tolerances=None):
     out = []
     for r in rows:
         out.append({k: (float(v) if isinstance(v, mpmath.mpf) else v) for k, v in r.items()})
-    return {"rows": out, "problems": problems, "faces": faces}
+    polar = {to: transfer(rows, 0, unit, to) for to in ("grad", "deg")} if rows else None
+    return {"rows": out, "problems": problems, "faces": faces, "polar": polar}
+
+
+def transfer(rows, back, frm, to):
+    """Kutupsal alım's fields from the rows with `back` as the back sight, the angles in `to`."""
+    conv = mpmath.mpf(1) if frm == to else (mpmath.mpf(9) / 10 if frm == "grad" else mpmath.mpf(10) / 9)
+    b = rows[back]
+    shots, left = [], []
+    for i, r in enumerate(rows):
+        if i == back:
+            continue
+        if r["slope"] is None or r["zenith"] is None:
+            left.append(r["target"])
+            continue
+        shot = {"name": r["target"], "reading": float(r["hz"] * conv), "slope": float(r["slope"]), "zenith": float(r["zenith"] * conv)}
+        if r["targetHeight"] is not None:
+            shot["targetHeight"] = float(r["targetHeight"])
+        shots.append(shot)
+    return {"back": b["target"], "backReading": float(b["hz"] * conv), "shots": shots, "left": left}
 
 
 def obs(target, hz, zenith, slope=None, th=None):

@@ -12,12 +12,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use iced::Task;
 use kentos_contracts::{AngleUnit, FieldBookRead, FieldCsvOptions, FieldStation};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::survey::Unit;
 use kentos_geometry_core::survey::fieldbook::{
-    Observation, Reduction, Station, Tolerances, reduce,
+    Observation, PolarTransfer, Reduction, Station, Tolerances, polar_transfer, reduce,
 };
 
 use super::grid::{Col, Mark, Table};
@@ -108,6 +107,9 @@ pub enum Event {
     /// The station shown, and its instrument height as typed.
     Station(usize),
     Height(String),
+    /// The reduced row that is the back sight, and Kutupsal alım'a aktar.
+    Back(usize),
+    Transfer,
 }
 
 /// A text book's mapping, remembered while the app runs.
@@ -176,6 +178,8 @@ pub struct Form {
     pub book: Option<FieldBookRead>,
     pub mapping: Mapping,
     pub station: usize,
+    /// The station's reduced row Kutupsal alım is oriented on.
+    pub back: usize,
     edits: Vec<Edits>,
     /// Why the file was not read.
     pub error: Option<String>,
@@ -331,6 +335,50 @@ impl Form {
     }
 }
 
+impl Form {
+    /// Kutupsal alım's fields from the station shown, its back sight row
+    /// the orientation, the angles in the project's unit (docs/adr/0169 §3).
+    pub fn transfer(&self, project: AngleUnit) -> Option<PolarTransfer> {
+        let core = |u: AngleUnit| match u {
+            AngleUnit::Grad => Unit::GRAD,
+            AngleUnit::Deg => Unit::DEG,
+        };
+        polar_transfer(
+            self.reduction.as_ref()?,
+            self.back,
+            core(self.unit(project)),
+            core(project),
+        )
+    }
+
+    /// The station shown as the file has it, and its instrument height as typed.
+    fn station_shown(&self) -> Option<(&FieldStation, &str)> {
+        let st = self.book.as_ref()?.stations.get(self.station)?;
+        let height = self
+            .edits
+            .get(self.station)
+            .map_or("", |e| e.height.as_str());
+        Some((st, height))
+    }
+}
+
+/// A value Kutupsal alım is filled with: the display rule's `d` decimals
+/// (8 for angles, 6 for lengths: far below what an instrument resolves),
+/// trailing zeros and a bare point dropped.
+fn exact(v: f64, d: usize) -> String {
+    let s = fixed(v, d);
+    let s = if s.contains('.') {
+        s.trim_end_matches('0').trim_end_matches('.')
+    } else {
+        s.as_str()
+    };
+    if s.is_empty() || s == "-0" {
+        "0".to_owned()
+    } else {
+        s.to_owned()
+    }
+}
+
 impl Table for Form {
     fn columns(&self) -> usize {
         COLUMNS.len()
@@ -447,76 +495,7 @@ impl Form {
     }
 }
 
-impl crate::app::App {
-    /// Karne editörü's own controls; the station is reduced again after each.
-    pub(crate) fn fieldbook_event(&mut self, e: Event) -> Task<Message> {
-        let form = &mut self.calc.fieldbook;
-        match e {
-            Event::Open => {
-                return Task::perform(
-                    async {
-                        rfd::AsyncFileDialog::new()
-                            .set_title("Karne aç")
-                            .add_filter(
-                                "Karne (.gsi, .txt, .csv, .dat)",
-                                &["gsi", "GSI", "txt", "TXT", "csv", "CSV", "dat", "DAT"],
-                            )
-                            .add_filter("Bütün dosyalar", &["*"])
-                            .pick_file()
-                            .await
-                            .map(|f| f.path().to_path_buf())
-                    },
-                    |path| fb(Event::Picked(path)),
-                );
-            }
-            Event::Picked(None) => {}
-            Event::Picked(Some(path)) => {
-                let name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_default();
-                match std::fs::metadata(&path) {
-                    Ok(m) if m.len() > LIMIT => {
-                        form.error = Some(format!(
-                            "“{name}” karne için çok büyük ({} MiB); en çok 64 MiB okunur.",
-                            m.len() >> 20
-                        ));
-                    }
-                    _ => match std::fs::read(&path) {
-                        Ok(bytes) => form.open(name, bytes),
-                        Err(e) => {
-                            form.error = Some(format!(
-                                "“{name}” okunamadı ({e}). Dosyanın yerini ve izinlerini denetleyin."
-                            ));
-                        }
-                    },
-                }
-            }
-            Event::Map(i, col) => {
-                if let Some(c) = form.mapping.columns.get_mut(i) {
-                    *c = col;
-                }
-                form.read();
-            }
-            Event::Header(on) => {
-                form.mapping.header = on;
-                form.read();
-            }
-            Event::Unit(u) => form.mapping.unit = Some(u),
-            Event::Station(i) => form.station = i,
-            Event::Height(t) => {
-                if let Some(e) = form.edits.get_mut(form.station) {
-                    e.height = t;
-                }
-            }
-        }
-        if let Some(doc) = &self.document {
-            self.calc.fieldbook.sync(doc.settings());
-        }
-        Task::none()
-    }
-}
-
+mod apply;
 mod view;
 
 #[cfg(test)]

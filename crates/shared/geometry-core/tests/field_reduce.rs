@@ -9,7 +9,7 @@
 
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::survey::Unit;
-use kentos_geometry_core::survey::fieldbook::{Station, Tolerances, reduce};
+use kentos_geometry_core::survey::fieldbook::{Station, Tolerances, polar_transfer, reduce};
 use serde_json::Value;
 
 fn near(got: Option<f64>, want: &Value, tol: f64, what: &str) {
@@ -106,6 +106,58 @@ fn the_field_book_reduces_as_the_reference_does() {
             .map(|v| v.as_u64().map(|f| f as usize))
             .collect();
         assert_eq!(got.faces, faces, "{name}: faces");
+        // Kutupsal alım's fields with the first row the back sight, in either unit.
+        for to in ["grad", "deg"] {
+            let w = &want["polar"][to];
+            let got = polar_transfer(&got, 0, unit, Unit::parse(to).expect("a unit"));
+            let Some(got) = got else {
+                assert!(w.is_null(), "{name}: polar {to}");
+                continue;
+            };
+            assert_eq!(got.back, w["back"].as_str().expect("back"), "{name}");
+            near(
+                Some(got.back_reading),
+                &w["backReading"],
+                angle,
+                &format!("{name}: back {to}"),
+            );
+            let shots = w["shots"].as_array().expect("shots");
+            assert_eq!(got.shots.len(), shots.len(), "{name}: shots {to}");
+            for (g, s) in got.shots.iter().zip(shots) {
+                assert_eq!(g.name, s["name"].as_str().expect("a name"), "{name}");
+                near(
+                    Some(g.reading),
+                    &s["reading"],
+                    angle,
+                    &format!("{name}: reading {to}"),
+                );
+                near(
+                    Some(g.slope),
+                    &s["slope"],
+                    metres,
+                    &format!("{name}: slope {to}"),
+                );
+                near(
+                    Some(g.zenith),
+                    &s["zenith"],
+                    angle,
+                    &format!("{name}: zenith {to}"),
+                );
+                near(
+                    g.target_height,
+                    &s["targetHeight"],
+                    metres,
+                    &format!("{name}: target height {to}"),
+                );
+            }
+            let left: Vec<&str> = w["left"]
+                .as_array()
+                .expect("left")
+                .iter()
+                .map(|v| v.as_str().expect("a name"))
+                .collect();
+            assert_eq!(got.left, left, "{name}: left {to}");
+        }
         let problems: Vec<u64> = want["problems"]
             .as_array()
             .expect("problems")

@@ -48,6 +48,27 @@ const state = {
 
 const TITLE = 'Kutupsal alım';
 
+/** Kutupsal alım's fields as another window fills them (Karne editörü, docs/adr/0169 §3): the table's rows replaced. */
+export interface PolarFill {
+  station: string;
+  back: string;
+  backReading: string;
+  stationZ: string;
+  instrumentHeight: string;
+  rows: Row[];
+}
+
+/** Fills Kutupsal alım's fields, then opens it. */
+export function openPolarWith(ctx: AppContext, fill: PolarFill): void {
+  state.station.text = fill.station;
+  state.back.text = fill.back;
+  state.backReading = fill.backReading;
+  state.stationZ = fill.stationZ;
+  state.instrumentHeight = fill.instrumentHeight;
+  state.rows = fill.rows.length ? fill.rows : [{}, {}, {}];
+  openPolar(ctx);
+}
+
 class PolarDialog implements Picker {
   readonly ctx: AppContext;
   readonly title = TITLE;

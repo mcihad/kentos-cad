@@ -142,6 +142,13 @@ impl Form {
                     .map(|_| event(CalcEvent::CopyReport)),
                 false,
             ))
+            .action(footer_button(
+                "Kutupsal alım'a aktar",
+                self.transfer(model.settings().angle_unit)
+                    .filter(|t| !t.shots.is_empty())
+                    .map(|_| fb(Event::Transfer)),
+                true,
+            ))
             .action(footer_button("Kapat", Some(event(CalcEvent::Close)), false))
             .max_height(MAX_HEIGHT)
             .into()
@@ -244,6 +251,25 @@ impl Form {
             fb(Event::Height(t))
         });
         let mut bar = row![select, height].spacing(18).align_y(iced::Bottom);
+        // Kutupsal alım is oriented on a reduced row: the first, or the one chosen.
+        if let Some(r) = self.reduction.as_ref().filter(|r| !r.rows.is_empty()) {
+            let choices: Vec<Choice> = r
+                .rows
+                .iter()
+                .map(|x| Choice::new(x.target.clone()))
+                .collect();
+            bar = bar.push(
+                column![
+                    label::caption("Geri bakış"),
+                    Select::new(choices, Some(self.back.min(r.rows.len() - 1)), |i| {
+                        fb(Event::Back(i))
+                    })
+                    .searchable(false),
+                ]
+                .spacing(4)
+                .width(Length::Fixed(160.0)),
+            );
+        }
         let st = &book.stations[self.station.min(book.stations.len() - 1)];
         if let (Some(e), Some(n)) = (st.east, st.north) {
             let mut place = format.point(kentos_interaction::Vec2::new(e, n));

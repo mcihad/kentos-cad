@@ -73,7 +73,37 @@
         "faces": [
           1,
           1
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "P2",
+            "backReading": 0.0,
+            "shots": [
+              {
+                "name": "101",
+                "reading": 87.4321,
+                "slope": 63.214,
+                "zenith": 101.2345,
+                "targetHeight": 1.7
+              }
+            ],
+            "left": []
+          },
+          "deg": {
+            "back": "P2",
+            "backReading": 0.0,
+            "shots": [
+              {
+                "name": "101",
+                "reading": 78.68889,
+                "slope": 63.214,
+                "zenith": 91.11104999999999,
+                "targetHeight": 1.7
+              }
+            ],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -159,7 +189,37 @@
           1,
           2,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "P2",
+            "backReading": 0.0019000000000005228,
+            "shots": [
+              {
+                "name": "101",
+                "reading": 87.43289999999999,
+                "slope": 63.215,
+                "zenith": 101.23369999999998,
+                "targetHeight": 1.7
+              }
+            ],
+            "left": []
+          },
+          "deg": {
+            "back": "P2",
+            "backReading": 0.0017100000000004707,
+            "shots": [
+              {
+                "name": "101",
+                "reading": 78.68961,
+                "slope": 63.215,
+                "zenith": 91.11032999999999,
+                "targetHeight": 1.7
+              }
+            ],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -211,7 +271,21 @@
         "faces": [
           1,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "A",
+            "backReading": 399.9993,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "A",
+            "backReading": 359.99937,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -263,7 +337,21 @@
         "faces": [
           1,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "A",
+            "backReading": 50.13777777777777,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "A",
+            "backReading": 45.123999999999995,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -304,7 +392,21 @@
         "problems": [],
         "faces": [
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "B",
+            "backReading": 50.0,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "B",
+            "backReading": 45.0,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -347,7 +449,21 @@
         "problems": [],
         "faces": [
           1
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "C",
+            "backReading": 10.0,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "C",
+            "backReading": 9.0,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -387,7 +503,21 @@
         "problems": [],
         "faces": [
           1
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "D",
+            "backReading": 123.4567,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "D",
+            "backReading": 111.11103,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -449,7 +579,25 @@
         "faces": [
           0,
           0
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "BS",
+            "backReading": 0.0,
+            "shots": [],
+            "left": [
+              "BS"
+            ]
+          },
+          "deg": {
+            "back": "BS",
+            "backReading": 0.0,
+            "shots": [],
+            "left": [
+              "BS"
+            ]
+          }
+        }
       }
     },
     {
@@ -513,7 +661,21 @@
           null,
           null,
           1
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "G",
+            "backReading": 3.0,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "G",
+            "backReading": 2.7,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -599,7 +761,37 @@
           2,
           1,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "A",
+            "backReading": 10.000500000000002,
+            "shots": [
+              {
+                "name": "A",
+                "reading": 59.99969999999999,
+                "slope": 100.001,
+                "zenith": 99.00030000000001,
+                "targetHeight": 1.5
+              }
+            ],
+            "left": []
+          },
+          "deg": {
+            "back": "A",
+            "backReading": 9.000450000000003,
+            "shots": [
+              {
+                "name": "A",
+                "reading": 53.99972999999999,
+                "slope": 100.001,
+                "zenith": 89.10027000000001,
+                "targetHeight": 1.5
+              }
+            ],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -693,7 +885,37 @@
           2,
           1,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "A",
+            "backReading": 10.001499999999993,
+            "shots": [
+              {
+                "name": "B",
+                "reading": 59.99969999999999,
+                "slope": 100.001,
+                "zenith": 99.00030000000001,
+                "targetHeight": 1.5
+              }
+            ],
+            "left": []
+          },
+          "deg": {
+            "back": "A",
+            "backReading": 9.001349999999993,
+            "shots": [
+              {
+                "name": "B",
+                "reading": 53.99972999999999,
+                "slope": 100.001,
+                "zenith": 89.10027000000001,
+                "targetHeight": 1.5
+              }
+            ],
+            "left": []
+          }
+        }
       }
     },
     {
@@ -750,7 +972,21 @@
         "faces": [
           1,
           2
-        ]
+        ],
+        "polar": {
+          "grad": {
+            "back": "A",
+            "backReading": 50.13777777777777,
+            "shots": [],
+            "left": []
+          },
+          "deg": {
+            "back": "A",
+            "backReading": 45.123999999999995,
+            "shots": [],
+            "left": []
+          }
+        }
       }
     }
   ]

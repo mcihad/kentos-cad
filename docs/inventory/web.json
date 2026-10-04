@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 89,
-      "implemented": 89,
+      "total": 90,
+      "implemented": 90,
       "partial": 0,
       "pending": 0
     },
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 89,
-        "implemented": 71,
+        "total": 90,
+        "implemented": 72,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -18187,6 +18187,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/calc/polar.rs (ADR 0071)"
+    },
+    {
+      "id": "apps/web/src/ui/calc/PolarDialog.ts#openPolarWith",
+      "name": "openPolarWith",
+      "role": "window",
+      "source": "apps/web/src/ui/calc/PolarDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/calc/fieldbook/apply.rs, Kutupsal alım filled from the field book (ADR 0169 §3)"
     },
     {
       "id": "apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout",

@@ -150,5 +150,25 @@ export interface Reduction {
   faces: (number | null)[];
 }
 
+/** A shot for Kutupsal alım: the target, its reading, slope distance and zenith in the project's unit, its target height. */
+export interface PolarShot {
+  name: string;
+  reading: number;
+  slope: number;
+  zenith: number;
+  targetHeight?: number;
+}
+
+/** Kutupsal alım's fields from a station's reduction (docs/adr/0169 §3): the back sight and its reading, the shots, the targets left out. */
+export interface PolarTransfer {
+  back: string;
+  backReading: number;
+  shots: PolarShot[];
+  left: string[];
+}
+
+/** A station reduced and turned into Kutupsal alım's fields: the `back` row the back sight, the angles in `to` (the core's `polar_transfer`). */
+export const fieldPolar = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null, back: number, to: AngleUnit) => PolarTransfer | null>('fieldPolar');
+
 /** A station's observations reduced in the unit with the refraction coefficient `k`, its pairs checked against the tolerances (the core's `survey::fieldbook`). */
 export const fieldReduce = op<(station: FieldStation, unit: AngleUnit, k: number, tolerances: Tolerances | null) => Reduction>('fieldReduce');

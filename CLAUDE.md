@@ -33,6 +33,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kenet ekleri: Ağırlık merkezi, Uzantı, Paralel ve Karelaj türleri (karelaj aralığı doğu ve kuzey), çizilmekte olan yola kenet, ölçek aralığında kenet; durum çubuğundaki Kenet hücresinin sağ tık menüsünde türler tek tek ve karelaj aralıkları; uçta durmak uzantısını, kenarda durmak doğrultusunu alır, yazılan mesafe uzantı ve paralel boyuncadır; Katmanlar'da katmanın kendi keneti (mıknatıs, Kenet ▸; `.kcad` şema 10) (ADR 0163);
   sayısallaştırma kilitleri: değer kartında sayı ve Tab ile uzunluk, `<açı` ile doğrultu (CBS'de semt), Sapma, Nesneye paralel ve dik (kenar ya da yay seçilerek), Kalıcı, Esc önce kilitleri kaldırır; Dik açı ve kapalı alanlarda Dik kapat (D); Referans noktası ve Yapım kipi; çizimde kesikli kılavuzlar, seçilen kenar ve “R”, sağ tıkta Kilit ▸ (ADR 0166);
   ikinci koordinat sistemi: projenin ayarı (`.kcad` şema 12), durum çubuğunda, Koordinat oku'da, Mesafe ölç ve Alan hesapla'da ikinci sistemin değerleri doğruluklarıyla (EPSG'nin yolları, “resmî dönüşüm değil”), coğrafide DMS ya da DD; Koordinat dönüştür (tek nokta, Çizimden, liste, panoya ve CSV; `crs.transform`) (ADR 0167);
+  saha verisi: Leica GSI ve CSV/TXT karne (içerikten tanınır, metin karnede sütun eşleme), Karne editörü (gözlemler, Kullan, nokta adı;
+  iki durumun indirgenmesi, indeks hatası, yatay uzunluk ve kot farkı yer eğriliği ve refraksiyonla; toleransı aşan fark),
+  Kutupsal alım'a aktar; Proje ayarları › Ölçme: k (0,13) ve toleranslar (`.kcad` şema 14), Kutupsal alım da k'yı uygular (ADR 0169);
   özel koordinat sistemi: projenin ya da ikinci sistemin tanımı (TM, coğrafi, taban sisteme bağlı yerel; kayıttaki ya da projenin datumu, WGS 84'e 7 parametre; `.kcad` şema 13), projenin datum dönüşümleri (7 parametre ya da cihazın NTv2 ızgarası), Izgaralar; Özel koordinat sistemi penceresi: WKT ve PROJ'dan al ve kopyala, Kayıttakini seç, Deneme noktası, Ortak noktalardan hesapla (ADR 0168);
   izleyerek çizim: yol aracının İzle (İ) düğmesi açıkken çizgiye yakın tık çizginin üstüne oturur, iki nokta arası görünen çizgiler boyunca kısa yoldan, köşeleri ve yaylarıyla; Birleştir'in Zincir (Z) seçeneği tıklanan çizginin bağlı zincirini tek çoklu çizgi yapar; yol aracının Akış (A) düğmesi açıkken imleç Adım boyu (B) kadar ilerledikçe köşe bırakır (ADR 0161);
   toplu alan: çizgilerin kapattığı bütün bölgeler tek adımda alan olur, içteki yazı ya da adlı nokta özniteliği; etiketsiz, çok etiketli bölgeler ve boşta uçlar söylenir (ADR 0151);
@@ -736,7 +739,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `survey::fieldbook`, CSV karne `formats::field`, iki platformda; başvurular `field_reduce_cases.py`, `field_csv_cases.py`) ve 2. adım
   (Leica GSI-8 ve GSI-16, `formats::field::gsi`; başvuru `field_gsi_cases.py`) ve 3a (Proje ayarları › Ölçme: k ve toleranslar, `.kcad`
   şema 14, `survey_form`; Kutupsal alım k'yı uygular) ve 3b (Karne editörü iki platformda, `calc.fieldbook`; çekirdekte durumlar ve
-  tolerans denetimi, `field::sniff`, `readFieldBook`) tamam; sıradaki 3c Kutupsal alım'a aktarma. Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
+  tolerans denetimi, `field::sniff`, `readFieldBook`) ve 3c (Kutupsal alım'a aktar: `polar_transfer`, `fieldPolar`, Geri bakış) tamam;
+  3. adım bitti. Sıradaki 4. adım Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
   sonraki ayrı işler `docs/sheet/integration.md` §6'da. 2 Ekim: web'in klasik arayüzü kaldırıldı, iki platformda yalnız şerit var (sahibin

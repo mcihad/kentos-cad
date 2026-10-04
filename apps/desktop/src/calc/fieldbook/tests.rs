@@ -108,7 +108,8 @@ fn a_text_book_is_mapped_then_read() {
 }
 
 /// Karne editörü's pictures: the sample book in the light theme at
-/// 1440×900 and the dark at 1100×650, and a text book's mapping.
+/// 1440×900 and the dark at 1100×650, a text book's mapping, and Kutupsal
+/// alım filled from the first station.
 #[test]
 #[ignore = "writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture"]
 fn screens() {
@@ -126,12 +127,15 @@ fn screens() {
     )
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
-        for name in ["gsi", "csv"] {
+        for name in ["gsi", "csv", "polar"] {
             let mut app = opened();
             let _ = app
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
+            if name == "polar" {
+                send(&mut app, Event::Transfer);
+            }
             if name == "csv" {
                 app.calc.fieldbook.mapping = super::Mapping::default();
                 send(&mut app, Event::Picked(Some(csv.clone())));
@@ -151,4 +155,53 @@ fn screens() {
         }
     }
     let _ = std::fs::remove_dir_all(dir);
+}
+
+/// Kutupsal alım'a aktar (docs/adr/0169 §3): the station by the file's
+/// coordinates (the drawing has no ST1), the first row the back sight, the
+/// other targets its shots; with any back point the window's height
+/// differences are the field book's.
+#[test]
+fn a_station_goes_to_kutupsal_alim() {
+    let mut app = opened();
+    let dh: Vec<(String, f64)> = app
+        .calc
+        .fieldbook
+        .reduction
+        .as_ref()
+        .expect("reduced")
+        .rows
+        .iter()
+        .skip(1)
+        .map(|r| (r.target.clone(), r.dh.expect("a height difference")))
+        .collect();
+    send(&mut app, Event::Transfer);
+    assert_eq!(app.calc.open, Some(Window::Polar));
+    let polar = &app.calc.polar;
+    assert_eq!(
+        (
+            polar.station.as_str(),
+            polar.back.as_str(),
+            polar.instrument_height.as_str()
+        ),
+        ("412350,4521800", "P2", "1.552")
+    );
+    assert_eq!(
+        (polar.back_reading.as_str(), polar.station_z.as_str()),
+        ("0.0019", "105.2")
+    );
+    let names: Vec<&str> = polar.rows.iter().map(|r| r[0].as_str()).collect();
+    assert_eq!(names, ["101", "102", "103", "104"]);
+    assert_eq!(
+        polar.rows[0],
+        ["101", "87.4329", "63.215", "101.2337", "1.7"]
+    );
+    // Any back point: the heights do not depend on the orientation.
+    app.calc.polar.back = "412350,4522000".to_owned();
+    let doc = app.document.as_ref().expect("a drawing");
+    let points = app.calc.polar.compute(&doc.model).points.expect("computed");
+    for ((name, want), p) in dh.iter().zip(&points) {
+        let got = p.dz.expect("a height difference");
+        assert!((got - want).abs() < 1e-6, "{name}: {got} ≠ {want}");
+    }
 }

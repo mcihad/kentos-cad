@@ -99,6 +99,15 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    uzunluk, Prizma, Kod, Satır), İndirgenmiş tablo (farklar cc ya da ″ ve mm ile; toleransı aşan kırmızı), özet (okunmayan satırlar,
    durum olmayan gözlemler, toleranslar ve aşımlar, k), Raporu kopyala. Resimler ve akış testleri `fixtures/field/v1/sample.gsi` ile
    (`field_sample_gsi.py`'nin elle yazılmış GSI-16 karnesi).
+
+   *(4 Ekim: 3c tamam; 3. adım bitti.)* Kutupsal alım'a aktarma: çekirdekte `survey::fieldbook::polar_transfer` (web'e `fieldPolar`):
+   seçilen indirgenmiş satır geri bakıştır (hedefi ve okuması yöneltme), eğik uzunluğu ve başucu açısı olan her öbür satır bir
+   nokta (adı, okuması, eğik uzunluğu, başucu açısı, prizma yüksekliği), olmayanlar adlarıyla dışarıda kalır; açılar karnenin
+   biriminden projeninkine çevrilir. Bağımsız başvuru `field_reduce_cases.py`'nin her durumunda iki birim için (`polar`). Karne
+   editöründe istasyonun yanında Geri bakış (indirgenmiş satırlar, ilki), altta Kutupsal alım'a aktar: istasyon çizimde adıyla varsa
+   adıyla, yoksa dosyadaki koordinatlarıyla, istasyon kotu dosyanınki, alet yüksekliği yazılan; değerler açılarda 8, uzunluklarda 6
+   ondalıkla yazılır (aletin çözünürlüğünün çok altında); Kutupsal alım açılır, karne kalır; kaç nokta aktarıldığı ve aktarılmayan
+   doğrultular söylenir. Kutupsal alım aynı k'yı uyguladığı için kot farkları karnedekilerle aynıdır (masaüstü testi 1e-6 m).
 4. Poligon hesabı'na aktarma (iki yönden kenarlar, kapanmalar).
 5. Sokkia SDR33 ve Topcon GTS-7; Trimble JobXML ve Nikon RAW.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.

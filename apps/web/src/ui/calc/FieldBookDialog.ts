@@ -4,14 +4,15 @@ import type { FieldCsvOptions } from '../../contracts/generated/FieldCsvOptions'
 import type { FieldStation } from '../../contracts/generated/FieldStation';
 import { fixed } from '../../core/displayNumber';
 import { formats } from '../../io/client';
-import { fieldReduce, type Reduction } from '../../model/geom/surveyCalc';
+import { fieldPolar, fieldReduce, type FieldStation as CoreStation, type Reduction, type Tolerances } from '../../model/geom/surveyCalc';
 import type { AngleUnit } from '../../model/projectSettings';
 import { surveyTexts } from '../../model/surveyForm';
 import { h, replaceChildren } from '../dom';
 import { checkField, field, fileLine, select } from '../io/common';
 import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
-import { copyReport, Grid, readNumber, summary, summaryLine, type GridModel, type Row } from './common';
+import { copyReport, Grid, readNumber, resolvePoint, summary, summaryLine, type GridModel, type Row } from './common';
+import { openPolarWith } from './PolarDialog';
 
 /**
  * Karne editörü (docs/adr/0169 §2–§3, §6; the desktop's `calc/fieldbook/`): a field book opened from an instrument's
@@ -48,6 +49,8 @@ const state = {
   book: null as FieldBookRead | null,
   mapping: { columns: Array<number | null>(8).fill(null), header: true, unit: null as AngleUnit | null },
   station: 0,
+  /** The station's reduced row Kutupsal alım is oriented on. */
+  back: 0,
   edits: [] as Edits[],
   error: null as string | null,
 };
@@ -71,6 +74,15 @@ function options(): FieldCsvOptions | null {
 /** An angle's columns in gon or degrees, the differences in cc or seconds. */
 const marks = (unit: AngleUnit) => (unit === 'grad' ? { mark: 'g', fine: 'cc', per: 10000 } : { mark: '°', fine: '″', per: 3600 });
 const shown = (v: number | null | undefined, d: number): string => (v === null || v === undefined ? '' : fixed(v, d));
+/**
+ * A value Kutupsal alım is filled with: the display rule's `d` decimals (8 for angles, 6 for lengths: far below what an
+ * instrument resolves), trailing zeros and a bare point dropped (the desktop's `fieldbook::exact`).
+ */
+function exact(v: number, d: number): string {
+  let s = fixed(v, d);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s === '' || s === '-0' ? '0' : s;
+}
 
 class FieldBookDialog {
   private readonly ctx: AppContext;
@@ -81,6 +93,11 @@ class FieldBookDialog {
   private readonly reducedBox = h('div', { class: 'calc-section' });
   private readonly summaryBox = h('div', { class: 'io-summary' });
   private readonly copy = h('button', { class: 'btn', type: 'button' }, 'Raporu kopyala');
+  private readonly transfer = h('button', { class: 'btn btn--primary', type: 'button' }, "Kutupsal alım'a aktar");
+  /** Geri bakış: the reduced row Kutupsal alım is oriented on (filled when the station is reduced). */
+  private readonly backBox = h('div', { class: 'fieldbook-back' });
+  /** The station shown in the core's terms, as last reduced (Kutupsal alım'a aktar reduces it again). */
+  private core: { station: CoreStation; tolerances: Tolerances | null } | null = null;
   private readonly dialog: Dialog;
   private reduction: Reduction | null = null;
   /** The observations the reduction was made of (the table's rows used, in order). */
@@ -94,10 +111,11 @@ class FieldBookDialog {
       width: 1040,
       className: 'dialog--io dialog--calc dialog--fieldbook',
       content: [this.fileBox, this.mappingBox, this.stationBox, this.tableBox, this.reducedBox, this.summaryBox],
-      footer: [h('div', { class: 'dialog__spacer' }), this.copy, close],
+      footer: [h('div', { class: 'dialog__spacer' }), this.copy, this.transfer, close],
     });
     close.addEventListener('click', () => this.dialog.close());
     this.copy.addEventListener('click', () => this.copyReport());
+    this.transfer.addEventListener('click', () => this.toPolar());
     this.render();
   }
 
@@ -227,8 +245,9 @@ class FieldBookDialog {
       h(
         'div',
         { class: 'io-row' },
-        field('İstasyon', select('İstasyon', stations, String(state.station), (v) => ((state.station = Number(v)), this.render()))),
+        field('İstasyon', select('İstasyon', stations, String(state.station), (v) => ((state.station = Number(v)), (state.back = 0), this.render()))),
         field('Alet yüksekliği (m)', height),
+        this.backBox,
         st.east !== undefined && st.north !== undefined
           ? field('Dosyadaki koordinatlar', h('span', { class: 'num fieldbook-place' }, `${f.point({ x: st.east, y: st.north })}${st.height !== undefined ? `  Z ${fixed(st.height, 3)}` : ''}`))
           : null,
@@ -246,7 +265,10 @@ class FieldBookDialog {
     if (!st || !edits) {
       replaceChildren(this.tableBox);
       replaceChildren(this.reducedBox);
+      replaceChildren(this.backBox);
+      this.core = null;
       this.copy.disabled = true;
+      this.transfer.disabled = true;
       this.showSummary();
       return;
     }
@@ -260,7 +282,28 @@ class FieldBookDialog {
     });
     const ih = readNumber(edits.height);
     const station = { station: st.station, ...(ih !== null && Number.isFinite(ih) ? { instrumentHeight: ih } : {}), observations };
-    this.reduction = fieldReduce(station, unit, settings.refraction, survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope } : null);
+    const tolerances = survey ? { faceHz: survey.faceHz, index: survey.index, faceSlope: survey.faceSlope } : null;
+    this.reduction = fieldReduce(station, unit, settings.refraction, tolerances);
+    this.core = { station, tolerances };
+    // Kutupsal alım is oriented on a reduced row: the first, or the one chosen.
+    const rowsReduced = this.reduction.rows;
+    state.back = Math.min(state.back, Math.max(0, rowsReduced.length - 1));
+    replaceChildren(
+      this.backBox,
+      rowsReduced.length
+        ? field(
+            'Geri bakış',
+            select(
+              'Geri bakış',
+              rowsReduced.map((row, i) => ({ value: String(i), label: row.target })),
+              String(state.back),
+              (v) => ((state.back = Number(v)), this.sync()),
+            ),
+          )
+        : null,
+    );
+    const polar = rowsReduced.length ? fieldPolar(station, unit, settings.refraction, tolerances, state.back, settings.angleUnit.value) : null;
+    this.transfer.disabled = !polar?.shots.length;
     const faces = new Map<number, number | null>();
     this.from.forEach((i, k) => faces.set(i, this.reduction!.faces[k] ?? null));
     const { mark } = marks(unit);
@@ -365,6 +408,32 @@ class FieldBookDialog {
       lines.push(summaryLine('info', `Kot farkları yer eğriliği ve refraksiyonla, k = ${settings.refraction}.`));
     }
     summary(this.summaryBox, lines);
+  }
+
+  /**
+   * Kutupsal alım'a aktar (docs/adr/0169 §3): its fields filled from the station shown (the station by its name when the
+   * drawing has it, else by the file's coordinates), then it opens; what is opened here stays.
+   */
+  private toPolar(): void {
+    const st = state.book?.stations[state.station];
+    const core = this.core;
+    if (!st || !core) return;
+    const settings = this.ctx.doc.settings;
+    const t = fieldPolar(core.station, this.unit(), settings.refraction, core.tolerances, state.back, settings.angleUnit.value);
+    if (!t?.shots.length) return;
+    const known = resolvePoint(this.ctx, st.station);
+    const station = known && !('error' in known) ? st.station : st.east !== undefined && st.north !== undefined ? `${st.east},${st.north}` : st.station;
+    openPolarWith(this.ctx, {
+      station,
+      back: t.back,
+      backReading: exact(t.backReading, 8),
+      stationZ: st.height === undefined ? '' : exact(st.height, 6),
+      instrumentHeight: state.edits[state.station]?.height ?? '',
+      rows: t.shots.map((s) => ({ name: s.name, reading: exact(s.reading, 8), distance: exact(s.slope, 6), zenith: exact(s.zenith, 8), target: s.targetHeight === undefined ? '' : exact(s.targetHeight, 6) })),
+    });
+    this.ctx.log.success(`Karne editörü: ${t.shots.length} nokta Kutupsal alım'a aktarıldı (geri bakış ${t.back}).`);
+    if (t.left.length) this.ctx.log.warn(`Uzunluğu ya da başucu açısı olmayan ${t.left.length} doğrultu aktarılmadı: ${t.left.join(', ')}.`);
+    this.dialog.close();
   }
 
   private copyReport(): void {
