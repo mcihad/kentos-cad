@@ -179,6 +179,24 @@ Kutupsal alım, Poligon hesabı ve Aplikasyon (ADR 0070, 0071) ölçüleri tablo
    biri `CO,` ile başlıyorsa. Bağımsız başvuru `field_nikon_cases.py` (`nikon.json`, 3 durum) ve 6000 rastgele karnede Rust ile
    birebir; örnek `sample-nikon.raw` GSI örneğiyle aynı karne; resimler `karne-nikon-*`, `fieldbook-nikon-*`. Kılavuzun “Data
    examples” örneği kendi içinde tutarsızdır (SS'in değerleri DDD.MMSS değil), örnek olarak alınmadı.
+
+   *(4 Ekim: 5c tamam; 5. adım bitti.)* Trimble JobXML: kaynak JobXML şeması 5.3
+   (https://ww2.trimble.com/schema/jobxml/5_3/jobxmlschema-5.3.xsd) ve açıklamaları: bütün açılar ondalık derece, bütün uzunluklar
+   metre; ham arazi okumaları Circle öğelerinde (düzeltmesiz). Çekirdekte `formats::field::jobxml` (biçim `jobxml`, `FORMATS_VERSION`
+   25). XML'i roxmltree okur: masaüstünde 27 Eylül'den beri vardı, ortak biçim çekirdeğine (yani web'in WASM'ına) girmesini sahip 4 Ekim'de
+   onayladı (`docs/deps/README.md`); biçim WASM'ı JobXML okuyucusuyla birlikte 1 954 331 bayttan 2 031 496 bayta (+77 KB; gzip'le 592 333'ten
+   622 325'e, +30 KB) büyüdü. roxmltree'nin ayrıştırıcısı her iç içe öğede özyinelediğinden belge ayrıştırılmadan önce taranır
+   (`formats::xml`): 256 düzeyden derin öğe söylenir, okunmaz (5000 düzeyli belge testte yığını taşırıyordu; başvuru aynı derinliği sayar).
+   Kök JOBFile ve FieldBook değilse söylenir; FieldBook'un kayıtları sırayla: TargetRecord (ID'siyle prizma yüksekliği), StationRecord
+   (ID'siyle istasyon: adı, alet yüksekliği, adının ondan önceki son Grid'li PointRecord'undan koordinatları), PointRecord (Deleted true ise
+   atlanır; Grid'i adının koordinatı; Circle'ı DirectReading, AverageMeasurements, AngleOnly ya da HorizontalAngleOnly yöntemindeyse gözlem:
+   HorizontalCircle, VerticalCircle, EDMDistance, StationID'nin istasyonu, TargetID'nin prizma yüksekliği, Code; başka yöntemdeki Circle —
+   dışmerkez, hesaplanmış, ortalanmış — söylenir, okunmaz). Sayılar şemanın double'ı (üslü yazım dahil, INF ve NaN değil), en yakın float64;
+   açı 0 ile 360 arasında; eğik uzunluk eksi olamaz. İçerikten tanıma: boşluktan sonraki ilk karakter `<` ve ilk 4096 karakterde
+   `<JOBFile`. Bağımsız başvuru `field_jobxml_cases.py` (`jobxml.json`, 7 durum; Python'un kendi XML okuyucusu expat ile, satırlar
+   öğelerin başladığı satır) ve 6000 rastgele belgede Rust ile birebir; örnek `sample.jxl` GSI örneğinin derecedeki karşılığı (açılar
+   1e-9 içinde ×0,9, uzunluklar ve kot farkları mikrometre içinde); dosya süzgecinde `.jxl`, `.xml`; resimler `karne-jobxml-*`,
+   `fieldbook-jobxml-*`.
 6. GNSS: GPX ve NMEA, WGS 84'ten projenin sistemine.
 7. Alete gönderme: okunan biçimlerin koordinat kayıtları ve CSV.
 

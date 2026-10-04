@@ -1,0 +1,231 @@
+{
+  "format": "kentos.field-jobxml",
+  "version": 1,
+  "source": "scripts/fixtures/field_jobxml_cases.py (docs/adr/0169 §1; Trimble JobXML schema 5.3)",
+  "texts": {
+    "xml": "Satır 1: dosya XML olarak okunamadı; karne okunmadı.",
+    "deep": "Satır 1: XML öğeleri {depth} düzeyden derin iç içe; karne okunmadı.",
+    "root": "Satır {line}: XML dosyası JobXML değil (kök öğe {root}); karne okunmadı.",
+    "fieldbook": "Satır {line}: JobXML dosyasında FieldBook yok; karne okunmadı.",
+    "value": "Satır {line}: “{data}” sayı değil; kayıt okunmadı.",
+    "turn": "Satır {line}: açı “{data}” sıfırla 360 derece arasında değil; kayıt okunmadı.",
+    "negative": "Satır {line}: eğik uzunluk “{data}” sıfırdan küçük; kayıt okunmadı.",
+    "method": "Satır {line}: {name} gözlemi {method} yöntemiyle; ham gözlem değil, okunmadı.",
+    "station": "Satır {line}: {name} gözleminin istasyonu (StationID {id}) yok; okunmadı.",
+    "horizontal": "Satır {line}: {name} gözleminin yatay açısı yok; okunmadı.",
+    "target": "Satır {line}: {name} gözleminin prizma kaydı (TargetID {id}) yok; prizma yüksekliği okunmadı."
+  },
+  "cases": [
+    {
+      "name": "iki istasyon, koordinatlar, prizma kayıtları, ham yöntemler, silinmiş ve ortalanmış kayıtlar",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<JOBFile jobName=\"KARNE\" product=\"Trimble Access\" productVersion=\"2026.00\" version=\"5.3\">\n  <FieldBook>\n    <PointRecord ID=\"00000001\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>ST1</Name>\n      <Code></Code>\n      <Method>Coordinates</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Grid><North>4521800.000</North><East>412350.000</East><Elevation>105.200</Elevation></Grid>\n    </PointRecord>\n    <StationRecord ID=\"00000002\" TimeStamp=\"2026-10-04T10:01:00\"><StationName>ST1</StationName><TheodoliteHeight>1.552</TheodoliteHeight><StationType>StandardStation</StationType></StationRecord>\n    <BackBearingRecord ID=\"00000003\" TimeStamp=\"2026-10-04T10:01:30\"><Station>ST1</Station><BackSight>P2</BackSight><Face1HorizontalCircle>0.00108</Face1HorizontalCircle></BackBearingRecord>\n    <TargetRecord ID=\"00000004\" TimeStamp=\"2026-10-04T10:02:00\"><PrismConstant>0</PrismConstant><TargetHeight>1.700</TargetHeight></TargetRecord>\n    <PointRecord ID=\"00000005\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P2</Name>\n      <Code></Code>\n      <Method>AngleOnly</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>BackSight</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>0.00108</HorizontalCircle><VerticalCircle>89.88885</VerticalCircle><EDMDistance></EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000006\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>101</Name>\n      <Code>BINA</Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>78.68889</HorizontalCircle><VerticalCircle>91.11105</VerticalCircle><EDMDistance>63.214</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000007\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>101</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>258.69033</HorizontalCircle><VerticalCircle>268.89039</VerticalCircle><EDMDistance>63.216</EDMDistance><Face>Face2</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000008\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>102</Name>\n      <Code></Code>\n      <Method>MeanTurnedAngle</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>108.4995</HorizontalCircle><VerticalCircle>90.396</VerticalCircle><EDMDistance>82.441</EDMDistance><Face>FaceNull</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000009\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>103</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>true</Deleted>\n      <Circle><HorizontalCircle>189.108</HorizontalCircle><VerticalCircle>88.83</VerticalCircle><EDMDistance>55.123</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000010\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>104</Name>\n      <Code></Code>\n      <Method>HorizontalAngleOnly</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>274.5</HorizontalCircle><VerticalCircle></VerticalCircle><EDMDistance></EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n    <TargetRecord ID=\"00000011\" TimeStamp=\"2026-10-04T10:05:00\"><PrismConstant>0</PrismConstant><TargetHeight></TargetHeight></TargetRecord>\n    <PointRecord ID=\"00000012\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>105</Name>\n      <Code></Code>\n      <Method>AverageMeasurements</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>1.5E1</HorizontalCircle><VerticalCircle>9.0e1</VerticalCircle><EDMDistance>1.25E+01</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000002</StationID>\n      <TargetID>00000011</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"00000013\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>ST2</Name>\n      <Code></Code>\n      <Method>Coordinates</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Grid><North>4521742.208</North><East>412410.512</East><Elevation>104.875</Elevation></Grid>\n    </PointRecord>\n    <StationRecord ID=\"00000014\" TimeStamp=\"2026-10-04T10:10:00\"><StationName>ST2</StationName><TheodoliteHeight>1.480</TheodoliteHeight></StationRecord>\n    <PointRecord ID=\"00000015\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>ST1</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>0</HorizontalCircle><VerticalCircle>90.3006</VerticalCircle><EDMDistance>83.392</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>00000014</StationID>\n      <TargetID>00000004</TargetID>\n    </PointRecord>\n  </FieldBook>\n</JOBFile>\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "ST1",
+            "instrumentHeight": 1.552,
+            "east": 412350.0,
+            "north": 4521800.0,
+            "height": 105.2,
+            "observations": [
+              {
+                "target": "P2",
+                "hz": 0.00108,
+                "zenith": 89.88885,
+                "targetHeight": 1.7,
+                "line": 16
+              },
+              {
+                "target": "101",
+                "hz": 78.68889,
+                "zenith": 91.11105,
+                "slope": 63.214,
+                "targetHeight": 1.7,
+                "code": "BINA",
+                "line": 27
+              },
+              {
+                "target": "101",
+                "hz": 258.69033,
+                "zenith": 268.89039,
+                "slope": 63.216,
+                "targetHeight": 1.7,
+                "line": 38
+              },
+              {
+                "target": "104",
+                "hz": 274.5,
+                "targetHeight": 1.7,
+                "line": 71
+              },
+              {
+                "target": "105",
+                "hz": 15.0,
+                "zenith": 90.0,
+                "slope": 12.5,
+                "line": 83
+              }
+            ]
+          },
+          {
+            "station": "ST2",
+            "instrumentHeight": 1.48,
+            "east": 412410.512,
+            "north": 4521742.208,
+            "height": 104.875,
+            "observations": [
+              {
+                "target": "ST1",
+                "hz": 0.0,
+                "zenith": 90.3006,
+                "slope": 83.392,
+                "targetHeight": 1.7,
+                "line": 104
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 49,
+            "problem": "Satır 49: 102 gözlemi MeanTurnedAngle yöntemiyle; ham gözlem değil, okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "bozuk değerler, bulunmayan istasyon ve prizma, ham olmayan yöntem",
+      "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<JOBFile jobName=\"KARNE\" product=\"Trimble Access\" productVersion=\"2026.00\" version=\"5.3\">\n  <FieldBook>\n    <StationRecord ID=\"1\"><StationName>S1</StationName><TheodoliteHeight>1.5</TheodoliteHeight></StationRecord>\n    <PointRecord ID=\"2\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P1</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>9</StationID>\n    </PointRecord>\n    <PointRecord ID=\"3\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P2</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>360</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"4\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P3</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>-1</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"5\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P4</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>-0.5</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"6\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P5</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>1x</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"7\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P6</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>INF</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"8\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P7</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle></HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <PointRecord ID=\"9\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P8</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n      <TargetID>77</TargetID>\n    </PointRecord>\n    <PointRecord ID=\"10\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P9</Name>\n      <Code></Code>\n      <Method>DistanceOffset</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>1</StationID>\n    </PointRecord>\n    <StationRecord ID=\"11\"><StationName>S2</StationName><TheodoliteHeight>abc</TheodoliteHeight></StationRecord>\n    <PointRecord ID=\"12\" TimeStamp=\"2026-10-04T10:00:00\">\n      <Name>P10</Name>\n      <Code></Code>\n      <Method>DirectReading</Method>\n      <SurveyMethod>Fix</SurveyMethod>\n      <Classification>Normal</Classification>\n      <Deleted>false</Deleted>\n      <Circle><HorizontalCircle>10</HorizontalCircle><VerticalCircle>90</VerticalCircle><EDMDistance>10</EDMDistance><Face>Face1</Face></Circle>\n      <StationID>11</StationID>\n    </PointRecord>\n  </FieldBook>\n</JOBFile>\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [
+          {
+            "station": "S1",
+            "instrumentHeight": 1.5,
+            "observations": [
+              {
+                "target": "P8",
+                "hz": 10.0,
+                "zenith": 90.0,
+                "slope": 10.0,
+                "line": 75
+              }
+            ]
+          }
+        ],
+        "problems": [
+          {
+            "line": 5,
+            "problem": "Satır 5: P1 gözleminin istasyonu (StationID 9) yok; okunmadı."
+          },
+          {
+            "line": 15,
+            "problem": "Satır 15: açı “360” sıfırla 360 derece arasında değil; kayıt okunmadı."
+          },
+          {
+            "line": 25,
+            "problem": "Satır 25: açı “-1” sıfırla 360 derece arasında değil; kayıt okunmadı."
+          },
+          {
+            "line": 35,
+            "problem": "Satır 35: eğik uzunluk “-0.5” sıfırdan küçük; kayıt okunmadı."
+          },
+          {
+            "line": 45,
+            "problem": "Satır 45: “1x” sayı değil; kayıt okunmadı."
+          },
+          {
+            "line": 55,
+            "problem": "Satır 55: “INF” sayı değil; kayıt okunmadı."
+          },
+          {
+            "line": 65,
+            "problem": "Satır 65: P7 gözleminin yatay açısı yok; okunmadı."
+          },
+          {
+            "line": 75,
+            "problem": "Satır 75: P8 gözleminin prizma kaydı (TargetID 77) yok; prizma yüksekliği okunmadı."
+          },
+          {
+            "line": 86,
+            "problem": "Satır 86: P9 gözlemi DistanceOffset yöntemiyle; ham gözlem değil, okunmadı."
+          },
+          {
+            "line": 96,
+            "problem": "Satır 96: “abc” sayı değil; kayıt okunmadı."
+          },
+          {
+            "line": 97,
+            "problem": "Satır 97: P10 gözleminin istasyonu (StationID 11) yok; okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "XML değil",
+      "text": "<JOBFile><FieldBook></JOBFile>\n",
+      "expect": {
+        "unit": null,
+        "stations": [],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: dosya XML olarak okunamadı; karne okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "JobXML değil (kök öğe gpx, JOBFile yalnız yorumda)",
+      "text": "<?xml version=\"1.0\"?>\n<!-- <JOBFile> -->\n<gpx version=\"1.1\">\n</gpx>\n",
+      "expect": {
+        "unit": null,
+        "stations": [],
+        "problems": [
+          {
+            "line": 3,
+            "problem": "Satır 3: XML dosyası JobXML değil (kök öğe gpx); karne okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "FieldBook yok",
+      "text": "<?xml version=\"1.0\"?>\n<JOBFile version=\"5.3\">\n  <Reductions/>\n</JOBFile>\n",
+      "expect": {
+        "unit": null,
+        "stations": [],
+        "problems": [
+          {
+            "line": 2,
+            "problem": "Satır 2: JobXML dosyasında FieldBook yok; karne okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "256 düzeyden derin",
+      "text": "<JOBFile><FieldBook><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><b/></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></FieldBook></JOBFile>\n",
+      "expect": {
+        "unit": null,
+        "stations": [],
+        "problems": [
+          {
+            "line": 1,
+            "problem": "Satır 1: XML öğeleri 256 düzeyden derin iç içe; karne okunmadı."
+          }
+        ]
+      }
+    },
+    {
+      "name": "tam 256 düzey",
+      "text": "<JOBFile><FieldBook><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><a><b/></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></a></FieldBook></JOBFile>\n",
+      "expect": {
+        "unit": "deg",
+        "stations": [],
+        "problems": []
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 """Independent reference of how a field book's format is told by its content (docs/adr/0169 §1, §6; steps 3b, 5).
 
 Writes fixtures/field/v1/sniff.json from the rules alone, no KentOS code: which files Karne editörü reads as Leica GSI,
-Sokkia SDR, Topcon GTS-7 or Nikon RAW and which as a text book whose columns the user maps.
+Sokkia SDR, Trimble JobXML, Topcon GTS-7 or Nikon RAW and which as a text book whose columns the user maps.
 
 The rules:
 
@@ -13,6 +13,8 @@ The rules:
 3. Otherwise the book is Sokkia SDR when one of its first five lines that are neither blank nor a transmission's frame
    (beginning with STX, hex 02, or ETX, hex 03) is an SDR header: its first seven characters "00", two capital letters
    A–Z (the derivation code) and "SDR" (records before it are said by the reader).
+3a. Otherwise the book is Trimble JobXML when its first character that is not blank (after a byte order mark) is "<"
+   and "<JOBFile" comes in its first 4096 characters from there.
 4. Otherwise the book is Topcon GTS-7 when one of its first ten lines that are not blank begins with "GTS-7" (the version
    record), or its first word (up to a blank) is UNITS or STN and the rest of the line holds a comma.
 5. Otherwise the book is Nikon RAW when one of its first ten lines that are not blank begins with "CO," (Nikon RAW's
@@ -45,6 +47,9 @@ def sniff(text):
     records = [line for line in head if line[0] not in "\x02\x03"][:5]
     if any(len(h) >= 7 and h[:2] == "00" and all("A" <= c <= "Z" for c in h[2:4]) and h[4:7] == "SDR" for h in records):
         return "sdr"
+    start = text.lstrip()
+    if start.startswith("<") and "<JOBFile" in start[:4096]:
+        return "jobxml"
     for line in head:
         parts = line.split(None, 1)
         if line.startswith("GTS-7") or (len(parts) == 2 and parts[0] in ("UNITS", "STN") and "," in parts[1]):
@@ -59,6 +64,7 @@ def cases():
     sdr = json.loads((ROOT / "fixtures" / "field" / "v1" / "sdr.json").read_text(encoding="utf-8"))
     gts7 = json.loads((ROOT / "fixtures" / "field" / "v1" / "gts7.json").read_text(encoding="utf-8"))
     nikon = json.loads((ROOT / "fixtures" / "field" / "v1" / "nikon.json").read_text(encoding="utf-8"))
+    jobxml = json.loads((ROOT / "fixtures" / "field" / "v1" / "jobxml.json").read_text(encoding="utf-8"))
     return [
         ("GSI-8", gsi["cases"][0]["text"]),
         ("GSI-16, CR LF", gsi["cases"][1]["text"]),
@@ -92,6 +98,11 @@ def cases():
         ("ikinci satırda CO,", "ST,1,,,,1.5\nCO,Angle Units: Gons\n"),
         ("onuncu satırdan sonra CO,", "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nCO,Angle Units: Gons\n"),
         ("Nikon RAW, birimlerden önce ölçü", nikon["cases"][2]["text"]),
+        ("JobXML", jobxml["cases"][0]["text"]),
+        ("JOBFile'ı yorumda geçen GPX (okuyucu söyler)", jobxml["cases"][3]["text"]),
+        ("GPX", '<?xml version="1.0"?>\n<gpx version="1.1" creator="x">\n</gpx>\n'),
+        ("boşluk ve BOM'dan sonra JobXML", "\ufeff\n\n  <JOBFile version=\"5.3\"><FieldBook/></JOBFile>\n"),
+        ("4096 karakterden sonra JOBFile", "<?xml version=\"1.0\"?>\n<!--" + "x" * 4100 + "-->\n<JOBFile/>\n"),
     ]
 
 

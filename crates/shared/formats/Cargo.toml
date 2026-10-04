@@ -20,5 +20,10 @@ kentos-contracts = { path = "../contracts", default-features = false }
 kentos-geometry-core = { path = "../geometry-core" }
 libm = { workspace = true }
 miniz_oxide = { workspace = true }
+# Trimble JobXML field books (docs/adr/0169 §1, step 5c) and GPX (step 6) are XML;
+# roxmltree reads them on both targets (the owner's approval for the shared
+# formats core, so the web's WASM too, 2026-10-04; the desktop has had it since
+# 2026-09-27, docs/deps/README.md).
+roxmltree = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

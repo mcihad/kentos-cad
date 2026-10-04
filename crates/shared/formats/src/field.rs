@@ -1,5 +1,5 @@
 //! Field books (docs/adr/0169 §1–§2, §6): an instrument's own file ([`gsi`],
-//! [`sdr`], [`gts7`], [`nikon`], told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
+//! [`sdr`], [`gts7`], [`nikon`], [`jobxml`], told by its content: [`sniff`], [`read`]), or a plain CSV or TXT field book whose
 //! columns the user maps (istasyon, alet yüksekliği, nokta, yatay açı,
 //! başucu açısı, eğik uzunluk, prizma yüksekliği, kod), read into stations
 //! and observations as the instrument wrote them; every line that is not
@@ -14,6 +14,7 @@ use crate::text;
 mod exact;
 pub mod gsi;
 pub mod gts7;
+pub mod jobxml;
 pub mod nikon;
 pub mod sdr;
 
@@ -83,7 +84,9 @@ fn number(text: &str, comma: bool) -> Option<f64> {
 /// `-`, eight characters at least); `sdr` when one of its first five lines
 /// that are neither blank nor a transmission's frame (STX, ETX) is a Sokkia
 /// SDR header (`00`, two capital letters, `SDR`; records before it are said
-/// by the reader); `gts7` when one of its first ten lines that are not blank
+/// by the reader); `jobxml` when its first character that is not blank is
+/// `<` and `<JOBFile` comes in its first 4096 characters (Trimble JobXML's
+/// root); `gts7` when one of its first ten lines that are not blank
 /// begins with `GTS-7` (the version record), or with `UNITS` or `STN` and
 /// blanks before fields that hold a comma; `nikon` when one of its first
 /// ten lines that are not blank begins with `CO,` (Nikon RAW's comment
@@ -125,6 +128,16 @@ pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
     if sdr {
         return Some("sdr");
     }
+    let start = body.trim_start();
+    if start.starts_with('<')
+        && start
+            .chars()
+            .take(4096)
+            .collect::<String>()
+            .contains("<JOBFile")
+    {
+        return Some("jobxml");
+    }
     let gts7 = head.iter().any(|l| {
         l.starts_with("GTS-7")
             || l.split_once(char::is_whitespace)
@@ -139,7 +152,7 @@ pub fn sniff(bytes: &[u8]) -> Option<&'static str> {
 }
 
 /// Reads a field book: an instrument's file by its content (Leica GSI,
-/// Sokkia SDR, Topcon GTS-7, Nikon RAW); otherwise a text book with the user's column mapping, or
+/// Sokkia SDR, Topcon GTS-7, Nikon RAW, Trimble JobXML); otherwise a text book with the user's column mapping, or
 /// without one only its first line's cells (the columns to map).
 pub fn read(bytes: &[u8], csv: Option<&FieldCsvOptions>) -> FieldBookRead {
     match sniff(bytes) {
@@ -147,6 +160,7 @@ pub fn read(bytes: &[u8], csv: Option<&FieldCsvOptions>) -> FieldBookRead {
         Some("sdr") => return sdr::read(bytes),
         Some("gts7") => return gts7::read(bytes),
         Some("nikon") => return nikon::read(bytes),
+        Some("jobxml") => return jobxml::read(bytes),
         _ => {}
     }
     match csv {

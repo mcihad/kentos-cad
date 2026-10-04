@@ -3704,6 +3704,7 @@ const SAMPLE_GSI = readFileSync(new URL('../../../../fixtures/field/v1/sample.gs
 const SAMPLE_SDR = readFileSync(new URL('../../../../fixtures/field/v1/sample.sdr', import.meta.url));
 const SAMPLE_GT7 = readFileSync(new URL('../../../../fixtures/field/v1/sample.gt7', import.meta.url));
 const SAMPLE_NIKON = readFileSync(new URL('../../../../fixtures/field/v1/sample-nikon.raw', import.meta.url));
+const SAMPLE_JXL = readFileSync(new URL('../../../../fixtures/field/v1/sample.jxl', import.meta.url));
 const TRAVERSE_SURVEY = `{ faceSlope: 0.005, twoWay: 0.003, traverseAngle: ${(60 * Math.PI) / 2_000_000}, traverseCoord: 0.03 }`;
 const bodyToEnd = (ui, dialog) => ui.eval(`(() => { const b = document.querySelector('${dialog} .dialog__body'); b.scrollTop = b.scrollHeight; })()`);
 const chooseFore = async (ui) => {
@@ -3719,10 +3720,11 @@ const fieldBookOpen = async (ui, name, bytes, survey = '{ faceSlope: 0.005 }') =
 const fieldBookClose = async (ui) => (await ui.escapeAll(2), await ui.eval(`window.kentos.doc.settings.assign({ survey: null })`));
 SCENES.fieldbook = [
   { id: 'fieldbook-gsi', open: (ui) => fieldBookOpen(ui, 'sample.gsi', SAMPLE_GSI), close: fieldBookClose },
-  // The same book from a Sokkia SDR33, a Topcon GTS-7 and a Nikon RAW file (docs/adr/0169 §1, step 5).
+  // The same book from a Sokkia SDR33, a Topcon GTS-7, a Nikon RAW and a Trimble JobXML file (docs/adr/0169 §1, step 5).
   { id: 'fieldbook-sdr', open: (ui) => fieldBookOpen(ui, 'sample.sdr', SAMPLE_SDR), close: fieldBookClose },
   { id: 'fieldbook-gts7', open: (ui) => fieldBookOpen(ui, 'sample.gt7', SAMPLE_GT7), close: fieldBookClose },
   { id: 'fieldbook-nikon', open: (ui) => fieldBookOpen(ui, 'sample-nikon.raw', SAMPLE_NIKON), close: fieldBookClose },
+  { id: 'fieldbook-jobxml', open: (ui) => fieldBookOpen(ui, 'sample.jxl', SAMPLE_JXL), close: fieldBookClose },
   { id: 'fieldbook-csv', open: (ui) => fieldBookOpen(ui, 'arazi-karnesi.csv', Buffer.from('İstasyon;Alet;Nokta;Hz;V;SD;Prizma;Kod\nS1;1,55;A;10;99;100;1,6;POL\n')), close: fieldBookClose },
   {
     // Kutupsal alım'a aktar: Kutupsal alım filled from ST1, the station by the file's coordinates.

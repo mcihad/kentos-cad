@@ -40,6 +40,7 @@ pub mod shp;
 pub mod text;
 pub mod units;
 pub mod watch;
+pub mod xml;
 pub mod zip;
 
 pub use kentos_contracts as contracts;

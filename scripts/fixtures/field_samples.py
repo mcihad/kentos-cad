@@ -11,7 +11,9 @@ traverse ends oriented on. Angles in gon, lengths in metres.
 - sample.sdr: Sokkia SDR33, 14-character names (Interfacing with the SOKKIA SDR Electronic Field Book, 1999).
 - sample.gt7: Topcon GTS-7 raw (Topcon Link Reference Manual, Appendix C), gon.
 - sample-nikon.raw: Nikon RAW V2.00 (Nivo Series Instruction Manual), gon.
+- sample.jxl: Trimble JobXML 5.3, the same angles in decimal degrees (a gon is exactly 0.9°).
 """
+from decimal import Decimal
 from pathlib import Path
 
 DIR = Path(__file__).resolve().parents[2] / "fixtures" / "field" / "v1"
@@ -126,7 +128,29 @@ def nikon():
     return "\r\n".join(lines) + "\r\n"
 
 
-for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr), ("sample.gt7", gts7), ("sample-nikon.raw", nikon)):
+def jobxml():
+    """Trimble JobXML: per station its coordinates (a keyed-in PointRecord with a Grid) and its StationRecord, a
+    TargetRecord whenever the target height changes, per observation a DirectReading PointRecord (or AngleOnly for one
+    without a distance) whose Circle holds the readings in decimal degrees, its face by its zenith."""
+    deg = lambda v: format(Decimal(repr(v)) * Decimal("0.9"), "f")
+    ids = iter(range(1, 1000))
+    rows = ['<?xml version="1.0" encoding="UTF-8"?>', '<JOBFile jobName="KARNE" product="Trimble Access" productVersion="2026.00" version="5.3">', "  <FieldBook>"]
+    for (name, e, n, h, hi), observations in BOOK:
+        rows.append(f'    <PointRecord ID="{next(ids):08d}" TimeStamp="2026-10-04T10:00:00"><Name>{name}</Name><Code></Code><Method>Coordinates</Method><SurveyMethod>KeyedIn</SurveyMethod><Classification>Normal</Classification><Deleted>false</Deleted><Grid><North>{n:.3f}</North><East>{e:.3f}</East><Elevation>{h:.3f}</Elevation></Grid></PointRecord>')
+        station = f"{next(ids):08d}"
+        rows.append(f'    <StationRecord ID="{station}" TimeStamp="2026-10-04T10:01:00"><StationName>{name}</StationName><TheodoliteHeight>{hi:.3f}</TheodoliteHeight><StationType>StandardStation</StationType></StationRecord>')
+        target = None
+        for o_target, hz, v, sd, th, code in observations:
+            if th is not None or target is None:
+                target = f"{next(ids):08d}"
+                rows.append(f'    <TargetRecord ID="{target}" TimeStamp="2026-10-04T10:02:00"><PrismConstant>0</PrismConstant><TargetHeight>{th:.3f}</TargetHeight></TargetRecord>')
+            face = "Face1" if v < 200 else "Face2"
+            rows.append(f'    <PointRecord ID="{next(ids):08d}" TimeStamp="2026-10-04T10:03:00"><Name>{o_target}</Name><Code>{code or ""}</Code><Method>DirectReading</Method><SurveyMethod>Fix</SurveyMethod><Classification>Normal</Classification><Deleted>false</Deleted><Circle><HorizontalCircle>{deg(hz)}</HorizontalCircle><VerticalCircle>{deg(v)}</VerticalCircle><EDMDistance>{sd:.4f}</EDMDistance><Face>{face}</Face></Circle><StationID>{station}</StationID><TargetID>{target}</TargetID></PointRecord>')
+    rows += ["  </FieldBook>", "</JOBFile>"]
+    return "\n".join(rows) + "\n"
+
+
+for name, write in (("sample.gsi", gsi), ("sample.sdr", sdr), ("sample.gt7", gts7), ("sample-nikon.raw", nikon), ("sample.jxl", jobxml)):
     text = write()
     (DIR / name).write_text(text, encoding="ascii", newline="")
     print(DIR / name, text.count("\n"), "satır")

@@ -62,7 +62,8 @@ pub fn read_coords(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
 }
 
 /// Reads a field book (docs/adr/0169 §1, §6): an instrument's file (Leica GSI,
-/// Sokkia SDR, Topcon GTS-7, Nikon RAW) by its content, else a text book with `options`
+/// Sokkia SDR, Topcon GTS-7, Nikon RAW, Trimble JobXML) by its content, else a text book
+/// with `options`
 /// (`FieldCsvOptions`; `null`: only its first line, to map); the result
 /// `FieldBookRead` (JSON bytes).
 #[wasm_bindgen(js_name = readFieldBook)]

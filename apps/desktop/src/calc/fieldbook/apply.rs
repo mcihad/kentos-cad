@@ -21,10 +21,10 @@ impl crate::app::App {
                         rfd::AsyncFileDialog::new()
                             .set_title("Karne aç")
                             .add_filter(
-                                "Karne (.gsi, .sdr, .gt7, .raw, .txt, .csv, .dat)",
+                                "Karne (.gsi, .sdr, .gt7, .raw, .jxl, .xml, .txt, .csv, .dat)",
                                 &[
-                                    "gsi", "GSI", "sdr", "SDR", "gt7", "GT7", "raw", "RAW", "txt",
-                                    "TXT", "csv", "CSV", "dat", "DAT",
+                                    "gsi", "GSI", "sdr", "SDR", "gt7", "GT7", "raw", "RAW", "jxl",
+                                    "JXL", "xml", "XML", "txt", "TXT", "csv", "CSV", "dat", "DAT",
                                 ],
                             )
                             .add_filter("Bütün dosyalar", &["*"])

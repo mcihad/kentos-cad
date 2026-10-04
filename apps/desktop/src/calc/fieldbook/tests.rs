@@ -132,6 +132,55 @@ fn an_sdr_book_reduces_as_the_gsi_book() {
     }
 }
 
+/// The JobXML sample (docs/adr/0169 §1, step 5c) is the same book in
+/// decimal degrees: told by its content, named so, and reduced into the GSI
+/// sample's rows with their angles turned into degrees (a gon is 0.9°),
+/// lengths and height differences to the micrometre.
+#[test]
+fn a_jobxml_book_reduces_as_the_gsi_book_in_degrees() {
+    let mut app = opened();
+    type Row = (String, usize, f64, Option<f64>, Option<f64>, Option<f64>);
+    let rows = |app: &App| -> Vec<Row> {
+        let r = app.calc.fieldbook.reduction.as_ref().expect("reduced");
+        r.rows
+            .iter()
+            .map(|x| {
+                (
+                    x.target.clone(),
+                    x.faces,
+                    x.hz,
+                    x.zenith,
+                    x.horizontal,
+                    x.dh,
+                )
+            })
+            .collect()
+    };
+    let gsi = [rows(&app), {
+        send(&mut app, Event::Station(1));
+        rows(&app)
+    }];
+    send(&mut app, Event::Picked(Some(sample_named("sample.jxl"))));
+    let book = app.calc.fieldbook.book.as_ref().expect("read");
+    assert_eq!((book.format.as_str(), book.stations.len()), ("jobxml", 2));
+    assert_eq!(super::format_name(&book.format), "Trimble JobXML");
+    let near = |a: Option<f64>, b: Option<f64>, tolerance: f64| match (a, b) {
+        (Some(a), Some(b)) => (a - b).abs() < tolerance,
+        (a, b) => a.is_none() && b.is_none(),
+    };
+    for (at, want) in gsi.iter().enumerate() {
+        send(&mut app, Event::Station(at));
+        let got = rows(&app);
+        assert_eq!(got.len(), want.len());
+        for (g, w) in got.iter().zip(want) {
+            assert_eq!((&g.0, g.1), (&w.0, w.1));
+            assert!((g.2 - w.2 * 0.9).abs() < 1e-9, "{g:?} {w:?}");
+            assert!(near(g.3, w.3.map(|z| z * 0.9), 1e-9), "{g:?} {w:?}");
+            assert!(near(g.4, w.4, 1e-6) && near(g.5, w.5, 1e-6), "{g:?} {w:?}");
+        }
+    }
+}
+
 /// A text book is read only to its first line until its point and
 /// horizontal reading are mapped; the mapping is remembered.
 #[test]
@@ -181,7 +230,8 @@ fn with_traverse_tolerances(app: &mut App) {
 
 /// Karne editörü's pictures: the sample book in the light theme at
 /// 1440×900 and the dark at 1100×650, the same book from a Sokkia SDR33, a
-/// Topcon GTS-7 and a Nikon RAW file, a text book's mapping, Kutupsal alım
+/// Topcon GTS-7, a Nikon RAW and a Trimble JobXML file, a text book's
+/// mapping, Kutupsal alım
 /// filled from the first station, the traverse's leg above its two-way
 /// tolerance and Poligon hesabı filled from both stations.
 #[test]
@@ -202,7 +252,7 @@ fn screens() {
     .expect("written");
     for (theme, w, h) in [("light", 1440.0, 900.0), ("dark", 1100.0, 650.0)] {
         for name in [
-            "gsi", "sdr", "gts7", "nikon", "csv", "polar", "kenar", "poligon",
+            "gsi", "sdr", "gts7", "nikon", "jobxml", "csv", "polar", "kenar", "poligon",
         ] {
             let mut app = opened();
             let _ = app
@@ -234,6 +284,9 @@ fn screens() {
                     &mut app,
                     Event::Picked(Some(sample_named("sample-nikon.raw"))),
                 );
+            }
+            if name == "jobxml" {
+                send(&mut app, Event::Picked(Some(sample_named("sample.jxl"))));
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

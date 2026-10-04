@@ -55,7 +55,8 @@ use crate::layer::LineType;
 /// 22: Sokkia SDR2x and SDR33 field books (`readFieldBook`, format `sdr`).
 /// 23: Topcon GTS-7 field books (`gts7`).
 /// 24: Nikon RAW field books (`nikon`).
-pub const FORMATS_VERSION: u32 = 24;
+/// 25: Trimble JobXML field books (`jobxml`), XML read by roxmltree.
+pub const FORMATS_VERSION: u32 = 25;
 
 // ── Every import ────────────────────────────────────────────────────────
 

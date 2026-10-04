@@ -2608,6 +2608,7 @@ dependencies = [
  "kentos-geometry-core",
  "libm",
  "miniz_oxide 0.9.1",
+ "roxmltree",
  "serde",
  "serde_json",
 ]

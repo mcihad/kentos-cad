@@ -143,6 +143,7 @@ describe.skipIf(!loader)('formats WASM module', () => {
     ['sdr', 'Sokkia SDR2x and SDR33'],
     ['gts7', 'Topcon GTS-7'],
     ['nikon', 'Nikon RAW'],
+    ['jobxml', 'Trimble JobXML'],
   ])('reads %s (%s) field books as the reference does (fixtures/field/v1, docs/adr/0169 §1)', async (format) => {
     const w = await load();
     const file = JSON.parse(new TextDecoder().decode(fs.readFileSync(new URL(`../../../../fixtures/field/v1/${format}.json`, import.meta.url)))) as {
