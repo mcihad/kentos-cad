@@ -409,6 +409,159 @@ pub fn listed(lib: &crate::library::StyleLibrary, query: &str) -> Vec<TemplateGr
     groups
 }
 
+/// The tool a template of a drawable kind draws with (Seçili nesneden şablon).
+fn tool_of_kind(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "point" => "point",
+        "line" => "line",
+        "polyline" => "polyline",
+        "polygon" => "polygon",
+        "circle" => "circle",
+        "text" => "text",
+        "insert" => "blockInsert",
+        _ => return None,
+    })
+}
+
+/// An object kind's name as the interface says it (the web's `ENTITY_KIND_LABEL`).
+fn kind_label(kind: &str) -> &'static str {
+    match kind {
+        "point" => "Nokta",
+        "line" => "Çizgi",
+        "polyline" => "Çoklu çizgi",
+        "polygon" => "Kapalı alan",
+        "circle" => "Daire",
+        "arc" => "Yay",
+        "ellipse" => "Elips",
+        "spline" => "Eğri",
+        "xline" => "Yardımcı çizgi",
+        "ray" => "Işın",
+        "text" => "Yazı",
+        "dimension" => "Ölçü",
+        "hatch" => "Tarama",
+        "insert" => "Blok",
+        "leader" => "Kılavuz",
+        _ => "Nesne",
+    }
+}
+
+/// The template made from a drawn object (Seçili nesneden şablon, docs/adr/0176
+/// §4) and its name, its layer's: the tool is the object's kind's; the layer
+/// is its own (`layers`, the drawing's tree), with the groups above it and its
+/// look; the object's own colour, line weight and symbol go with it when it has
+/// them, and so do its attributes and label, but a point's label is the
+/// template's first name and its `Kod` its code (docs/adr/0152); a text gives
+/// its height, alignment and mask, an insert its block by name (`block_name`).
+/// Another kind is refused, said by its name. The web's is
+/// `model/objectTemplate.ts`'s `templateFromObject`; both pass
+/// fixtures/style/v1/template-from-object.json.
+pub fn from_object(
+    entity: &kentos_contracts::Entity,
+    layers: &[kentos_contracts::LayerNode],
+    block_name: impl Fn(&kentos_contracts::BlockId) -> Option<String>,
+) -> Result<(String, Value), String> {
+    use kentos_contracts::Entity;
+    let kind = entity.kind();
+    let Some(tool) = tool_of_kind(kind) else {
+        return Err(format!(
+            "{} nesnesinden şablon yapılamaz: şablon nokta, çizgi, çoklu çizgi, kapalı alan, daire, yazı ya da blok çizer.",
+            kind_label(kind)
+        ));
+    };
+    let base = entity.base();
+    let (layer, groups) = find_node(layers, &base.layer_id, &mut Vec::new())
+        .map_or((None, Vec::new()), |(node, groups)| (Some(node), groups));
+    let name = layer.map_or_else(|| base.layer_id.clone(), |l| l.name.clone());
+    let mut layer_value = Map::new();
+    layer_value.insert("path".into(), Value::from(groups));
+    layer_value.insert("name".into(), Value::from(name.clone()));
+    if let Some(l) = layer {
+        layer_value.insert("color".into(), Value::from(l.style.color.clone()));
+        layer_value.insert(
+            "lineType".into(),
+            serde_json::to_value(l.style.line_type).unwrap_or(Value::Null),
+        );
+        layer_value.insert("lineWeight".into(), Value::from(l.style.line_weight));
+    }
+    let mut t = Map::new();
+    t.insert("tool".into(), Value::from(tool));
+    t.insert("layer".into(), Value::Object(layer_value));
+    if let Some(color) = &base.color {
+        t.insert("color".into(), Value::from(color.clone()));
+    }
+    if let Some(weight) = base.line_weight {
+        t.insert("lineWeight".into(), Value::from(weight));
+    }
+    if let Some(symbol) = &base.symbol {
+        t.insert("symbol".into(), Value::from(symbol.clone()));
+    }
+    let mut attrs = base.attrs.clone();
+    let mut label = base.label.clone();
+    if kind == "point" {
+        let mut point = Map::new();
+        if let Some(name) = label.take().filter(|l| !l.is_empty()) {
+            point.insert("name".into(), Value::from(name));
+        }
+        if let Some(code) = attrs.remove("Kod").filter(|c| !c.is_empty()) {
+            point.insert("code".into(), Value::from(code));
+        }
+        if !point.is_empty() {
+            t.insert("point".into(), Value::Object(point));
+        }
+    }
+    if !attrs.is_empty() {
+        // By name: the map's own order.
+        let attrs: Map<String, Value> = attrs
+            .into_iter()
+            .map(|(k, v)| (k, Value::from(v)))
+            .collect();
+        t.insert("attrs".into(), Value::Object(attrs));
+    }
+    if let Some(label) = label.filter(|l| !l.is_empty()) {
+        t.insert("label".into(), Value::from(label));
+    }
+    match entity {
+        Entity::Text(text) => {
+            let mut written = Map::new();
+            written.insert("height".into(), Value::from(text.height));
+            if let Some(align) = text.align {
+                written.insert("align".into(), Value::from(align.name()));
+            }
+            if text.mask {
+                written.insert("mask".into(), Value::from(true));
+            }
+            t.insert("text".into(), Value::Object(written));
+        }
+        Entity::Insert(insert) => {
+            let block = block_name(&insert.block).unwrap_or_else(|| insert.block.to_text());
+            t.insert("block".into(), Value::from(block));
+        }
+        _ => {}
+    }
+    Ok((name, Value::Object(t)))
+}
+
+/// The node of `id` in `nodes` and the names of the groups above it, from the top.
+fn find_node<'a>(
+    nodes: &'a [kentos_contracts::LayerNode],
+    id: &str,
+    groups: &mut Vec<String>,
+) -> Option<(&'a kentos_contracts::LayerNode, Vec<String>)> {
+    for node in nodes {
+        if node.id == id {
+            return Some((node, groups.clone()));
+        }
+        if node.kind == kentos_contracts::LayerNodeType::Group {
+            groups.push(node.name.clone());
+            if let Some(found) = find_node(&node.children, id, groups) {
+                return Some(found);
+            }
+            groups.pop();
+        }
+    }
+    None
+}
+
 /// What a template's card and preview show (docs/adr/0176): its own symbol when
 /// the library has it, else one made of the template's colour and line weight
 /// (its layer's when it gives none) in its tool's shape: a dot for a point

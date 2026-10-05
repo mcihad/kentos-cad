@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LayerStore, type LayerInit } from './layers';
-import { lockedTemplateLayerText, templateIssues, templateLayer, type TemplateLayerAnswer } from './objectTemplate';
+import type { Entity } from './entities';
+import { lockedTemplateLayerText, templateFromObject, templateIssues, templateLayer, type TemplateLayerAnswer } from './objectTemplate';
 
 /**
  * A template's rules (docs/adr/0176 §1) as fixtures/style/v1/object-templates.json holds them, written by hand from the ADR: every
@@ -56,4 +57,31 @@ describe('where a template draws (fixtures/style/v1/template-layers.json)', () =
     expect(lockedTemplateLayerText({ name: 'Parsel', type: 'layer' }, 'Parsel sınırı')).toBe('“Parsel” katmanı kilitli; “Parsel sınırı” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın.');
     expect(lockedTemplateLayerText({ name: 'Kadastro', type: 'group' }, 'Parsel sınırı')).toBe('“Kadastro” grubu kilitli; “Parsel sınırı” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın.');
   });
+});
+
+/** A case of fixtures/style/v1/template-from-object.json (scripts/fixtures/template_from_object_cases.py). */
+interface FromObjectCase {
+  name: string;
+  entity: Entity;
+  result: { name: string; template: unknown } | { refused: string };
+}
+
+const fromObjectFiles = import.meta.glob<string>('../../../../fixtures/style/v1/template-from-object.json', { query: '?raw', import: 'default', eager: true });
+const fromObject = JSON.parse(Object.values(fromObjectFiles)[0]) as { format: string; version: number; layers: LayerInit[]; blocks: { id: string; name: string }[]; cases: FromObjectCase[] };
+
+describe('a template made from an object (fixtures/style/v1/template-from-object.json)', () => {
+  const layers = new LayerStore(fromObject.layers, 'cizim');
+  const blockName = (id: string) => fromObject.blocks.find((b) => b.id === id)?.name;
+  it('is a template-from-object-cases v1 file', () => {
+    expect([fromObject.format, fromObject.version]).toEqual(['kentos.template-from-object-cases', 1]);
+    expect(fromObject.cases.length).toBeGreaterThanOrEqual(12);
+  });
+  for (const c of fromObject.cases) {
+    it(c.name, () => {
+      const got = templateFromObject(c.entity, layers, blockName);
+      expect(got).toEqual(c.result);
+      // What it makes is a template the app draws with.
+      if ('template' in got) expect(templateIssues(got.template)).toEqual([]);
+    });
+  }
 });

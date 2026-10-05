@@ -41,6 +41,7 @@ pub mod file;
 pub mod legend;
 pub mod library;
 pub mod object_template;
+pub mod template_form;
 pub mod preview;
 pub mod program;
 pub mod renderer;

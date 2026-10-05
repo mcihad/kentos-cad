@@ -147,3 +147,44 @@ fn the_templates_panel_lists_what_the_web_lists() {
         assert_eq!(Value::from(got), c["groups"], "{name}");
     }
 }
+
+/// A template made from a drawn object (docs/adr/0176 §4) as
+/// `fixtures/style/v1/template-from-object.json` has it, written from the
+/// rule by an independent script (`model/objectTemplate.test.ts` runs the
+/// same cases).
+#[test]
+fn a_template_made_from_an_object_is_the_webs() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/style/v1/template-from-object.json");
+    let fixture: Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("template-from-object.json"))
+            .expect("JSON");
+    assert_eq!(fixture["format"], "kentos.template-from-object-cases");
+    let layers: Vec<kentos_contracts::LayerNode> =
+        serde_json::from_value(fixture["layers"].clone()).expect("layers");
+    let blocks = fixture["blocks"].as_array().expect("blocks").clone();
+    let block_name = |id: &kentos_contracts::BlockId| {
+        blocks
+            .iter()
+            .find(|b| b["id"].as_str() == Some(id.to_text().as_str()))
+            .and_then(|b| b["name"].as_str())
+            .map(str::to_owned)
+    };
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 12, "{} cases", cases.len());
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or("?");
+        let entity: kentos_contracts::Entity =
+            serde_json::from_value(c["entity"].clone()).expect("an entity");
+        let got =
+            match kentos_native_style::object_template::from_object(&entity, &layers, block_name) {
+                Ok((name, template)) => {
+                    // What it makes is a template the app draws with.
+                    assert!(template_issues(&template, "şablon").is_empty(), "{name}");
+                    json!({ "name": name, "template": template })
+                }
+                Err(refused) => json!({ "refused": refused }),
+            };
+        assert_eq!(got, c["result"], "{name}");
+    }
+}

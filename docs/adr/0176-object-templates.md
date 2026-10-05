@@ -128,6 +128,11 @@ da geçer:
      çizer, ↓ ve Enter, grup açılıp kapanır, satırın menüsü (Şablonla çiz, Stil yöneticisinde göster, Kitaplığıma ve Projeye kopyala,
      Sil sorarak); `template.panel` (“Şablonlar”), kimliksiz `template.draw` paneli açar; dok sekmesi `templates` (`fixtures/shell/v1/
      layout.json`); ikonlar `templates`, `templateDraw`; ortak iz `template-draw.json` paneli de resimler.
+   - 4b-1 **Tamam (5 Ekim):** düzenleyicinin iki kuralı iki platformda: Seçili nesneden şablon (`object_template::from_object`,
+     `templateFromObject`; araç nesnenin türünden, katman yolu ve görünüşüyle, nesnenin rengi, kalınlığı, sembolü, öznitelikleri ve
+     etiketi; noktanın etiketi ilk adı, Kod'u kodu; yazının yüksekliği, hizası, zemini; bloğun adı; başka tür reddedilir; bağımsız
+     başvuru `template_from_object_cases.py`, 14 ortak durum) ve formun kuralı (`template_form`, `model/templateForm.ts`: alanlardan
+     öğe ve şablon, sorunlar alanların sırasıyla, ve geri; başvuru `template_form_cases.py`, 24 ortak durum).
 5. Grup şablonu; ortak iz.
 6. Şablonu uygula; ortak iz.
 

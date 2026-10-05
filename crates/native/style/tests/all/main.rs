@@ -8,3 +8,4 @@ mod kstil;
 mod legend;
 mod object_templates;
 mod tally;
+mod template_form;

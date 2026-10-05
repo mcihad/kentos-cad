@@ -1,4 +1,4 @@
-import { MAX_LINE_WEIGHT, TEXT_ALIGNS, type TextAlign } from './entities';
+import { ENTITY_KIND_LABEL, MAX_LINE_WEIGHT, TEXT_ALIGNS, type Entity, type TextAlign } from './entities';
 import type { LayerNode, LineType } from './layers';
 
 /**
@@ -179,4 +179,50 @@ export function templateLayer(layers: { readonly tree: readonly LayerNode[]; isL
 /** What is said when a template's layer, or the group it would be opened in, is locked: the node by its name, the template by its. */
 export function lockedTemplateLayerText(node: Pick<LayerNode, 'name' | 'type'>, template: string): string {
   return `“${node.name}” ${node.type === 'group' ? 'grubu' : 'katmanı'} kilitli; “${template}” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın.`;
+}
+
+/** The tool a template of each drawable kind draws with (Seçili nesneden şablon); the other kinds have none. */
+const TOOL_OF_KIND: Partial<Record<Entity['kind'], TemplateTool>> = { point: 'point', line: 'line', polyline: 'polyline', polygon: 'polygon', circle: 'circle', text: 'text', insert: 'blockInsert' };
+
+/**
+ * The template made from a drawn object (Seçili nesneden şablon, docs/adr/0176 §4), named after its layer, with no
+ * category: the tool is the object's kind's; the layer is its own, with the groups above it and its look; the
+ * object's own colour, line weight and symbol go with it when it has them, and so do its attributes (by name) and
+ * label, but a point's label is the template's first name and its `Kod` its code (docs/adr/0152); a text gives its
+ * height, alignment and mask, an insert its block by name. Another kind is refused, said by its name. The desktop's
+ * is `kentos_native_style::object_template::from_object`; both pass fixtures/style/v1/template-from-object.json.
+ */
+export function templateFromObject(
+  e: Entity,
+  layers: { get(id: string): LayerNode | undefined; parentOf(id: string): LayerNode | null },
+  blockName: (id: string) => string | undefined,
+): { readonly name: string; readonly template: ObjectTemplate } | { readonly refused: string } {
+  const tool = TOOL_OF_KIND[e.kind];
+  if (!tool) return { refused: `${ENTITY_KIND_LABEL[e.kind]} nesnesinden şablon yapılamaz: şablon nokta, çizgi, çoklu çizgi, kapalı alan, daire, yazı ya da blok çizer.` };
+  const layer = layers.get(e.layerId);
+  const path: string[] = [];
+  for (let g = layer ? layers.parentOf(layer.id) : null; g; g = layers.parentOf(g.id)) path.unshift(g.name);
+  const name = layer?.name ?? e.layerId;
+  const attrs: Record<string, string> = { ...e.attrs };
+  let label = e.label;
+  let point: { name?: string; code?: string } | undefined;
+  if (e.kind === 'point') {
+    point = { ...(label && { name: label }), ...(attrs.Kod && { code: attrs.Kod }) };
+    if (attrs.Kod) delete attrs.Kod;
+    label = undefined;
+  }
+  const sorted = Object.fromEntries(Object.entries(attrs).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  const template: ObjectTemplate = {
+    tool,
+    layer: { path, name, ...(layer && { color: layer.style.color, lineType: layer.style.lineType, lineWeight: layer.style.lineWeight }) },
+    ...(e.color !== undefined && { color: e.color }),
+    ...(e.lineWeight !== undefined && { lineWeight: e.lineWeight }),
+    ...(e.symbol !== undefined && { symbol: e.symbol }),
+    ...(point && Object.keys(point).length > 0 && { point }),
+    ...(Object.keys(sorted).length > 0 && { attrs: sorted }),
+    ...(label && { label }),
+    ...(e.kind === 'text' && { text: { height: e.height, ...(e.align && { align: e.align }), ...(e.mask === true && { mask: true }) } }),
+    ...(e.kind === 'insert' && { block: blockName(e.block) ?? e.block }),
+  };
+  return { name, template };
 }
