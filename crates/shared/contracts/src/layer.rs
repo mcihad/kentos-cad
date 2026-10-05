@@ -267,3 +267,100 @@ impl LayerSnap {
         None
     }
 }
+
+/// A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's
+/// layer states): the tree's nodes as they were when it was saved, their
+/// visibility and, when it was saved with them, their locks and the layers'
+/// styles. The project keeps them (`ProjectSettings::layer_states`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayerState {
+    /// One of its kind among the project's states.
+    pub id: String,
+    /// Its name as the menu lists it: not empty, one of its kind (as written,
+    /// spaces at its ends aside).
+    pub name: String,
+    /// The nodes, in the tree's order when it was saved.
+    pub nodes: Vec<LayerStateNode>,
+}
+
+/// A node of a layer state: a layer's or a group's id and what was kept of it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayerStateNode {
+    /// The node's id; a node the tree no longer has is passed over.
+    pub node: String,
+    pub visible: bool,
+    /// Its own lock, when the state keeps locks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub locked: Option<bool>,
+    /// A layer's style, when the state keeps styles; a group has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub style: Option<LayerStyle>,
+}
+
+/// What is wrong with a project's layer states, in the words the project
+/// file and the settings say it: an empty or a repeated id or name; in a
+/// state, an empty or a repeated node.
+pub fn layer_states_problem(states: &[LayerState]) -> Option<String> {
+    for (i, s) in states.iter().enumerate() {
+        if s.id.is_empty() {
+            return Some("katman durumunun kimliği boş".to_owned());
+        }
+        if states[..i].iter().any(|t| t.id == s.id) {
+            return Some(format!("“{}” kimlikli katman durumu iki kez var", s.id));
+        }
+        let name = s.name.trim();
+        if name.is_empty() {
+            return Some("katman durumunun adı boş".to_owned());
+        }
+        if states[..i].iter().any(|t| t.name.trim() == name) {
+            return Some(format!("“{name}” adlı katman durumu iki kez var"));
+        }
+        for (j, n) in s.nodes.iter().enumerate() {
+            if n.node.is_empty() {
+                return Some(format!("“{name}” durumunda düğüm kimliği boş"));
+            }
+            if s.nodes[..j].iter().any(|m| m.node == n.node) {
+                return Some(format!(
+                    "“{name}” durumunda “{}” düğümü iki kez var",
+                    n.node
+                ));
+            }
+        }
+    }
+    None
+}
+
+/// The layer states as a project keeps them: of those with the same id or
+/// name the first, none with an empty one; in each, of the same node the
+/// first, none with an empty id.
+pub fn sanitized_layer_states(states: Vec<LayerState>) -> Vec<LayerState> {
+    let mut out: Vec<LayerState> = Vec::with_capacity(states.len());
+    for mut s in states {
+        let name = s.name.trim().to_owned();
+        if s.id.is_empty()
+            || name.is_empty()
+            || out.iter().any(|t| t.id == s.id || t.name.trim() == name)
+        {
+            continue;
+        }
+        let mut nodes: Vec<LayerStateNode> = Vec::with_capacity(s.nodes.len());
+        for n in s.nodes {
+            if !n.node.is_empty() && !nodes.iter().any(|m| m.node == n.node) {
+                nodes.push(n);
+            }
+        }
+        s.nodes = nodes;
+        out.push(s);
+    }
+    out
+}

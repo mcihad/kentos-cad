@@ -1,5 +1,6 @@
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
+import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
@@ -377,6 +378,12 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
             ? { datumTransforms: settings.datumTransforms as unknown as DatumTransform[] }
             : fail('Proje ayarları › datum dönüşümleri', 'liste olmalı')),
         ...(settings.survey === undefined ? {} : { survey: surveyOf(settings.survey) }),
+        // The project's named layer states (docs/adr/0177 §4): a list of objects, kept as a project keeps them.
+        ...(settings.layerStates === undefined
+          ? {}
+          : Array.isArray(settings.layerStates) && settings.layerStates.every(isObj)
+            ? { layerStates: settings.layerStates as unknown as LayerState[] }
+            : fail('Proje ayarları › katman durumları', 'liste olmalı')),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

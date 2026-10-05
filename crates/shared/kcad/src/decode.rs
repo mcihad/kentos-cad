@@ -13,8 +13,9 @@ mod objects;
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DocumentSnapshotV2, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
-    LayerNodeType, LayerSnap, LayerStyle, LineType, MigrationSource, PointStyle, PointSymbol,
-    ProjectId, ProjectSettings, ProjectStyles, SurveySettings, Vec2, Workspace,
+    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LineType, MigrationSource,
+    PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings, Vec2,
+    Workspace, layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -304,6 +305,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut drawing_unit, mut second_srid) = (None, None);
     let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
     let mut survey = None;
+    let mut layer_states = Vec::new();
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -369,6 +371,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
+            "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
@@ -429,6 +432,56 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         second_custom_crs,
         datum_transforms,
         survey,
+        layer_states,
+    })
+}
+
+/// Schema 19's layer states (docs/adr/0177 §4): each its id, name and nodes,
+/// a node its id, visibility and, when kept, its lock and a layer's style;
+/// checked whole (`layer_states_problem`): no empty or repeated id or name,
+/// no empty or repeated node in a state.
+fn layer_states_list(r: &mut Reader<'_>) -> Result<Vec<LayerState>, KcadError> {
+    let at = r.position();
+    let all = list(r, |r, _| {
+        let (mut id, mut name, mut nodes) = (None, None, None);
+        map(r, |r, key| {
+            match key {
+                "id" => id = Some(text(r)?),
+                "name" => name = Some(text(r)?),
+                "nodes" => nodes = Some(list(r, |r, _| layer_state_node(r))?),
+                _ => return Err(unknown(r)),
+            }
+            Ok(())
+        })?;
+        Ok(LayerState {
+            id: required(r, id, "id")?,
+            name: required(r, name, "name")?,
+            nodes: required(r, nodes, "nodes")?,
+        })
+    })?;
+    match layer_states_problem(&all) {
+        Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
+        None => Ok(all),
+    }
+}
+
+fn layer_state_node(r: &mut Reader<'_>) -> Result<LayerStateNode, KcadError> {
+    let (mut node, mut visible, mut locked, mut style) = (None, None, None, None);
+    map(r, |r, key| {
+        match key {
+            "node" => node = Some(text(r)?),
+            "style" => style = Some(layer_style(r)?),
+            "locked" => locked = Some(r.bool()?),
+            "visible" => visible = Some(r.bool()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(LayerStateNode {
+        node: required(r, node, "node")?,
+        visible: required(r, visible, "visible")?,
+        locked,
+        style,
     })
 }
 

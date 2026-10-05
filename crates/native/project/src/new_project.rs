@@ -68,6 +68,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         custom_crs: None,
         second_custom_crs: None,
         datum_transforms: Vec::new(),
+        layer_states: Vec::new(),
         survey: None,
     }
 }

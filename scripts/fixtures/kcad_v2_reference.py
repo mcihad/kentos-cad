@@ -286,10 +286,32 @@ def settings(s):
                 "secondCustomCrs": (crs_definition, False),
                 "datumTransforms": (datum_transforms, False),
                 "survey": (survey, False),
+                "layerStates": (layer_states, False),
             },
             "settings",
         )
     )
+
+
+def layer_states(states):
+    """The project's named layer states (schema 19, docs/adr/0177 §4): an id and a name, neither empty nor twice (a name
+    as written, the spaces at its ends aside); in each, the nodes, none empty or twice, each with its visibility and,
+    when kept, its lock and a layer's style."""
+    assert states, "boş liste yazılmaz"
+    ids, names, out = set(), set(), []
+    for st in states:
+        name = st["name"].strip()
+        assert st["id"] and st["id"] not in ids, "katman durumunun kimliği boş ya da iki kez"
+        assert name and name not in names, "katman durumunun adı boş ya da iki kez"
+        ids.add(st["id"])
+        names.add(name)
+        seen, nodes = set(), []
+        for n in st["nodes"]:
+            assert n["node"] and n["node"] not in seen, "düğüm boş ya da iki kez"
+            seen.add(n["node"])
+            nodes.append(cmap(fields(n, {"node": (text, True), "style": (layer_style, False), "locked": (boolean, False), "visible": (boolean, True)}, "layerStateNode")))
+        out.append(cmap(fields(st, {"id": (text, True), "name": (text, True), "nodes": (lambda _: array(nodes), True)}, "layerState")))
+    return array(out)
 
 
 def survey(s):
@@ -564,7 +586,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 18 with a text that writes an object's label (docs/adr/0175 §4), 17
+    """The oldest schema that holds the drawing: 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
+    object's label (docs/adr/0175 §4), 17
     with a multi-part polyline or a multi-point object, in the drawing or
     a block definition (docs/adr/0174), 16 with the survey settings' ground height or reduction to the grid
     (docs/adr/0171), 15 with their traverse tolerances, 14 with survey settings (docs/adr/0169 §3), 13 with the project's
@@ -582,6 +605,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def line_parts(es):
         return any(e["kind"] in ("polyline", "point") and "parts" in e for e in es)
 
+    if settings and settings.get("layerStates"):
+        return 19
     # A block definition's texts have no link (their objects have no persistent ids).
     if any(e["kind"] == "text" and ("labelOf" in e or "labelScale" in e) for e in entities):
         return 18
@@ -807,7 +832,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-19.kcad"] = container(root(cmap(parts), version=b"\x13"))
+    files["schema-version-20.kcad"] = container(root(cmap(parts), version=b"\x14"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1079,6 +1104,18 @@ def broken(minimal_content, minimal_file):
     files["survey-ground-range.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(9500.0)}))
     files["survey-reduce-without-height.kcad"] = with_settings(16, survey=cmap({"reduceToGrid": b"\xf5"}))
     files["survey-reduce-not-bool.kcad"] = with_settings(16, survey=cmap({"groundHeight": f64(850.0), "reduceToGrid": uint(1)}))
+    # The layer states are schema 19's (docs/adr/0177 §4): an unknown field in schema 18; an id and a name, neither empty
+    # nor twice; in a state, no node empty or twice; a visibility that is a bool.
+    node = lambda n, **more: cmap({"node": text(n), "visible": b"\xf5", **more})
+    state = lambda i, name, nodes=None: cmap({"id": text(i), "name": text(name), "nodes": array(nodes if nodes is not None else [node("0")])})
+    files["layer-states-in-schema-18.kcad"] = with_settings(18, layerStates=array([state("a", "Görünüm")]))
+    files["layer-states-empty-id.kcad"] = with_settings(19, layerStates=array([state("", "Görünüm")]))
+    files["layer-states-same-id.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm"), state("a", "Baskı")]))
+    files["layer-states-empty-name.kcad"] = with_settings(19, layerStates=array([state("a", "  ")]))
+    files["layer-states-same-name.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm"), state("b", " Görünüm")]))
+    files["layer-states-same-node.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [node("0"), node("0")])]))
+    files["layer-states-visible-not-bool.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0"), "visible": uint(1)})])]))
+    files["layer-states-without-visible.kcad"] = with_settings(19, layerStates=array([state("a", "Görünüm", [cmap({"node": text("0")})])]))
     files["bad-source.kcad"] = container(with_parts({**parts, "migratedFrom": cmap({"format": text("kentos.document"), "version": uint(1), "sourceSha256": blob(bytes(31))})}))
     return files
 
@@ -1126,6 +1163,7 @@ def build():
     out["survey-ground.kcad"] = container(document(load("survey-ground.json")))
     out["multi-part-lines.kcad"] = container(document(load("multi-part-lines.json")))
     out["linked-texts.kcad"] = container(document(load("linked-texts.json")))
+    out["layer-states.kcad"] = container(document(load("layer-states.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

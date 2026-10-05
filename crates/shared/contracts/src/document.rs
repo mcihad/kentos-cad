@@ -10,7 +10,7 @@ use ts_rs::TS;
 use crate::crs::{CrsDefinition, DatumTransform, choices_problem};
 use crate::entity::{Entity, Vec2};
 use crate::identity::{EntityId, ProjectId};
-use crate::layer::LayerNode;
+use crate::layer::{LayerNode, LayerState, sanitized_layer_states};
 
 pub const DOCUMENT_FORMAT: &str = "kentos.document";
 pub const DOCUMENT_VERSION: u32 = 1;
@@ -171,6 +171,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub survey: Option<SurveySettings>,
+    /// The project's named layer states (docs/adr/0177 §4), in the menu's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LayerState>>", optional))]
+    pub layer_states: Vec<LayerState>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -398,7 +402,8 @@ impl ProjectSettings {
     /// its own definition only without an EPSG code and where its rules
     /// hold, a second system only where it may be (an EPSG code before a
     /// definition), a unit only without a system, the datum choices only
-    /// when they all hold, the survey settings that hold (docs/adr/0169 §3).
+    /// when they all hold, the survey settings that hold (docs/adr/0169 §3),
+    /// the layer states that hold (docs/adr/0177 §4).
     pub fn sanitized(mut self) -> Self {
         if self.srid != 0
             || self
@@ -425,6 +430,7 @@ impl ProjectSettings {
             self.datum_transforms.clear();
         }
         self.survey = self.survey.and_then(SurveySettings::sanitized);
+        self.layer_states = sanitized_layer_states(std::mem::take(&mut self.layer_states));
         self
     }
 }

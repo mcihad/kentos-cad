@@ -20,8 +20,8 @@ mod objects;
 
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
-    Entity, LabelStyle, LayerNode, LayerNodeType, LayerSnap, LayerStyle, MigrationSource,
-    ProjectSettings, SurveySettings, Vec2,
+    Entity, LabelStyle, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode,
+    LayerStyle, MigrationSource, ProjectSettings, SurveySettings, Vec2, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -30,10 +30,10 @@ use crate::error::{Code, KcadError};
 use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -279,7 +279,8 @@ impl<'d> Encoder<'d> {
             + usize::from(s.custom_crs.is_some())
             + usize::from(s.second_custom_crs.is_some())
             + usize::from(!s.datum_transforms.is_empty())
-            + usize::from(s.survey.is_some());
+            + usize::from(s.survey.is_some())
+            + usize::from(!s.layer_states.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -330,6 +331,12 @@ impl<'d> Encoder<'d> {
             self.key("drawingUnit");
             self.w.text(drawing_unit(u));
         }
+        if !s.layer_states.is_empty() {
+            self.key("layerStates");
+            self.at(Seg::Name("layerStates"), |e| {
+                e.layer_states(&s.layer_states)
+            })?;
+        }
         self.key("areaDecimals");
         self.w.uint(u64::from(s.area_decimals));
         self.key("lengthDecimals");
@@ -352,6 +359,58 @@ impl<'d> Encoder<'d> {
                 e.crs_definition(d)
             })?;
         }
+        self.close();
+        Ok(())
+    }
+
+    /// The layer states (docs/adr/0177 §4), checked whole as a reader checks
+    /// them: `id`, `name`, `nodes`; a node's `node`, `style`, `locked`, `visible`.
+    fn layer_states(&mut self, states: &'d [LayerState]) -> Result<(), KcadError> {
+        if let Some(problem) = layer_states_problem(states) {
+            return Err(self.fail(Code::BadValue, &problem));
+        }
+        self.open(states.len(), false)?;
+        for (i, state) in states.iter().enumerate() {
+            self.at(Seg::Index(i), |e| {
+                e.open(3, true)?;
+                e.key("id");
+                e.text(&state.id)?;
+                e.key("name");
+                e.text(&state.name)?;
+                e.key("nodes");
+                e.at(Seg::Name("nodes"), |e| {
+                    e.open(state.nodes.len(), false)?;
+                    for (j, node) in state.nodes.iter().enumerate() {
+                        e.at(Seg::Index(j), |e| e.layer_state_node(node))?;
+                    }
+                    e.close();
+                    Ok(())
+                })?;
+                e.close();
+                Ok(())
+            })?;
+        }
+        self.close();
+        Ok(())
+    }
+
+    fn layer_state_node(&mut self, n: &'d LayerStateNode) -> Result<(), KcadError> {
+        self.open(
+            2 + usize::from(n.style.is_some()) + usize::from(n.locked.is_some()),
+            true,
+        )?;
+        self.key("node");
+        self.text(&n.node)?;
+        if let Some(style) = &n.style {
+            self.key("style");
+            self.at(Seg::Name("style"), |e| e.layer_style(style))?;
+        }
+        if let Some(locked) = n.locked {
+            self.key("locked");
+            self.w.bool(locked);
+        }
+        self.key("visible");
+        self.w.bool(n.visible);
         self.close();
         Ok(())
     }
@@ -634,7 +693,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 18 when a text of it writes an
+/// The oldest schema that holds the drawing: 19 when the project has layer
+/// states (docs/adr/0177 §4), 18 when a text of it writes an
 /// object's label (`labelOf`, `labelScale`), 17 when a polyline or a point,
 /// of it or of a block definition, has parts, 16 when its survey settings
 /// name the ground, 15 when they name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
@@ -658,6 +718,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             _ => false,
         })
     };
+    if !doc.settings.layer_states.is_empty() {
+        return SCHEMA_WITH_LAYER_STATES;
+    }
     // A block definition's texts have no link: only the drawing's (docs/adr/0175 §4).
     if doc
         .entities
@@ -779,7 +842,7 @@ mod tests {
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
         // The maps whose keys the writer writes by hand, in the order it writes them.
-        let maps: [&[&str]; 27] = [
+        let maps: [&[&str]; 29] = [
             &["format", "version", "document"],
             &[
                 "name",
@@ -805,12 +868,16 @@ mod tests {
                 "secondSrid",
                 "drawingFont",
                 "drawingUnit",
+                "layerStates",
                 "areaDecimals",
                 "lengthDecimals",
                 "datumTransforms",
                 "secondCustomCrs",
             ],
             &["format", "version", "sourceSha256"],
+            // A layer state and its node (docs/adr/0177 §4).
+            &["id", "name", "nodes"],
+            &["node", "style", "locked", "visible"],
             &[
                 "id", "name", "snap", "type", "style", "locked", "visible", "children", "expanded",
             ],

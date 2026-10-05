@@ -231,7 +231,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 18**, şema 17'nin kendisi ve bir nesnenin etiketini yazan yazıdır: `text`'in `labelOf`'u ve `labelScale`'i (§6.6; ADR 0175 §4). Yazıcı `18`'i **yalnız belgenin bir yazısında bu alanlar varken** yazar. Başka her çizim şema 2–17'dir ve eskisiyle bayt bayt aynıdır. Şema 2–17 yükünde yazının `labelOf`'u ve `labelScale`'i bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/text-label-of-in-schema-17.kcad`): eski okuyucu bağlı yazıyı sessizce bağsız açmaz, dosyayı açmaz. Bir blok tanımının yazısında iki alan her şemada bilinmeyen alandır (`block-text-label-of.kcad`): tanımın nesnelerinin kalıcı kimliği yoktur. Şema 18 şema 17'yi kapsar. Örnek dosya `linked-texts.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 19**, şema 18'in kendisi ve projenin adlı katman durumlarıdır: proje ayarlarının `layerStates`'i (§6.4, §6.4.3; ADR 0177 §4). Yazıcı `19`'u **yalnız projenin katman durumu varken** yazar. Başka her çizim şema 2–18'dir ve eskisiyle bayt bayt aynıdır. Şema 2–18 yükünde `layerStates` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/layer-states-in-schema-18.kcad`): eski okuyucu durumları açıp bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 19 şema 18'i kapsar. Örnek dosya `layer-states.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -283,6 +285,7 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `drawingFont` | numaralı metin | | `barlow`, `arimo`, `overpass`, `quicksand`, `architects-daughter`, `courier-prime`, `plex-mono` |
 | `secondSrid` | u32 | | şema 12'de: projenin ikinci koordinat sisteminin EPSG kodu; koordinatları projeninkilerin yanında gösterilir, çizim dönüştürülmez (ADR 0167 §1). 0 olamaz, `srid` ile aynı olamaz, koordinat sistemi olmayan projede (`srid` 0, `customCrs` yok) bulunmaz; değilse `bad_value` (`broken/second-srid-zero.kcad`, `broken/second-srid-same.kcad`, `broken/second-srid-local.kcad`). Okuyucu sistemi tanımasa da alanı korur; değerleri gösterilmez |
 | `drawingUnit` | numaralı metin | | şema 11'de: yerel projenin çizim birimi, `mm`, `cm`, `m` (yokluğu metre). Uzunluklar ve koordinatlar bu birimle yazılır ve gösterilir; geometri metrede saklanır. Koordinat sistemi olan projede birim sistemindir (ADR 0165 §2) |
+| `layerStates` | dizi (§6.4.3) | | şema 19'da: projenin adlı katman durumları, menüdeki sırasıyla (ADR 0177 §4) |
 | `areaDecimals` | u32 | evet | alan gösterim basamağı |
 | `lengthDecimals` | u32 | evet | uzunluk gösterim basamağı |
 | `datumTransforms` | dizi (§6.4.1) | | şema 13'te: projenin datum seçimleri, kayıttaki her datum çifti için en çok biri (ADR 0168 §3); değilse `bad_value` (`broken/datum-transform-twice.kcad`) |
@@ -330,6 +333,25 @@ Bütün sayılar sonludur. Bu kurallardan biri tutmazsa `bad_value` (`broken/cus
 | `reduceToGrid` | şema 16'da: bool; Hesap pencereleri ölçülen uzunlukları düzleme indirir, Aplikasyon düzlemdekini zemine çevirir (ADR 0171 §4); `true` yalnız `groundHeight` varken (`broken/survey-reduce-without-height.kcad`), bool değilse `wrong_type` (`broken/survey-reduce-not-bool.kcad`); uygulamalar `false`'u yazmaz, okuyucu yazılmış `false`'u da okur |
 
 Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz. Uygulamalar varsayılan k'yı (0.13) yazmaz; okuyucu yazılmış 0.13'ü de okur.
+
+#### 6.4.3 Katman durumları
+
+Şema 19'da (ADR 0177 §4). Dizi; boş dizi yazılmaz (alan yazılmaz). Her öğe bir haritadır, anahtarları (kodlanmış sırasıyla) `id` < `name` < `nodes`:
+
+| Anahtar | Tür | Değerler |
+|---|---|---|
+| `id` | metin | durumun kimliği; boş olamaz, projede bir kez (`broken/layer-states-empty-id.kcad`, `broken/layer-states-same-id.kcad`) |
+| `name` | metin | menüdeki adı; uçlarındaki boşluklar dışında boş olamaz, öyle karşılaştırılınca projede bir kez (`broken/layer-states-empty-name.kcad`, `broken/layer-states-same-name.kcad`) |
+| `nodes` | dizi | kaydedildiği andaki ağacın sırasıyla düğümler |
+
+Düğüm bir haritadır, anahtarları `node` < `style` < `locked` < `visible`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `node` | metin | evet | katmanın ya da grubun kimliği (§6.5); boş olamaz, bir durumda bir kez (`broken/layer-states-same-node.kcad`). Ağaçta olmayan düğüm (sonradan silinmiş) geçerlidir: uygulanınca atlanır |
+| `style` | harita (§6.5'in katman stili) | | durum stille kaydedildiyse katmanın stili; grubun yoktur |
+| `locked` | bool | | durum kilitlerle kaydedildiyse düğümün kendi kilidi |
+| `visible` | bool | evet | düğümün kendi görünürlüğü (`broken/layer-states-without-visible.kcad`, bool değilse `wrong_type`: `broken/layer-states-visible-not-bool.kcad`) |
 
 ### 6.5 Katman ağacı
 

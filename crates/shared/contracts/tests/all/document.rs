@@ -284,3 +284,43 @@ fn a_ground_height_and_the_reduction_to_the_grid_keep_their_rules() {
     settings.survey = Some(with(Some(850.0), None));
     assert!(!settings.reduces_to_grid());
 }
+
+#[test]
+fn layer_states_are_kept_as_a_project_keeps_them() {
+    use kentos_contracts::{LayerState, ProjectSettings, layer_states_problem};
+
+    let mut settings: ProjectSettings = serde_json::from_str(
+        r##"{"srid":5254,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,
+            "layerStates":[
+              {"id":"a","name":"Kadastro","nodes":[{"node":"parsel","visible":true},{"node":"parsel","visible":false},{"node":"","visible":true}]},
+              {"id":"a","name":"İkinci","nodes":[]},
+              {"id":"b","name":" Kadastro ","nodes":[]},
+              {"id":"c","name":"  ","nodes":[]},
+              {"id":"d","name":"Baskı","nodes":[{"node":"bina","visible":true,"locked":true,
+                "style":{"color":"#E5484D","lineType":"dashed","lineWeight":0.5}}]}
+            ]}"##,
+    )
+    .expect("settings");
+    assert!(layer_states_problem(&settings.layer_states).is_some());
+    settings = settings.sanitized();
+    // Of those with the same id or name the first, none with an empty one; in
+    // each, of the same node the first, none with an empty id.
+    let names: Vec<&str> = settings
+        .layer_states
+        .iter()
+        .map(|s: &LayerState| s.name.as_str())
+        .collect();
+    assert_eq!(names, ["Kadastro", "Baskı"]);
+    assert_eq!(settings.layer_states[0].nodes.len(), 1);
+    assert!(settings.layer_states[0].nodes[0].visible);
+    assert_eq!(layer_states_problem(&settings.layer_states), None);
+    // In JSON: absent when there is none, the lock and style only where kept.
+    let json = serde_json::to_string(&settings).expect("json");
+    assert!(
+        json.contains(r#""layerStates":[{"id":"a","name":"Kadastro","nodes":[{"node":"parsel","visible":true}]}"#),
+        "{json}"
+    );
+    settings.layer_states.clear();
+    let json = serde_json::to_string(&settings).expect("json");
+    assert!(!json.contains("layerStates"), "{json}");
+}

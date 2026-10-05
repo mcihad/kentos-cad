@@ -138,7 +138,12 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
    - 4a sözleşme ve `.kcad` şema 19: `ProjectSettings.layerStates`, her durum `{ id, name, nodes: [{ node, visible, locked?, style? }] }`
      (düğüm kimliği, katman ya da grup; `locked` ve `style` kayıtta seçildiyse; stil yalnız katmanda); temizleyici (boş ya da yinelenen
      kimlik ve ad, yinelenen düğüm düşer); KCAD kodeki (`layerStates` anahtarı, şema kapısı), spesifikasyon, bağımsız Python okuyucu ve
-     yazıcısı, örnek ve bozuk dosyalar; web'in ayar sinyali ve görüntüsü, TS ve Python tipleri.
+     yazıcısı, örnek ve bozuk dosyalar; web'in ayar sinyali ve görüntüsü, TS ve Python tipleri. **Tamam (5 Ekim):** sözleşme
+     `kentos_contracts::{LayerState, LayerStateNode, layer_states_problem, sanitized_layer_states}`; kodek `SCHEMA_WITH_LAYER_STATES`
+     (anahtar `drawingUnit` ile `areaDecimals` arasında; durum `id` < `name` < `nodes`, düğüm `node` < `style` < `locked` <
+     `visible`); spesifikasyon §6.1 ve §6.4.3; `tools/kcad/kcad.py` ve `kcad_v2_reference.py`; `layer-states.kcad` ve sekiz bozuk dosya
+     (gelecek şema örneği 20'ye geçti), Rust kodeği, Python okuyucusu ve web (WASM) aynı okur; kodeğin testi `layer_states.rs`; web
+     `ProjectSettings.layerStates`, `sanitizeLayerStates`, görüntünün denetimi; TS, katalog ve Python SDK'sı üretildi.
    - 4b kurallar iki platformda ortak durumlarla: şimdiki hâlin kaydı (hangi parçalar), uygulamanın değişiklikleri (görünürlük ve kilit
      ağacın değişikliği, stil tek geri alma adımı; durumda olmayan ve silinmiş düğümler), şimdiki hâle uyan durum (menüdeki işaret).
    - 4c arayüz: Katmanlar panelinin araç çubuğunda Katman durumları ▾ (durumlar, Yeni durum kaydet…, Güncelle, Yeniden adlandır…, Sil),

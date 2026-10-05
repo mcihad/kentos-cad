@@ -1724,6 +1724,67 @@
             },
             "type": "object"
           },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
           "LayerStyle": {
             "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
             "properties": {
@@ -2330,6 +2391,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "layerStates": {
+                "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
               },
               "lengthDecimals": {
                 "format": "uint32",
@@ -3838,6 +3906,67 @@
             },
             "type": "object"
           },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
           "LayerStyle": {
             "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
             "properties": {
@@ -3997,6 +4126,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "layerStates": {
+                "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
               },
               "lengthDecimals": {
                 "format": "uint32",
@@ -6047,6 +6183,67 @@
             },
             "type": "object"
           },
+          "LayerState": {
+            "description": "A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's\nlayer states): the tree's nodes as they were when it was saved, their\nvisibility and, when it was saved with them, their locks and the layers'\nstyles. The project keeps them (`ProjectSettings::layer_states`).",
+            "properties": {
+              "id": {
+                "description": "One of its kind among the project's states.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name as the menu lists it: not empty, one of its kind (as written,\nspaces at its ends aside).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The nodes, in the tree's order when it was saved.",
+                "items": {
+                  "$ref": "#/$defs/LayerStateNode"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "nodes"
+            ],
+            "type": "object"
+          },
+          "LayerStateNode": {
+            "description": "A node of a layer state: a layer's or a group's id and what was kept of it.",
+            "properties": {
+              "locked": {
+                "description": "Its own lock, when the state keeps locks.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "node": {
+                "description": "The node's id; a node the tree no longer has is passed over.",
+                "type": "string"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A layer's style, when the state keeps styles; a group has none."
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "node",
+              "visible"
+            ],
+            "type": "object"
+          },
           "LayerStyle": {
             "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
             "properties": {
@@ -6703,6 +6900,13 @@
                   }
                 ],
                 "description": "A local project's unit (docs/adr/0165 §2); absent: metres. Only a\nproject without a coordinate system (SRID 0) has another."
+              },
+              "layerStates": {
+                "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
+                "items": {
+                  "$ref": "#/$defs/LayerState"
+                },
+                "type": "array"
               },
               "lengthDecimals": {
                 "format": "uint32",

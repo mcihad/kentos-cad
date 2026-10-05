@@ -184,8 +184,15 @@ pub const SCHEMA_WITH_LINE_PARTS: u32 = 17;
 /// those refuses a drawing that has them rather than keep its texts unlinked.
 pub const SCHEMA_WITH_LINKED_TEXTS: u32 = 18;
 
+/// Document schema 19 (docs/specs/kcad-v2.md §6.1): schema 18 and the
+/// project's named layer states, the settings' `layerStates`
+/// (docs/adr/0177 §4). A writer writes it only when the project has one: any
+/// other drawing stays 18 or older, byte for byte; a reader of those refuses
+/// a drawing that has them rather than drop them on its next save.
+pub const SCHEMA_WITH_LAYER_STATES: u32 = 19;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 17] = [
+pub const SCHEMAS: [u32; 18] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -203,6 +210,7 @@ pub const SCHEMAS: [u32; 17] = [
     SCHEMA_WITH_GROUND,
     SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINKED_TEXTS,
+    SCHEMA_WITH_LAYER_STATES,
 ];
 
 /// The file a drawing is saved as.

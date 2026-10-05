@@ -451,6 +451,7 @@ mod tests {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            layer_states: Vec::new(),
             survey: None,
         };
         let cad = Format::of(&settings);
@@ -519,6 +520,7 @@ mod tests {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            layer_states: Vec::new(),
             survey: None,
         };
         let f = Format::of(&settings);

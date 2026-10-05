@@ -143,6 +143,7 @@ fn drawing(n: usize) -> Document {
             custom_crs: None,
             second_custom_crs: None,
             datum_transforms: Vec::new(),
+            layer_states: Vec::new(),
             survey: None,
         },
         origin: Vec2 {

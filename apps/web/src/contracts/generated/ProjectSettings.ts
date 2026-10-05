@@ -5,6 +5,7 @@ import type { CrsDefinition } from "./CrsDefinition";
 import type { DatumTransform } from "./DatumTransform";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { LayerState } from "./LayerState";
 import type { SurveySettings } from "./SurveySettings";
 import type { Workspace } from "./Workspace";
 
@@ -54,4 +55,8 @@ datumTransforms?: Array<DatumTransform>,
  * The project's survey constants and tolerances (docs/adr/0169 §3);
  * absent: k = [`REFRACTION`] and no tolerance.
  */
-survey?: SurveySettings, };
+survey?: SurveySettings, 
+/**
+ * The project's named layer states (docs/adr/0177 §4), in the menu's order.
+ */
+layerStates?: Array<LayerState>, };

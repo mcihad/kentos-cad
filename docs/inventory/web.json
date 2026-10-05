@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 335,
-      "implemented": 335,
+      "total": 343,
+      "implemented": 343,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 335,
-        "implemented": 335,
+        "total": 343,
+        "implemented": 343,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -17437,6 +17437,97 @@
       }
     },
     {
+      "id": "LayerState.id",
+      "contract": "LayerState",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "id",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerState.name",
+      "contract": "LayerState",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerState.nodes",
+      "contract": "LayerState",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "nodes",
+      "type": "Array<LayerStateNode>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerStateNode.locked",
+      "contract": "LayerStateNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "locked",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerStateNode.node",
+      "contract": "LayerStateNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "node",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerStateNode.style",
+      "contract": "LayerStateNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "style",
+      "type": "LayerStyle",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "LayerStateNode.visible",
+      "contract": "LayerStateNode",
+      "rust": "crates/shared/contracts/src/layer.rs",
+      "field": "visible",
+      "type": "boolean",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "LayerStyle.color",
       "contract": "LayerStyle",
       "rust": "crates/shared/contracts/src/layer.rs",
@@ -18396,6 +18487,19 @@
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "drawingUnit",
       "type": "DrawingUnit",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.layerStates",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "layerStates",
+      "type": "Array<LayerState>",
       "optional": true,
       "status": "implemented",
       "platforms": {

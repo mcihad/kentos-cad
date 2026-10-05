@@ -3634,6 +3634,71 @@ class LayerSnap(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerState(_Model):
+    """A named layer state (docs/adr/0177 §4; QGIS's map themes, AutoCAD's
+    layer states): the tree's nodes as they were when it was saved, their
+    visibility and, when it was saved with them, their locks and the layers'
+    styles. The project keeps them (`ProjectSettings::layer_states`).
+    Attributes:
+        id: One of its kind among the project's states.
+        name: Its name as the menu lists it: not empty, one of its kind (as written,
+            spaces at its ends aside).
+        nodes: The nodes, in the tree's order when it was saved.
+    """
+    id: str
+    name: str
+    nodes: list[LayerStateNode]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["nodes"] = [e0.to_json() for e0 in self.nodes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerState:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            nodes=[LayerStateNode.from_json(e0) for e0 in data["nodes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerStateNode(_Model):
+    """A node of a layer state: a layer's or a group's id and what was kept of it.
+    Attributes:
+        node: The node's id; a node the tree no longer has is passed over.
+        locked: Its own lock, when the state keeps locks.
+        style: A layer's style, when the state keeps styles; a group has none.
+    """
+    node: str
+    visible: bool
+    locked: bool | None | Unset = UNSET
+    style: LayerStyle | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node
+        out["visible"] = self.visible
+        if self.locked is not UNSET:
+            out["locked"] = self.locked
+        if self.style is not UNSET:
+            out["style"] = None if self.style is None else self.style.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerStateNode:
+        return cls(
+            node=data["node"],
+            visible=data["visible"],
+            locked=data.get("locked", UNSET),
+            style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerStyle(_Model):
     """A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.
     Attributes:
@@ -5346,6 +5411,7 @@ class ProjectSettings(_Model):
         drawing_font: Absent in files written before drawing typefaces (read as Barlow).
         drawing_unit: A local project's unit (docs/adr/0165 §2); absent: metres. Only a
             project without a coordinate system (SRID 0) has another.
+        layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
@@ -5366,6 +5432,7 @@ class ProjectSettings(_Model):
     datum_transforms: list[DatumTransform] | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
+    layer_states: list[LayerState] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
@@ -5387,6 +5454,8 @@ class ProjectSettings(_Model):
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
+        if self.layer_states is not UNSET:
+            out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.second_custom_crs is not UNSET:
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
@@ -5410,6 +5479,7 @@ class ProjectSettings(_Model):
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
+            layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
@@ -7273,6 +7343,8 @@ __all__ = [
     "LayerNodeType",
     "LayerNodeTypeName",
     "LayerSnap",
+    "LayerState",
+    "LayerStateNode",
     "LayerStyle",
     "LeaderArrow",
     "LeaderArrowName",

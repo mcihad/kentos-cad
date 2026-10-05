@@ -3,6 +3,7 @@ import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
+import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
@@ -58,6 +59,8 @@ export interface ProjectSettingsData {
   datumTransforms?: DatumTransform[];
   /** The project's survey constants and tolerances (docs/adr/0169 §3); absent: k = 0.13 and no tolerance. */
   survey?: SurveySettings;
+  /** The project's named layer states (docs/adr/0177 §4), in the menu's order; absent: none. */
+  layerStates?: LayerState[];
 }
 
 /**
@@ -168,6 +171,8 @@ export class ProjectSettings {
   readonly datumTransforms: Signal<readonly DatumTransform[]>;
   /** The project's survey constants and tolerances, or null: k = 0.13 and no tolerance (docs/adr/0169 §3). */
   readonly survey: Signal<SurveySettings | null>;
+  /** The project's named layer states, as a project keeps them (docs/adr/0177 §4; `sanitizeLayerStates`). */
+  readonly layerStates: Signal<readonly LayerState[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -188,6 +193,7 @@ export class ProjectSettings {
     this.secondCustomCrs = new Signal(this.secondSrid.value === null && (this.crs.value.kind !== 'local' || custom) ? (d.secondCustomCrs ?? null) : null);
     this.datumTransforms = new Signal<readonly DatumTransform[]>(d.datumTransforms ?? []);
     this.survey = new Signal(sanitizeSurvey(d.survey), sameSurvey);
+    this.layerStates = new Signal<readonly LayerState[]>(sanitizeLayerStates(d.layerStates ?? []));
     watchAll(
       [
         this.crs,
@@ -204,6 +210,7 @@ export class ProjectSettings {
         this.secondCustomCrs,
         this.datumTransforms,
         this.survey,
+        this.layerStates,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -230,6 +237,8 @@ export class ProjectSettings {
       ...(this.datumTransforms.value.length ? { datumTransforms: [...this.datumTransforms.value] } : {}),
       // Written only when there are (KCAD schema 14).
       ...(this.survey.value ? { survey: { ...this.survey.value } } : {}),
+      // Written only when there are (KCAD schema 19).
+      ...(this.layerStates.value.length ? { layerStates: structuredClone([...this.layerStates.value]) } : {}),
     };
   }
 
@@ -274,6 +283,7 @@ export class ProjectSettings {
       secondCustomCrs: data.secondCustomCrs ?? null,
       datumTransforms: data.datumTransforms ?? [],
       survey: data.survey ?? null,
+      layerStates: data.layerStates ?? [],
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -309,5 +319,23 @@ export class ProjectSettings {
     this.secondCustomCrs.set(this.secondSrid.value === null && this.hasSystem ? secondCustom : null);
     if (data.datumTransforms !== undefined) this.datumTransforms.set(data.datumTransforms);
     if (data.survey !== undefined) this.survey.set(sanitizeSurvey(data.survey));
+    if (data.layerStates !== undefined) this.layerStates.set(sanitizeLayerStates(data.layerStates));
   }
+}
+
+/**
+ * The layer states as a project keeps them (the contract's `sanitized_layer_states`, docs/adr/0177 §4): of those with
+ * the same id or name (the spaces at its ends aside) the first, none with an empty one; in each, of the same node the
+ * first, none with an empty id.
+ */
+export function sanitizeLayerStates(states: readonly LayerState[]): LayerState[] {
+  const out: LayerState[] = [];
+  for (const s of states) {
+    const name = s.name.trim();
+    if (!s.id || !name || out.some((t) => t.id === s.id || t.name.trim() === name)) continue;
+    const nodes: LayerState['nodes'] = [];
+    for (const n of s.nodes) if (n.node && !nodes.some((m) => m.node === n.node)) nodes.push(n);
+    out.push({ ...s, nodes });
+  }
+  return out;
 }

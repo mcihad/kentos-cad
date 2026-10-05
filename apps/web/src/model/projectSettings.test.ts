@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GROUND_HEIGHTS, ProjectSettings, REFRACTION, sanitizeSurvey } from './projectSettings';
+import { GROUND_HEIGHTS, ProjectSettings, REFRACTION, sanitizeLayerStates, sanitizeSurvey } from './projectSettings';
 
 /**
  * The project's survey settings (docs/adr/0169 §3) as the settings model keeps them: the contract's
@@ -57,5 +57,30 @@ describe('ProjectSettings › survey (docs/adr/0169 §3)', () => {
     const { survey: _dropped, ...whole } = s.toJSON();
     s.replace(whole);
     expect(s.survey.value).toBeNull();
+  });
+
+  it('keeps the layer states as a project keeps them, writes them only when there are, and drops them on a whole snapshot (docs/adr/0177 §4)', () => {
+    // The contract's `layer_states_are_kept_as_a_project_keeps_them`: of the same id or name the first, none empty; of the same node the first.
+    expect(
+      sanitizeLayerStates([
+        { id: 'a', name: 'Kadastro', nodes: [{ node: 'parsel', visible: true }, { node: 'parsel', visible: false }, { node: '', visible: true }] },
+        { id: 'a', name: 'İkinci', nodes: [] },
+        { id: 'b', name: ' Kadastro ', nodes: [] },
+        { id: 'c', name: '  ', nodes: [] },
+        { id: 'd', name: 'Baskı', nodes: [{ node: 'bina', visible: true, locked: true, style: { color: '#E5484D', lineType: 'dashed', lineWeight: 0.5 } }] },
+      ]).map((s) => [s.name, s.nodes.length]),
+    ).toEqual([
+      ['Kadastro', 1],
+      ['Baskı', 1],
+    ]);
+    const s = new ProjectSettings();
+    expect('layerStates' in s.toJSON()).toBe(false);
+    const changed = s.changed.value;
+    s.assign({ layerStates: [{ id: 'a', name: 'Görünüm', nodes: [{ node: '0', visible: false }] }] });
+    expect(s.changed.value).toBe(changed + 1);
+    expect(s.toJSON().layerStates).toEqual([{ id: 'a', name: 'Görünüm', nodes: [{ node: '0', visible: false }] }]);
+    const { layerStates: _dropped, ...whole } = s.toJSON();
+    s.replace(whole);
+    expect(s.layerStates.value).toEqual([]);
   });
 });

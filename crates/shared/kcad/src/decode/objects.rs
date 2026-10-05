@@ -27,10 +27,10 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS,
-    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
-    SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
+    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -106,6 +106,8 @@ pub(super) struct Features {
     pub(super) traverse_tolerances: bool,
     /// Schema 16: the survey settings' ground height and reduction to the grid.
     pub(super) ground: bool,
+    /// Schema 19: the settings' layer states (docs/adr/0177 §4).
+    pub(super) layer_states: bool,
     /// Schema 17: a polyline's and a point's parts (`parts`, docs/adr/0174).
     pub(super) line_parts: bool,
     /// Schema 18: a text's link to the object whose label it writes
@@ -133,6 +135,7 @@ impl Features {
             survey: schema >= SCHEMA_WITH_SURVEY,
             traverse_tolerances: schema >= SCHEMA_WITH_TRAVERSE_TOLERANCES,
             ground: schema >= SCHEMA_WITH_GROUND,
+            layer_states: schema >= SCHEMA_WITH_LAYER_STATES,
             line_parts: schema >= SCHEMA_WITH_LINE_PARTS,
             linked_texts: schema >= SCHEMA_WITH_LINKED_TEXTS,
             uids: true,

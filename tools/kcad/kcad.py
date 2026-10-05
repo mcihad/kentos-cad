@@ -89,6 +89,8 @@ SCHEMA_WITH_GROUND = 16
 SCHEMA_WITH_LINE_PARTS = 17
 # Schema 18: schema 17 and the text that writes an object's label, a text's `labelOf` and `labelScale` (docs/adr/0175 §4).
 SCHEMA_WITH_LINKED_TEXTS = 18
+# Schema 19: schema 18 and the project's named layer states, the settings' `layerStates` (docs/adr/0177 §4).
+SCHEMA_WITH_LAYER_STATES = 19
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
@@ -101,7 +103,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -602,6 +604,7 @@ class _Schema:
         self.survey_fields = version >= SCHEMA_WITH_SURVEY
         self.traverse_tolerances = version >= SCHEMA_WITH_TRAVERSE_TOLERANCES
         self.ground = version >= SCHEMA_WITH_GROUND
+        self.layer_states = version >= SCHEMA_WITH_LAYER_STATES
         checked = self.fields({"format": (self.text, True), "version": (self.uint(32), True), "document": (self.document, True)})(v)
         return checked["document"]
 
@@ -666,6 +669,7 @@ class _Schema:
                     else {}
                 ),
                 **({"survey": (self.survey, False)} if self.survey_fields else {}),
+                **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -682,6 +686,34 @@ class _Schema:
             self.path.append("secondCustomCrs")
             self.fail("bad_value", "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz")
         return s
+
+    def layer_states_(self, v):
+        # The project's named layer states (schema 19, spec §6.4.3, docs/adr/0177 §4): an id and a name, neither empty
+        # nor twice (a name as written, the spaces at its ends aside); in each, the nodes, none empty or twice, each
+        # with its visibility and, when kept, its lock and a layer's style.
+        node = self.fields({"node": (self.text, True), "style": (self.layer_style, False), "locked": (self.bool, False), "visible": (self.bool, True)})
+        states = self.array(self.fields({"id": (self.text, True), "name": (self.text, True), "nodes": (self.array(node), True)}))(v)
+        ids, names = set(), set()
+        for s in states:
+            name = s["name"].strip()
+            if not s["id"]:
+                self.fail("bad_value", "katman durumunun kimliği boş")
+            if s["id"] in ids:
+                self.fail("bad_value", f"“{s['id']}” kimlikli katman durumu iki kez var")
+            if not name:
+                self.fail("bad_value", "katman durumunun adı boş")
+            if name in names:
+                self.fail("bad_value", f"“{name}” adlı katman durumu iki kez var")
+            ids.add(s["id"])
+            names.add(name)
+            seen = set()
+            for n in s["nodes"]:
+                if not n["node"]:
+                    self.fail("bad_value", f"“{name}” durumunda düğüm kimliği boş")
+                if n["node"] in seen:
+                    self.fail("bad_value", f"“{name}” durumunda “{n['node']}” düğümü iki kez var")
+                seen.add(n["node"])
+        return states
 
     def survey(self, v):
         # The project's survey constants and tolerances (schema 14, spec §6.4.2, docs/adr/0169 §3): at least one, k

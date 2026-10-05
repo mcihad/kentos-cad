@@ -1,0 +1,189 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ada 101, katman durumları",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "layerStates": [
+      {
+        "id": "durum-kadastro",
+        "name": "Kadastro görünümü",
+        "nodes": [
+          {
+            "node": "kadastro",
+            "visible": true
+          },
+          {
+            "node": "parsel",
+            "visible": true
+          },
+          {
+            "node": "bina",
+            "visible": false
+          },
+          {
+            "node": "yol",
+            "visible": false
+          }
+        ]
+      },
+      {
+        "id": "durum-baski",
+        "name": "Baskı",
+        "nodes": [
+          {
+            "node": "kadastro",
+            "visible": true,
+            "locked": false
+          },
+          {
+            "node": "parsel",
+            "visible": true,
+            "locked": true,
+            "style": {
+              "color": "#E5484D",
+              "lineType": "continuous",
+              "lineWeight": 0.5
+            }
+          },
+          {
+            "node": "bina",
+            "visible": true,
+            "locked": false,
+            "style": {
+              "color": "#8C9AAA",
+              "lineType": "dashed",
+              "lineWeight": 0.18,
+              "fill": "#8C9AAA33"
+            }
+          },
+          {
+            "node": "silinmis",
+            "visible": false
+          }
+        ]
+      }
+    ]
+  },
+  "origin": {
+    "x": 414000.0,
+    "y": 4540000.0
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        },
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "ada": "101",
+        "parsel": "7"
+      },
+      "pts": [
+        {
+          "x": 414100.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414130.0,
+          "y": 4540100.0
+        },
+        {
+          "x": 414130.0,
+          "y": 4540125.0
+        },
+        {
+          "x": 414100.0,
+          "y": 4540125.0
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 414090.0,
+        "y": 4540095.0
+      },
+      "b": {
+        "x": 414140.0,
+        "y": 4540095.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e41",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4e42"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}
