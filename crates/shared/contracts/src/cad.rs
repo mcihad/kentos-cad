@@ -66,6 +66,17 @@ pub struct PolygonCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// The text shown beside it (`EntityBase.label`). Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+    /// instead of its layer's style: an object template's (docs/adr/0176).
+    /// The id is not looked up: the libraries are the host's. Absent: the
+    /// layer's style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
@@ -158,6 +169,17 @@ pub struct LineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// The text shown beside it (`EntityBase.label`). Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+    /// instead of its layer's style: an object template's (docs/adr/0176).
+    /// The id is not looked up: the libraries are the host's. Absent: the
+    /// layer's style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
@@ -250,6 +272,17 @@ pub struct PolylineCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// The text shown beside it (`EntityBase.label`). Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+    /// instead of its layer's style: an object template's (docs/adr/0176).
+    /// The id is not looked up: the libraries are the host's. Absent: the
+    /// layer's style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
     /// The document revision the input was prepared against, as decimal text
     /// (from a plan, or the document). When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.

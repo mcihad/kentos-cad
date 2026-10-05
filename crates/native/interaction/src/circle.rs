@@ -252,6 +252,8 @@ impl Circle {
             line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
+            label: None,
+            symbol: None,
         };
         let result = circle::execute(&mut ExecutionContext::new(cx.doc), input);
         match points::written(result, cx) {

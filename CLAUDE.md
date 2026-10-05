@@ -839,7 +839,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   notu) tamam; `HYB-18` bitti (5 Ekim). Sıradaki `HYB-19` nesne şablonları ([ADR 0176](docs/adr/0176-object-templates.md); TODOS'taki “çizim
   kalemleri”, ad sahibin seçimi): şablon stil kitaplığının üçüncü öğe türü, şablonla çizmek, Şablonlar paneli, grup şablonu, Şablonu uygula;
   BÖHYY takımı sahibin tarifini bekler. 1. adım (şablonun kuralları `model/objectTemplate.ts`, `kentos_native_style::object_template`, ortak
-  `object-templates.json`; kitaplıkta `template`, `.kstil` sürüm 2; Stil yöneticisinde Şablon türü) tamam.
+  `object-templates.json`; kitaplıkta `template`, `.kstil` sürüm 2; Stil yöneticisinde Şablon türü) ve 2. adım (oluşturma komutlarının
+  `symbol`'ü, eksik olanlarda `label`; ortak komut durumları) tamam.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

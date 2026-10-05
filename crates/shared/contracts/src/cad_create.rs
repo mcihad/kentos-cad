@@ -110,6 +110,13 @@ pub struct NewObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
+    /// Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+    /// instead of its layer's style: an object template's (docs/adr/0176).
+    /// The id is not looked up: the libraries are the host's. Absent: the
+    /// layer's style.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub symbol: Option<String>,
     /// The object whose label this new text writes (Etiketleri yazıya
     /// çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
     /// (lowercase UUID text with hyphens), an object of the drawing. On a

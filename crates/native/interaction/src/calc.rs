@@ -60,6 +60,7 @@ pub fn add_points(
                 label: Some(pt.name.clone()),
                 label_of: None,
                 label_scale: None,
+                symbol: None,
             }
         })
         .collect();

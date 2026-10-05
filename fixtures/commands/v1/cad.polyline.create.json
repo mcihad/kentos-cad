@@ -4,7 +4,7 @@
   "command": "cad.polyline.create",
   "commandVersion": 1,
   "title": "Çoklu çizgi oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0027. Denetim sırası: nokta sayısı (en az 2), sonlu koordinatlar (nokta sırasıyla, önce x), yay değeri sayısı (kenar başına bir tane, noktalardan bir eksik), sonlu yay değerleri; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Belge yay değerlerini DXF gibi nokta başına saklar: verilen değerlerin sonuna açık çoklu çizginin olmayan kapanış kenarı için 0 eklenir. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar.",
+  "note": "ADR 0027. Denetim sırası: nokta sayısı (en az 2), sonlu koordinatlar (nokta sırasıyla, önce x), yay değeri sayısı (kenar başına bir tane, noktalardan bir eksik), sonlu yay değerleri; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Belge yay değerlerini DXF gibi nokta başına saklar: verilen değerlerin sonuna açık çoklu çizginin olmayan kapanış kenarı için 0 eklenir. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Öznitelikler, etiket ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -585,6 +585,13 @@
           "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri kenar sayısı kadar olmalı, her kenara bir değer: 3 nokta, 2 kenar, 1 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
           "expect": { "revision": "same" }
         }
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "label": "Y1", "symbol": "temel.cizgi.cift", "attrs": { "Tür": "Yol" } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polyline", "id": 10, "layerId": "yapi", "attrs": { "Tür": "Yol" }, "label": "Y1", "symbol": "temel.cizgi.cift", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
       ]
     }
   ]

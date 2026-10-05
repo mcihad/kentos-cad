@@ -395,6 +395,7 @@ impl Polygonize {
                     label: None,
                     label_of: None,
                     label_scale: None,
+                    symbol: None,
                 })
                 .collect(),
             operation: Some(CreateOperation::Polygonize),

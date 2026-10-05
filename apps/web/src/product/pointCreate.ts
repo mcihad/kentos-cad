@@ -41,6 +41,7 @@ function pointOf(input: PointCreate): NewEntity & { kind: 'point' } {
     ...(input.color != null && { color: input.color }),
     attrs: { ...input.attrs },
     ...(input.label != null && { label: input.label }),
+    ...(input.symbol != null && { symbol: input.symbol }),
   };
 }
 

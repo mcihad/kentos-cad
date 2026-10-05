@@ -241,6 +241,7 @@ impl LabelsToText {
                     label: None,
                     label_of,
                     label_scale,
+                    symbol: None,
                 }
             })
             .collect();

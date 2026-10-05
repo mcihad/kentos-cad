@@ -49,7 +49,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         bulges: Sequence[float] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> PolylineCreated:
         """Çoklu çizgi oluştur: Açık çizimde verilen katmana noktaları ve isteğe bağlı yay
         değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma
@@ -73,9 +75,14 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
+            label: The text shown beside it (`EntityBase.label`). Absent: none.
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre).
+            symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+                instead of its layer's style: an object template's (docs/adr/0176).
+                The id is not looked up: the libraries are the host's. Absent: the
+                layer's style.
 
         Returns:
             PolylineCreated
@@ -91,7 +98,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             bulges=_opt(bulges, lambda x: list(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def plan(
@@ -105,7 +114,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         bulges: Sequence[float] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> PolylinePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -117,7 +128,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             bulges=_opt(bulges, lambda x: list(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def validate(
@@ -131,7 +144,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
         bulges: Sequence[float] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -143,7 +158,9 @@ class _PolylineCreate(LocalCommand[PolylineCreate, PolylineCreated, PolylinePlan
             bulges=_opt(bulges, lambda x: list(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
 

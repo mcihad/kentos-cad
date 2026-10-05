@@ -275,6 +275,7 @@ impl Point {
             attrs: (!code.is_empty())
                 .then(|| BTreeMap::from([("Kod".to_owned(), code.to_owned())])),
             expected_revision: None,
+            symbol: None,
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(written) = points::written(result, cx) {
@@ -406,6 +407,7 @@ impl Point {
                 ("Z (m)".to_owned(), fixed(z, 3)),
             ])),
             expected_revision: None,
+            symbol: None,
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         match points::written(result, cx) {

@@ -244,6 +244,8 @@ impl Arc {
             line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
+            label: None,
+            symbol: None,
         };
         let result = arc::execute(&mut ExecutionContext::new(cx.doc), input);
         match points::written(result, cx) {

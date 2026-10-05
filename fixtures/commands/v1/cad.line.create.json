@@ -4,7 +4,7 @@
   "command": "cad.line.create",
   "commandVersion": 1,
   "title": "Çizgi oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0027. Denetim sırası: uçların sonlu olması (önce başlangıç a, sonra bitiş b; her uçta önce x); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Çizgi aracı zincirin her parçası için komutu bir kez çalıştırır: her parça ayrı nesne ve ayrı geri alma adımıdır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar.",
+  "note": "ADR 0027. Denetim sırası: uçların sonlu olması (önce başlangıç a, sonra bitiş b; her uçta önce x); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Çizgi aracı zincirin her parçası için komutu bir kez çalıştırır: her parça ayrı nesne ve ayrı geri alma adımıdır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Öznitelikler, etiket ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -520,6 +520,13 @@
           "result": { "status": "failed", "error": { "code": "not_finite", "message": "Bitiş noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "b.x" } },
           "expect": { "revision": "same" }
         }
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420022.5 }, "label": "D1", "symbol": "temel.cizgi.cift", "attrs": { "Tür": "Duvar" } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "line", "id": 10, "layerId": "yapi", "attrs": { "Tür": "Duvar" }, "label": "D1", "symbol": "temel.cizgi.cift", "a": { "x": 487010, "y": 4420010 }, "b": { "x": 487030, "y": 4420022.5 } } }, "revision": "changed" } },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
       ]
     }
   ]

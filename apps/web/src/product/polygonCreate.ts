@@ -101,6 +101,8 @@ function polygonOf(input: PolygonCreate): NewEntity & { kind: 'polygon' } {
     ...(input.color != null && { color: input.color }),
     ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
+    ...(input.label != null && { label: input.label }),
+    ...(input.symbol != null && { symbol: input.symbol }),
   };
 }
 

@@ -803,6 +803,8 @@ impl Path {
                 line_weight: cx.draft.line_weight,
                 attrs: None,
                 expected_revision: None,
+                label: None,
+                symbol: None,
             };
             let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
             points::written(result, cx).is_some()
@@ -1084,6 +1086,8 @@ impl Path {
                 line_weight: cx.draft.line_weight,
                 attrs: None,
                 expected_revision: None,
+                label: None,
+                symbol: None,
             };
             let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
             points::written(result, cx).map(|_| ())
@@ -1105,6 +1109,8 @@ impl Path {
             line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
+            label: None,
+            symbol: None,
         };
         let result = polyline::execute(&mut ExecutionContext::new(cx.doc), input);
         points::written(result, cx).is_some()
@@ -1172,6 +1178,7 @@ impl Path {
                 label: Some(number.clone()),
                 label_of: None,
                 label_scale: None,
+                symbol: None,
             }],
             operation: None,
             expected_revision: None,

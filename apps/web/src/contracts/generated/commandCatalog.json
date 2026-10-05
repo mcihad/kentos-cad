@@ -12776,6 +12776,13 @@
               "null"
             ]
           },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
@@ -12796,6 +12803,13 @@
               "$ref": "#/$defs/Vec2"
             },
             "type": "array"
+          },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -14584,6 +14598,13 @@
               "null"
             ]
           },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
@@ -14595,6 +14616,13 @@
             "minimum": 0.0,
             "type": [
               "number",
+              "null"
+            ]
+          },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
               "null"
             ]
           }
@@ -16341,6 +16369,13 @@
               "null"
             ]
           },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
@@ -16361,6 +16396,13 @@
               "$ref": "#/$defs/Vec2"
             },
             "type": "array"
+          },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -18259,6 +18301,13 @@
             "$ref": "#/$defs/Vec2",
             "description": "Where it is: x east (Y), y north (X), in the project's units (m), float64."
           },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "z": {
             "description": "Its elevation (kot), in metres. Absent: none.",
             "format": "double",
@@ -19995,6 +20044,13 @@
               "null"
             ]
           },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
@@ -20013,6 +20069,13 @@
             "description": "Its radius, in the project's units; above zero.",
             "format": "double",
             "type": "number"
+          },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -21751,6 +21814,13 @@
               "null"
             ]
           },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
             "type": "string"
@@ -21769,6 +21839,13 @@
             "description": "Its radius, in the project's units; above zero.",
             "format": "double",
             "type": "number"
+          },
+          "symbol": {
+            "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -31250,6 +31327,13 @@
                 "minimum": 0.0,
                 "type": [
                   "number",
+                  "null"
+                ]
+              },
+              "symbol": {
+                "description": "Its own symbol, a library item's id (`EntityBase.symbol`), drawn\ninstead of its layer's style: an object template's (docs/adr/0176).\nThe id is not looked up: the libraries are the host's. Absent: the\nlayer's style.",
+                "type": [
+                  "string",
                   "null"
                 ]
               }

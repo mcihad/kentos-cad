@@ -469,6 +469,7 @@ pub fn write_draft(
         color: color.map(str::to_owned),
         attrs: (!code.is_empty()).then(|| BTreeMap::from([("Kod".to_owned(), code.clone())])),
         expected_revision: None,
+        symbol: None,
     };
     if let Some(e) = refusal(point::execute(&mut ExecutionContext::new(doc), input)) {
         return fail(e.message);

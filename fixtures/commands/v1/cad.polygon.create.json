@@ -4,7 +4,7 @@
   "command": "cad.polygon.create",
   "commandVersion": 1,
   "title": "Kapalı alan oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0022. Denetim sırası: dış halka, sonra her delik (köşe sayısı, sonlu koordinat, yay değeri sayısı, sonlu yay değeri); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar.",
+  "note": "ADR 0022. Denetim sırası: dış halka, sonra her delik (köşe sayısı, sonlu koordinat, yay değeri sayısı, sonlu yay değeri); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Öznitelikler, etiket ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -616,6 +616,13 @@
           "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 3 köşe, 2 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
           "expect": { "revision": "same" }
         }
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "label": "101", "symbol": "temel.alan.kenar-ici", "attrs": { "Tür": "Parsel" } }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10], "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": { "Tür": "Parsel" }, "label": "101", "symbol": "temel.alan.kenar-ici", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } }, "revision": "changed" } },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9] } }
       ]
     }
   ]

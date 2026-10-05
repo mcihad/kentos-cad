@@ -4,7 +4,7 @@
   "command": "cad.circle.create",
   "commandVersion": 1,
   "title": "Daire oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0032. Denetim sırası: merkezin sonlu olması (önce x, sonra y), yarıçapın sonlu olması, yarıçapın sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Daire aracı yöntemlerinin dairesini ortak çekirdekle bulur ve bu komutla yazar.",
+  "note": "ADR 0032. Denetim sırası: merkezin sonlu olması (önce x, sonra y), yarıçapın sonlu olması, yarıçapın sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Daire aracı yöntemlerinin dairesini ortak çekirdekle bulur ve bu komutla yazar. Öznitelikler, etiket ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -212,6 +212,13 @@
       "name": "büyük koordinattaki merkez ve yarıçap olduğu gibi saklanır",
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "circle", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125}}}}
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 7.5, "label": "A1", "symbol": "temel.alan.dolu", "attrs": {"Tür": "Ağaç"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "circle", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Ağaç"}, "label": "A1", "symbol": "temel.alan.dolu", "c": {"x": 487020, "y": 4420015}, "r": 7.5}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
     }
   ]

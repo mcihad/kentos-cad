@@ -63,6 +63,8 @@ function polylineOf(input: PolylineCreate): NewEntity & { kind: 'polyline' } {
     ...(input.color != null && { color: input.color }),
     ...(input.lineWeight != null && { lineWeight: input.lineWeight }),
     attrs: { ...input.attrs },
+    ...(input.label != null && { label: input.label }),
+    ...(input.symbol != null && { symbol: input.symbol }),
   };
 }
 

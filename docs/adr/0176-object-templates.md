@@ -96,7 +96,11 @@ da geçer:
    aktarma şablonun sembolünü de alır, içe aktarma varlık, sembol, şablon sırasıyla ve kopyada şablonu yeni sembol kimliğine çevirir
    (`kstil.json` web'den yeniden kaydedildi, iki platformda); şablonun resmi kendi sembolü ya da görünüşü (`style/templateSymbol.ts`,
    `object_template::preview_symbol`).
-2. Komutlar: oluşturma komutlarının `symbol`'ü (ve eksikse `label`'ı); ortak durumlar.
+2. Komutlar: oluşturma komutlarının `symbol`'ü (ve eksikse `label`'ı); ortak durumlar. **Tamam (5 Ekim):** `cad.polygon.create`,
+   `cad.line.create`, `cad.polyline.create`, `cad.circle.create` ve `cad.arc.create` `label` ve `symbol`, `cad.point.create` `symbol`,
+   `cad.entities.create`'in nesneleri `symbol` alır; değerler olduğu gibi yazılır, sembolün kimliği kitaplıkta aranmaz (kitaplıklar ev
+   sahibinindir; kitaplıkta bulunmayan sembolün nesnesi çizimde düz görünüşle, rengi ve kalınlığıyla çizilir, kaybolmaz). Her komutun dosyasında bir ortak durum (`create_command_cases.py`
+   üretir); TS sözleşmeleri, katalog ve Python SDK'sı yeniden üretildi.
 3. Şablonla çizmek: şablonun katmanı, rengi ve kalınlığı, araçların yazdığı sembol, öznitelik ve etiket; ortak iz.
 4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler.
 5. Grup şablonu; ortak iz.

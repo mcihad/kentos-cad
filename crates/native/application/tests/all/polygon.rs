@@ -43,6 +43,8 @@ fn triangle() -> PolygonCreate {
         line_weight: None,
         attrs: None,
         expected_revision: None,
+        label: None,
+        symbol: None,
     }
 }
 

@@ -4,7 +4,7 @@
   "command": "cad.point.create",
   "commandVersion": 1,
   "title": "Nokta oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0032. Denetim sırası: noktanın sonlu olması (önce x, sonra y), verildiyse kotun sonlu olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Nokta aracı her nokta için komutu bir kez çalıştırır; kot noktası aracı kotu ve yanında görünen yazıyı da verir.",
+  "note": "ADR 0032. Denetim sırası: noktanın sonlu olması (önce x, sonra y), verildiyse kotun sonlu olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Nokta aracı her nokta için komutu bir kez çalıştırır; kot noktası aracı kotu ve yanında görünen yazıyı da verir. Öznitelikler ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -199,6 +199,13 @@
       "name": "büyük koordinat olduğu gibi saklanır",
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "p": {"x": 487012.3456789, "y": 4420001.2345678}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "point", "id": 10, "layerId": "yapi", "attrs": {}, "p": {"x": 487012.3456789, "y": 4420001.2345678}}}}}
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "p": {"x": 487010, "y": 4420010}, "label": "P1", "symbol": "temel.isaret.arti", "attrs": {"Kod": "SN"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "point", "id": 10, "layerId": "yapi", "attrs": {"Kod": "SN"}, "label": "P1", "symbol": "temel.isaret.arti", "p": {"x": 487010, "y": 4420010}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
     }
   ]

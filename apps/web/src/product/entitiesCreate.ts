@@ -112,6 +112,7 @@ function entityOf(o: NewObject, layerId: string): NewEntity {
     ...(o.lineWeight != null && { lineWeight: o.lineWeight }),
     attrs: { ...o.attrs },
     ...(o.label != null && { label: o.label }),
+    ...(o.symbol != null && { symbol: o.symbol }),
     // A linked text knows its object (docs/adr/0175 §4).
     ...(o.geometry.kind === 'text' && o.labelOf != null && { labelOf: o.labelOf, labelScale: o.labelScale }),
   } as unknown as NewEntity;

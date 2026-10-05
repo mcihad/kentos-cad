@@ -125,6 +125,8 @@ pub(crate) fn write_ring(
         color: cx.draft.color.map(str::to_owned),
         line_weight: cx.draft.line_weight,
         attrs: None,
+        label: None,
+        symbol: None,
         expected_revision: None,
     };
     let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
@@ -234,6 +236,7 @@ pub(crate) fn write_objects_with(
                 label: None,
                 label_of: None,
                 label_scale: None,
+                symbol: None,
             })
             .collect(),
         operation,

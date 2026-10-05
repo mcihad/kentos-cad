@@ -50,7 +50,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> LineCreated:
         """Çizgi oluştur: Açık çizimde verilen katmana iki uç noktası arasında düz bir çizgi
         ekler; tek geri alma adımıdır. Çizgi aracı zincirin her parçası için bu komutu bir
@@ -69,9 +71,14 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
+            label: The text shown beside it (`EntityBase.label`). Absent: none.
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre).
+            symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+                instead of its layer's style: an object template's (docs/adr/0176).
+                The id is not looked up: the libraries are the host's. Absent: the
+                layer's style.
 
         Returns:
             LineCreated
@@ -87,7 +94,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def plan(
@@ -101,7 +110,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> LinePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -113,7 +124,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def validate(
@@ -127,7 +140,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -139,7 +154,9 @@ class _LineCreate(LocalCommand[LineCreate, LineCreated, LinePlan]):
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
             expected_revision=expected_revision,
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
 

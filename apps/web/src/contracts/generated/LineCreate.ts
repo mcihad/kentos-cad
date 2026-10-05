@@ -44,6 +44,17 @@ lineWeight?: number,
  */
 attrs?: { [key in string]: string }, 
 /**
+ * The text shown beside it (`EntityBase.label`). Absent: none.
+ */
+label?: string, 
+/**
+ * Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+ * instead of its layer's style: an object template's (docs/adr/0176).
+ * The id is not looked up: the libraries are the host's. Absent: the
+ * layer's style.
+ */
+symbol?: string, 
+/**
  * The document revision the input was prepared against, as decimal text
  * (from a plan, or the document). When given and the document is no
  * longer at it, nothing is written and the answer is `conflict`.

@@ -51,7 +51,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> PolygonCreated:
         """Kapalı alan oluştur: Açık çizimde verilen katmana köşeleri, isteğe bağlı yay
         değerleri ve delikleriyle bir kapalı alan ekler; tek geri alma adımıdır. Katman
@@ -74,9 +76,14 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
             holes: Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
+            label: The text shown beside it (`EntityBase.label`). Absent: none.
             line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
                 thinnest, at most 100; docs/adr/0139): what the tools give a new
                 object from the current weight. Absent: the layer's (katmana göre).
+            symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+                instead of its layer's style: an object template's (docs/adr/0176).
+                The id is not looked up: the libraries are the host's. Absent: the
+                layer's style.
 
         Returns:
             PolygonCreated
@@ -93,7 +100,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             color=color,
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def plan(
@@ -108,7 +117,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> PolygonPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -121,7 +132,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             color=color,
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
     def validate(
@@ -136,7 +149,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
         color: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         holes: Sequence[RingGeometry] | None | Unset = UNSET,
+        label: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
+        symbol: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -149,7 +164,9 @@ class _PolygonCreate(LocalCommand[PolygonCreate, PolygonCreated, PolygonPlan]):
             color=color,
             expected_revision=expected_revision,
             holes=_opt(holes, lambda x: list(x)),
+            label=label,
             line_weight=line_weight,
+            symbol=symbol,
         ))
 
 

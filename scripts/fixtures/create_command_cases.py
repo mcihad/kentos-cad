@@ -60,7 +60,7 @@ SETUP = {
 
 def made(obj, slot, layer_id="yapi"):
     """An object as the document stores it: its geometry, its slot, the input's
-    layer, and its colour, attributes (none: empty) and label when given. An
+    layer, and its colour, attributes (none: empty), label and symbol when given. An
     insert is mirrored or has no `mirror` (docs/adr/0144)."""
     out = json.loads(json.dumps(obj["geometry"]))
     if out["kind"] == "insert" and out.get("mirror") is not True:
@@ -84,6 +84,9 @@ def made(obj, slot, layer_id="yapi"):
     out["attrs"] = obj.get("attrs", {})
     if "label" in obj:
         out["label"] = obj["label"]
+    # An object template's symbol, written as given (docs/adr/0176 §3).
+    if "symbol" in obj:
+        out["symbol"] = obj["symbol"]
     # A linked text knows its object and its scale (docs/adr/0175 §4).
     if out["kind"] == "text" and "labelOf" in obj:
         out["labelOf"] = obj["labelOf"]
@@ -194,6 +197,18 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O(RAY)]}, "result": done([4]),
          "expect": {"entities": {"4": made(O(RAY), 4)}, "revision": "changed"}},
         {"op": "undo", "returns": "Ekle", "note": "Her yazma kendi adımıdır.", "expect": {"ids": IDS + [3]}},
+    ],
+})
+
+# An object template's recipe (docs/adr/0176 §3): the symbol, attributes and label as given; the symbol's id is
+# the libraries' (the host's), not looked up.
+cases.append({
+    "name": "nesne şablonu: sembol, öznitelikler ve etiket verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(ELLIPSE, symbol="temel.alan.kenar-ici", attrs={"Tür": "Havuz"}, label="H1"), O(SPLINE, symbol="u-yok")]},
+         "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(O(ELLIPSE, symbol="temel.alan.kenar-ici", attrs={"Tür": "Havuz"}, label="H1"), 3), "4": made(O(SPLINE, symbol="u-yok"), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS}},
     ],
 })
 
@@ -962,7 +977,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya çevir. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş), etiketi ve sembolüyle yazılır (ADR 0176: sembolün kimliği kitaplıkta aranmaz). Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya çevir. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

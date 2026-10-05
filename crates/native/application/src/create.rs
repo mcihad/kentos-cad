@@ -250,7 +250,7 @@ fn entities(input: &EntitiesCreate) -> Vec<Entity> {
                     color: object.color.clone(),
                     attrs: object.attrs.clone().unwrap_or_default(),
                     label: object.label.clone(),
-                    symbol: None,
+                    symbol: object.symbol.clone(),
                     line_weight: object.line_weight,
                 },
             );

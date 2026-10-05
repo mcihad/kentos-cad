@@ -4,7 +4,7 @@
   "command": "cad.arc.create",
   "commandVersion": 1,
   "title": "Yay oluştur: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0032. Denetim sırası: merkezin (önce x, sonra y), yarıçapın, başlangıç ve bitiş açılarının sonlu olması, yarıçapın sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Açılar radyandır; yay a0'dan a1'e saat yönünün tersine gider ve açılar verildiği gibi saklanır. Yay aracı yöntemlerinin yayını ortak çekirdekle bulur ve bu komutla yazar.",
+  "note": "ADR 0032. Denetim sırası: merkezin (önce x, sonra y), yarıçapın, başlangıç ve bitiş açılarının sonlu olması, yarıçapın sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Açılar radyandır; yay a0'dan a1'e saat yönünün tersine gider ve açılar verildiği gibi saklanır. Yay aracı yöntemlerinin yayını ortak çekirdekle bulur ve bu komutla yazar. Öznitelikler, etiket ve sembol verildiyse olduğu gibi yazılır; sembolün kimliği kitaplıkta aranmaz (nesne şablonu, ADR 0176).",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -216,6 +216,13 @@
       "name": "büyük koordinattaki yay olduğu gibi saklanır",
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125, "a0": 0.123456789, "a1": 2.987654321}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125, "a0": 0.123456789, "a1": 2.987654321}}}}
+      ]
+    },
+    {
+      "name": "nesne şablonunun etiketi, sembolü ve öznitelikleri verildiği gibi yazılır (ADR 0176); sembolün kimliği kitaplıkta aranmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "label": "B1", "symbol": "temel.cizgi.cift", "attrs": {"Tür": "Bordür"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Bordür"}, "label": "B1", "symbol": "temel.cizgi.cift", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9]}}
       ]
     }
   ]

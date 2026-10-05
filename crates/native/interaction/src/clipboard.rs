@@ -234,6 +234,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                     label: e.base().label.clone(),
                     label_of: None,
                     label_scale: None,
+                    symbol: None,
                 })
                 .collect();
             let input = EntitiesCreate {

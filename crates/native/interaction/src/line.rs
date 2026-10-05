@@ -102,6 +102,8 @@ impl Line {
             line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,
+            label: None,
+            symbol: None,
         };
         let result = line::execute(&mut ExecutionContext::new(cx.doc), input);
         let slot = Slot(points::written(result, cx)?.id);

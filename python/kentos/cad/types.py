@@ -925,9 +925,14 @@ class ArcCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     layer_id: str
     c: Vec2
@@ -937,7 +942,9 @@ class ArcCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -952,8 +959,12 @@ class ArcCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -967,7 +978,9 @@ class ArcCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -1766,9 +1779,14 @@ class CircleCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     layer_id: str
     c: Vec2
@@ -1776,7 +1794,9 @@ class CircleCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -1789,8 +1809,12 @@ class CircleCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -1802,7 +1826,9 @@ class CircleCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -3758,9 +3784,14 @@ class LineCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     layer_id: str
     a: Vec2
@@ -3768,7 +3799,9 @@ class LineCreate(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3781,8 +3814,12 @@ class LineCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -3794,7 +3831,9 @@ class LineCreate(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -3960,6 +3999,10 @@ class NewObject(_Model):
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     geometry: EntityGeometry
     attrs: dict[str, str] | None | Unset = UNSET
@@ -3968,6 +4011,7 @@ class NewObject(_Model):
     label_of: str | None | Unset = UNSET
     label_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -3984,6 +4028,8 @@ class NewObject(_Model):
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -3996,6 +4042,7 @@ class NewObject(_Model):
             label_of=data.get("labelOf", UNSET),
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -4094,6 +4141,10 @@ class PointCreate(_Model):
             longer at it, nothing is written and the answer is `conflict`.
         label: The text shown beside it (`EntityBase.label`): a point's name, a spot
             elevation. Absent: none.
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
         z: Its elevation (kot), in metres. Absent: none.
     """
     layer_id: str
@@ -4102,6 +4153,7 @@ class PointCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -4116,6 +4168,8 @@ class PointCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -4129,6 +4183,7 @@ class PointCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             label=data.get("label", UNSET),
+            symbol=data.get("symbol", UNSET),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -4326,9 +4381,14 @@ class PolygonCreate(_Model):
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
         holes: Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     layer_id: str
     pts: list[Vec2]
@@ -4337,7 +4397,9 @@ class PolygonCreate(_Model):
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     holes: list[RingGeometry] | None | Unset = UNSET
+    label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4353,8 +4415,12 @@ class PolygonCreate(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.holes is not UNSET:
             out["holes"] = None if self.holes is None else [e0.to_json() for e0 in self.holes]
+        if self.label is not UNSET:
+            out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -4367,7 +4433,9 @@ class PolygonCreate(_Model):
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             holes=UNSET if "holes" not in data else None if data["holes"] is None else [RingGeometry.from_json(e0) for e0 in data["holes"]],
+            label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
@@ -4454,9 +4522,14 @@ class PolylineCreate(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        label: The text shown beside it (`EntityBase.label`). Absent: none.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
+        symbol: Its own symbol, a library item's id (`EntityBase.symbol`), drawn
+            instead of its layer's style: an object template's (docs/adr/0176).
+            The id is not looked up: the libraries are the host's. Absent: the
+            layer's style.
     """
     layer_id: str
     pts: list[Vec2]
@@ -4464,7 +4537,9 @@ class PolylineCreate(_Model):
     bulges: list[float] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -4478,8 +4553,12 @@ class PolylineCreate(_Model):
             out["color"] = self.color
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
         return out
 
     @classmethod
@@ -4491,7 +4570,9 @@ class PolylineCreate(_Model):
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
             color=data.get("color", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
         )
 
 
