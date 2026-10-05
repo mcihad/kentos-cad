@@ -208,6 +208,8 @@ impl LabelsToText {
                 line_weight: None,
                 attrs: None,
                 label: None,
+                label_of: None,
+                label_scale: None,
             })
             .collect();
         let active = cx.memory.labels_active;

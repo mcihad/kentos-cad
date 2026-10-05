@@ -58,6 +58,8 @@ pub fn add_points(
                 line_weight: None,
                 attrs: Some(attrs),
                 label: Some(pt.name.clone()),
+                label_of: None,
+                label_scale: None,
             }
         })
         .collect();

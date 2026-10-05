@@ -164,9 +164,10 @@ class Case:
                 raise AssertionError(f"{at}: unknown expectation {key}")
 
     def block_ids(self, value: Any, at: str) -> Any:
-        """An expected object with its block ids filled in (`$blockOf:Ad`, `$block:name`); nothing else is a placeholder."""
+        """An expected object with its block ids (`$blockOf:Ad`, `$block:name`) and the persistent ids of the objects it
+        names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4) filled in; nothing else is a placeholder."""
         if isinstance(value, str):
-            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:")) else value
+            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:")) else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
         if isinstance(value, dict):

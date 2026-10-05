@@ -11,7 +11,7 @@
 | Proje türleri | 4 | 2 | 0 | 2 |
 | Ayarlar | 80 | 80 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 333 | 333 | 0 | 0 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 335 | 0 | 0 |
 | Pencereler ve paneller | 94 | 94 | 0 | 0 |
 
 ## Kısmi (0)
@@ -56,7 +56,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
 | Ayarlar | 77 | 0 | 2 | 0 | 1 | 80 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
-| `.kcad` alanları (v1 okunur, v2 yazılır) | 333 | 0 | 0 | 0 | 0 | 333 |
+| `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 0 | 0 | 0 | 0 | 335 |
 | Pencereler ve paneller | 76 | 2 | 15 | 0 | 1 | 94 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
@@ -176,7 +176,7 @@ Yok.
 
 Yok.
 
-#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 333)
+#### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 335)
 
 Yok.
 

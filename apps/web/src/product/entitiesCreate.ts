@@ -5,6 +5,7 @@ import type { EntitiesCreated } from '../contracts/generated/EntitiesCreated';
 import type { EntitiesCreatePlan } from '../contracts/generated/EntitiesCreatePlan';
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { NewObject } from '../contracts/generated/NewObject';
+import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import { checkLineWeight, checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
@@ -24,9 +25,12 @@ import { checkBlocks, checkGeometry, geometryOf } from './entitiesEdit';
  *
  * The checks, in order (the first that fails answers): at least one object;
  * every geometry, in order, by `cad.entities.edit`'s rules (enough points
- * for its kind, every number finite, a positive radius) and its line weight
- * from 0 to 100 mm when given (docs/adr/0139); the expected
- * revision, then the layer (checks.ts, for the reasons polygonCreate.ts gives).
+ * for its kind, every number finite, a positive radius), its line weight
+ * from 0 to 100 mm when given (docs/adr/0139) and its link to the object
+ * whose label it writes, when given: a text's, whole and well formed
+ * (docs/adr/0175 §4); the expected revision, then the layer (checks.ts, for
+ * the reasons polygonCreate.ts gives); every insert's block, then every
+ * linked text's object, the drawing's.
  */
 
 /** The undo step's name: the drawing tool's when it has its own, else the document's “Ekle”. */
@@ -53,11 +57,30 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   labels: 'Etiketleri yazıya çevir',
 };
 
+/**
+ * A new object's link to the object whose label it writes, when it has one (docs/adr/0175 §4): a text's, both
+ * fields, the id a persistent id's text, the scale finite and over 0 (`invalid_link`).
+ */
+function checkLink(o: NewObject, i: number): Stop | null {
+  const at = (field: string) => `objects[${i}].${field}`;
+  const of = o.labelOf ?? undefined;
+  const scale = o.labelScale ?? undefined;
+  if (of === undefined && scale === undefined) return null;
+  if (o.geometry.kind !== 'text')
+    return failed(error('invalid_link', `Yalnız yazı bir nesnenin etiketine bağlanır; ${i + 1}. nesne yazı değil. Bağı kaldırın.`, at(of !== undefined ? 'labelOf' : 'labelScale')));
+  if (of === undefined || scale === undefined)
+    return failed(error('invalid_link', 'Bağlı yazının nesnesi ve ölçeği birlikte verilir. İkisini birden verin ya da hiçbirini vermeyin.', at(of === undefined ? 'labelOf' : 'labelScale')));
+  if (!isUuid(of)) return failed(error('invalid_link', `Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “${of}” verildi.`, at('labelOf')));
+  if (!(Number.isFinite(scale) && scale > 0))
+    return failed(error('invalid_link', "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin.", at('labelScale')));
+  return null;
+}
+
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */
 function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[] {
   if (!input.objects.length) return failed(error('no_objects', 'Eklenecek nesne verilmedi. En az bir nesne verin.', 'objects'));
   for (const [i, o] of input.objects.entries()) {
-    const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin') ?? checkLineWeight(o.lineWeight, `objects[${i}].lineWeight`);
+    const stop = checkGeometry(o.geometry, i, 'objects', 'nesnenin') ?? checkLineWeight(o.lineWeight, `objects[${i}].lineWeight`) ?? checkLink(o, i);
     if (stop) return stop;
   }
   const stop = checkRevision(doc, input.expectedRevision);
@@ -65,11 +88,19 @@ function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[]
   const layer = checkLayer(doc, input.layerId);
   if (!Array.isArray(layer)) return layer;
   // An insert's block is the drawing's (docs/adr/0144).
-  return checkBlocks(
+  const blocks = checkBlocks(
     doc,
     input.objects.map((o) => o.geometry),
     'objects',
-  ) ?? layer;
+  );
+  if (blocks) return blocks;
+  // A linked text's object is the drawing's (docs/adr/0175 §4).
+  for (const [i, o] of input.objects.entries())
+    if (o.labelOf != null && !doc.byUid(o.labelOf))
+      return failed(
+        error('link_not_found', `“${o.labelOf}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin.`, `objects[${i}].labelOf`),
+      );
+  return layer;
 }
 
 /** An object as the document stores it: its own copies of every field, never the caller's objects. */
@@ -81,6 +112,8 @@ function entityOf(o: NewObject, layerId: string): NewEntity {
     ...(o.lineWeight != null && { lineWeight: o.lineWeight }),
     attrs: { ...o.attrs },
     ...(o.label != null && { label: o.label }),
+    // A linked text knows its object (docs/adr/0175 §4).
+    ...(o.geometry.kind === 'text' && o.labelOf != null && { labelOf: o.labelOf, labelScale: o.labelScale }),
   } as unknown as NewEntity;
 }
 

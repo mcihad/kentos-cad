@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 333,
-      "implemented": 333,
+      "total": 335,
+      "implemented": 335,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 333,
-        "implemented": 333,
+        "total": 335,
+        "implemented": 335,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -18301,6 +18301,32 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "label",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.labelOf",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelOf",
+      "type": "EntityId",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.labelScale",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "labelScale",
+      "type": "number",
       "optional": true,
       "status": "implemented",
       "platforms": {

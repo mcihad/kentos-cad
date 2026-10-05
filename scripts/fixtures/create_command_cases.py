@@ -84,6 +84,10 @@ def made(obj, slot, layer_id="yapi"):
     out["attrs"] = obj.get("attrs", {})
     if "label" in obj:
         out["label"] = obj["label"]
+    # A linked text knows its object and its scale (docs/adr/0175 §4).
+    if out["kind"] == "text" and "labelOf" in obj:
+        out["labelOf"] = obj["labelOf"]
+        out["labelScale"] = obj["labelScale"]
     return out
 
 
@@ -323,6 +327,67 @@ cases.append({
          "expect": {"ids": IDS + [3, 4, 5], "entities": {str(3 + i): made(O(g), 3 + i) for i, g in enumerate(LABEL_TEXTS)}, "revision": "changed"}},
         {"op": "undo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
         {"op": "redo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS + [3, 4, 5]}},
+    ],
+})
+
+# Nesneye bağlı (docs/adr/0175 §4): the text knows the object whose label it writes (the line in slot 1, by its
+# persistent id) and the scale it was written at; the command writes it as given and checks the link.
+LINKED_TEXT = {"kind": "text", "p": P(487010, 4420001.5), "text": "Hat 1", "height": 2.6458333333333335, "rotation": 0, "align": "middleCenter"}
+LINE = {"kind": "line", "a": P(487000, 4420010), "b": P(487010, 4420010)}
+NOT_IN_DRAWING = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4ffe"
+NIL = "00000000-0000-0000-0000-000000000000"
+BOTH = "Bağlı yazının nesnesi ve ölçeği birlikte verilir. İkisini birden verin ya da hiçbirini vermeyin."
+SCALE = "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin."
+
+
+def not_a_text(n, field):
+    return failed("invalid_link", f"Yalnız yazı bir nesnenin etiketine bağlanır; {n}. nesne yazı değil. Bağı kaldırın.", f"objects[{n - 1}].{field}")
+
+
+def link_not_found(uid_text, i):
+    return failed("link_not_found", f"“{uid_text}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin.", f"objects[{i}].labelOf")
+
+
+cases.append({
+    "name": "Nesneye bağlı: yazı etiketini yazdığı nesnenin kalıcı kimliğini ve ölçeğini taşır; plan gösterir, yazma yazar, geri alma ve yineleme",
+    "note": "ADR 0175 §4. Bağlı yazı 1 yuvasındaki çizginin etiketini 1:1000'de yazar.",
+    "steps": [
+        {"op": "plan", "input": {"layerId": "yapi", "operation": "labels", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=1000)]},
+         "result": {"status": "completed", "output": {"entities": [made(O(LINKED_TEXT, labelOf=uid(1), labelScale=1000), 0)], "revision": "$current"}, "warnings": []}, "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "labels", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=1000), O(LABEL_TEXTS[0])]}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(O(LINKED_TEXT, labelOf=uid(1), labelScale=1000), 3), "4": made(O(LABEL_TEXTS[0]), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS + [3, 4], "entities": {"3": made(O(LINKED_TEXT, labelOf=uid(1), labelScale=1000), 3)}}},
+    ],
+})
+
+cases.append({
+    "name": "bağ yalnız yazıda, iki alanıyla, kalıcı kimlik yazımıyla ve sonlu, sıfırdan büyük ölçekle olur: invalid_link, her nesnenin geometrisinden sonra, sürümden önce",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINE, labelOf=uid(1), labelScale=1000)], "expectedRevision": "999"}, "result": not_a_text(1, "labelOf"),
+         "note": "Çizgi bir etiketi yazmaz; sürüm denetimi daha sonra.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINE, labelScale=1000)]}, "result": not_a_text(1, "labelScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT), O(LINKED_TEXT, labelOf=uid(1))]}, "result": failed("invalid_link", BOTH, "objects[1].labelScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelScale=1000)]}, "result": failed("invalid_link", BOTH, "objects[0].labelOf"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf="Hat-1", labelScale=1000)]},
+         "result": failed("invalid_link", "Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “Hat-1” verildi.", "objects[0].labelOf"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=0)]}, "result": failed("invalid_link", SCALE, "objects[0].labelScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=-500)]}, "result": failed("invalid_link", SCALE, "objects[0].labelScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=uid(1), labelScale=1000)]}, "nonFinite": {"objects[0].labelScale": "Infinity"},
+         "result": failed("invalid_link", SCALE, "objects[0].labelScale"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**LINKED_TEXT, "text": " "}, labelOf=uid(1), labelScale=0)]},
+         "result": failed("empty_text", "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "objects[0].geometry.text"),
+         "note": "Geometri önce denetlenir.", "expect": NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "bağlı yazının nesnesi çizimin olmalı: link_not_found, sırayla; katman denetiminden sonra",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=uid(2), labelScale=1000), O(LINKED_TEXT, labelOf=NOT_IN_DRAWING, labelScale=1000)]},
+         "result": link_not_found(NOT_IN_DRAWING, 1), "note": "2 yuvasındaki daire çizimde; ikinci yazının nesnesi yok.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(LINKED_TEXT, labelOf=NIL, labelScale=1000)]}, "result": link_not_found(NIL, 0), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [O(LINKED_TEXT, labelOf=NOT_IN_DRAWING, labelScale=1000)]}, "result": locked("Kilitli katman"), "expect": NOTHING},
     ],
 })
 

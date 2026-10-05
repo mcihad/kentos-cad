@@ -10,7 +10,7 @@
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
-//! 2. something to set;
+//! 2. something to set (Bağı kopar's `unlink` too, docs/adr/0175 §4);
 //! 3. no attribute name empty or only white space (Unicode's `White_Space`);
 //!    the line weight given a number from 0 to 100 mm;
 //! 4. the expected revision (every command's, `checks.rs`);
@@ -108,6 +108,8 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::Symbol => "Sembol ata",
         PropertiesOperation::Attributes => "Değiştir",
         PropertiesOperation::Label => "Etiket değiştir",
+        // Öznitelikler's Bağı kopar (docs/adr/0175 §4).
+        PropertiesOperation::Unlink => "Bağı kopar",
     }
 }
 
@@ -126,9 +128,19 @@ struct Checked {
 }
 
 /// `e` as the input asks, or `None` when it already is: only the fields
-/// every object has change, so only they are compared.
+/// every object has change, so only they are compared, and a linked text's
+/// link (docs/adr/0175 §4).
 fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
     let mut next = e.clone();
+    let mut unlinked = false;
+    if input.unlink
+        && let Entity::Text(text) = &mut next
+        && text.label_of.is_some()
+    {
+        text.label_of = None;
+        text.label_scale = None;
+        unlinked = true;
+    }
     let base = next.base_mut();
     if let Some(layer) = &input.layer_id {
         base.layer_id.clone_from(layer);
@@ -155,7 +167,7 @@ fn changed(e: &Entity, input: &EntitiesSetProperties) -> Option<Entity> {
             }
         }
     }
-    (next.base() != e.base()).then_some(next)
+    (unlinked || next.base() != e.base()).then_some(next)
 }
 
 /// The checks in the contract's order.
@@ -168,6 +180,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         && input.symbol.is_none()
         && attrs.is_none()
         && input.label.is_none()
+        && !input.unlink
     {
         return Err(Stop::Failed(error(
             codes::NOTHING_TO_SET,

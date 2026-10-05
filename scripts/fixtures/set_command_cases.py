@@ -149,6 +149,30 @@ def conflict():
     return {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}}
 
 
+# Bağı kopar (docs/adr/0175 §4): a text that writes an object's label (9; its object is not in this drawing: Bağı kopar
+# does not look at it) and a text of its own (10).
+LINKED_TO = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"
+L_ENTITIES = ENTITIES + [
+    {"kind": "text", "id": 9, "layerId": "yapi", "attrs": {}, "p": P(487040, 4420010), "text": "7", "height": 2.6458333333333335, "rotation": 0,
+     "align": "middleCenter", "labelOf": LINKED_TO, "labelScale": 1000},
+    {"kind": "text", "id": 10, "layerId": "yapi", "attrs": {}, "p": P(487000, 4420010), "text": "Not", "height": 2.5, "rotation": 0},
+]
+L_SETUP = {**SETUP, "entities": L_ENTITIES}
+L_IDS = [e["id"] for e in L_ENTITIES]
+
+
+def L(i):
+    return json.loads(json.dumps(next(e for e in L_ENTITIES if e["id"] == i)))
+
+
+def unlinked(i):
+    """The linked text without its link: its object and scale gone, nothing else of it changed."""
+    e = L(i)
+    e.pop("labelOf")
+    e.pop("labelScale")
+    return e
+
+
 cases = []
 
 # ── Writing ────────────────────────────────────────────────────────────
@@ -504,6 +528,8 @@ def write(command, title, note, cases):
         lines = ["    {", f'      "name": {compact(c["name"])},']
         if "note" in c:
             lines.append(f'      "note": {compact(c["note"])},')
+        if "setup" in c:
+            lines.append(f'      "setup": {compact(c["setup"])},')
         lines.append('      "steps": [')
         lines.append(",\n".join(f"        {compact(st)}" for st in c["steps"]))
         lines.append("      ]")
@@ -523,10 +549,29 @@ def write(command, title, note, cases):
         f.write(text)
 
 
+cases.append({
+    "name": "Bağı kopar: bağlı yazının nesnesi ve ölçeği kalkar, yazı yerinde ve olduğu gibi kalır; bağsız yazı ve öbür nesneler değişmez, çıktıda yoktur; adım “Bağı kopar”",
+    "note": "ADR 0175 §4. 9 bir nesnenin etiketini yazan yazı (nesnesi bu çizimde yok; Bağı kopar nesneye bakmaz), 10 bağsız yazı.",
+    "setup": L_SETUP,
+    "steps": [
+        {"op": "plan", "input": {"uids": uids(9, 10, 1), "unlink": True, "operation": "unlink"},
+         "result": {"status": "completed", "output": {"changed": [planned(unlinked(9))], "revision": "$current"}, "warnings": []},
+         "expect": {"ids": L_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(9, 10, 1), "unlink": True, "operation": "unlink"}, "result": done([9]),
+         "expect": {"ids": L_IDS, "entities": {"9": unlinked(9), "10": L(10), "1": L(1)}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Bağı kopar", "expect": {"entities": {"9": L(9)}, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Bağı kopar", "expect": {"entities": {"9": unlinked(9)}}},
+        {"op": "execute", "input": {"uids": uids(9, 10), "unlink": True, "operation": "unlink"}, "result": done([]),
+         "note": "Bağı zaten kopmuş: hiçbir şey yazılmaz.", "expect": {"entities": {"9": unlinked(9)}, "revision": "same"}},
+        {"op": "execute", "input": {"uids": uids(10), "unlink": False, "operation": "unlink"}, "result": failed("nothing_to_set", NOTHING_TO_SET),
+         "note": "unlink false bir şey vermez.", "expect": {"revision": "same"}},
+    ],
+})
+
 write(
     "cad.entities.set",
     "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",
-    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir. Kurulumdaki en büyük kimlik 8. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir, Bağı kopar (unlink: bağlı yazının labelOf ve labelScale'i kalkar, ADR 0175 §4; unlink false bir şey vermez). Kurulumdaki en büyük kimlik 8; Bağı kopar'ın kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

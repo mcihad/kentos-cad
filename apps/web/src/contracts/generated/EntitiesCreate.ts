@@ -18,10 +18,15 @@ import type { NewObject } from "./NewObject";
  * edge is an arc), `empty_text` (a text whose text is empty or only white space),
  * `invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an
  * insert's), `invalid_line_weight` (the object's weight not from 0 to 100
- * mm); then `invalid_revision`, `revision_conflict` (status `conflict`),
+ * mm), `invalid_link` (`labelOf` or `labelScale` on an object that is not
+ * a text, one without the other, an id that is not lowercase UUID text
+ * with hyphens, a scale not finite or not over 0; docs/adr/0175 §4); then
+ * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
- * insert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.
- * Warning: `layer_hidden` (they are written all the same).
+ * insert's block, in order; docs/adr/0144), `link_not_found` (each linked
+ * text's object, in order: no object of the drawing has that id); on the
+ * desktop also `slots_exhausted`. Warning: `layer_hidden` (they are
+ * written all the same).
  */
 export type EntitiesCreate = { 
 /**

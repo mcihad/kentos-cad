@@ -138,9 +138,13 @@ class Run {
     return value;
   }
 
-  /** An expected object with its block ids filled in (`$blockOf:Ad`, `$block:name`, docs/adr/0144); nothing else of it is read as a placeholder. */
+  /**
+   * An expected object with its block ids (`$blockOf:Ad`, `$block:name`, docs/adr/0144) and the persistent ids of the
+   * objects it names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4) filled in; nothing else of it is read as
+   * a placeholder.
+   */
   private blockIds(value: Json, where: string): Json {
-    if (typeof value === 'string') return value.startsWith('$blockOf:') || value.startsWith('$block:') ? this.fill(value, where) : value;
+    if (typeof value === 'string') return /^\$(blockOf|block|uidOf):/.test(value) ? this.fill(value, where) : value;
     if (Array.isArray(value)) return value.map((v) => this.blockIds(v, where));
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, this.blockIds(v, where)]));
     return value;

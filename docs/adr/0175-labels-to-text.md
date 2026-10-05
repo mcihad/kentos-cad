@@ -58,6 +58,11 @@ sınır, ölçek aralığı, en küçük nesne, okunur yön, inceltme ve hücrel
 `cad.entities.create`'in yeni işlemi `labels` (adım “Etiketleri yazıya çevir”): yazılar tek adımda, tek katmana. Hesap çağıranındır
 (çekirdeğin kuralı), komut yazıları verildiği gibi yazar; ortak durumlar `fixtures/commands/v1`'de, bağımsız denetimle.
 
+Bağlı yazı (§4) için `NewObject`'in iki alanı: `labelOf` (nesnenin kalıcı kimliği, metin) ve `labelScale` (N). Redler: `invalid_link`
+(yazı olmayan nesnede, biri öbürü olmadan, kalıcı kimlik yazımında olmayan kimlik, sonlu ve sıfırdan büyük olmayan ölçek; nesnenin
+geometrisinden ve kalınlığından sonra) ve `link_not_found` (adlandırdığı nesne çizimde yok; katman ve bloklardan sonra, sırayla).
+`cad.entities.set`'in `unlink`'i (işlem `unlink`, adım “Bağı kopar”) bağlı yazıların iki alanını siler; öbür nesneler değişmez.
+
 ### 3. Araç: Etiketleri yazıya çevir
 
 Topolojik temizlik (ADR 0148) gibi: kapsamı başlarken alır, seçenekleri komut satırındadır, önizler, Enter yazar. Böylece iki platform aynı
@@ -68,10 +73,11 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
   yoksa türünün varsayılanıdır (çizimdeki gibi; etiket stili olmayan katmanda alan, daire, nokta, çoklu çizgi ve çizgi). Etiketi boş olan, yazı,
   ölçü, kılavuz ve stilsiz türler girmez; hiç etiket yoksa araç söyler ve çıkar.
 - **Seçenekler**: Ölçek (Ö): `1:N` ya da `N` yazılır, her çalışmada projenin çizim ölçeğinden başlar; Örtüşenler de (R), Zemin (Z) ve
-  Katman (K) oturum boyunca kalır. Örtüşenler de (R): kapalı başlar;
+  Katman (K) ve Nesneye bağlı (B) oturum boyunca kalır. Örtüşenler de (R): kapalı başlar;
   Zemin (Z): yazılara zemin (ADR 0145), kapalı başlar; Katman (K): projenin standart yazı katmanı (`yazi`, yeni projedeki adıyla:
   CBS'de “Yazılar”, CAD'de “Yazı”; yoksa aynı adımda açılır, ADR 0067'nin `parsel` ve `kot` katmanları gibi) ya da etkin katman.
-  Nesneye bağlı (B) 4. adımla gelir (§4).
+  Nesneye bağlı (B): kapalı başlar; açıkken yazılar nesnelerine bağlı yazılır (§4).
+- Bağlı yazısı olan nesnenin etiketi kapsama girmez: etiketi zaten yazıdır (§4).
 - **Önizleme:** yazılar yerlerinde, boylarında ve dönüşlerinde soluk; imlecin yanında sayılar: kaç etiketin yazı olacağı, kaçının örtüşme, ölçek
   ya da boyut yüzünden atlanacağı.
 - **Sonuç:** Enter (ya da Uygula) yazıları `cad.entities.create` (`labels`) ile hedef katmana tek adımda yazar; yazı katmanı yoksa

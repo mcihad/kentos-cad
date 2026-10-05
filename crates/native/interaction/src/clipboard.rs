@@ -232,6 +232,8 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                     line_weight: e.base().line_weight,
                     attrs: Some(e.base().attrs.clone()),
                     label: e.base().label.clone(),
+                    label_of: None,
+                    label_scale: None,
                 })
                 .collect();
             let input = EntitiesCreate {
@@ -274,6 +276,7 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
                 label: None,
                 operation: PropertiesOperation::Symbol,
                 expected_revision: None,
+                unlink: false,
             };
             if let refused @ (CommandResult::Failed { .. }
             | CommandResult::Conflict { .. }

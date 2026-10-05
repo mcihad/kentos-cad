@@ -55,6 +55,7 @@ impl App {
                 label: None,
                 operation: PropertiesOperation::Symbol,
                 expected_revision: None,
+                unlink: false,
             };
             // The step keeps the symbol's name, “Sembol: …”: the command knows no library.
             let label = if id.is_some() {

@@ -27,4 +27,17 @@ attrs?: { [key in string]: string },
 /**
  * The text shown beside it (`EntityBase.label`). Absent: none.
  */
-label?: string, };
+label?: string, 
+/**
+ * The object whose label this new text writes (Etiketleri yazıya
+ * çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
+ * (lowercase UUID text with hyphens), an object of the drawing. On a
+ * text only, given with `labelScale`; the text then follows the object
+ * (`TextEntity.label_of`). Absent: a text of its own.
+ */
+labelOf?: string, 
+/**
+ * The scale's denominator (1:N) the linked label is written at:
+ * finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
+ */
+labelScale?: number, };

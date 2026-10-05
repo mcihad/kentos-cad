@@ -12,16 +12,18 @@
 //! 1. at least one object;
 //! 2. every geometry, in order, by `cad.entities.edit`'s rules: enough
 //!    points for its kind, every number finite, a circle's or an arc's
-//!    radius above zero, an insert's scale above zero; and its line weight
-//!    from 0 to 100 mm when given;
+//!    radius above zero, an insert's scale above zero; its line weight
+//!    from 0 to 100 mm when given; its link to the object whose label it
+//!    writes, when given, a text's, whole and well formed (docs/adr/0175 §4);
 //! 3. the expected revision, then the layer (every create command's, `checks.rs`);
-//! 4. every insert's block is the drawing's (docs/adr/0144).
+//! 4. every insert's block is the drawing's (docs/adr/0144);
+//! 5. every linked text's object is the drawing's.
 
 use kentos_contracts::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntitiesCreatePlan,
-    EntitiesCreated, Entity, EntityBase,
+    EntitiesCreated, Entity, EntityBase, EntityGeometry, EntityId, NewObject, label_scale_ok,
 };
-use kentos_domain::{Document, labels};
+use kentos_domain::{Document, Uuid, labels};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -143,6 +145,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
     for (i, object) in input.objects.iter().enumerate() {
         check_geometry(&object.geometry, "objects", i, "nesnenin")?;
         checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
+        check_link(object, i)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let warnings = checks::layer(doc, &input.layer_id)?;
@@ -156,7 +159,80 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
             .map(|(i, o)| (i, &o.geometry)),
         "objects",
     )?;
+    // A linked text's object is the drawing's (docs/adr/0175 §4).
+    for (i, object) in input.objects.iter().enumerate() {
+        if let Some(of) = &object.label_of
+            && Uuid::parse_str(of)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .is_none()
+        {
+            return Err(Stop::Failed(error(
+                codes::LINK_NOT_FOUND,
+                format!(
+                    "“{of}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Çizimdeki bir nesnenin kimliğini verin."
+                ),
+                Some(format!("objects[{i}].labelOf")),
+            )));
+        }
+    }
     Ok(warnings)
+}
+
+/// A new object's link to the object whose label it writes, when it has one
+/// (docs/adr/0175 §4): a text's, both fields, the id a persistent id's text,
+/// the scale finite and over 0 (`invalid_link`).
+fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
+    let refuse = |field: &str, message: String| {
+        Err(Stop::Failed(error(
+            codes::INVALID_LINK,
+            message,
+            Some(format!("objects[{i}].{field}")),
+        )))
+    };
+    let (of, scale) = (&object.label_of, object.label_scale);
+    if of.is_none() && scale.is_none() {
+        return Ok(());
+    }
+    if !matches!(object.geometry, EntityGeometry::Text { .. }) {
+        let field = if of.is_some() {
+            "labelOf"
+        } else {
+            "labelScale"
+        };
+        return refuse(
+            field,
+            format!(
+                "Yalnız yazı bir nesnenin etiketine bağlanır; {}. nesne yazı değil. Bağı kaldırın.",
+                i + 1
+            ),
+        );
+    }
+    let (Some(of), Some(scale)) = (of, scale) else {
+        let field = if of.is_none() {
+            "labelOf"
+        } else {
+            "labelScale"
+        };
+        return refuse(
+            field,
+            "Bağlı yazının nesnesi ve ölçeği birlikte verilir. İkisini birden verin ya da hiçbirini vermeyin.".into(),
+        );
+    };
+    if !checks::is_uid_text(of) {
+        return refuse(
+            "labelOf",
+            format!("Bağlı nesnenin kimliği küçük harfli, tireli bir UUID olmalı; “{of}” verildi."),
+        );
+    }
+    if !label_scale_ok(scale) {
+        return refuse(
+            "labelScale",
+            "Bağlı yazının ölçeği (1:N'deki N) sonlu ve sıfırdan büyük olmalı. Ölçeği düzeltin."
+                .into(),
+        );
+    }
+    Ok(())
 }
 
 /// The objects `input` describes, as the document stores them: slot 0 (given
@@ -166,7 +242,7 @@ fn entities(input: &EntitiesCreate) -> Vec<Entity> {
         .objects
         .iter()
         .map(|object| {
-            entity_of(
+            let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
                     id: 0,
@@ -177,7 +253,13 @@ fn entities(input: &EntitiesCreate) -> Vec<Entity> {
                     symbol: None,
                     line_weight: object.line_weight,
                 },
-            )
+            );
+            // A linked text knows its object (docs/adr/0175 §4).
+            if let Entity::Text(text) = &mut entity {
+                text.label_of = object.label_of.as_deref().and_then(EntityId::parse);
+                text.label_scale = object.label_of.as_ref().and(object.label_scale);
+            }
+            entity
         })
         .collect()
 }

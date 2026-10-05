@@ -453,6 +453,7 @@ fn set_input(
         label: None,
         operation,
         expected_revision: None,
+        unlink: false,
     }
 }
 

@@ -546,6 +546,7 @@ class PropertiesOperation(_StrEnum):
     - ``symbol``: Sembol ver and Sembolü kaldır: their own symbol, or their layer
     - ``attributes``: An attribute row of Öznitelikler, with the label that shows the
     - ``label``: The label alone. “Etiket değiştir”.
+    - ``unlink``: Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
     """
     LAYER = "layer"
     COLOR = "color"
@@ -553,9 +554,10 @@ class PropertiesOperation(_StrEnum):
     SYMBOL = "symbol"
     ATTRIBUTES = "attributes"
     LABEL = "label"
+    UNLINK = "unlink"
 
 
-PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 
@@ -2461,10 +2463,15 @@ class EntitiesCreate(_Model):
     edge is an arc), `empty_text` (a text whose text is empty or only white space),
     `invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an
     insert's), `invalid_line_weight` (the object's weight not from 0 to 100
-    mm); then `invalid_revision`, `revision_conflict` (status `conflict`),
+    mm), `invalid_link` (`labelOf` or `labelScale` on an object that is not
+    a text, one without the other, an id that is not lowercase UUID text
+    with hyphens, a scale not finite or not over 0; docs/adr/0175 §4); then
+    `invalid_revision`, `revision_conflict` (status `conflict`),
     `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
-    insert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.
-    Warning: `layer_hidden` (they are written all the same).
+    insert's block, in order; docs/adr/0144), `link_not_found` (each linked
+    text's object, in order: no object of the drawing has that id); on the
+    desktop also `slots_exhausted`. Warning: `layer_hidden` (they are
+    written all the same).
     Attributes:
         layer_id: The layer they go on: a layer's id (`LayerNode.id`), not a group's.
         objects: What is written, at least one, in this order.
@@ -2836,7 +2843,7 @@ class EntitiesSetProperties(_Model):
     Öznitelikler fills `uids` from the selection and the property from the
     row; the command reads no selection, library or view.
 
-    A property absent from the input stays as it is. `color`, `lineWeight`,
+    A property absent from the input stays as it is (`unlink`: false). `color`, `lineWeight`,
     `symbol` and `label` are removed with null: the object is drawn in its
     layer's colour, weight and style again, and shows no label. An attribute is set by its name, or
     removed with null; the attributes not named stay. What an object already
@@ -2880,6 +2887,10 @@ class EntitiesSetProperties(_Model):
         symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
             instead of their layer's style; null: the layer's style. The id is
             not looked up: the libraries are the host's. Absent: unchanged.
+        unlink: Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
+            among them that write an object's label (`TextEntity.label_of` and
+            `label_scale` removed); they stay where and as they are and follow
+            nothing. Other objects are left alone. Absent or false: unchanged.
     """
     uids: list[str]
     operation: PropertiesOperation | PropertiesOperationName
@@ -2890,6 +2901,7 @@ class EntitiesSetProperties(_Model):
     layer_id: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    unlink: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -2909,6 +2921,8 @@ class EntitiesSetProperties(_Model):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.unlink is not UNSET:
+            out["unlink"] = self.unlink
         return out
 
     @classmethod
@@ -2923,6 +2937,7 @@ class EntitiesSetProperties(_Model):
             layer_id=data.get("layerId", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+            unlink=data.get("unlink", UNSET),
         )
 
 
@@ -3935,6 +3950,13 @@ class NewObject(_Model):
         attrs: GIS attributes, text in v1. Absent: none.
         color: Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).
         label: The text shown beside it (`EntityBase.label`). Absent: none.
+        label_of: The object whose label this new text writes (Etiketleri yazıya
+            çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
+            (lowercase UUID text with hyphens), an object of the drawing. On a
+            text only, given with `labelScale`; the text then follows the object
+            (`TextEntity.label_of`). Absent: a text of its own.
+        label_scale: The scale's denominator (1:N) the linked label is written at:
+            finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
             thinnest, at most 100; docs/adr/0139): what the tools give a new
             object from the current weight. Absent: the layer's (katmana göre).
@@ -3943,6 +3965,8 @@ class NewObject(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_of: str | None | Unset = UNSET
+    label_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -3954,6 +3978,10 @@ class NewObject(_Model):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_of is not UNSET:
+            out["labelOf"] = self.label_of
+        if self.label_scale is not UNSET:
+            out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         return out
@@ -3965,6 +3993,8 @@ class NewObject(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_of=data.get("labelOf", UNSET),
+            label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
         )
 

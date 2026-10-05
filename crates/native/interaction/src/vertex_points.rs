@@ -110,6 +110,8 @@ impl VertexPoints {
                 attrs: (!code.is_empty())
                     .then(|| BTreeMap::from([("Kod".to_owned(), code.clone())])),
                 label: pt.name.clone(),
+                label_of: None,
+                label_scale: None,
             })
             .collect();
         let names = match (&points[0].name, &points[count - 1].name) {

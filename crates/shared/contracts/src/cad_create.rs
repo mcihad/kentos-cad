@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[cfg(feature = "schema")]
-use crate::cad::REVISION_TEXT;
+use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::cad_edit::EntityGeometry;
 use crate::entity::Entity;
 
@@ -110,6 +110,20 @@ pub struct NewObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub label: Option<String>,
+    /// The object whose label this new text writes (Etiketleri yazıya
+    /// çevir's “Nesneye bağlı”, docs/adr/0175 §4): its persistent id
+    /// (lowercase UUID text with hyphens), an object of the drawing. On a
+    /// text only, given with `labelScale`; the text then follows the object
+    /// (`TextEntity.label_of`). Absent: a text of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub label_of: Option<String>,
+    /// The scale's denominator (1:N) the linked label is written at:
+    /// finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label_scale: Option<f64>,
 }
 
 /// Input of `cad.entities.create` v1: new objects on a named layer, written
@@ -127,10 +141,15 @@ pub struct NewObject {
 /// edge is an arc), `empty_text` (a text whose text is empty or only white space),
 /// `invalid_elevations`, `not_finite`, `invalid_radius`, `invalid_scale` (an
 /// insert's), `invalid_line_weight` (the object's weight not from 0 to 100
-/// mm); then `invalid_revision`, `revision_conflict` (status `conflict`),
+/// mm), `invalid_link` (`labelOf` or `labelScale` on an object that is not
+/// a text, one without the other, an id that is not lowercase UUID text
+/// with hyphens, a scale not finite or not over 0; docs/adr/0175 §4); then
+/// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `layer_not_found`, `not_a_layer`, `layer_locked`, `unknown_block` (each
-/// insert's block, in order; docs/adr/0144); on the desktop also `slots_exhausted`.
-/// Warning: `layer_hidden` (they are written all the same).
+/// insert's block, in order; docs/adr/0144), `link_not_found` (each linked
+/// text's object, in order: no object of the drawing has that id); on the
+/// desktop also `slots_exhausted`. Warning: `layer_hidden` (they are
+/// written all the same).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

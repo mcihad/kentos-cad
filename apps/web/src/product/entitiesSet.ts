@@ -21,7 +21,7 @@ import type { ProductCommand } from './command';
  * (TODOS.md CMD-07): the command reads no selection and no library.
  *
  * The checks, in order (the first that fails answers): at least one id,
- * each lowercase UUID text with hyphens; something to set; no attribute
+ * each lowercase UUID text with hyphens; something to set (Bağı kopar's `unlink` too, docs/adr/0175 §4); no attribute
  * name empty or only white space; the line weight a number from 0 to 100
  * mm; the expected revision (checks.ts); each
  * id names an object; the layer given is one, not a group; no object on a
@@ -36,6 +36,8 @@ const LABEL: Record<Exclude<PropertiesOperation, 'symbol'>, string> = {
   lineWeight: 'Kalınlık değiştir',
   attributes: 'Değiştir',
   label: 'Etiket değiştir',
+  // Öznitelikler's Bağı kopar (docs/adr/0175 §4).
+  unlink: 'Bağı kopar',
 };
 
 /** The step a call is named: its operation's, or for a symbol whether it is given or taken away. */
@@ -62,6 +64,11 @@ const attrOf = (e: Entity, key: string): string | null => (Object.hasOwn(e.attrs
 /** What the input changes of `e`, or null when `e` already is as asked. */
 function patchOf(e: Entity, input: EntitiesSetProperties): Partial<Entity> | null {
   const patch: Record<string, unknown> = {};
+  // A linked text follows its object no more (docs/adr/0175 §4).
+  if (input.unlink && e.kind === 'text' && e.labelOf !== undefined) {
+    patch.labelOf = undefined;
+    patch.labelScale = undefined;
+  }
   if (input.layerId != null && e.layerId !== input.layerId) patch.layerId = input.layerId;
   for (const key of ['color', 'lineWeight', 'symbol', 'label'] as const) {
     const want = input[key];
@@ -85,7 +92,7 @@ function check(doc: CadDocument, input: EntitiesSetProperties): Stop | Checked {
   const stop = checkUids(input.uids, 'Özellikleri değişecek nesne verilmedi.');
   if (stop) return stop;
   const attrs = Object.keys(input.attrs ?? {});
-  if (input.layerId == null && input.color === undefined && input.lineWeight === undefined && input.symbol === undefined && !attrs.length && input.label === undefined)
+  if (input.layerId == null && input.color === undefined && input.lineWeight === undefined && input.symbol === undefined && !attrs.length && input.label === undefined && !input.unlink)
     return failed({ code: 'nothing_to_set', message: 'Değişecek özellik verilmedi. Katman, renk, kalınlık, sembol, öznitelik ya da etiket verin.' });
   if (attrs.some(isBlank))
     return failed(error('invalid_attribute', 'Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.', 'attrs'));

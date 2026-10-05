@@ -393,6 +393,8 @@ impl Polygonize {
                         .as_ref()
                         .map(|v| BTreeMap::from([(attribute.clone(), v.clone())])),
                     label: None,
+                    label_of: None,
+                    label_scale: None,
                 })
                 .collect(),
             operation: Some(CreateOperation::Polygonize),

@@ -557,6 +557,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         layer_id: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        unlink: bool | Unset = UNSET,
     ) -> EntitiesPropertiesSet:
         """Nesnelerin özelliklerini değiştir: Kalıcı kimlikleriyle verilen nesnelerin
         katmanını, rengini, sembolünü, özniteliklerini ya da etiketini değiştirir; hepsi tek
@@ -594,6 +595,10 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             symbol: Their own symbol, a library item's id (`EntityBase.symbol`), drawn
                 instead of their layer's style; null: the layer's style. The id is
                 not looked up: the libraries are the host's. Absent: unchanged.
+            unlink: Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
+                among them that write an object's label (`TextEntity.label_of` and
+                `label_scale` removed); they stay where and as they are and follow
+                nothing. Other objects are left alone. Absent or false: unchanged.
 
         Returns:
             EntitiesPropertiesSet
@@ -612,6 +617,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             layer_id=layer_id,
             line_weight=line_weight,
             symbol=symbol,
+            unlink=unlink,
         ))
 
     def plan(
@@ -628,6 +634,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         layer_id: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        unlink: bool | Unset = UNSET,
     ) -> EntitiesSetPropertiesPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -642,6 +649,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             layer_id=layer_id,
             line_weight=line_weight,
             symbol=symbol,
+            unlink=unlink,
         ))
 
     def validate(
@@ -658,6 +666,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
         layer_id: str | None | Unset = UNSET,
         line_weight: float | None | Unset = UNSET,
         symbol: str | None | Unset = UNSET,
+        unlink: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -672,6 +681,7 @@ class _EntitiesSet(LocalCommand[EntitiesSetProperties, EntitiesPropertiesSet, En
             layer_id=layer_id,
             line_weight=line_weight,
             symbol=symbol,
+            unlink=unlink,
         ))
 
 

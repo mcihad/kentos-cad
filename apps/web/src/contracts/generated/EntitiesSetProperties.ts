@@ -8,7 +8,7 @@ import type { PropertiesOperation } from "./PropertiesOperation";
  * Öznitelikler fills `uids` from the selection and the property from the
  * row; the command reads no selection, library or view.
  *
- * A property absent from the input stays as it is. `color`, `lineWeight`,
+ * A property absent from the input stays as it is (`unlink`: false). `color`, `lineWeight`,
  * `symbol` and `label` are removed with null: the object is drawn in its
  * layer's colour, weight and style again, and shows no label. An attribute is set by its name, or
  * removed with null; the attributes not named stay. What an object already
@@ -70,6 +70,13 @@ attrs?: { [key in string]: string | null },
  * unchanged.
  */
 label?: string | null, 
+/**
+ * Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
+ * among them that write an object's label (`TextEntity.label_of` and
+ * `label_scale` removed); they stay where and as they are and follow
+ * nothing. Other objects are left alone. Absent or false: unchanged.
+ */
+unlink?: boolean, 
 /**
  * What the change is; it names the undo step.
  */

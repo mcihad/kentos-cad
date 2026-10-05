@@ -40,6 +40,8 @@ fn points(n: usize) -> EntitiesCreate {
                 line_weight: None,
                 attrs: None,
                 label: None,
+                label_of: None,
+                label_scale: None,
             })
             .collect(),
         operation: Some(CreateOperation::Divide),
@@ -118,6 +120,8 @@ fn the_geometry_is_written_as_given() {
                 line_weight: None,
                 attrs: None,
                 label: None,
+                label_of: None,
+                label_scale: None,
             }],
             operation: None,
             expected_revision: None,

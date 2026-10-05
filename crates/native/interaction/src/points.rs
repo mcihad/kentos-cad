@@ -232,6 +232,8 @@ pub(crate) fn write_objects_with(
                 color: cx.draft.color.map(str::to_owned),
                 attrs: attrs.clone(),
                 label: None,
+                label_of: None,
+                label_scale: None,
             })
             .collect(),
         operation,

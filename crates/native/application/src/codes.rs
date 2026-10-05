@@ -88,6 +88,13 @@ pub const INVALID_LINE_WEIGHT: &str = "invalid_line_weight";
 pub const INVALID_SCALE: &str = "invalid_scale";
 /// A block the drawing does not define (an insert's geometry, `cad.blocks.edit`).
 pub const UNKNOWN_BLOCK: &str = "unknown_block";
+/// A new object's link to the object whose label it writes that cannot be
+/// one: not a text's, `labelOf` without `labelScale` or the other way, an id
+/// that is not a persistent id's text, a scale not finite and over 0
+/// (`cad.entities.create`, docs/adr/0175 §4).
+pub const INVALID_LINK: &str = "invalid_link";
+/// The object a linked text names is not in the drawing (`cad.entities.create`).
+pub const LINK_NOT_FOUND: &str = "link_not_found";
 /// A block name empty or only white space (`cad.blocks.define`, `cad.blocks.edit`).
 pub const EMPTY_NAME: &str = "empty_name";
 /// A block name the drawing already has, Turkish case folded.

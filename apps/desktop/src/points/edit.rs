@@ -270,6 +270,7 @@ pub fn write_cell(
                     PropertiesOperation::Attributes
                 },
                 expected_revision: None,
+                unlink: false,
             };
             refusal(set::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message)
         });

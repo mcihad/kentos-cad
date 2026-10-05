@@ -48,6 +48,9 @@ pub enum PropertiesOperation {
     Attributes,
     /// The label alone. “Etiket değiştir”.
     Label,
+    /// Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
+    /// their objects no more (`unlink`). “Bağı kopar”.
+    Unlink,
 }
 
 /// Input of `cad.entities.set` v1: properties set for objects named by their
@@ -56,7 +59,7 @@ pub enum PropertiesOperation {
 /// Öznitelikler fills `uids` from the selection and the property from the
 /// row; the command reads no selection, library or view.
 ///
-/// A property absent from the input stays as it is. `color`, `lineWeight`,
+/// A property absent from the input stays as it is (`unlink`: false). `color`, `lineWeight`,
 /// `symbol` and `label` are removed with null: the object is drawn in its
 /// layer's colour, weight and style again, and shows no label. An attribute is set by its name, or
 /// removed with null; the attributes not named stay. What an object already
@@ -128,6 +131,13 @@ pub struct EntitiesSetProperties {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub label: Option<Option<String>>,
+    /// Bağı kopar (docs/adr/0175 §4): `true` breaks the link of the texts
+    /// among them that write an object's label (`TextEntity.label_of` and
+    /// `label_scale` removed); they stay where and as they are and follow
+    /// nothing. Other objects are left alone. Absent or false: unchanged.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unlink: bool,
     /// What the change is; it names the undo step.
     pub operation: PropertiesOperation,
     /// The document revision the input was prepared against, as decimal text

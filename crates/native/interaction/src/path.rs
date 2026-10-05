@@ -1170,6 +1170,8 @@ impl Path {
                 line_weight: cx.draft.line_weight,
                 attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),
                 label: Some(number.clone()),
+                label_of: None,
+                label_scale: None,
             }],
             operation: None,
             expected_revision: None,

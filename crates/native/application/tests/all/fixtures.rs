@@ -141,11 +141,17 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
     })
 }
 
-/// An expected object with its block ids filled in (`$blockOf:Ad`,
-/// `$block:name`, docs/adr/0144); nothing else of it is read as a placeholder.
+/// An expected object with its block ids (`$blockOf:Ad`, `$block:name`,
+/// docs/adr/0144) and the persistent ids of the objects it names (`$uidOf:12`:
+/// a linked text's object, docs/adr/0175 §4) filled in; nothing else of it
+/// is read as a placeholder.
 fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
-        Value::String(text) if text.starts_with("$blockOf:") || text.starts_with("$block:") => {
+        Value::String(text)
+            if text.starts_with("$blockOf:")
+                || text.starts_with("$block:")
+                || text.starts_with("$uidOf:") =>
+        {
             fill(value, doc, state, at)?
         }
         Value::Array(items) => Value::Array(
@@ -473,12 +479,13 @@ impl Input for EntitiesEdit {
 
 impl Input for EntitiesCreate {
     /// `objects[0].geometry.major.x`, `objects[1].geometry.pts[2].y`, `objects[0].geometry.ratio`,
-    /// `objects[1].lineWeight` (which the step's input must give) …
+    /// `objects[1].lineWeight`, `objects[0].labelScale` (which the step's input must give) …
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         let (i, rest) = path.strip_prefix("objects[")?.split_once("].")?;
         let object = self.objects.get_mut(i.parse::<usize>().ok()?)?;
         match rest {
             "lineWeight" => object.line_weight.as_mut(),
+            "labelScale" => object.label_scale.as_mut(),
             _ => geometry_number(&mut object.geometry, rest.strip_prefix("geometry.")?),
         }
     }

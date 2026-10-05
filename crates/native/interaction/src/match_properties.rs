@@ -166,6 +166,7 @@ impl MatchProperties {
                 label: None,
                 operation: PropertiesOperation::Layer,
                 expected_revision: None,
+                unlink: false,
             };
             let result = set::execute(&mut ExecutionContext::new(cx.doc), input);
             match points::written(result, cx) {

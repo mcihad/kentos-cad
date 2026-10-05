@@ -317,6 +317,7 @@ impl Point {
                     label: (!given.is_empty()).then(|| Some(given.to_owned())),
                     operation: PropertiesOperation::Attributes,
                     expected_revision: None,
+                    unlink: false,
                 };
                 refusal(set::execute(&mut ExecutionContext::new(doc), input))?;
             }
