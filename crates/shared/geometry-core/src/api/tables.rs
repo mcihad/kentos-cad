@@ -75,4 +75,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::crs::text::OPS,
     crate::tools::locks::OPS,
     crate::survey::fieldbook::OPS,
+    crate::ops::template_members::OPS,
 ];

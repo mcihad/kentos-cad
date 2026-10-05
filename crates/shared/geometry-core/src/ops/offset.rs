@@ -19,7 +19,7 @@ use crate::ops::curve_cuts::{
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
 
-fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
+pub(crate) fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
     if closed {
         Shape::Polygon {
             pts,

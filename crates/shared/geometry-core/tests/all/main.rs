@@ -25,6 +25,7 @@ mod point_text;
 mod polygonize;
 mod reshape;
 mod snap;
+mod template_members;
 mod text;
 mod topology;
 mod vertex_points;

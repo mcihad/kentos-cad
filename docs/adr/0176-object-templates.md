@@ -190,6 +190,13 @@ da geçer:
      `template-groups.json`, 11 durum, elle); düzenleyicinin formunda üye satırları (`MemberRow`; boş satır düşer, şablon ve kural
      gerekir, ötelemede uzaklık ve yan; `template_form_cases.py`'ye 6 + 1 durum). Düzenleyiciler formu bütün tuttuğu için var olan
      grup şablonunun üyeleri düzenlemede korunur; üyelerin tablosu 5d'de.
+   - 5b **Tamam (5 Ekim):** üyelerin geometrisi çekirdekte (`ops::template_members`): `member_offsets` öteleme üyesinin paralelleri
+     (Ötele'nin kuralı `geom::offset`'in işaretli uzaklığıyla: açık şekilde sol artı, kapalı şekilde iç, halkanın yönü işaretli
+     alanından, yaylı halkada yaylarıyla; iki yanda önce sol ya da iç; retler: bilinmeyen yan, sıfırdan büyük olmayan uzaklık, çok
+     parçalı alan, çizgi, çoklu çizgi ve alan dışındaki şekil, şekle uymayan yan); ağırlık merkezi etiketin yeri (`entity_anchor`).
+     İşlemler adlarıyla `templateMemberOffsets` ve `templateMemberCentroid`, web'de `model/ops/templateMembers.ts`. Bağımsız başvuru
+     `scripts/fixtures/template_member_cases.py` (kesin kesirlerle, Ötele'nin dört uzaklıklık köşe sınırı ve yarım çember dahil; 21
+     öteleme ve 7 ağırlık merkezi durumu, `fixtures/template-members/v1/cases.json`); iki platform 1e-9 m içinde geçer.
 6. Şablonu uygula; ortak iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

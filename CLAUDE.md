@@ -221,6 +221,10 @@ python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin dur
 python3 scripts/fixtures/polygonize_cases.py --check   # Toplu alan'ın durumlarını (bölgeler, adalar, etiketler, var olan alan, boşta uçlar) kesin kesirlerle kurallardan denetle (ADR 0151)
 python3 scripts/fixtures/vertex_points_cases.py --check   # Köşelere nokta'nın durumlarını (paylaşılan köşe, var olan nokta, kot, ad artımı) kurallardan denetle (ADR 0152)
 python3 scripts/fixtures/label_text_cases.py --check   # Etiketleri yazıya çevir'in kuralını (dört yerleşim, büyüme ve üst sınır, ölçek aralığı, en küçük nesne, okunur yön, 8 px'lik hücrelerle inceltme) kesirle bağımsız başvurudan denetle (ADR 0175)
+python3 scripts/fixtures/template_layer_cases.py --check   # nesne şablonunun katmanını bulma ve açma kuralını (yol tercihi, kilitli grup, açılacak gruplar) kurallardan denetle; durumlar fixtures/style/v1/template-layers.json (ADR 0176 §3)
+python3 scripts/fixtures/template_from_object_cases.py --check   # Seçili nesneden şablon'u (araç, katman yolu ve görünüşü, noktanın adı ve kodu, yazının kâğıttaki yüksekliği, bloğun adı, retler) kesirle kurallardan denetle; durumlar fixtures/style/v1/template-from-object.json (ADR 0176 §4)
+python3 scripts/fixtures/template_form_cases.py --check   # Şablon düzenleyicinin form kuralını (alanlar, öznitelik satırları, yazı ve blok, grup şablonunun üye satırları) kurallardan denetle; durumlar fixtures/style/v1/template-form.json (ADR 0176 §4, §5)
+python3 scripts/fixtures/template_member_cases.py --check   # grup şablonunun üyelerinin geometrisini (açık şeklin sol ve sağ, kapalı şeklin iç ve dış ötelemeleri, keskin köşe, yarım çember, retler; ağırlık merkezi) kesin kesirlerle bağımsız başvurudan denetle; durumlar fixtures/template-members/v1/cases.json (ADR 0176 §5)
 python3 scripts/fixtures/point_editor_cases.py --check   # Nokta editörünün hesaplarını (doğal sıra, tablonun süzgeç ve sıralaması, çift noktalar, bağlı köşeler) kurallardan denetle (ADR 0153)
 python3 scripts/fixtures/point_edit_cases.py --check   # Nokta editörünün düzenlemelerini (hücreler, bağlı çizgiler, taslak satır) kurallardan denetle (ADR 0153 §3–§4)
 python3 scripts/fixtures/point_batch_cases.py --check   # Nokta editörünün toplu işlemlerini (Yeniden adlandır, Sıralı numara ver, Katmana taşı, hedef satırlar) kurallardan denetle (ADR 0153 §5)
@@ -855,7 +859,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve 3b (nokta, yazı ve blok şablonları: masaüstü `seed_tool`, `give_tool_back`, web `tools/templateSeeds.ts`; ad dizisi şablon başına;
   bloğu olmayan şablon başlamaz; nesneden şablonda yazı kâğıtta mm; ortak iz `template-tools.json`) ve 5a (grup şablonunun modeli:
   `members`, `templateIssues`/`template_issues`, kitaplıkta `memberIssues`/`member_issues`, formun `MemberRow`'u; ortak
-  `template-groups.json`) tamam; sıradaki 5b (üyelerin geometrisi, çekirdekte), 5c, 5d, sonra 6 (Şablonu uygula).
+  `template-groups.json`) ve 5b (üyelerin geometrisi: çekirdek `ops::template_members`, işlemler `templateMemberOffsets` ve
+  `templateMemberCentroid`, web `model/ops/templateMembers.ts`; başvuru `template_member_cases.py`) tamam; sıradaki 5c (grup şablonuyla
+  çizmek), 5d, sonra 6 (Şablonu uygula).
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

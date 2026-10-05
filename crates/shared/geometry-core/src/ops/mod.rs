@@ -27,6 +27,7 @@ pub mod reshape_by;
 pub mod rubber;
 pub mod split;
 pub mod stretch;
+pub mod template_members;
 pub mod topology;
 pub mod topology_edit;
 pub mod trace;
