@@ -1,0 +1,90 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "reshape",
+  "title": "Biçim değiştir (ADR 0173 §2–§3): Topoloji açıkken uyarır; daire alınmaz; parselin içine tıklanır, kesen hat büyük parçayı bırakır, nesne seçili kalır ve dışarıdan dolanan hat cebi ekler; Geri nesneyi bırakır; deliğe değen hat reddedilir, hat kalır; yolun iki buluşma arası değişir; çizgide tek buluşma kısa tarafı yeniden çizer, çizgi çoklu çizgi olur, Ctrl+Z geri alır",
+  "source": "Web'in reshapeTool.ts'i (ReshapeTool, PathTool'un straight seçeneği), masaüstünün kentos_interaction::reshape_by'ı ve path'in Reshape biçimi; çekirdeğin ops::reshape_by'ı; cad.entities.edit reshape, ADR 0173",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "reshape.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false, "topology": true },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.reshape",
+      "note": "Biçim değiştir: Topoloji açıkken komşuların değişmeyeceği söylenir; seçim yok.",
+      "expect": { "tool": "reshape", "options": [], "prompt": "Biçim değiştir: biçimi değişecek alanı ya da çizgiyi seçin", "logged": ["Topoloji açık: komşular Biçim değiştir'le değişmez."] }
+    },
+    { "click": [24, 5], "note": "Dairenin kenarı.", "expect": { "points": 0, "logged": ["Biçim değiştir alan, çizgi ve çoklu çizgi içindir."] } },
+    { "click": [-25, 5], "note": "51'in içine tıklamak onu seçer.", "expect": { "points": 0, "prompt": "Biçim değiştir: hattın ilk noktasını belirtin [Geri (G)]", "options": ["G"] } },
+    { "text": "486955,4420015" },
+    { "key": "Enter", "expect": { "points": 1, "prompt": "Biçim değiştir: sonraki noktayı belirtin [Uzunluk (U) / Akış (A) / Geri (G)]", "options": ["U", "A", "G"] } },
+    { "move": [-5, 15] },
+    { "shot": "bicim-kes" },
+    { "text": "486995,4420015" },
+    { "key": "Enter", "expect": { "points": 2, "prompt": "Biçim değiştir: sonraki noktayı belirtin [Uzunluk (U) / Akış (A) / Geri (G) / Bitir (Enter)]" } },
+    {
+      "key": "Enter",
+      "note": "Parseli kesen hat: büyük parça kalır; kesimdeki köşeler kotlarını eski kenardan alır.",
+      "expect": { "points": 0, "prompt": "Biçim değiştir: hattın ilk noktasını belirtin [Geri (G)]", "entities": 5, "logged": ["Alan 750.00 m² oldu (−150.00 m²)."], "objects": [{ "id": 1, "kind": "polygon", "points": [[-40, -10], [-10, -10], [-10, 15], [-40, 15]], "zs": [10.0, 11.0, 11.833333333333334, 12.5], "holes": 0, "label": "51" }] }
+    },
+    { "text": "486990,4420000" },
+    { "key": "Enter" },
+    { "text": "487000,4420000" },
+    { "key": "Enter" },
+    { "text": "487000,4420010" },
+    { "key": "Enter" },
+    { "move": [-10, 10] },
+    { "shot": "bicim-cep" },
+    { "text": "486990,4420010" },
+    { "key": "Enter" },
+    {
+      "key": "Enter",
+      "note": "Aynı parsel seçili kalır: sınırdan sınıra dışarıdan dolanan hat cebi ekler.",
+      "expect": { "entities": 5, "logged": ["Alan 850.00 m² oldu (+100.00 m²)."], "objects": [{ "id": 1, "kind": "polygon", "holes": 0 }] }
+    },
+    { "key": "G", "note": "Geri: ilk noktadan önce parseli bırakır.", "expect": { "prompt": "Biçim değiştir: biçimi değişecek alanı ya da çizgiyi seçin" } },
+    { "click": [-35, -25], "note": "Delikli 52.", "expect": { "prompt": "Biçim değiştir: hattın ilk noktasını belirtin [Geri (G)]" } },
+    { "text": "486955,4419975" },
+    { "key": "Enter" },
+    { "text": "486995,4419975" },
+    { "key": "Enter" },
+    {
+      "key": "Enter",
+      "note": "Deliğe değen hat reddedilir; hat kalır, düzeltilebilir.",
+      "expect": { "points": 2, "entities": 5, "logged": ["Hat bir deliğe değiyor; deliği Delik araçlarıyla düzenleyin."], "objects": [{ "id": 4, "kind": "polygon", "holes": 1 }] }
+    },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "run": "tool.reshape", "expect": { "tool": "reshape", "prompt": "Biçim değiştir: biçimi değişecek alanı ya da çizgiyi seçin" } },
+    { "click": [20, -20], "note": "Yolun kenarı.", "expect": { "prompt": "Biçim değiştir: hattın ilk noktasını belirtin [Geri (G)]" } },
+    { "text": "487030,4419975" },
+    { "key": "Enter" },
+    { "text": "487030,4419990" },
+    { "key": "Enter" },
+    { "move": [45, 0] },
+    { "shot": "bicim-yol" },
+    { "text": "487045,4420000" },
+    { "key": "Enter" },
+    {
+      "key": "Enter",
+      "note": "Yolun iki buluşma arası hattın biçimini alır; hattın uçları atılır.",
+      "expect": { "entities": 5, "logged": ["Uzunluk 75.352 m oldu (−4.648 m)."], "objects": [{ "id": 2, "kind": "polyline", "points": [[0, -20], [30, -20], [30, -10], [40, -3.3333333333], [40, 20]], "attrs": { "Ad": "Yol" } }] }
+    },
+    { "key": "G", "expect": { "prompt": "Biçim değiştir: biçimi değişecek alanı ya da çizgiyi seçin" } },
+    { "click": [20, 25], "note": "Çit çizgisi.", "expect": { "prompt": "Biçim değiştir: hattın ilk noktasını belirtin [Geri (G)]" } },
+    { "text": "487035,4420020" },
+    { "key": "Enter" },
+    { "text": "487035,4420030" },
+    { "key": "Enter" },
+    { "text": "487045,4420030" },
+    { "key": "Enter" },
+    {
+      "key": "Enter",
+      "note": "Tek buluşma: çizginin kısa tarafı yerine hattın uzun tarafı; çizgi çoklu çizgi olur, etiketi ve öznitelikleri kalır.",
+      "expect": { "entities": 5, "logged": ["Uzunluk 50.000 m oldu (+10.000 m)."], "objects": [{ "id": 3, "kind": "polyline", "points": [[0, 25], [35, 25], [35, 30], [45, 30]], "label": "Çit", "attrs": { "Ad": "Çit" } }] }
+    },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri: yine çizgi.", "expect": { "objects": [{ "id": 3, "kind": "line", "points": [[0, 25], [40, 25]] }] } },
+    { "key": "Esc" }
+  ]
+}

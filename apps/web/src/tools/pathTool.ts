@@ -59,6 +59,8 @@ export class PathTool extends PointInputTool {
   protected readonly label: string;
   private readonly closed: boolean;
   private readonly measureOnly: boolean;
+  /** Straight edges only, not along the line work: no Yay, no İzle (Biçim değiştir's line, docs/adr/0173 §6). */
+  private readonly straight: boolean;
   /** Set for parcel mode: target layer that also numbers new parcels. */
   private readonly parcelLayer?: string;
   /** One bulge per drawn segment (pts[i] → pts[i+1]). */
@@ -83,12 +85,13 @@ export class PathTool extends PointInputTool {
   /** The visible line work İzle follows, kept while the view and the drawing stand. */
   private readonly work: VisibleTrace;
 
-  constructor(ctx: AppContext, opts: { id: string; label: string; closed: boolean; measureOnly?: boolean; parcelLayer?: string }) {
+  constructor(ctx: AppContext, opts: { id: string; label: string; closed: boolean; measureOnly?: boolean; parcelLayer?: string; straight?: boolean }) {
     super(ctx);
     this.id = opts.id;
     this.label = opts.label;
     this.closed = opts.closed;
     this.measureOnly = opts.measureOnly ?? false;
+    this.straight = opts.straight ?? false;
     this.parcelLayer = opts.parcelLayer;
     this.work = new VisibleTrace(ctx);
   }
@@ -104,7 +107,7 @@ export class PathTool extends PointInputTool {
 
   /** Whether İzle applies now: on, in line mode (a measuring tool's own modes turn it off). */
   protected get tracing(): boolean {
-    return PathTool.trace && !this.arcMode;
+    return PathTool.trace && !this.arcMode && !this.straight;
   }
 
   /** Whether Akış applies now: on, in line mode (a measuring tool's own modes turn it off), no number waited for. */
@@ -149,6 +152,7 @@ export class PathTool extends PointInputTool {
       const step = PathTool.stream ? ` / Adım boyu (B): ${this.ctx.format.length(PathTool.streamStep)}` : '';
       // Dik kapat once a ring has three corners (docs/adr/0166 §4).
       const square = this.closed && n >= 3 ? ' / Dik kapat (D)' : '';
+      if (this.straight) return `sonraki noktayı belirtin [Uzunluk (U) / Akış (A)${whenOn(PathTool.stream)}${step}${square} / Geri (G)${done}]`;
       return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / İzle (İ)${whenOn(PathTool.trace)} / Akış (A)${whenOn(PathTool.stream)}${step}${square} / Geri (G)${done}]`;
     }
     const arcOpts = `Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G)${done}`;
@@ -328,6 +332,8 @@ export class PathTool extends PointInputTool {
   }
 
   protected override option(key: string): boolean {
+    // A straight line has no arcs and does not follow the line work.
+    if (this.straight && (key === 'Y' || key === 'İ' || key === 'I')) return false;
     // Dik kapat: a ring of three corners or more, its last edge drawn straight.
     if (key === 'D' && !this.arcMode && this.closed && this.pts.length >= 3) {
       this.squareClose();

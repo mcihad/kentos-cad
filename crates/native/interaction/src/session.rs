@@ -61,9 +61,9 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
     continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    leader, match_properties, meeting, parallel, polygonize, quick_dimension, revcloud, sector,
-    select_circle, select_containing, select_fence, set_elevation, spline, split, station_offset,
-    text, text_file, topology, vertex_points,
+    leader, match_properties, meeting, parallel, polygonize, quick_dimension, reshape_by, revcloud,
+    sector, select_circle, select_containing, select_fence, set_elevation, spline, split,
+    station_offset, text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -175,6 +175,8 @@ pub const TOOLS: &[&str] = &[
     holes::FILL_ID,
     // docs/adr/0173 §4: Sürdür, the path tool's shape that continues a line or a polyline.
     continuation::ID,
+    // docs/adr/0173 §2–§3: Biçim değiştir, the path tool's shape that reshapes an area or a path.
+    reshape_by::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -311,6 +313,7 @@ impl Session {
             boundary::ID => Box::new(crate::boundary::Boundary::new()),
             holes::ADD_ID => Box::new(Path::new(path::Shape::Hole)),
             continuation::ID => Box::new(Path::new(path::Shape::Continue)),
+            reshape_by::ID => Box::new(Path::new(path::Shape::Reshape)),
             holes::REMOVE_ID => Box::new(crate::holes::HoleClick::remove()),
             holes::FILL_ID => Box::new(crate::holes::HoleClick::fill()),
             reshape::FILLET_ALL_ID => Box::new(Reshape::fillet_all()),

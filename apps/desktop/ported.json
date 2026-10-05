@@ -226,6 +226,7 @@
     "tool.holeRemove",
     "tool.holeFill",
     "tool.continue",
+    "tool.reshape",
     "sheet.model"
   ],
   "format": "kentos.desktop-ported",

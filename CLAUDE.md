@@ -47,7 +47,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   delikler: Delik ekle (halka ilk köşesinin içinde olduğu alana, seçiliyse ona; var olan deliğe değen halka onunla birleşir, sınırı aşan
   reddedilir), Deliği sil ve Deliği doldur (imlecin altındaki delik vurgulu; dolduran yeni alan deliğin kotlarıyla, delik kalır),
   şeritte Delikler paneli; Sürdür: çizgi ya da çoklu çizgi ucundan (seçiliyse imlece yakın ucundan) sürer, ilk yay uçtaki teğetle,
-  eski köşeler kotlarıyla (ADR 0173);
+  eski köşeler kotlarıyla; Biçim değiştir: alanın ya da çizginin üstünden çizilen düz kenarlı hatla, alanda kesim büyük parçayı bırakır,
+  dışarıdan dolanan hat cebi ekler, çizgide buluşmalar arası değişir; önizleme yeni boyutu ve değişimi gösterir (ADR 0173);
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
   numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
   noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
@@ -811,8 +812,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   sürdürme ve delikler ([ADR 0173](docs/adr/0173-reshape-continue-holes.md)): 1. adım (`cad.entities.edit`'in beş işlemi; çekirdek
   `ops::holes`, `ops::reshape_by`; başvuru `reshape_cases.py`) ve 2. adım (Delik ekle yol aracının `Hole` biçimi, Deliği sil ve
   Deliği doldur iki platformda: masaüstü `kentos_interaction::holes`, web `holeTools.ts`; deponun `holes_at`'i; ortak iz `holes.json`)
-  ve 3. adım (Sürdür: `ops::continuation`, yol aracının `Continue` biçimi, web `continueTool.ts`; ortak iz `continue.json`) tamam;
-  sıradaki 4. adım (Biçim değiştir). 4 Ekim: derleme ve test süreleri
+  ve 3. adım (Sürdür: `ops::continuation`, yol aracının `Continue` biçimi, web `continueTool.ts`; ortak iz `continue.json`) ve 4. adım
+  (Biçim değiştir: yol aracının `Reshape` biçimi, `kentos_interaction::reshape_by`, web `reshapeTool.ts`; ortak iz `reshape.json`) tamam;
+  `HYB-16` bitti (5 Ekim). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

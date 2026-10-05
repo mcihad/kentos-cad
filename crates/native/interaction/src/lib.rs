@@ -167,6 +167,7 @@ pub mod properties;
 pub mod rectangle;
 pub mod regular;
 pub mod reshape;
+pub mod reshape_by;
 pub mod revcloud;
 pub mod rotate;
 pub mod rotated;

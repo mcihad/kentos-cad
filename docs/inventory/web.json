@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 299,
-      "implemented": 287,
+      "total": 300,
+      "implemented": 288,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 93,
-      "implemented": 91,
+      "total": 94,
+      "implemented": 92,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 227,
+    "commandsOnDesktop": 228,
     "desktop": {
       "commands": {
-        "total": 299,
-        "implemented": 227,
+        "total": 300,
+        "implemented": 228,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 93,
-        "implemented": 91,
+        "total": 94,
+        "implemented": 92,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -7746,6 +7746,38 @@
       ]
     },
     {
+      "id": "tool.reshape",
+      "title": "Biçim değiştir",
+      "category": "Düzenle",
+      "icon": "reshape",
+      "description": "Alanın ya da çizginin sınırını üstünden çizilen hatla yeniden biçimler: alanı kesen hat büyük parçayı bırakır, dışından dolanan hat cebi ekler; çizgide ilk ve son kesişim arası hattın biçimini alır.",
+      "aliases": [
+        "RESHAPE",
+        "BICIM",
+        "BICIMDEGISTIR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Kenar"
+      ],
+      "ribbon": [
+        "CAD › Değiştir › Kenar",
+        "CBS › Düzenle › Kenar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/reshape.json"
+      ]
+    },
+    {
       "id": "tool.revcloud",
       "title": "Revizyon bulutu",
       "category": "Açıklama",
@@ -10149,7 +10181,7 @@
         "SURDUR"
       ],
       "primary": false,
-      "rare": false,
+      "rare": true,
       "methods": [],
       "steps": 3,
       "description": "Bitmiş bir çizgiyi ya da çoklu çizgiyi ucundan sürdürür: çizilen noktalar nesnenin kendisine eklenir.",
@@ -10607,7 +10639,7 @@
         "DELIKDOLDUR"
       ],
       "primary": false,
-      "rare": false,
+      "rare": true,
       "methods": [],
       "steps": 2,
       "description": "Tıklanan deliğin biçiminde yeni bir alan yazar; delik yerinde kalır, yeni alan onu doldurur.",
@@ -11515,6 +11547,32 @@
       "tests": [
         "apps/web/src/app/ribbon.test.ts",
         "fixtures/interaction/v1/rect-options.json"
+      ]
+    },
+    {
+      "id": "reshape",
+      "label": "Biçim değiştir",
+      "icon": "reshape",
+      "group": "modify",
+      "section": "edge",
+      "aliases": [
+        "RESHAPE",
+        "BICIM",
+        "BICIMDEGISTIR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Alanın ya da çizginin sınırını üstünden çizilen hatla yeniden biçimler: alanı kesen hat büyük parçayı bırakır, dışından dolanan hat cebi ekler; çizgide ilk ve son kesişim arası hattın biçimini alır.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/reshape.json"
       ]
     },
     {
@@ -19838,7 +19896,8 @@
               "tool.lengthen",
               "tool.break",
               "tool.split",
-              "tool.continue"
+              "tool.continue",
+              "tool.reshape"
             ]
           },
           {
@@ -21265,11 +21324,13 @@
                 "size": "small"
               },
               {
-                "command": "tool.continue",
+                "command": "tool.reshape",
                 "size": "small"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "tool.continue"
+            ],
             "keep": false
           },
           {
@@ -21403,18 +21464,16 @@
             "items": [
               {
                 "command": "tool.holeAdd",
-                "size": "small"
+                "size": "large"
               },
               {
                 "command": "tool.holeRemove",
-                "size": "small"
-              },
-              {
-                "command": "tool.holeFill",
-                "size": "small"
+                "size": "large"
               }
             ],
-            "overflow": [],
+            "overflow": [
+              "tool.holeFill"
+            ],
             "keep": false
           },
           {
@@ -23356,12 +23415,13 @@
                   "size": "small"
                 },
                 {
-                  "command": "tool.continue",
+                  "command": "tool.reshape",
                   "size": "small"
                 }
               ],
               "overflow": [
-                "tool.lengthen"
+                "tool.lengthen",
+                "tool.continue"
               ],
               "keep": false
             },
@@ -23532,18 +23592,16 @@
               "items": [
                 {
                   "command": "tool.holeAdd",
-                  "size": "small"
+                  "size": "large"
                 },
                 {
                   "command": "tool.holeRemove",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.holeFill",
-                  "size": "small"
+                  "size": "large"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.holeFill"
+              ],
               "keep": false
             }
           ]
@@ -25271,11 +25329,13 @@
                   "size": "small"
                 },
                 {
-                  "command": "tool.continue",
+                  "command": "tool.reshape",
                   "size": "small"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.continue"
+              ],
               "keep": false
             },
             {
@@ -25409,18 +25469,16 @@
               "items": [
                 {
                   "command": "tool.holeAdd",
-                  "size": "small"
+                  "size": "large"
                 },
                 {
                   "command": "tool.holeRemove",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.holeFill",
-                  "size": "small"
+                  "size": "large"
                 }
               ],
-              "overflow": [],
+              "overflow": [
+                "tool.holeFill"
+              ],
               "keep": false
             },
             {
@@ -26308,6 +26366,7 @@
     "align": "<path d=\"M4 9.5 8.5 4.5l4 3.6\" stroke-dasharray=\"2 1.5\"/><path d=\"M4 16h9v-5\"/><rect x=\"2.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "lengthen": "<path d=\"M3 13h9\"/><path d=\"M12 13h5.5\" stroke-dasharray=\"2 1.5\"/><path d=\"m15 10.5 2.5 2.5-2.5 2.5\"/><rect x=\"10.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "continue": "<path d=\"M2.5 16.5 6 10.5l4 3\"/><path d=\"m10 13.5 3.5-6.5 4 1.5\" stroke-dasharray=\"1.8 1.4\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"12\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "reshape": "<path d=\"M11.5 3.5h-8v13h8\"/><path d=\"M11.5 3.5v13\" stroke-dasharray=\"1.6 1.3\"/><path d=\"M11.5 3.5 17 6.5l-2.5 3.5 2.5 3.5-5.5 3\"/>",
     "donut": "<path d=\"M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 1 1 0-13zm0 3.5a3 3 0 1 0 0 6 3 3 0 1 0 0-6z\" fill=\"currentColor\" fill-opacity=\".35\" fill-rule=\"evenodd\"/>",
     "revcloud": "<path d=\"M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z\"/>",
     "boundary": "<path d=\"M3 15h14M5 17 11 3M9 3l6 14\"/><path d=\"M5.86 15h8.28L10 5.33z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"10\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",

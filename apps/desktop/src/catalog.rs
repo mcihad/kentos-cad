@@ -355,6 +355,8 @@ pub const PORTED: &[&str] = &[
     "tool.holeFill",
     // Sürdür (docs/adr/0173 §4): a line or a polyline continued from an end.
     "tool.continue",
+    // Biçim değiştir (docs/adr/0173 §2–§3): an area or a path reshaped by a line drawn over it.
+    "tool.reshape",
     // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
     "sheet.model",
 ];

@@ -206,6 +206,8 @@ export const ICONS = {
   lengthen: `<path d="M3 13h9"/><path d="M12 13h5.5" stroke-dasharray="2 1.5"/><path d="m15 10.5 2.5 2.5-2.5 2.5"/>${grip(12, 13)}`,
   // Sürdür (docs/adr/0173 §4): a polyline drawn, its end's grip, the new vertices going on from it dashed.
   continue: `<path d="M2.5 16.5 6 10.5l4 3"/><path d="m10 13.5 3.5-6.5 4 1.5" stroke-dasharray="1.8 1.4"/>${grip(10, 13.5)}${grip(13.5, 7)}${grip(17.5, 8.5)}`,
+  // Biçim değiştir (docs/adr/0173 §2): an area whose side (dashed) gives way to the line drawn over it.
+  reshape: '<path d="M11.5 3.5h-8v13h8"/><path d="M11.5 3.5v13" stroke-dasharray="1.6 1.3"/><path d="M11.5 3.5 17 6.5l-2.5 3.5 2.5 3.5-5.5 3"/>',
   donut: '<path d="M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 1 1 0-13zm0 3.5a3 3 0 1 0 0 6 3 3 0 1 0 0-6z" fill="currentColor" fill-opacity=".35" fill-rule="evenodd"/>',
   revcloud: '<path d="M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z"/>',
   // Alan işlemleri

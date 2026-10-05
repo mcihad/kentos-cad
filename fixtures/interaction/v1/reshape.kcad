@@ -1,0 +1,188 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Biçim değiştir",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "51"
+      },
+      "label": "51",
+      "pts": [
+        {
+          "x": 486960.0,
+          "y": 4419990.0
+        },
+        {
+          "x": 486990.0,
+          "y": 4419990.0
+        },
+        {
+          "x": 486990.0,
+          "y": 4420020.0
+        },
+        {
+          "x": 486960.0,
+          "y": 4420020.0
+        }
+      ],
+      "zs": [
+        10.0,
+        11.0,
+        12.0,
+        13.0
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Yol"
+      },
+      "pts": [
+        {
+          "x": 487000.0,
+          "y": 4419980.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4419980.0
+        },
+        {
+          "x": 487040.0,
+          "y": 4420020.0
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Çit"
+      },
+      "label": "Çit",
+      "a": {
+        "x": 487000.0,
+        "y": 4420025.0
+      },
+      "b": {
+        "x": 487040.0,
+        "y": 4420025.0
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "52"
+      },
+      "label": "52",
+      "pts": [
+        {
+          "x": 486960.0,
+          "y": 4419965.0
+        },
+        {
+          "x": 486990.0,
+          "y": 4419965.0
+        },
+        {
+          "x": 486990.0,
+          "y": 4419985.0
+        },
+        {
+          "x": 486960.0,
+          "y": 4419985.0
+        }
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 486970.0,
+              "y": 4419970.0
+            },
+            {
+              "x": 486980.0,
+              "y": 4419970.0
+            },
+            {
+              "x": 486980.0,
+              "y": 4419980.0
+            },
+            {
+              "x": 486970.0,
+              "y": 4419980.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "circle",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {},
+      "c": {
+        "x": 487020.0,
+        "y": 4420005.0
+      },
+      "r": 4.0
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

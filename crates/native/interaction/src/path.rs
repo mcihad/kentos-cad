@@ -89,6 +89,7 @@ use crate::log::Level;
 use crate::overlap;
 use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
+use crate::reshape_by;
 use crate::second::Second;
 use crate::tool::{
     Area, Context, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
@@ -138,6 +139,8 @@ pub enum Shape {
     Hole,
     /// Sürdür: a path from an end of a line or a polyline, added to it (docs/adr/0173 §4).
     Continue,
+    /// Biçim değiştir: a line of straight edges that reshapes an area or a path (docs/adr/0173 §2–§3).
+    Reshape,
 }
 
 impl Shape {
@@ -151,6 +154,7 @@ impl Shape {
             Shape::Adjoin => adjoin::ID,
             Shape::Hole => holes::ADD_ID,
             Shape::Continue => continuation::ID,
+            Shape::Reshape => reshape_by::ID,
         }
     }
 
@@ -164,6 +168,7 @@ impl Shape {
             Shape::Adjoin => adjoin::LABEL,
             Shape::Hole => holes::ADD_LABEL,
             Shape::Continue => continuation::LABEL,
+            Shape::Reshape => reshape_by::LABEL,
         }
     }
 
@@ -256,6 +261,10 @@ pub struct Path {
     target_rings: Vec<Vec<Vec2>>,
     /// Sürdür: the line or polyline continued and its end, the path's first point; none while one is picked.
     cont: Option<continuation::Target>,
+    /// Biçim değiştir: the object reshaped, kept from one line to the next; none while one is picked.
+    reshape_target: Option<reshape_by::Target>,
+    /// Biçim değiştir: what the line to the cursor would make of it, for the preview.
+    reshaped: Option<reshape_by::Reshaped>,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -302,6 +311,8 @@ impl Path {
             target: None,
             target_rings: Vec::new(),
             cont: None,
+            reshape_target: None,
+            reshaped: None,
         }
     }
 
@@ -341,7 +352,11 @@ impl Path {
     /// Whether İzle applies now: on, in line mode, neither Sabit ilk nokta's
     /// rays nor İçine tıkla (docs/adr/0161 §1).
     fn tracing(&self) -> bool {
-        self.memory.trace && !self.arc_mode && !self.fixed() && !self.inside_mode()
+        self.memory.trace
+            && !self.arc_mode
+            && !self.fixed()
+            && !self.inside_mode()
+            && self.shape != Shape::Reshape
     }
 
     /// Whether Akış applies now, as İzle does, and no number is waited for (docs/adr/0161 §3).
@@ -475,6 +490,10 @@ impl Path {
     fn on_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
         if self.inside_mode() {
             return self.click_inside(p, cx);
+        }
+        // Biçim değiştir: the first point picks the object while there is none.
+        if self.shape == Shape::Reshape && self.reshape_target.is_none() {
+            return self.pick_reshaped(p, cx);
         }
         // Sürdür: the first point picks the object (its end nearer the point
         // starts the path); a selected one's end is fixed by the first new point.
@@ -675,6 +694,21 @@ impl Path {
         self.measured = Some(region);
     }
 
+    /// Biçim değiştir: the object at `p` (its edge, else the area around it).
+    fn pick_reshaped(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let Some(slot) = reshape_by::pick_at(p, cx) else {
+            cx.say(Level::Warn, reshape_by::NO_OBJECT);
+            return;
+        };
+        match reshape_by::Target::of(slot, cx) {
+            Ok(t) => {
+                self.reshape_target = Some(t);
+                cx.selection.set_hover(Some(slot));
+            }
+            Err(why) => cx.say(Level::Warn, why.unwrap_or(reshape_by::NO_OBJECT)),
+        }
+    }
+
     /// Sürdür: the object whose edge is at `p`, going on from its end nearer `p`.
     fn pick_continued(&mut self, p: Vec2, cx: &mut Context<'_>) {
         let Some(slot) = continuation::pick_at(p, cx) else {
@@ -793,6 +827,19 @@ impl Path {
         if self.fixed() && key != "G" {
             return false;
         }
+        // Biçim değiştir's line has straight edges only (docs/adr/0173 §6);
+        // Geri before its first point lets the object go.
+        if self.shape == Shape::Reshape {
+            if matches!(key, "Y" | "İ" | "I") {
+                return false;
+            }
+            if key == "G" && self.pts.is_empty() && self.reshape_target.is_some() {
+                self.reshape_target = None;
+                self.reshaped = None;
+                cx.selection.set_hover(None);
+                return true;
+            }
+        }
         // Dik kapat (docs/adr/0166 §4): a ring of three corners or more, its
         // last edge drawn straight, closes square on its first edge.
         if key == "D" && !self.arc_mode && self.shape.closed() && self.pts.len() >= 3 {
@@ -875,6 +922,16 @@ impl Path {
 
     /// Commits the shape when it has enough points, then starts over.
     fn finish(&mut self, cx: &mut Context<'_>) {
+        // Biçim değiştir: the object stays for the next line; a refused line
+        // stays to be put right.
+        if self.shape == Shape::Reshape && self.pts.len() >= 2 {
+            if let Some(t) = self.reshape_target
+                && reshape_by::write(&t, &self.pts.clone(), cx)
+            {
+                self.reset();
+            }
+            return;
+        }
         // Sürdür: the end alone draws nothing; the object is picked again.
         if self.shape == Shape::Continue && self.pts.len() < 2 {
             cx.say(Level::Warn, continuation::NOTHING_DRAWN);
@@ -961,7 +1018,8 @@ impl Path {
                 }
                 cx.selection.set_hover(None);
             }
-            Shape::Adjoin => {}
+            // Written above: the object stays for the next line.
+            Shape::Adjoin | Shape::Reshape => {}
         }
         self.reset();
     }
@@ -1153,6 +1211,7 @@ impl Path {
         self.region.clear();
         self.target_rings.clear();
         self.cont = None;
+        self.reshaped = None;
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -1419,6 +1478,22 @@ impl Tool for Path {
                 Err(None) => {}
             }
         }
+        // Biçim değiştir: the object selected beforehand, one alone; Topoloji
+        // leaves the neighbours as they are (docs/adr/0173 §6).
+        if self.shape == Shape::Reshape && self.reshape_target.is_none() {
+            if cx.draft.topology {
+                cx.say(Level::Info, reshape_by::TOPOLOGY);
+            }
+            match (cx.selection.len(), selected) {
+                (0, _) => {}
+                (_, Some(one)) => match reshape_by::Target::of(one, cx) {
+                    Ok(t) => self.reshape_target = Some(t),
+                    Err(Some(why)) => cx.say(Level::Warn, why),
+                    Err(None) => {}
+                },
+                _ => cx.say(Level::Warn, reshape_by::MANY),
+            }
+        }
         Flow::Stay
     }
 
@@ -1452,6 +1527,12 @@ impl Tool for Path {
         if n == 0 && self.shape == Shape::Continue {
             return Prompt::new(label, "sürdürülecek çizginin ucuna yakın tıklayın");
         }
+        if n == 0 && self.shape == Shape::Reshape {
+            return match self.reshape_target {
+                None => Prompt::new(label, "biçimi değişecek alanı ya da çizgiyi seçin"),
+                Some(_) => Prompt::new(label, "hattın ilk noktasını belirtin").option("Geri", "G"),
+            };
+        }
         if n == 0 {
             return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
         }
@@ -1476,11 +1557,17 @@ impl Tool for Path {
             return Prompt::new(label, "akışın adım boyunu yazın").option("Geri", "G");
         }
         if !self.arc_mode {
-            let mut prompt = Prompt::new(label, "sonraki noktayı belirtin")
-                .option("Yay", "Y")
-                .option("Uzunluk", "U")
-                .toggle("İzle", "İ", self.memory.trace)
-                .toggle("Akış", "A", self.memory.stream);
+            // Biçim değiştir's line: straight edges, not along the line work.
+            let straight = self.shape == Shape::Reshape;
+            let mut prompt = Prompt::new(label, "sonraki noktayı belirtin");
+            if !straight {
+                prompt = prompt.option("Yay", "Y");
+            }
+            prompt = prompt.option("Uzunluk", "U");
+            if !straight {
+                prompt = prompt.toggle("İzle", "İ", self.memory.trace);
+            }
+            let mut prompt = prompt.toggle("Akış", "A", self.memory.stream);
             if self.memory.stream {
                 prompt = prompt.option_with(
                     "Adım boyu",
@@ -1529,6 +1616,18 @@ impl Tool for Path {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
+        // Biçim değiştir: the object under the pointer while one is picked; then the object reshaped.
+        if self.shape == Shape::Reshape {
+            match self.reshape_target {
+                None => {
+                    let hit = reshape_by::pick_at(p.raw, cx);
+                    cx.selection.set_hover(hit);
+                    self.hover = None;
+                    return;
+                }
+                Some(t) => cx.selection.set_hover(Some(t.slot)),
+            }
+        }
         // Sürdür: the object under the pointer while one is picked; then the
         // object continued, its end following the pointer until fixed.
         if self.shape == Shape::Continue {
@@ -1569,6 +1668,11 @@ impl Tool for Path {
         if self.inside_mode() {
             let region = self.face(point, cx);
             self.inside = Some((point, region));
+        }
+        // Biçim değiştir: what the line to the cursor would make of the object.
+        if let (Shape::Reshape, Some(t)) = (self.shape, self.reshape_target) {
+            let (sketch, _) = self.preview_path();
+            self.reshaped = reshape_by::preview(&t, &sketch, cx);
         }
         // Delik ekle: the area the ring goes into, or would at a click here.
         if self.shape == Shape::Hole {
@@ -1733,6 +1837,10 @@ impl Tool for Path {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Alan {}", format.area(area)));
                 }
+                // Biçim değiştir: the object's size after the line, with the change.
+                if let Some(r) = &self.reshaped {
+                    lines.push(r.line.clone());
+                }
                 // Bitişik alan: the path's length and the region's area.
                 if self.shape == Shape::Adjoin {
                     let length = bulge_path_length(&pts, Some(&bulges), false);
@@ -1756,8 +1864,10 @@ impl Tool for Path {
             dash: None,
             fill_tone: Tone::Accent,
         });
+        let reshaped_area = self.reshaped.as_ref().and_then(|r| r.area.clone());
         let areas = target
             .into_iter()
+            .chain(reshaped_area)
             .chain(
                 self.measured
                     .iter()
@@ -1770,6 +1880,12 @@ impl Tool for Path {
             ring,
             guides,
             areas,
+            strokes: self
+                .reshaped
+                .as_ref()
+                .and_then(|r| r.stroke.clone())
+                .into_iter()
+                .collect(),
             tracking: tag.as_ref().and(self.tracking),
             tag,
             ..Preview::default()

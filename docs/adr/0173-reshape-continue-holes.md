@@ -40,8 +40,12 @@ akışı iki platformda ortak izlerle sınanır.
 
 ### 2. Biçim değiştir: alan
 
-- **Akış:** önce alan seçilir (seçim varsa o; birden çoksa “Biçimi değişecek tek alan ya da çizgi seçin.”). Sonra hat nokta nokta
-  çizilir (kenet, değer kartı, Esc bir nokta geri); önizleme sonucu ve alanını gösterir; Enter ya da sağ tık uygular.
+- **Akış:** önce nesne seçilir: araçtan önce seçilmiş tek nesne (birden çoksa “Biçimi değişecek tek alan ya da çizgi seçin.”), yoksa
+  kenarına ya da (alanın) içine tıklanan; öbür türler: “Biçim değiştir alan, çizgi ve çoklu çizgi içindir.”, kilitli katmandaki nesne
+  seçilmez. Nesne vurgulanır. Sonra hat nokta nokta çizilir: düz kenarlar (Yay ve İzle yok; Uzunluk, Akış, kenet, değer kartı; Geri (G)
+  son noktayı siler, ilk noktadan önce nesneyi bırakır); önizleme sonucu (alanı hafif dolu, çizgiyi kalın) ve imlecin yanında yeni boyutu
+  değişimiyle gösterir. Enter ya da sağ tık uygular; nesne sonraki hat için seçili kalır. Reddedilen hat söylenir ve kalır (Geri ile
+  düzeltilir). Esc aracı bırakır. Topoloji açıkken araç başlarken söyler (§6).
 - **Hangi parça:** hat çok parçalı alanın tek bir parçasının dış halkasına değmelidir; birden çok parçaya değerse: “Hat alanın birden çok
   parçasına değiyor; bir parçayı düzenleyin.” Deliğe değen hat reddedilir: “Hat bir deliğe değiyor; deliği Delik araçlarıyla düzenleyin.”
 - **Kırpma:** hat parçanın içinden geçip onu ikiye (ya da daha çoğuna) bölüyorsa en büyük alanlı parça kalır, ötekiler gider (ArcGIS'in
@@ -123,7 +127,10 @@ sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”; kilitli katman
    `continue_path`: ekleme; WASM `pathEnds`, `continuePath`; başvuru `reshape_cases.py`'nin Sürdür ve uç durumları, 45 durum); masaüstü
    yol aracının `Continue` biçimi ve `kentos_interaction::continuation`, web `ContinueTool` (`PathTool`'un `startTangent` ve
    `dropStart` kancalarıyla); ortak iz `continue.json` (sahne `continue.kcad`) iki platformda, resimleriyle.
-4. Biçim değiştir iki platformda (alan ve çizgi); ortak izler; resimler.
+4. Biçim değiştir iki platformda (alan ve çizgi); ortak izler; resimler. Bitti (5 Ekim): masaüstü yol aracının `Reshape` biçimi ve
+   `kentos_interaction::reshape_by` (hedef, önizleme, yazma, retlerin iletileri), web `ReshapeTool` (`PathTool`'un `straight`
+   seçeneğiyle); ortak iz `reshape.json` (sahne `reshape.kcad`; kesim, cep, delik reddi, yol, tek buluşmalı çizgi, Topoloji uyarısı)
+   iki platformda, resimleriyle. Şerit 1440 px'te yazılı kalsın diye Sürdür ve Deliği doldur seyrek araçtır (Kenar ▾, Delikler ▾).
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 
