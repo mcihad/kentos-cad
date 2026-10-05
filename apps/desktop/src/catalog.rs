@@ -388,6 +388,8 @@ pub const PORTED: &[&str] = &[
     "layer.stateSave",
     "layer.purge",
     "layer.list",
+    // docs/adr/0179: Veri karşılaştır (data_compare.rs).
+    "data.compare",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

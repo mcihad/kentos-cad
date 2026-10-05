@@ -1393,6 +1393,7 @@ impl App {
             Asking::LayerStates => self.layer_states_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::LayerList => self.layer_list_view(),
+            Asking::DataCompare => self.data_compare_view(),
             Asking::PointBatch => self.point_batch_view(),
         }
     }

@@ -255,6 +255,56 @@
   text-align: right;
 }
 
+/* Veri karşılaştır (docs/adr/0179): the rows in a list of fixed height, each finding's word in its colour. */
+.compare-source {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.compare-node {
+  flex: 1 1 calc(200px * var(--ui-scale));
+  min-width: 0;
+}
+.compare-fields {
+  gap: 2px 16px;
+}
+.compare-none {
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+.compare-run {
+  align-items: flex-end;
+}
+.compare-num {
+  width: calc(110px * var(--ui-scale));
+}
+.compare-rows {
+  height: min(calc(240px * var(--ui-scale)), 30vh);
+}
+.compare-row {
+  cursor: pointer;
+}
+.compare-row:hover td {
+  background: var(--c-hover);
+}
+.compare-row--added td:first-child {
+  color: var(--c-ok);
+}
+.compare-row--removed td:first-child {
+  color: var(--c-danger);
+}
+.compare-row--geometry td:first-child,
+.compare-row--attributes td:first-child,
+.compare-row--both td:first-child {
+  color: var(--c-warn);
+}
+.compare-row--key td:first-child {
+  color: var(--c-text-3);
+}
+.compare-row td {
+  white-space: nowrap;
+}
+
 /* Cihaza gönder (docs/adr/0169 §4): the file's first lines as written, in the code face, scrolling sideways. */
 .send-preview {
   margin: 0;

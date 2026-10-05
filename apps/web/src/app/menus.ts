@@ -175,7 +175,7 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'analysis',
     label: 'Analiz',
-    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope'],
+    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope', sec('Karşılaştırma'), 'data.compare'],
   },
   {
     id: 'processing',

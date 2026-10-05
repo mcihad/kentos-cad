@@ -1,0 +1,20 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "data-compare",
+  "title": "Veri karşılaştır: Eski ve Yeni katmanları konumla, 1 m arama ve 1 mm toleransla karşılaştırılır (köşesi kayan, özniteliği değişen, silinen, eklenen parsel; ters çizilmiş yol; kayan nokta); farklar “Karşılaştırma” grubunun üç katmanına tek adımda yazılır, geri alınır; 0,3 m aramada köşesi 0,4 m kayan parsel silinen ve eklenen olur",
+  "source": "docs/adr/0179",
+  "covers": ["HYB-21"],
+  "document": "data-compare.kcad",
+  "view": {"center": [487050, 4420005], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "steps": [
+    {"run": "data.compare", "expect": {"dialog": "Veri karşılaştır"}},
+    {"dialog": "Veri karşılaştır", "press": "Karşılaştır", "note": "Eski: ilk katman, Yeni: etkin katman", "expect": {"dialog": "Veri karşılaştır", "logged": ["Karşılaştırıldı: 1 eklenen, 1 silinen, 3 değişen, 2 aynı."]}},
+    {"shot": "karsilastir-pencere", "note": "Veri karşılaştır: farkların satırları, renkli durumları ve konum farkları"},
+    {"dialog": "Veri karşılaştır", "press": "Farkları çizime yaz", "note": "Üç katman tek adımda", "expect": {"dialog": "Veri karşılaştır", "canUndo": true, "entities": 17, "layers": ["Eski", "Yeni", "Karşılaştırma", "Karşılaştırma / Eklenen", "Karşılaştırma / Silinen", "Karşılaştırma / Değişen"], "logged": ["Farklar çizime yazıldı: “Karşılaştırma” grubunda 1 eklenen, 1 silinen, 3 değişen nesne."]}},
+    {"dialog": "Veri karşılaştır", "fill": {"Arama uzaklığı (m)": "0.3"}, "press": "Karşılaştır", "note": "Köşesi 0,4 m kayan parsel artık eş değil", "expect": {"logged": ["Karşılaştırıldı: 2 eklenen, 2 silinen, 2 değişen, 2 aynı."]}},
+    {"dialog": "Veri karşılaştır", "press": "Kapat", "expect": {"dialog": null}},
+    {"key": "Ctrl+Z", "note": "Farkların katmanları ve kopyaları tek adımda geri alınır", "expect": {"canUndo": false, "entities": 12, "layers": ["Eski", "Yeni"]}}
+  ]
+}

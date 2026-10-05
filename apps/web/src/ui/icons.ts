@@ -318,6 +318,9 @@ export const ICONS = {
     '<path d="m2.5 13.2 6.5 3.2 6.5-3.2-6.5-3.2z" stroke-dasharray="1.6 1.4"/><path d="m2.5 16.2 6.5 3.2 6.5-3.2"/><path d="M17.6 1.6 14.4 5.6" stroke-width="1.2"/><path d="M11.8 5.8h4.8l.9 3.6h-6.6z" stroke-width="1.2"/>',
   layerList:
     '<path d="m2.6 4.6 2.3-1.3 2.3 1.3-2.3 1.3zM2.6 10l2.3-1.3 2.3 1.3-2.3 1.3zM2.6 15.4l2.3-1.3 2.3 1.3-2.3 1.3z" stroke-width="1.1"/><path d="M9.5 4.6h8M9.5 10h8M9.5 15.4h8"/>',
+  // Veri karşılaştır (docs/adr/0179): two shapes side by side, the second one changed, arrows between them.
+  dataCompare:
+    '<path d="M2.5 4.5h6v6h-6z" stroke-width="1.2"/><path d="M11.5 9.5h6v6h-4.2l-1.8-2.1z" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/><path d="M5.5 13.5v3h3M14.5 6.5v-3h-3" stroke-width="1.1"/><path d="m7 15 1.5 1.5L7 18M13 2l-1.5 1.5L13 5" stroke-width="1.1"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',
   folder: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v8z"/>',
   eye: '<path d="M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.4"/>',

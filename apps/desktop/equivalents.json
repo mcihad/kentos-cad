@@ -140,6 +140,7 @@
     "apps/web/src/ui/layers/LayerStatesDialog.ts#openLayerStates": { "desktop": "implemented", "where": "apps/desktop/src/layer_states.rs (ADR 0177 §4)" },
     "apps/web/src/ui/layers/PurgeDialog.ts#openPurge": { "desktop": "implemented", "where": "apps/desktop/src/layer_purge.rs (ADR 0177 §5)" },
     "apps/web/src/ui/layers/LayerListDialog.ts#openLayerList": { "desktop": "implemented", "where": "apps/desktop/src/layer_list.rs (ADR 0177 §6)" },
+    "apps/web/src/ui/data/DataCompareDialog.ts#openDataCompare": { "desktop": "implemented", "where": "apps/desktop/src/data_compare.rs (ADR 0179)" },
     "apps/web/src/ui/blocks/BlocksPanel.ts#BlocksPanel": { "desktop": "implemented", "where": "apps/desktop/src/blocks_panel.rs (ADR 0144)" },
     "apps/web/src/ui/templates/TemplatesPanel.ts#TemplatesPanel": { "desktop": "implemented", "where": "apps/desktop/src/templates_panel.rs (ADR 0176 §4)" },
     "apps/web/src/ui/templates/TemplateEditor.ts#openTemplateEditor": { "desktop": "implemented", "where": "apps/desktop/src/template_editor.rs (ADR 0176 §4)" },

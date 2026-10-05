@@ -936,6 +936,7 @@ impl App {
             Some(Dialog::LayerStates) => self.layer_states_window = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::LayerList) => self.layer_list = None,
+            Some(Dialog::DataCompare) => self.data_compare = None,
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
             Some(Dialog::TemplateEditor) => self.template_editor = None,
             Some(Dialog::PointBatch) => self.points.close_batch(),

@@ -232,7 +232,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
   {
     id: 'manage',
     label: 'Yönet',
-    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'tools' }, { menu: 'help' }],
+    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'analysis', sections: ['Karşılaştırma'] }, { menu: 'tools' }, { menu: 'help' }],
     launchers: AIDS_LAUNCHER,
   },
   {
@@ -309,7 +309,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     ],
     launchers: AIDS_LAUNCHER,
   },
-  { id: 'analysis', label: 'Analiz', sources: [{ menu: 'processing' }, { menu: 'map', sections: ['Arazi'] }, { menu: 'analysis', sections: ['Arazi analizi'] }, { menu: 'tools', sections: ['Komut'] }] },
+  { id: 'analysis', label: 'Analiz', sources: [{ menu: 'processing' }, { menu: 'map', sections: ['Arazi'] }, { menu: 'analysis', sections: ['Arazi analizi', 'Karşılaştırma'] }, { menu: 'tools', sections: ['Komut'] }] },
   {
     id: 'survey',
     label: 'Ölçme',

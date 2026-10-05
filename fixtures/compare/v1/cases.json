@@ -1,0 +1,1960 @@
+{
+ "format": "kentos.compare-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/compare_cases.py from docs/adr/0179, not from either platform's code. A row's `old` and `new` are indices into the two lists; `distance` is the location difference in metres (null: none); `fields` the changed attributes. Statuses: same, geometry, attributes, both, added, removed, key.",
+ "cases": [
+  {
+   "name": "Konumla, 1 m arama, 1 mm tolerans: köşesi kayan, milimetre altı kayan, silinen ve eklenen parsel; ters çizilmiş yol; kayan nokta ve öznitelik; metni değişen yazı; yarıçapı değişen daire",
+   "old": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420020
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "4",
+      "Malik": "Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487000,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487080,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.0
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "new": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040.4,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420020.0003
+       },
+       {
+        "x": 487040.0004,
+        "y": 4420020.0003
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420020
+       },
+       {
+        "x": 487200,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "5",
+      "Malik": "Ece"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487080,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487000,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100.0005,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1",
+      "Kod": "PN"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1A",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.5
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "settings": {
+    "match": "location",
+    "search": 1.0,
+    "tolerance": 0.001
+   },
+   "rows": [
+    {
+     "status": "same",
+     "old": 0,
+     "new": 0,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 1,
+     "new": 1,
+     "distance": 0.40000000002328306,
+     "fields": []
+    },
+    {
+     "status": "attributes",
+     "old": 2,
+     "new": 2,
+     "distance": 0.0005000002682210077,
+     "fields": [
+      "Malik"
+     ]
+    },
+    {
+     "status": "added",
+     "old": null,
+     "new": 3,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "same",
+     "old": 4,
+     "new": 4,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "attributes",
+     "old": 5,
+     "new": 5,
+     "distance": 0.0005000000237487257,
+     "fields": [
+      "Kod"
+     ]
+    },
+    {
+     "status": "geometry",
+     "old": 6,
+     "new": 6,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 7,
+     "new": 7,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "removed",
+     "old": 3,
+     "new": null,
+     "distance": null,
+     "fields": []
+    }
+   ]
+  },
+  {
+   "name": "Konumla, 0,3 m arama: köşesi 0,4 m kayan parsel artık eş değil, silinen ve eklenen olur",
+   "old": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420020
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "4",
+      "Malik": "Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487000,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487080,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.0
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "new": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040.4,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420020.0003
+       },
+       {
+        "x": 487040.0004,
+        "y": 4420020.0003
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420020
+       },
+       {
+        "x": 487200,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "5",
+      "Malik": "Ece"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487080,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487000,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100.0005,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1",
+      "Kod": "PN"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1A",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.5
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "settings": {
+    "match": "location",
+    "search": 0.3,
+    "tolerance": 0.001
+   },
+   "rows": [
+    {
+     "status": "same",
+     "old": 0,
+     "new": 0,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "added",
+     "old": null,
+     "new": 1,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "attributes",
+     "old": 2,
+     "new": 2,
+     "distance": 0.0005000002682210077,
+     "fields": [
+      "Malik"
+     ]
+    },
+    {
+     "status": "added",
+     "old": null,
+     "new": 3,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "same",
+     "old": 4,
+     "new": 4,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "attributes",
+     "old": 5,
+     "new": 5,
+     "distance": 0.0005000000237487257,
+     "fields": [
+      "Kod"
+     ]
+    },
+    {
+     "status": "geometry",
+     "old": 6,
+     "new": 6,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 7,
+     "new": 7,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "removed",
+     "old": 1,
+     "new": null,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "removed",
+     "old": 3,
+     "new": null,
+     "distance": null,
+     "fields": []
+    }
+   ]
+  },
+  {
+   "name": "Anahtar alanla (No) ve Malik karşılaştırılmadan",
+   "old": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       },
+       {
+        "x": 487040,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420000
+       },
+       {
+        "x": 487080,
+        "y": 4420020
+       },
+       {
+        "x": 487060,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "4",
+      "Malik": "Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487000,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487080,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.0
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "new": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       },
+       {
+        "x": 487000,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "1",
+      "Malik": "Ali"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040.4,
+        "y": 4420020
+       },
+       {
+        "x": 487020,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "2",
+      "Malik": "Ayşe"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487040.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420000.0003
+       },
+       {
+        "x": 487060.0004,
+        "y": 4420020.0003
+       },
+       {
+        "x": 487040.0004,
+        "y": 4420020.0003
+       }
+      ]
+     },
+     "attrs": {
+      "No": "3",
+      "Malik": "Veli Can"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420000
+       },
+       {
+        "x": 487220,
+        "y": 4420020
+       },
+       {
+        "x": 487200,
+        "y": 4420020
+       }
+      ]
+     },
+     "attrs": {
+      "No": "5",
+      "Malik": "Ece"
+     }
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 487080,
+       "y": 4419990
+      },
+      "b": {
+       "x": 487000,
+       "y": 4419990
+      }
+     },
+     "attrs": {
+      "No": "Y1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487100.0005,
+       "y": 4420000
+      }
+     },
+     "attrs": {
+      "No": "N1",
+      "Kod": "PN"
+     }
+    },
+    {
+     "shape": {
+      "kind": "text",
+      "p": {
+       "x": 487005,
+       "y": 4420005
+      },
+      "text": "120/1A",
+      "height": 1.5,
+      "rotation": 0
+     },
+     "attrs": {
+      "No": "T1"
+     }
+    },
+    {
+     "shape": {
+      "kind": "circle",
+      "c": {
+       "x": 487110,
+       "y": 4420010
+      },
+      "r": 2.5
+     },
+     "attrs": {
+      "No": "K1"
+     }
+    }
+   ],
+   "settings": {
+    "match": "key",
+    "key": "No",
+    "search": 1.0,
+    "tolerance": 0.001,
+    "ignore": [
+     "Malik"
+    ]
+   },
+   "rows": [
+    {
+     "status": "same",
+     "old": 0,
+     "new": 0,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 1,
+     "new": 1,
+     "distance": 0.40000000002328306,
+     "fields": []
+    },
+    {
+     "status": "same",
+     "old": 2,
+     "new": 2,
+     "distance": 0.0005000002682210077,
+     "fields": []
+    },
+    {
+     "status": "added",
+     "old": null,
+     "new": 3,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "same",
+     "old": 4,
+     "new": 4,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "attributes",
+     "old": 5,
+     "new": 5,
+     "distance": 0.0005000000237487257,
+     "fields": [
+      "Kod"
+     ]
+    },
+    {
+     "status": "geometry",
+     "old": 6,
+     "new": 6,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 7,
+     "new": 7,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "removed",
+     "old": 3,
+     "new": null,
+     "distance": null,
+     "fields": []
+    }
+   ]
+  },
+  {
+   "name": "Halkalar: başka köşeden ve ters yönde çizilmiş aynı alan; yaylı kenarın bükümü; delik; bir köşe fazla; yayın ucu; bloğun dönüklüğü",
+   "old": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "A"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 20,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 10
+       },
+       {
+        "x": 20,
+        "y": 10
+       }
+      ],
+      "bulges": [
+       0,
+       0.5,
+       0,
+       0
+      ]
+     },
+     "attrs": {
+      "Ad": "B"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 40,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 10
+       },
+       {
+        "x": 40,
+        "y": 10
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 42,
+          "y": 2
+         },
+         {
+          "x": 44,
+          "y": 2
+         },
+         {
+          "x": 44,
+          "y": 4
+         },
+         {
+          "x": 42,
+          "y": 4
+         }
+        ]
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "C"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 60,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 10
+       },
+       {
+        "x": 60,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "D"
+     }
+    },
+    {
+     "shape": {
+      "kind": "arc",
+      "c": {
+       "x": 100,
+       "y": 0
+      },
+      "r": 5,
+      "a0": 0,
+      "a1": 1.5707963267948966
+     },
+     "attrs": {
+      "Ad": "E"
+     }
+    },
+    {
+     "shape": {
+      "kind": "insert",
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001",
+      "p": {
+       "x": 120,
+       "y": 0
+      },
+      "scale": 1,
+      "rotation": 0
+     },
+     "attrs": {
+      "Ad": "F"
+     }
+    }
+   ],
+   "new": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "A"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 20,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 10
+       },
+       {
+        "x": 20,
+        "y": 10
+       }
+      ],
+      "bulges": [
+       0,
+       0.4,
+       0,
+       0
+      ]
+     },
+     "attrs": {
+      "Ad": "B"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 40,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 10
+       },
+       {
+        "x": 40,
+        "y": 10
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 43,
+          "y": 2
+         },
+         {
+          "x": 45,
+          "y": 2
+         },
+         {
+          "x": 45,
+          "y": 4
+         },
+         {
+          "x": 43,
+          "y": 4
+         }
+        ]
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "C"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 60,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 10
+       },
+       {
+        "x": 65,
+        "y": 12
+       },
+       {
+        "x": 60,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "Ad": "D"
+     }
+    },
+    {
+     "shape": {
+      "kind": "arc",
+      "c": {
+       "x": 100,
+       "y": 0
+      },
+      "r": 5,
+      "a0": 0.0001,
+      "a1": 1.5707963267948966
+     },
+     "attrs": {
+      "Ad": "E"
+     }
+    },
+    {
+     "shape": {
+      "kind": "insert",
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001",
+      "p": {
+       "x": 120,
+       "y": 0
+      },
+      "scale": 1,
+      "rotation": 0.5
+     },
+     "attrs": {
+      "Ad": "F"
+     }
+    }
+   ],
+   "settings": {
+    "match": "key",
+    "key": "Ad",
+    "search": 1.0,
+    "tolerance": 0.001
+   },
+   "rows": [
+    {
+     "status": "same",
+     "old": 0,
+     "new": 0,
+     "distance": 0.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 1,
+     "new": 1,
+     "distance": 0.4999999999999999,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 2,
+     "new": 2,
+     "distance": 1.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 3,
+     "new": 3,
+     "distance": 1.0,
+     "fields": []
+    },
+    {
+     "status": "same",
+     "old": 4,
+     "new": 4,
+     "distance": 0.0004999999997916667,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 5,
+     "new": 5,
+     "distance": 0.0,
+     "fields": []
+    }
+   ]
+  },
+  {
+   "name": "Anahtar alanla: yinelenen ve boş anahtar sorunlu, türü değişen eş, uzaklaşan eş, Tarih karşılaştırılmaz",
+   "old": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       },
+       {
+        "x": 0,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "10",
+      "Tarih": "2024"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 20,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 10
+       },
+       {
+        "x": 20,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "11",
+      "Tarih": "2024"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 40,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 10
+       },
+       {
+        "x": 40,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "12",
+      "Tarih": "2024"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 60,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 0
+       },
+       {
+        "x": 70,
+        "y": 10
+       },
+       {
+        "x": 60,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "12",
+      "Tarih": "2024"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 80,
+        "y": 0
+       },
+       {
+        "x": 90,
+        "y": 0
+       },
+       {
+        "x": 90,
+        "y": 10
+       },
+       {
+        "x": 80,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": " ",
+      "Tarih": "2024"
+     }
+    }
+   ],
+   "new": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 500,
+        "y": 0
+       },
+       {
+        "x": 510,
+        "y": 0
+       },
+       {
+        "x": 510,
+        "y": 10
+       },
+       {
+        "x": 500,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "10",
+      "Tarih": "2025"
+     }
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 25,
+       "y": 5
+      }
+     },
+     "attrs": {
+      "ParselNo": " 11 ",
+      "Tarih": "2025"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 40,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 0
+       },
+       {
+        "x": 50,
+        "y": 10
+       },
+       {
+        "x": 40,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "12",
+      "Tarih": "2025"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 100,
+        "y": 0
+       },
+       {
+        "x": 110,
+        "y": 0
+       },
+       {
+        "x": 110,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "ParselNo": "13",
+      "Tarih": "2025"
+     }
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 120,
+        "y": 0
+       },
+       {
+        "x": 130,
+        "y": 0
+       },
+       {
+        "x": 130,
+        "y": 10
+       },
+       {
+        "x": 120,
+        "y": 10
+       }
+      ]
+     },
+     "attrs": {
+      "Tarih": "2025"
+     }
+    }
+   ],
+   "settings": {
+    "match": "key",
+    "key": "ParselNo",
+    "search": 1.0,
+    "tolerance": 0.001,
+    "ignore": [
+     "Tarih"
+    ]
+   },
+   "rows": [
+    {
+     "status": "geometry",
+     "old": 0,
+     "new": 0,
+     "distance": 500.0,
+     "fields": []
+    },
+    {
+     "status": "geometry",
+     "old": 1,
+     "new": 1,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "key",
+     "old": null,
+     "new": 2,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "added",
+     "old": null,
+     "new": 3,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "key",
+     "old": null,
+     "new": 4,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "key",
+     "old": 2,
+     "new": null,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "key",
+     "old": 3,
+     "new": null,
+     "distance": null,
+     "fields": []
+    },
+    {
+     "status": "key",
+     "old": 4,
+     "new": null,
+     "distance": null,
+     "fields": []
+    }
+   ]
+  }
+ ]
+}

@@ -69,6 +69,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kopyala, Kopyasını oluştur, Katmanları birleştir; Katman durumları (görünürlük, isteğe bağlı kilit ve stil; projenin ayarı, `.kcad`
   şema 19; Katmanlar panelinde Katman durumları ▾), Kullanılmayanları temizle (boş katmanlar ve gruplar, kullanılmayan bloklar,
   projenin kullanılmayan sembolleri ve varlıkları), Katman listesi (pano, CSV) (ADR 0177);
+  veri karşılaştırma: iki katman, grup ya da çizim konumla ya da anahtar alanla eşlenir; eklenen, silinen, geometrisi ya da
+  öznitelikleri değişen nesneler, rapor (pano, CSV) ve Karşılaştırma grubunda renkli fark katmanları (ADR 0179);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -885,8 +887,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `kentos_domain::layer_purge`, `model/layerPurge.ts`: kalanların kullanmadığı en büyük küme; web `ui/layers/PurgeDialog.ts`, masaüstü
   `layer_purge.rs`), Katman listesi (pano ve CSV; web `app/layerList.ts`, masaüstü `layer_list.rs`); ortak durumlar `fixtures/layers/v1`
   bağımsız Python başvurularıyla, ortak izler `layer-states.json` ve `layer-purge.json`, izlerin `layers` beklentisi; web kaydının
-  katman durumlarını ve katmanın kendi kenetini düşürmesi düzeldi (`io/kcad.ts` `projectHead`); `HYB-20` bitti (5 Ekim). Sıradaki
-  `HYB-21` veri karşılaştırma; `HYB-22` veride arama sahibin izniyle bir kezlik alt ajanda.
+  katman durumlarını ve katmanın kendi kenetini düşürmesi düzeldi (`io/kcad.ts` `projectHead`); `HYB-20` bitti (5 Ekim). `HYB-21`
+  veri karşılaştırma ([ADR 0179](docs/adr/0179-data-compare.md)) tek parçada bitti (5 Ekim): çekirdek `ops::compare` (işlem
+  `dataCompare`, bağımsız başvuru `compare_cases.py`, ortak durumlar `fixtures/compare/v1`), web `app/dataCompare.ts`,
+  `ui/data/DataCompareDialog.ts`, masaüstü `data_compare.rs`; ortak iz `data-compare.json`. `HYB-22` veride arama sahibin izniyle bir
+  kezlik alt ajanda (ADR 0178); sıradaki `HYB-23` kayıtlı ölçü (COGO) öznitelikleri.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

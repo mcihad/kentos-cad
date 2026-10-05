@@ -6,8 +6,6 @@
 //! is cut to fit. The points come from the drawing's selection, Aplikasyon's
 //! table or Nokta editörü's rows; the drawing is not changed.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 use iced::widget::{Column, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{Entity, FieldPoint, FieldWrite, FieldWriteFormat, FieldWriteOptions};
@@ -52,9 +50,6 @@ const FORMATS: [(FieldWriteFormat, &str, &str, &str); 6] = [
 const PREVIEW_LINES: usize = 14;
 /// Points said in the summary; the rest are counted.
 const SHOWN: usize = 5;
-
-/// The last format chosen, kept for the session.
-static LAST: AtomicUsize = AtomicUsize::new(0);
 
 /// A drawing's point as the writer takes it: its name (its label, else its
 /// Ad), Kod and elevation.
@@ -143,7 +138,8 @@ impl App {
         let mut state = State {
             points,
             from,
-            format: LAST.load(Ordering::Relaxed).min(FORMATS.len() - 1),
+            // The last format chosen, kept for the session (`App::field_send_format`).
+            format: self.field_send_format.min(FORMATS.len() - 1),
             job: if job.is_empty() {
                 "KentOS".to_owned()
             } else {
@@ -195,7 +191,7 @@ impl App {
         match e {
             Event::Format(i) => {
                 s.format = i.min(FORMATS.len() - 1);
-                LAST.store(s.format, Ordering::Relaxed);
+                self.field_send_format = s.format;
                 s.write();
             }
             Event::Job(job) => {

@@ -246,7 +246,8 @@
     "layer.states",
     "layer.stateSave",
     "layer.purge",
-    "layer.list"
+    "layer.list",
+    "data.compare"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

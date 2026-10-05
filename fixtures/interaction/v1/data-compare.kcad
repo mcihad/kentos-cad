@@ -1,0 +1,329 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Veri karşılaştır",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "eski",
+      "name": "Eski",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yeni",
+      "name": "Yeni",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#4F8EF7",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yeni",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "eski",
+      "attrs": {
+        "No": "1",
+        "Malik": "Ali"
+      },
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420020
+        },
+        {
+          "x": 487000,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "eski",
+      "attrs": {
+        "No": "2",
+        "Malik": "Ayşe"
+      },
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487040,
+          "y": 4420020
+        },
+        {
+          "x": 487020,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "eski",
+      "attrs": {
+        "No": "3",
+        "Malik": "Veli"
+      },
+      "pts": [
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420020
+        },
+        {
+          "x": 487040,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "eski",
+      "attrs": {
+        "No": "4",
+        "Malik": "Can"
+      },
+      "pts": [
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487080,
+          "y": 4420000
+        },
+        {
+          "x": 487080,
+          "y": 4420020
+        },
+        {
+          "x": 487060,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 5,
+      "layerId": "eski",
+      "attrs": {
+        "No": "Y1"
+      },
+      "a": {
+        "x": 487000,
+        "y": 4419990
+      },
+      "b": {
+        "x": 487080,
+        "y": 4419990
+      }
+    },
+    {
+      "kind": "point",
+      "id": 6,
+      "layerId": "eski",
+      "attrs": {
+        "No": "N1"
+      },
+      "p": {
+        "x": 487100,
+        "y": 4420000
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "1",
+        "Malik": "Ali"
+      },
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487020,
+          "y": 4420020
+        },
+        {
+          "x": 487000,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "2",
+        "Malik": "Ayşe"
+      },
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420000
+        },
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487040.4,
+          "y": 4420020
+        },
+        {
+          "x": 487020,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "3",
+        "Malik": "Veli Can"
+      },
+      "pts": [
+        {
+          "x": 487040,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420000
+        },
+        {
+          "x": 487060,
+          "y": 4420020
+        },
+        {
+          "x": 487040,
+          "y": 4420020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 10,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "5",
+        "Malik": "Ece"
+      },
+      "pts": [
+        {
+          "x": 487100,
+          "y": 4420010
+        },
+        {
+          "x": 487120,
+          "y": 4420010
+        },
+        {
+          "x": 487120,
+          "y": 4420030
+        },
+        {
+          "x": 487100,
+          "y": 4420030
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 11,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "Y1"
+      },
+      "a": {
+        "x": 487080,
+        "y": 4419990
+      },
+      "b": {
+        "x": 487000,
+        "y": 4419990
+      }
+    },
+    {
+      "kind": "point",
+      "id": 12,
+      "layerId": "yeni",
+      "attrs": {
+        "No": "N1",
+        "Kod": "PN"
+      },
+      "p": {
+        "x": 487100.0005,
+        "y": 4420000
+      }
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

@@ -803,6 +803,15 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       description: 'Katmanları ve grupları ağacın sırasıyla durumları, görünüşleri ve nesne sayılarıyla listeler; panoya kopyalar ya da CSV olarak kaydeder.',
       run: () => void import('../ui/layers/LayerListDialog').then((m) => m.openLayerList(ctx)),
     },
+    {
+      id: 'data.compare',
+      title: 'Veri karşılaştır…',
+      category: 'Veri',
+      icon: 'dataCompare',
+      aliases: ['VERIKARSILASTIR', 'KARSILASTIR', 'COMPARE', 'FEATURECOMPARE'],
+      description: 'İki katmanı, grubu ya da çizimi karşılaştırır: konumla ya da anahtar alanla eşler, eklenen, silinen, geometrisi ya da özniteliği değişen nesneleri listeler; rapor verir, farkları renkli katmanlara yazar.',
+      run: () => void import('../ui/data/DataCompareDialog').then((m) => m.openDataCompare(ctx)),
+    },
 
     // Araç akışı
     { id: 'tool.cancel', title: 'İptal', category: 'Komut', icon: 'close', run: () => tools.exit() },

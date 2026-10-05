@@ -42,6 +42,7 @@ impl App {
             Dialog::LayerStates => crate::layer_states::STATES_TITLE.to_owned(),
             Dialog::LayerPurge => crate::layer_purge::PURGE_TITLE.to_owned(),
             Dialog::LayerList => crate::layer_list::LIST_TITLE.to_owned(),
+            Dialog::DataCompare => crate::data_compare::COMPARE_TITLE.to_owned(),
             Dialog::Project if self.asking_type() => crate::project::TYPE_TITLE.to_owned(),
             other => format!("{other:?}"),
         })
@@ -59,6 +60,7 @@ impl App {
             Some(Dialog::LayerStates) => self.layer_states_control(control),
             Some(Dialog::LayerPurge) => self.layer_purge_control(control),
             Some(Dialog::LayerList) => self.layer_list_control(control),
+            Some(Dialog::DataCompare) => self.data_compare_control(control),
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
             Some(other) => Err(format!("{other:?} penceresi izden yanıtlanamıyor")),
             None => Err("açık pencere yok".to_owned()),
