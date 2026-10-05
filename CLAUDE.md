@@ -873,6 +873,7 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `kentos_interaction::layer_tools`; iki belgede `isolateLayers`/`isolate_layers`; Yalıtımı kaldır `layer.unisolate`; şeridin yerleşik
   panelinin ▾'i `under`; izlerin `hiddenLayers` ve `lockedLayers`'ı; ortak iz `layer-by-object.json`) ve 2. adım (Katmanı eşle ve
   Katmana kopyala: web `tools/layerMoveTool.ts`, masaüstü `kentos_interaction::layer_move`; ortak iz `layer-move.json`) tamam.
+  `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır, cihaz gelince döner.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
