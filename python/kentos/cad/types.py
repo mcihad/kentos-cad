@@ -1087,7 +1087,8 @@ class ArcPlan(_Model):
 class AreaPart(_Model):
     """A part of a multi-part area past its first (docs/adr/0143): its outer
     ring in vertex + bulge form, its holes and its vertices' elevations, as
-    the area's own fields hold the first part's.
+    the area's own fields hold the first part's. A multi-part polyline's
+    part is the same, open and without holes (docs/adr/0174).
     Attributes:
         zs: Each vertex's elevation, as the area's own `zs` (docs/adr/0142).
     """
@@ -3975,8 +3976,9 @@ class PathEntity(_Model):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
-        parts: A polygon's parts past its first, whose own are the fields above;
-            absent for a one-part area, never on a polyline (docs/adr/0143).
+        parts: A polygon's or a polyline's parts past its first, whose own are the
+            fields above; absent for one part (docs/adr/0143, 0174). A
+            polyline's parts are open, of two vertices or more, without holes.
         symbol: Library symbol overriding the layer's style.
         zs: Each vertex's elevation, m, as many as `pts`; `null` for a vertex
             without one (not 0); absent when no vertex has one (docs/adr/0142).
@@ -4141,6 +4143,8 @@ class PointEntity(Entity):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
+        parts: A multi-point object's points past its first, whose own are the
+            fields above; absent for one point (docs/adr/0174).
         symbol: Library symbol overriding the layer's style.
     """
     TAG_VALUE: ClassVar[str] = "point"
@@ -4151,6 +4155,7 @@ class PointEntity(Entity):
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    parts: list[PointPart] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
@@ -4166,6 +4171,8 @@ class PointEntity(Entity):
             out["label"] = self.label
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.z is not UNSET:
@@ -4182,7 +4189,31 @@ class PointEntity(Entity):
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [PointPart.from_json(e0) for e0 in data["parts"]],
             symbol=data.get("symbol", UNSET),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointPart(_Model):
+    """A point of a multi-point object past its first (docs/adr/0174): its
+    place and elevation, as the point's own fields hold the first's.
+    """
+    p: Vec2
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["p"] = _vec2_out(self.p)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointPart:
+        return cls(
+            p=Vec2.from_json(data["p"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -7117,6 +7148,7 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointPart",
     "PointPlan",
     "PointStyle",
     "PointSymbol",

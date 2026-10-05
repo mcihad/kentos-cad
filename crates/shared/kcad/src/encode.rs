@@ -31,8 +31,8 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -633,7 +633,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 16 when its survey settings
+/// The oldest schema that holds the drawing: 17 when a polyline or a point,
+/// of it or of a block definition, has parts, 16 when its survey settings
 /// name the ground, 15 when they name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
 /// a second system, 11 when it names a drawing unit, 10 when a layer has its own
 /// snapping, 9 when a dimension of it or of
@@ -647,6 +648,16 @@ impl<'d> Encoder<'d> {
 fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     fn snaps(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| n.snap.is_some() || snaps(&n.children))
+    }
+    let line_parts = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Polyline(p) => p.parts.is_some(),
+            Entity::Point(p) => p.parts.is_some(),
+            _ => false,
+        })
+    };
+    if line_parts(&doc.entities) || doc.blocks.iter().any(|b| line_parts(&b.entities)) {
+        return SCHEMA_WITH_LINE_PARTS;
     }
     let s = &doc.settings;
     if s.survey.as_ref().is_some_and(SurveySettings::has_ground) {

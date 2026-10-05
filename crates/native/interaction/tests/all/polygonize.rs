@@ -173,6 +173,7 @@ fn says_what_to_look_at_takes_adalar_and_the_name_and_leaves_the_rest_empty() {
             },
             p: pt(20.0, 7.0),
             z: None,
+            parts: None,
         }),
     );
     text(&mut b, [28.0, 21.0], "101/4");
@@ -347,6 +348,7 @@ fn a_label_is_a_texts_value_or_a_points_label_trimmed() {
             },
             p: pt(0.0, 0.0),
             z: None,
+            parts: None,
         }),
     );
     assert_eq!(

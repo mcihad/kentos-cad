@@ -108,7 +108,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -2059,7 +2059,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -2148,6 +2148,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -2167,6 +2177,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -4451,7 +4480,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -6329,7 +6358,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -6418,6 +6447,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -6437,6 +6476,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -12805,7 +12863,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -13886,7 +13944,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -13975,6 +14033,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -13994,6 +14062,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -14554,7 +14641,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -15635,7 +15722,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -15724,6 +15811,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -15743,6 +15840,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -16264,7 +16380,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -17345,7 +17461,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -17434,6 +17550,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -17453,6 +17579,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -18116,7 +18261,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -19197,7 +19342,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -19286,6 +19431,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -19305,6 +19460,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -19811,7 +19985,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -20892,7 +21066,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -20981,6 +21155,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -21000,6 +21184,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -21516,7 +21719,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -22597,7 +22800,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -22686,6 +22889,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -22705,6 +22918,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -23471,7 +23703,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -24552,7 +24784,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -24641,6 +24873,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -24660,6 +24902,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -25046,7 +25307,7 @@
       "input": {
         "$defs": {
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -26336,7 +26597,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -27417,7 +27678,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -27506,6 +27767,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -27525,6 +27796,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -28177,7 +28467,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -29258,7 +29548,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -29347,6 +29637,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -29366,6 +29666,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -29721,7 +30040,7 @@
       "input": {
         "$defs": {
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -30824,7 +31143,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -31905,7 +32224,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -31994,6 +32313,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -32013,6 +32342,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -32661,7 +33009,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -33742,7 +34090,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -33831,6 +34179,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -33850,6 +34208,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -34394,7 +34771,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -35580,7 +35957,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -35669,6 +36046,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -35688,6 +36075,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"
@@ -36396,7 +36802,7 @@
             "type": "object"
           },
           "AreaPart": {
-            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's.",
+            "description": "A part of a multi-part area past its first (docs/adr/0143): its outer\nring in vertex + bulge form, its holes and its vertices' elevations, as\nthe area's own fields hold the first part's. A multi-part polyline's\npart is the same, open and without holes (docs/adr/0174).",
             "properties": {
               "bulges": {
                 "items": {
@@ -37582,7 +37988,7 @@
                 ]
               },
               "parts": {
-                "description": "A polygon's parts past its first, whose own are the fields above;\nabsent for a one-part area, never on a polyline (docs/adr/0143).",
+                "description": "A polygon's or a polyline's parts past its first, whose own are the\nfields above; absent for one part (docs/adr/0143, 0174). A\npolyline's parts are open, of two vertices or more, without holes.",
                 "items": {
                   "$ref": "#/$defs/AreaPart"
                 },
@@ -37671,6 +38077,16 @@
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
+              "parts": {
+                "description": "A multi-point object's points past its first, whose own are the\nfields above; absent for one point (docs/adr/0174).",
+                "items": {
+                  "$ref": "#/$defs/PointPart"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
                 "type": [
@@ -37690,6 +38106,25 @@
               "id",
               "layerId",
               "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
               "p"
             ],
             "type": "object"

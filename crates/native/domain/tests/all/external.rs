@@ -37,6 +37,7 @@ fn point(layer: &str, x: f64) -> Entity {
         },
         p: Vec2 { x, y: 0.0 },
         z: None,
+        parts: None,
     })
 }
 

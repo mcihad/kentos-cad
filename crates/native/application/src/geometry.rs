@@ -453,7 +453,12 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
 /// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
     match geometry.clone() {
-        EntityGeometry::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
+        EntityGeometry::Point { p, z } => Entity::Point(PointEntity {
+            base,
+            p,
+            z,
+            parts: None,
+        }),
         EntityGeometry::Line { a, b, zs } => {
             let z = |k: usize| zs.as_ref().and_then(|zs| zs.get(k).copied().flatten());
             Entity::Line(LineEntity {

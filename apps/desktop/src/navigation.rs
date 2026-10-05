@@ -429,6 +429,7 @@ mod tests {
                 },
                 p: Vec2 { x, y },
                 z: None,
+                parts: None,
             }))
             .expect("a slot")
     }

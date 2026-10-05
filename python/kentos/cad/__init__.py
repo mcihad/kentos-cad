@@ -204,6 +204,7 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointPart",
     "PointPlan",
     "PointStyle",
     "PointSymbol",

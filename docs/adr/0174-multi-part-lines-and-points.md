@@ -101,7 +101,11 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
 ## Adımlar
 
 1. Sözleşme, `.kcad` şema 17 ve bellekteki belge: spesifikasyon, kodek, sütunlar, Python okuyucusu ve yazıcısı, örnekler. Web modeli ve
-   masaüstünün `kentos-domain`'i parçaları taşır; kaydet ve aç onları bayt bayt korur.
+   masaüstünün `kentos-domain`'i parçaları taşır; kaydet ve aç onları bayt bayt korur. Bitti (5 Ekim): `PathEntity.parts` çoklu çizgide
+   de (deliksiz, en az iki köşe), `PointEntity.parts` (`PointPart`); şema 17 (`SCHEMA_WITH_LINE_PARTS`), tipli sütunlarda noktanın
+   parçaları (`FORMATS_VERSION` 28); bağımsız Python okuyucusu ve yazıcısı, örnek `multi-part-lines.kcad` ve beş bozuk örnek (iki eski
+   şema, tek köşeli parça, delikli parça, yersiz nokta); iki belgede tür değişince yalnız miras kalan parçalar düşer (ortak
+   `document-ops` durumu); web sayfası örneği bayt bayt yazar.
 2. Hesap: çekirdeğin `Shape`'i, ölçüler, depo (çizim, seçme, kenet, etiket), tutamaçlar, dönüşümler, düzenlemeler; iki çizici.
 3. Değişim biçimleri ve sunucu: GeoJSON, Shapefile, DXF yazımı, PostGIS izdüşümü; bağımsız okuyucunun (`tools/formats/gis.py`)
    kuralları.

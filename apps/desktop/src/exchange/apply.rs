@@ -630,6 +630,7 @@ mod tests {
             base: b,
             p: Vec2 { x, y },
             z: None,
+            parts: None,
         })
     }
 

@@ -97,6 +97,7 @@ fn drawing(n: usize) -> Document {
                 y: y0 + 3.0,
             },
             z: None,
+            parts: None,
         }));
         if i % 2 == 0 {
             entities.push(Entity::Polyline(PathEntity {

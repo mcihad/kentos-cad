@@ -79,6 +79,7 @@ fn joins_the_ends_within_the_tolerance_on_the_whole_drawing_in_one_step() {
             base: common::base("cizim"),
             p: pt(20.0, 10.0),
             z: Some(105.0),
+            parts: None,
         }),
     );
     let third = line(

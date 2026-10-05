@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     AreaPart, BlockId, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchPattern,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, RingGeometry, Vec2, width_factor_ok,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, Vec2, width_factor_ok,
 };
 
 use super::Encoder;
@@ -40,8 +40,10 @@ pub(super) enum Val<'d> {
     /// Elevations and the number of vertices they belong to (one each, §6.6).
     Elevations(&'d [Option<f64>], usize),
     Rings(&'d [RingGeometry]),
-    /// A multi-part area's parts past its first (§6.6).
+    /// A multi-part area's or polyline's parts past its first (§6.6).
     Parts(&'d [AreaPart]),
+    /// A multi-point object's points past its first (§6.6).
+    PointParts(&'d [PointPart]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
 }
@@ -119,6 +121,9 @@ impl<'d> Encoder<'d> {
                 if let Some(z) = e.z {
                     f.push(("z", Val::Float(z)));
                 }
+                if let Some(parts) = &e.parts {
+                    f.push(("parts", Val::PointParts(parts)));
+                }
             }
             Entity::Line(e) => {
                 f.push(("a", Val::Point(&e.a)));
@@ -149,12 +154,32 @@ impl<'d> Encoder<'d> {
                     f.push(("holes", Val::Rings(h)));
                 }
                 if let Some(parts) = &e.parts {
+                    // A polyline's parts (docs/adr/0174): open, of two vertices or more, without holes.
                     if matches!(entity, Entity::Polyline(_)) {
-                        self.path.push(Seg::Name(kind));
-                        return Err(self.fail(
-                            Code::BadValue,
-                            "çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur",
-                        ));
+                        let wrong = parts.iter().enumerate().find_map(|(i, part)| {
+                            if part.holes.is_some() {
+                                Some((
+                                    i,
+                                    "çoklu çizginin parçasının adası (deliği) olamaz".to_owned(),
+                                ))
+                            } else if part.pts.len() < 2 {
+                                Some((
+                                    i,
+                                    format!(
+                                        "çoklu çizginin parçasının {} köşesi var; en az iki olmalı",
+                                        part.pts.len()
+                                    ),
+                                ))
+                            } else {
+                                None
+                            }
+                        });
+                        if let Some((i, why)) = wrong {
+                            self.path.push(Seg::Name(kind));
+                            self.path.push(Seg::Name("parts"));
+                            self.path.push(Seg::Index(i));
+                            return Err(self.fail(Code::BadValue, &why));
+                        }
                     }
                     f.push(("parts", Val::Parts(parts)));
                 }
@@ -416,6 +441,25 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Rings(rings) => self.rings(rings),
+            Val::PointParts(parts) => {
+                self.open(parts.len(), false)?;
+                for (i, part) in parts.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.open(1 + usize::from(part.z.is_some()), true)?;
+                        // p, z.
+                        e.key("p");
+                        e.at(Seg::Name("p"), |e| e.point(&part.p))?;
+                        if let Some(z) = part.z {
+                            e.key("z");
+                            e.at(Seg::Name("z"), |e| e.float(z))?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
             Val::Parts(parts) => {
                 self.open(parts.len(), false)?;
                 for (i, part) in parts.iter().enumerate() {

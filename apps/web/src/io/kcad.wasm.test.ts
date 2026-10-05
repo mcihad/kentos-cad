@@ -157,7 +157,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         valid++;
       }
     }
-    expect(valid).toBe(22);
+    expect(valid).toBe(23);
   });
 
   it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
@@ -185,6 +185,8 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['second-crs.json', 'second-crs.kcad'],
       // Schema 16: the survey settings' ground height and reduction to the grid (docs/adr/0171 §2, §4).
       ['survey-ground.json', 'survey-ground.kcad'],
+      // Schema 17: multi-part polylines and points, their parts in the page's columns (docs/adr/0174).
+      ['multi-part-lines.json', 'multi-part-lines.kcad'],
     ]) {
       expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }

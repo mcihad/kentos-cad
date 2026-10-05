@@ -305,6 +305,7 @@ impl Bench {
             base: base(layer),
             p: wire(at),
             z: Some(z),
+            parts: None,
         });
         self.doc.add(point).expect("a slot")
     }

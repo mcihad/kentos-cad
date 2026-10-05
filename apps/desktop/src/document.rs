@@ -329,6 +329,7 @@ mod tests {
                 y: 4_420_195.75,
             },
             z: None,
+            parts: None,
         }));
         s.uids.push(EntityId::parse(NEW_POINT).expect("a UUID"));
         if let Some(n) = layer_mut(&mut s.layers, "bina") {

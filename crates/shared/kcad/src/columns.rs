@@ -80,7 +80,7 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
     HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity,
-    PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
+    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -295,11 +295,28 @@ impl Packer {
     fn geometry(&mut self, entity: &Entity) -> u32 {
         let mut flags = 0;
         match entity {
-            Entity::Point(PointEntity { base: _, p, z }) => {
+            Entity::Point(PointEntity {
+                base: _,
+                p,
+                z,
+                parts,
+            }) => {
                 self.point(p);
                 if let Some(z) = z {
                     flags |= OPT[0];
                     self.float(*z);
+                }
+                // A multi-point object's other points (docs/adr/0174): each its flag, place and elevation.
+                if let Some(parts) = parts {
+                    flags |= OPT[1];
+                    self.int(count(parts.len()));
+                    for PointPart { p, z } in parts {
+                        self.int(u32::from(z.is_some()));
+                        self.point(p);
+                        if let Some(z) = z {
+                            self.float(*z);
+                        }
+                    }
                 }
             }
             Entity::Line(LineEntity {
@@ -830,9 +847,10 @@ fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entit
 /// The optional-field flags a kind may have.
 fn allowed(kind: u8) -> u32 {
     match kind {
-        0 => OPT[0],
+        0 => OPT[0] | OPT[1],
         1 => OPT[0] | OPT[1],
-        2 => OPT[0] | OPT[1] | OPT[2],
+        // A polyline's parts are schema 17's (docs/adr/0174).
+        2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         10 | 14 => OPT[0] | OPT[1] | OPT[2],
         // A dimension: text, style, angle, c, then schema 9's mask, za, zb (docs/adr/0147).
@@ -851,11 +869,30 @@ fn geometry(
 ) -> Result<Entity, KcadError> {
     let has = |bit: usize| flags & OPT[bit] != 0;
     Ok(match kind {
-        0 => Entity::Point(PointEntity {
-            base,
-            p: c.point()?,
-            z: if has(0) { Some(c.float()?) } else { None },
-        }),
+        0 => {
+            let p = c.point()?;
+            let z = if has(0) { Some(c.float()?) } else { None };
+            let parts = if has(1) {
+                let q = c.usize()?;
+                if q > c.cols.ints.len() {
+                    return Err(broken("nokta sayısı tam sayılardan fazla"));
+                }
+                let mut parts = Vec::with_capacity(q);
+                for _ in 0..q {
+                    let flag = c.int()?;
+                    if flag > 1 {
+                        return Err(broken(&format!("noktanın bayrağı {flag:#x}")));
+                    }
+                    let p = c.point()?;
+                    let z = if flag == 1 { Some(c.float()?) } else { None };
+                    parts.push(PointPart { p, z });
+                }
+                Some(parts)
+            } else {
+                None
+            };
+            Entity::Point(PointEntity { base, p, z, parts })
+        }
         1 => Entity::Line(LineEntity {
             base,
             a: c.point()?,
@@ -1228,6 +1265,7 @@ mod tests {
             base: b,
             p: Vec2 { x: -0.0, y: 2.5 },
             z: Some(12.0),
+            parts: None,
         });
         let cols = pack(vec![p], vec![id(1)]);
         assert_eq!(cols.kinds, [0]);

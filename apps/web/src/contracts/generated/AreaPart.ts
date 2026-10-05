@@ -5,7 +5,8 @@ import type { Vec2 } from "./Vec2";
 /**
  * A part of a multi-part area past its first (docs/adr/0143): its outer
  * ring in vertex + bulge form, its holes and its vertices' elevations, as
- * the area's own fields hold the first part's.
+ * the area's own fields hold the first part's. A multi-part polyline's
+ * part is the same, open and without holes (docs/adr/0174).
  */
 export type AreaPart = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
 /**

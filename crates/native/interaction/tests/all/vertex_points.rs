@@ -39,6 +39,7 @@ fn point(b: &mut Bench, at: [f64; 2], label: Option<&str>) -> Slot {
             },
             p: pt(at[0], at[1]),
             z: None,
+            parts: None,
         }),
     )
 }

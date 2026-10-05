@@ -407,17 +407,34 @@ def part(pt):
     return cmap(fields(pt, table, "part"))
 
 
+def line_part(pt):
+    """A part of a multi-part polyline past its first (schema 17, docs/adr/0174): two vertices or more, its arcs and
+    elevations; no holes."""
+    assert len(pt["pts"]) >= 2, "çoklu çizginin parçası: en az iki köşe"
+    assert "zs" not in pt or len(pt["zs"]) == len(pt["pts"]), "parça: kot sayısı köşe sayısına eşit olmalı"
+    return cmap(fields(pt, {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}, "line part"))
+
+
+def point_part(pp):
+    """A point of a multi-point object past its first (schema 17, docs/adr/0174): its place and elevation."""
+    return cmap(fields(pp, {"p": (point, True), "z": (f64, False)}, "point part"))
+
+
 def path_fields(holes):
     table = {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}
     if holes:
         table["holes"] = (lambda h: array([ring(r) for r in h]), False)
-        # Schema 5 (docs/adr/0143): only an area has parts.
+        # Schema 5 (docs/adr/0143): an area's parts.
         table["parts"] = (lambda ps: array([part(pt) for pt in ps]), False)
+    else:
+        # Schema 17 (docs/adr/0174): a polyline's parts.
+        table["parts"] = (lambda ps: array([line_part(pt) for pt in ps]), False)
     return table
 
 
 KINDS = {
-    "point": {"p": (point, True), "z": (f64, False)},
+    # Schema 17 (docs/adr/0174): a multi-point object's points past its first.
+    "point": {"p": (point, True), "z": (f64, False), "parts": (lambda ps: array([point_part(pp) for pp in ps]), False)},
     # A line's end without an elevation has no key (spec §5.2): `null` is only for a vertex in `zs`.
     "line": {"a": (point, True), "b": (point, True), "za": (f64, False), "zb": (f64, False)},
     "polyline": path_fields(False),
@@ -544,7 +561,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 16 with the survey settings' ground height or reduction to the grid
+    """The oldest schema that holds the drawing: 17 with a multi-part polyline or a multi-point object, in the drawing or
+    a block definition (docs/adr/0174), 16 with the survey settings' ground height or reduction to the grid
     (docs/adr/0171), 15 with their traverse tolerances, 14 with survey settings (docs/adr/0169 §3), 13 with the project's
     own systems or datum choices (docs/adr/0168), 12 with a second coordinate system (docs/adr/0167 §1), 11 with a local
     project's drawing unit (docs/adr/0165 §2), 10 with a layer's own snapping (docs/adr/0163 §4), 9 with one of
@@ -557,6 +575,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def snaps(nodes):
         return any("snap" in n or snaps(n["children"]) for n in nodes)
 
+    def line_parts(es):
+        return any(e["kind"] in ("polyline", "point") and "parts" in e for e in es)
+
+    if line_parts(entities) or any(line_parts(b["entities"]) for b in blocks or []):
+        return 17
     if settings and any(k in settings.get("survey", {}) for k in ("groundHeight", "reduceToGrid")):
         return 16
     if settings and any(k in settings.get("survey", {}) for k in ("twoWay", "traverseAngle", "traverseCoord")):
@@ -777,7 +800,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-17.kcad"] = container(root(cmap(parts), version=b"\x11"))
+    files["schema-version-18.kcad"] = container(root(cmap(parts), version=b"\x12"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -824,6 +847,15 @@ def broken(minimal_content, minimal_file):
     files["parts-on-polyline.kcad"] = in_schema(5, path("polyline", 3, parts=array([cmap({"pts": square(5)})])))
     files["part-elevation-wrong-length.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"pts": square(5), "zs": elevations([1.0, 2.0])})])))
     files["part-without-points.kcad"] = in_schema(5, path("polygon", 4, parts=array([cmap({"bulges": array([f64(0.5)])})])))
+    # A polyline's and a point's parts are schema 17's (docs/adr/0174): in schema 16 unknown fields. A polyline's part
+    # has two vertices or more and no holes; a point's part its place.
+    two = lambda dx: array([point({"x": one["p"]["x"] + dx + x, "y": one["p"]["y"]}) for x in (0, 1)])
+    files["polyline-parts-in-schema-16.kcad"] = in_schema(16, path("polyline", 3, parts=array([cmap({"pts": two(5)})])))
+    point_with = lambda **extra: cmap({"point": cmap({**common, "p": point(one["p"]), **extra})})
+    files["point-parts-in-schema-16.kcad"] = in_schema(16, point_with(parts=array([cmap({"p": point({"x": one["p"]["x"] + 1.0, "y": one["p"]["y"]})})])))
+    files["polyline-part-one-point.kcad"] = in_schema(17, path("polyline", 3, parts=array([cmap({"pts": array([point(one["p"])])})])))
+    files["polyline-part-holes.kcad"] = in_schema(17, path("polyline", 3, parts=array([cmap({"pts": two(5), "holes": array([])})])))
+    files["point-part-without-place.kcad"] = in_schema(17, point_with(parts=array([cmap({"z": f64(100.0)})])))
     # Blocks are schema 6's (docs/adr/0144): in schema 5 `blocks` is an unknown field and `insert` an unknown kind.
     # A definition's objects have no persistent id; its name (Turkish case folded) and id are once in a drawing; an
     # insert names a definition, its scale is positive, `mirror` is written only when true; no definition holds
@@ -1071,6 +1103,7 @@ def build():
     out["survey.kcad"] = container(document(load("survey.json")))
     out["survey-traverse.kcad"] = container(document(load("survey-traverse.json")))
     out["survey-ground.kcad"] = container(document(load("survey-ground.json")))
+    out["multi-part-lines.kcad"] = container(document(load("multi-part-lines.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

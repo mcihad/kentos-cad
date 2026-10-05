@@ -183,7 +183,12 @@ impl Collect {
             line_weight: None,
         };
         self.entities.push(match shape {
-            Shape::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
+            Shape::Point { p, z } => Entity::Point(PointEntity {
+                base,
+                p,
+                z,
+                parts: None,
+            }),
             Shape::Line { a, b, za, zb } => Entity::Line(LineEntity { base, a, b, za, zb }),
             Shape::Polyline(r) => Entity::Polyline(PathEntity {
                 base,

@@ -61,6 +61,7 @@ fn points(n: usize) -> DocumentSnapshotV2 {
                     y: -0.0,
                 },
                 z: None,
+                parts: None,
             })
         })
         .collect();

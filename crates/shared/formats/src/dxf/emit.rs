@@ -855,6 +855,7 @@ impl<'l> Emitter<'l> {
                     base: b(),
                     p: ctx.tf.apply(xy(*p)),
                     z: (z != 0.0 || kept).then_some(z),
+                    parts: None,
                 }));
             }
             Kind::Circle { c, r } => {

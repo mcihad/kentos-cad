@@ -13,8 +13,9 @@ export type PathEntity = { pts: Array<Vec2>, bulges?: Array<number>, holes?: Arr
  */
 zs?: Array<number | null>, 
 /**
- * A polygon's parts past its first, whose own are the fields above;
- * absent for a one-part area, never on a polyline (docs/adr/0143).
+ * A polygon's or a polyline's parts past its first, whose own are the
+ * fields above; absent for one part (docs/adr/0143, 0174). A
+ * polyline's parts are open, of two vertices or more, without holes.
  */
 parts?: Array<AreaPart>, id: number, layerId: string, 
 /**

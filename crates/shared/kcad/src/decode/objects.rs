@@ -17,8 +17,8 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
     DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
     HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity, PointEntity, RingGeometry, SplineEntity,
-    TextAlign, TextEntity, Vec2, width_factor_ok,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity, PointEntity, PointPart, RingGeometry,
+    SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -28,8 +28,8 @@ use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -105,6 +105,8 @@ pub(super) struct Features {
     pub(super) traverse_tolerances: bool,
     /// Schema 16: the survey settings' ground height and reduction to the grid.
     pub(super) ground: bool,
+    /// Schema 17: a polyline's and a point's parts (`parts`, docs/adr/0174).
+    pub(super) line_parts: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -127,6 +129,7 @@ impl Features {
             survey: schema >= SCHEMA_WITH_SURVEY,
             traverse_tolerances: schema >= SCHEMA_WITH_TRAVERSE_TOLERANCES,
             ground: schema >= SCHEMA_WITH_GROUND,
+            line_parts: schema >= SCHEMA_WITH_LINE_PARTS,
             uids: true,
         }
     }
@@ -147,11 +150,15 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
         || (has.uids && key == "uid")
         || (has.weights && key == "lineWeight")
         || match kind {
-            Kind::Point => matches!(key, "p" | "z"),
+            Kind::Point => matches!(key, "p" | "z") || (has.line_parts && key == "parts"),
             Kind::Line => {
                 matches!(key, "a" | "b") || (has.elevations && matches!(key, "za" | "zb"))
             }
-            Kind::Polyline => matches!(key, "pts" | "bulges") || (has.elevations && key == "zs"),
+            Kind::Polyline => {
+                matches!(key, "pts" | "bulges")
+                    || (has.elevations && key == "zs")
+                    || (has.line_parts && key == "parts")
+            }
             Kind::Polygon => {
                 matches!(key, "pts" | "bulges" | "holes")
                     || (has.elevations && key == "zs")
@@ -222,6 +229,8 @@ struct Fields {
     zs_at: usize,
     rings: Option<Vec<RingGeometry>>,
     parts: Option<Vec<AreaPart>>,
+    /// A multi-point object's points past its first (schema 17).
+    point_parts: Option<Vec<PointPart>>,
     loops: Option<Vec<Vec<Vec2>>>,
     closed: Option<bool>,
     text: Option<String>,
@@ -422,6 +431,8 @@ pub(super) fn object(
             }
             "holes" if kind == Kind::Polygon => f.rings = Some(list(r, |r, _| ring(r, has))?),
             "holes" => f.loops = Some(list(r, |r, _| points(r))?),
+            "parts" if kind == Kind::Point => f.point_parts = Some(list(r, |r, _| point_part(r))?),
+            "parts" if kind == Kind::Polyline => f.parts = Some(list(r, |r, _| line_part(r, has))?),
             "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
             "closed" => f.closed = Some(r.bool()?),
             "text" if kind == Kind::Leader => {
@@ -523,6 +534,7 @@ fn build(
             base,
             p: required(r, f.p, "p")?,
             z: f.z,
+            parts: f.point_parts.take(),
         }),
         Kind::Line => Entity::Line(LineEntity {
             base,
@@ -728,6 +740,63 @@ fn part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
         bulges,
         holes,
         zs,
+    })
+}
+
+/// A part of a multi-part polyline past its first (schema 17, §6.6): two
+/// vertices or more, its arcs and elevations; no holes (an unknown field).
+fn line_part(r: &mut Reader<'_>, has: Features) -> Result<AreaPart, KcadError> {
+    let (mut pts, mut bulges, mut zs, mut zs_at, mut pts_at) = (None, None, None, 0, 0);
+    map(r, |r, key| {
+        match key {
+            "pts" => {
+                pts_at = r.position();
+                pts = Some(points(r)?);
+            }
+            "bulges" => bulges = Some(floats(r)?),
+            "zs" if has.elevations => {
+                zs_at = r.position();
+                zs = Some(elevations(r)?);
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let pts = required(r, pts, "pts")?;
+    if pts.len() < 2 {
+        return Err(r.fail_at(
+            Code::BadValue,
+            pts_at,
+            &format!(
+                "çoklu çizginin parçasının {} köşesi var; en az iki olmalı",
+                pts.len()
+            ),
+        ));
+    }
+    let zs = as_long_as(r, zs, zs_at, pts.len())?;
+    Ok(AreaPart {
+        pts,
+        bulges,
+        holes: None,
+        zs,
+    })
+}
+
+/// A point of a multi-point object past its first (schema 17, §6.6): its
+/// place and elevation.
+fn point_part(r: &mut Reader<'_>) -> Result<PointPart, KcadError> {
+    let (mut p, mut z) = (None, None);
+    map(r, |r, key| {
+        match key {
+            "p" => p = Some(point(r)?),
+            "z" => z = Some(r.float()?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(PointPart {
+        p: required(r, p, "p")?,
+        z,
     })
 }
 

@@ -847,6 +847,7 @@ fn a_point_keeps_its_row_as_it_was() {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: Some(12.5),
+            parts: None,
         }),
     );
     select(&mut app, &[spot]);
@@ -1016,6 +1017,7 @@ fn several_objects_show_their_elevation_only_when_every_vertex_has_the_same() {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: Some(5.0),
+            parts: None,
         }),
     );
     select(&mut app, &[a, b, c, line, spot]);
@@ -1036,6 +1038,7 @@ fn several_objects_show_their_elevation_only_when_every_vertex_has_the_same() {
             base: base("nokta"),
             p: wire(2.0, 2.0),
             z: None,
+            parts: None,
         }),
     );
     select(&mut app, &[a, bare_spot]);
@@ -1078,6 +1081,7 @@ fn a_cell_of_several_objects_sets_every_vertex_of_each_of_them_in_one_step() {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: None,
+            parts: None,
         }),
     );
     select(&mut app, &[path, area, line, spot]);

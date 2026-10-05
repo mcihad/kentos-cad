@@ -448,6 +448,7 @@ mod tests {
             },
             p: Vec2 { x: 1.5, y: 2.5 },
             z,
+            parts: None,
         })
     }
 

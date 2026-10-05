@@ -122,16 +122,19 @@ fn objects() -> Vec<Entity> {
             }),
             p: tm(0.1 + 0.2, third),
             z: Some(0.0),
+            parts: None,
         }),
         Entity::Point(PointEntity {
             base: base("kot"),
             p: tm(10.0, 20.0),
             z: Some(105.2),
+            parts: None,
         }),
         Entity::Point(PointEntity {
             base: base("kot"),
             p: tm(-1e-7, 2.5),
             z: None,
+            parts: None,
         }),
         Entity::Line(LineEntity {
             base: with("parsel", |b| b.color = Some("#FF0000".into())),
@@ -894,6 +897,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             base: with("parsel", |b| b.attrs = long.clone()),
             p: tm(1.0, 1.0),
             z: None,
+            parts: None,
         }),
         Entity::Point(PointEntity {
             base: with("parsel", |b| {
@@ -902,6 +906,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             }),
             p: tm(2.0, 2.0),
             z: None,
+            parts: None,
         }),
         Entity::Line(LineEntity {
             base: base("dup"),
@@ -1535,6 +1540,7 @@ fn pole_like() -> Entity {
         base: base(""),
         p: v(0.0, 0.0),
         z: None,
+        parts: None,
     })
 }
 

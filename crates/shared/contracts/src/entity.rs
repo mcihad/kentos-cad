@@ -67,6 +67,24 @@ pub struct PointEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub z: Option<f64>,
+    /// A multi-point object's points past its first, whose own are the
+    /// fields above; absent for one point (docs/adr/0174).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<Vec<PointPart>>,
+}
+
+/// A point of a multi-point object past its first (docs/adr/0174): its
+/// place and elevation, as the point's own fields hold the first's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PointPart {
+    pub p: Vec2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub z: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -108,7 +126,8 @@ pub struct RingGeometry {
 
 /// A part of a multi-part area past its first (docs/adr/0143): its outer
 /// ring in vertex + bulge form, its holes and its vertices' elevations, as
-/// the area's own fields hold the first part's.
+/// the area's own fields hold the first part's. A multi-part polyline's
+/// part is the same, open and without holes (docs/adr/0174).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -148,8 +167,9 @@ pub struct PathEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zs: Option<Vec<Option<f64>>>,
-    /// A polygon's parts past its first, whose own are the fields above;
-    /// absent for a one-part area, never on a polyline (docs/adr/0143).
+    /// A polygon's or a polyline's parts past its first, whose own are the
+    /// fields above; absent for one part (docs/adr/0143, 0174). A
+    /// polyline's parts are open, of two vertices or more, without holes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<AreaPart>>,

@@ -193,12 +193,16 @@ describe('.kcad v2 content (docs/specs/kcad-v2.md)', () => {
     doc.replaceWith(two);
     const area = [...doc.all()][at];
     expect(area.kind === 'polygon' && area.parts?.[0].zs).toEqual([1, null, 2, 3]);
-    // Only an area has parts; a part is at least two vertices; its lists as long as its vertices.
+    // A polyline has parts too (docs/adr/0174), without holes; a part is at least two vertices; its lists as long as
+    // its vertices.
     const line = good.entities.findIndex((e) => e.kind === 'polyline');
+    const lineParts = structuredClone(good);
+    (lineParts.entities[line] as unknown as Record<string, unknown>).parts = [{ pts: square(5).slice(0, 2) }];
+    expect(readSnapshotV2(lineParts).ok).toBe(true);
     const d = structuredClone(good);
-    (d.entities[line] as unknown as Record<string, unknown>).parts = [];
+    (d.entities[line] as unknown as Record<string, unknown>).parts = [{ pts: square(5), holes: [{ pts: square(5.25).slice(0, 3) }] }];
     const r = readSnapshotV2(d);
-    expect(r.ok ? null : r.error).toContain('parçalar: yalnızca kapalı alanda');
+    expect(r.ok ? null : r.error).toContain('parça 2 › adalar: yalnızca kapalı alanda');
     expect(read((e) => (e.parts = [{ pts: square(5).slice(0, 1) }]))).toContain('parça 2');
     expect(read((e) => (e.parts = [{ pts: square(5), zs: [1] }]))).toContain('parça 2 › kotlar');
     expect(read((e) => (e.parts = [{ pts: square(5), holes: [{ pts: square(5).slice(0, 2) }] }]))).toContain('parça 2 › ada 1');

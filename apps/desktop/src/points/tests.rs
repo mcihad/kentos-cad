@@ -167,6 +167,7 @@ fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
             y: 4420002.25,
         },
         z: Some(100.5),
+        parts: None,
     };
     let row = row_of(&p, "Nokta", true);
     assert_eq!(

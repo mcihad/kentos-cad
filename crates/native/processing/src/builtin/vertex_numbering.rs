@@ -308,6 +308,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                 base: base(&layer.id, Some(c.name.clone()), &attrs),
                 p: c.p,
                 z: None,
+                parts: None,
             }));
         }
         if output != "points"

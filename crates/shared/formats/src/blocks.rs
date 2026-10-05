@@ -349,6 +349,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             base,
             p: back(*p),
             z: *z,
+            parts: None,
         }),
         Shape::Line { a, b } => Entity::Line(LineEntity {
             base,

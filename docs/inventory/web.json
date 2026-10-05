@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 330,
-      "implemented": 330,
+      "total": 333,
+      "implemented": 333,
       "partial": 0,
       "pending": 0
     },
@@ -161,8 +161,8 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 330,
-        "implemented": 330,
+        "total": 333,
+        "implemented": 333,
         "partial": 0,
         "pending": 0,
         "none": 0,
@@ -17531,6 +17531,19 @@
       }
     },
     {
+      "id": "PointEntity.parts",
+      "contract": "PointEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "parts",
+      "type": "Array<PointPart>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "PointEntity.symbol",
       "contract": "PointEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -17546,6 +17559,32 @@
     {
       "id": "PointEntity.z",
       "contract": "PointEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "z",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PointPart.p",
+      "contract": "PointPart",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "p",
+      "type": "Vec2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "PointPart.z",
+      "contract": "PointPart",
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "z",
       "type": "number",

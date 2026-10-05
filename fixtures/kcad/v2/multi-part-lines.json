@@ -1,0 +1,175 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Çok parçalı çizgiler ve noktalar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "polyline",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "Yol"
+      },
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500020.0,
+          "y": 4400000.0
+        },
+        {
+          "x": 500030.0,
+          "y": 4400010.0
+        }
+      ],
+      "bulges": [
+        0.0,
+        0.25,
+        0.0
+      ],
+      "zs": [
+        100.0,
+        null,
+        101.5
+      ],
+      "parts": [
+        {
+          "pts": [
+            {
+              "x": 500040.0,
+              "y": 4400010.0
+            },
+            {
+              "x": 500060.0,
+              "y": 4400010.0
+            }
+          ]
+        },
+        {
+          "pts": [
+            {
+              "x": 500070.0,
+              "y": 4400010.0
+            },
+            {
+              "x": 500080.0,
+              "y": 4400000.0
+            },
+            {
+              "x": 500090.0,
+              "y": 4400000.0
+            }
+          ],
+          "bulges": [
+            -0.5,
+            0.0,
+            0.0
+          ],
+          "zs": [
+            102.0,
+            102.25,
+            -0.0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "S1",
+        "Kod": "ST"
+      },
+      "label": "S1",
+      "p": {
+        "x": 500000.0,
+        "y": 4400030.0
+      },
+      "z": 99.5,
+      "parts": [
+        {
+          "p": {
+            "x": 500010.0,
+            "y": 4400030.0
+          }
+        },
+        {
+          "p": {
+            "x": 500020.0,
+            "y": 4400030.0
+          },
+          "z": 98.25
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 500000.0,
+          "y": 4400050.0
+        },
+        {
+          "x": 500010.0,
+          "y": 4400050.0
+        }
+      ],
+      "parts": []
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500030.0,
+        "y": 4400050.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1741",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1742",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1743",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1744"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

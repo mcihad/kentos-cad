@@ -1,6 +1,6 @@
 # KCAD v2: KentOS proje dosyası (`.kcad`) bayt spesifikasyonu
 
-- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–16 yazar, §6.1), KentOS CBOR profili 1.
+- **Sürüm:** kap 2.0, belge şeması 2 (yazıcı gerektiğinde 3–17 yazar, §6.1), KentOS CBOR profili 1.
 - **Durum:** kabul edildi (2026-09-26, [ADR 0025](../adr/0025-kcad-v2-encoding.md)). Yön [ADR 0011](../adr/0011-kcad-binary-snapshot.md)'den, kimlikler [ADR 0014](../adr/0014-persistent-entity-identity.md)'ten gelir.
 - **Kapsam:** TODOS.md `FILE-01..08`, `FILE-12`, `FILE-22`, `FILE-23`.
 - **Başvuru uygulamaları:** Rust kodlayıcı ve çözücü `crates/shared/kcad` (`kentos-kcad`); tarayıcıda aynı kod `crates/wasm/formats-wasm` ile; bağımsız Python okuyucusu `tools/kcad/kcad.py`; bayt düzeyinde örnekler `fixtures/kcad/v2`.
@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15` ya da `16`; değilse `schema_version` |
+| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16` ya da `17`; değilse `schema_version` |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -227,7 +227,9 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 
 **Şema 16**, şema 15'in kendisi ve ölçme ayarlarının zeminidir: `survey`'in `groundHeight` ve `reduceToGrid`'i (§6.4.2; ADR 0171 §2, §4). Yazıcı `16`'yı **yalnız bunlardan biri varken** yazar. Başka her çizim şema 2–15'tir ve eskisiyle bayt bayt aynıdır. Şema 15 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/survey-ground-in-schema-15.kcad`): eski okuyucu zemin değerlerini başka bir yükseklikte vermez, ölçülen uzunlukları düzleme indirmeden bırakmaz, dosyayı açmaz. Şema 16 şema 15'i kapsar. Örnek dosya `survey-ground.kcad`.
 
-Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
+**Şema 17**, şema 16'nın kendisi ve çok parçalı çoklu çizgiyle çok noktalı nesnedir: `polyline`'ın ve `point`'in `parts`'ı (§6.6; ADR 0174). Yazıcı `17`'yi **yalnız belgenin ya da bir blok tanımının bir çoklu çizgisinin ya da noktasının `parts` alanı varken** yazar. Başka her çizim şema 2–16'dır ve eskisiyle bayt bayt aynıdır. Şema 2–16 yükünde çoklu çizginin ve noktanın `parts`'ı bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/polyline-parts-in-schema-16.kcad`, `point-parts-in-schema-16.kcad`): eski okuyucu çok parçalı çizgiyi sessizce ilk parçasına indirmez, dosyayı açmaz. Şema 17 şema 16'yı kapsar. Örnek dosya `multi-part-lines.kcad`.
+
+Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
 ### 6.2 Belge
 
@@ -405,9 +407,9 @@ Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz.
 
 | Tür | Alanlar |
 |---|---|
-| `point` | `p` nokta; `z` float (isteğe bağlı, kot) |
+| `point` | `p` nokta; `z` float (isteğe bağlı, kot); `parts` nokta dizisi (isteğe bağlı; yalnız şema 17 ve sonrası) |
 | `line` | `a`, `b` nokta; `za`, `zb` float (isteğe bağlı; yalnız şema 4 ve sonrası: uçların kotu) |
-| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası) |
+| `polyline` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası); `parts` parça dizisi (isteğe bağlı; yalnız şema 17 ve sonrası) |
 | `polygon` | `pts` nokta listesi; `bulges` float dizisi (isteğe bağlı); `holes` halka dizisi (isteğe bağlı); `zs` kot listesi (isteğe bağlı; yalnız şema 4 ve sonrası); `parts` parça dizisi (isteğe bağlı; yalnız şema 5 ve sonrası) |
 | `circle` | `c` nokta; `r` float |
 | `arc` | `c` nokta; `r`, `a0`, `a1` float (radyan, saat yönünün tersine `a0` → `a1`) |
@@ -424,7 +426,9 @@ Yokluğu denetlenmeyen toleranstır: farklar gösterilir, karşılaştırılmaz.
 - **Parça** (şema 5; ADR 0143): çok parçalı alanın ilk parçasının ötesindeki bir parçası. Alanın kendi `pts`, `bulges`, `holes` ve `zs`'i ilk parçadır; `parts` öbürlerini sırasıyla tutar. Parça haritası: `pts` nokta listesi (zorunlu), `bulges` float dizisi, `holes` halka dizisi, `zs` kot listesi (isteğe bağlı); alanlarının kuralları alanın kendi alanlarınınkiyle aynıdır. Anahtarları kodlanmış sırasıyla `zs` < `pts` < `holes` < `bulges`'tir.
   - Parçaların sırası anlamlıdır ve korunur. Okuyucu parçaların örtüşmesini denetlemez, deliklerin dış halkanın içinde olmasını denetlemediği gibi.
   - Yazıcı `parts`'ı verildiği gibi yazar, boş olanı da. Tek parçalı alanda alanı hiç üretmemek üreticinin işidir.
-  - Yalnız `polygon` parça alır; `polyline`'da `parts` bilinmeyen alandır (`unknown_field`).
+  - Şema 5–16'da yalnız `polygon` parça alır; `polyline`'da `parts` bilinmeyen alandır (`unknown_field`).
+- **Çoklu çizginin parçası** (şema 17; ADR 0174): çok parçalı çoklu çizginin ilk parçasının ötesindeki bir parçası, alanın parçasıyla aynı haritadır: `pts` nokta listesi (zorunlu, en az 2 nokta; azı `bad_value`), `bulges` float dizisi, `zs` kot listesi (isteğe bağlı). `holes` yasaktır (`bad_value`: çizginin deliği olmaz). Çoklu çizginin kendi `pts`, `bulges` ve `zs`'i ilk parçadır; parçalar açıktır, sırası anlamlıdır ve korunur, birbirine değmeleri denetlenmez.
+- **Noktanın parçası** (şema 17; ADR 0174): çok noktalı nesnenin ilk noktasının ötesindeki bir noktası: `p` nokta (zorunlu), `z` float (isteğe bağlı, kot). Anahtarları kodlanmış sırasıyla `p` < `z`'dir. Noktanın kendi `p` ve `z`'si ilk noktadır; öznitelikleri ve etiketi bütün noktalarındır.
 - **Yay değeri** (`bulges`): DXF'teki gibi `tan(θ/4)`, saat yönünün tersi artı; `bulges[i]` `pts[i] → pts[i+1]` kenarınındır, kapalı şekilde son değer kapanış kenarınındır. Yaylar, delikler, elips ve eğri parametreleri tanım olarak saklanır; ekranda çizilen üçgen ya da kısa parçalar dosyaya girmez (`FILE-08`).
 - **Köşe kotları** (şema 4; ADR 0142):
   - **Anlamı:** metre, projenin düşey datumunda; sonlu bir float, eksi olabilir (deniz altı, kazı), aralık sınırı yoktur. Hangi yükseklik olduğu (ortometrik, elipsoidal) proje ayarının işidir, dosya biçiminin değil.

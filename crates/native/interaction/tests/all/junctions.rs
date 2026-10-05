@@ -287,6 +287,7 @@ fn a_point_is_a_corner_with_noktalar_da() {
             y: 4420005.0,
         },
         z: None,
+        parts: None,
     });
     b.doc.add(point).expect("a slot");
     draw(&mut b, "polygon", &GAP);

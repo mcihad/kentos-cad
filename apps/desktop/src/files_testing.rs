@@ -67,6 +67,7 @@ pub fn drawing(extra: usize) -> Document {
                 y: 4_420_200.0,
             },
             z: None,
+            parts: None,
         }));
     }
     let mut doc = Document::new(snapshot, None).expect("opens");

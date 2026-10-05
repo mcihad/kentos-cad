@@ -42,6 +42,7 @@ fn add_point(b: &mut Bench, at: [f64; 2], label: Option<&str>) -> Slot {
             y: N + at[1],
         },
         z: None,
+        parts: None,
     };
     b.doc.add(Entity::Point(point)).expect("a slot")
 }

@@ -59,7 +59,10 @@ use crate::layer::LineType;
 /// 26: GNSS files, GPX 1.1 and NMEA 0183 (`readGnss` → `GnssRead`).
 /// 27: instrument coordinate files written (`writeField`: `FieldPoint`s and
 ///    `FieldWriteOptions` → `FieldWrite`).
-pub const FORMATS_VERSION: u32 = 27;
+/// 28: multi-part polylines and points (docs/adr/0174): `.kcad` document schema 17 and the typed
+///    columns' layout, a polyline's `parts` as an area's, a point's `parts` (each its flags, place
+///    and elevation).
+pub const FORMATS_VERSION: u32 = 28;
 
 // ── Every import ────────────────────────────────────────────────────────
 

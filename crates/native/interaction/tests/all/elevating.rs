@@ -93,6 +93,7 @@ fn point(b: &mut Bench, at: [f64; 2], z: Option<f64>) -> Slot {
             base: base("cizim"),
             p: pt(at[0], at[1]),
             z,
+            parts: None,
         }),
     )
 }

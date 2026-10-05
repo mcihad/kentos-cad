@@ -89,5 +89,6 @@ fn point(input: PointCreate, id: u32) -> Entity {
         },
         p: input.p,
         z: input.z,
+        parts: None,
     })
 }

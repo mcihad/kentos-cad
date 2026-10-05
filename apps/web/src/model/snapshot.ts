@@ -562,6 +562,17 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
     case 'point':
       pointAt(v.p, w, 'p');
       if (v.z !== undefined) numAt(v.z, w, 'z');
+      // A multi-point object's other points (docs/adr/0174): each its place and elevation.
+      if (v.parts !== undefined) {
+        if (!Array.isArray(v.parts)) fail(at(w, 'noktalar'), 'liste olmalı');
+        (v.parts as unknown[]).forEach((p, i) => {
+          const name = `nokta ${i + 2}`;
+          if (!isObj(p)) fail(at(w, name), 'nesne olmalı');
+          const part = p as Record<string, unknown>;
+          pointAt(part.p, w, name);
+          if (part.z !== undefined) numAt(part.z, w, `${name} › kot`);
+        });
+      }
       break;
     case 'line':
       pointAt(v.a, w, 'a');
@@ -578,9 +589,10 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
         if (kind !== 'polygon' || !Array.isArray(v.holes)) fail(at(w, 'adalar'), 'yalnızca kapalı alanda, liste olarak');
         holesAt(v.holes as unknown[], w, '');
       }
-      // A multi-part area's other parts (docs/adr/0143): each as the area's own ring, with its holes.
+      // A multi-part area's or polyline's other parts (docs/adr/0143, 0174): each as the object's own path, an area's
+      // with its holes.
       if (v.parts !== undefined) {
-        if (kind !== 'polygon' || !Array.isArray(v.parts)) fail(at(w, 'parçalar'), 'yalnızca kapalı alanda, liste olarak');
+        if (!Array.isArray(v.parts)) fail(at(w, 'parçalar'), 'liste olmalı');
         (v.parts as unknown[]).forEach((p, i) => {
           const name = `parça ${i + 2}`;
           if (!isObj(p)) fail(at(w, name), 'nesne olmalı');
@@ -589,7 +601,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
           if (part.bulges !== undefined && numbersAt(part.bulges, w, `${name} › bulge`) > k) fail(at(w, `${name} › bulge`), 'köşe sayısından uzun olamaz');
           if (part.zs !== undefined) elevationsAt(part.zs, k, w, `${name} › kotlar`);
           if (part.holes !== undefined) {
-            if (!Array.isArray(part.holes)) fail(at(w, `${name} › adalar`), 'liste olmalı');
+            if (kind !== 'polygon' || !Array.isArray(part.holes)) fail(at(w, `${name} › adalar`), 'yalnızca kapalı alanda, liste olarak');
             holesAt(part.holes as unknown[], w, `${name} › `);
           }
         });

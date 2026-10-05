@@ -474,6 +474,7 @@ fn point_entity(row: Row) -> Entity {
         },
         p: Vec2 { x: row.y, y: row.x },
         z: row.z.map(|(v, _)| v),
+        parts: None,
     })
 }
 

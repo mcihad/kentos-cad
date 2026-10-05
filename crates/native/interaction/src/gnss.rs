@@ -169,6 +169,7 @@ pub fn entities(placed: &[Placed]) -> Vec<Entity> {
                     y: pt.p.y,
                 },
                 z: pt.z,
+                parts: None,
             })
         })
         .collect()

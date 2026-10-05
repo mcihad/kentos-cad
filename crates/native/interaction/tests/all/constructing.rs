@@ -689,6 +689,7 @@ fn with_point(b: &mut Bench, at: [f64; 2], z: Option<f64>) {
             y: N + at[1],
         },
         z,
+        parts: None,
     });
     b.doc.add(point).expect("a slot");
 }

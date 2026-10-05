@@ -50,6 +50,7 @@ fn point(x: f64) -> Entity {
         },
         p: Vec2 { x, y: 4_420_190.0 },
         z: None,
+        parts: None,
     })
 }
 

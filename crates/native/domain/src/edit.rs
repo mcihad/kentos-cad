@@ -123,7 +123,7 @@ impl Document {
             };
             let after = Stored {
                 uid: before.uid,
-                entity: Arc::new(changed(entity, slot)),
+                entity: Arc::new(changed(entity, slot, &before.entity)),
             };
             if after.entity == before.entity {
                 continue;
@@ -428,14 +428,23 @@ impl Document {
 }
 
 /// `entity` as the object at `slot` after an update: the slot's id, and no
-/// holes or parts on a polyline (a polygon opened by an edit loses them, web
-/// `updateOp`; docs/adr/0143). A hatch keeps its islands, on the web too
-/// since docs/adr/0020's fix.
-fn changed(mut entity: Entity, slot: Slot) -> Entity {
+/// holes on a polyline. An area opened into a polyline, or a polyline closed
+/// into an area, keeps no parts it only inherited (web `updateOp`;
+/// docs/adr/0143, 0174); a polyline's own parts stay. A hatch keeps its
+/// islands, on the web too since docs/adr/0020's fix.
+fn changed(mut entity: Entity, slot: Slot, before: &Entity) -> Entity {
     base_mut(&mut entity).id = slot.0;
+    match (&mut entity, before) {
+        (Entity::Polyline(after), Entity::Polygon(was))
+        | (Entity::Polygon(after), Entity::Polyline(was))
+            if after.parts == was.parts =>
+        {
+            after.parts = None;
+        }
+        _ => {}
+    }
     if let Entity::Polyline(path) = &mut entity {
         path.holes = None;
-        path.parts = None;
     }
     entity
 }

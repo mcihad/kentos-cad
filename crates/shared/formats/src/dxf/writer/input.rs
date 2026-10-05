@@ -166,6 +166,7 @@ impl Fields {
                 base,
                 p: need(self.p, "p")?,
                 z: self.z,
+                parts: None,
             }),
             "line" => Entity::Line(LineEntity {
                 base,

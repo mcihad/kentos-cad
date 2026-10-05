@@ -78,6 +78,7 @@ fn the_same_file_opens_with_the_same_ids_and_new_objects_get_v7() {
         },
         p: Vec2 { x: 1.0, y: 2.0 },
         z: None,
+        parts: None,
     });
     let slot = first.add(point).expect("a slot");
     assert_eq!(first.uid(slot).map(|u| u.get_version_num()), Some(7));
@@ -98,6 +99,7 @@ fn the_same_file_opens_with_the_same_ids_and_new_objects_get_v7() {
         },
         p: Vec2 { x: 3.0, y: 4.0 },
         z: None,
+        parts: None,
     });
     again.add(edited).expect("a slot");
     let reopened = open(&serde_json::to_string(&again.to_snapshot()).expect("written"));

@@ -1487,6 +1487,7 @@ fn perf() {
                 y: 4_420_000.0 + (i / side) as f64,
             },
             z: None,
+            parts: None,
         }));
     }
     let doc = crate::document::Document::new(snapshot, None).expect("opens");

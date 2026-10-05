@@ -167,14 +167,21 @@ fn the_writer_refuses_what_the_reader_would() {
     let refused = |e: Entity| {
         kentos_kcad::encode(&drawing(vec![e])).expect_err("refused")
     };
-    // A polyline has no parts.
-    let Entity::Polygon(mut path) = area(Some(vec![part(5.0)])) else {
+    // A polyline's part has no holes (docs/adr/0174).
+    let mut holed_line = part(5.0);
+    holed_line.holes = Some(vec![RingGeometry {
+        pts: square(5.25),
+        bulges: None,
+        zs: None,
+    }]);
+    let Entity::Polygon(mut path) = area(Some(vec![holed_line])) else {
         unreachable!()
     };
     path.base = base(0);
     let e = refused(Entity::Polyline(path));
     assert_eq!(e.code, Code::BadValue);
-    assert!(e.message.contains("çoklu çizginin parçası olamaz"), "{e}");
+    assert!(e.message.contains("polyline/parts/0"), "{e}");
+    assert!(e.message.contains("çoklu çizginin parçasının adası"), "{e}");
     // A part's elevations: one per vertex.
     let mut short = part(5.0);
     short.zs = Some(vec![Some(1.0)]);

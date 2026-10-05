@@ -361,7 +361,15 @@ impl Emitter {
                     _ => note(&mut b, "Blok", &e.label),
                 }
                 self.grow(v(c));
-                self.push(layer, Entity::Point(PointEntity { base: b, p: v(c), z }));
+                self.push(
+                    layer,
+                    Entity::Point(PointEntity {
+                        base: b,
+                        p: v(c),
+                        z,
+                        parts: None,
+                    }),
+                );
             }
             Kind::Line => {
                 let [a, z] = [e.coords.first(), e.coords.get(1)].map(|c| c.filter(|c| finite(c)));
@@ -405,7 +413,7 @@ impl Emitter {
                 if e.coords.len() == 1 {
                     let c = e.coords.first().filter(|c| finite(c)).ok_or(BAD)?;
                     self.grow(v(c));
-                    self.push_smart(layer, Entity::Point(PointEntity { base: b, p: v(c), z: None }));
+                    self.push_smart(layer, Entity::Point(PointEntity { base: b, p: v(c), z: None, parts: None }));
                 } else {
                     self.area(e, layer, b)?;
                     self.layers[layer].smart += 1;
@@ -581,7 +589,7 @@ impl Emitter {
         let Some(symbol) = symbols::planet_symbol(e, &measure) else {
             *self.undrawn.entry(e.smart).or_default() += 1;
             self.grow(at);
-            self.push_smart(layer, Entity::Point(PointEntity { base: b, p: at, z: None }));
+            self.push_smart(layer, Entity::Point(PointEntity { base: b, p: at, z: None, parts: None }));
             return Ok(());
         };
         let mut size = e.scale;

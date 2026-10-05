@@ -310,6 +310,18 @@ class Packer {
       case 'point':
         this.point(e.p, 'p', kind);
         if (e.z !== undefined) (flags |= OPT[0]), this.float(e.z, 'z');
+        // A multi-point object's other points (docs/adr/0174): each its flag, place and elevation.
+        if (e.parts !== undefined) {
+          if (!Array.isArray(e.parts)) throw unwritable('wrong_type', `${this.where}/parts`, 'nokta listesi olmalı');
+          flags |= OPT[1];
+          this.int(e.parts.length);
+          e.parts.forEach((q, i) => {
+            for (const key in q) if (key !== 'p' && key !== 'z') this.drop(`${kind}.parts.${key}`);
+            this.int(q.z !== undefined ? 1 : 0);
+            this.point(q.p, `parts/${i}/p`, kind);
+            if (q.z !== undefined) this.float(q.z, `parts/${i}/z`);
+          });
+        }
         break;
       case 'line':
         this.point(e.a, 'a', kind);
@@ -328,8 +340,8 @@ class Packer {
           flags |= OPT[1];
           this.holes(holes, 'holes', kind);
         }
-        // A multi-part area's other parts (docs/adr/0143): after the holes, each part's flags and lists.
-        const parts = e.kind === 'polygon' ? e.parts : undefined;
+        // A multi-part area's or polyline's other parts (docs/adr/0143, 0174): after the holes, each part's flags and lists.
+        const parts = e.parts;
         if (parts !== undefined) {
           if (!Array.isArray(parts)) throw unwritable('wrong_type', `${this.where}/parts`, 'parça listesi olmalı');
           flags |= OPT[3];
@@ -624,6 +636,17 @@ export class ColumnsReader {
       case 'point':
         e.p = this.pt();
         if (has(0)) e.z = this.num();
+        if (has(1)) {
+          const q = this.readInt();
+          const parts = [];
+          for (let k = 0; k < q; k++) {
+            const pf = this.readInt();
+            const part: Record<string, unknown> = { p: this.pt() };
+            if (pf & 1) part.z = this.num();
+            parts.push(part);
+          }
+          e.parts = parts;
+        }
         break;
       case 'line':
         e.a = this.pt();

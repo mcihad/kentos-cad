@@ -561,6 +561,7 @@ mod tests {
             base: base(),
             p: pt(0.0, 0.0),
             z: Some(3.0),
+            parts: None,
         });
         assert_eq!(space_length(&point), None);
     }
@@ -679,6 +680,7 @@ mod tests {
                 base: base(),
                 p: pt(1.0, 2.0),
                 z,
+                parts: None,
             })
         };
         let raised = geometry_with(&point(Some(12.5)), Change::Raise(2.5)).expect("a point");
@@ -746,6 +748,7 @@ mod tests {
             base: base(),
             p: pt(0.0, 0.0),
             z: Some(2.0),
+            parts: None,
         });
         assert_eq!(Summary::of_object(&point), Summary::Value(2.0));
     }
@@ -758,6 +761,7 @@ mod tests {
             base: base(),
             p: pt(0.0, 0.0),
             z: Some(5.0),
+            parts: None,
         });
         let circle = Entity::Circle(kentos_contracts::CircleEntity {
             base: base(),
@@ -777,6 +781,7 @@ mod tests {
             base: base(),
             p: pt(0.0, 0.0),
             z: None,
+            parts: None,
         });
         assert_eq!(Summary::of_objects([&a, &bare]), Summary::Partial(5.0, 5.0));
         assert_eq!(Summary::of_objects([&polyline(None), &bare]), Summary::None);

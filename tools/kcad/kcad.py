@@ -85,6 +85,8 @@ SCHEMA_WITH_SURVEY = 14
 SCHEMA_WITH_TRAVERSE_TOLERANCES = 15
 # Schema 16: schema 15 and the survey settings' ground, `groundHeight` and `reduceToGrid` (docs/adr/0171 §2, §4).
 SCHEMA_WITH_GROUND = 16
+# Schema 17: schema 16 and multi-part polylines and points, a polyline's and a point's `parts` (docs/adr/0174).
+SCHEMA_WITH_LINE_PARTS = 17
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
@@ -97,7 +99,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -430,6 +432,7 @@ class _Schema:
         self.weights = False
         self.elevations = False
         self.parts = False
+        self.line_parts = False
         self.blocks = False
         self.texts = False
         # While a block definition's objects are read: how many so far (they have no persistent ids).
@@ -583,6 +586,7 @@ class _Schema:
         self.weights = version >= SCHEMA_WITH_LINE_WEIGHTS
         self.elevations = version >= SCHEMA_WITH_ELEVATIONS
         self.parts = version >= SCHEMA_WITH_PARTS
+        self.line_parts = version >= SCHEMA_WITH_LINE_PARTS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -1129,6 +1133,23 @@ class _Schema:
         self.same_length(ring)
         return ring
 
+    def line_part(self, v):
+        """A part of a multi-part polyline past its first (schema 17, §6.6): two vertices or more, its arcs and
+        elevations; no holes."""
+        table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False)}
+        if self.elevations:
+            table["zs"] = (self.array(self.elevation), False)
+        part = self.fields(table)(v)
+        if len(part["pts"]) < 2:
+            self.path.append("pts")
+            self.fail("bad_value", f"çoklu çizginin parçasının {len(part['pts'])} köşesi var; en az iki olmalı")
+        self.same_length(part)
+        return part
+
+    def point_part(self, v):
+        """A point of a multi-point object past its first (schema 17, §6.6): its place and elevation."""
+        return self.fields({"p": (self.point, True), "z": (self.float, False)})(v)
+
     def part(self, v):
         """A part of a multi-part area past its first (§6.6): its ring, arcs, holes and elevations, as the area's own."""
         table = {"pts": (self.array(self.point), True), "bulges": (self.array(self.float), False), "holes": (self.array(self.ring), False)}
@@ -1143,16 +1164,19 @@ def _path(s, holes):
     table = {"pts": (s.array(s.point), True), "bulges": (s.array(s.float), False)}
     if holes:
         table["holes"] = (s.array(s.ring), False)
-        # Only an area has parts (schema 5).
+        # An area has parts from schema 5 on.
         if s.parts:
             table["parts"] = (s.array(s.part), False)
+    elif s.line_parts:
+        # A polyline from schema 17 on (docs/adr/0174).
+        table["parts"] = (s.array(s.line_part), False)
     if s.elevations:
         table["zs"] = (s.array(s.elevation), False)
     return table
 
 
 ENTITY_KINDS = {
-    "point": lambda s: {"p": (s.point, True), "z": (s.float, False)},
+    "point": lambda s: {"p": (s.point, True), "z": (s.float, False), **({"parts": (s.array(s.point_part), False)} if s.line_parts else {})},
     # A line's end without an elevation has no key: `null` is not written there (§5.2).
     "line": lambda s: {"a": (s.point, True), "b": (s.point, True), **({"za": (s.float, False), "zb": (s.float, False)} if s.elevations else {})},
     "polyline": lambda s: _path(s, holes=False),

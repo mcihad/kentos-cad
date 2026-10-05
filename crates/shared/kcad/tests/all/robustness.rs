@@ -371,6 +371,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 base: b,
                 p: point(rng),
                 z: rng.chance(50).then(|| rng.float()),
+                parts: None,
             }),
             1 => Entity::Polyline(PathEntity {
                 base: b,
