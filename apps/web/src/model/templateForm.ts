@@ -1,6 +1,6 @@
 import type { TextAlign } from './entities';
 import type { LineType } from './layers';
-import { TEMPLATE_METHODS, type ObjectTemplate, type TemplateTool } from './objectTemplate';
+import { CLOSED_SIDES, CLOSED_TOOLS, GROUP_TOOLS, OPEN_SIDES, TEMPLATE_METHODS, type MemberRule, type MemberSide, type ObjectTemplate, type TemplateMember, type TemplateTool } from './objectTemplate';
 
 /**
  * The Şablon düzenleyici's form (docs/adr/0176 §4): its texts and choices, the library item's fields and the
@@ -10,8 +10,11 @@ import { TEMPLATE_METHODS, type ObjectTemplate, type TemplateTool } from './obje
  * not written; Yöntem only for a tool that has methods; Katman (its name) is trimmed and needed; an empty choice is the
  * default; a weight is a number with a point or a comma, 0 to 100 mm; attribute rows with neither a name nor a value
  * are left out, a value without a name is said by its row, a name written twice by its name; a text template needs a
- * Yükseklik above zero, a block template its Blok; the other tools' fields are not written. Every problem in the
- * order of the fields. The desktop's is `kentos_native_style::template_form`.
+ * Yükseklik above zero, a block template its Blok; the other tools' fields are not written. A group template's member
+ * rows (docs/adr/0176 §5), only for Çizgi, Çoklu çizgi, Kapalı alan and the rectangles: a row with neither a template
+ * nor a rule is left out; a member needs both; an offset needs a distance above zero and a side that fits the shape
+ * (open: sola, sağa, iki yana; closed: içe, dışa, iki yana); another rule's distance and side are not written. Every
+ * problem in the order of the fields. The desktop's is `kentos_native_style::template_form`.
  */
 
 export interface TemplateForm {
@@ -42,6 +45,16 @@ export interface TemplateForm {
   textAlign: '' | TextAlign;
   textMask: boolean;
   block: string;
+  /** A group template's member rows: the member's template (its id), its rule, an offset's distance as typed and side. */
+  members: MemberRow[];
+}
+
+/** A member row of the form; an empty choice is none. */
+export interface MemberRow {
+  template: string;
+  rule: '' | MemberRule;
+  distance: string;
+  side: '' | MemberSide;
 }
 
 /** What a form makes: the library item's fields and its template, or what is wrong. */
@@ -72,6 +85,7 @@ export const EMPTY_TEMPLATE_FORM: TemplateForm = {
   textAlign: '',
   textMask: false,
   block: '',
+  members: [],
 };
 
 const parts = (text: string) =>
@@ -123,6 +137,27 @@ export function templateFromForm(f: TemplateForm): TemplateFormResult {
   }
   const block = f.block.trim();
   if (f.tool === 'blockInsert' && !block) issues.push('Blok şablonunun bloğu yok; yerleştirilecek bloğu seçin.');
+  const members: TemplateMember[] = [];
+  if (GROUP_TOOLS.includes(f.tool)) {
+    const closed = CLOSED_TOOLS.includes(f.tool);
+    f.members.forEach((m, i) => {
+      const template = m.template.trim();
+      if (!template && !m.rule) return;
+      const n = `${i + 1}. üyenin`;
+      if (!template) issues.push(`${n} şablonu seçilmemiş.`);
+      if (!m.rule) issues.push(`${n} kuralı seçilmemiş.`);
+      let distance: number | undefined;
+      let side: MemberSide | undefined;
+      if (m.rule === 'offset') {
+        const d = m.distance.trim() ? number(m.distance) : null;
+        if (d === null || !(d > 0)) issues.push(`${n} uzaklığı sıfırdan büyük bir sayı olmalı.`);
+        else distance = d;
+        if (m.side && (closed ? CLOSED_SIDES : OPEN_SIDES).includes(m.side)) side = m.side;
+        else issues.push(`${n} yanı ${closed ? 'içe, dışa' : 'sola, sağa'} ya da iki yana olmalı.`);
+      }
+      members.push({ template, rule: m.rule as MemberRule, ...(distance !== undefined && { distance }), ...(side && { side }) });
+    });
+  }
   if (issues.length) return { issues };
   const point = f.tool === 'point' ? { ...(f.pointName.trim() && { name: f.pointName.trim() }), ...(f.pointCode.trim() && { code: f.pointCode.trim() }) } : {};
   const sorted = Object.fromEntries(Object.entries(attrs).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
@@ -144,6 +179,7 @@ export function templateFromForm(f: TemplateForm): TemplateFormResult {
     ...(Object.keys(point).length > 0 && { point }),
     ...(text && { text }),
     ...(f.tool === 'blockInsert' && { block }),
+    ...(members.length > 0 && { members }),
   };
   const description = f.description.trim();
   return { name, path: parts(f.category), ...(description && { description }), template };
@@ -177,5 +213,6 @@ export function formOfTemplate(item: { readonly name: string; readonly path: rea
     textAlign: t.text?.align ?? '',
     textMask: t.text?.mask === true,
     block: t.block ?? '',
+    members: (t.members ?? []).map((m) => ({ template: m.template, rule: m.rule, distance: num(m.distance), side: m.side ?? '' })),
   };
 }

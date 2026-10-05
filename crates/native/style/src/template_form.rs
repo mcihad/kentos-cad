@@ -10,7 +10,12 @@
 //! with neither a name nor a value are left out, a value without a name is
 //! said by its row, a name written twice by its name; a text template needs
 //! a Yükseklik above zero, a block template its Blok; the other tools' fields
-//! are not written. Every problem in the order of the fields. The web's is
+//! are not written. A group template's member rows (docs/adr/0176 §5), only
+//! for Çizgi, Çoklu çizgi, Kapalı alan and the rectangles: a row with neither
+//! a template nor a rule is left out; a member needs both; an offset needs a
+//! distance above zero and a side that fits the shape (open: sola, sağa, iki
+//! yana; closed: içe, dışa, iki yana); another rule's distance and side are
+//! not written. Every problem in the order of the fields. The web's is
 //! `model/templateForm.ts`.
 
 use std::collections::BTreeMap;
@@ -19,7 +24,9 @@ use kentos_style_core::js::number;
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-use crate::object_template::template_methods;
+use crate::object_template::{
+    CLOSED_SIDES, CLOSED_TOOLS, GROUP_TOOLS, OPEN_SIDES, template_methods,
+};
 
 /// The form's texts and choices, as typed.
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
@@ -52,6 +59,18 @@ pub struct TemplateForm {
     pub text_align: String,
     pub text_mask: bool,
     pub block: String,
+    /// A group template's member rows.
+    pub members: Vec<MemberRow>,
+}
+
+/// A member row of the form: the member's template (its id), its rule, an
+/// offset's distance as typed and side; an empty choice is none.
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+pub struct MemberRow {
+    pub template: String,
+    pub rule: String,
+    pub distance: String,
+    pub side: String,
 }
 
 impl TemplateForm {
@@ -157,6 +176,53 @@ pub fn from_form(f: &TemplateForm) -> Result<FormItem, Vec<String>> {
     if f.tool == "blockInsert" && block.is_empty() {
         issues.push("Blok şablonunun bloğu yok; yerleştirilecek bloğu seçin.".to_owned());
     }
+    let mut members = Vec::new();
+    if GROUP_TOOLS.contains(&f.tool.as_str()) {
+        let closed = CLOSED_TOOLS.contains(&f.tool.as_str());
+        for (i, m) in f.members.iter().enumerate() {
+            let template = m.template.trim();
+            if template.is_empty() && m.rule.is_empty() {
+                continue;
+            }
+            let n = format!("{}. üyenin", i + 1);
+            if template.is_empty() {
+                issues.push(format!("{n} şablonu seçilmemiş."));
+            }
+            if m.rule.is_empty() {
+                issues.push(format!("{n} kuralı seçilmemiş."));
+            }
+            let mut member = Map::new();
+            member.insert("template".into(), Value::from(template));
+            member.insert("rule".into(), Value::from(m.rule.clone()));
+            if m.rule == "offset" {
+                let distance = if m.distance.trim().is_empty() {
+                    None
+                } else {
+                    parse_number(&m.distance)
+                };
+                match distance.filter(|d| *d > 0.0) {
+                    Some(d) => {
+                        member.insert("distance".into(), Value::from(d));
+                    }
+                    None => issues.push(format!("{n} uzaklığı sıfırdan büyük bir sayı olmalı.")),
+                }
+                let sides: &[&str] = if closed { &CLOSED_SIDES } else { &OPEN_SIDES };
+                if sides.contains(&m.side.as_str()) {
+                    member.insert("side".into(), Value::from(m.side.clone()));
+                } else {
+                    issues.push(format!(
+                        "{n} yanı {} ya da iki yana olmalı.",
+                        if closed {
+                            "içe, dışa"
+                        } else {
+                            "sola, sağa"
+                        }
+                    ));
+                }
+            }
+            members.push(Value::Object(member));
+        }
+    }
     if !issues.is_empty() {
         return Err(issues);
     }
@@ -215,6 +281,9 @@ pub fn from_form(f: &TemplateForm) -> Result<FormItem, Vec<String>> {
     }
     if f.tool == "blockInsert" {
         t.insert("block".into(), Value::from(block));
+    }
+    if !members.is_empty() {
+        t.insert("members".into(), Value::from(members));
     }
     let description = f.description.trim();
     Ok(FormItem {
@@ -285,5 +354,19 @@ pub fn to_form(item: &Value) -> TemplateForm {
             .and_then(Value::as_bool)
             .unwrap_or(false),
         block: text(field("block")),
+        members: field("members")
+            .and_then(Value::as_array)
+            .map(|members| {
+                members
+                    .iter()
+                    .map(|m| MemberRow {
+                        template: text(m.get("template")),
+                        rule: text(m.get("rule")),
+                        distance: num(m.get("distance")),
+                        side: text(m.get("side")),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
     }
 }

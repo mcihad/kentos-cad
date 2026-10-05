@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LayerStore, type LayerInit } from './layers';
 import type { Entity } from './entities';
-import { lockedTemplateLayerText, templateFromObject, templateIssues, templateLayer, type TemplateLayerAnswer } from './objectTemplate';
+import { lockedTemplateLayerText, memberIssues, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayerAnswer } from './objectTemplate';
 
 /**
  * A template's rules (docs/adr/0176 §1) as fixtures/style/v1/object-templates.json holds them, written by hand from the ADR: every
@@ -84,6 +84,31 @@ describe('a template made from an object (fixtures/style/v1/template-from-object
       expect(got).toEqual(c.result);
       // What it makes is a template the app draws with.
       if ('template' in got) expect(templateIssues(got.template)).toEqual([]);
+    });
+  }
+});
+
+/** A case of fixtures/style/v1/template-groups.json: a group template and what keeps it from starting with the file's library (docs/adr/0176 §5). */
+interface GroupCase {
+  name: string;
+  template: ObjectTemplate;
+  issues: string[];
+}
+
+const groupFiles = import.meta.glob<string>('../../../../fixtures/style/v1/template-groups.json', { query: '?raw', import: 'default', eager: true });
+const groups = JSON.parse(Object.values(groupFiles)[0]) as { format: string; version: number; library: { id: string; name: string; template: unknown }[]; cases: GroupCase[] };
+
+describe('a group template’s members in the library (fixtures/style/v1/template-groups.json)', () => {
+  const find = (id: string) => groups.library.find((i) => i.id === id);
+  it('is a template-group-cases v1 file', () => {
+    expect([groups.format, groups.version]).toEqual(['kentos.template-group-cases', 1]);
+    expect(groups.cases.length).toBeGreaterThanOrEqual(10);
+  });
+  for (const c of groups.cases) {
+    it(c.name, () => {
+      // The template itself has no problems: what is said is the library's.
+      expect(templateIssues(c.template)).toEqual([]);
+      expect(memberIssues(c.template, find)).toEqual(c.issues);
     });
   }
 });

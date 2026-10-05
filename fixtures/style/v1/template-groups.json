@@ -1,0 +1,30 @@
+{
+  "format": "kentos.template-group-cases",
+  "version": 1,
+  "note": "ADR 0176 §5: grup şablonunun üyeleri kitaplıkta. Her üye sırasıyla: şablonu kitaplıkta yoksa söylenir; şablonunun sorunu varsa ilk sorunu (““Ad” şablonu: …”); kendisi grup şablonuysa (üyeleri olan) üye olamaz; köşelere nokta üyesi nokta şablonu, ağırlık merkezi üyesi nokta ya da yazı şablonu olmalı, yazının ilk metni etiketidir, etiketsiz yazı reddedilir. Aynı geometri ve öteleme üyesinin aracı serbesttir (üye yalnız katmanını, görünüşünü, özniteliklerini ve etiketini verir). Sorunlu bir üye için bir sorun söylenir; sorunsuz üyeler atlanır. Durumlar ADR'den elle yazıldı; web model/objectTemplate.ts memberIssues, masaüstü kentos_native_style::object_template::member_issues.",
+  "library": [
+    {"id": "u-kenar", "name": "Yol kenarı", "template": {"tool": "polyline", "layer": {"path": ["Ulaşım"], "name": "Yol"}, "lineWeight": 0.35}},
+    {"id": "u-nokta", "name": "Poligon noktası", "template": {"tool": "point", "layer": {"path": [], "name": "Nokta"}, "point": {"name": "P1", "code": "PN"}}},
+    {"id": "u-numara", "name": "Parsel numarası", "template": {"tool": "text", "layer": {"path": [], "name": "Yazı"}, "text": {"height": 3, "align": "middleCenter"}, "label": "101"}},
+    {"id": "u-not", "name": "Not", "template": {"tool": "text", "layer": {"path": [], "name": "Yazı"}, "text": {"height": 2}}},
+    {"id": "u-bina", "name": "Bina", "template": {"tool": "polygon", "layer": {"path": [], "name": "Bina"}}},
+    {"id": "u-agac", "name": "Ağaç", "template": {"tool": "circle", "layer": {"path": [], "name": "Bitki"}}},
+    {"id": "u-blok", "name": "Rögar", "template": {"tool": "blockInsert", "layer": {"path": [], "name": "Altyapı"}, "block": "Rögar kapağı"}},
+    {"id": "u-bozuk", "name": "Bozuk", "template": {"tool": "line", "layer": {"path": [], "name": " "}}},
+    {"id": "u-yol", "name": "Yol", "template": {"tool": "polyline", "layer": {"path": ["Ulaşım"], "name": "Yol ekseni"}, "members": [{"template": "u-kenar", "rule": "offset", "distance": 5, "side": "both"}]}},
+    {"id": "u-bos-grup", "name": "Üyesiz", "template": {"tool": "line", "layer": {"path": [], "name": "Çizgi"}, "members": []}}
+  ],
+  "cases": [
+    {"name": "parsel: köşelere nokta, ağırlık merkezine yazı, içe öteleme", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-nokta", "rule": "vertices"}, {"template": "u-numara", "rule": "centroid"}, {"template": "u-bina", "rule": "offset", "distance": 0.3, "side": "inside"}]}, "issues": []},
+    {"name": "ağırlık merkezine nokta; aynı geometri ve ötelemede üyenin aracı serbest", "template": {"tool": "polyline", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-nokta", "rule": "centroid"}, {"template": "u-agac", "rule": "same"}, {"template": "u-blok", "rule": "offset", "distance": 1, "side": "left"}]}, "issues": []},
+    {"name": "üyesiz şablonu üye olabilir", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-bos-grup", "rule": "same"}]}, "issues": []},
+    {"name": "üyesiz şablonda sorun yok", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}}, "issues": []},
+    {"name": "kitaplıkta olmayan üye", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-yok", "rule": "same"}]}, "issues": ["1. üye: “u-yok” kimlikli şablon kitaplıkta yok; üyeyi düzenleyicide yeniden seçin."]},
+    {"name": "bozuk üye şablonu", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-bozuk", "rule": "same"}]}, "issues": ["1. üye: “Bozuk” şablonu: katmanın adı boş"]},
+    {"name": "grup şablonu üye olamaz", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-yol", "rule": "same"}]}, "issues": ["1. üye: “Yol” bir grup şablonu; grup şablonu üye olamaz."]},
+    {"name": "köşelere nokta üyesi nokta şablonu olmalı", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-bina", "rule": "vertices"}]}, "issues": ["1. üye: köşelere nokta üyesi bir nokta şablonu olmalı; “Bina” Kapalı alan şablonu."]},
+    {"name": "ağırlık merkezi üyesi nokta ya da yazı şablonu olmalı", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-agac", "rule": "centroid"}]}, "issues": ["1. üye: ağırlık merkezi üyesi bir nokta ya da yazı şablonu olmalı; “Ağaç” Daire şablonu."]},
+    {"name": "etiketsiz yazı ağırlık merkezine yazılmaz", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-not", "rule": "centroid"}]}, "issues": ["1. üye: “Not” yazı şablonunun etiketi yok: ağırlık merkezine yazılacak ilk metni etiketine yazın."]},
+    {"name": "her üyenin sorunu sırasıyla, sorunsuz üyeler atlanır", "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [{"template": "u-nokta", "rule": "vertices"}, {"template": "u-yok", "rule": "same"}, {"template": "u-blok", "rule": "vertices"}, {"template": "u-kenar", "rule": "centroid"}]}, "issues": ["2. üye: “u-yok” kimlikli şablon kitaplıkta yok; üyeyi düzenleyicide yeniden seçin.", "3. üye: köşelere nokta üyesi bir nokta şablonu olmalı; “Rögar” Blok ekle şablonu.", "4. üye: ağırlık merkezi üyesi bir nokta ya da yazı şablonu olmalı; “Yol kenarı” Çoklu çizgi şablonu."]}
+  ]
+}

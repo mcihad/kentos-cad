@@ -182,6 +182,14 @@ da geçer:
    `object-templates.json`'a durumlar; düzenleyicinin formunda üyeler, `template-form.json`); 5b çekirdek (üyelerin geometrisi:
    `ops::template_members`, aynı, ötelenmiş, ağırlık merkezi; bağımsız başvuru ve ortak durumlar); 5c grup şablonuyla çizmek (üyelerin
    katmanları, ana nesneyle tek adım, köşelere nokta ve yazının artışı; ortak iz); 5d Şablon düzenleyicide üyeler tablosu, resimler.
+   - 5a **Tamam (5 Ekim):** şablonun `members`'ı iki platformda (web `TemplateMember`, `GROUP_TOOLS`, `CLOSED_TOOLS`, `MEMBER_RULES`,
+     `MEMBER_SIDES`; masaüstü `object_template`'in aynı adlı sabitleri): kendi kuralları `templateIssues` ve `template_issues`'ta (yalnız
+     grup araçlarında, liste, her üyenin şablonu, kuralı, ötelemede uzaklığı ve şekle uyan yanı, başka kuralda uzaklık ve yan yok;
+     `object-templates.json`'a 14 durum); kitaplıktaki çözümü `memberIssues` ve `member_issues` (kitaplıkta olmayan, bozuk ya da grup
+     olan üye şablonu, köşelere nokta üyesi nokta şablonu, ağırlık merkezi üyesi nokta ya da etiketli yazı şablonu; yeni ortak dosya
+     `template-groups.json`, 11 durum, elle); düzenleyicinin formunda üye satırları (`MemberRow`; boş satır düşer, şablon ve kural
+     gerekir, ötelemede uzaklık ve yan; `template_form_cases.py`'ye 6 + 1 durum). Düzenleyiciler formu bütün tuttuğu için var olan
+     grup şablonunun üyeleri düzenlemede korunur; üyelerin tablosu 5d'de.
 6. Şablonu uygula; ortak iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

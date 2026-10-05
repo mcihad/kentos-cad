@@ -26,6 +26,30 @@ export const TEMPLATE_TOOL_LABEL: Record<TemplateTool, string> = {
   blockInsert: 'Blok ekle',
 };
 
+/** The tools a group template draws with: its members' rules need a line or an area (docs/adr/0176 §5). */
+export const GROUP_TOOLS: readonly TemplateTool[] = ['line', 'polyline', 'polygon', 'rectangle', 'rectangle3'];
+/** The group tools that draw a closed shape: their offsets go inside or outside, not left or right. */
+export const CLOSED_TOOLS: readonly TemplateTool[] = ['polygon', 'rectangle', 'rectangle3'];
+
+/** How a group template's member makes its object from the drawn shape (docs/adr/0176 §5). */
+export const MEMBER_RULES = ['same', 'offset', 'vertices', 'centroid'] as const;
+export type MemberRule = (typeof MEMBER_RULES)[number];
+/** An offset's side: by the drawing's direction on an open shape, inside or outside on a closed one; or both. */
+export const MEMBER_SIDES = ['left', 'right', 'inside', 'outside', 'both'] as const;
+export type MemberSide = (typeof MEMBER_SIDES)[number];
+/** The sides an offset member may take on an open and on a closed shape. */
+export const OPEN_SIDES: readonly MemberSide[] = ['left', 'right', 'both'];
+export const CLOSED_SIDES: readonly MemberSide[] = ['inside', 'outside', 'both'];
+
+/** A group template's member: another template of the library, by its id, and the rule it makes its object by. */
+export interface TemplateMember {
+  readonly template: string;
+  readonly rule: MemberRule;
+  /** An offset's distance (metres, above zero) and side. */
+  readonly distance?: number;
+  readonly side?: MemberSide;
+}
+
 /** The methods a template may name, by tool (their options in the tool catalog); a tool not here has none to choose. */
 export const TEMPLATE_METHODS: Partial<Record<TemplateTool, readonly string[]>> = { circle: ['2N', '3N', 'TTY', 'TTT'] };
 
@@ -60,6 +84,8 @@ export interface ObjectTemplate {
   readonly text?: { readonly height: number; readonly align?: TextAlign; readonly mask?: boolean };
   /** A block template's block, by name. */
   readonly block?: string;
+  /** A group template's members: objects made from the drawn one, in the same undo step (docs/adr/0176 §5). */
+  readonly members?: readonly TemplateMember[];
 }
 
 const LINE_TYPES: readonly LineType[] = ['continuous', 'dashed', 'dashdot', 'dotted'];
@@ -129,6 +155,54 @@ export function templateIssues(template: unknown, where = 'şablon'): string[] {
   if (tool === 'blockInsert') {
     if (typeof template.block !== 'string' || blank(template.block)) say('blok şablonunun bloğu yok');
   } else if (template.block !== undefined) say('blok yalnız blok şablonunda olur');
+  if (template.members !== undefined) {
+    if (!GROUP_TOOLS.includes(tool)) say('üyeler yalnız çizgi, çoklu çizgi, kapalı alan ve dikdörtgen şablonunda olur');
+    else if (!Array.isArray(template.members)) say('üyeler liste olmalı');
+    else {
+      const closed = CLOSED_TOOLS.includes(tool);
+      template.members.forEach((m: unknown, i) => {
+        const at = `${i + 1}. üye`;
+        if (!isObj(m)) return void say(`${at}: tanımı yok`);
+        if (typeof m.template !== 'string' || blank(m.template)) say(`${at}: şablonu yok`);
+        if (!(MEMBER_RULES as readonly unknown[]).includes(m.rule)) say(`${at}: bilinmeyen kural “${String(m.rule)}”`);
+        if (m.rule === 'offset') {
+          if (typeof m.distance !== 'number' || !Number.isFinite(m.distance) || !(m.distance > 0)) say(`${at}: öteleme uzaklığı sıfırdan büyük olmalı`);
+          if (!(closed ? CLOSED_SIDES : OPEN_SIDES).includes(m.side as MemberSide))
+            say(`${at}: ${closed ? 'kapalı şekilde yan içe, dışa' : 'açık şekilde yan sola, sağa'} ya da iki yana olmalı`);
+        } else {
+          if (m.distance !== undefined) say(`${at}: uzaklık yalnız ötelenmiş üyede olur`);
+          if (m.side !== undefined) say(`${at}: yan yalnız ötelenmiş üyede olur`);
+        }
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * What keeps a group template from starting with this library (docs/adr/0176 §5), a problem for each member that has
+ * one, in their order: its template the library lacks, has a problem of its own, or is itself a group (one with
+ * members); a Köşelere nokta member that is not a point template; an Ağırlık merkezine member that is neither a point
+ * nor a text template, or a text template without a label (its first text). An Aynı geometri or offset member's tool is
+ * free: it gives only its layer, look, attributes and label. None for a template without members. The desktop's is
+ * `kentos_native_style::object_template::member_issues`; both pass fixtures/style/v1/template-groups.json.
+ */
+export function memberIssues(template: ObjectTemplate, find: (id: string) => { readonly name: string; readonly template: unknown } | undefined): string[] {
+  const out: string[] = [];
+  (template.members ?? []).forEach((m, i) => {
+    const at = `${i + 1}. üye`;
+    const item = find(m.template);
+    if (!item) return void out.push(`${at}: “${m.template}” kimlikli şablon kitaplıkta yok; üyeyi düzenleyicide yeniden seçin.`);
+    const own = templateIssues(item.template, `“${item.name}” şablonu`)[0];
+    if (own) return void out.push(`${at}: ${own}`);
+    const t = item.template as ObjectTemplate;
+    if (t.members?.length) return void out.push(`${at}: “${item.name}” bir grup şablonu; grup şablonu üye olamaz.`);
+    if (m.rule === 'vertices' && t.tool !== 'point') out.push(`${at}: köşelere nokta üyesi bir nokta şablonu olmalı; “${item.name}” ${TEMPLATE_TOOL_LABEL[t.tool]} şablonu.`);
+    if (m.rule === 'centroid') {
+      if (t.tool !== 'point' && t.tool !== 'text') out.push(`${at}: ağırlık merkezi üyesi bir nokta ya da yazı şablonu olmalı; “${item.name}” ${TEMPLATE_TOOL_LABEL[t.tool]} şablonu.`);
+      else if (t.tool === 'text' && (typeof t.label !== 'string' || blank(t.label))) out.push(`${at}: “${item.name}” yazı şablonunun etiketi yok: ağırlık merkezine yazılacak ilk metni etiketine yazın.`);
+    }
+  });
   return out;
 }
 

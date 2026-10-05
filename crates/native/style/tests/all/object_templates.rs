@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 
 use kentos_native_style::library::{Source, StyleLibrary, TreeFilter};
-use kentos_native_style::object_template::{preview_symbol, template_issues};
+use kentos_native_style::object_template::{member_issues, preview_symbol, template_issues};
 use serde_json::{Value, json};
 
 #[test]
@@ -189,5 +189,45 @@ fn a_template_made_from_an_object_is_the_webs() {
             Err(refused) => json!({ "refused": refused }),
         };
         assert_eq!(got, c["result"], "{name}");
+    }
+}
+
+/// A group template's members in the library (docs/adr/0176 §5), as
+/// `fixtures/style/v1/template-groups.json` has them: what keeps each case
+/// from starting, in the web's words.
+#[test]
+fn a_group_templates_members_are_found_as_the_web_finds_them() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/style/v1/template-groups.json");
+    let fixture: Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("template-groups.json"))
+            .expect("JSON");
+    assert_eq!(fixture["format"], "kentos.template-group-cases");
+    assert_eq!(fixture["version"], 1);
+    let library = fixture["library"].as_array().expect("library");
+    let find = |id: &str| {
+        library
+            .iter()
+            .find(|i| i["id"].as_str() == Some(id))
+            .and_then(|i| Some((i["name"].as_str()?, &i["template"])))
+    };
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 10, "{} cases", cases.len());
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or("?");
+        // The template itself has no problems: what is said is the library's.
+        assert_eq!(
+            template_issues(&c["template"], "şablon"),
+            Vec::<String>::new(),
+            "{name}"
+        );
+        let want: Vec<String> = c["issues"]
+            .as_array()
+            .expect("issues")
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect();
+        assert_eq!(member_issues(&c["template"], find), want, "{name}");
     }
 }

@@ -31,6 +31,18 @@ pub fn tool_label(tool: &str) -> &str {
         .map_or(tool, |(_, label)| label)
 }
 
+/// The tools a group template draws with: its members' rules need a line or
+/// an area (docs/adr/0176 §5).
+pub const GROUP_TOOLS: [&str; 5] = ["line", "polyline", "polygon", "rectangle", "rectangle3"];
+/// The group tools that draw a closed shape: their offsets go inside or
+/// outside, not left or right.
+pub const CLOSED_TOOLS: [&str; 3] = ["polygon", "rectangle", "rectangle3"];
+/// How a group template's member makes its object from the drawn shape.
+pub const MEMBER_RULES: [&str; 4] = ["same", "offset", "vertices", "centroid"];
+/// The sides an offset member may take on an open and on a closed shape.
+pub const OPEN_SIDES: [&str; 3] = ["left", "right", "both"];
+pub const CLOSED_SIDES: [&str; 3] = ["inside", "outside", "both"];
+
 /// The methods a template may name, by tool (their options in the tool catalog);
 /// a tool not here has none to choose.
 pub fn template_methods(tool: &str) -> &'static [&'static str] {
@@ -229,6 +241,144 @@ pub fn template_issues(template: &Value, where_: &str) -> Vec<String> {
         }
     } else if get("block").is_some() {
         say("blok yalnız blok şablonunda olur".to_owned());
+    }
+    if let Some(members) = get("members") {
+        if !GROUP_TOOLS.contains(&tool) {
+            say(
+                "üyeler yalnız çizgi, çoklu çizgi, kapalı alan ve dikdörtgen şablonunda olur"
+                    .to_owned(),
+            );
+        } else if let Some(members) = members.as_array() {
+            let closed = CLOSED_TOOLS.contains(&tool);
+            for (i, m) in members.iter().enumerate() {
+                for issue in member_shape_issues(m, closed) {
+                    say(format!("{}. üye: {issue}", i + 1));
+                }
+            }
+        } else {
+            say("üyeler liste olmalı".to_owned());
+        }
+    }
+    out
+}
+
+/// What is wrong with one member of a group template, by itself: its
+/// template's id, its rule, an offset's distance and side (`closed`: the
+/// group draws a closed shape).
+fn member_shape_issues(m: &Value, closed: bool) -> Vec<String> {
+    let Some(m) = m.as_object() else {
+        return vec!["tanımı yok".to_owned()];
+    };
+    let mut out = Vec::new();
+    if m.get("template").and_then(Value::as_str).is_none_or(blank) {
+        out.push("şablonu yok".to_owned());
+    }
+    let rule = m.get("rule").and_then(Value::as_str);
+    if !rule.is_some_and(|r| MEMBER_RULES.contains(&r)) {
+        out.push(format!(
+            "bilinmeyen kural “{}”",
+            m.get("rule").map_or_else(|| "undefined".to_owned(), shown)
+        ));
+    }
+    if rule == Some("offset") {
+        if !m
+            .get("distance")
+            .and_then(Value::as_f64)
+            .is_some_and(|d| d.is_finite() && d > 0.0)
+        {
+            out.push("öteleme uzaklığı sıfırdan büyük olmalı".to_owned());
+        }
+        let sides: &[&str] = if closed { &CLOSED_SIDES } else { &OPEN_SIDES };
+        if !m
+            .get("side")
+            .and_then(Value::as_str)
+            .is_some_and(|s| sides.contains(&s))
+        {
+            out.push(
+                if closed {
+                    "kapalı şekilde yan içe, dışa ya da iki yana olmalı"
+                } else {
+                    "açık şekilde yan sola, sağa ya da iki yana olmalı"
+                }
+                .to_owned(),
+            );
+        }
+    } else {
+        if m.contains_key("distance") {
+            out.push("uzaklık yalnız ötelenmiş üyede olur".to_owned());
+        }
+        if m.contains_key("side") {
+            out.push("yan yalnız ötelenmiş üyede olur".to_owned());
+        }
+    }
+    out
+}
+
+/// What keeps a group template from starting with this library (docs/adr/0176
+/// §5), a problem for each member that has one, in their order: its template
+/// the library lacks (`find` gives a template's name and definition by its
+/// id), has a problem of its own, or is itself a group (one with members); a
+/// Köşelere nokta member that is not a point template; an Ağırlık merkezine
+/// member that is neither a point nor a text template, or a text template
+/// without a label (its first text). An Aynı geometri or offset member's tool
+/// is free: it gives only its layer, look, attributes and label. None for a
+/// template without members. The web's is `model/objectTemplate.ts`'s
+/// `memberIssues`; both pass fixtures/style/v1/template-groups.json.
+pub fn member_issues<'a>(
+    template: &Value,
+    find: impl Fn(&str) -> Option<(&'a str, &'a Value)>,
+) -> Vec<String> {
+    let mut out = Vec::new();
+    let members = template
+        .get("members")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    for (i, m) in members.iter().enumerate() {
+        let at = format!("{}. üye", i + 1);
+        let id = m.get("template").and_then(Value::as_str).unwrap_or("");
+        let rule = m.get("rule").and_then(Value::as_str).unwrap_or("");
+        let Some((name, t)) = find(id) else {
+            out.push(format!(
+                "{at}: “{id}” kimlikli şablon kitaplıkta yok; üyeyi düzenleyicide yeniden seçin."
+            ));
+            continue;
+        };
+        if let Some(own) = template_issues(t, &format!("“{name}” şablonu"))
+            .into_iter()
+            .next()
+        {
+            out.push(format!("{at}: {own}"));
+            continue;
+        }
+        if t.get("members")
+            .and_then(Value::as_array)
+            .is_some_and(|m| !m.is_empty())
+        {
+            out.push(format!(
+                "{at}: “{name}” bir grup şablonu; grup şablonu üye olamaz."
+            ));
+            continue;
+        }
+        let tool = t.get("tool").and_then(Value::as_str).unwrap_or("");
+        if rule == "vertices" && tool != "point" {
+            out.push(format!(
+                "{at}: köşelere nokta üyesi bir nokta şablonu olmalı; “{name}” {} şablonu.",
+                tool_label(tool)
+            ));
+        }
+        if rule == "centroid" {
+            if tool != "point" && tool != "text" {
+                out.push(format!(
+                    "{at}: ağırlık merkezi üyesi bir nokta ya da yazı şablonu olmalı; “{name}” {} şablonu.",
+                    tool_label(tool)
+                ));
+            } else if tool == "text" && t.get("label").and_then(Value::as_str).is_none_or(blank) {
+                out.push(format!(
+                    "{at}: “{name}” yazı şablonunun etiketi yok: ağırlık merkezine yazılacak ilk metni etiketine yazın."
+                ));
+            }
+        }
     }
     out
 }

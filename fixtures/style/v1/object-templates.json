@@ -1,7 +1,7 @@
 {
  "format": "kentos.object-template-cases",
  "version": 1,
- "note": "Nesne şablonları (docs/adr/0176 §1): bir nesne şablonunun kuralları, iki platformda aynı sözlerle (web model/objectTemplate.ts templateIssues, masaüstü kentos_native_style::object_template::template_issues). Sorunlar alanların okunma sırasıyladır: araç ve yöntemi, katman (ad, yol, renk, çizgi tipi, kalınlık), renk, kalınlık, sembol, öznitelikler (ada göre sıralı), etiket, nokta, yazı, blok. Değer sözde JavaScript'in String(v)'si gibi yazılır (dizi virgülle, eksik öğe boş). Yerin adı verilmezse “şablon”. Durumlar ADR'den elle yazıldı.",
+ "note": "Nesne şablonları (docs/adr/0176 §1): bir nesne şablonunun kuralları, iki platformda aynı sözlerle (web model/objectTemplate.ts templateIssues, masaüstü kentos_native_style::object_template::template_issues). Sorunlar alanların okunma sırasıyladır: araç ve yöntemi, katman (ad, yol, renk, çizgi tipi, kalınlık), renk, kalınlık, sembol, öznitelikler (ada göre sıralı), etiket, nokta, yazı, blok, üyeler (grup şablonu, ADR 0176 §5: yalnız Çizgi, Çoklu çizgi, Kapalı alan ve dikdörtgenlerde; her üye sırasıyla şablonu, kuralı, ötelemede uzaklığı ve şekle uyan yanı; başka kuralda uzaklık ve yan yazılmaz). Değer sözde JavaScript'in String(v)'si gibi yazılır (dizi virgülle, eksik öğe boş). Yerin adı verilmezse “şablon”. Durumlar ADR'den elle yazıldı.",
  "cases": [
   {
    "id": "polygon-minimal",
@@ -721,6 +721,345 @@
     "öğe 3 (Yol kenarı): blok yalnız blok şablonunda olur"
    ],
    "where": "öğe 3 (Yol kenarı)"
+  },
+  {
+   "id": "group-road",
+   "template": {
+    "tool": "polyline",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-kenar",
+      "rule": "offset",
+      "distance": 5,
+      "side": "both"
+     },
+     {
+      "template": "u-eksen-nokta",
+      "rule": "vertices"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "id": "group-parcel",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "members": [
+     {
+      "template": "u-nokta",
+      "rule": "vertices"
+     },
+     {
+      "template": "u-numara",
+      "rule": "centroid"
+     },
+     {
+      "template": "u-bina-ici",
+      "rule": "offset",
+      "distance": 0.3,
+      "side": "inside"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "id": "group-rectangle-outside",
+   "template": {
+    "tool": "rectangle3",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "members": [
+     {
+      "template": "u-saçak",
+      "rule": "offset",
+      "distance": 0.5,
+      "side": "outside"
+     },
+     {
+      "template": "u-iz",
+      "rule": "same"
+     }
+    ]
+   },
+   "issues": []
+  },
+  {
+   "id": "group-empty-members",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": []
+   },
+   "issues": []
+  },
+  {
+   "id": "group-point-tool",
+   "template": {
+    "tool": "point",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "same"
+     }
+    ]
+   },
+   "issues": [
+    "şablon: üyeler yalnız çizgi, çoklu çizgi, kapalı alan ve dikdörtgen şablonunda olur"
+   ]
+  },
+  {
+   "id": "group-not-list",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": {
+     "template": "u-x"
+    }
+   },
+   "issues": [
+    "şablon: üyeler liste olmalı"
+   ]
+  },
+  {
+   "id": "group-member-not-object",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     "u-x",
+     null
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: tanımı yok",
+    "şablon: 2. üye: tanımı yok"
+   ]
+  },
+  {
+   "id": "group-member-no-template",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "rule": "same"
+     },
+     {
+      "template": " ",
+      "rule": "same"
+     },
+     {
+      "template": 3,
+      "rule": "same"
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: şablonu yok",
+    "şablon: 2. üye: şablonu yok",
+    "şablon: 3. üye: şablonu yok"
+   ]
+  },
+  {
+   "id": "group-member-unknown-rule",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "mirror"
+     },
+     {
+      "template": "u-y"
+     },
+     {
+      "template": "u-z",
+      "rule": null
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: bilinmeyen kural “mirror”",
+    "şablon: 2. üye: bilinmeyen kural “undefined”",
+    "şablon: 3. üye: bilinmeyen kural “null”"
+   ]
+  },
+  {
+   "id": "group-offset-distance",
+   "template": {
+    "tool": "polyline",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "side": "left"
+     },
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": 0,
+      "side": "left"
+     },
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": "5",
+      "side": "left"
+     },
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": -2,
+      "side": "right"
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: öteleme uzaklığı sıfırdan büyük olmalı",
+    "şablon: 2. üye: öteleme uzaklığı sıfırdan büyük olmalı",
+    "şablon: 3. üye: öteleme uzaklığı sıfırdan büyük olmalı",
+    "şablon: 4. üye: öteleme uzaklığı sıfırdan büyük olmalı"
+   ]
+  },
+  {
+   "id": "group-offset-side-open",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": 1,
+      "side": "inside"
+     },
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": 1
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: açık şekilde yan sola, sağa ya da iki yana olmalı",
+    "şablon: 2. üye: açık şekilde yan sola, sağa ya da iki yana olmalı"
+   ]
+  },
+  {
+   "id": "group-offset-side-closed",
+   "template": {
+    "tool": "rectangle",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "offset",
+      "distance": 1,
+      "side": "left"
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: kapalı şekilde yan içe, dışa ya da iki yana olmalı"
+   ]
+  },
+  {
+   "id": "group-extra-on-other-rules",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "u-x",
+      "rule": "same",
+      "distance": 1,
+      "side": "both"
+     },
+     {
+      "template": "u-y",
+      "rule": "centroid",
+      "side": null
+     }
+    ]
+   },
+   "issues": [
+    "şablon: 1. üye: uzaklık yalnız ötelenmiş üyede olur",
+    "şablon: 1. üye: yan yalnız ötelenmiş üyede olur",
+    "şablon: 2. üye: yan yalnız ötelenmiş üyede olur"
+   ]
+  },
+  {
+   "id": "group-where-and-order",
+   "template": {
+    "tool": "polyline",
+    "layer": {
+     "path": [],
+     "name": "Yol ekseni"
+    },
+    "members": [
+     {
+      "template": "",
+      "rule": "offset",
+      "distance": -1,
+      "side": "up"
+     }
+    ]
+   },
+   "issues": [
+    "öğe 2 (Yol): 1. üye: şablonu yok",
+    "öğe 2 (Yol): 1. üye: öteleme uzaklığı sıfırdan büyük olmalı",
+    "öğe 2 (Yol): 1. üye: açık şekilde yan sola, sağa ya da iki yana olmalı"
+   ],
+   "where": "öğe 2 (Yol)"
   }
  ]
 }

@@ -29,6 +29,14 @@ is wrong, every problem in the order of the fields:
   chosen, Zemin when on. A block template's Blok is trimmed and needed
   (“Blok şablonunun bloğu yok; yerleştirilecek bloğu seçin.”). Those of the
   other tools are not written.
+- Üyeler (a group template's, docs/adr/0176 §5), only for Çizgi, Çoklu
+  çizgi, Kapalı alan and the rectangles: a row with neither a template nor
+  a rule is left out; a member needs its template (“2. üyenin şablonu
+  seçilmemiş.”) and its rule (“… kuralı seçilmemiş.”); an offset needs a
+  distance above zero (“… uzaklığı sıfırdan büyük bir sayı olmalı.”) and a
+  side that fits the shape (open: sola, sağa or iki yana; closed: içe, dışa
+  or iki yana: “… yanı içe, dışa ya da iki yana olmalı.”); another rule's
+  distance and side are not written.
 
 And back: a library item's fields and template as the form shows them
 (categories and groups joined with “ / ”, numbers as JavaScript writes them,
@@ -46,6 +54,8 @@ import sys
 PATH = "fixtures/style/v1/template-form.json"
 
 METHODS = {"circle": ["2N", "3N", "TTY", "TTT"]}
+GROUP_TOOLS = ["line", "polyline", "polygon", "rectangle", "rectangle3"]
+CLOSED_TOOLS = ["polygon", "rectangle", "rectangle3"]
 NUMBER = re.compile(r"^\d+(?:[.,]\d+)?$")
 
 
@@ -140,6 +150,33 @@ def from_form(f):
             issues.append("Blok şablonunun bloğu yok; yerleştirilecek bloğu seçin.")
         else:
             t["block"] = block
+    if tool in GROUP_TOOLS:
+        closed = tool in CLOSED_TOOLS
+        members = []
+        for i, m in enumerate(f["members"]):
+            template = m["template"].strip()
+            if not template and not m["rule"]:
+                continue
+            n = f"{i + 1}. üyenin"
+            if not template:
+                issues.append(f"{n} şablonu seçilmemiş.")
+            if not m["rule"]:
+                issues.append(f"{n} kuralı seçilmemiş.")
+            member = {"template": template, "rule": m["rule"]}
+            if m["rule"] == "offset":
+                d = number(m["distance"]) if m["distance"].strip() else None
+                if d is None or d <= 0:
+                    issues.append(f"{n} uzaklığı sıfırdan büyük bir sayı olmalı.")
+                else:
+                    member["distance"] = d
+                sides = ["inside", "outside", "both"] if closed else ["left", "right", "both"]
+                if m["side"] not in sides:
+                    issues.append(f"{n} yanı {'içe, dışa' if closed else 'sola, sağa'} ya da iki yana olmalı.")
+                else:
+                    member["side"] = m["side"]
+            members.append(member)
+        if members:
+            t["members"] = members
     if issues:
         return {"issues": issues}
     out = {"name": name, "path": parts(f["category"]), "template": t}
@@ -176,6 +213,10 @@ def to_form(item):
         "textAlign": text.get("align", ""),
         "textMask": bool(text.get("mask", False)),
         "block": t.get("block", ""),
+        "members": [
+            {"template": m["template"], "rule": m["rule"], "distance": js(m["distance"]) if "distance" in m else "", "side": m.get("side", "")}
+            for m in t.get("members", [])
+        ],
     }
 
 
@@ -183,7 +224,12 @@ EMPTY = {
     "name": "", "category": "", "description": "", "tool": "polygon", "method": "", "layerGroups": "", "layerName": "",
     "layerColor": "", "layerLineType": "", "layerWeight": "", "color": "", "weight": "", "symbol": "", "attrs": [],
     "label": "", "pointName": "", "pointCode": "", "textHeight": "", "textAlign": "", "textMask": False, "block": "",
+    "members": [],
 }
+
+
+def member(template="", rule="", distance="", side=""):
+    return {"template": template, "rule": rule, "distance": distance, "side": side}
 
 
 def form(**fields):
@@ -213,6 +259,17 @@ FORM_CASES = [
     ("yazının yüksekliği sıfır", form(name="Not", layerName="Yazı", tool="text", textHeight="0")),
     ("blok şablonunun bloğu yok", form(name="Rögar", layerName="Altyapı", tool="blockInsert", block="  ")),
     ("her sorun alanların sırasıyla", form(tool="text", weight="x", attrs=[["", "1"]])),
+    ("grup: iki yana öteleme ve köşelere nokta; boş satır düşer, başka kuralın uzaklığı ve yanı yazılmaz",
+     form(name="Yol", layerName="Yol ekseni", tool="polyline",
+          members=[member("u-kenar", "offset", "5", "both"), member(), member(" u-nokta ", "vertices", "3", "left")])),
+    ("grup: kapalı alanda virgüllü uzaklıkla içe öteleme, ağırlık merkezine yazı",
+     form(name="Parsel", layerName="Parsel", tool="polygon", members=[member("u-bina-ici", "offset", "0,3", "inside"), member("u-numara", "centroid")])),
+    ("grup: dikdörtgende dışa öteleme ve aynı geometri",
+     form(name="Bina", layerName="Bina", tool="rectangle3", members=[member("u-saçak", "offset", "0.5", "outside"), member("u-bina-iz", "same")])),
+    ("üyesi olamayan araçta üyeler yazılmaz", form(name="Nokta", layerName="Nokta", tool="point", members=[member("u-x", "same")])),
+    ("üyenin sorunları: şablon, uzaklık ve açık şeklin yanı; kural",
+     form(name="Yol", layerName="Yol", tool="polyline", members=[member("", "offset", "", "inside"), member("u-x", "", "1", "both")])),
+    ("kapalı şeklin yanı ve sıfır uzaklık", form(name="Bina", layerName="Bina", tool="rectangle", members=[member("u-x", "offset", "0", "left")])),
 ]
 ITEMS = [
     ("kapalı alan, bütün alanlarıyla", {"name": "Parsel sınırı", "path": ["Kadastro", "Sınırlar"], "description": "Tescilli parsel", "template": {
@@ -222,6 +279,9 @@ ITEMS = [
     ("nokta", {"name": "Poligon noktası", "path": ["Ölçme"], "template": {"tool": "point", "layer": {"path": [], "name": "Nokta"}, "point": {"name": "P1", "code": "PN"}}}),
     ("yazı", {"name": "Ada numarası", "path": [], "template": {"tool": "text", "layer": {"path": [], "name": "Yazı"}, "text": {"height": 2.5, "align": "topLeft", "mask": True}}}),
     ("blok", {"name": "Rögar", "path": [], "template": {"tool": "blockInsert", "layer": {"path": ["Altyapı"], "name": "Rögar"}, "block": "Rögar kapağı", "lineWeight": 0.0}}),
+    ("grup şablonu", {"name": "Parsel", "path": ["Kadastro"], "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}, "members": [
+        {"template": "u-nokta", "rule": "vertices"}, {"template": "u-numara", "rule": "centroid"},
+        {"template": "u-bina-ici", "rule": "offset", "distance": 0.3, "side": "inside"}]}}),
 ]
 
 
@@ -247,7 +307,10 @@ def build():
             "yerinden, iki kez yazılan ad adıyla söylenir; adlar kırpılır, değerler yazıldığı gibi, adlarının sırasıyla; yazı şablonunda "
             "Yükseklik gerekir, sıfırdan büyük sayı; Hiza seçiliyse, Zemin açıksa; blok şablonunda Blok kırpılır ve gerekir; başka aracın "
             "alanları yazılmaz. Her sorun alanların sırasıyla. Geri yönde kitaplık öğesi forma: yollar “ / ” ile, sayılar JavaScript'in "
-            "yazdığı gibi, öznitelikler adlarıyla. Üretici: scripts/fixtures/template_form_cases.py (KentOS kodu olmadan)."
+            "yazdığı gibi, öznitelikler adlarıyla. Grup şablonunun üyeleri (ADR 0176 §5) yalnız Çizgi, Çoklu çizgi, Kapalı alan ve "
+            "dikdörtgenlerde: şablonu ve kuralı seçilmemiş satır düşer; üyenin şablonu ve kuralı gerekir; ötelemede sıfırdan büyük "
+            "uzaklık ve şekle uyan yan (açık: sola, sağa, iki yana; kapalı: içe, dışa, iki yana); başka kuralın uzaklığı ve yanı "
+            "yazılmaz. Üretici: scripts/fixtures/template_form_cases.py (KentOS kodu olmadan)."
         ),
         "toTemplate": to_template,
         "toForm": to_fields,
