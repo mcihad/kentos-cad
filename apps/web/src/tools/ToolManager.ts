@@ -34,8 +34,11 @@ export class ToolManager {
   private lastTemplate: string | null = null;
   /** The object templates drawn with in this session, the newest first (at most five; the Şablonlar panel's first group). */
   readonly recentTemplates = new Signal<readonly string[]>([]);
-  /** Each point template's next name, by its id: its series goes on from run to run in the drawing (docs/adr/0176 §3b). */
-  private readonly templateNames = new Map<string, string>();
+  /**
+   * Each point template's next name, or a text template's next text, by its id: its series goes on from run to run in
+   * the drawing (docs/adr/0176 §3b), and a group's members take theirs from it (§5).
+   */
+  readonly templateNames = new Map<string, string>();
   /** Puts back the tool's own options the running template set (tools/templateSeeds.ts). */
   private templateBack: (() => void) | null = null;
   /** Tools suspended under a transparent one (point calculator), innermost last. */

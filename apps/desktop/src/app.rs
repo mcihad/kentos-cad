@@ -578,9 +578,10 @@ pub struct App {
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
     pub(crate) last_template: Option<String>,
-    /// Each point template's next name, by its id: its series goes on from
-    /// run to run in the drawing (docs/adr/0176 §3b).
-    pub(crate) template_names: std::collections::HashMap<String, kentos_interaction::Name>,
+    /// Each point template's next name, or a text template's next text, by
+    /// its id: its series goes on from run to run in the drawing (docs/adr/0176
+    /// §3b), and a group's members take theirs from it (§5).
+    pub(crate) template_names: std::collections::HashMap<String, String>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.

@@ -23,6 +23,7 @@ use iced::advanced::widget::operation;
 use iced::keyboard::key::Named;
 use iced::widget::operation as widget_operation;
 
+use kentos_domain::Slot;
 use kentos_interaction::{
     Context, Draft, Level, LockAsk, Pointer, Session, SnapKind, Toward, Vec2, View, ViewChange,
     js_trim,
@@ -98,6 +99,14 @@ impl App {
         let doc = self.document.as_mut()?;
         // The store answers for the drawing as it is now (docs/adr/0029).
         self.spatial.sync(&doc.model);
+        // A group template's members are written with every object the tool
+        // writes, in its undo step (docs/adr/0176 §5, template_members.rs).
+        let group = self
+            .template
+            .as_ref()
+            .is_some_and(|run| !run.members.is_empty())
+            .then(|| doc.model.begin_group(kentos_domain::labels::ADD));
+        let from = doc.model.next_slot();
         let mut log = Vec::new();
         let mut changes = Vec::new();
         let view = CameraView(&self.viewport.camera);
@@ -119,6 +128,19 @@ impl App {
                 template: self.template.as_ref().map(|run| &run.stamp),
             },
         );
+        if let Some(group) = group {
+            // The objects the tool wrote: the slots given out meanwhile.
+            let made: Vec<Slot> = (from..doc.model.next_slot())
+                .filter_map(|s| u32::try_from(s).ok().map(Slot))
+                .filter(|s| doc.model.get(*s).is_some())
+                .collect();
+            if !made.is_empty() {
+                self.write_members(&made);
+            }
+            if let Some(doc) = self.document.as_mut() {
+                doc.model.end_group(group);
+            }
+        }
         for change in changes {
             match change {
                 // Yazı's field opens over the drawing (text_field.rs).

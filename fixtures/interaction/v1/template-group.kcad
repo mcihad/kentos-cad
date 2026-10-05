@@ -1,0 +1,233 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Grup şablonu",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 500,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [],
+  "styles": {
+    "items": [
+      {
+        "kind": "template",
+        "id": "g-parsel",
+        "name": "Parsel",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polygon",
+          "layer": {
+            "path": [
+              "Kadastro"
+            ],
+            "name": "Parsel",
+            "color": "#E5484D"
+          },
+          "attrs": {
+            "Tür": "Parsel"
+          },
+          "members": [
+            {
+              "template": "p-nokta",
+              "rule": "vertices"
+            },
+            {
+              "template": "p-numara",
+              "rule": "centroid"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "template",
+        "id": "g-yol",
+        "name": "Yol",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polyline",
+          "layer": {
+            "path": [
+              "Ulaşım"
+            ],
+            "name": "Yol ekseni"
+          },
+          "members": [
+            {
+              "template": "p-kenar",
+              "rule": "offset",
+              "distance": 5,
+              "side": "both"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "template",
+        "id": "g-bina",
+        "name": "Bina",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "rectangle",
+          "layer": {
+            "path": [],
+            "name": "Bina"
+          },
+          "members": [
+            {
+              "template": "p-sacak",
+              "rule": "offset",
+              "distance": 1,
+              "side": "outside"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "template",
+        "id": "g-bozuk",
+        "name": "Bozuk grup",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polygon",
+          "layer": {
+            "path": [],
+            "name": "Parsel"
+          },
+          "members": [
+            {
+              "template": "p-yok",
+              "rule": "same"
+            }
+          ]
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-nokta",
+        "name": "Parsel noktası",
+        "path": [
+          "Üyeler"
+        ],
+        "template": {
+          "tool": "point",
+          "layer": {
+            "path": [],
+            "name": "Nokta",
+            "color": "#4F8EF7"
+          },
+          "attrs": {
+            "Tür": "Parsel köşesi"
+          },
+          "point": {
+            "name": "P1",
+            "code": "PN"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-numara",
+        "name": "Parsel numarası",
+        "path": [
+          "Üyeler"
+        ],
+        "template": {
+          "tool": "text",
+          "layer": {
+            "path": [],
+            "name": "Yazılar"
+          },
+          "label": "101",
+          "text": {
+            "height": 2.5,
+            "align": "middleCenter"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-kenar",
+        "name": "Yol kenarı",
+        "path": [
+          "Üyeler"
+        ],
+        "template": {
+          "tool": "polyline",
+          "layer": {
+            "path": [
+              "Ulaşım"
+            ],
+            "name": "Yol kenarı",
+            "lineType": "dashed"
+          },
+          "attrs": {
+            "Tür": "Yol kenarı"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-sacak",
+        "name": "Saçak",
+        "path": [
+          "Üyeler"
+        ],
+        "template": {
+          "tool": "polygon",
+          "layer": {
+            "path": [],
+            "name": "Saçak"
+          },
+          "color": "#8C9AAA"
+        }
+      }
+    ],
+    "categories": [
+      {
+        "path": [
+          "Şablonlar"
+        ]
+      },
+      {
+        "path": [
+          "Üyeler"
+        ]
+      }
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 import type { AppContext } from '../app/context';
 import type { TextAlign } from '../model/entities';
+import type { MemberRule, MemberSide } from '../model/objectTemplate';
 
 /**
  * What a template being drawn with gives every object its tool writes (docs/adr/0176 §3): the run the session keeps
@@ -24,6 +25,26 @@ export type TemplateSeed =
   | { readonly kind: 'text'; readonly heightMm: number; readonly align: TextAlign | null; readonly mask: boolean }
   | { readonly kind: 'block'; readonly block: string };
 
+/**
+ * A group template's member as the run writes it (docs/adr/0176 §5, tools/templateMembers.ts): its template's id (a
+ * point or text template's series is kept by it) and name, its rule, the layer its objects go on (found or opened when
+ * the group started), their look, attributes and label, and a point template's first name and code or a text template's
+ * height on paper, alignment and mask.
+ */
+export interface RunMember {
+  readonly id: string;
+  readonly name: string;
+  readonly rule: MemberRule;
+  readonly distance?: number;
+  readonly side?: MemberSide;
+  readonly layerId: string;
+  readonly color: string | null;
+  readonly lineWeight: number | null;
+  readonly stamp: TemplateStamp;
+  readonly point?: { readonly name?: string; readonly code: string };
+  readonly text?: { readonly heightMm: number; readonly align: TextAlign | null; readonly mask: boolean };
+}
+
 /** A template being drawn with: its library id and name, its stamp, and what it found and gives back at its end. */
 export interface TemplateRun {
   readonly id: string;
@@ -36,6 +57,8 @@ export interface TemplateRun {
   readonly before: { readonly color: string | null; readonly lineWeight: number | null };
   /** The tool's own options it sets; the run's end gives the tool's back. */
   readonly seed?: TemplateSeed;
+  /** A group template's members: their objects are written with each object the tool writes, in its undo step. */
+  readonly members?: readonly RunMember[];
 }
 
 /**

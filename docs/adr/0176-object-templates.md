@@ -197,6 +197,21 @@ da geçer:
      İşlemler adlarıyla `templateMemberOffsets` ve `templateMemberCentroid`, web'de `model/ops/templateMembers.ts`. Bağımsız başvuru
      `scripts/fixtures/template_member_cases.py` (kesin kesirlerle, Ötele'nin dört uzaklıklık köşe sınırı ve yarım çember dahil; 21
      öteleme ve 7 ağırlık merkezi durumu, `fixtures/template-members/v1/cases.json`); iki platform 1e-9 m içinde geçer.
+   - 5c **Tamam (5 Ekim):** grup şablonuyla çizmek iki platformda. Seçilince üyeler kitaplıkta denetlenir (`memberIssues`,
+     `member_issues`; ilk sorun ““Ad” grup şablonu başlamaz: …” diye söylenir, hiçbir şey değişmez); şablonun ve üyelerin katmanları
+     bulunur ya da tek “Katman ekle” adımında açılır (biri kilitliyse hiçbiri açılmaz). Koşu üyeleri katmanlarıyla taşır (web
+     `TemplateRun.members`, masaüstü `RunMember`). Aracın yazdığı her nesne üyelerinin nesneleriyle tek “Ekle” adımıdır: web'de
+     grup araçlarının yazma yerleri (Kapalı alan, Çoklu çizgi, Çizgi, dikdörtgenler) `tools/templateMembers.ts`'in `withMembers`'ıyla
+     sarılır, masaüstünde `input.rs`'in `with_tool`'u grup şablonu çalışırken belge grubunu açar (`template_members.rs`); yazılan nesneler
+     belgenin yeni `nextSlot` ve `next_slot`'undan bulunur. Üyelerin nesneleri `cad.entities.create` ile, her üye kendi katmanına:
+     aynı geometri, çekirdeğin ötelemeleri, Köşelere nokta'nın kuralıyla köşe noktaları (çizimdeki noktaların yeri atlanır), ağırlık
+     merkezine nokta ya da kâğıttaki yüksekliğiyle yazı. Üyenin ad ve metin dizisi şablonların dizisidir (çizim boyunca, üye şablonun
+     kimliğiyle; web `ToolManager.templateNames`, masaüstü `template_names`). Yapamayan üye söylenir (“… üyesi yazılmadı: …”), ana nesne
+     ve öbür üyeler kalır; yazılanların sayısı “Parsel: 5 üye nesnesi yazıldı.” diye söylenir. Geri alma üyelerin dizisini geri vermez
+     (Nokta'nın kendi adını geri verdiğinin tersine): yeniden çizilen nesnenin noktaları dizinin sıradaki adlarını alır. Ortak iz
+     `template-group.json` (`template-group.kcad`): bozuk grup başlamaz; parsel köşe noktaları ve numarasıyla, tek adımda geri alınır ve
+     yinelenir, komşu parselde ortak köşeler atlanır (P5, P6, 102); yol iki yanında kenarlarıyla; dikdörtgen dışa saçağıyla; `shot`
+     adımlarıyla iki platformda resimlenir.
 6. Şablonu uygula; ortak iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

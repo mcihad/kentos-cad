@@ -20,10 +20,11 @@ use kentos_interaction::templates::{
 };
 use kentos_interaction::{DraftColor, Level, Name, Prompt};
 use kentos_native_style::library::ItemKind;
-use kentos_native_style::object_template::{self, Recipe, template_issues};
+use kentos_native_style::object_template::{self, Recipe, member_issues, template_issues};
 
 use crate::app::{App, Message};
 use crate::catalog::catalog;
+use crate::template_members::RunMember;
 
 /// A template being drawn with: what the tools' context carries, and what
 /// its end gives back.
@@ -39,6 +40,9 @@ pub(crate) struct TemplateRun {
     before: (Option<DraftColor>, Option<f64>),
     /// The tool's own options it set, as they were before it.
     tool_back: ToolBack,
+    /// A group template's members: their objects are written with each
+    /// object the tool writes, in its undo step (template_members.rs).
+    pub(crate) members: Vec<RunMember>,
 }
 
 /// A tool's own options as a point, text or block template found them
@@ -107,9 +111,38 @@ impl App {
             }
             None => None,
         };
-        if !self.template_layer(&recipe, &name) {
+        // A group template's members, from the library: what keeps one from
+        // starting is said, and nothing changes.
+        let (issue, members) = {
+            let lib = &self.styles.library;
+            let find = |mid: &str| {
+                lib.get(mid)
+                    .filter(|(item, _)| item.kind() == ItemKind::Template)
+                    .and_then(|(item, _)| Some((item.name(), item.template()?)))
+            };
+            let issue = member_issues(&template, find).into_iter().next();
+            let members: Vec<(object_template::RecipeMember, String, Recipe)> = recipe
+                .members
+                .iter()
+                .filter_map(|m| {
+                    let (item, _) = lib.get(&m.template)?;
+                    let own = object_template::read(item.template()?)?;
+                    Some((m.clone(), item.name().to_owned(), own))
+                })
+                .collect();
+            (issue, members)
+        };
+        if let Some(issue) = issue {
+            self.warn(format!("“{name}” grup şablonu başlamaz: {issue}"));
             return Task::none();
         }
+        let layers: Vec<TemplateLayer> = std::iter::once(&recipe)
+            .chain(members.iter().map(|(_, _, own)| own))
+            .map(layer_of)
+            .collect();
+        let Some(layer_ids) = self.template_layers(&layers, &name) else {
+            return Task::none();
+        };
         // Another template's run gives way, its colour and weight kept as the
         // ones to give back; its tool's own options come back now.
         let previous = self.template.take();
@@ -134,6 +167,13 @@ impl App {
             runs: 0,
             before,
             tool_back,
+            members: members
+                .into_iter()
+                .zip(layer_ids.into_iter().skip(1))
+                .map(|((m, member_name, own), layer_id)| {
+                    RunMember::new(&m, member_name, &own, layer_id)
+                })
+                .collect(),
         };
         if !self.session.start(&recipe.tool) {
             (self.draft.color, self.draft.line_weight) = before;
@@ -164,44 +204,57 @@ impl App {
         Task::none()
     }
 
-    /// Makes the template's layer active, opening it when the drawing lacks
-    /// it; false (said) when it, or the group it would go in, is locked or the
-    /// drawing refuses it.
-    fn template_layer(&mut self, recipe: &Recipe, name: &str) -> bool {
-        let Some(doc) = self.document.as_mut() else {
-            return false;
-        };
-        let layer = TemplateLayer {
-            path: recipe.layer_path.clone(),
-            name: recipe.layer_name.clone(),
-            color: recipe.layer_color.clone(),
-            line_type: recipe.layer_line_type,
-            line_weight: recipe.layer_line_weight,
-        };
-        let layers = doc.model.layers();
-        let refusal = match find_layer(layers.nodes(), &layer, |id| layers.is_locked(id)) {
-            LayerAnswer::Found(id) => {
-                doc.model.set_active_layer(&id);
-                None
+    /// Finds or opens the template's layers (its own first, then its
+    /// members'), the opened ones in one step “Katman ekle”, and makes the
+    /// first active: their ids, in order; none (said) when one of them, or the
+    /// group it would go in, is locked or the drawing refuses it, and then
+    /// nothing changes.
+    fn template_layers(&mut self, layers: &[TemplateLayer], name: &str) -> Option<Vec<String>> {
+        let doc = self.document.as_mut()?;
+        let locked = layers.iter().find_map(|layer| {
+            let tree = doc.model.layers();
+            match find_layer(tree.nodes(), layer, |id| tree.is_locked(id)) {
+                LayerAnswer::Locked(id) => Some(
+                    tree.get(&id)
+                        .map_or_else(String::new, |node| locked_text(node, name)),
+                ),
+                _ => None,
             }
-            LayerAnswer::Locked(id) => Some(
-                layers
-                    .get(&id)
-                    .map_or_else(String::new, |node| locked_text(node, name)),
-            ),
-            LayerAnswer::Open { parent, create } => {
-                open_layer(&mut doc.model, &layer, parent.as_deref(), &create)
-                    .err()
-                    .map(|refusal| refusal.to_string())
-            }
-        };
-        match refusal {
-            Some(text) => {
-                self.warn(text);
-                false
-            }
-            None => true,
+        });
+        if let Some(text) = locked {
+            self.warn(text);
+            return None;
         }
+        let group = doc.model.begin_group(kentos_domain::labels::LAYER_ADD);
+        let mut ids = Vec::new();
+        // One after another: a layer opened for one is found for the next.
+        for layer in layers {
+            let tree = doc.model.layers();
+            let answer = find_layer(tree.nodes(), layer, |id| tree.is_locked(id));
+            let id = match answer {
+                LayerAnswer::Found(id) => Ok(id),
+                LayerAnswer::Locked(id) => Err(doc
+                    .model
+                    .layers()
+                    .get(&id)
+                    .map_or_else(String::new, |node| locked_text(node, name))),
+                LayerAnswer::Open { parent, create } => {
+                    open_layer(&mut doc.model, layer, parent.as_deref(), &create)
+                        .map_err(|refusal| refusal.to_string())
+                }
+            };
+            match id {
+                Ok(id) => ids.push(id),
+                Err(text) => {
+                    doc.model.cancel_group(group);
+                    self.warn(text);
+                    return None;
+                }
+            }
+        }
+        doc.model.end_group(group);
+        doc.model.set_active_layer(&ids[0]);
+        Some(ids)
     }
 
     /// After every message: a template's run ends with its tool (Esc, another
@@ -231,7 +284,7 @@ impl App {
     /// leaves Nokta's own series alone. A text template without its text
     /// part leaves Yazı's options alone.
     fn seed_tool(&mut self, id: &str, recipe: &Recipe, block: Option<BlockId>) -> ToolBack {
-        let next_name = self.template_names.get(id).copied();
+        let next_name = self.template_names.get(id).and_then(|n| Name::new(n));
         let m = &mut self.memory;
         let mut back = ToolBack::default();
         match recipe.tool.as_str() {
@@ -277,7 +330,7 @@ impl App {
         let back = run.tool_back;
         if let Some(name) = back.point_name {
             self.template_names
-                .insert(run.id.clone(), self.memory.point_name);
+                .insert(run.id.clone(), self.memory.point_name.as_str().to_owned());
             self.memory.point_name = name;
         }
         if let Some(code) = back.point_code {
@@ -308,6 +361,17 @@ impl App {
     pub(crate) fn last_template_name(&self) -> Option<&str> {
         let id = self.last_template.as_deref()?;
         self.styles.library.get(id).map(|(item, _)| item.name())
+    }
+}
+
+/// The layer a recipe's objects go on.
+fn layer_of(recipe: &Recipe) -> TemplateLayer {
+    TemplateLayer {
+        path: recipe.layer_path.clone(),
+        name: recipe.layer_name.clone(),
+        color: recipe.layer_color.clone(),
+        line_type: recipe.layer_line_type,
+        line_weight: recipe.layer_line_weight,
     }
 }
 

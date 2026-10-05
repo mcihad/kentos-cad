@@ -189,6 +189,14 @@ impl Document {
         self.generation
     }
 
+    /// The slot the next new object takes: every object added after reading
+    /// it has this slot or a later one, as slots are never reused (a group
+    /// template's members find the objects a tool wrote by it, docs/adr/0176
+    /// §5; the web's `nextSlot`).
+    pub fn next_slot(&self) -> u64 {
+        self.next_slot
+    }
+
     /// Whether the drawing has changes a save has not written.
     pub fn is_dirty(&self) -> bool {
         self.dirty

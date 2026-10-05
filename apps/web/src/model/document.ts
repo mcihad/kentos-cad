@@ -741,6 +741,14 @@ export class CadDocument {
     this.dirty.set(false);
   }
 
+  /**
+   * The slot the next new object takes: every object added after reading it has this slot or a later one, as slots are
+   * never reused (a group template's members find the objects a tool wrote by it, docs/adr/0176 §5).
+   */
+  get nextSlot(): number {
+    return this.nextId;
+  }
+
   /** A fresh object id (for objects that arrive from elsewhere, see `applyExternal`). */
   allocateId(): number {
     return this.nextId++;

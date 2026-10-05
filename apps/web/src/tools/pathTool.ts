@@ -20,6 +20,7 @@ import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
 import { VisibleTrace } from './visibleTrace';
+import { withMembers } from './templateMembers';
 import { stamp } from './templateStamp';
 
 /** Dik kapat with the first and the last edge parallel (docs/adr/0166 §4; the desktop's words). */
@@ -475,9 +476,12 @@ export class PathTool extends PointInputTool {
     const color = this.ctx.settings.color.value;
     const lineWeight = this.ctx.settings.lineWeight.value;
     const segments = hasBulges(this.bulges) ? { bulges: [...this.bulges] } : {};
-    const result = polylineCreate.execute(
-      { doc: this.ctx.doc },
-      { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }), ...stamp(this.ctx) },
+    // A group template's members are written with it, in its step (docs/adr/0176 §5).
+    const result = withMembers(this.ctx, () =>
+      polylineCreate.execute(
+        { doc: this.ctx.doc },
+        { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }), ...stamp(this.ctx) },
+      ),
     );
     if (result.status !== 'completed') {
       if ('error' in result) this.ctx.log.warn(result.error.message);
@@ -509,7 +513,8 @@ export class PathTool extends PointInputTool {
     // Topoloji (§4): the new area joined with its neighbours corner by corner, in its step.
     const joining = joinCorners(this.ctx, areas);
     const joined = joining?.areas ?? areas;
-    const written = this.writeJoined(joining, 'Ekle', () => {
+    // A group template's members are written with it, in its step (docs/adr/0176 §5).
+    const written = withMembers(this.ctx, () => this.writeJoined(joining, 'Ekle', () => {
       if (clipped) return this.writeObjects([clippedGeometry(joined)]);
       const ring = joined[0].outer;
       const result = polygonCreate.execute(
@@ -522,7 +527,7 @@ export class PathTool extends PointInputTool {
       }
       for (const w of result.warnings) this.ctx.log.warn(w.message);
       return result.output;
-    });
+    }));
     if (!written) return;
     sayJoined(this.ctx, joining);
     this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(clipped ? writtenArea(clipped.areas) : area())}`);

@@ -412,6 +412,19 @@ pub struct Recipe {
     pub text_mask: bool,
     /// A block template's block, by name.
     pub block: Option<String>,
+    /// A group template's members, in their order (docs/adr/0176 §5).
+    pub members: Vec<RecipeMember>,
+}
+
+/// A group template's member as its recipe has it: another template's id and
+/// the rule it makes its object by, an offset's distance and side.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RecipeMember {
+    pub template: String,
+    /// One of [`MEMBER_RULES`].
+    pub rule: String,
+    pub distance: Option<f64>,
+    pub side: Option<String>,
 }
 
 /// A template's recipe; none for one with an issue ([`template_issues`]).
@@ -466,6 +479,23 @@ pub fn read(template: &Value) -> Option<Recipe> {
             .and_then(Value::as_bool)
             .unwrap_or(false),
         block: text(template.get("block")),
+        members: template
+            .get("members")
+            .and_then(Value::as_array)
+            .map(|members| {
+                members
+                    .iter()
+                    .filter_map(|m| {
+                        Some(RecipeMember {
+                            template: text(m.get("template"))?,
+                            rule: text(m.get("rule"))?,
+                            distance: m.get("distance").and_then(Value::as_f64),
+                            side: text(m.get("side")),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
     })
 }
 

@@ -1,7 +1,7 @@
 import type { AppContext } from './context';
-import { lockedTemplateLayerText, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayer } from '../model/objectTemplate';
+import { lockedTemplateLayerText, memberIssues, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayer, type TemplateMember } from '../model/objectTemplate';
 import { formOfTemplate } from '../model/templateForm';
-import type { TemplateRun, TemplateSeed } from '../tools/templateStamp';
+import type { RunMember, TemplateRun, TemplateSeed } from '../tools/templateStamp';
 import { RIBBON_TEXTS } from '../ui/ribbon/ribbonPlan';
 
 /**
@@ -14,7 +14,9 @@ import { RIBBON_TEXTS } from '../ui/ribbon/ribbonPlan';
  * (a template whose block the drawing lacks does not start, and says so). The run ends with the tool (the ToolManager
  * lets it go): Esc, another command or another template give the colour, the weight and the tool's own options back;
  * the active layer stays. Son komutu yinele starts the template again. A locked layer keeps the template from
- * starting, and says so.
+ * starting, and says so. A group template's members (§5) are checked against the library first (what keeps one from
+ * starting is said), their layers found or opened with the template's in one step, and every object the tool writes
+ * takes their objects in its undo step (tools/templateMembers.ts).
  */
 
 /** `template.draw`: draws with the library's template `id` (Stil yöneticisi's Şablonla çiz, a trace's `template` step). */
@@ -30,18 +32,25 @@ export function drawWithTemplate(ctx: AppContext, id: string): void {
     block = ctx.doc.blocks.value.find((b) => b.name === t.block)?.id;
     if (block === undefined) return void ctx.log.warn(missingBlockText(t.block, item.name));
   }
-  if (!useLayer(ctx, t.layer, item.name)) return;
+  // A group template's members, from the library: what keeps one from starting is said, and nothing changes.
+  const lib = ctx.styles.library;
+  const memberIssue = memberIssues(t, (mid) => lib.template(mid))[0];
+  if (memberIssue) return void ctx.log.warn(`“${item.name}” grup şablonu başlamaz: ${memberIssue}`);
+  const members = (t.members ?? []).map((m) => ({ m, item: lib.template(m.template)! }));
+  const layerIds = useLayers(ctx, [t.layer, ...members.map(({ item: mi }) => mi.template.layer)], item.name);
+  if (!layerIds) return;
   const settings = ctx.settings;
   const seed = seedOf(t, block);
   const run: TemplateRun = {
     id,
     name: item.name,
-    stamp: { ...(t.symbol !== undefined && { symbol: t.symbol }), attrs: { ...t.attrs }, ...(t.label !== undefined && { label: t.label }) },
+    stamp: stampOf(t),
     color: t.color ?? null,
     lineWeight: t.lineWeight ?? null,
     // Another template's run gives way, its colour and weight kept as the ones to give back.
     before: settings.template.value?.before ?? { color: settings.color.value, lineWeight: settings.lineWeight.value },
     ...(seed && { seed }),
+    ...(members.length > 0 && { members: members.map(({ m, item: mi }, i): RunMember => runMember(m, mi, layerIds[i + 1])) }),
   };
   ctx.tools.activate(t.tool, run);
   // Its method, as the ribbon's menu starts one (Daire: 2 nokta).
@@ -65,30 +74,62 @@ function seedOf(t: ObjectTemplate, block: string | undefined): TemplateSeed | nu
   return null;
 }
 
-/** Makes the template's layer active, opening it when the drawing lacks it; false (said) when it, or the group it would go in, is locked or the drawing refuses it. */
-function useLayer(ctx: AppContext, layer: TemplateLayer, name: string): boolean {
+/** What every object drawn with a template takes besides its geometry: its symbol, attributes and label. */
+function stampOf(t: ObjectTemplate): TemplateRun['stamp'] {
+  return { ...(t.symbol !== undefined && { symbol: t.symbol }), attrs: { ...t.attrs }, ...(t.label !== undefined && { label: t.label }) };
+}
+
+/** A group template's member as the run writes it: its rule, the layer found or opened for it, its template's look. */
+function runMember(m: TemplateMember, item: { readonly id: string; readonly name: string; readonly template: ObjectTemplate }, layerId: string): RunMember {
+  const t = item.template;
+  return {
+    id: item.id,
+    name: item.name,
+    rule: m.rule,
+    ...(m.distance !== undefined && { distance: m.distance }),
+    ...(m.side !== undefined && { side: m.side }),
+    layerId,
+    color: t.color ?? null,
+    lineWeight: t.lineWeight ?? null,
+    stamp: stampOf(t),
+    ...(t.tool === 'point' && { point: { ...(t.point?.name && { name: t.point.name }), code: t.point?.code ?? '' } }),
+    ...(t.tool === 'text' && t.text && { text: { heightMm: t.text.height, align: t.text.align ?? null, mask: t.text.mask ?? false } }),
+  };
+}
+
+/**
+ * Finds or opens the template's layers (its own first, then its members'), the opened ones in one step “Katman ekle”,
+ * and makes the first active: their ids, in order; null (said) when one of them, or the group it would go in, is locked
+ * or the drawing refuses it, and then nothing changes.
+ */
+function useLayers(ctx: AppContext, layers: readonly TemplateLayer[], name: string): string[] | null {
   const doc = ctx.doc;
-  const answer = templateLayer(doc.layers, layer);
-  if ('found' in answer) {
-    doc.layers.setActive(answer.found);
-    return true;
-  }
-  if ('locked' in answer) {
-    const node = doc.layers.get(answer.locked);
-    if (node) ctx.log.warn(lockedTemplateLayerText(node, name));
-    return false;
+  for (const layer of layers) {
+    const answer = templateLayer(doc.layers, layer);
+    if ('locked' in answer) {
+      const node = doc.layers.get(answer.locked);
+      if (node) ctx.log.warn(lockedTemplateLayerText(node, name));
+      return null;
+    }
   }
   try {
-    doc.transact('Katman ekle', () => {
-      let under = answer.open.parent;
-      for (const group of answer.open.create) under = doc.addLayer({ name: group, type: 'group' }, under).id;
-      const style = { ...(layer.color !== undefined && { color: layer.color }), ...(layer.lineType !== undefined && { lineType: layer.lineType }), ...(layer.lineWeight !== undefined && { lineWeight: layer.lineWeight }) };
-      doc.addLayer({ name: layer.name.trim(), type: 'layer', style }, under, { activate: true });
-    });
-    return true;
+    const ids = doc.transact('Katman ekle', () =>
+      // One after another: a layer opened for one is found for the next.
+      layers.map((layer) => {
+        const answer = templateLayer(doc.layers, layer);
+        if ('found' in answer) return answer.found;
+        if ('locked' in answer) throw new Error(`“${layer.name}” katmanı kilitli; “${name}” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın.`);
+        let under = answer.open.parent;
+        for (const group of answer.open.create) under = doc.addLayer({ name: group, type: 'group' }, under).id;
+        const style = { ...(layer.color !== undefined && { color: layer.color }), ...(layer.lineType !== undefined && { lineType: layer.lineType }), ...(layer.lineWeight !== undefined && { lineWeight: layer.lineWeight }) };
+        return doc.addLayer({ name: layer.name.trim(), type: 'layer', style }, under).id;
+      }),
+    );
+    doc.layers.setActive(ids[0]);
+    return ids;
   } catch (e) {
     ctx.log.warn(e instanceof Error ? e.message : String(e));
-    return false;
+    return null;
   }
 }
 

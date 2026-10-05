@@ -23,6 +23,7 @@ import type { Area } from '../model/geom/overlay';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { joinCorners, sayJoined, withJoined, type Joining } from './junctions';
 import { followLocks } from './locks';
+import { withMembers } from './templateMembers';
 import { stamp } from './templateStamp';
 
 /**
@@ -261,8 +262,9 @@ export abstract class PointInputTool implements Tool {
     if (!areas.length) return null;
     const joining = joinCorners(this.ctx, areas);
     const joined = joining?.areas ?? areas;
-    const written = this.writeJoined(joining, 'Ekle', () =>
-      clipped ? this.writeObjects([clippedGeometry(joined)]) : this.writeRing(joined[0].outer.pts, joined[0].outer.bulges) || null,
+    // A group template's members are written with it, in its step (docs/adr/0176 §5).
+    const written = withMembers(this.ctx, () =>
+      this.writeJoined(joining, 'Ekle', () => (clipped ? this.writeObjects([clippedGeometry(joined)]) : this.writeRing(joined[0].outer.pts, joined[0].outer.bulges) || null)),
     );
     if (!written) return null;
     sayJoined(this.ctx, joining);
@@ -343,7 +345,8 @@ export class LineTool extends PointInputTool {
    * texts, word for word). The new line's slot, or null when refused.
    */
   private createLine(a: Vec2, b: Vec2): number | null {
-    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight(), ...stamp(this.ctx) }))?.id ?? null;
+    // A group template's members are written with each line, in its step (docs/adr/0176 §5).
+    return withMembers(this.ctx, () => this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight(), ...stamp(this.ctx) }))?.id ?? null);
   }
 
   protected override option(key: string): boolean {
