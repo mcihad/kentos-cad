@@ -132,6 +132,14 @@
   color: var(--c-accent-text);
 }
 
+/* Katmanları birleştir (docs/adr/0177 §3): the layers in a list of fixed height, as Bul ve değiştir's matches. */
+.merge-rows {
+  height: min(calc(260px * var(--ui-scale)), 32vh);
+}
+.merge-row__target {
+  color: var(--c-text-3);
+}
+
 /* Cihaza gönder (docs/adr/0169 §4): the file's first lines as written, in the code face, scrolling sideways. */
 .send-preview {
   margin: 0;

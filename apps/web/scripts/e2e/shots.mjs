@@ -2245,6 +2245,22 @@ SCENES.templates = [
   },
 ];
 
+// Katmanlar's row menu (docs/adr/0177 §3: Kopyasını oluştur, Başka katmanlarla birleştir…); the desktop's icon tour “katman”.
+SCENES.layers = [
+  {
+    id: 'row-menu',
+    open: async (ui) => {
+      const at = await ui.eval(
+        `(() => { const r = [...document.querySelectorAll('.tree__row')].find((e) => e.querySelector('.tree__name')?.textContent === 'Parsel sınırı'); const b = r.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; })()`,
+      );
+      await ui.contextClick(...at);
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => ui.escapeAll(2),
+  },
+];
+
 SCENES.pointeditor = [
   { id: 'noktalar', open: openPointEditor },
   {

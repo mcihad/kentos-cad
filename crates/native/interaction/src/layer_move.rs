@@ -12,7 +12,9 @@
 //!   refuses and the tool waits for another; the commands' own warnings (a
 //!   hidden target) are said.
 
-use kentos_contracts::{EntitiesCreate, EntitiesSetProperties, NewObject, PropertiesOperation};
+use kentos_contracts::{
+    EntitiesCreate, EntitiesSetProperties, Entity, NewObject, PropertiesOperation,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -151,6 +153,22 @@ impl LayerMove {
     }
 }
 
+/// An object as `cad.entities.create` writes its copy in place: its
+/// geometry, its own colour, weight, attributes, label and symbol (Katmana
+/// kopyala, Kopyasını oluştur; the web's `newObjectOf`).
+pub fn new_object(e: &Entity) -> Option<NewObject> {
+    Some(NewObject {
+        geometry: edit_geometry(shape(e))?,
+        color: e.base().color.clone(),
+        line_weight: e.base().line_weight,
+        attrs: Some(e.base().attrs.clone()),
+        label: e.base().label.clone(),
+        label_of: None,
+        label_scale: None,
+        symbol: e.base().symbol.clone(),
+    })
+}
+
 /// Katmanı eşle's write: one `cad.entities.set` in the step “Katmanı eşle”.
 fn move_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
     let input = EntitiesSetProperties {
@@ -190,18 +208,7 @@ fn copy_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
     let new: Vec<NewObject> = objects
         .iter()
         .filter_map(|s| cx.doc.get(*s))
-        .filter_map(|e| {
-            Some(NewObject {
-                geometry: edit_geometry(shape(e))?,
-                color: e.base().color.clone(),
-                line_weight: e.base().line_weight,
-                attrs: Some(e.base().attrs.clone()),
-                label: e.base().label.clone(),
-                label_of: None,
-                label_scale: None,
-                symbol: e.base().symbol.clone(),
-            })
-        })
+        .filter_map(new_object)
         .collect();
     let input = EntitiesCreate {
         layer_id: layer.to_owned(),

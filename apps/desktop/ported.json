@@ -240,7 +240,9 @@
     "tool.layerMakeActive",
     "layer.unisolate",
     "tool.layerMatch",
-    "tool.copyToLayer"
+    "tool.copyToLayer",
+    "layer.duplicate",
+    "layer.merge"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

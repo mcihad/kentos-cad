@@ -13,6 +13,21 @@ import { drawTag } from './preview';
 import type { ToolPointer } from './Tool';
 
 /**
+ * An object as `cad.entities.create` writes its copy in place: its geometry, its own colour, weight, attributes, label
+ * and symbol (Katmana kopyala, Kopyasını oluştur; the desktop's `layer_move::new_object`).
+ */
+export function newObjectOf(e: Entity): NewObject {
+  return {
+    geometry: geometryOf(e as unknown as EditGeometry) as unknown as EditGeometry,
+    ...(e.color !== undefined && { color: e.color }),
+    ...(e.lineWeight !== undefined && { lineWeight: e.lineWeight }),
+    attrs: { ...e.attrs },
+    ...(e.label !== undefined && { label: e.label }),
+    ...(e.symbol !== undefined && { symbol: e.symbol }),
+  };
+}
+
+/**
  * Katmanı eşle and Katmana kopyala (docs/adr/0177 §2; the desktop's `kentos_interaction::layer_move`): the selected
  * objects (picked first when nothing is selected) go to, or are copied to, a target layer: the layer of an object
  * clicked, or the active one (Etkin katman, E).
@@ -105,15 +120,7 @@ export class LayerMoveTool extends SelectionFirstTool {
 
   private copyTo(objects: Entity[], layerId: string, name: string): void {
     const { doc, log, selection } = this.ctx;
-    const objectOf = (e: Entity): NewObject => ({
-      geometry: geometryOf(e as unknown as EditGeometry) as unknown as EditGeometry,
-      ...(e.color !== undefined && { color: e.color }),
-      ...(e.lineWeight !== undefined && { lineWeight: e.lineWeight }),
-      attrs: { ...e.attrs },
-      ...(e.label !== undefined && { label: e.label }),
-      ...(e.symbol !== undefined && { symbol: e.symbol }),
-    });
-    const result = doc.transact('Katmana kopyala', () => entitiesCreate.execute({ doc }, { layerId, objects: objects.map(objectOf) }));
+    const result = doc.transact('Katmana kopyala', () => entitiesCreate.execute({ doc }, { layerId, objects: objects.map(newObjectOf) }));
     if (result.status !== 'completed') return void ('error' in result && log.warn(result.error.message));
     for (const w of result.warnings) log.warn(w.message);
     selection.set(result.output.ids);

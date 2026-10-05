@@ -965,7 +965,7 @@ impl App {
     }
 
     /// “Grup / Katman” (web `layers.path`).
-    pub(super) fn layer_path(&self, id: &str) -> String {
+    pub(crate) fn layer_path(&self, id: &str) -> String {
         let Some(doc) = &self.document else {
             return id.to_owned();
         };

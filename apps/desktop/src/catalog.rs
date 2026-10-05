@@ -379,6 +379,9 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     "tool.layerMatch",
     "tool.copyToLayer",
+    // docs/adr/0177 §3: Kopyasını oluştur and Katmanları birleştir (layer_merge.rs).
+    "layer.duplicate",
+    "layer.merge",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

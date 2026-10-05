@@ -54,9 +54,10 @@ Beş araç, imleç altındaki nesneye tıklanarak (nesne seçen araç gibi, kutu
 
 ### 3. Katmanın kopyası ve katmanları birleştirmek
 
-- **Kopyasını oluştur** (`layer.duplicate`): Katmanlar panelinde katmanın menüsünde. Katmanın yanına “<ad> kopyası” (ağaçta tek) adıyla,
-  aynı görünüş, katman stili ve kenetle yeni katman açılır, katmanın nesnelerinin kopyaları ona yazılır; tek adım “Katmanı kopyala”.
-  Gruplarda kapalıdır.
+- **Kopyasını oluştur** (`layer.duplicate`): Katmanlar panelinde katmanın menüsünde (komut olarak etkin katmanınki). Katmanın grubuna,
+  sona “<ad> kopyası” (ağaçta tek) adıyla, aynı görünüş, katman stili ve görünürlükle, kilitsiz yeni katman açılır, katmanın nesnelerinin
+  kopyaları ona yazılır; tek adım “Katmanı kopyala”. Katmanın kendi keneti kopyaya geçmez (ağacın ayarıdır, katmanınkine dönülür).
+  Gruplarda yoktur; kilitli katmanın kopyası oluşturulmaz (nesnelerininki de, CLAUDE.md §7).
 - **Katmanları birleştir** (`layer.merge`; LAYMRG): pencere; birleşecek katmanlar (işaretli liste, nesne sayılarıyla) ve hedef katman.
   Kaynakların nesneleri hedefe geçer, kaynak katmanlar silinir; tek adım “Katmanları birleştir”. Kaynaklardan biri etkinse hedef etkin
   olur. Kilitli kaynak ya da hedef birleştirmeyi başlatmaz (söylenir). Katmanlar panelinde katmanın menüsünden (“Başka katmanlarla
@@ -126,7 +127,13 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
    `Stages::pointer`'la); Katmanı eşle `cad.entities.set`'in `layer` işlemiyle, Katmana kopyala `cad.entities.create` ile (renk, kalınlık,
    öznitelik, etiket ve sembol nesnenin kendi değeriyle); ikonlar `layerMatch`, `copyToLayer`; ikisi de Katmanlar ▾'inde ve Düzen
    menüsünün Katman bölümünde. Ortak iz `layer-move.json` (1. adımın belgesiyle; `shot` adımlarıyla iki platformda resimlenir).
-3. Kopyasını oluştur ve Katmanları birleştir (§3): komutlar ve pencere iki platformda; ortak iz.
+3. Kopyasını oluştur ve Katmanları birleştir (§3): komutlar ve pencere iki platformda; ortak iz. **Tamam (5 Ekim):** web
+   `app/layerActions.ts` (`duplicateLayer`, `mergeLayers`, `mergeSummary`) ve `ui/layers/MergeLayersDialog.ts`, masaüstü
+   `layer_merge.rs` (aynı kurallar ve sözler, pencere KentOS UI'la; izin `dialog` adımı `layer_merge_control` ile); komutlar
+   `layer.duplicate`, `layer.merge` (Katmanlar ▾'inde), katmanın menüsünde Kopyasını oluştur ve Başka katmanlarla birleştir…; ikonlar
+   `layerDuplicate`, `layerMerge`. Ortak iz `layer-merge.json`; hedefin listeden değiştirilmesi izde olmadığından etkin katmanın
+   birleşmesi, kilitli katman ve kopyaların adları iki platformun birim testlerinde (`layerActions.test.ts`, `layer_merge::tests`).
+   Resimler: iz `shot` adımıyla iki platformda, katmanın menüsü masaüstünün ikon turunda (`katman`) ve web'in `shots.mjs layers`'ında.
 4. Katman durumları (§4): sözleşme ve `.kcad` şema 19 (kodek, bağımsız Python okuyucu ve yazıcısı, örnek dosya); kurallar iki platformda,
    ortak durumlar; Katmanlar panelinde menü ve kayıt penceresi; ortak iz.
 5. Kullanılmayanları temizle (§5): kural iki platformda ortak durumlarla; pencere; ortak iz.

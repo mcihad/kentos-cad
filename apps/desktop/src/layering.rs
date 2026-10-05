@@ -64,6 +64,10 @@ pub enum Event {
     RenameCancel,
     /// Yanına yeni katman (a layer) or İçine yeni katman (a group).
     AddBeside(String),
+    /// Kopyasını oluştur (docs/adr/0177 §3): the layer and its objects copied.
+    Duplicate(String),
+    /// Başka katmanlarla birleştir…: Katmanları birleştir's window, this layer the target.
+    MergeInto(String),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -159,6 +163,14 @@ impl App {
             self.ask_remove_layer(id);
             return Task::none();
         }
+        if let Event::Duplicate(id) = event {
+            self.duplicate_layer(Some(id));
+            return Task::none();
+        }
+        if let Event::MergeInto(id) = event {
+            self.open_layer_merge(Some(id));
+            return Task::none();
+        }
         if let Event::ZoomTo(id) = &event {
             self.zoom_to_layer(id);
             return Task::none();
@@ -183,6 +195,8 @@ impl App {
             Event::Activate(id) => {
                 model.set_active_layer(&id);
             }
+            // Handled above, before the drawing is borrowed.
+            Event::Duplicate(_) | Event::MergeInto(_) => {}
             Event::Isolate(id) => model.isolate_layer(&id),
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
@@ -441,7 +455,8 @@ impl App {
                 .icon(crate::icons::from_web(Some("layerStyle")))
                 .separator();
         }
-        menu.item("Yeniden adlandır", event(Event::Rename(id.clone())))
+        let menu = menu
+            .item("Yeniden adlandır", event(Event::Rename(id.clone())))
             .icon(crate::icons::from_web(Some("edit")))
             .shortcut("F2")
             .item(
@@ -452,8 +467,20 @@ impl App {
                 },
                 event(Event::AddBeside(id.clone())),
             )
-            .icon(crate::icons::from_web(Some("layerAdd")))
-            .separator()
+            .icon(crate::icons::from_web(Some("layerAdd")));
+        // Kopyasını oluştur and Başka katmanlarla birleştir… (docs/adr/0177 §3).
+        let menu = if is_layer {
+            menu.item("Kopyasını oluştur", event(Event::Duplicate(id.clone())))
+                .icon(crate::icons::from_web(Some("layerDuplicate")))
+                .item(
+                    "Başka katmanlarla birleştir…",
+                    event(Event::MergeInto(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("layerMerge")))
+        } else {
+            menu
+        };
+        menu.separator()
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))
             .icon(crate::icons::from_web(Some("trash")))

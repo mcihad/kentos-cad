@@ -357,6 +357,13 @@ export class LayersPanel extends Panel {
           this.ctx.log.success(`“${node.name}” katmanı eklendi ve etkin yapıldı.`);
         },
       },
+      // Kopyasını oluştur and Başka katmanlarla birleştir… (docs/adr/0177 §3): this layer the source, or the target.
+      ...(isLayer
+        ? [
+            { label: 'Kopyasını oluştur', icon: 'layerDuplicate', run: () => void this.ctx.commands.execute('layer.duplicate', n.id) },
+            { label: 'Başka katmanlarla birleştir…', icon: 'layerMerge', run: () => void this.ctx.commands.execute('layer.merge', n.id) },
+          ]
+        : []),
       { kind: 'separator' },
       { label: 'Sil', icon: 'trash', shortcut: 'Delete', run: () => void this.remove(n) },
     );

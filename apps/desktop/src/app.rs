@@ -159,6 +159,8 @@ pub enum Dialog {
     AttributeValues,
     /// Bul ve değiştir (find_replace.rs, docs/adr/0145 §6); the window is `App::find_replace`.
     FindReplace,
+    /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
+    LayerMerge,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -292,6 +294,7 @@ pub enum Message {
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
+    LayerMerge(crate::layer_merge::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
@@ -587,6 +590,8 @@ pub struct App {
     /// The layers and groups Katmanı yalıt hid since the last Yalıtımı kaldır
     /// (docs/adr/0177 §1): the drawing's, forgotten with it.
     pub(crate) isolated_layers: Vec<String>,
+    /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
+    pub(crate) layer_merge: Option<crate::layer_merge::Window>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
@@ -806,6 +811,7 @@ impl App {
             last_template: None,
             template_names: std::collections::HashMap::new(),
             isolated_layers: Vec::new(),
+            layer_merge: None,
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
@@ -1171,6 +1177,7 @@ impl App {
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
+            Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
@@ -1695,6 +1702,10 @@ impl App {
                 Some(doc) => doc.model.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
+            // Kopyasını oluştur and Katmanları birleştir (docs/adr/0177 §3): the active layer's;
+            // Katmanlar's menu names its layer (layering.rs).
+            "layer.duplicate" => self.duplicate_layer(None),
+            "layer.merge" => self.open_layer_merge(None),
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {

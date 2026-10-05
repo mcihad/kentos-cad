@@ -1,0 +1,30 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "layer-merge",
+  "title": "Kopyasını oluştur ve Katmanları birleştir: etkin katmanın kopyası nesnesiyle tek adımda açılır, geri alınır; pencerede işaretlenen Bina ve Duvar etkin Parsel'e birleşir (nesneleri taşınır, katmanları silinir), tek adımda geri alınır; kilitli katman işaretlenemez, Birleştir kapalı kalır; kilitli katmanın kopyası oluşturulmaz",
+  "source": "docs/adr/0177 §3",
+  "covers": ["HYB-20"],
+  "document": "layer-by-object.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "steps": [
+    {"run": "layer.duplicate", "note": "Etkin katman Parsel: kopyası nesnesiyle tek adımda", "expect": {"canUndo": true, "activeLayer": ["Parsel"], "entities": 5, "logged": ["“Parsel” katmanı “Parsel kopyası” olarak kopyalandı: 1 nesne."], "objects": [{"id": 4, "kind": "polygon", "layer": "Parsel"}, {"id": 5, "kind": "polygon", "layer": "Parsel kopyası", "points": [[0, -10], [20, -10], [20, 10], [0, 10]]}]}},
+    {"key": "Ctrl+Z", "note": "Katman ve nesnesi birlikte geri alınır", "expect": {"entities": 4}},
+    {"run": "layer.merge", "expect": {"dialog": "Katmanları birleştir"}},
+    {"dialog": "Katmanları birleştir", "check": {"Yapılar / Bina": true, "Yapılar / Duvar": true}, "note": "Bina ve Duvar işaretli: pencere ne olacağını söyler"},
+    {"shot": "birlestir-pencere", "note": "Katmanları birleştir: iki katman işaretli, hedef etkin Parsel"},
+    {"dialog": "Katmanları birleştir", "press": "Birleştir", "note": "Bina ve Duvar etkin Parsel'e birleşir", "expect": {"dialog": null, "canUndo": true, "logged": ["2 katman “Parsel” katmanına birleştirildi: 2 nesne taşındı."], "objects": [{"id": 1, "kind": "polygon", "layer": "Parsel"}, {"id": 2, "kind": "line", "layer": "Parsel"}]}},
+    {"key": "Ctrl+Z", "note": "Tek adımda geri alınır: katmanlar nesneleriyle döner", "expect": {"objects": [{"id": 1, "kind": "polygon", "layer": "Bina"}, {"id": 2, "kind": "line", "layer": "Duvar"}]}},
+    {"run": "tool.layerLock"},
+    {"click": [-20, -20], "expect": {"lockedLayers": ["Yol"]}},
+    {"key": "Enter"},
+    {"run": "layer.merge", "expect": {"dialog": "Katmanları birleştir"}},
+    {"dialog": "Katmanları birleştir", "check": {"Yol": true}, "press": "Birleştir", "note": "Kilitli Yol işaretlenemez, Birleştir kapalı: pencere açık kalır, değişen olmaz", "expect": {"dialog": "Katmanları birleştir", "objects": [{"id": 3, "kind": "line", "layer": "Yol"}]}},
+    {"dialog": "Katmanları birleştir", "press": "Vazgeç", "expect": {"dialog": null}},
+    {"run": "tool.layerLock"},
+    {"click": [0, 5], "expect": {"lockedLayers": ["Yol", "Parsel"]}},
+    {"key": "Enter"},
+    {"run": "layer.duplicate", "note": "Kilitli katmanın kopyası oluşturulmaz", "expect": {"entities": 4, "log": "warn", "logged": ["“Parsel” katmanı kilitli; kopyası oluşturulmaz. Kilidini Katmanlar panelinden açın."]}}
+  ]
+}

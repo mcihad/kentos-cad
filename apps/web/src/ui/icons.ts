@@ -301,6 +301,11 @@ export const ICONS = {
     '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="2.8" y="2.4" width="5" height="5" rx=".6" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/><path d="M9.2 4.9h4.6v4.6M12.1 7.8l1.7 1.7 1.7-1.7" stroke-width="1.2"/>',
   copyToLayer:
     '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="2.4" y="2" width="4.4" height="4.4" rx=".6" stroke-width="1.1"/><rect x="4.4" y="4" width="4.4" height="4.4" rx=".6" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="M10.2 6.2h3.6v3.6M12.1 8.1l1.7 1.7 1.7-1.7" stroke-width="1.2"/>',
+  // Kopyasını oluştur: a layer and its copy beside it; Katmanları birleştir: two layers flowing into one.
+  layerDuplicate:
+    '<path d="m8 9.6 6 3.1-6 3.1-6-3.1z"/><path d="m12 4.2 6 3.1-6 3.1" fill="currentColor" fill-opacity=".3" stroke-dasharray="1.6 1.4"/><path d="M14.5 13.6v4.6M12.2 15.9h4.6" stroke-width="1.3"/>',
+  layerMerge:
+    '<path d="m10 12.4 7 3.6-7 3.6-7-3.6z" fill="currentColor" fill-opacity=".3"/><path d="M4.5 2.5v2.4A3 3 0 0 0 7.5 8H10m5.5-5.5v2.4a3 3 0 0 1-3 3.1H10v3.4m-1.6-1.6L10 11.4l1.6-1.6" stroke-width="1.3"/>',
   layerUnisolate:
     '<path d="m10 6.6 7 3.6-7 3.6-7-3.6z"/><path d="m3 13.8 7 3.6 7-3.6"/><path d="M13.6 4.2a4 4 0 0 0-6.9.6M6.4 2v2.8h2.8" stroke-width="1.2"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',

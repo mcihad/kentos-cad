@@ -15,7 +15,7 @@ import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 import { lockCommands } from './lockCommands';
-import { unisolateLayers } from './layerActions';
+import { duplicateLayer, unisolateLayers } from './layerActions';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -734,6 +734,30 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['LAYUNISO', 'YALITIMIKALDIR'],
       description: 'Katmanı yalıt’ın bu çizimde gizlediği katman ve grupları yeniden gösterir; arada elle değiştirilenlere dokunmaz.',
       run: () => unisolateLayers(ctx),
+    },
+    {
+      id: 'layer.duplicate',
+      title: 'Kopyasını oluştur',
+      category: 'Katman',
+      icon: 'layerDuplicate',
+      aliases: ['KATMANKOPYASI', 'LAYDUP'],
+      description: 'Katmanın yanına aynı görünüşle “<ad> kopyası” katmanını açar ve nesnelerinin kopyalarını ona yazar; tek adımda geri alınır. Katmanlar panelinde katmanın menüsünden; komut olarak etkin katmanınki.',
+      run: (args) => duplicateLayer(ctx, typeof args === 'string' ? args : undefined),
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
+    },
+    {
+      id: 'layer.merge',
+      title: 'Katmanları birleştir…',
+      category: 'Katman',
+      icon: 'layerMerge',
+      aliases: ['LAYMRG', 'KATMANBIRLESTIR'],
+      description: 'İşaretlenen katmanların nesnelerini hedef katmana taşır ve o katmanları siler; tek adımda geri alınır. Kilitli katman birleşmez.',
+      run: (args) => void import('../ui/layers/MergeLayersDialog').then((m) => m.openMergeLayers(ctx, typeof args === 'string' ? args : undefined)),
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
     },
 
     // Araç akışı
