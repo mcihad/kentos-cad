@@ -225,6 +225,7 @@
     "tool.holeAdd",
     "tool.holeRemove",
     "tool.holeFill",
+    "tool.continue",
     "sheet.model"
   ],
   "format": "kentos.desktop-ported",

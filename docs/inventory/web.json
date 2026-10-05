@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 298,
-      "implemented": 286,
+      "total": 299,
+      "implemented": 287,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 92,
-      "implemented": 90,
+      "total": 93,
+      "implemented": 91,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 226,
+    "commandsOnDesktop": 227,
     "desktop": {
       "commands": {
-        "total": 298,
-        "implemented": 226,
+        "total": 299,
+        "implemented": 227,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 92,
-        "implemented": 90,
+        "total": 93,
+        "implemented": 91,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -5977,6 +5977,37 @@
       ]
     },
     {
+      "id": "tool.continue",
+      "title": "Sürdür",
+      "category": "Düzenle",
+      "icon": "continue",
+      "description": "Bitmiş bir çizgiyi ya da çoklu çizgiyi ucundan sürdürür: çizilen noktalar nesnenin kendisine eklenir.",
+      "aliases": [
+        "CONTINUE",
+        "SURDUR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Kenar"
+      ],
+      "ribbon": [
+        "CAD › Değiştir › Kenar",
+        "CBS › Düzenle › Kenar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/continue.json"
+      ]
+    },
+    {
       "id": "tool.copy",
       "title": "Kopyala",
       "category": "Dönüştür",
@@ -10105,6 +10136,31 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts"
+      ]
+    },
+    {
+      "id": "continue",
+      "label": "Sürdür",
+      "icon": "continue",
+      "group": "modify",
+      "section": "edge",
+      "aliases": [
+        "CONTINUE",
+        "SURDUR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Bitmiş bir çizgiyi ya da çoklu çizgiyi ucundan sürdürür: çizilen noktalar nesnenin kendisine eklenir.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/continue.json"
       ]
     },
     {
@@ -19781,7 +19837,8 @@
               "tool.extend",
               "tool.lengthen",
               "tool.break",
-              "tool.split"
+              "tool.split",
+              "tool.continue"
             ]
           },
           {
@@ -21205,6 +21262,10 @@
                   }
                 ],
                 "key": "split",
+                "size": "small"
+              },
+              {
+                "command": "tool.continue",
                 "size": "small"
               }
             ],
@@ -23293,6 +23354,10 @@
                   ],
                   "key": "split",
                   "size": "small"
+                },
+                {
+                  "command": "tool.continue",
+                  "size": "small"
                 }
               ],
               "overflow": [
@@ -25204,6 +25269,10 @@
                   ],
                   "key": "split",
                   "size": "small"
+                },
+                {
+                  "command": "tool.continue",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -26238,6 +26307,7 @@
     "arrayPolar": "<circle cx=\"10\" cy=\"10\" r=\"6.5\" stroke-dasharray=\"2 2\"/><rect x=\"8.3\" y=\"1.8\" width=\"3.4\" height=\"3.4\"/><rect x=\"14.8\" y=\"8.3\" width=\"3.4\" height=\"3.4\"/><rect x=\"8.3\" y=\"14.8\" width=\"3.4\" height=\"3.4\"/><rect x=\"1.8\" y=\"8.3\" width=\"3.4\" height=\"3.4\"/><circle cx=\"10\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/>",
     "align": "<path d=\"M4 9.5 8.5 4.5l4 3.6\" stroke-dasharray=\"2 1.5\"/><path d=\"M4 16h9v-5\"/><rect x=\"2.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"11.5\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "lengthen": "<path d=\"M3 13h9\"/><path d=\"M12 13h5.5\" stroke-dasharray=\"2 1.5\"/><path d=\"m15 10.5 2.5 2.5-2.5 2.5\"/><rect x=\"10.5\" y=\"11.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "continue": "<path d=\"M2.5 16.5 6 10.5l4 3\"/><path d=\"m10 13.5 3.5-6.5 4 1.5\" stroke-dasharray=\"1.8 1.4\"/><rect x=\"8.5\" y=\"12\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"12\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "donut": "<path d=\"M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 1 1 0-13zm0 3.5a3 3 0 1 0 0 6 3 3 0 1 0 0-6z\" fill=\"currentColor\" fill-opacity=\".35\" fill-rule=\"evenodd\"/>",
     "revcloud": "<path d=\"M5 8.2a2.2 2.2 0 0 1 3.5-2 2.4 2.4 0 0 1 4-.2 2.2 2.2 0 0 1 3.4 1.9 2.2 2.2 0 0 1 .3 4.2 2.3 2.3 0 0 1-3 3 2.4 2.4 0 0 1-4 .3 2.3 2.3 0 0 1-3.6-1.9A2.2 2.2 0 0 1 5 8.2z\"/>",
     "boundary": "<path d=\"M3 15h14M5 17 11 3M9 3l6 14\"/><path d=\"M5.86 15h8.28L10 5.33z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><circle cx=\"10\" cy=\"11.8\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",

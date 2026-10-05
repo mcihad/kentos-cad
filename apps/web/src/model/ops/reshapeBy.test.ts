@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { holeAdd, holeRemove, holeRing, reshapeBy } from './reshapeBy';
+import { continuePath, holeAdd, holeRemove, holeRing, pathEnds, reshapeBy } from './reshapeBy';
 
 /**
- * Biçim değiştir and the hole operations (docs/adr/0173) through the WASM core, against the independent reference in
+ * Biçim değiştir, Sürdür and the hole operations (docs/adr/0173) through the WASM core, against the independent reference in
  * fixtures/reshape/v1/cases.json (scripts/fixtures/reshape_cases.py: rings and paths spliced with exact fractions, the
  * arc case in mpmath; no KentOS code), the cases the core runs natively in
  * crates/shared/geometry-core/tests/all/reshape.rs. Rings are compared as shapes: their start, their direction and
@@ -100,20 +100,41 @@ function pathDiffers(got: Json, want: Json, name: string): string | null {
 
 interface Case {
   name: string;
-  op: 'reshape' | 'holeAdd' | 'holeRemove' | 'holeRing';
+  op: 'reshape' | 'holeAdd' | 'holeRemove' | 'holeRing' | 'continue' | 'pathEnds';
+  fromFirst?: boolean;
+  drawn?: { x: number; y: number }[];
+  bulges?: number[];
   shape: Json;
   sketch?: { x: number; y: number }[];
   ring?: Json;
   at?: { x: number; y: number };
   refusal?: string;
-  expect?: Json;
+  expect?: Json | null;
 }
 
 const file = JSON.parse(fs.readFileSync(new URL('../../../../../fixtures/reshape/v1/cases.json', import.meta.url), 'utf8')) as { format: string; cases: Case[] };
 
+/** Sürdür's answers: the object or nothing, and a path's ends; null when they are the reference's. */
+function plainDiffers(c: Case): string | null {
+  const e = c.shape as never;
+  if (c.op === 'pathEnds') {
+    const got = pathEnds(e) as unknown as Record<string, { x: number; y: number }> | null;
+    const want = (c.expect as Json).ends as Record<string, { x: number; y: number }>;
+    const near = got && ['first', 'last', 'outFirst', 'outLast'].every((k) => Math.abs(got[k].x - want[k].x) <= 1e-12 && Math.abs(got[k].y - want[k].y) <= 1e-12);
+    return near ? null : `${c.name}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`;
+  }
+  const got = continuePath(e, c.fromFirst!, c.drawn!, c.bulges!) as unknown as Json | null;
+  if (c.expect === null) return got === null ? null : `${c.name}: hiçbiri beklenirken ${JSON.stringify(got).slice(0, 120)}`;
+  if (got === null) return `${c.name}: nesne beklenirken hiçbiri`;
+  return pathDiffers(got, c.expect!, c.name);
+}
+
 function run(c: Case): Json {
   const e = c.shape as never;
   switch (c.op) {
+    case 'continue':
+    case 'pathEnds':
+      throw new Error('plainDiffers');
     case 'reshape':
       return reshapeBy(e, c.sketch!) as unknown as Json;
     case 'holeAdd':
@@ -131,6 +152,10 @@ describe('Biçim değiştir ve delikler', () => {
   it('gives every case’s object or refusal', () => {
     expect(file.cases.length).toBeGreaterThanOrEqual(30);
     const off = file.cases.flatMap((c) => {
+      if (c.op === 'continue' || c.op === 'pathEnds') {
+        const d = plainDiffers(c);
+        return d ? [d] : [];
+      }
       const got = run(c);
       const refusal = got.refusal as { why: string } | undefined;
       if (c.refusal) return refusal?.why === c.refusal ? [] : [`${c.name}: ${c.refusal} reddi beklenirken ${JSON.stringify(got).slice(0, 120)}`];

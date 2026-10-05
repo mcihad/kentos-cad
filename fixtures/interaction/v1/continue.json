@@ -1,0 +1,66 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "continue",
+  "title": "Sürdür (ADR 0173 §4): alan ve kilitli çizgi seçilmez; yaylı yol son ucundan yayla (uçtaki teğetle) ve düz kenarla sürer, kotları kalır; çizgi baş ucundan sürünce çoklu çizgi olur, etiketi ve öznitelikleri kalır, Ctrl+Z geri alır; Geri ucu bırakır, yalnız uçla Enter yazmaz; önceden seçili çizgi imlece yakın ucundan sürer",
+  "source": "Web'in continueTool.ts'i (ContinueTool, PathTool'un startTangent ve dropStart kancaları), masaüstünün kentos_interaction::continuation'ı ve path'in Continue biçimi; çekirdeğin ops::continuation'ı; cad.entities.edit continue, ADR 0173",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "continue.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.continue",
+      "note": "Sürdür: seçim yok; nesne kenarından tıklanarak seçilir.",
+      "expect": { "tool": "continue", "options": [], "prompt": "Sürdür: sürdürülecek çizginin ucuna yakın tıklayın" }
+    },
+    { "click": [20, 15], "note": "Parselin kenarı: alan sürdürülmez.", "expect": { "points": 0, "logged": ["Sürdür çizgi ve çoklu çizgi içindir."] } },
+    { "click": [-30, 20], "note": "Kilitli katmandaki çizgi seçilmez.", "expect": { "points": 0, "logged": ["Sürdürülecek çizgiye ya da çoklu çizgiye, ucunun yakınında tıklayın."] } },
+    { "click": [0, 10], "note": "Yolun son ucu: yol vurgulanır, sürdürme bu uçtan başlar.", "expect": { "points": 1, "tool": "continue" } },
+    { "key": "Y", "note": "Yay: ilk yay yolun ucundaki teğetle sürer." },
+    { "move": [10, 20] },
+    { "shot": "surdur-yay" },
+    { "text": "487010,4420020" },
+    { "key": "Enter", "note": "Yolun yayının teğetiyle ters kabarık yay (S eğrisi).", "expect": { "points": 2 } },
+    { "key": "D", "note": "Düz kenara dönülür." },
+    { "text": "487020,4420020" },
+    { "key": "Enter", "expect": { "points": 3 } },
+    {
+      "key": "Enter",
+      "note": "Yazılır: yol aynı nesnedir, köşeleri uca eklenir; eski köşeler kotlarını korur, yeniler kotsuz.",
+      "expect": { "points": 0, "entities": 4, "logged": ["Sürdürüldü: 2 köşe eklendi; uzunluk 74.928 m oldu (+24.976 m)."], "objects": [{ "id": 1, "kind": "polyline", "points": [[-40, -10], [-20, -10], [0, 10], [10, 20], [20, 20]], "bulges": [0, 0.3, -0.3, 0, 0], "zs": [100.0, 101.0, 102.0, null, null], "attrs": { "Ad": "Yol 1" } }] }
+    },
+    { "shot": "surdur-yazildi" },
+    { "click": [12, -20], "note": "Hattın baş ucuna yakın: sürdürme baştan başlar.", "expect": { "points": 1 } },
+    { "text": "@0,-10" },
+    { "key": "Enter", "expect": { "points": 2 } },
+    {
+      "key": "Enter",
+      "note": "Çizgi çoklu çizgi olur; yeni köşe başa, sıra korunur; etiketi ve öznitelikleri kalır.",
+      "expect": { "entities": 4, "logged": ["Sürdürüldü: 1 köşe eklendi; uzunluk 30.000 m oldu (+10.000 m)."], "objects": [{ "id": 2, "kind": "polyline", "points": [[10, -30], [10, -20], [30, -20]], "zs": [null, 50.0, 51.0], "label": "Hat", "attrs": { "Ad": "Hat" } }] }
+    },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri: yine çizgi.", "expect": { "objects": [{ "id": 2, "kind": "line", "points": [[10, -20], [30, -20]] }] } },
+    { "click": [-38, -10], "note": "Yolun baş ucu.", "expect": { "points": 1 } },
+    { "key": "G", "note": "Geri: uç bırakılır, nesne yeniden seçilir.", "expect": { "points": 0, "prompt": "Sürdür: sürdürülecek çizginin ucuna yakın tıklayın" } },
+    { "click": [-38, -10], "expect": { "points": 1 } },
+    {
+      "key": "Enter",
+      "note": "Yalnız uçla Enter bir şey yazmaz.",
+      "expect": { "points": 0, "entities": 4, "logged": ["Sürdürmek için en az bir nokta verin."], "prompt": "Sürdür: sürdürülecek çizginin ucuna yakın tıklayın" }
+    },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "click": [20, -20], "note": "Seçim aracıyla hat seçilir." },
+    { "run": "tool.continue", "note": "Seçili hat sürdürülür: uç imleci izler, ilk tıklamaya ya da yazılan noktaya dek.", "expect": { "tool": "continue", "points": 1 } },
+    { "move": [11, -19], "note": "İmleç hattın baş ucuna yakın." },
+    { "shot": "surdur-secili" },
+    { "text": "@-5,0" },
+    { "key": "Enter", "expect": { "points": 2 } },
+    {
+      "key": "Enter",
+      "expect": { "logged": ["Sürdürüldü: 1 köşe eklendi; uzunluk 25.000 m oldu (+5.000 m)."], "objects": [{ "id": 2, "kind": "polyline", "points": [[5, -20], [10, -20], [30, -20]], "zs": [null, 50.0, 51.0] }] }
+    },
+    { "key": "Esc" }
+  ]
+}

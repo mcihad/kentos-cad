@@ -353,6 +353,8 @@ pub const PORTED: &[&str] = &[
     "tool.holeAdd",
     "tool.holeRemove",
     "tool.holeFill",
+    // Sürdür (docs/adr/0173 §4): a line or a polyline continued from an end.
+    "tool.continue",
     // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
     "sheet.model",
 ];

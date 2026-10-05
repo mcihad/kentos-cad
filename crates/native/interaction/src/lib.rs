@@ -111,6 +111,7 @@ pub mod circle;
 pub mod cleanup;
 pub mod clipboard;
 pub mod construction;
+pub mod continuation;
 pub mod coordinate;
 pub mod corner;
 pub mod dimension;

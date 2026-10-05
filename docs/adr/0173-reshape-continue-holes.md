@@ -68,10 +68,15 @@ akışı iki platformda ortak izlerle sınanır.
 
 ### 4. Sürdür
 
-Çizgi ya da çoklu çizgi seçilir; tıklamaya yakın ucu başlangıçtır (seçimle gelinmişse imlece yakın ucu, ilk tıklamada belirlenir). Çoklu
-çizgi aracı gibi noktalar verilir (kenet, değer kartı, Esc bir nokta geri); önizleme eklenen bölümü gösterir. Enter yazar: nesne aynı
-kalır, köşeleri uca eklenir (baş uçtan sürdürülürse başa, sırası korunarak). Çizgi çoklu çizgi olur. Yeni köşeler kotsuzdur. Kapalı alan
-sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”
+Çizgi ya da çoklu çizgi kenarından tıklanarak seçilir; tıklamaya yakın ucu başlangıçtır. Araçtan önce seçilmiş tek çizgi ya da çoklu
+çizgi sürdürülecek nesnedir: ilk yeni noktaya dek uç imlece yakın olandır. Nesne vurgulanır; ucu yolun ilk noktasıdır. Çoklu çizgi aracı
+gibi noktalar verilir (kenet, değer kartı, Yay, Uzunluk, İzle, Akış; Geri (G) son noktayı siler, uç tek başınayken nesneyi bırakır);
+önizleme eklenen bölümü gösterir. İlk yay nesnenin ucundaki doğrultuyla sürer (yolun teğetini izler). Enter yazar: nesne aynı kalır,
+köşeleri uca eklenir (baş uçtan sürdürülürse başa, sırası ve yaylarının yönü korunarak). Çizgi çoklu çizgi olur, etiketi ve öznitelikleri
+kalır. Eski köşeler kotlarını korur, yeni köşeler kotsuzdur (kotlar geometriyle açıkça yazılır). İleti: “Sürdürüldü: 2 köşe eklendi;
+uzunluk 74.928 m oldu (+24.976 m).”. Yalnız uçla Enter: “Sürdürmek için en az bir nokta verin.”. Kapalı alan ve öbür türler
+sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”; kilitli katmandaki nesne seçilmez. Esc aracı bırakır (Çoklu çizgi'deki gibi).
+Şeritte Değiştir'in (CBS'de Düzenle'nin) Kenar panelindedir.
 
 ### 5. Delikler
 
@@ -114,7 +119,10 @@ sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”
    `holeTools.ts`); deliği imlecin altında olan alanlar deponun `Store::holes_at`'inden (en küçük delik önce; WASM `holesAt`); şeritte
    alan işlemlerinin yanında Delikler paneli (CAD'de Değiştir, CBS'de Düzenle), ayırt edici simgeleriyle; iz oynatıcılarına alanın
    delik sayısı (`holes`); ortak iz `holes.json` (sahne `holes.kcad`) iki platformda, resimleriyle.
-3. Sürdür iki platformda; ortak iz.
+3. Sürdür iki platformda; ortak iz. Bitti (5 Ekim): çekirdek `ops::continuation` (`path_ends`: uçlar ve dışa doğrultuları;
+   `continue_path`: ekleme; WASM `pathEnds`, `continuePath`; başvuru `reshape_cases.py`'nin Sürdür ve uç durumları, 45 durum); masaüstü
+   yol aracının `Continue` biçimi ve `kentos_interaction::continuation`, web `ContinueTool` (`PathTool`'un `startTangent` ve
+   `dropStart` kancalarıyla); ortak iz `continue.json` (sahne `continue.kcad`) iki platformda, resimleriyle.
 4. Biçim değiştir iki platformda (alan ve çizgi); ortak izler; resimler.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

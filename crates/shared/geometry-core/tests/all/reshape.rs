@@ -1,4 +1,4 @@
-//! Biçim değiştir and the hole operations (docs/adr/0173) against the
+//! Biçim değiştir, Sürdür and the hole operations (docs/adr/0173) against the
 //! independent reference in `fixtures/reshape/v1/cases.json`
 //! (`scripts/fixtures/reshape_cases.py`: rings and paths spliced with exact
 //! fractions, the arc case in mpmath; no KentOS code). The operations are
@@ -182,6 +182,53 @@ fn every_case_is_the_references() {
     for c in cases {
         let name = c["name"].as_str().unwrap();
         let shape = &c["shape"];
+        // Sürdür's answers are the object or nothing, and a path's ends.
+        let plain = match c["op"].as_str().unwrap() {
+            "continue" => Some((
+                "continuePath",
+                json!([shape, c["fromFirst"], c["drawn"], c["bulges"]]),
+            )),
+            "pathEnds" => Some(("pathEnds", json!([shape]))),
+            _ => None,
+        };
+        if let Some((op, args)) = plain {
+            let got: Value = match run_named(op, &args.to_string()) {
+                Ok(text) => serde_json::from_str(&text).expect("answer"),
+                Err(e) => {
+                    failures.push(format!("{name}: {e}"));
+                    continue;
+                }
+            };
+            let want = &c["expect"];
+            let checked = if want.is_null() {
+                if got.is_null() {
+                    Ok(())
+                } else {
+                    Err(format!("{name}: hiçbiri beklenirken {got}"))
+                }
+            } else if let Some(ends) = want.get("ends") {
+                let near = ["first", "last", "outFirst", "outLast"].iter().all(|k| {
+                    ["x", "y"].iter().all(|a| {
+                        (got[k][a].as_f64().unwrap_or(f64::NAN) - ends[k][a].as_f64().unwrap())
+                            .abs()
+                            <= 1e-12
+                    })
+                });
+                if near {
+                    Ok(())
+                } else {
+                    Err(format!("{name}: {got} ≠ {ends}"))
+                }
+            } else if got.is_null() {
+                Err(format!("{name}: nesne beklenirken hiçbiri"))
+            } else {
+                same_path(&got, want, name)
+            };
+            if let Err(e) = checked {
+                failures.push(e);
+            }
+            continue;
+        }
         let (op, args) = match c["op"].as_str().unwrap() {
             "reshape" => ("reshapeBy", json!([shape, c["sketch"]])),
             "holeAdd" => ("holeAdd", json!([shape, c["ring"]])),

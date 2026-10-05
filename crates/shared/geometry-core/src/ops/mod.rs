@@ -3,6 +3,7 @@
 pub mod adjoin;
 pub mod areas;
 pub mod breaking;
+pub mod continuation;
 pub mod curve_cuts;
 pub mod edge_labels;
 pub mod edges;

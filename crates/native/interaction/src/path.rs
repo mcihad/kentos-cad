@@ -79,6 +79,7 @@ use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
 use crate::adjoin;
+use crate::continuation;
 use crate::faces;
 use crate::format::Format;
 use crate::ground;
@@ -135,6 +136,8 @@ pub enum Shape {
     Adjoin,
     /// Delik ekle: a ring cut from the area its first point is in (docs/adr/0173 §5).
     Hole,
+    /// Sürdür: a path from an end of a line or a polyline, added to it (docs/adr/0173 §4).
+    Continue,
 }
 
 impl Shape {
@@ -147,6 +150,7 @@ impl Shape {
             Shape::Parcel => PARCEL_ID,
             Shape::Adjoin => adjoin::ID,
             Shape::Hole => holes::ADD_ID,
+            Shape::Continue => continuation::ID,
         }
     }
 
@@ -159,6 +163,7 @@ impl Shape {
             Shape::Parcel => PARCEL_LABEL,
             Shape::Adjoin => adjoin::LABEL,
             Shape::Hole => holes::ADD_LABEL,
+            Shape::Continue => continuation::LABEL,
         }
     }
 
@@ -249,6 +254,8 @@ pub struct Path {
     target: Option<Slot>,
     /// Delik ekle: that area's rings (or the one a click would take), lightly filled in the preview.
     target_rings: Vec<Vec<Vec2>>,
+    /// Sürdür: the line or polyline continued and its end, the path's first point; none while one is picked.
+    cont: Option<continuation::Target>,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -294,6 +301,7 @@ impl Path {
             region: Vec::new(),
             target: None,
             target_rings: Vec::new(),
+            cont: None,
         }
     }
 
@@ -356,9 +364,15 @@ impl Path {
         }
     }
 
-    /// Travel direction at the last corner (the end tangent of the last segment).
+    /// Travel direction at the last corner (the end tangent of the last
+    /// segment); Sürdür's first segment goes on out of the object's end.
     fn tangent(&self) -> Option<Vec2> {
         let n = self.pts.len();
+        if n == 1
+            && let Some(t) = &self.cont
+        {
+            return t.out();
+        }
         (n >= 2).then(|| {
             let bulge = self.bulges.get(n - 2).copied().unwrap_or(0.0);
             segment_tangent(self.pts[n - 2], self.pts[n - 1], bulge, true)
@@ -461,6 +475,14 @@ impl Path {
     fn on_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
         if self.inside_mode() {
             return self.click_inside(p, cx);
+        }
+        // Sürdür: the first point picks the object (its end nearer the point
+        // starts the path); a selected one's end is fixed by the first new point.
+        if self.shape == Shape::Continue {
+            match &mut self.cont {
+                None => return self.pick_continued(p, cx),
+                Some(t) => t.open = false,
+            }
         }
         if self.fixed() {
             return self.on_ray(p, cx);
@@ -653,6 +675,23 @@ impl Path {
         self.measured = Some(region);
     }
 
+    /// Sürdür: the object whose edge is at `p`, going on from its end nearer `p`.
+    fn pick_continued(&mut self, p: Vec2, cx: &mut Context<'_>) {
+        let Some(slot) = continuation::pick_at(p, cx) else {
+            cx.say(Level::Warn, continuation::NO_OBJECT);
+            return;
+        };
+        match continuation::Target::of(slot, cx) {
+            Ok(mut t) => {
+                t.nearer(p);
+                self.pts.push(t.end());
+                self.cont = Some(t);
+                cx.selection.set_hover(Some(slot));
+            }
+            Err(why) => cx.say(Level::Warn, why.unwrap_or(continuation::NO_OBJECT)),
+        }
+    }
+
     /// The face of the visible line work around `p`, closed groups inside it as holes.
     fn face(&mut self, p: Vec2, cx: &Context<'_>) -> Option<Region> {
         faces::face_at(&mut self.faces.0, p, true, None, cx)
@@ -798,6 +837,10 @@ impl Path {
             self.ask_step = false;
         } else if key == "G" && self.arc_via.is_some() {
             self.arc_via = None;
+        } else if key == "G" && self.shape == Shape::Continue && self.pts.len() == 1 {
+            // Sürdür: the end alone goes back to picking the object.
+            self.reset();
+            cx.selection.set_hover(None);
         } else if key == "G" && !self.pts.is_empty() {
             self.pts.pop();
             self.bulges.pop();
@@ -832,6 +875,13 @@ impl Path {
 
     /// Commits the shape when it has enough points, then starts over.
     fn finish(&mut self, cx: &mut Context<'_>) {
+        // Sürdür: the end alone draws nothing; the object is picked again.
+        if self.shape == Shape::Continue && self.pts.len() < 2 {
+            cx.say(Level::Warn, continuation::NOTHING_DRAWN);
+            cx.selection.set_hover(None);
+            self.reset();
+            return;
+        }
         let min = self.shape.min();
         if self.pts.len() < min {
             cx.say(
@@ -902,6 +952,12 @@ impl Path {
             Shape::Hole => {
                 if let Some(slot) = self.target {
                     holes::add(slot, Ring { pts, bulges }, cx);
+                }
+                cx.selection.set_hover(None);
+            }
+            Shape::Continue => {
+                if let Some(t) = &self.cont {
+                    continuation::write(t, &pts, &self.bulges, cx);
                 }
                 cx.selection.set_hover(None);
             }
@@ -1096,6 +1152,7 @@ impl Path {
         self.way = None;
         self.region.clear();
         self.target_rings.clear();
+        self.cont = None;
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -1338,6 +1395,30 @@ impl Tool for Path {
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
+        // Sürdür: an object selected beforehand is the one continued, from
+        // the end nearer the pointer until the first new point.
+        let selected = match cx.selection.ids() {
+            [one] => Some(*one),
+            _ => None,
+        };
+        if self.shape == Shape::Continue
+            && self.cont.is_none()
+            && let Some(one) = selected
+        {
+            match continuation::Target::of(one, cx) {
+                Ok(mut t) => {
+                    t.open = true;
+                    if let Some(h) = self.hover {
+                        t.nearer(h);
+                    }
+                    self.pts = vec![t.end()];
+                    self.bulges.clear();
+                    self.cont = Some(t);
+                }
+                Err(Some(why)) => cx.say(Level::Warn, why),
+                Err(None) => {}
+            }
+        }
         Flow::Stay
     }
 
@@ -1367,6 +1448,9 @@ impl Tool for Path {
         }
         if n == 0 && self.shape == Shape::Hole {
             return Prompt::new(label, "deliğin ilk köşesini alanın içinde belirtin");
+        }
+        if n == 0 && self.shape == Shape::Continue {
+            return Prompt::new(label, "sürdürülecek çizginin ucuna yakın tıklayın");
         }
         if n == 0 {
             return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
@@ -1445,6 +1529,27 @@ impl Tool for Path {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.see(cx);
+        // Sürdür: the object under the pointer while one is picked; then the
+        // object continued, its end following the pointer until fixed.
+        if self.shape == Shape::Continue {
+            match &mut self.cont {
+                None => {
+                    let hit = continuation::pick_at(p.raw, cx);
+                    cx.selection.set_hover(hit);
+                    self.hover = None;
+                    return;
+                }
+                Some(t) => {
+                    if t.open {
+                        t.nearer(p.raw);
+                        if let Some(first) = self.pts.first_mut() {
+                            *first = t.end();
+                        }
+                    }
+                    cx.selection.set_hover(Some(t.slot));
+                }
+            }
+        }
         let point = self.constrain(p, cx);
         self.hover = Some(point);
         // Akış: the pointer leaves a vertex every step it goes, where it is.

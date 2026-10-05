@@ -181,10 +181,21 @@ export class PathTool extends PointInputTool {
     return this.arcMode ? null : this.tangent();
   }
 
-  /** Travel direction at the last vertex (end tangent of the last segment). */
+  /** Travel direction at the last vertex (end tangent of the last segment); a first segment goes on from `startTangent`. */
   private tangent(): Vec2 | null {
     const n = this.pts.length;
+    if (n === 1) return this.startTangent();
     return n >= 2 ? segmentTangent(this.pts[n - 2], this.pts[n - 1], this.bulges[n - 2] ?? 0, true) : null;
+  }
+
+  /** The direction the first segment goes on in: none here (Sürdür's is out of its object's end). */
+  protected startTangent(): Vec2 | null {
+    return null;
+  }
+
+  /** Geri with the first point alone: false takes it back as any point (Sürdür picks its object again instead). */
+  protected dropStart(): boolean {
+    return false;
   }
 
   /** Where a segment towards p really ends (the centre option puts it on the circle). */
@@ -348,7 +359,9 @@ export class PathTool extends PointInputTool {
     // Geri leaves the step as it was; the points stay.
     else if (key === 'G' && this.askStep) this.askStep = false;
     else if (key === 'G' && this.arcVia) this.arcVia = null;
-    else if (key === 'G' && this.pts.length) {
+    else if (key === 'G' && this.pts.length === 1 && this.dropStart()) {
+      // The subclass went back itself.
+    } else if (key === 'G' && this.pts.length) {
       this.pts.pop();
       this.bulges.pop();
       this.spec = { kind: 'tangent' };

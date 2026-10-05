@@ -3,7 +3,7 @@ import type { Entity } from '../entities';
 import type { Vec2 } from '../geometry';
 
 /**
- * Biçim değiştir and the hole operations (docs/adr/0173): the core's `ops::reshape_by` and `ops::holes`, one for both
+ * Biçim değiştir, Sürdür and the hole operations (docs/adr/0173): the core's `ops::reshape_by`, `ops::continuation` and `ops::holes`, one for both
  * platforms. Each gives the object (`done`: its geometry; the caller keeps its other fields) or why not; the tools say
  * the reason in their own words. The independent reference is scripts/fixtures/reshape_cases.py.
  */
@@ -36,3 +36,13 @@ export const holeRing = op<(e: Entity, p: Vec2) => Answer<Ring, HoleRefusal>>('h
 
 /** The area without the hole that holds `p` (Deliği sil). */
 export const holeRemove = op<(e: Entity, p: Vec2) => Answer<Entity, HoleRefusal>>('holeRemove');
+
+/** A line's or an open polyline's two ends and the directions out of them (Sürdür); null for any other object. */
+export const pathEnds = op<(e: Entity) => { first: Vec2; last: Vec2; outFirst?: Vec2; outLast?: Vec2 } | null>('pathEnds');
+
+/**
+ * The line or open polyline continued from its first end (`fromFirst`) or its last by the drawn path (its first point
+ * the end itself), one bulge per drawn segment (Sürdür); null when it is no such object or nothing is drawn beyond the
+ * end.
+ */
+export const continuePath = op<(e: Entity, fromFirst: boolean, drawn: readonly Vec2[], bulges: readonly number[]) => Entity | null>('continuePath');

@@ -46,7 +46,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   komşular da (ADR 0172);
   delikler: Delik ekle (halka ilk köşesinin içinde olduğu alana, seçiliyse ona; var olan deliğe değen halka onunla birleşir, sınırı aşan
   reddedilir), Deliği sil ve Deliği doldur (imlecin altındaki delik vurgulu; dolduran yeni alan deliğin kotlarıyla, delik kalır),
-  şeritte Delikler paneli (ADR 0173);
+  şeritte Delikler paneli; Sürdür: çizgi ya da çoklu çizgi ucundan (seçiliyse imlece yakın ucundan) sürer, ilk yay uçtaki teğetle,
+  eski köşeler kotlarıyla (ADR 0173);
   GNSS içe aktar: GPX ve NMEA konumları WGS 84'ten projenin sistemine doğruluğu ve dayanağıyla, adlı noktalar olarak (türler, adsızların ön eki ve
   numarası, kot elipsoit yüksekliği; çözüm, uydu, HDOP, zaman ve yükseklikler öznitelik), sistemi olmayan projeye alınmaz; Cihaza gönder: seçili
   noktalar, Aplikasyon'un ve Nokta editörünün noktaları Leica GSI-16 ve GSI-8, Topcon GTS-7, Trimble JobXML, Nikon RAW ya da CSV olarak, taşınamayan
@@ -243,7 +244,7 @@ python3 scripts/fixtures/field_gts7_cases.py --check   # Topcon GTS-7 okuyucusun
 python3 scripts/fixtures/gnss_gpx_cases.py --check   # GPX 1.1 okuyucusunu (yol, rota ve iz noktaları, ele ve geoidheight'tan elipsoit yüksekliği, fix, uydu, HDOP, fix none, bozuk konum ve değerler, XML değil, derin) şemadan yazılmış, expat'le okuyan başvurudan denetle; durumlar fixtures/gnss/v1/gpx.json (ADR 0169 §1)
 python3 scripts/vendor/geographiclib.py --check   # GeographicLib'in libm'li kopyasını (crates/shared/geographiclib-rs) crates.io sürümünden ve kuraldan denetle; değişince yeniden yaz (ADR 0171 §5)
 python3 scripts/fixtures/ground_survey_cases.py --check   # Hesap pencerelerinin zemin ile düzlem arası uzunluklarını (Kutupsal alım noktaları yerine koyar, Aplikasyon zemin uzunluğunu verir, Poligon hesabı noktalarını kapanmasız geri verir) bilinen düzlem noktalarından ve PROJ ile GeographicLib'in çarpanlarından denetle; durumlar fixtures/geodesy/v1/ground-survey.json (ADR 0171 §4)
-python3 scripts/fixtures/reshape_cases.py --check   # Biçim değiştir'in ve deliklerin durumlarını (alanda kırpma ve cep, çok parça, retler; çizgide iki ve tek buluşma, yaylı yol; delik ekleme, birleşme, silme ve halka) düz kenarlarda kesin kesirlerle halka ve yol ekleyen, yayda mpmath'le hesaplayan bağımsız başvurudan denetle; durumlar fixtures/reshape/v1/cases.json (ADR 0173)
+python3 scripts/fixtures/reshape_cases.py --check   # Biçim değiştir'in, Sürdür'ün ve deliklerin durumlarını (alanda kırpma ve cep, çok parça, retler; çizgide iki ve tek buluşma, yaylı yol; sondan ve baştan sürdürme, uçların doğrultuları; delik ekleme, birleşme, silme ve halka) düz kenarlarda kesin kesirlerle halka ve yol ekleyen, yayda mpmath'le hesaplayan bağımsız başvurudan denetle; durumlar fixtures/reshape/v1/cases.json (ADR 0173)
 python3 scripts/fixtures/vertex_table_cases.py --check   # Köşe tablosunun satırlarını ve yazmalarını (taşıma, kot, yarıçap büyüklüğünü koruyarak ve payıyla, köşe ekleme, çoklu silme, retler) kurallardan ve mpmath'le 50 basamaklı yarıçap ile büküm arası çeviriden denetle; durumlar fixtures/vertex-table/v1/cases.json (ADR 0172)
 python3 scripts/fixtures/vertex_edit_cases.py --check   # Köşe tablosunun yazmalarını (hücreler, taslak satır, silme; iletiler, adımlar, açık kalan hücre; CAD'in eksen adları) kurallardan denetle; durumlar fixtures/vertex-table/v1/edits.json (ADR 0172)
 cargo test -p kentos-desktop vertices::tests::screens -- --ignored --nocapture   # Köşe tablosunun resimleri, .run/shots/kose-tablosu-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs vertextable))
@@ -810,7 +811,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   sürdürme ve delikler ([ADR 0173](docs/adr/0173-reshape-continue-holes.md)): 1. adım (`cad.entities.edit`'in beş işlemi; çekirdek
   `ops::holes`, `ops::reshape_by`; başvuru `reshape_cases.py`) ve 2. adım (Delik ekle yol aracının `Hole` biçimi, Deliği sil ve
   Deliği doldur iki platformda: masaüstü `kentos_interaction::holes`, web `holeTools.ts`; deponun `holes_at`'i; ortak iz `holes.json`)
-  tamam; sıradaki 3. adım (Sürdür). 4 Ekim: derleme ve test süreleri
+  ve 3. adım (Sürdür: `ops::continuation`, yol aracının `Continue` biçimi, web `continueTool.ts`; ortak iz `continue.json`) tamam;
+  sıradaki 4. adım (Biçim değiştir). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

@@ -16,6 +16,11 @@ their meetings with exact fractions instead:
 The arc case (a path whose arc the sketch cuts) is worked out with mpmath at 50 digits: the cut point on the circle and
 the two arcs' bulges tan(θ·t/4). Refusals are the ADR's, stated per case.
 
+Sürdür (§4): a path continued from its last end takes the drawn points after its own; from its first end the drawn
+points go before them in turned order, each drawn arc on its other side (a bulge's sign is its arc's side seen along
+the travel). The directions out of a path's ends: straight edges along their chords, an arc's end along the chord
+turned by half the arc's sweep (2·atan b, counter-clockwise for b > 0), in mpmath.
+
 The cases compare rings as shapes: the start vertex, the direction and vertices on straight lines between straight
 edges do not matter; coordinates within 1e-9 m, bulges within 1e-12.
 """
@@ -307,7 +312,71 @@ def cases():
                 "expect": {"ring": {"pts": rect(40, 60, 60, 80)}}})
     out.append({"name": "deliği doldur: delik dışına tıklama", "op": "holeRing", "shape": polygon(SQUARE), "at": P(50, 70),
                 "refusal": "notInHole"})
+    # Sürdür.
+    flat = polyline(pts((0, 0), (100, 0)))
+    bent = polyline(pts((0, 0), (50, 0), (100, 50)), [0, 0.3, 0])
+    out.append(continue_case("sürdür: sondan iki nokta", flat, False, pts((100, 0), (120, 20), (140, 20))))
+    out.append(continue_case("sürdür: baştan, nesnenin yönü korunur", polyline(pts((0, 0), (100, 0), (100, 50))), True,
+                             pts((0, 0), (-20, 0), (-20, -30))))
+    out.append(continue_case("sürdür: baştan yaylı çizim, yay öbür yana döner", flat, True,
+                             pts((0, 0), (-20, 20), (-40, 20)), [0.4, 0]))
+    out.append(continue_case("sürdür: yaylı nesnenin sonundan yayla", bent, False, pts((100, 50), (100, 80), (70, 110)), [0, -0.25]))
+    out.append(continue_case("sürdür: çizgi (line) çoklu çizgi olur", {"kind": "line", "a": P(0, 0), "b": P(50, 0)}, True,
+                             pts((0, 0), (0, 30))))
+    out.append(continue_case("sürdür: ucun kendisi, eklenecek nokta yok", flat, False, pts((100, 0), (100, 0)), none=True))
+    out.append(continue_case("sürdür: alan sürdürülmez", polygon(SQUARE), False, pts((0, 0), (-10, 0)), none=True))
+    out.append(ends_case("uçlar: yaylı çoklu çizgi", bent))
+    out.append(ends_case("uçlar: çizgi (line)", {"kind": "line", "a": P(10, 10), "b": P(40, 50)}))
     return out
+
+
+def path_points(shape):
+    return shape["pts"] if shape["kind"] == "polyline" else [shape["a"], shape["b"]]
+
+
+def continued(shape, from_first, drawn, bulges):
+    """The ADR's rule, vertex by vertex: the object's own per-vertex bulges (none: 0), the drawn segments' after them
+    or, turned, before them."""
+    src = path_points(shape)
+    sb = list(shape.get("bulges") or [0] * len(src))
+    k = len(drawn) - 1
+    if from_first:
+        out = [drawn[j] for j in range(k, 0, -1)] + src
+        ob = [-bulges[j] if bulges[j] else 0 for j in range(k - 1, -1, -1)] + sb[:-1] + [0]
+    else:
+        out = src + drawn[1:]
+        ob = sb[:-1] + list(bulges[:k]) + [0]
+    e = {"kind": "polyline", "pts": out}
+    if any(ob):
+        e["bulges"] = [float(b) for b in ob]
+    return e
+
+
+def continue_case(name, shape, from_first, drawn, bulges=None, none=False):
+    bulges = bulges or [0] * (len(drawn) - 1)
+    case = {"name": name, "op": "continue", "shape": shape, "fromFirst": from_first, "drawn": drawn,
+            "bulges": [float(b) for b in bulges]}
+    case["expect"] = None if none else continued(shape, from_first, drawn, bulges)
+    return case
+
+
+def direction(a, b, bulge=0, at_end=True):
+    """The travel direction at a segment's end (`at_end`) or start: the chord turned by ±2·atan(bulge)."""
+    dx, dy = mp.mpf(b["x"]) - mp.mpf(a["x"]), mp.mpf(b["y"]) - mp.mpf(a["y"])
+    l = mp.sqrt(dx * dx + dy * dy)
+    half = 2 * mp.atan(mp.mpf(bulge))
+    t = half if at_end else -half
+    return (dx / l * mp.cos(t) - dy / l * mp.sin(t), dx / l * mp.sin(t) + dy / l * mp.cos(t))
+
+
+def ends_case(name, shape):
+    src = path_points(shape)
+    b = shape.get("bulges") or [0] * len(src)
+    into = direction(src[0], src[1], b[0], at_end=False)
+    onwards = direction(src[-2], src[-1], b[-2], at_end=True)
+    return {"name": name, "op": "pathEnds", "shape": shape,
+            "expect": {"ends": {"first": src[0], "last": src[-1], "outFirst": P(float(-into[0]), float(-into[1])),
+                                "outLast": P(float(onwards[0]), float(onwards[1]))}}}
 
 
 def build():
