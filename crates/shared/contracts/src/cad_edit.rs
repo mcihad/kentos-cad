@@ -23,7 +23,8 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{
-    AreaPart, DimensionStyle, Entity, HatchPattern, LeaderArrow, RingGeometry, TextAlign, Vec2,
+    AreaPart, DimensionStyle, Entity, HatchPattern, LeaderArrow, PointPart, RingGeometry,
+    TextAlign, Vec2,
 };
 use crate::identity::BlockId;
 
@@ -153,6 +154,13 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         z: Option<f64>,
+        /// A multi-point object's points past its first, each with its
+        /// elevation (docs/adr/0174). The geometry is the whole object:
+        /// absent, it has one point, so an edit of a multi-point object
+        /// writes every point.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        parts: Option<Vec<PointPart>>,
     },
     Line {
         a: Vec2,
@@ -176,6 +184,13 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         zs: Option<Vec<Option<f64>>>,
+        /// A multi-part polyline's parts past its first, each its vertices,
+        /// arcs and elevations, without holes (docs/adr/0174). The geometry
+        /// is the whole polyline: absent, it has one part, so an edit of a
+        /// multi-part polyline writes every part.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        parts: Option<Vec<AreaPart>>,
     },
     /// A closed area: its ring and, when it has any, its holes.
     Polygon {

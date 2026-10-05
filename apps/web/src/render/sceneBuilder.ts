@@ -114,6 +114,8 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
         break;
       case 'point':
         b.points.push(e.p.x - origin.x, e.p.y - origin.y);
+        // Every point of a multi-point object (docs/adr/0174).
+        for (const q of e.parts ?? []) b.points.push(q.p.x - origin.x, q.p.y - origin.y);
         break;
       // A block's insert (docs/adr/0144): its pieces, each in its own colour, else the insert's.
       case 'insert': {
@@ -125,7 +127,7 @@ export function buildSceneLayer(id: string, entities: readonly Entity[], style: 
         const table = opts.geometry.blockPieces(e.block);
         for (const { piece, geometry } of g.items) {
           const pb = bucket(table?.[piece]?.color ?? e.color ?? style.color);
-          if (geometry.cls === 'marker') pb.points.push(geometry.point.x - origin.x, geometry.point.y - origin.y);
+          if (geometry.cls === 'marker') for (const q of geometry.points ?? [geometry.point]) pb.points.push(q.x - origin.x, q.y - origin.y);
           else if (geometry.cls === 'line') for (const p of geometry.paths) pb.lines.path(p.pts, origin, p.closed);
           else if (geometry.cls === 'fill') {
             for (const r of geometry.rings) pb.lines.path(r, origin, true);

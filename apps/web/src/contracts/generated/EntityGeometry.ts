@@ -4,6 +4,7 @@ import type { BlockId } from "./BlockId";
 import type { DimensionStyle } from "./DimensionStyle";
 import type { HatchPattern } from "./HatchPattern";
 import type { LeaderArrow } from "./LeaderArrow";
+import type { PointPart } from "./PointPart";
 import type { RingGeometry } from "./RingGeometry";
 import type { TextAlign } from "./TextAlign";
 import type { Vec2 } from "./Vec2";
@@ -14,7 +15,14 @@ import type { Vec2 } from "./Vec2";
  * label, symbol). Coordinates are x east (Y), y north (X), in the project's
  * units (m), float64; angles in radians unless said otherwise.
  */
-export type EntityGeometry = { "kind": "point", p: Vec2, z?: number, } | { "kind": "line", a: Vec2, b: Vec2, 
+export type EntityGeometry = { "kind": "point", p: Vec2, z?: number, 
+/**
+ * A multi-point object's points past its first, each with its
+ * elevation (docs/adr/0174). The geometry is the whole object:
+ * absent, it has one point, so an edit of a multi-point object
+ * writes every point.
+ */
+parts?: Array<PointPart>, } | { "kind": "line", a: Vec2, b: Vec2, 
 /**
  * The vertices' elevations as written (docs/adr/0142): its two ends, `null` for one without; all `null`: none. Absent:
  * each vertex takes one from the objects the edit names.
@@ -25,7 +33,14 @@ zs?: Array<number | null>, } | { "kind": "polyline", pts: Array<Vec2>, bulges?: 
  * the vertices, `null` for one without; all `null`: none. Absent:
  * each vertex takes one from the objects the edit names.
  */
-zs?: Array<number | null>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
+zs?: Array<number | null>, 
+/**
+ * A multi-part polyline's parts past its first, each its vertices,
+ * arcs and elevations, without holes (docs/adr/0174). The geometry
+ * is the whole polyline: absent, it has one part, so an edit of a
+ * multi-part polyline writes every part.
+ */
+parts?: Array<AreaPart>, } | { "kind": "polygon", pts: Array<Vec2>, bulges?: Array<number>, holes?: Array<RingGeometry>, 
 /**
  * The vertices' elevations as written (docs/adr/0142): as many as
  * the vertices, `null` for one without; all `null`: none. The holes' come with them (`RingGeometry.zs`). Absent:

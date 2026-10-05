@@ -25,7 +25,19 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
     let any = |pts: &[Vec2]| pts.iter().any(|&p| inside(p, r));
     let geom = entity_geometry(e);
     let shape = match &geom.shape {
-        Shape::Point { p, z } => inside(*p, r).then(|| Shape::Point { p: mv(*p), z: *z })?,
+        // A multi-point object's points in the window move (docs/adr/0174).
+        Shape::Point { p, z, parts } => {
+            let in_parts = parts.iter().flatten().any(|q| inside(q.p, r));
+            (inside(*p, r) || in_parts).then(|| Shape::Point {
+                p: mv(*p),
+                z: *z,
+                parts: parts.as_ref().map(|ps| {
+                    ps.iter()
+                        .map(|q| crate::entity::PointPart { p: mv(q.p), z: q.z })
+                        .collect()
+                }),
+            })?
+        }
         Shape::Text { p, .. } => inside(*p, r).then(|| {
             let mut moved = geom.shape.clone();
             if let Shape::Text { p: at, .. } = &mut moved {
@@ -53,12 +65,29 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             mirror: *mirror,
             attrs: attrs.clone(),
         })?,
-        // Arc segments keep their bulge, so they bend with their moved ends.
-        Shape::Polyline { pts, bulges, holes } => any(pts).then(|| Shape::Polyline {
-            pts: pts.iter().map(|&p| mv(p)).collect(),
-            bulges: bulges.clone(),
-            holes: holes.clone(),
-        })?,
+        // Arc segments keep their bulge, so they bend with their moved ends;
+        // every part of a multi-part polyline so (docs/adr/0174).
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
+            (any(pts) || parts.iter().flatten().any(|q| any(&q.pts))).then(|| Shape::Polyline {
+                pts: pts.iter().map(|&p| mv(p)).collect(),
+                bulges: bulges.clone(),
+                holes: holes.clone(),
+                parts: parts.as_ref().map(|ps| {
+                    ps.iter()
+                        .map(|q| Part {
+                            pts: q.pts.iter().map(|&p| mv(p)).collect(),
+                            bulges: q.bulges.clone(),
+                            holes: None,
+                        })
+                        .collect()
+                }),
+            })?
+        }
         Shape::Spline { pts, closed } => any(pts).then(|| Shape::Spline {
             pts: pts.iter().map(|&p| mv(p)).collect(),
             closed: *closed,

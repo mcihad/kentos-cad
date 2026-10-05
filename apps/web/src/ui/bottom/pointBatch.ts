@@ -53,7 +53,8 @@ export function importTargets(doc: CadDocument, imported: readonly number[]): { 
   const nameOf = (e: Entity | undefined) => (e?.kind === 'point' ? (e.label?.trim() ?? '') : '');
   const names = new Set(imported.map((id) => nameOf(doc.get(id))).filter((n) => n !== ''));
   if (!names.size) return null;
-  const points = [...doc.all()].filter((e): e is PointEntity => e.kind === 'point');
+  // The table's points: a multi-point object is none of them (docs/adr/0174).
+  const points = [...doc.all()].filter((e): e is PointEntity => e.kind === 'point' && !e.parts);
   const carried = new Map<string, number>();
   for (const e of points) {
     const name = nameOf(e);
@@ -99,7 +100,7 @@ export interface BatchPlan {
 const pointsOf = (doc: CadDocument, ids: readonly number[]): PointEntity[] =>
   ids.flatMap((id) => {
     const e = doc.get(id);
-    return e?.kind === 'point' ? [e] : [];
+    return e?.kind === 'point' && !e.parts ? [e] : [];
   });
 
 export function planBatch(doc: CadDocument, ids: readonly number[], op: Exclude<BatchOp, { kind: 'dedupe' }>): BatchPlan {

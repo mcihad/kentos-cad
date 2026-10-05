@@ -75,6 +75,21 @@ pub fn area_centroid<'r>(
 /// The centroid: of the area for an area (holes removed), a circle and a
 /// whole ellipse; the anchor for everything else and for an empty area.
 pub fn shape_centroid(s: &Shape) -> Option<Vec2> {
+    // A multi-point object's is its points' mean (docs/adr/0174).
+    if let Shape::Point { .. } = s
+        && is_multi_part(s)
+    {
+        let parts = area_parts(s);
+        let (mut sx, mut sy) = (0.0, 0.0);
+        for part in parts.iter() {
+            if let Shape::Point { p, .. } = part {
+                sx += p.x;
+                sy += p.y;
+            }
+        }
+        let n = parts.len() as f64;
+        return Some(Vec2::new(sx / n, sy / n));
+    }
     // A multi-part area's is its parts' centroids weighted by their areas (docs/adr/0143).
     if is_multi_part(s) {
         let (mut total, mut sx, mut sy) = (0.0, 0.0, 0.0);

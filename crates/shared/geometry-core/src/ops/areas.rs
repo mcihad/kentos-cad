@@ -129,9 +129,12 @@ pub fn polylines_of_polygon(e: &Shape) -> Result<Vec<Entity>, String> {
         return Ok(out);
     }
     let (pts, bulges, holes) = match e {
-        Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes, .. } => {
-            (pts, bulges, holes)
+        Shape::Polyline {
+            pts, bulges, holes, ..
         }
+        | Shape::Polygon {
+            pts, bulges, holes, ..
+        } => (pts, bulges, holes),
         _ => return Err("çoklu çizgi ya da kapalı alan bekleniyordu".into()),
     };
     let rings =
@@ -154,6 +157,7 @@ pub fn polylines_of_polygon(e: &Shape) -> Result<Vec<Entity>, String> {
                 pts: out,
                 bulges,
                 holes: None,
+                parts: None,
             }))
         })
         .collect()
@@ -169,9 +173,10 @@ pub fn line_source(entities: &[Entity]) -> Source {
     for e in entities {
         match &e.shape {
             Shape::Line { a, b } => points.extend([*a, *b]),
-            Shape::Polyline { pts, .. } => points.extend_from_slice(pts),
-            // Every part's ring and holes (docs/adr/0143).
-            Shape::Polygon { .. } => points.extend(entity_vertices(&e.shape)),
+            // Every part's ring and holes (docs/adr/0143), every polyline's part (docs/adr/0174).
+            Shape::Polyline { .. } | Shape::Polygon { .. } => {
+                points.extend(entity_vertices(&e.shape))
+            }
             Shape::Arc { c, r, a0, a1 } => {
                 let g = ArcGeom {
                     c: *c,

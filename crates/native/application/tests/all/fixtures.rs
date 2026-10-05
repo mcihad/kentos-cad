@@ -495,7 +495,7 @@ fn elevation_number<'a>(zs: &'a mut Option<Vec<Option<f64>>>, rest: &str) -> Opt
 /// `major.y`, `ratio`, `dir.x`, a text's `height`, `ring[2].x`, `pattern.angle` …
 fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&'a mut f64> {
     match geometry {
-        EntityGeometry::Point { p, z } => match rest {
+        EntityGeometry::Point { p, z, .. } => match rest {
             "z" => z.as_mut(),
             _ => coordinate(p, "p", rest),
         },
@@ -505,7 +505,9 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             }
             coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
         }
-        EntityGeometry::Polyline { pts, bulges, zs } => {
+        EntityGeometry::Polyline {
+            pts, bulges, zs, ..
+        } => {
             if rest.starts_with("pts[") {
                 point_number(pts, rest)
             } else if rest.starts_with("zs[") {

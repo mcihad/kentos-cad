@@ -1448,6 +1448,7 @@ impl Tool for Path {
                 pts: self.pts.clone(),
                 bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
                 holes: None,
+                parts: None,
             }
         })
     }

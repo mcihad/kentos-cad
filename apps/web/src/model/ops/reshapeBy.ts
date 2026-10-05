@@ -9,7 +9,7 @@ import type { Vec2 } from '../geometry';
  */
 
 /** Why Biçim değiştir is refused. */
-export type ReshapeRefusal = { why: 'notShape' } | { why: 'tooShort' } | { why: 'noCrossing' } | { why: 'manyParts' } | { why: 'touchesHole' } | { why: 'bothWays' } | { why: 'apart' };
+export type ReshapeRefusal = { why: 'notShape' } | { why: 'tooShort' } | { why: 'noCrossing' } | { why: 'manyParts' } | { why: 'touchesHole' } | { why: 'bothWays' } | { why: 'apart' } | { why: 'multiPart' };
 
 /** Why a hole is not added, removed or filled. */
 export type HoleRefusal = { why: 'notArea' } | { why: 'degenerate' } | { why: 'outside' } | { why: 'splits' } | { why: 'notInHole' };

@@ -16,7 +16,7 @@ use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::block::{Attribute, Blocks, Definition};
 use kentos_geometry_core::entity::{
-    Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, Shape,
+    Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
 
@@ -215,6 +215,15 @@ fn shape(e: &Entity) -> Shape {
         Entity::Point(p) => Shape::Point {
             p: core(p.p),
             z: p.z,
+            // Every point of a multi-point object (docs/adr/0174).
+            parts: p.parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| CorePoint {
+                        p: core(q.p),
+                        z: q.z,
+                    })
+                    .collect()
+            }),
         },
         Entity::Line(l) => Shape::Line {
             a: core(l.a),
@@ -222,7 +231,21 @@ fn shape(e: &Entity) -> Shape {
         },
         Entity::Polyline(p) => {
             let (pts, bulges, holes) = path(p);
-            Shape::Polyline { pts, bulges, holes }
+            Shape::Polyline {
+                pts,
+                bulges,
+                holes,
+                // Every part of a multi-part polyline (docs/adr/0174).
+                parts: p.parts.as_ref().map(|ps| {
+                    ps.iter()
+                        .map(|part| Part {
+                            pts: points(&part.pts),
+                            bulges: part.bulges.clone(),
+                            holes: None,
+                        })
+                        .collect()
+                }),
+            }
         }
         Entity::Polygon(p) => {
             let (pts, bulges, holes) = path(p);
@@ -345,11 +368,18 @@ fn entity(s: &Shape) -> Option<Entity> {
             parts: None,
         };
     Some(match s {
-        Shape::Point { p, z } => Entity::Point(PointEntity {
+        Shape::Point { p, z, parts } => Entity::Point(PointEntity {
             base,
             p: back(*p),
             z: *z,
-            parts: None,
+            parts: parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| kentos_contracts::PointPart {
+                        p: back(q.p),
+                        z: q.z,
+                    })
+                    .collect()
+            }),
         }),
         Shape::Line { a, b } => Entity::Line(LineEntity {
             base,
@@ -358,7 +388,24 @@ fn entity(s: &Shape) -> Option<Entity> {
             za: None,
             zb: None,
         }),
-        Shape::Polyline { pts, bulges, holes } => Entity::Polyline(path(base, pts, bulges, holes)),
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => Entity::Polyline(PathEntity {
+            parts: parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|part| AreaPart {
+                        pts: points_back(&part.pts),
+                        bulges: part.bulges.clone(),
+                        holes: None,
+                        zs: None,
+                    })
+                    .collect()
+            }),
+            ..path(base, pts, bulges, holes)
+        }),
         Shape::Polygon {
             pts,
             bulges,

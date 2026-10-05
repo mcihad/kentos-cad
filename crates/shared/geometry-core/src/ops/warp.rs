@@ -368,16 +368,43 @@ pub fn warp_shape(shape: &Shape, zs: &[Vec<Option<f64>>], warp: &Warp) -> Result
         return Ok(done);
     }
     Ok(match shape {
-        Shape::Polyline { pts, bulges, holes } => {
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
             let (pts2, z, dense) = warp_ring(warp, pts, bulges, zs.first(), false)?;
+            let mut out_zs = vec![z];
+            let mut curves = dense;
+            // Every part of a multi-part polyline, its elevations after the first's (docs/adr/0174).
+            let parts = match parts {
+                Some(ps) => {
+                    let mut out = Vec::with_capacity(ps.len());
+                    for (k, part) in ps.iter().enumerate() {
+                        let (p, z, d) =
+                            warp_ring(warp, &part.pts, &part.bulges, zs.get(k + 1), false)?;
+                        out_zs.push(z);
+                        curves |= d;
+                        out.push(crate::entity::Part {
+                            pts: p,
+                            bulges: if d { None } else { part.bulges.clone() },
+                            holes: None,
+                        });
+                    }
+                    Some(out)
+                }
+                None => None,
+            };
             Warped {
                 shape: Shape::Polyline {
                     pts: pts2,
                     bulges: if dense { None } else { bulges.clone() },
                     holes: holes.clone(),
+                    parts,
                 },
-                zs: vec![z],
-                curves: dense,
+                zs: out_zs,
+                curves,
                 kept: false,
             }
         }
@@ -497,9 +524,22 @@ fn common<M: Map + ?Sized>(
         kept: false,
     };
     Ok(Some(match shape {
-        Shape::Point { p, z } => plain(Shape::Point {
+        Shape::Point { p, z, parts } => plain(Shape::Point {
             p: m.at(*p)?,
             z: *z,
+            parts: match parts {
+                Some(ps) => Some(
+                    ps.iter()
+                        .map(|q| {
+                            Ok(crate::entity::PointPart {
+                                p: m.at(q.p)?,
+                                z: q.z,
+                            })
+                        })
+                        .collect::<Result<Vec<_>, _>>()?,
+                ),
+                None => None,
+            },
         }),
         Shape::Line { a, b } => plain(Shape::Line {
             a: m.at(*a)?,
@@ -693,6 +733,7 @@ fn curve(
                 pts,
                 bulges: None,
                 holes: None,
+                parts: None,
             },
             zs: Vec::new(),
             curves: true,
@@ -807,11 +848,25 @@ pub fn sheet_shape(shape: &Shape, zs: &[Vec<Option<f64>>], sheet: &Sheet) -> (Wa
         bulges: r.bulges.clone(),
     };
     let warped = match shape {
-        Shape::Polyline { pts, bulges, holes } => plain(Shape::Polyline {
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => plain(Shape::Polyline {
             pts: map(pts),
             bulges: bulges.clone(),
             // Only a polygon's holes move (as `transform_shape`).
             holes: holes.clone(),
+            parts: parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|part| crate::entity::Part {
+                        pts: map(&part.pts),
+                        bulges: part.bulges.clone(),
+                        holes: None,
+                    })
+                    .collect()
+            }),
         }),
         Shape::Polygon {
             pts,

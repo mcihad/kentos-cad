@@ -730,7 +730,16 @@ fn shape_snaps(
             }
             return;
         }
-        Shape::Point { p: q, .. } | Shape::Text { p: q, .. } | Shape::Insert { p: q, .. } => {
+        // Every point of a multi-point object (docs/adr/0174).
+        Shape::Point { .. } => {
+            for part in area_parts(e).iter() {
+                if let Shape::Point { p: q, .. } = part {
+                    ch.consider(SnapKind::Node, *q, id);
+                }
+            }
+            return;
+        }
+        Shape::Text { p: q, .. } | Shape::Insert { p: q, .. } => {
             ch.consider(SnapKind::Node, *q, id);
             return;
         }
@@ -1002,6 +1011,7 @@ mod tests {
                         pts,
                         bulges: None,
                         holes: None,
+                        parts: None,
                     },
                 );
             }
@@ -1081,6 +1091,7 @@ mod tests {
                                 .collect(),
                         ),
                         holes: None,
+                        parts: None,
                     }
                 }
                 4 => Shape::Xline {
@@ -1095,7 +1106,11 @@ mod tests {
                     pts: (0..3 + rng.below(3)).map(|_| near(rng)).collect(),
                     closed: rng.next() < 0.3,
                 },
-                7 => Shape::Point { p: c, z: None },
+                7 => Shape::Point {
+                    p: c,
+                    z: None,
+                    parts: None,
+                },
                 8 => line(c, c),
                 9 => {
                     // Collinear and overlapping, and the same segment twice.

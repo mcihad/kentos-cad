@@ -32,6 +32,7 @@ fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
             pts,
             bulges,
             holes: None,
+            parts: None,
         }
     }
 }
@@ -89,10 +90,47 @@ fn offset_parts(e: &Shape, distance: f64, through: Vec2) -> Geometry {
     }
 }
 
+/// A multi-part polyline's parallel (docs/adr/0174): every part offset by
+/// the same distance to the same side of its direction (left or right of
+/// travel, as QGIS and ArcGIS offset a multi-part line), the side `through`
+/// is on of the nearest edge.
+fn offset_path_parts(e: &Shape, distance: f64, through: Vec2) -> Geometry {
+    let d = f64::from(bulged_side(e, through)) * distance;
+    let mut shapes = Vec::new();
+    for part in area_parts(e).iter() {
+        let Shape::Polyline { pts, bulges, .. } = part else {
+            continue;
+        };
+        let shape = match bulges.as_deref() {
+            Some(bs) if has_bulges(Some(bs)) => match offset_bulge_path(pts, bs, d, false) {
+                OffsetResult::Path { pts, bulges } => path_shape(false, pts, Some(bulges)),
+                OffsetResult::Error { error } => return Geometry::Error(error),
+            },
+            _ => {
+                let out = offset_path(pts, d, false);
+                if out.len() < 2 {
+                    return Geometry::Error("Öteleme sonucu geçerli bir şekil oluşmadı.".into());
+                }
+                path_shape(false, out, None)
+            }
+        };
+        shapes.push(shape);
+    }
+    match join_parts(&shapes) {
+        Some(shape) => Geometry::Ok(Entity::new(shape)),
+        None => Geometry::Error("Öteleme sonucu geçerli bir şekil oluşmadı.".into()),
+    }
+}
+
 /// Parallel copy at `distance`, on the side of `through`.
 pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
     if !(distance > 0.0) {
         return Geometry::Error("Öteleme mesafesi sıfırdan büyük olmalı.".into());
+    }
+    if let Shape::Polyline { .. } = e
+        && is_multi_part(e)
+    {
+        return offset_path_parts(e, distance, through);
     }
     if is_multi_part(e) {
         return offset_parts(e, distance, through);

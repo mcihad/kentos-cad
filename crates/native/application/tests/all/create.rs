@@ -34,6 +34,7 @@ fn points(n: usize) -> EntitiesCreate {
                 geometry: EntityGeometry::Point {
                     p: at(487000.0 + i as f64, 4420000.0),
                     z: None,
+                    parts: None,
                 },
                 color: None,
                 line_weight: None,

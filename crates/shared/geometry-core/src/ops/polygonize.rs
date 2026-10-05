@@ -295,14 +295,16 @@ fn open_path(shape: &Shape) -> Option<([Vec2; 2], Vec<Vec2>)> {
 /// (within 1 µm of its edges) and no other vertex of their own path (the
 /// free ends of ADR 0148 §5).
 fn free_ends(lines: &[Entity]) -> Vec<Vec2> {
-    let work: Vec<(usize, &Entity)> = lines
+    // Part by part: a multi-part polyline's parts are paths of their own (docs/adr/0174).
+    let parts: Vec<Shape> = lines
         .iter()
-        .enumerate()
-        .filter(|(_, e)| bounds(&e.shape))
+        .filter(|e| bounds(&e.shape))
+        .flat_map(|e| area_parts(&e.shape).into_owned())
         .collect();
+    let work: Vec<(usize, &Shape)> = parts.iter().enumerate().collect();
     let mut edges: Vec<(usize, Edge)> = Vec::new();
-    for (o, e) in &work {
-        for edge in entity_edges(&e.shape) {
+    for (o, s) in &work {
+        for edge in entity_edges(s) {
             edges.push((*o, edge));
         }
     }
@@ -314,8 +316,8 @@ fn free_ends(lines: &[Entity]) -> Vec<Vec2> {
     let tree = PackedTree::build(&boxes);
     let mut out = Vec::new();
     let mut hits = Vec::new();
-    for (o, e) in &work {
-        let Some((ends, own)) = open_path(&e.shape) else {
+    for (o, s) in &work {
+        let Some((ends, own)) = open_path(s) else {
             continue;
         };
         for (k, end) in ends.iter().enumerate() {

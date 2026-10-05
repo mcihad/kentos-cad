@@ -362,8 +362,10 @@ export function geometryOf(e: Entity, paths: readonly TopoPath[]): EditGeometry 
       return { kind: 'line', a: p.pts[0], b: p.pts[1], zs: p.zs };
     }
     case 'polyline': {
-      const [p] = paths;
-      return { kind: 'polyline', pts: p.pts, ...bulgesOf(p.pts, p.bulges), zs: p.zs };
+      const [p, ...rest] = paths;
+      // Every other part, in `elevatedPaths`' order (docs/adr/0174).
+      const parts = rest.map(ring);
+      return { kind: 'polyline', pts: p.pts, ...bulgesOf(p.pts, p.bulges), zs: p.zs, ...(parts.length ? { parts } : {}) };
     }
     case 'polygon': {
       let k = 0;

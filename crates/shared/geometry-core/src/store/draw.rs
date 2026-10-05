@@ -11,6 +11,8 @@
 //! - `NONE`: nothing drawn (text, an unknown id, a construction line
 //!   outside the clip box, a dimension without a layout);
 //! - `MARKER, x, y`;
+//! - `MARKERS, n, x0, y0, …`: a multi-point object's points (docs/adr/0174),
+//!   each drawn as a `MARKER` would be;
 //! - `LINE, paths`, then per path `closed` (0 or 1) and its points;
 //! - `FILL, rings`, then per ring its points (outer ring first);
 //! - `FILLS, parts`, then per part `rings` and per ring its points, a
@@ -30,6 +32,8 @@
 //! Points are `n, x0, y0, …`, or `SOURCE` / `REVERSED`: the object's own
 //! points for that path or ring (a line's two ends; a polyline's or
 //! polygon's vertices, hole k's for ring k + 1; a hatch's ring and holes).
+//! A multi-part polyline's paths, one per part, always give their points
+//! (docs/adr/0174).
 //! A dimension's layout lines come as open two-point paths.
 
 use super::Store;
@@ -56,6 +60,8 @@ pub const FILLS: f64 = 4.0;
 pub const GROUP: f64 = 5.0;
 /// Lines and a solid area in one record: a leader's (docs/adr/0146).
 pub const MIXED: f64 = 6.0;
+/// A multi-point object's points (docs/adr/0174).
+pub const MARKERS: f64 = 7.0;
 /// The object's own points, as they are.
 pub const SOURCE: f64 = -1.0;
 /// The object's own points, last to first.
@@ -134,6 +140,18 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
 /// out: a block's piece is no object of the drawing, so its points go as they are.
 fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, out: &mut Vec<f64>) {
     match s {
+        // Every point of a multi-point object (docs/adr/0174).
+        Shape::Point { .. } if is_multi_part(s) => {
+            let parts = area_parts(s);
+            out.extend([MARKERS, parts.len() as f64]);
+            for part in parts.iter() {
+                let p = match part {
+                    Shape::Point { p, .. } => *p,
+                    _ => Vec2::new(f64::NAN, f64::NAN),
+                };
+                out.extend([p.x, p.y]);
+            }
+        }
         // An insert shows its insertion point until the store expands its block (docs/adr/0144).
         Shape::Point { p, .. } | Shape::Insert { p, .. } => out.extend([MARKER, p.x, p.y]),
         Shape::Text { .. } => out.push(NONE),
@@ -176,6 +194,20 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // Every part of a multi-part polyline, its points always given (docs/adr/0174).
+        Shape::Polyline { .. } if is_multi_part(s) => {
+            let parts = area_parts(s);
+            out.extend([LINE, parts.len() as f64]);
+            for part in parts.iter() {
+                match part {
+                    Shape::Polyline {
+                        bulges: Some(_), ..
+                    } => path(out, false, &entity_outline(part, OUTLINE_SEGMENTS)),
+                    Shape::Polyline { pts, .. } => path(out, false, pts),
+                    _ => path(out, false, &[]),
+                }
+            }
+        }
         Shape::Polyline { pts, bulges, .. } => {
             out.extend([LINE, 1.0]);
             // As the TypeScript tested it: any bulge list (even all zero) is tessellated.

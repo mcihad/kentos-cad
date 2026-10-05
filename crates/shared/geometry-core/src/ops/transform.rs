@@ -3,7 +3,7 @@
 //! every other field; mirrored text stays readable (MIRRTEXT = 0).
 
 use crate::api::Op;
-use crate::entity::{Entity, Part, Shape, ellipse_geom};
+use crate::entity::{Entity, Part, PointPart, Shape, ellipse_geom};
 use crate::geom::affine::{Affine, apply, apply_linear, is_reflection, length_scale, translation};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle};
 use crate::geom::arrangement::Ring;
@@ -51,21 +51,49 @@ fn transform_holes(holes: &Option<Vec<Ring>>, m: &Affine) -> Option<Vec<Ring>> {
 pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
     let s = length_scale(m);
     match shape {
-        Shape::Point { p, z } => Shape::Point {
+        Shape::Point { p, z, parts } => Shape::Point {
             p: apply(m, *p),
             z: *z,
+            // Every point of a multi-point object (docs/adr/0174).
+            parts: parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| PointPart {
+                        p: apply(m, q.p),
+                        z: q.z,
+                    })
+                    .collect()
+            }),
         },
         Shape::Line { a, b } => Shape::Line {
             a: apply(m, *a),
             b: apply(m, *b),
         },
-        Shape::Polyline { pts, bulges, holes } => {
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
             let (pts, bulges) = transform_ring(pts, bulges, m);
             // Only a polygon's holes are transformed (a polyline has none to speak of).
+            // Every part of a multi-part polyline, as the first (docs/adr/0174).
+            let parts = parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|p| {
+                        let (pts, bulges) = transform_ring(&p.pts, &p.bulges, m);
+                        Part {
+                            pts,
+                            bulges,
+                            holes: None,
+                        }
+                    })
+                    .collect()
+            });
             Shape::Polyline {
                 pts,
                 bulges,
                 holes: holes.clone(),
+                parts,
             }
         }
         Shape::Polygon {

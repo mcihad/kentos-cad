@@ -73,7 +73,11 @@ const sameName = (name: string) => `${PREFIX}“${name}” adında başka bir no
 /** Line work's geometry with its paths (in `elevatedPaths`' order: the outer ring, its holes, then each part's ring and holes) put back. */
 export function withPaths(e: Entity, ps: readonly Elevated[]): EditGeometry | null {
   if (e.kind === 'line') return { kind: 'line', a: ps[0].pts[0], b: ps[0].pts[1], zs: ps[0].zs };
-  if (e.kind === 'polyline') return { kind: 'polyline', pts: ps[0].pts, ...(e.bulges && { bulges: e.bulges }), zs: ps[0].zs };
+  if (e.kind === 'polyline') {
+    // A multi-part polyline's other parts, in `elevatedPaths`' order (docs/adr/0174).
+    const parts = (e.parts ?? []).map((part, k) => ({ pts: ps[k + 1].pts, ...(part.bulges && { bulges: part.bulges }), zs: ps[k + 1].zs }));
+    return { kind: 'polyline', pts: ps[0].pts, ...(e.bulges && { bulges: e.bulges }), zs: ps[0].zs, ...(parts.length && { parts }) };
+  }
   if (e.kind !== 'polygon') return null;
   let k = 1;
   const ring = (r: { bulges?: number[] }) => {
@@ -131,7 +135,8 @@ export function writeCell(doc: CadDocument, e: PointEntity, col: EditColumn, tex
   const unchanged = col === 'z' ? (v ?? undefined) === e.z : to.x === from.x && to.y === from.y;
   if (unchanged) return nothing;
   const z = col === 'z' ? v : (e.z ?? null);
-  const changes = [{ kind: 'update' as const, uid, geometry: { kind: 'point', p: to, ...(z !== null && { z }) } as EditGeometry }];
+  // A multi-point object keeps its other points (docs/adr/0174).
+  const changes = [{ kind: 'update' as const, uid, geometry: { kind: 'point', p: to, ...(z !== null && { z }), ...(e.parts && { parts: e.parts }) } as EditGeometry }];
   if (follow) {
     for (const other of doc.all()) {
       if (other.kind !== 'line' && other.kind !== 'polyline' && other.kind !== 'polygon') continue;

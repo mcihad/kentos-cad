@@ -331,10 +331,11 @@ pub fn corner_in_path(e: &Shape, index: usize, op: &CornerOp) -> Result<Geometry
             pts: path.pts,
             bulges: path.bulges,
             holes: None,
+            parts: None,
         },
     };
     let shape = if parts.len() > 1 {
-        replace_part(e, k, part).ok_or("Parça kapalı alan olarak kalmalı.")?
+        replace_part(e, k, part).ok_or(crate::ops::vertex::part_kept(e))?
     } else {
         part
     };

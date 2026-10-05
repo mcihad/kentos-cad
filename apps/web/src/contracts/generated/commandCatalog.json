@@ -25750,6 +25750,16 @@
                   "p": {
                     "$ref": "#/$defs/Vec2"
                   },
+                  "parts": {
+                    "description": "A multi-point object's points past its first, each with its\nelevation (docs/adr/0174). The geometry is the whole object:\nabsent, it has one point, so an edit of a multi-point object\nwrites every point.",
+                    "items": {
+                      "$ref": "#/$defs/PointPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
                   "z": {
                     "format": "double",
                     "type": [
@@ -25814,6 +25824,16 @@
                   "kind": {
                     "const": "polyline",
                     "type": "string"
+                  },
+                  "parts": {
+                    "description": "A multi-part polyline's parts past its first, each its vertices,\narcs and elevations, without holes (docs/adr/0174). The geometry\nis the whole polyline: absent, it has one part, so an edit of a\nmulti-part polyline writes every part.",
+                    "items": {
+                      "$ref": "#/$defs/AreaPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "pts": {
                     "items": {
@@ -26373,6 +26393,25 @@
                 "type": "string"
               }
             ]
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "p"
+            ],
+            "type": "object"
           },
           "RingGeometry": {
             "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -30244,6 +30283,16 @@
                   "p": {
                     "$ref": "#/$defs/Vec2"
                   },
+                  "parts": {
+                    "description": "A multi-point object's points past its first, each with its\nelevation (docs/adr/0174). The geometry is the whole object:\nabsent, it has one point, so an edit of a multi-point object\nwrites every point.",
+                    "items": {
+                      "$ref": "#/$defs/PointPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
                   "z": {
                     "format": "double",
                     "type": [
@@ -30308,6 +30357,16 @@
                   "kind": {
                     "const": "polyline",
                     "type": "string"
+                  },
+                  "parts": {
+                    "description": "A multi-part polyline's parts past its first, each its vertices,\narcs and elevations, without holes (docs/adr/0174). The geometry\nis the whole polyline: absent, it has one part, so an edit of a\nmulti-part polyline writes every part.",
+                    "items": {
+                      "$ref": "#/$defs/AreaPart"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "pts": {
                     "items": {
@@ -30912,6 +30971,25 @@
             },
             "required": [
               "geometry"
+            ],
+            "type": "object"
+          },
+          "PointPart": {
+            "description": "A point of a multi-point object past its first (docs/adr/0174): its\nplace and elevation, as the point's own fields hold the first's.",
+            "properties": {
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "p"
             ],
             "type": "object"
           },

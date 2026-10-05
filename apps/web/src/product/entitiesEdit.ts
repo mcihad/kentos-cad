@@ -88,9 +88,9 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
 const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
-  point: ['p', 'z'],
+  point: ['p', 'z', 'parts'],
   line: ['a', 'b', 'zs'],
-  polyline: ['pts', 'bulges', 'zs'],
+  polyline: ['pts', 'bulges', 'zs', 'parts'],
   polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
   circle: ['c', 'r'],
   arc: ['c', 'r', 'a0', 'a1'],
@@ -219,6 +219,18 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
   const at = (field: string) => `${list}[${i}].geometry${field}`;
   if (g.kind === 'polyline' && g.pts.length < 2)
     return failed(error('too_few_points', `Çoklu çizginin en az 2 noktası olmalı; ${g.pts.length} nokta verildi. Eksik noktaları ekleyin.`, at('.pts')));
+  // A multi-part polyline's other parts are paths as its own is, without holes (docs/adr/0174).
+  if (g.kind === 'polyline')
+    for (const [k, part] of (g.parts ?? []).entries()) {
+      if (part.pts.length < 2)
+        return failed(
+          error('too_few_points', `${k + 2}. parçanın en az 2 noktası olmalı; ${part.pts.length} nokta verildi. Eksik noktaları ekleyin ya da parçayı çıkarın.`, at(`.parts[${k}].pts`)),
+        );
+      if (part.holes !== undefined)
+        return failed(
+          error('part_holes', `Çoklu çizginin ${k + 2}. parçasının deliği olamaz; delik yalnız kapalı alanda olur. Deliği çıkarın.`, at(`.parts[${k}].holes`)),
+        );
+    }
   if (g.kind === 'polygon') {
     if (!ringCloses(g.pts, g.bulges))
       return failed(error('too_few_corners', `Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); ${g.pts.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.pts')));
@@ -313,6 +325,8 @@ function writtenElevations(g: EntityGeometry): [readonly (number | null)[], numb
   const out: [readonly (number | null)[], number, string][] = [];
   if (g.kind === 'line' && g.zs) out.push([g.zs, 2, '.zs']);
   if ((g.kind === 'polyline' || g.kind === 'polygon') && g.zs) out.push([g.zs, g.pts.length, '.zs']);
+  // A multi-part polyline's other parts (docs/adr/0174).
+  if (g.kind === 'polyline') for (const [k, part] of (g.parts ?? []).entries()) if (part.zs) out.push([part.zs, part.pts.length, `.parts[${k}].zs`]);
   if (g.kind === 'polygon') {
     for (const [h, ring] of (g.holes ?? []).entries()) if (ring.zs) out.push([ring.zs, ring.pts.length, `.holes[${h}].zs`]);
     // A multi-part area's other parts (docs/adr/0143).
@@ -324,8 +338,9 @@ function writtenElevations(g: EntityGeometry): [readonly (number | null)[], numb
   return out;
 }
 
-/** Whether the geometry carries its elevations (docs/adr/0142): a multi-part area's when its own or a part's list is given (docs/adr/0143). */
-const written = (g: EntityGeometry): boolean => ('zs' in g && g.zs !== undefined) || (g.kind === 'polygon' && !!g.parts?.some((part) => part.zs !== undefined));
+/** Whether the geometry carries its elevations (docs/adr/0142): a multi-part area's or polyline's when its own or a part's list is given (docs/adr/0143, 0174). */
+const written = (g: EntityGeometry): boolean =>
+  ('zs' in g && g.zs !== undefined) || ((g.kind === 'polygon' || g.kind === 'polyline') && !!g.parts?.some((part) => part.zs !== undefined));
 
 /**
  * Written elevations as the object holds them (docs/adr/0142): a line's two as `za` and `zb`, a path's
@@ -345,8 +360,9 @@ function held(init: NewEntity): NewEntity {
   if ((init.kind === 'polyline' || init.kind === 'polygon') && none(out.zs)) delete out.zs;
   const bare = <T extends { zs?: (number | null)[] }>(ring: T): T => (none(ring.zs) ? (({ zs: _zs, ...rest }) => rest as T)(ring) : ring);
   if (init.kind === 'polygon' && init.holes) init.holes = init.holes.map(bare);
-  // A part's elevations, and its holes', are held as the area's own are (docs/adr/0143).
+  // A part's elevations, and its holes', are held as the area's own are (docs/adr/0143); a polyline's part's as the polyline's (docs/adr/0174).
   if (init.kind === 'polygon' && init.parts) init.parts = init.parts.map((part) => ({ ...bare(part), ...(part.holes && { holes: part.holes.map(bare) }) }));
+  if (init.kind === 'polyline' && init.parts) init.parts = init.parts.map(bare);
   return init;
 }
 

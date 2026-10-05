@@ -140,7 +140,11 @@ export function cellEditable(kind: VertexKind, row: VertexRow, col: VertexColumn
 export function geometryOf(e: Editable, kind: VertexKind, paths: readonly Elevated[]): EditGeometry {
   const ring = (p: Elevated) => ({ pts: p.pts, ...(p.bulges && { bulges: p.bulges }), zs: p.zs });
   if (kind === 'line') return { kind: 'line', a: paths[0].pts[0], b: paths[0].pts[1], zs: paths[0].zs };
-  if (kind === 'polyline') return { kind: 'polyline', ...ring(paths[0]) };
+  if (kind === 'polyline') {
+    // A multi-part polyline's other parts, in `elevatedPaths`' order (docs/adr/0174).
+    const parts = e.kind === 'polyline' ? (e.parts ?? []).map((_, k) => ring(paths[k + 1])) : [];
+    return { kind: 'polyline', ...ring(paths[0]), ...(parts.length && { parts }) };
+  }
   let k = 1;
   const next = () => ring(paths[k++]);
   const area = e as PolylineEntity;

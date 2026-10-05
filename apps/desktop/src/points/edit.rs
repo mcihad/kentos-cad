@@ -141,11 +141,27 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
             b: wire(ps[0].pts[1]),
             zs: Some(ps[0].zs.clone()),
         }),
-        Entity::Polyline(l) => Some(EntityGeometry::Polyline {
-            pts: wires(&ps[0].pts),
-            bulges: l.bulges.clone(),
-            zs: Some(ps[0].zs.clone()),
-        }),
+        Entity::Polyline(l) => {
+            // A multi-part polyline's other parts, in `elevation::paths`' order (docs/adr/0174).
+            let parts: Vec<AreaPart> = l
+                .parts
+                .iter()
+                .flatten()
+                .zip(ps.iter().skip(1))
+                .map(|(part, p)| AreaPart {
+                    pts: wires(&p.pts),
+                    bulges: part.bulges.clone(),
+                    zs: Some(p.zs.clone()),
+                    holes: None,
+                })
+                .collect();
+            Some(EntityGeometry::Polyline {
+                pts: wires(&ps[0].pts),
+                bulges: l.bulges.clone(),
+                zs: Some(ps[0].zs.clone()),
+                parts: (!parts.is_empty()).then_some(parts),
+            })
+        }
         Entity::Polygon(a) => {
             let mut k = 1;
             let mut ring = |bulges: &Option<Vec<f64>>| {
@@ -310,7 +326,12 @@ pub fn write_cell(
     let z = if col == EditColumn::Z { v } else { p.z };
     let mut changes = vec![EntityEdit::Update {
         uid,
-        geometry: EntityGeometry::Point { p: wire(to), z },
+        // A multi-point object keeps its other points (docs/adr/0174).
+        geometry: EntityGeometry::Point {
+            p: wire(to),
+            z,
+            parts: p.parts.clone(),
+        },
     }];
     if follow {
         for other in doc.entities() {

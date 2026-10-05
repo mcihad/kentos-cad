@@ -474,11 +474,25 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
             })
         }
         Entity::Polyline(_) => {
-            let p = paths.first()?;
+            let mut next = paths.iter();
+            let p = next.next()?;
+            // Every other part, in `elevation::paths`' order (docs/adr/0174).
+            let parts: Vec<AreaPart> = next
+                .map(|q| {
+                    let own = ring(q);
+                    AreaPart {
+                        pts: own.pts,
+                        bulges: own.bulges,
+                        holes: None,
+                        zs: own.zs,
+                    }
+                })
+                .collect();
             Some(EntityGeometry::Polyline {
                 pts: pts(p),
                 bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
                 zs: Some(p.zs.clone()),
+                parts: (!parts.is_empty()).then_some(parts),
             })
         }
         Entity::Polygon(area) => {

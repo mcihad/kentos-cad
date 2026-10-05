@@ -197,6 +197,7 @@ pub fn sub_path(path: &Path, s0: f64, s1: f64, source: &Shape) -> Entity {
         pts: clean.pts,
         bulges: clean.bulges,
         holes: None,
+        parts: None,
     })
 }
 

@@ -278,32 +278,34 @@ fn cut_point(p: &TopoPath, c: &Cut, start: bool) -> (Vec2, Option<f64>) {
 /// Works the free ends out on the joined drawing, then applies them all.
 pub(super) fn ends(objs: &mut [Work], tol: f64, works: TopoWorks, out: &mut Out) {
     let ix = Index::new(objs);
-    let mut plans: Vec<(usize, Plan)> = Vec::new();
+    // Every path of a line work: a multi-part polyline's parts each have their ends (docs/adr/0174).
+    let mut plans: Vec<(usize, usize, Plan)> = Vec::new();
     for (o, w) in objs.iter().enumerate() {
         if w.fixed || !w.kind.open() {
             continue;
         }
-        let p = &w.paths[0];
-        if p.closed || p.pts.len() < 2 {
-            continue;
-        }
-        let mut plan = Plan {
-            start: plan_end(p, o, true, tol, works, &ix),
-            end: plan_end(p, o, false, tol, works, &ix),
-        };
-        // Both ends cut past each other: neither is.
-        if let (Some(Fix::Trim(a)), Some(Fix::Trim(b))) = (plan.start, plan.end)
-            && a.s >= b.s - TOUCH
-        {
-            plan = Plan::default();
-        }
-        if plan.start.is_some() || plan.end.is_some() {
-            plans.push((o, plan));
+        for (k, p) in w.paths.iter().enumerate() {
+            if p.closed || p.pts.len() < 2 {
+                continue;
+            }
+            let mut plan = Plan {
+                start: plan_end(p, o, true, tol, works, &ix),
+                end: plan_end(p, o, false, tol, works, &ix),
+            };
+            // Both ends cut past each other: neither is.
+            if let (Some(Fix::Trim(a)), Some(Fix::Trim(b))) = (plan.start, plan.end)
+                && a.s >= b.s - TOUCH
+            {
+                plan = Plan::default();
+            }
+            if plan.start.is_some() || plan.end.is_some() {
+                plans.push((o, k, plan));
+            }
         }
     }
-    for (o, plan) in plans {
+    for (o, k, plan) in plans {
         let w = &mut objs[o];
-        let p = &mut w.paths[0];
+        let p = &mut w.paths[k];
         let (first, last) = (p.pts[0], p.pts[p.pts.len() - 1]);
         let own = path_edges(p);
         let cut_start = match plan.start {

@@ -249,6 +249,14 @@ impl Store {
 /// Distance from `p` to what can be clicked of an object: its edges, a
 /// text's whole body, a dimension's value text.
 pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
+    // A multi-point object by its nearest point (docs/adr/0174).
+    if let Shape::Point { .. } = e
+        && is_multi_part(e)
+    {
+        return area_parts(e)
+            .iter()
+            .fold(f64::INFINITY, |d, q| js_min(d, edge_distance(q, p, font)));
+    }
     match e {
         // An insert is clicked at its insertion point until its block is expanded (docs/adr/0144).
         Shape::Point { p: q, .. } | Shape::Insert { p: q, .. } => {

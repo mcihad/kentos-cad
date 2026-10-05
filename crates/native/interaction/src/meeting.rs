@@ -317,6 +317,7 @@ impl IntersectPoint {
         let point = kentos_contracts::EntityGeometry::Point {
             p: points::wire(p),
             z: None,
+            parts: None,
         };
         let operation = Some(kentos_contracts::CreateOperation::IntersectPoint);
         if let Some(out) = points::write_objects(vec![point], operation, cx) {

@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson, field};
-use crate::entity::{Shape, entity_vertices};
+use crate::entity::{Shape, entity_vertices, is_multi_part};
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geometry::dist;
 use crate::jsmath::{PI, atan, atan2, cos, js_hypot, sin};
@@ -189,8 +189,12 @@ impl ToJson for Found {
 // ── Paths and ends ──
 
 /// A line's or an open polyline's vertices and bulges; none for any other
-/// kind, an empty line or a closed polyline.
+/// kind, an empty line, a closed polyline or a multi-part one (which part
+/// would be matched is not known; docs/adr/0174).
 fn path(shape: &Shape) -> Option<(Vec<Vec2>, Vec<f64>)> {
+    if is_multi_part(shape) {
+        return None;
+    }
     match shape {
         Shape::Line { a, b } => (dist(*a, *b) > SAME).then(|| (vec![*a, *b], vec![0.0])),
         Shape::Polyline { pts, bulges, .. } => {
@@ -626,6 +630,7 @@ fn put(member: &Member, targets: [Option<Vec2>; 2], method: Method) -> Option<Pu
             pts,
             bulges: Some(bulges),
             holes: None,
+            parts: None,
         }
     };
     Some((shape, zs))

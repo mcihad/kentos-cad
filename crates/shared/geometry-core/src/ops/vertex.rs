@@ -88,11 +88,19 @@ fn in_part(
             };
             match replace_part(e, k, part) {
                 Some(shape) => Geometry::Ok(Entity::new(shape)),
-                None => Geometry::Error("Parça kapalı alan olarak kalmalı.".into()),
+                None => Geometry::Error(part_kept(e).into()),
             }
         }
         refused => refused,
     })
+}
+
+/// Why a part's edit cannot be written back: it must stay its object's kind.
+pub(crate) fn part_kept(e: &Shape) -> &'static str {
+    match e {
+        Shape::Polyline { .. } => "Parça çoklu çizgi olarak kalmalı.",
+        _ => "Parça kapalı alan olarak kalmalı.",
+    }
 }
 
 fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
@@ -108,6 +116,7 @@ fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
             pts,
             bulges,
             holes: None,
+            parts: None,
         }
     }
 }
@@ -144,6 +153,7 @@ pub fn insert_vertex(e: &Shape, seg: usize, p: Vec2) -> Result<Geometry, String>
                 pts: vec![*a, q.p, *b],
                 bulges: None,
                 holes: None,
+                parts: None,
             })));
         }
         Shape::Polyline { pts, bulges, .. } => (pts, bulges.as_deref(), false),

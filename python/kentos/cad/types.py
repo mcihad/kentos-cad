@@ -6198,13 +6198,23 @@ class RemoveEntityEdit(EntityEdit):
 
 @dataclass(kw_only=True, slots=True)
 class PointEntityGeometry(EntityGeometry):
+    """
+    Attributes:
+        parts: A multi-point object's points past its first, each with its
+            elevation (docs/adr/0174). The geometry is the whole object:
+            absent, it has one point, so an edit of a multi-point object
+            writes every point.
+    """
     TAG_VALUE: ClassVar[str] = "point"
     p: Vec2
+    parts: list[PointPart] | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "point"}
         out["p"] = _vec2_out(self.p)
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -6213,6 +6223,7 @@ class PointEntityGeometry(EntityGeometry):
     def from_json(cls, data: Mapping[str, Any]) -> PointEntityGeometry:
         return cls(
             p=Vec2.from_json(data["p"]),
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [PointPart.from_json(e0) for e0 in data["parts"]],
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
@@ -6251,6 +6262,10 @@ class PolylineEntityGeometry(EntityGeometry):
     """An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the
     one at vertex i bending the edge to vertex i + 1.
     Attributes:
+        parts: A multi-part polyline's parts past its first, each its vertices,
+            arcs and elevations, without holes (docs/adr/0174). The geometry
+            is the whole polyline: absent, it has one part, so an edit of a
+            multi-part polyline writes every part.
         zs: The vertices' elevations as written (docs/adr/0142): as many as
             the vertices, `null` for one without; all `null`: none. Absent:
             each vertex takes one from the objects the edit names.
@@ -6258,6 +6273,7 @@ class PolylineEntityGeometry(EntityGeometry):
     TAG_VALUE: ClassVar[str] = "polyline"
     pts: list[Vec2]
     bulges: list[float] | None | Unset = UNSET
+    parts: list[AreaPart] | None | Unset = UNSET
     zs: list[float | None] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6265,6 +6281,8 @@ class PolylineEntityGeometry(EntityGeometry):
         out["pts"] = [_vec2_out(e0) for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
         if self.zs is not UNSET:
             out["zs"] = None if self.zs is None else [None if e0 is None else float(e0) for e0 in self.zs]
         return out
@@ -6274,6 +6292,7 @@ class PolylineEntityGeometry(EntityGeometry):
         return cls(
             pts=[Vec2.from_json(e0) for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
             zs=UNSET if "zs" not in data else None if data["zs"] is None else [None if e0 is None else float(e0) for e0 in data["zs"]],
         )
 

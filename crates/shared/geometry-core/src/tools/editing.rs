@@ -839,6 +839,7 @@ mod tests {
             ],
             bulges: None,
             holes: None,
+            parts: None,
         };
         // Five places over 20 m: 0, 5, 10 (the bend: the next edge's direction), 15, 20.
         let maps = path_array_transforms(&path, 5.0, None, true).expect("maps");
@@ -861,6 +862,7 @@ mod tests {
         let point = Shape::Point {
             p: Vec2::new(0.0, 0.0),
             z: None,
+            parts: None,
         };
         assert!(path_array_transforms(&point, 3.0, None, false).is_none());
     }

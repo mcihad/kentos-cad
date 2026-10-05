@@ -8,7 +8,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::entity::{Entity, Shape};
+use crate::entity::{Entity, Shape, area_parts};
 use crate::geom::arrangement::{Area, Ring, Source, TOL, edge_box};
 use crate::geom::bulge::{bulge_of_sweep, bulge_path_edges};
 use crate::geom::intersect::{Edge, closest_on_edge};
@@ -288,9 +288,13 @@ pub fn junctions(areas: &[Area], neighbours: &[Neighbour], points: bool) -> Join
     let mut joined = Joined::default();
     let mut theirs = Vec::new();
     for (i, n) in neighbours.iter().enumerate() {
-        if let Shape::Point { p, .. } = &n.shape {
+        if let Shape::Point { .. } = &n.shape {
+            // Every point of a multi-point object (docs/adr/0174).
             if points {
-                theirs.push(*p);
+                theirs.extend(area_parts(&n.shape).iter().filter_map(|s| match s {
+                    Shape::Point { p, .. } => Some(*p),
+                    _ => None,
+                }));
             }
             continue;
         }

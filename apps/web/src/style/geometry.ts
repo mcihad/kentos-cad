@@ -16,7 +16,8 @@ import { op } from '../wasm/core';
 export type GeometryClass = 'marker' | 'line' | 'fill';
 
 export type StyledGeometry =
-  | { readonly cls: 'marker'; readonly point: Vec2 }
+  /** A point; a multi-point object's every point in `points` (docs/adr/0174), `point` its first. */
+  | { readonly cls: 'marker'; readonly point: Vec2; readonly points?: readonly Vec2[] }
   | { readonly cls: 'line'; readonly paths: readonly { readonly pts: readonly Vec2[]; readonly closed: boolean }[] }
   | {
       readonly cls: 'fill';
@@ -71,6 +72,7 @@ const FILL = 3;
 const FILLS = 4;
 const GROUP = 5;
 const MIXED = 6;
+const MARKERS = 7;
 const SOURCE = -1;
 const REVERSED = -2;
 
@@ -146,6 +148,11 @@ export class DrawnReader {
         const point = { x: b[this.at], y: b[this.at + 1] };
         this.at += 2;
         return { cls: 'marker', point };
+      }
+      // A multi-point object's points (docs/adr/0174), each drawn as a marker.
+      case MARKERS: {
+        const points = this.written(b[this.at++]);
+        return { cls: 'marker', point: points[0], points };
       }
       case LINE:
         return { cls: 'line', paths: this.paths(e) };

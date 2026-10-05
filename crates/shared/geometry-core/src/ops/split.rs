@@ -21,12 +21,14 @@ use crate::ops::edges::entity_edges;
 use crate::ops::path::{Division, Path, cuts_on, division_params, path_of, sub_path};
 use crate::vec2::Vec2;
 
-/// The kinds Parçala cuts: lines, open polylines, arcs and circles.
+/// The kinds Parçala cuts: lines, open polylines, arcs and circles; not a
+/// multi-part polyline, whose cut part would not be known (docs/adr/0174).
 fn splittable(s: &Shape) -> bool {
-    matches!(
-        s,
-        Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } | Shape::Circle { .. }
-    )
+    !is_multi_part(s)
+        && matches!(
+            s,
+            Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } | Shape::Circle { .. }
+        )
 }
 
 /// The object cut at arc lengths `cuts` (sorted, inside the path): its
@@ -208,24 +210,59 @@ fn same_rings(a: Option<&[Ring]>, b: Option<&[Ring]>) -> bool {
 /// (its direction is data), nor text with other words.
 fn same_shape(a: &Shape, b: &Shape) -> bool {
     match (a, b) {
-        (Shape::Point { p, z }, Shape::Point { p: q, z: w }) => {
-            same_pt(*p, *q) && z.unwrap_or(0.0) == w.unwrap_or(0.0)
+        (
+            Shape::Point { p, z, parts },
+            Shape::Point {
+                p: q,
+                z: w,
+                parts: others,
+            },
+        ) => {
+            // A multi-point object's points in order too (docs/adr/0174).
+            let none = Vec::new();
+            let (mine, theirs) = (
+                parts.as_ref().unwrap_or(&none),
+                others.as_ref().unwrap_or(&none),
+            );
+            same_pt(*p, *q)
+                && z.unwrap_or(0.0) == w.unwrap_or(0.0)
+                && mine.len() == theirs.len()
+                && mine
+                    .iter()
+                    .zip(theirs)
+                    .all(|(a, b)| same_pt(a.p, b.p) && a.z.unwrap_or(0.0) == b.z.unwrap_or(0.0))
         }
         (Shape::Line { a, b }, Shape::Line { a: c, b: d }) => {
             (same_pt(*a, *c) && same_pt(*b, *d)) || (same_pt(*a, *d) && same_pt(*b, *c))
         }
         (
-            Shape::Polyline { pts, bulges, holes },
+            Shape::Polyline {
+                pts,
+                bulges,
+                holes,
+                parts,
+            },
             Shape::Polyline {
                 pts: p2,
                 bulges: b2,
                 holes: h2,
+                parts: q2,
             },
-        )
-        => {
+        ) => {
+            // A multi-part polyline's parts in order too (docs/adr/0174).
+            let none = Vec::new();
+            let (mine, theirs) = (
+                parts.as_ref().unwrap_or(&none),
+                q2.as_ref().unwrap_or(&none),
+            );
             same_pts(pts, p2)
                 && same_bulges(bulges.as_deref(), b2.as_deref())
                 && same_rings(holes.as_deref(), h2.as_deref())
+                && mine.len() == theirs.len()
+                && mine.iter().zip(theirs).all(|(a, b)| {
+                    same_pts(&a.pts, &b.pts)
+                        && same_bulges(a.bulges.as_deref(), b.bulges.as_deref())
+                })
         }
         (
             Shape::Polygon {
@@ -379,13 +416,46 @@ pub fn cleanup_findings(list: &[Entity]) -> Findings {
             kept.entry(b).or_default().push(i);
         }
         let shape = match &e.shape {
-            Shape::Polyline { pts, bulges, holes } => {
-                without_repeats(pts, bulges.as_deref(), false).map(|c| Shape::Polyline {
-                    pts: c.pts,
-                    bulges: c.bulges,
-                    holes: holes.clone(),
-                })
+            // A multi-part polyline: every part's repeats (docs/adr/0174).
+            Shape::Polyline { .. } if is_multi_part(&e.shape) => {
+                let parts = area_parts(&e.shape);
+                let fixed: Vec<Option<Shape>> = parts
+                    .iter()
+                    .map(|part| match part {
+                        Shape::Polyline { pts, bulges, .. } => {
+                            without_repeats(pts, bulges.as_deref(), false).map(|c| {
+                                Shape::Polyline {
+                                    pts: c.pts,
+                                    bulges: c.bulges,
+                                    holes: None,
+                                    parts: None,
+                                }
+                            })
+                        }
+                        _ => None,
+                    })
+                    .collect();
+                fixed
+                    .iter()
+                    .any(Option::is_some)
+                    .then(|| {
+                        let shapes: Vec<Shape> = parts
+                            .iter()
+                            .zip(fixed)
+                            .map(|(part, f)| f.unwrap_or_else(|| part.clone()))
+                            .collect();
+                        join_parts(&shapes)
+                    })
+                    .flatten()
             }
+            Shape::Polyline {
+                pts, bulges, holes, ..
+            } => without_repeats(pts, bulges.as_deref(), false).map(|c| Shape::Polyline {
+                pts: c.pts,
+                bulges: c.bulges,
+                holes: holes.clone(),
+                parts: None,
+            }),
             // A multi-part area: every part's repeats (docs/adr/0143).
             Shape::Polygon { .. } if is_multi_part(&e.shape) => {
                 let parts = area_parts(&e.shape);
@@ -628,6 +698,7 @@ mod tests {
             pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(20.0, 0.0)],
             bulges: Some(vec![0.0, 1.0, 0.0]),
             holes: None,
+            parts: None,
         });
         let parts = split_equal(&p, 2.0).expect("two");
         assert_eq!(parts.len(), 2);
@@ -693,6 +764,7 @@ mod tests {
                     pts: vec![v(0.0, 5.0), v(1.0, 5.0), v(1.0, 5.0), v(2.0, 5.0)],
                     bulges: None,
                     holes: None,
+                    parts: None,
                 },
             ),
         ];

@@ -180,3 +180,68 @@ describe('a block insert packed (docs/adr/0144)', () => {
     ]);
   });
 });
+
+/** A road of two strips (the second with an arc) and three survey marks (docs/adr/0174). */
+const road = (id: number): PolylineEntity => ({
+  id,
+  layerId: 'a',
+  attrs: {},
+  kind: 'polyline',
+  pts: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 5 }],
+  zs: [1, null, 3],
+  parts: [{ pts: [{ x: 30, y: 0 }, { x: 36, y: 0 }], bulges: [0.25, 0] }],
+});
+const marks = (id: number): Entity => ({
+  id,
+  layerId: 'b',
+  attrs: {},
+  label: 'P1',
+  kind: 'point',
+  p: { x: 0, y: 0 },
+  z: 100,
+  parts: [{ p: { x: 6, y: -0 } }, { p: { x: 0, y: 9 }, z: 102.5 }],
+});
+
+describe('a multi-part polyline and a multi-point object packed (docs/adr/0174)', () => {
+  it('give the store the very objects their JSON gives', () => {
+    const list = [road(1), marks(2)];
+    const packed = new CoreStore();
+    const p = packEntities(list);
+    packed.putPacked(p.nums, p.strings);
+    const json = new CoreStore();
+    json.put(JSON.stringify(list));
+    expect(packed.itemJson(1)).toBe(json.itemJson(1));
+    // JSON has no −0: the packed point keeps it.
+    expect(packed.itemJson(2)).toBe(json.itemJson(2)?.replace('"x":6,"y":0', '"x":6,"y":-0'));
+    expect(packed.itemJson(1)).toContain('"parts":[{"pts"');
+    packed.dispose();
+    json.dispose();
+  });
+
+  it('are kinds 16 and 17: the first part as one object of the kind, the count of the others, each of them', () => {
+    const { nums } = packEntities([road(1), marks(2)]);
+    // The road: id, layer, label, kind 16; its 3 points, no arcs, no holes; 1 more part: 2 points, 2 arcs, no holes.
+    expect(Array.from(nums.subarray(0, 4))).toEqual([1, 0, 0, 16]);
+    const after = 4 + 1 + 6 + 1 + 1;
+    expect(Array.from(nums.subarray(after, after + 1 + 1 + 4 + 1 + 2 + 1))).toEqual([1, 2, 30, 0, 36, 0, 2, 0.25, 0, -1]);
+    // The marks: id, layer, label, kind 17; x, y, has z, z; 2 more points, each x, y, has z, z.
+    const at = after + 10;
+    expect(Array.from(nums.subarray(at, at + 4))).toEqual([2, 1, 1, 17]);
+    expect(Array.from(nums.subarray(at + 4, at + 9))).toEqual([0, 0, 1, 100, 2]);
+    expect(Array.from(nums.subarray(at + 9, at + 17))).toEqual([6, -0, 0, NaN, 0, 9, 1, 102.5]);
+  });
+
+  it('are read back as they were, bit for bit, and come back from the store moved', () => {
+    const back = unpackEntities(packEntities([road(1), marks(2)]));
+    expect(back[0].geometry).toEqual({ kind: 'polyline', pts: road(1).pts, parts: road(1).parts });
+    expect(back[1].geometry).toEqual({ kind: 'point', p: { x: 0, y: 0 }, z: 100, parts: [{ p: { x: 6, y: -0 } }, { p: { x: 0, y: 9 }, z: 102.5 }] });
+    expect(Object.is((back[1].geometry.parts as { p: { y: number } }[])[0].p.y, -0)).toBe(true);
+    const store = new CoreStore();
+    const p = packEntities([road(1), marks(2)]);
+    store.putPacked(p.nums, p.strings);
+    const moved = unpackEntities(store.transformPacked(Float64Array.of(1, 2), Float64Array.of(1, 0, 0, 1, 100, 200)));
+    expect((moved[0].geometry.parts as { pts: { x: number; y: number }[] }[])[0].pts[0]).toEqual({ x: 130, y: 200 });
+    expect(moved[1].geometry.parts).toEqual([{ p: { x: 106, y: 200 } }, { p: { x: 100, y: 209 }, z: 102.5 }]);
+    store.dispose();
+  });
+});

@@ -190,7 +190,7 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
     if !positive {
         return None;
     }
-    // A multi-part area: every part's corners (docs/adr/0143).
+    // A multi-part area or polyline: every part's corners (docs/adr/0143, 0174).
     if is_multi_part(&e.shape) {
         let (mut shapes, mut done, mut skipped) = (Vec::new(), 0, 0);
         for part in area_parts(&e.shape).iter() {
@@ -207,13 +207,16 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
         });
     }
     let (shape, done, skipped) = match &e.shape {
-        Shape::Polyline { pts, bulges, holes } => {
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        } => {
             let (p, done, skipped) = all_corners_of_path(pts, bulges.as_deref(), false, op);
             (
                 Shape::Polyline {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes: holes.clone(),
+                    parts: None,
                 },
                 done,
                 skipped,
@@ -263,7 +266,7 @@ pub fn all_corners(e: &Entity, op: &CornerOp) -> Option<Reshaped> {
 /// for kinds without a direction of their own here: arcs and ellipses always
 /// run counter-clockwise, circles, points, text, dimensions and hatches.
 pub fn reverse(e: &Entity) -> Option<Entity> {
-    // A multi-part area: every part runs the other way (docs/adr/0143).
+    // A multi-part area or polyline: every part runs the other way (docs/adr/0143, 0174).
     if is_multi_part(&e.shape) {
         let shapes: Option<Vec<Shape>> = area_parts(&e.shape)
             .iter()
@@ -273,12 +276,15 @@ pub fn reverse(e: &Entity) -> Option<Entity> {
     }
     let shape = match &e.shape {
         Shape::Line { a, b } => Shape::Line { a: *b, b: *a },
-        Shape::Polyline { pts, bulges, holes } => {
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        } => {
             let r = reverse_bulge_path(pts, bulges.as_deref(), false);
             Shape::Polyline {
                 pts: r.pts,
                 bulges: bulges.as_ref().and(r.bulges),
                 holes: holes.clone(),
+                parts: None,
             }
         }
         Shape::Polygon {
@@ -448,7 +454,7 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
     if !(tol > 0.0) {
         return None;
     }
-    // A multi-part area: every part (docs/adr/0143).
+    // A multi-part area or polyline: every part (docs/adr/0143, 0174).
     if is_multi_part(&e.shape) {
         let (mut shapes, mut removed, mut deviation) = (Vec::new(), 0, 0.0);
         for part in area_parts(&e.shape).iter() {
@@ -465,13 +471,16 @@ pub fn simplify(e: &Entity, tol: f64) -> Option<Reshaped> {
         });
     }
     let (shape, removed, deviation) = match &e.shape {
-        Shape::Polyline { pts, bulges, holes } => {
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        } => {
             let (p, removed, dev) = simplify_path(pts, bulges.as_deref(), false, tol);
             (
                 Shape::Polyline {
                     pts: p.pts,
                     bulges: p.bulges,
                     holes: holes.clone(),
+                    parts: None,
                 },
                 removed,
                 dev,
@@ -544,6 +553,7 @@ mod tests {
             pts: pts.iter().map(|&(x, y)| v(x, y)).collect(),
             bulges: None,
             holes: None,
+            parts: None,
         })
     }
 
@@ -625,6 +635,7 @@ mod tests {
             pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(0.0, 10.0)],
             bulges: Some(vec![0.0, 0.5, 0.0, 0.0]),
             holes: None,
+            parts: None,
         });
         let r = all_corners(&p, &CornerOp::Radius(1.0)).expect("answered");
         // Both vertices of the arc edge meet it at an angle: left.
@@ -659,6 +670,7 @@ mod tests {
             pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0)],
             bulges: Some(vec![0.4, 0.0, 0.0]),
             holes: None,
+            parts: None,
         });
         let r = reverse(&p).expect("reversed");
         let Shape::Polyline { pts, bulges, .. } = &r.shape else {
@@ -713,6 +725,7 @@ mod tests {
             pts: vec![v(0.0, 0.0), v(5.0, 0.001), v(10.0, 0.0), v(20.0, 0.0)],
             bulges: Some(vec![0.0, 0.0, 0.3, 0.0]),
             holes: None,
+            parts: None,
         });
         let s = simplify(&a, 0.01).expect("simplified");
         let Shape::Polyline { pts, bulges, .. } = &s.entity.shape else {

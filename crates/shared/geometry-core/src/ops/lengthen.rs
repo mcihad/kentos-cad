@@ -4,7 +4,7 @@
 //! end segment along its direction or on its own circle.
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape, entity_geometry};
+use crate::entity::{Entity, MULTI_PART_REFUSED, Shape, entity_geometry, is_multi_part};
 use crate::geom::arc::{norm_angle, sweep as ccw_sweep};
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
 use crate::geom::intersect::Edge;
@@ -39,6 +39,10 @@ pub fn lengthen_entity(e: &Entity, at_end: bool, new_length: f64) -> Geometry {
     if !can_lengthen(s) {
         return Geometry::Error("Uzat-kısalt çizgi, yay ve açık çoklu çizgide çalışır.".into());
     }
+    // Which part's end would move is not known (docs/adr/0174).
+    if is_multi_part(s) {
+        return Geometry::Error(MULTI_PART_REFUSED.into());
+    }
     let Some(path) = path_of(s) else {
         return Geometry::Error("Nesnenin uzunluğu yok.".into());
     };
@@ -61,6 +65,7 @@ pub fn lengthen_entity(e: &Entity, at_end: bool, new_length: f64) -> Geometry {
                 pts: vec![*a, *b],
                 bulges: None,
                 holes: None,
+                parts: None,
             }));
         }
         return Geometry::Ok(g);
@@ -159,6 +164,7 @@ pub fn lengthen_entity(e: &Entity, at_end: bool, new_length: f64) -> Geometry {
                 pts,
                 bulges,
                 holes: None,
+                parts: None,
             }))
         }
         _ => Geometry::Error("Uzat-kısalt çizgi, yay ve açık çoklu çizgide çalışır.".into()),

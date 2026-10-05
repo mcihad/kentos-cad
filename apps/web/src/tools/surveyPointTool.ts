@@ -274,7 +274,8 @@ export class SurveyPointTool extends PointInputTool {
           if (r.status !== 'completed' && 'error' in r) refused = r.error.message;
         }
         if (!refused && S.z !== null && there.z !== S.z) {
-          const geometry: EditGeometry = { kind: 'point', p: there.p, z: S.z };
+          // A multi-point object keeps its other points (docs/adr/0174).
+          const geometry: EditGeometry = { kind: 'point', p: there.p, z: S.z, ...(there.parts && { parts: there.parts }) };
           const r = entitiesEdit.execute({ doc }, { operation: 'elevation', changes: [{ kind: 'update', uid, geometry }] });
           if (r.status !== 'completed' && 'error' in r) refused = r.error.message;
         }

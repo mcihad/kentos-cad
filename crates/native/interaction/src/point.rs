@@ -303,7 +303,7 @@ impl Point {
             self.back();
             return;
         };
-        let (uid, at, old_z) = (uid.to_string(), old.p, old.z);
+        let (uid, at, old_z, others) = (uid.to_string(), old.p, old.z, old.parts.clone());
         let done = cx.doc.transact(CORRECT_LABEL, |doc| {
             if !given.is_empty() || !code.is_empty() {
                 let input = EntitiesSetProperties {
@@ -327,7 +327,12 @@ impl Point {
                     operation: EditOperation::Elevation,
                     changes: vec![EntityEdit::Update {
                         uid: uid.clone(),
-                        geometry: EntityGeometry::Point { p: at, z: Some(z) },
+                        // A multi-point object keeps its other points (docs/adr/0174).
+                        geometry: EntityGeometry::Point {
+                            p: at,
+                            z: Some(z),
+                            parts: others.clone(),
+                        },
                     }],
                     expected_revision: None,
                 };

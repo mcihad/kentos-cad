@@ -102,6 +102,8 @@ pub fn refusal_text(why: &ReshapeRefusal, area: bool) -> &'static str {
             "Hat alanı hem kesiyor hem büyütüyor; ikisini ayrı hatlarla yapın."
         }
         ReshapeRefusal::Apart => "Hattın kapattığı cepler alanı parçalara ayırırdı.",
+        // Which part the sketch reshapes is not known (docs/adr/0174).
+        ReshapeRefusal::MultiPart => kentos_geometry_core::entity::MULTI_PART_REFUSED,
     }
 }
 

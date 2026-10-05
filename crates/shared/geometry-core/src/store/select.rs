@@ -243,6 +243,12 @@ fn outline(e: &Shape, font: Font) -> Vec<Vec2> {
 /// Whether the fence crosses the object: an edge, a text's body (crossed or
 /// holding a fence point), a point within `tol`.
 fn crosses(e: &Shape, fence: &[Vec2], segs: &[Edge], tol: f64, font: Font) -> bool {
+    // A multi-part object when the fence crosses one of its parts (docs/adr/0143, 0174).
+    if is_multi_part(e) {
+        return area_parts(e)
+            .iter()
+            .any(|part| crosses(part, fence, segs, tol, font));
+    }
     match e {
         Shape::Point { p, .. } | Shape::Insert { p, .. } => {
             segs.iter().any(|s| closest_on_edge(s, *p).d <= tol)

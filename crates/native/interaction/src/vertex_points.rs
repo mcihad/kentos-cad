@@ -103,6 +103,7 @@ impl VertexPoints {
                 geometry: EntityGeometry::Point {
                     p: wire(pt.p),
                     z: pt.z,
+                    parts: None,
                 },
                 color: color.clone(),
                 line_weight: None,

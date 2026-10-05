@@ -8,7 +8,8 @@ import { op } from '../../wasm/core';
  * missing field would keep the old arcs or holes: every polyline, polygon
  * and hatch in the result gets the field back, undefined. An area's parts
  * (docs/adr/0143) are the same: an area the core gives back with one part
- * has none, so the old ones must not stay.
+ * has none, so the old ones must not stay; so are a polyline's and a
+ * point's (docs/adr/0174).
  */
 export function entityOp<F extends (...args: never[]) => unknown>(name: string): F {
   const call = op<(...args: unknown[]) => unknown>(name);
@@ -31,7 +32,7 @@ function clear(v: unknown): void {
   const kind = o.kind;
   if ((kind === 'polyline' || kind === 'polygon') && !('bulges' in o)) o.bulges = undefined;
   if ((kind === 'polygon' || kind === 'hatch') && !('holes' in o)) o.holes = undefined;
-  if (kind === 'polygon' && !('parts' in o)) o.parts = undefined;
+  if ((kind === 'polygon' || kind === 'polyline' || kind === 'point') && !('parts' in o)) o.parts = undefined;
   for (const key in o) {
     const x = o[key];
     if (x && typeof x === 'object') clear(x);

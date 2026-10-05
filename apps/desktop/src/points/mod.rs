@@ -387,9 +387,13 @@ impl App {
         let mut data = Vec::new();
         let mut counts: Vec<(String, usize)> = Vec::new();
         for e in model.entities() {
+            // A multi-point object is no row: its points share one name (docs/adr/0174).
             let Entity::Point(p) = e else {
                 continue;
             };
+            if p.parts.is_some() {
+                continue;
+            }
             let slot = Slot(p.base.id);
             let name = layer_name(model, &p.base.layer_id);
             match counts.iter_mut().find(|(id, _)| *id == p.base.layer_id) {

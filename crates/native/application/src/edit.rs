@@ -486,6 +486,34 @@ pub(crate) fn check_geometry(
                 at(".pts"),
             )));
         }
+        // A multi-part polyline's other parts are paths as its own is, without holes (docs/adr/0174).
+        EntityGeometry::Polyline {
+            parts: Some(parts), ..
+        } => {
+            for (k, part) in parts.iter().enumerate() {
+                if part.pts.len() < 2 {
+                    return Err(Stop::Failed(error(
+                        codes::TOO_FEW_POINTS,
+                        format!(
+                            "{}. parçanın en az 2 noktası olmalı; {} nokta verildi. Eksik noktaları ekleyin ya da parçayı çıkarın.",
+                            k + 2,
+                            part.pts.len()
+                        ),
+                        at(&format!(".parts[{k}].pts")),
+                    )));
+                }
+                if part.holes.is_some() {
+                    return Err(Stop::Failed(error(
+                        codes::PART_HOLES,
+                        format!(
+                            "Çoklu çizginin {}. parçasının deliği olamaz; delik yalnız kapalı alanda olur. Deliği çıkarın.",
+                            k + 2
+                        ),
+                        at(&format!(".parts[{k}].holes")),
+                    )));
+                }
+            }
+        }
         EntityGeometry::Polygon {
             pts,
             bulges,
@@ -702,7 +730,11 @@ pub(crate) fn check_blocks<'a>(
 /// multi-part area's when its own or a part's list is given (docs/adr/0143).
 fn written(g: &EntityGeometry) -> bool {
     match g {
-        EntityGeometry::Line { zs, .. } | EntityGeometry::Polyline { zs, .. } => zs.is_some(),
+        EntityGeometry::Line { zs, .. } => zs.is_some(),
+        // A multi-part polyline's when its own or a part's list is given (docs/adr/0174).
+        EntityGeometry::Polyline { zs, parts, .. } => {
+            zs.is_some() || parts.iter().flatten().any(|p| p.zs.is_some())
+        }
         EntityGeometry::Polygon { zs, parts, .. } => {
             zs.is_some() || parts.iter().flatten().any(|p| p.zs.is_some())
         }
@@ -716,9 +748,17 @@ fn written_elevations(g: &EntityGeometry) -> Vec<(&[Option<f64>], usize, String)
     let mut out: Vec<(&[Option<f64>], usize, String)> = Vec::new();
     match g {
         EntityGeometry::Line { zs: Some(zs), .. } => out.push((zs, 2, ".zs".into())),
-        EntityGeometry::Polyline {
-            pts, zs: Some(zs), ..
-        } => out.push((zs, pts.len(), ".zs".into())),
+        EntityGeometry::Polyline { pts, zs, parts, .. } => {
+            if let Some(zs) = zs {
+                out.push((zs, pts.len(), ".zs".into()));
+            }
+            // A multi-part polyline's other parts (docs/adr/0174).
+            for (k, part) in parts.iter().flatten().enumerate() {
+                if let Some(zs) = &part.zs {
+                    out.push((zs, part.pts.len(), format!(".parts[{k}].zs")));
+                }
+            }
+        }
         EntityGeometry::Polygon {
             pts,
             zs,
@@ -766,9 +806,29 @@ fn finite(g: &EntityGeometry) -> bool {
         zs.iter().flatten().flatten().all(|z| z.is_finite())
     }
     match g {
-        EntityGeometry::Point { p, z } => pt(p) && z.is_none_or(f64::is_finite),
+        EntityGeometry::Point { p, z, parts } => {
+            pt(p)
+                && z.is_none_or(f64::is_finite)
+                && parts
+                    .iter()
+                    .flatten()
+                    .all(|q| pt(&q.p) && q.z.is_none_or(f64::is_finite))
+        }
         EntityGeometry::Line { a, b, zs } => pt(a) && pt(b) && heights(zs),
-        EntityGeometry::Polyline { pts: p, bulges, zs } => pts(p) && values(bulges) && heights(zs),
+        EntityGeometry::Polyline {
+            pts: p,
+            bulges,
+            zs,
+            parts,
+        } => {
+            pts(p)
+                && values(bulges)
+                && heights(zs)
+                && parts
+                    .iter()
+                    .flatten()
+                    .all(|q| pts(&q.pts) && values(&q.bulges) && heights(&q.zs))
+        }
         EntityGeometry::Polygon {
             pts: p,
             bulges,

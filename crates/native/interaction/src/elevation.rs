@@ -47,9 +47,10 @@ fn any(zs: &Option<Vec<Option<f64>>>) -> bool {
 /// Whether any vertex has an elevation (nothing is allocated).
 pub fn has_any(e: &Entity) -> bool {
     match e {
-        Entity::Point(p) => p.z.is_some(),
+        // Every point and every part too (docs/adr/0174).
+        Entity::Point(p) => p.z.is_some() || p.parts.iter().flatten().any(|q| q.z.is_some()),
         Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
-        Entity::Polyline(p) => any(&p.zs),
+        Entity::Polyline(p) => any(&p.zs) || p.parts.iter().flatten().any(|q| any(&q.zs)),
         Entity::Polygon(p) => {
             let holes = |hs: &Option<Vec<kentos_contracts::RingGeometry>>| {
                 hs.iter().flatten().any(|h| any(&h.zs))
@@ -65,8 +66,11 @@ pub fn has_any(e: &Entity) -> bool {
 
 /// Every vertex's elevation, in the order above; empty for a kind without any.
 pub fn vertex_elevations(e: &Entity) -> Vec<Option<f64>> {
+    // Every point of a multi-point object (docs/adr/0174).
     if let Entity::Point(p) = e {
-        return vec![p.z];
+        return std::iter::once(p.z)
+            .chain(p.parts.iter().flatten().map(|q| q.z))
+            .collect();
     }
     paths(e).into_iter().flat_map(|p| p.zs).collect()
 }
@@ -128,12 +132,24 @@ impl Tally {
     /// Every vertex of an object that takes an elevation.
     fn object(&mut self, e: &Entity) {
         match e {
-            Entity::Point(p) => self.add(p.z),
+            Entity::Point(p) => {
+                self.add(p.z);
+                // Every point of a multi-point object (docs/adr/0174).
+                for q in p.parts.iter().flatten() {
+                    self.add(q.z);
+                }
+            }
             Entity::Line(l) => {
                 self.add(l.za);
                 self.add(l.zb);
             }
-            Entity::Polyline(p) => self.ring(&p.zs, p.pts.len()),
+            Entity::Polyline(p) => {
+                self.ring(&p.zs, p.pts.len());
+                // Every other part (docs/adr/0174).
+                for part in p.parts.iter().flatten() {
+                    self.ring(&part.zs, part.pts.len());
+                }
+            }
             Entity::Polygon(p) => {
                 self.ring(&p.zs, p.pts.len());
                 for hole in p.holes.iter().flatten() {
@@ -280,31 +296,40 @@ pub fn space_length(e: &Entity) -> Option<(&'static str, f64)> {
 /// The elevation of the vertex a grip stands on, or none: a mid grip is no
 /// vertex, and a vertex may have none. `index` counts as the core lists the
 /// grips (`entity_grips`): a path's vertices, then one mid grip for each
-/// edge, then the vertices of each hole; a multi-part area's part after part
-/// (docs/adr/0143).
+/// edge, then the vertices of each hole; a multi-part area's and polyline's
+/// part after part (docs/adr/0143, 0174); a multi-point object's points.
 pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
-    if let Entity::Polygon(p) = e
+    if let Entity::Polygon(p) | Entity::Polyline(p) = e
         && p.parts.as_ref().is_some_and(|ps| !ps.is_empty())
     {
         let (k, local) = grip_part(&shape(e), index)?;
-        if k == 0 {
+        let one = if k == 0 {
             let mut first = p.clone();
             first.parts = None;
-            return grip_elevation(&Entity::Polygon(first), local);
-        }
-        let part = p.parts.as_ref()?.get(k - 1)?;
-        let one = kentos_contracts::PathEntity {
-            base: p.base.clone(),
-            pts: part.pts.clone(),
-            bulges: part.bulges.clone(),
-            holes: part.holes.clone(),
-            zs: part.zs.clone(),
-            parts: None,
+            first
+        } else {
+            let part = p.parts.as_ref()?.get(k - 1)?;
+            kentos_contracts::PathEntity {
+                base: p.base.clone(),
+                pts: part.pts.clone(),
+                bulges: part.bulges.clone(),
+                holes: part.holes.clone(),
+                zs: part.zs.clone(),
+                parts: None,
+            }
         };
-        return grip_elevation(&Entity::Polygon(one), local);
+        return grip_elevation(
+            &match e {
+                Entity::Polygon(_) => Entity::Polygon(one),
+                _ => Entity::Polyline(one),
+            },
+            local,
+        );
     }
     match e {
-        Entity::Point(p) => p.z.filter(|_| index == 0),
+        Entity::Point(p) if index == 0 => p.z,
+        // A multi-point object's other points, each a grip (docs/adr/0174).
+        Entity::Point(p) => p.parts.as_ref()?.get(index - 1)?.z,
         Entity::Line(l) => match index {
             0 => l.za,
             1 => l.zb,
@@ -334,7 +359,14 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
 pub fn elevation_at(e: &Entity, at: Vec2) -> Option<f64> {
     let near = |q: &kentos_contracts::Vec2| (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON;
     match e {
-        Entity::Point(p) => p.z.filter(|_| near(&p.p)),
+        // Any point of a multi-point object (docs/adr/0174).
+        Entity::Point(p) => p.z.filter(|_| near(&p.p)).or_else(|| {
+            p.parts
+                .iter()
+                .flatten()
+                .find(|q| near(&q.p))
+                .and_then(|q| q.z)
+        }),
         Entity::Line(l) => {
             if near(&l.a) {
                 l.za
@@ -407,10 +439,26 @@ pub fn geometry_with(e: &Entity, change: Change) -> Option<EntityGeometry> {
             .collect()
     };
     match (&mut geometry, e) {
-        (EntityGeometry::Point { z, .. }, Entity::Point(p)) => *z = change.apply(p.z, 0),
+        (EntityGeometry::Point { z, parts, .. }, Entity::Point(p)) => {
+            *z = change.apply(p.z, 0);
+            // Every point of a multi-point object, in turn (docs/adr/0174).
+            for (k, (part, was)) in parts
+                .iter_mut()
+                .flatten()
+                .zip(p.parts.iter().flatten())
+                .enumerate()
+            {
+                part.z = change.apply(was.z, k + 1);
+            }
+        }
         (EntityGeometry::Line { zs, .. }, Entity::Line(l)) => *zs = Some(run(vec![l.za, l.zb])),
-        (EntityGeometry::Polyline { zs, .. }, Entity::Polyline(_)) => {
-            *zs = paths(e).into_iter().next().map(|p| run(p.zs));
+        (EntityGeometry::Polyline { zs, parts, .. }, Entity::Polyline(_)) => {
+            // `paths`' order: the polyline, then each other part (docs/adr/0174).
+            let mut lines = paths(e).into_iter();
+            *zs = lines.next().map(|p| run(p.zs));
+            for part in parts.iter_mut().flatten() {
+                part.zs = lines.next().map(|p| run(p.zs));
+            }
         }
         (
             EntityGeometry::Polygon {
@@ -688,7 +736,8 @@ mod tests {
             raised,
             EntityGeometry::Point {
                 p: pt(1.0, 2.0),
-                z: Some(15.0)
+                z: Some(15.0),
+                parts: None
             }
         );
         let stays = geometry_with(&point(None), Change::Raise(2.5)).expect("a point");
@@ -696,7 +745,8 @@ mod tests {
             stays,
             EntityGeometry::Point {
                 p: pt(1.0, 2.0),
-                z: None
+                z: None,
+                parts: None
             }
         );
         // A circle takes none.

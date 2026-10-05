@@ -437,7 +437,8 @@ export class PointTable extends Component {
   private refresh(): void {
     if (!this.el.isConnected) return;
     const { doc, selection } = this.ctx;
-    this.points = [...doc.all()].filter((e: Entity): e is PointEntity => e.kind === 'point');
+    // A multi-point object is no row: its points share one name (docs/adr/0174).
+    this.points = [...doc.all()].filter((e: Entity): e is PointEntity => e.kind === 'point' && !e.parts);
     const selected = selection.ids.value;
     const name = (id: string) => doc.layers.get(id)?.name ?? id;
     // A layer chosen that no longer holds points shows all.

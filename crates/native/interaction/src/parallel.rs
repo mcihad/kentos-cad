@@ -194,6 +194,7 @@ impl Parallel {
                     pts: wire_all(pts),
                     bulges: None,
                     zs: None,
+                    parts: None,
                 }
             }
         };

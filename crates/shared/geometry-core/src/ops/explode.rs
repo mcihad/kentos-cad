@@ -26,8 +26,21 @@ fn line(a: Vec2, b: Vec2) -> Entity {
 
 pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
     match e {
-        Shape::Polyline { pts, bulges, .. } => {
-            let pieces = segment_pieces(pts, bulges.as_deref(), false);
+        // A multi-point object comes apart into its points (docs/adr/0174).
+        Shape::Point { .. } if crate::entity::is_multi_part(e) => Cut::Pieces(
+            crate::entity::area_parts(e)
+                .iter()
+                .map(|s| Entity::new(s.clone()))
+                .collect(),
+        ),
+        Shape::Polyline {
+            pts, bulges, parts, ..
+        } => {
+            // Every part's edges (docs/adr/0174).
+            let mut pieces = segment_pieces(pts, bulges.as_deref(), false);
+            for part in parts.iter().flatten() {
+                pieces.extend(segment_pieces(&part.pts, part.bulges.as_deref(), false));
+            }
             if pieces.is_empty() {
                 Cut::Error("Patlatılacak bir kenar yok.".into())
             } else {
@@ -72,6 +85,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     pts: out,
                     bulges: None,
                     holes: None,
+                    parts: None,
                 }
             })])
         }
@@ -159,6 +173,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     pts,
                     bulges: None,
                     holes: None,
+                    parts: None,
                 })
             };
             let mut pieces = vec![path(leader::drawn_path(pts, &l))];

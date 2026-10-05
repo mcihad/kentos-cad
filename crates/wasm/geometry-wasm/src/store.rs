@@ -935,5 +935,6 @@ fn draft_path(xy: &[f64], bulges: &[f64]) -> Vec<Shape> {
         pts,
         bulges,
         holes: None,
+        parts: None,
     }]
 }

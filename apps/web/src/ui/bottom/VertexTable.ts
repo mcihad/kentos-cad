@@ -69,6 +69,8 @@ interface Col {
 
 /** The rings' names, path by path (`elevatedPaths`' order): Dış, Delik 1, Parça 2, Parça 2, delik 1. */
 export function ringNames(e: Editable): string[] {
+  // A multi-part polyline's parts (docs/adr/0174).
+  if (e.kind === 'polyline' && e.parts) return Array.from({ length: e.parts.length + 1 }, (_, k) => `Parça ${k + 1}`);
   if (e.kind !== 'polygon') return [''];
   const out = ['Dış', ...(e.holes ?? []).map((_, i) => `Delik ${i + 1}`)];
   (e.parts ?? []).forEach((part, k) => {

@@ -6,6 +6,8 @@
 pub const TOO_FEW_CORNERS: &str = "too_few_corners";
 /// A polyline with fewer than 2 points (`cad.polyline.create`).
 pub const TOO_FEW_POINTS: &str = "too_few_points";
+/// A polyline's part with holes: only an area's parts have them (docs/adr/0174).
+pub const PART_HOLES: &str = "part_holes";
 /// A coordinate, a bulge, a radius, an angle or an elevation that is NaN or ±∞.
 pub const NOT_FINITE: &str = "not_finite";
 /// A circle's or an arc's radius that is not above zero (`cad.circle.create`, `cad.arc.create`).

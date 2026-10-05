@@ -26,6 +26,10 @@ const MULTI_PART = 13;
 const INSERT = 14;
 /** A leader (docs/adr/0146): its vertices, height and turn, its note and arrowhead's name (−1 none), its mask flag. */
 const LEADER = 15;
+/** A multi-part polyline (docs/adr/0174): laid out as a multi-part area. */
+const MULTI_PART_LINE = 16;
+/** A multi-point object (docs/adr/0174): its first point as a point's fields, then the count of the others and each one's. */
+const MULTI_POINT = 17;
 
 interface XY {
   x: number;
@@ -97,9 +101,9 @@ export function packEntities(list: Iterable<object>): Packed {
   for (const e of list as Iterable<Fields>) {
     let kind = KIND[e.kind];
     if (kind === undefined) throw new Error(`Geometri deposu “${String(e.kind)}” türünü tanımıyor.`);
-    // An area with parts past its first has a number of its own (the others are as they always were).
-    const parts = kind === 3 && Array.isArray(e.parts) && e.parts.length ? (e.parts as Record<string, unknown>[]) : null;
-    if (parts) kind = MULTI_PART;
+    // An area, a polyline or a point with parts past its first has a number of its own (the others are as they always were).
+    const parts = (kind === 0 || kind === 2 || kind === 3) && Array.isArray(e.parts) && e.parts.length ? (e.parts as Record<string, unknown>[]) : null;
+    if (parts) kind = kind === 3 ? MULTI_PART : kind === 2 ? MULTI_PART_LINE : MULTI_POINT;
     num(e.id);
     out.push(str(e.layerId), e.label ? 1 : 0, kind);
     switch (kind) {
@@ -117,9 +121,21 @@ export function packEntities(list: Iterable<object>): Packed {
         path(e);
         break;
       case MULTI_PART:
+      case MULTI_PART_LINE:
         path(e);
         out.push(parts!.length);
         for (const part of parts!) path(part);
+        break;
+      case MULTI_POINT:
+        pt(e.p);
+        out.push(e.z == null ? 0 : 1);
+        num(e.z);
+        out.push(parts!.length);
+        for (const q of parts!) {
+          pt(q.p);
+          out.push(q.z == null ? 0 : 1);
+          num(q.z);
+        }
         break;
       case 4:
         pt(e.c);
@@ -282,7 +298,7 @@ export function unpackEntities(p: Packed): Unpacked[] {
     const layerId = str() ?? '';
     const labelled = flag();
     const code = num();
-    const kind = code === MULTI_PART ? 'polygon' : code === INSERT ? 'insert' : code === LEADER ? 'leader' : KINDS[code];
+    const kind = code === MULTI_PART ? 'polygon' : code === MULTI_PART_LINE ? 'polyline' : code === MULTI_POINT ? 'point' : code === INSERT ? 'insert' : code === LEADER ? 'leader' : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -290,6 +306,14 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const hasZ = flag();
         const z = num();
         g = hasZ ? { kind, p, z } : { kind, p };
+        // A multi-point object: the count of its other points, then each of them.
+        if (code === MULTI_POINT)
+          g.parts = Array.from({ length: num() }, () => {
+            const q = pt();
+            const qz = flag();
+            const z = num();
+            return qz ? { p: q, z } : { p: q };
+          });
         break;
       }
       case 'line': {
@@ -305,8 +329,8 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g = { kind, pts };
         if (bulges) g.bulges = bulges;
         if (holes) g.holes = holes;
-        // A multi-part area: the count of its other parts, then each of them.
-        if (code === MULTI_PART) g.parts = Array.from({ length: num() }, part);
+        // A multi-part area or polyline: the count of its other parts, then each of them.
+        if (code === MULTI_PART || code === MULTI_PART_LINE) g.parts = Array.from({ length: num() }, part);
         break;
       }
       case 'circle': {

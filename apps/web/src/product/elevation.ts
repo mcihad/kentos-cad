@@ -21,9 +21,9 @@ const path = (p: Paths, closed: boolean): Elevated => ({
 
 /**
  * An object's paths with their elevations, null for a vertex without one: a
- * line's two ends, a polyline, a polygon's outer ring then its holes, then
- * each other part's ring and holes (docs/adr/0143); nothing for the other
- * kinds. The desktop's is `crates/native/application/src/elevation.rs`
+ * line's two ends, a polyline then each other part (docs/adr/0174), a
+ * polygon's outer ring then its holes, then each other part's ring and holes
+ * (docs/adr/0143); nothing for the other kinds. The desktop's is `crates/native/application/src/elevation.rs`
  * `paths`: the order is the one every elevation index goes by.
  */
 export function elevatedPaths(e: Entity | NewEntity): Elevated[] {
@@ -31,7 +31,7 @@ export function elevatedPaths(e: Entity | NewEntity): Elevated[] {
     case 'line':
       return [{ pts: [e.a, e.b], closed: false, zs: [e.za ?? null, e.zb ?? null] }];
     case 'polyline':
-      return [path(e, false)];
+      return [path(e, false), ...(e.parts ?? []).map((part) => path(part, false))];
     case 'polygon':
       return [path(e, true), ...(e.holes ?? []).map((h) => path(h, true)), ...(e.parts ?? []).flatMap((part) => [path(part, true), ...(part.holes ?? []).map((h) => path(h, true))])];
     default:
@@ -87,7 +87,8 @@ export function assignElevations(e: NewEntity, zs: readonly (number | null)[][])
         return hz ? { ...rest, zs: hz } : rest;
       };
       if (e.kind === 'polygon' && e.holes) e.holes = e.holes.map(ring);
-      if (e.kind === 'polygon' && e.parts)
+      // Each other part of an area or a polyline (docs/adr/0143, 0174).
+      if (e.parts)
         e.parts = e.parts.map((part) => {
           const { zs: _z, holes: _h, bulges, ...rest } = part;
           const pz = take(k++);
@@ -141,10 +142,11 @@ export function carryInto(e: NewEntity, sources: readonly Elevated[], same: read
           return hz ? { ...ring, zs: hz } : ring;
         });
       if (e.kind === 'polygon' && e.holes) e.holes = holes(e.holes);
-      if (e.kind === 'polygon' && e.parts)
+      // Each other part of an area or a polyline (docs/adr/0143, 0174).
+      if (e.parts)
         e.parts = e.parts.map((part) => {
           const { zs: _z, holes: _h, bulges, ...rest } = part;
-          const pz = run(part.pts, true, k++);
+          const pz = run(part.pts, e.kind === 'polygon', k++);
           any ||= pz !== undefined;
           // As the typed columns lay a part out: its ring, its arcs, its elevations, its holes.
           return { ...rest, ...(bulges && { bulges }), ...(pz && { zs: pz }), ...(part.holes && { holes: holes(part.holes) }) };

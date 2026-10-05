@@ -151,9 +151,9 @@ describe('move, copy and paste through the geometry store, packed', () => {
     expect(failures.slice(0, 5).join('\n')).toBe('');
     const point = back.at(-2)!.geometry;
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
-    // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146); the first
-    // number that is no kind is 16.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 16), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146), 16 a
+    // multi-part polyline and 17 a multi-point object (docs/adr/0174); the first number that is no kind is 18.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 18), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

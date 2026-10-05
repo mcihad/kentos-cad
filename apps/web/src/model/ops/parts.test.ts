@@ -6,7 +6,7 @@ import { netArea } from '../geom/region';
 import { areaOfEntity, areasOfEntity } from './areas';
 import { breakEntity } from './break';
 import { entityGrips, gripPart, holeGrip, midGripSegment, moveGrip } from './grips';
-import { joinParts, replacePart, splitParts } from './parts';
+import { joinParts, MULTI_PART_REFUSED, replacePart, splitParts } from './parts';
 import { geometryIsFinite, transformEntity, transformObjects, withGeometry } from './transform';
 import { insertVertex, nearHole, removeVertex } from './vertex';
 
@@ -137,7 +137,7 @@ describe('vertices and edges of a multi-part area', () => {
 
   it('refuses to break an area of several parts, and says why', () => {
     const r = breakEntity(two(), v(20, 0), v(30, 10));
-    expect(r).toEqual({ error: 'Bu işlem çok parçalı alanda çalışmaz; önce Parçalara ayır ile alanı parçalarına ayırın.' });
+    expect(r).toEqual({ error: MULTI_PART_REFUSED });
   });
 });
 

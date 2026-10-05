@@ -269,8 +269,16 @@ pub fn next_cell(
 }
 
 /// The rings' names, path by path (the elevations' order): Dış, Delik 1,
-/// Parça 2, Parça 2, delik 1 (the web's `ringNames`).
+/// Parça 2, Parça 2, delik 1; a multi-part polyline's Parça 1, Parça 2
+/// (docs/adr/0174; the web's `ringNames`).
 pub fn ring_names(e: &Entity) -> Vec<String> {
+    if let Entity::Polyline(l) = e
+        && let Some(parts) = &l.parts
+    {
+        return (1..=parts.len() + 1)
+            .map(|k| format!("Parça {k}"))
+            .collect();
+    }
     let Entity::Polygon(area) = e else {
         return vec![String::new()];
     };

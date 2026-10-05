@@ -53,6 +53,16 @@ export interface PointEntity extends EntityBase {
   kind: 'point';
   p: Vec2;
   z?: number;
+  /**
+   * A multi-point object's points past its first, whose own are the fields
+   * above (docs/adr/0174); undefined for one point.
+   */
+  parts?: PointPart[];
+}
+/** A point of a multi-point object past its first: its place and elevation. */
+export interface PointPart {
+  p: Vec2;
+  z?: number;
 }
 export interface LineEntity extends EntityBase {
   kind: 'line';
@@ -84,12 +94,13 @@ export interface PolylineEntity extends EntityBase {
    */
   zs?: (number | null)[];
   /**
-   * A multi-part area's parts past its first, whose own are the fields above
-   * (docs/adr/0143); undefined for a one-part area, never on a polyline.
+   * A multi-part area's or polyline's parts past its first, whose own are the
+   * fields above (docs/adr/0143, 0174); undefined for one part. A polyline's
+   * parts have no holes.
    */
   parts?: AreaPart[];
 }
-/** A part of a multi-part area past its first: its ring, arcs, holes and elevations, as a polygon's own. */
+/** A part of a multi-part area or polyline past its first: its path, arcs, holes (an area's only) and elevations. */
 export interface AreaPart {
   pts: Vec2[];
   bulges?: number[];

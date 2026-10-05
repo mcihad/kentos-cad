@@ -817,7 +817,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `HYB-16` bitti (5 Ekim). Sıradaki `HYB-17` çok parçalı çizgi ve çok noktalı nesne
   ([ADR 0174](docs/adr/0174-multi-part-lines-and-points.md)): 1. adım (sözleşme: çoklu çizginin ve noktanın `parts`'ı, `PointPart`;
   `.kcad` şema 17, `FORMATS_VERSION` 28; kodek, sütunlar, bağımsız Python okuyucu ve yazıcısı, `multi-part-lines.kcad`; iki belgede
-  miras parçalar düşer) tamam; sıradaki 2. adım (hesap: çekirdeğin `Shape`'i, ölçüler, depo, tutamaçlar, düzenlemeler). 4 Ekim: derleme ve test süreleri
+  miras parçalar düşer) ve 2. adım (hesap: çekirdeğin `Shape`'i ve `area_parts`'ı üç türde, deponun `MARKERS` kaydı ve paket türleri 16, 17,
+  düzenlemeler ve `MULTI_PART_REFUSED` retleri, `EntityGeometry`'nin `parts`'ı, kotlar, iki çizici) tamam; sıradaki 3. adım (GeoJSON,
+  Shapefile, DXF yazımı, PostGIS izdüşümü). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

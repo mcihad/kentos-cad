@@ -20,6 +20,10 @@ struct Chain {
 }
 
 fn chain_of(e: &Shape) -> Option<Chain> {
+    // A multi-part polyline is no one chain: which end goes on is not known (docs/adr/0174).
+    if crate::entity::is_multi_part(e) {
+        return None;
+    }
     match e {
         Shape::Line { a, b } => Some(Chain {
             pts: vec![*a, *b],
@@ -103,6 +107,7 @@ fn to_geometry(c: &Chain, tol: f64) -> Result<Entity, String> {
             pts: clean.pts,
             bulges: clean.bulges,
             holes: None,
+            parts: None,
         }
     }))
 }

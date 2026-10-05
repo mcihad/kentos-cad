@@ -72,6 +72,16 @@ pub struct Part {
 
 crate::json_struct!(Part { pts, bulges, holes });
 
+/// A point of a multi-point object past its first (docs/adr/0174): its
+/// place and elevation, as the point's own fields hold the first's.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PointPart {
+    pub p: Vec2,
+    pub z: Option<f64>,
+}
+
+crate::json_struct!(PointPart { p, z });
+
 impl Part {
     /// The part as a one-part area.
     pub fn shape(&self) -> Shape {
@@ -90,6 +100,9 @@ pub enum Shape {
     Point {
         p: Vec2,
         z: Option<f64>,
+        /// A multi-point object's points past its first, whose own are the
+        /// fields above (docs/adr/0174); `point_parts` takes it point by point.
+        parts: Option<Vec<PointPart>>,
     },
     Line {
         a: Vec2,
@@ -99,6 +112,10 @@ pub enum Shape {
         pts: Vec<Vec2>,
         bulges: Option<Vec<f64>>,
         holes: Option<Vec<Ring>>,
+        /// A multi-part polyline's parts past its first, whose own are the
+        /// fields above, open and without holes (docs/adr/0174); `path_parts`
+        /// takes it part by part.
+        parts: Option<Vec<Part>>,
     },
     Polygon {
         pts: Vec<Vec2>,
@@ -203,9 +220,9 @@ pub enum Shape {
 }
 
 crate::json_tagged!(Shape, "kind",
-    Point => "point" { p, z },
+    Point => "point" { p, z, parts },
     Line => "line" { a, b },
-    Polyline => "polyline" { pts, bulges, holes },
+    Polyline => "polyline" { pts, bulges, holes, parts },
     Polygon => "polygon" { pts, bulges, holes, parts },
     Circle => "circle" { c, r },
     Arc => "arc" { c, r, a0, a1 },
@@ -344,13 +361,11 @@ pub fn tessellate_circle(c: Vec2, r: f64, segments: f64) -> Vec<Vec2> {
 /// Characteristic vertices: grips, snapping and coordinate tables.
 pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
     match e {
+        // Part after part, an area's each its ring's then its holes' (docs/adr/0143, 0174).
+        _ if is_multi_part(e) => area_parts(e).iter().flat_map(entity_vertices).collect(),
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } => pts.clone(),
-        // Part after part, each its ring's then its holes' (docs/adr/0143).
-        Shape::Polygon { .. } if is_multi_part(e) => {
-            area_parts(e).iter().flat_map(entity_vertices).collect()
-        }
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -502,9 +517,11 @@ pub fn polygon_holes(e: &Shape) -> Vec<Vec<Vec2>> {
     }
 }
 
-/// An area's parts, each a one-part area (the first its own fields); any
-/// other shape, a one-part area among them, as itself (docs/adr/0143). What
-/// holds for one polygon holds part by part: measure, draw, pick and snap so.
+/// An object's parts, each a one-part object of its kind (the first its own
+/// fields): an area's (docs/adr/0143), a polyline's and a multi-point
+/// object's (docs/adr/0174); any other shape, a one-part object among them,
+/// as itself. What holds for one polygon, polyline or point holds part by
+/// part: measure, draw, pick and snap so.
 pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
     match e {
         Shape::Polygon {
@@ -523,15 +540,54 @@ pub fn area_parts(e: &Shape) -> Cow<'_, [Shape]> {
             out.extend(parts.iter().map(Part::shape));
             Cow::Owned(out)
         }
+        Shape::Polyline {
+            pts,
+            bulges,
+            parts: Some(parts),
+            ..
+        } if !parts.is_empty() => {
+            let mut out = Vec::with_capacity(parts.len() + 1);
+            out.push(Shape::Polyline {
+                pts: pts.clone(),
+                bulges: bulges.clone(),
+                holes: None,
+                parts: None,
+            });
+            out.extend(parts.iter().map(|q| Shape::Polyline {
+                pts: q.pts.clone(),
+                bulges: q.bulges.clone(),
+                holes: None,
+                parts: None,
+            }));
+            Cow::Owned(out)
+        }
+        Shape::Point {
+            p,
+            z,
+            parts: Some(parts),
+        } if !parts.is_empty() => {
+            let mut out = Vec::with_capacity(parts.len() + 1);
+            out.push(Shape::Point {
+                p: *p,
+                z: *z,
+                parts: None,
+            });
+            out.extend(parts.iter().map(|q| Shape::Point {
+                p: q.p,
+                z: q.z,
+                parts: None,
+            }));
+            Cow::Owned(out)
+        }
         _ => Cow::Borrowed(std::slice::from_ref(e)),
     }
 }
 
-/// What an edit that runs along one ring (Kır, Buda, Parçala) says of a
-/// multi-part area: it would not know which part, and must not lose the
-/// others (docs/adr/0143).
+/// What an edit that runs along one ring or path (Kır, Buda, Parçala) says of
+/// a multi-part object: it would not know which part, and must not lose the
+/// others (docs/adr/0143, 0174).
 pub const MULTI_PART_REFUSED: &str =
-    "Bu işlem çok parçalı alanda çalışmaz; önce Parçalara ayır ile alanı parçalarına ayırın.";
+    "Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın.";
 
 /// What an edge edit (Buda, Uzat, Kır, Ötele) says of a leader: its
 /// arrowhead, line, landing and note are one object (docs/adr/0146 §4).
@@ -540,40 +596,88 @@ pub fn leader_refused(verb: &str) -> String {
     format!("Kılavuz {verb}; önce Patlat (X) ile çizgisine, ok başına ve notuna ayırın.")
 }
 
-/// Whether an area has parts past its first.
+/// Whether an area, a polyline or a point has parts past its first.
 pub fn is_multi_part(e: &Shape) -> bool {
-    matches!(e, Shape::Polygon { parts: Some(p), .. } if !p.is_empty())
+    match e {
+        Shape::Polygon { parts: Some(p), .. } | Shape::Polyline { parts: Some(p), .. } => {
+            !p.is_empty()
+        }
+        Shape::Point { parts: Some(p), .. } => !p.is_empty(),
+        _ => false,
+    }
 }
 
-/// One area of `areas` in order, their parts flattened: the first part's
-/// fields its own, the others its parts; none for no area or a shape that is
-/// not one (docs/adr/0143).
-pub fn join_parts(areas: &[Shape]) -> Option<Shape> {
-    let mut all = Vec::new();
-    for a in areas {
-        for part in area_parts(a).iter() {
-            let Shape::Polygon {
-                pts, bulges, holes, ..
-            } = part
-            else {
-                return None;
-            };
-            all.push(Part {
+/// One object of `shapes` in order, their parts flattened: the first part's
+/// fields its own, the others its parts. All areas give an area
+/// (docs/adr/0143), all polylines a polyline, all points a multi-point
+/// object (docs/adr/0174); none for nothing, mixed kinds or another kind.
+pub fn join_parts(shapes: &[Shape]) -> Option<Shape> {
+    let all: Vec<Shape> = shapes
+        .iter()
+        .flat_map(|s| area_parts(s).into_owned())
+        .collect();
+    let (first, rest) = all.split_first()?;
+    match first {
+        Shape::Polygon { .. } => {
+            let mut parts = Vec::with_capacity(all.len());
+            for s in &all {
+                let Shape::Polygon {
+                    pts, bulges, holes, ..
+                } = s
+                else {
+                    return None;
+                };
+                parts.push(Part {
+                    pts: pts.clone(),
+                    bulges: bulges.clone(),
+                    holes: holes.clone(),
+                });
+            }
+            let mut it = parts.into_iter();
+            let first = it.next()?;
+            let rest: Vec<Part> = it.collect();
+            Some(Shape::Polygon {
+                pts: first.pts,
+                bulges: first.bulges,
+                holes: first.holes,
+                parts: (!rest.is_empty()).then_some(rest),
+            })
+        }
+        Shape::Polyline { pts, bulges, .. } => {
+            let mut parts = Vec::with_capacity(rest.len());
+            for s in rest {
+                let Shape::Polyline { pts, bulges, .. } = s else {
+                    return None;
+                };
+                parts.push(Part {
+                    pts: pts.clone(),
+                    bulges: bulges.clone(),
+                    holes: None,
+                });
+            }
+            Some(Shape::Polyline {
                 pts: pts.clone(),
                 bulges: bulges.clone(),
-                holes: holes.clone(),
-            });
+                holes: None,
+                parts: (!parts.is_empty()).then_some(parts),
+            })
         }
+        Shape::Point { p, z, .. } => {
+            let mut parts = Vec::with_capacity(rest.len());
+            for s in rest {
+                let Shape::Point { p, z, .. } = s else {
+                    return None;
+                };
+                parts.push(PointPart { p: *p, z: *z });
+            }
+            Some(Shape::Point {
+                p: *p,
+                z: *z,
+                parts: (!parts.is_empty()).then_some(parts),
+            })
+        }
+        _ => None,
     }
-    let mut it = all.into_iter();
-    let first = it.next()?;
-    let rest: Vec<Part> = it.collect();
-    Some(Shape::Polygon {
-        pts: first.pts,
-        bulges: first.bulges,
-        holes: first.holes,
-        parts: (!rest.is_empty()).then_some(rest),
-    })
 }
 
 /// Where `index` falls among an area's parts when each part counts
@@ -605,8 +709,9 @@ pub fn outer_count(e: &Shape) -> usize {
     }
 }
 
-/// The area with part `k` (0: the area's own fields) replaced by `part`, a
-/// one-part area; none when `k` is past its parts or `part` is no area.
+/// The object with part `k` (0: the object's own fields) replaced by `part`,
+/// a one-part object of its kind; none when `k` is past its parts or `part`
+/// is of another kind.
 pub fn replace_part(e: &Shape, k: usize, part: Shape) -> Option<Shape> {
     let mut parts = area_parts(e).into_owned();
     *parts.get_mut(k)? = part;
@@ -620,7 +725,9 @@ pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
         return area_parts(e).iter().any(|part| inside_polygon(part, p));
     }
     let (pts, bulges, holes) = match e {
-        Shape::Polyline { pts, bulges, holes }
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        }
         | Shape::Polygon {
             pts, bulges, holes, ..
         } => (pts, bulges, holes),
@@ -920,6 +1027,18 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
             return best.and_then(|(_, part)| entity_anchor(part));
         }
         Shape::Polygon { pts, bulges, .. } => centroid(&polygon_ring(pts, bulges.as_deref())),
+        // A multi-part polyline's goes on its longest part (docs/adr/0174).
+        Shape::Polyline { .. } if is_multi_part(e) => {
+            let parts = area_parts(e);
+            let mut best: Option<(f64, &Shape)> = None;
+            for part in parts.iter() {
+                let l = entity_length(part).unwrap_or(0.0);
+                if best.is_none_or(|(most, _)| l > most) {
+                    best = Some((l, part));
+                }
+            }
+            return best.and_then(|(_, part)| entity_anchor(part));
+        }
         Shape::Circle { c, .. } | Shape::Ellipse { c, .. } => *c,
         Shape::Arc { c, r, a0, a1 } => arc_mid(&ArcGeom {
             c: *c,
@@ -944,11 +1063,14 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
 pub fn entity_length(e: &Shape) -> Option<f64> {
     match e {
         Shape::Line { a, b } => Some(path_length(&[*a, *b], false)),
-        // A multi-part area's perimeter is its parts' (docs/adr/0143).
-        Shape::Polygon { .. } if is_multi_part(e) => {
+        // A multi-part area's perimeter and a multi-part polyline's length
+        // are their parts' (docs/adr/0143, 0174).
+        Shape::Polygon { .. } | Shape::Polyline { .. } if is_multi_part(e) => {
             Some(area_parts(e).iter().filter_map(entity_length).sum())
         }
-        Shape::Polyline { pts, bulges, holes }
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        }
         | Shape::Polygon {
             pts, bulges, holes, ..
         } => {

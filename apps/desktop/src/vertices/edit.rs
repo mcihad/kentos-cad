@@ -201,10 +201,30 @@ pub fn geometry_of(e: &Entity, kind: Kind, paths: &[Elevated]) -> Option<EntityG
         },
         Kind::Polyline => {
             let r = ring(first);
+            // A multi-part polyline's other parts, in `elevation::paths`' order (docs/adr/0174).
+            let parts: Vec<AreaPart> = match e {
+                Entity::Polyline(l) => l
+                    .parts
+                    .iter()
+                    .flatten()
+                    .zip(paths.iter().skip(1))
+                    .map(|(_, p)| {
+                        let own = ring(p);
+                        AreaPart {
+                            pts: own.pts,
+                            bulges: own.bulges,
+                            zs: own.zs,
+                            holes: None,
+                        }
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
             EntityGeometry::Polyline {
                 pts: r.pts,
                 bulges: r.bulges,
                 zs: r.zs,
+                parts: (!parts.is_empty()).then_some(parts),
             }
         }
         Kind::Polygon => {

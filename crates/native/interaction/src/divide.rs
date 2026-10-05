@@ -137,6 +137,7 @@ impl Divide {
                 .map(|p| EntityGeometry::Point {
                     p: wire(p),
                     z: None,
+                    parts: None,
                 })
                 .collect();
             if points::write_objects(objects, Some(CreateOperation::Divide), cx).is_some() {

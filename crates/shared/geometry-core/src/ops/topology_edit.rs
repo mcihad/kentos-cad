@@ -107,7 +107,8 @@ pub(crate) struct Path {
 /// as they were), or an area's parts with how many holes each has.
 pub(crate) enum Plan {
     Line,
-    Polyline(Option<Vec<Ring>>),
+    /// A polyline: its holes (kept as they are) and how many parts it has past its first (docs/adr/0174).
+    Polyline(Option<Vec<Ring>>, usize),
     Polygon(Vec<usize>),
 }
 
@@ -129,14 +130,23 @@ pub(crate) fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
             }],
             Plan::Line,
         )),
-        Shape::Polyline { pts, bulges, holes } => Some((
-            vec![Path {
+        // A multi-part polyline's parts after its own path (docs/adr/0174).
+        Shape::Polyline {
+            pts,
+            bulges,
+            holes,
+            parts,
+        } => {
+            let path = |pts: &Vec<Vec2>, bulges: &Option<Vec<f64>>| Path {
                 pts: pts.clone(),
                 bulges: padded(bulges, pts.len().saturating_sub(1)),
                 closed: false,
-            }],
-            Plan::Polyline(holes.clone()),
-        )),
+            };
+            let mut out = vec![path(pts, bulges)];
+            out.extend(parts.iter().flatten().map(|q| path(&q.pts, &q.bulges)));
+            let n = out.len() - 1;
+            Some((out, Plan::Polyline(holes.clone(), n)))
+        }
         Shape::Polygon {
             pts,
             bulges,
@@ -175,7 +185,7 @@ pub(crate) fn paths_of(shape: &Shape) -> Option<(Vec<Path>, Plan)> {
 pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
     let mut paths = paths.into_iter();
     match plan {
-        Plan::Line | Plan::Polyline(_) => {
+        Plan::Line | Plan::Polyline(..) => {
             let Path { pts, bulges, .. } = paths.next().unwrap_or(Path {
                 pts: Vec::new(),
                 bulges: Vec::new(),
@@ -186,15 +196,28 @@ pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
                     a: pts[0],
                     b: pts[1],
                 },
-                Plan::Polyline(holes) => Shape::Polyline {
-                    pts,
-                    bulges: Some(bulges),
-                    holes,
-                },
+                Plan::Polyline(holes, n) => {
+                    let parts: Vec<Part> = paths
+                        .by_ref()
+                        .take(n)
+                        .map(|q| Part {
+                            pts: q.pts,
+                            bulges: Some(q.bulges),
+                            holes: None,
+                        })
+                        .collect();
+                    Shape::Polyline {
+                        pts,
+                        bulges: Some(bulges),
+                        holes,
+                        parts: (n > 0).then_some(parts),
+                    }
+                }
                 _ => Shape::Polyline {
                     pts,
                     bulges: Some(bulges),
                     holes: None,
+                    parts: None,
                 },
             }
         }
@@ -255,17 +278,37 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
         .collect();
     let mut answer = Answer::default();
     for (i, n) in neighbours.iter().enumerate() {
-        if let Shape::Point { p, z } = &n.shape {
+        if let Shape::Point { p, z, parts } = &n.shape {
             if !points {
                 continue;
             }
-            let Some(&(_, to)) = moves.iter().find(|(at, _)| same(*p, *at)) else {
+            // A multi-point object's points move each on its own (docs/adr/0174).
+            let to_of = |q: Vec2| moves.iter().find(|(at, _)| same(q, *at)).map(|&(_, to)| to);
+            let first = to_of(*p);
+            let others: Vec<Option<Vec2>> = parts.iter().flatten().map(|q| to_of(q.p)).collect();
+            if first.is_none() && others.iter().all(Option::is_none) {
                 continue;
-            };
+            }
             if n.locked {
                 answer.locked += 1;
             } else {
-                answer.edited.push((i, Shape::Point { p: to, z: *z }));
+                let parts = parts.as_ref().map(|ps| {
+                    ps.iter()
+                        .zip(&others)
+                        .map(|(q, to)| crate::entity::PointPart {
+                            p: to.unwrap_or(q.p),
+                            z: q.z,
+                        })
+                        .collect()
+                });
+                answer.edited.push((
+                    i,
+                    Shape::Point {
+                        p: first.unwrap_or(*p),
+                        z: *z,
+                        parts,
+                    },
+                ));
             }
             continue;
         }

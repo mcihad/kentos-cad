@@ -13,7 +13,7 @@ use kentos_contracts::{
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, Shape};
+use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, PointPart as CorePoint, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::text::{Font, TextAlign};
 
@@ -32,7 +32,25 @@ fn ring(r: &RingGeometry) -> Ring {
     }
 }
 
-/// A part of a multi-part area as the core takes it (docs/adr/0143).
+/// A multi-point object's points past its first as the core takes them (docs/adr/0174).
+fn core_points(parts: &Option<Vec<kentos_contracts::PointPart>>) -> Option<Vec<CorePoint>> {
+    parts.as_ref().map(|ps| {
+        ps.iter()
+            .map(|q| CorePoint { p: v(&q.p), z: q.z })
+            .collect()
+    })
+}
+
+/// The core's points of a multi-point object back (docs/adr/0174).
+fn points_back(parts: Option<Vec<CorePoint>>) -> Option<Vec<kentos_contracts::PointPart>> {
+    parts.map(|ps| {
+        ps.into_iter()
+            .map(|q| kentos_contracts::PointPart { p: p(q.p), z: q.z })
+            .collect()
+    })
+}
+
+/// A part of a multi-part area or polyline as the core takes it (docs/adr/0143, 0174).
 fn part(p: &AreaPart) -> Part {
     Part {
         pts: points(&p.pts),
@@ -87,7 +105,12 @@ pub fn drawing_font(font: Option<DrawingFont>) -> Font {
 /// An object's geometry as the geometry core takes it.
 pub fn shape(entity: &Entity) -> Shape {
     match entity {
-        Entity::Point(p) => Shape::Point { p: v(&p.p), z: p.z },
+        Entity::Point(p) => Shape::Point {
+            p: v(&p.p),
+            z: p.z,
+            // Every point of a multi-point object (docs/adr/0174).
+            parts: core_points(&p.parts),
+        },
         Entity::Line(l) => Shape::Line {
             a: v(&l.a),
             b: v(&l.b),
@@ -96,6 +119,8 @@ pub fn shape(entity: &Entity) -> Shape {
             pts: points(&p.pts),
             bulges: p.bulges.clone(),
             holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+            // Every part of a multi-part polyline (docs/adr/0174).
+            parts: p.parts.as_ref().map(|ps| ps.iter().map(part).collect()),
         },
         Entity::Polygon(p) => Shape::Polygon {
             pts: points(&p.pts),
@@ -258,16 +283,37 @@ fn parts_back(parts: Option<Vec<Part>>, before: Option<&[AreaPart]>) -> Option<V
 pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
     let mut out = entity.clone();
     match (&mut out, shape) {
-        (Entity::Point(e), Shape::Point { p: at, z }) => {
+        (Entity::Point(e), Shape::Point { p: at, z, parts }) => {
             e.p = p(at);
             e.z = z;
+            // Every point too, with its elevation (docs/adr/0174).
+            e.parts = points_back(parts);
         }
         (Entity::Line(e), Shape::Line { a, b }) => {
             e.a = p(a);
             e.b = p(b);
         }
-        (Entity::Polyline(e), Shape::Polyline { pts, bulges, holes })
-        | (
+        (
+            Entity::Polyline(e),
+            Shape::Polyline {
+                pts,
+                bulges,
+                holes,
+                parts,
+            },
+        ) => {
+            e.pts = back(pts);
+            e.bulges = bulges;
+            let before = e.holes.take();
+            e.holes = holes_back(holes, before.as_deref());
+            // Every part too, with its elevations (docs/adr/0174).
+            let was = e.parts.take();
+            e.parts = parts_back(parts, was.as_deref());
+            if e.zs.as_ref().is_some_and(|zs| zs.len() != e.pts.len()) {
+                e.zs = None;
+            }
+        }
+        (
             Entity::Polygon(e),
             Shape::Polygon {
                 pts,
@@ -453,12 +499,7 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
 /// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
     match geometry.clone() {
-        EntityGeometry::Point { p, z } => Entity::Point(PointEntity {
-            base,
-            p,
-            z,
-            parts: None,
-        }),
+        EntityGeometry::Point { p, z, parts } => Entity::Point(PointEntity { base, p, z, parts }),
         EntityGeometry::Line { a, b, zs } => {
             let z = |k: usize| zs.as_ref().and_then(|zs| zs.get(k).copied().flatten());
             Entity::Line(LineEntity {
@@ -469,13 +510,27 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 zb: z(1),
             })
         }
-        EntityGeometry::Polyline { pts, bulges, zs } => Entity::Polyline(PathEntity {
+        EntityGeometry::Polyline {
+            pts,
+            bulges,
+            zs,
+            parts,
+        } => Entity::Polyline(PathEntity {
             base,
             pts,
             bulges,
             holes: None,
             zs: held(zs),
-            parts: None,
+            // Every part as written, its elevations held as the polyline's (docs/adr/0174).
+            parts: parts.map(|ps| {
+                ps.into_iter()
+                    .map(|mut p| {
+                        p.zs = held(p.zs);
+                        p.holes = None;
+                        p
+                    })
+                    .collect()
+            }),
         }),
         EntityGeometry::Polygon {
             pts,
@@ -627,16 +682,30 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
 /// does not know (the core carries them as names).
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
-        Shape::Point { p: at, z } => EntityGeometry::Point { p: p(at), z },
+        Shape::Point { p: at, z, parts } => EntityGeometry::Point {
+            p: p(at),
+            z,
+            parts: points_back(parts),
+        },
         Shape::Line { a, b } => EntityGeometry::Line {
             a: p(a),
             b: p(b),
             zs: None,
         },
-        Shape::Polyline { pts, bulges, .. } => EntityGeometry::Polyline {
+        Shape::Polyline {
+            pts, bulges, parts, ..
+        } => EntityGeometry::Polyline {
             pts: back(pts),
             bulges,
             zs: None,
+            parts: parts_back(parts, None).map(|ps| {
+                ps.into_iter()
+                    .map(|mut q| {
+                        q.holes = None;
+                        q
+                    })
+                    .collect()
+            }),
         },
         Shape::Polygon {
             pts,

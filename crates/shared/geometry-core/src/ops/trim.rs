@@ -87,6 +87,10 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
     if let Shape::Leader { .. } = s {
         return Geometry::Error(leader_refused("uzatılamaz"));
     }
+    // Which part's end would go on is not known (docs/adr/0174).
+    if is_multi_part(s) {
+        return Geometry::Error(MULTI_PART_REFUSED.into());
+    }
     if let Some(g) = ellipse_of(s) {
         return extend_ellipse(&g, pick, boundaries);
     }
@@ -139,6 +143,7 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
                     pts,
                     bulges: Some(b),
                     holes: None,
+                    parts: None,
                 }));
             }
             let tip = if at_end { pts[n - 1] } else { pts[0] };
@@ -173,6 +178,7 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
                 pts,
                 bulges,
                 holes: None,
+                parts: None,
             }))
         }
         Shape::Arc { c, r, a0, a1 } => {

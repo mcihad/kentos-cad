@@ -52,6 +52,7 @@ pub fn add_points(
                         y: pt.p.y,
                     },
                     z: pt.z,
+                    parts: None,
                 },
                 color: None,
                 line_weight: None,

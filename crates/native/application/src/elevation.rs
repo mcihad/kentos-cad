@@ -27,9 +27,9 @@ fn path(
 }
 
 /// An object's paths with their elevations, `None` for a vertex without
-/// one: a line's two ends, a polyline, a polygon's outer ring then its
-/// holes, then each other part's ring and holes (docs/adr/0143); nothing
-/// for the other kinds.
+/// one: a line's two ends, a polyline then each other part (docs/adr/0174),
+/// a polygon's outer ring then its holes, then each other part's ring and
+/// holes (docs/adr/0143); nothing for the other kinds.
 pub fn paths(e: &Entity) -> Vec<Elevated> {
     match e {
         Entity::Line(l) => vec![Elevated {
@@ -38,7 +38,14 @@ pub fn paths(e: &Entity) -> Vec<Elevated> {
             closed: false,
             zs: vec![l.za, l.zb],
         }],
-        Entity::Polyline(p) => vec![path(&p.pts, &p.bulges, false, &p.zs)],
+        Entity::Polyline(p) => std::iter::once(path(&p.pts, &p.bulges, false, &p.zs))
+            .chain(
+                p.parts
+                    .iter()
+                    .flatten()
+                    .map(|q| path(&q.pts, &q.bulges, false, &q.zs)),
+            )
+            .collect(),
         Entity::Polygon(p) => {
             let mut out: Vec<Elevated> = std::iter::once(path(&p.pts, &p.bulges, true, &p.zs))
                 .chain(
@@ -79,7 +86,12 @@ pub fn assign(entity: &mut Entity, zs: &[Vec<Option<f64>>]) {
             l.za = ends.and_then(|z| z.first().copied().flatten());
             l.zb = ends.and_then(|z| z.get(1).copied().flatten());
         }
-        Entity::Polyline(p) => p.zs = take(0),
+        Entity::Polyline(p) => {
+            p.zs = take(0);
+            for (k, part) in p.parts.iter_mut().flatten().enumerate() {
+                part.zs = take(k + 1);
+            }
+        }
         Entity::Polygon(p) => {
             p.zs = take(0);
             let mut k = 1;
@@ -123,7 +135,13 @@ pub fn carry(entity: &mut Entity, sources: &[Elevated], same: &[Elevated], how: 
         }
         Entity::Polyline(p) => {
             p.zs = run(&p.pts, false, 0);
-            p.zs.is_some()
+            let mut any = p.zs.is_some();
+            // Every other part, in `paths`' order (docs/adr/0174).
+            for (k, part) in p.parts.iter_mut().flatten().enumerate() {
+                part.zs = run(&part.pts, false, k + 1);
+                any |= part.zs.is_some();
+            }
+            any
         }
         Entity::Polygon(p) => {
             p.zs = run(&p.pts, true, 0);

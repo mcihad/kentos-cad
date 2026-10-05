@@ -80,6 +80,7 @@ fn extras(v: &Value) -> SnapExtras {
                     .and_then(Value::as_array)
                     .map(|b| b.iter().map(num).collect()),
                 holes: None,
+                parts: None,
             }]
         })
         .unwrap_or_default();

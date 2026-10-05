@@ -5,6 +5,7 @@ import { bulgePathOutline } from '../model/geom/bulge';
 import type { Area } from '../model/geom/overlay';
 import type { Vec2 } from '../model/geometry';
 import { areasOfEntity } from '../model/ops/areas';
+import { MULTI_PART_REFUSED } from '../model/ops/parts';
 import { reshapeBy, type ReshapeRefusal } from '../model/ops/reshapeBy';
 import type { ViewTransform } from '../viewport/Camera';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
@@ -75,6 +76,9 @@ export function refusalText(r: ReshapeRefusal, area: boolean): string {
       return 'Hat alanı hem kesiyor hem büyütüyor; ikisini ayrı hatlarla yapın.';
     case 'apart':
       return 'Hattın kapattığı cepler alanı parçalara ayırırdı.';
+    // Which part the sketch reshapes is not known (docs/adr/0174).
+    case 'multiPart':
+      return MULTI_PART_REFUSED;
   }
 }
 

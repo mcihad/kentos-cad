@@ -34,7 +34,9 @@ use kentos_contracts::{
     DocumentSnapshotV1, DrawingFont, Entity, HatchEntity, HatchPatternType, LayerNode,
     LayerNodeType, PathEntity, PointSymbol, RingGeometry,
 };
-use kentos_geometry_core::entity::{HatchPattern, Part, Shape, dimension_geom, entity_bounds_in};
+use kentos_geometry_core::entity::{
+    HatchPattern, Part, PointPart, Shape, dimension_geom, entity_bounds_in,
+};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
@@ -156,10 +158,20 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
         for entity in entities {
             let color = entity_color(entity, layer, palette);
             match entity {
-                Entity::Point(p) => b.marker(v(&p.p), color, layer.mark_size, layer.mark_shape),
+                Entity::Point(p) => {
+                    b.marker(v(&p.p), color, layer.mark_size, layer.mark_shape);
+                    // Every point of a multi-point object (docs/adr/0174).
+                    for q in p.parts.iter().flatten() {
+                        b.marker(v(&q.p), color, layer.mark_size, layer.mark_shape);
+                    }
+                }
                 Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
-                Entity::Polyline(p) if !has_bulges(p.bulges.as_deref()) => {
+                Entity::Polyline(p) if !polygon_curved(p) => {
                     b.path(&points(&p.pts), false, color);
+                    // Every part of a multi-part polyline (docs/adr/0174).
+                    for q in p.parts.iter().flatten() {
+                        b.path(&points(&q.pts), false, color);
+                    }
                 }
                 Entity::Polygon(p) if !polygon_curved(p) => {
                     let mut rings = vec![points(&p.pts)];
@@ -358,12 +370,20 @@ fn curves(
         for entity in entities {
             let color = entity_color(entity, layer, palette);
             match entity {
-                Entity::Polyline(p) if has_bulges(p.bulges.as_deref()) => {
+                Entity::Polyline(p) if polygon_curved(p) => {
                     b.path(
                         &bulge_path(&points(&p.pts), p.bulges.as_deref(), false, tol),
                         false,
                         color,
                     );
+                    // Every part, an arc anywhere sending them all here (docs/adr/0174).
+                    for q in p.parts.iter().flatten() {
+                        b.path(
+                            &bulge_path(&points(&q.pts), q.bulges.as_deref(), false, tol),
+                            false,
+                            color,
+                        );
+                    }
                 }
                 Entity::Polygon(p) if polygon_curved(p) => {
                     let mut rings =
@@ -529,7 +549,13 @@ fn highlight_tolerance(tolerance: f64) -> f64 {
 fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, clip: &Bounds) {
     let color = style.color;
     match entity {
-        Entity::Point(p) => b.marker(v(&p.p), color, style.mark_size, style.mark_shape),
+        Entity::Point(p) => {
+            b.marker(v(&p.p), color, style.mark_size, style.mark_shape);
+            // Every point of a multi-point object (docs/adr/0174).
+            for q in p.parts.iter().flatten() {
+                b.marker(v(&q.p), color, style.mark_size, style.mark_shape);
+            }
+        }
         Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
         Entity::Polyline(p) => {
             b.path(
@@ -537,6 +563,14 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
                 false,
                 color,
             );
+            // Every part of a multi-part polyline (docs/adr/0174).
+            for q in p.parts.iter().flatten() {
+                b.path(
+                    &bulge_path(&points(&q.pts), q.bulges.as_deref(), false, tol),
+                    false,
+                    color,
+                );
+            }
         }
         Entity::Polygon(p) => {
             let mut rings = vec![bulge_path(&points(&p.pts), p.bulges.as_deref(), true, tol)];
@@ -738,7 +772,7 @@ fn entity_color(entity: &Entity, layer: &DrawLayer<'_>, palette: &Palette) -> Rg
         .unwrap_or(layer.color)
 }
 
-/// Whether an area has an arc edge anywhere: its ring, a hole, another part's (docs/adr/0143).
+/// Whether a path has an arc edge anywhere: its own, a hole, another part's (docs/adr/0143, 0174).
 fn polygon_curved(p: &PathEntity) -> bool {
     let curved = |bulges: &Option<Vec<f64>>, holes: &Option<Vec<RingGeometry>>| {
         has_bulges(bulges.as_deref())
@@ -1003,7 +1037,16 @@ fn other_parts(p: &PathEntity, tol: f64) -> Vec<Vec<Vec<Vec2>>> {
 /// An object's geometry as the geometry core takes it (its own `Shape`).
 fn shape(entity: &Entity) -> Shape {
     match entity {
-        Entity::Point(p) => Shape::Point { p: v(&p.p), z: p.z },
+        Entity::Point(p) => Shape::Point {
+            p: v(&p.p),
+            z: p.z,
+            // Every point of a multi-point object (docs/adr/0174).
+            parts: p.parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| PointPart { p: v(&q.p), z: q.z })
+                    .collect()
+            }),
+        },
         Entity::Line(l) => Shape::Line {
             a: v(&l.a),
             b: v(&l.b),
@@ -1012,6 +1055,16 @@ fn shape(entity: &Entity) -> Shape {
             pts: points(&p.pts),
             bulges: p.bulges.clone(),
             holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
+            // Every part of a multi-part polyline (docs/adr/0174).
+            parts: p.parts.as_ref().map(|ps| {
+                ps.iter()
+                    .map(|q| Part {
+                        pts: points(&q.pts),
+                        bulges: q.bulges.clone(),
+                        holes: None,
+                    })
+                    .collect()
+            }),
         },
         Entity::Polygon(p) => Shape::Polygon {
             pts: points(&p.pts),

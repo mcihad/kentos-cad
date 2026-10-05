@@ -32,8 +32,8 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
   yapar).
 - **Parçaların sırası** anlamlıdır ve korunur. Parçalar birbirine değebilir, kesişebilir; okuyucu denetlemez (alanın parçaları gibi).
 - **Adlar:** sözleşmede (`contracts::entity`) çoklu çizginin `parts`'ı (`AreaPart`, `holes`'suz) ve noktanın `parts`'ı (`PointPart`);
-  TypeScript'te aynı adlar. Çekirdekte `Shape::Polyline`'ın ve `Shape::Point`'in `parts`'ı; parça parça gezmek `path_parts` ve
-  `point_parts` ile (alanlar için `area_parts` gibi).
+  TypeScript'te aynı adlar. Çekirdekte `Shape::Polyline`'ın ve `Shape::Point`'in `parts`'ı; parça parça gezmek alanınkiyle aynı
+  `area_parts` ile (üç tür için; `is_multi_part`, `join_parts`, `replace_part` de öyle).
 
 ### 2. `.kcad`: belge şeması 17
 
@@ -91,7 +91,9 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
 - **Öznitelikler:** parça sayısı 1'den çoksa “Parça sayısı” satırı (çok noktalıda “Nokta sayısı”). Uzunluk ve Köşe sayısı bütün
   parçaların toplamıdır.
 - **Üzerine gelme kartı:** “Parça: n” (çok noktalıda “Nokta: n”).
-- **Köşe tablosu** (ADR 0172) parçaları halkalar gibi sıralar (“Parça 2”).
+- **Köşe tablosu** (ADR 0172) parçaları halkalar gibi sıralar (“Parça 1”, “Parça 2”).
+- **Nokta editörü** (ADR 0153) tek noktaları listeler: çok noktalı nesnenin noktaları bir adı paylaşır, satır olmaz (ad, sıra ve çift
+  nokta kuralları noktanın kendi adına dayanır); Parçalara ayır ile ayrılınca listede görünür.
 
 ### 7. Kapsam dışı
 
@@ -107,6 +109,18 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
    şema, tek köşeli parça, delikli parça, yersiz nokta); iki belgede tür değişince yalnız miras kalan parçalar düşer (ortak
    `document-ops` durumu); web sayfası örneği bayt bayt yazar.
 2. Hesap: çekirdeğin `Shape`'i, ölçüler, depo (çizim, seçme, kenet, etiket), tutamaçlar, dönüşümler, düzenlemeler; iki çizici.
+   Bitti (5 Ekim): çekirdekte `Shape::Polyline` ve `Shape::Point` `parts` alır, `area_parts` üç türü parçalar; uzunluk ve köşeler
+   bütün parçaların, kutu bütün parçaları kapsar, çoklu çizginin etiketi en uzun parçasında, çok noktalının ağırlık merkezi
+   noktalarının ortalaması. Depoda çizim kaydı parça başına bir yol (noktaları hep verilir) ve çok noktalı için yeni `MARKERS` kaydı
+   (7; stil motoru her noktayı noktanın sembolüyle çizer), tıklama en yakın noktaya, çit ve pencereler parça parça, kenet bütün
+   parçaların uçları, ortaları ve kenarları ile her nokta, paketin türleri 16 ve 17. Tutamaçlar, taşı, döndür, ölçekle, aynala,
+   oturt, Kauçuk levha, Esnet ve topolojik düzenleme parça parça; Ötele her parçayı aynı yana öteler (QGIS ve ArcGIS gibi, yönüne
+   göre sol ya da sağ; yanı imlece en yakın kenar söyler); Patlat her parçanın kenarlarını, çok noktalıyı noktalarını verir. Buda,
+   Uzat, Kır, Uzat-kısalt, Sürdür ve Biçim değiştir reddeder (`MULTI_PART_REFUSED`); Parçala ve Birleştir onu dışarıda bırakır,
+   Kenar eşleme aday saymaz; Toplu alan ve İzle parçaları ayrı yollar olarak alır; Topolojik temizlik her parçanın uçlarını işler.
+   `cad.entities.edit`'in geometrisinde noktanın ve çoklu çizginin `parts`'ı (parçası en az iki köşe, deliği `part_holes` ile
+   reddedilir), kotları parça parça taşınır; Kot ver her noktaya ve parçaya. Masaüstünün wgpu çizicisi ve web'in sahnesi her parçayı
+   ve noktayı çizer. Çekirdek testleri `tests/all/line_parts.rs`, web'in paket testleri (16, 17).
 3. Değişim biçimleri ve sunucu: GeoJSON, Shapefile, DXF yazımı, PostGIS izdüşümü; bağımsız okuyucunun (`tools/formats/gis.py`)
    kuralları.
 4. Komutlar: `partsJoin` ve `partsSplit`'in yeni türleri; ortak durumlar.

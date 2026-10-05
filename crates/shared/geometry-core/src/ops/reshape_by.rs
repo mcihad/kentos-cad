@@ -48,6 +48,8 @@ pub enum ReshapeRefusal {
     BothWays,
     /// The pockets would leave the area in pieces.
     Apart,
+    /// A multi-part polyline: which part the line runs along is not known (docs/adr/0174 §3).
+    MultiPart,
 }
 
 crate::json_tagged!(ReshapeRefusal, "why",
@@ -58,6 +60,7 @@ crate::json_tagged!(ReshapeRefusal, "why",
     TouchesHole => "touchesHole" {},
     BothWays => "bothWays" {},
     Apart => "apart" {},
+    MultiPart => "multiPart" {},
 );
 
 /// The object reshaped by `sketch` (its points in order).
@@ -68,10 +71,12 @@ pub fn reshape(e: &Shape, sketch: &[Vec2]) -> Result<Shape, ReshapeRefusal> {
     match e {
         Shape::Polygon { .. } => reshape_area(e, sketch),
         Shape::Line { a, b } => reshape_path(&[*a, *b], &[0.0, 0.0], sketch),
+        Shape::Polyline { .. } if crate::entity::is_multi_part(e) => Err(ReshapeRefusal::MultiPart),
         Shape::Polyline {
             pts,
             bulges,
             holes: None,
+            ..
         } => {
             let b: Vec<f64> = (0..pts.len())
                 .map(|i| bulge_at(bulges.as_deref(), i))
@@ -395,6 +400,7 @@ fn reshape_path(pts: &[Vec2], b: &[f64], sketch: &[Vec2]) -> Result<Shape, Resha
         pts: clean.pts,
         bulges: clean.bulges,
         holes: None,
+        parts: None,
     })
 }
 

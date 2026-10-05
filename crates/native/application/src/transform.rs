@@ -648,7 +648,14 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         vs.iter().flatten().all(|v| v.is_finite())
     }
     match s {
-        Shape::Point { p, z } => pt(p) && z.is_none_or(f64::is_finite),
+        Shape::Point { p, z, parts } => {
+            pt(p)
+                && z.is_none_or(f64::is_finite)
+                && parts
+                    .iter()
+                    .flatten()
+                    .all(|q| pt(&q.p) && q.z.is_none_or(f64::is_finite))
+        }
         Shape::Insert {
             p, scale, rotation, ..
         } => pt(p) && scale.is_finite() && rotation.is_finite(),
@@ -657,6 +664,7 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             pts: p,
             bulges,
             holes,
+            parts,
         } => {
             pts(p)
                 && values(bulges)
@@ -664,6 +672,10 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
                     .iter()
                     .flatten()
                     .all(|h| pts(&h.pts) && values(&h.bulges))
+                && parts
+                    .iter()
+                    .flatten()
+                    .all(|q| pts(&q.pts) && values(&q.bulges))
         }
         Shape::Polygon {
             pts: p,

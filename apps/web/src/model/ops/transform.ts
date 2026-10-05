@@ -26,9 +26,10 @@ export const transformEntities = entityOp<<E extends Entity>(list: readonly E[],
 
 /** A kind's geometry fields, as the core's JSON names them (geometry-core entity.rs `Shape`). */
 export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
-  point: ['p', 'z'],
+  // A multi-point object's and a multi-part polyline's other parts are their own (docs/adr/0174).
+  point: ['p', 'z', 'parts'],
   line: ['a', 'b'],
-  polyline: ['pts', 'bulges', 'holes'],
+  polyline: ['pts', 'bulges', 'holes', 'parts'],
   // An area's parts past its first are its own (docs/adr/0143); the elevations (`zs`) are the object's, not the core's.
   polygon: ['pts', 'bulges', 'holes', 'parts'],
   circle: ['c', 'r'],
@@ -80,13 +81,16 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
   for (const key in g) out[key] = g[key];
   if ((g.kind === 'polyline' || g.kind === 'polygon') && !('bulges' in g)) out.bulges = undefined;
   if ((g.kind === 'polygon' || g.kind === 'hatch') && !('holes' in g)) out.holes = undefined;
-  if (g.kind === 'polygon' && !('parts' in g)) out.parts = undefined;
+  if ((g.kind === 'polygon' || g.kind === 'polyline' || g.kind === 'point') && !('parts' in g)) out.parts = undefined;
   // A transform moves each vertex and keeps it: the elevations stay with their vertices, the
   // holes' too, and each part's and its holes' (docs/adr/0143); a vertex count that changed
   // leaves them out (docs/adr/0142).
   if (g.kind === 'polygon') {
     const holes = src.holes as Ring[] | undefined;
     if (Array.isArray(out.holes) && holes?.some((h) => h.zs)) out.holes = withElevations(out.holes as Ring[], holes);
+  }
+  // Each part's elevations stay with it, an area's and a polyline's (docs/adr/0143, 0174).
+  if (g.kind === 'polygon' || g.kind === 'polyline') {
     const was = src.parts as ElevatedPart[] | undefined;
     if (Array.isArray(out.parts) && was) out.parts = (out.parts as ElevatedPart[]).map((part, k) => withPartElevations(part, was[k]));
   }

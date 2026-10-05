@@ -286,6 +286,7 @@ fn with_bulge(
             pts: pts.to_vec(),
             bulges,
             holes: None,
+            parts: None,
         }
     }
 }

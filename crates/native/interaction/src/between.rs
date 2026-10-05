@@ -174,6 +174,7 @@ impl PointsBetween {
             .map(|p| EntityGeometry::Point {
                 p: wire(p),
                 z: None,
+                parts: None,
             })
             .collect();
         if points::write_objects(

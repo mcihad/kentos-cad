@@ -15,6 +15,7 @@ mod field_traverse;
 mod geodesy;
 mod golden;
 mod leader;
+mod line_parts;
 mod locks;
 mod measure;
 mod numeric;

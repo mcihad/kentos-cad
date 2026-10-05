@@ -41,6 +41,10 @@ pub fn entity_edges_in(e: &Shape, area: &Bounds) -> Vec<Edge> {
 pub fn entity_edges(e: &Shape) -> Vec<Edge> {
     match e {
         Shape::Line { a, b } => vec![Edge::Seg { a: *a, b: *b }],
+        // Part after part, each its own path (docs/adr/0174).
+        Shape::Polyline { .. } if is_multi_part(e) => {
+            area_parts(e).iter().flat_map(entity_edges).collect()
+        }
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
         // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
         Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
@@ -165,6 +169,7 @@ mod tests {
             ],
             bulges: None,
             holes: None,
+            parts: None,
         };
         assert_eq!(
             nearest_edge(&path, Vec2::new(9.0, 6.0)),
@@ -193,7 +198,8 @@ mod tests {
             nearest_edge(
                 &Shape::Point {
                     p: Vec2::new(1.0, 1.0),
-                    z: None
+                    z: None,
+                    parts: None,
                 },
                 Vec2::new(0.0, 0.0)
             ),

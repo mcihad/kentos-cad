@@ -21,7 +21,7 @@ use crate::vec2::Vec2;
 const DIRECTION_GRIP: f64 = 10.0;
 
 pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
-    // A multi-part area's grips are its parts', part after part (docs/adr/0143).
+    // A multi-part object's grips are its parts', part after part (docs/adr/0143, 0174).
     if is_multi_part(e) {
         return area_parts(e).iter().flat_map(entity_grips).collect();
     }
@@ -213,7 +213,7 @@ pub fn grip_part(e: &Shape, index: usize) -> Option<(usize, usize)> {
 
 /// Entity with grip `index` moved to `p` (same id), or None when the result would be degenerate.
 pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
-    // A multi-part area: the grip's part moves it, the others stay.
+    // A multi-part object: the grip's part moves it, the others stay (docs/adr/0143, 0174).
     if is_multi_part(&e.shape) {
         let (k, local) = grip_part(&e.shape, index)?;
         let part = area_parts(&e.shape)[k].clone();
@@ -221,7 +221,11 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         return Some(e.with(replace_part(&e.shape, k, moved.shape)?));
     }
     let shape = match &e.shape {
-        Shape::Point { z, .. } => Shape::Point { p, z: *z },
+        Shape::Point { z, .. } => Shape::Point {
+            p,
+            z: *z,
+            parts: None,
+        },
         Shape::Insert {
             block,
             scale,
@@ -289,7 +293,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 Shape::Line { a: *a, b: p }
             }
         }
-        Shape::Polyline { pts, bulges, holes }
+        Shape::Polyline {
+            pts, bulges, holes, ..
+        }
         | Shape::Polygon {
             pts, bulges, holes, ..
         } => {
@@ -301,7 +307,12 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                         holes,
                         parts: None,
                     },
-                    _ => Shape::Polyline { pts, bulges, holes },
+                    _ => Shape::Polyline {
+                        pts,
+                        bulges,
+                        holes,
+                        parts: None,
+                    },
                 }
             };
             if let Some(hole) = hole_grip(&e.shape, index) {

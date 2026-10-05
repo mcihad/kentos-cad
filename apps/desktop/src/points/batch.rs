@@ -119,9 +119,10 @@ pub fn import_targets(doc: &Document, imported: &[Slot]) -> Option<(Vec<Slot>, S
     if names.is_empty() {
         return None;
     }
+    // The table's points: a multi-point object is none of them (docs/adr/0174).
     let points: Vec<&Entity> = doc
         .entities()
-        .filter(|e| matches!(e, Entity::Point(_)))
+        .filter(|e| matches!(e, Entity::Point(p) if p.parts.is_none()))
         .collect();
     let mut carried: HashMap<&str, usize> = HashMap::new();
     for &e in &points {
@@ -197,7 +198,7 @@ fn points_of(doc: &Document, slots: &[Slot]) -> Vec<(Slot, PointEntity)> {
     slots
         .iter()
         .filter_map(|&s| match doc.get(s) {
-            Some(Entity::Point(p)) => Some((s, p.clone())),
+            Some(Entity::Point(p)) if p.parts.is_none() => Some((s, p.clone())),
             _ => None,
         })
         .collect()
@@ -574,6 +575,7 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
                         y: m.to.y,
                     },
                     z: m.z,
+                    parts: None,
                 },
             }];
             if follow {

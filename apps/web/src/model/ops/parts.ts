@@ -9,6 +9,12 @@ import { entityOp } from './entityOp';
  */
 
 /**
+ * What an edit that runs along one path says of an object of several parts (docs/adr/0143, 0174): which part it
+ * would work on is not known. The core's `MULTI_PART_REFUSED`, which its own refusals carry word for word.
+ */
+export const MULTI_PART_REFUSED = 'Bu işlem çok parçalı nesnede çalışmaz; önce Parçalara ayır ile parçalarına ayırın.';
+
+/**
  * Each part of an area as an area of its own, the object's other fields kept (its layer, colour, attributes,
  * label …), in the parts' order; an area of one part, or anything that is not an area, comes back as itself.
  */
