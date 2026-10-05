@@ -1,4 +1,3 @@
-import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import type { LabelStyle } from '../model/layers';
 
@@ -9,14 +8,8 @@ import type { LabelStyle } from '../model/layers';
  * overlay reads their strings and styles from the objects.
  */
 
-/** Labels a layer without a label style gets, by kind. */
-export const DEFAULT_LABELS: Partial<Record<Entity['kind'], LabelStyle>> = {
-  polygon: { placement: 'center', size: 10, grow: 1, maxSize: 14, minFeaturePx: 26 },
-  circle: { placement: 'center', size: 10, minFeaturePx: 26 },
-  point: { placement: 'beside', size: 10.5, minScale: 2 },
-  polyline: { placement: 'along', size: 10, minScale: 1.6 },
-  line: { placement: 'along', size: 10, minScale: 1.6 },
-};
+/** Labels a layer without a label style gets, by kind (the model's, docs/adr/0175 §4). */
+export { DEFAULT_LABELS } from '../model/labelDefaults';
 
 /** What decides whether and where a label is drawn, as the store reads it. */
 export function labelRule(st: LabelStyle): { placement: LabelStyle['placement']; minScale?: number; maxScale?: number; minFeaturePx?: number } {

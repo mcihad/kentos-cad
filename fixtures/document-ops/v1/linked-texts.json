@@ -1,0 +1,660 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Bağlı yazılar",
+  "note": "Etiketleri yazıya çevir'in nesneye bağlı yazısı (docs/adr/0175 §4): yazının labelOf'u nesnenin kalıcı kimliği, labelScale'i ölçeğin paydasıdır. Adım kaydedilmeden, adımın değiştirdiği nesnenin bağlı yazısı etiket kuralıyla yeniden yazılır (inceltmesiz), silinen nesnenin bağlı yazısı silinir, kendisi düzenlenen bağlı yazının bağı kopar; değişiklikler aynı adıma girer. \"$uid:ad\" captureUid'in aldığı kalıcı kimliktir. Yerler ve boylar kuraldan, çekirdeğin işlem sırasıyla: k = 96 / 0,0254 / N px/m, noktanın varsayılan etiketi yanda 10,5 px (en küçük ölçek 2 px/m), yer x + 7/k, y + 7/k, yükseklik 10,5/k.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı yazılar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 486500,
+      "y": 4420100
+    },
+    "layers": [
+      {
+        "id": "a",
+        "name": "Nokta",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      },
+      {
+        "id": "y",
+        "name": "Yazılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg-dim",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Bağlı yazı nesnesini izler: nesne taşınınca ve etiketi değişince yazı aynı adımda yeniden yazılır; geri alma ikisini birlikte döndürür (docs/adr/0175 §4)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "y",
+            "p": {
+              "x": 486601.85208333336,
+              "y": 4420101.852083334
+            },
+            "text": "P7",
+            "height": 2.778125,
+            "rotation": 0,
+            "align": "middleLeft",
+            "attrs": {},
+            "labelOf": "$uid:nokta",
+            "labelScale": 1000
+          },
+          "returns": 2,
+          "note": "Etiketleri yazıya çevir'in yazdığı gibi: 1:1000'de noktanın yanında, 7 px sağda ve yukarıda.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486601.85208333336,
+                  "y": 4420101.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "p": {
+              "x": 486610,
+              "y": 4420105
+            }
+          },
+          "note": "Nokta taşınır: yazısı aynı adımda yeni yerine.",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486610,
+                  "y": 4420105
+                },
+                "label": "P7",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486600,
+                  "y": 4420100
+                },
+                "label": "P7",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486601.85208333336,
+                  "y": 4420101.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": "P8"
+          },
+          "note": "Etiket değişir: yazının metni de.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P8",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": null
+          },
+          "note": "Etiketi boşalan nesne yazı yazmaz: yazı yerinde kalır, bağı kopar.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P8",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P8",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesnesi silinen bağlı yazı aynı adımda silinir; elle düzenlenen bağlı yazının bağı kopar, nesnesiyle birlikte düzenlenen yazı kurala göre yazılır (docs/adr/0175 §4)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "y",
+            "p": {
+              "x": 486601.85208333336,
+              "y": 4420101.852083334
+            },
+            "text": "P7",
+            "height": 2.778125,
+            "rotation": 0,
+            "align": "middleLeft",
+            "attrs": {},
+            "labelOf": "$uid:nokta",
+            "labelScale": 1000
+          },
+          "returns": 2
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "y",
+            "p": {
+              "x": 486650,
+              "y": 4420150
+            },
+            "text": "Not",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {}
+          },
+          "returns": 3
+        },
+        {
+          "op": "remove",
+          "ids": [
+            1
+          ],
+          "note": "Nokta silinir: bağlı yazısı da aynı adımda; bağsız yazı kalır.",
+          "expect": {
+            "ids": [
+              3
+            ]
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3
+            ],
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486601.85208333336,
+                  "y": 4420101.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 2,
+          "patch": {
+            "p": {
+              "x": 486700,
+              "y": 4420200
+            }
+          },
+          "note": "Yazının kendisi taşınır: nesneyi artık izlemez.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486700,
+                  "y": 4420200
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486601.85208333336,
+                  "y": 4420101.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "transact",
+          "label": "Taşı",
+          "steps": [
+            {
+              "op": "update",
+              "id": 1,
+              "patch": {
+                "p": {
+                  "x": 486610,
+                  "y": 4420105
+                }
+              }
+            },
+            {
+              "op": "update",
+              "id": 2,
+              "patch": {
+                "p": {
+                  "x": 486700,
+                  "y": 4420200
+                }
+              }
+            }
+          ],
+          "note": "Nesneyle birlikte düzenlenen yazı kuralla yazılır ve bağlı kalır.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486611.85208333336,
+                  "y": 4420106.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Taşı",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {
+                  "x": 486600,
+                  "y": 4420100
+                },
+                "label": "P7",
+                "attrs": {}
+              },
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486601.85208333336,
+                  "y": 4420101.852083334
+                },
+                "text": "P7",
+                "height": 2.778125,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {},
+                "labelOf": "$uid:nokta",
+                "labelScale": 1000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kural artık yazmayınca (ölçek dışı) yazı yerinde kalır, bağı kopar; gruptaki değişiklikler grubun sonunda izlenir (docs/adr/0175 §4)",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "a",
+            "p": {
+              "x": 486600,
+              "y": 4420100
+            },
+            "label": "P7",
+            "attrs": {}
+          },
+          "returns": 1
+        },
+        {
+          "op": "captureUid",
+          "id": 1,
+          "as": "nokta"
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "y",
+            "p": {
+              "x": 486609.2604166667,
+              "y": 4420109.260416667
+            },
+            "text": "P7",
+            "height": 13.890625,
+            "rotation": 0,
+            "align": "middleLeft",
+            "attrs": {},
+            "labelOf": "$uid:nokta",
+            "labelScale": 5000
+          },
+          "returns": 2,
+          "note": "1:5000'de yazılmış bağlı yazı (noktanın varsayılan etiketi 2 px/m'den büyük ölçeklerde)."
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "p": {
+              "x": 486610,
+              "y": 4420105
+            }
+          },
+          "note": "1:5000 noktanın etiket ölçeğinin dışında: yazı yerinde kalır, bağı kopar.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486609.2604166667,
+                  "y": 4420109.260416667
+                },
+                "text": "P7",
+                "height": 13.890625,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir"
+        },
+        {
+          "op": "beginGroup",
+          "label": "Model"
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": "P9"
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {
+            "label": "P7"
+          }
+        },
+        {
+          "op": "endGroup",
+          "note": "Grubun içindeki iki değişiklik grubun sonunda bir kez izlenir: etiket aynı kaldı ama nesne değişti, kural yazmaz.",
+          "expect": {
+            "entities": {
+              "2": {
+                "id": 2,
+                "kind": "text",
+                "layerId": "y",
+                "p": {
+                  "x": 486609.2604166667,
+                  "y": 4420109.260416667
+                },
+                "text": "P7",
+                "height": 13.890625,
+                "rotation": 0,
+                "align": "middleLeft",
+                "attrs": {}
+              }
+            },
+            "canUndo": true
+          }
+        }
+      ]
+    }
+  ]
+}

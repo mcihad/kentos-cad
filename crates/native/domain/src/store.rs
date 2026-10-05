@@ -7,7 +7,7 @@
 //! back transaction) returns to its place (docs/adr/0020). It is the drawing
 //! order and the order a saved file lists the objects in.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -52,6 +52,17 @@ pub(crate) struct Store {
     /// The places of removed slots. Slots are never given twice, so a slot
     /// that comes back is the same object, and it takes its place again.
     vacated: SlotMap<u64>,
+    /// The texts that write an object's label, by that object's persistent
+    /// id (docs/adr/0175 §4): what a step that changes the object updates.
+    links: HashMap<Uuid, BTreeSet<Slot>>,
+}
+
+/// The object a text writes the label of, when it is a linked text (docs/adr/0175 §4).
+fn link_of(stored: &Stored) -> Option<Uuid> {
+    match &*stored.entity {
+        Entity::Text(t) => t.label_of.map(|id| Uuid::from_bytes(id.0)),
+        _ => None,
+    }
 }
 
 impl Store {
@@ -65,6 +76,33 @@ impl Store {
 
     pub fn slot_of(&self, uid: Uuid) -> Option<Slot> {
         self.uids.get(&uid).copied()
+    }
+
+    /// The texts that write the label of the object with persistent id `of`, in slot order.
+    pub fn linked_to(&self, of: Uuid) -> impl Iterator<Item = Slot> + '_ {
+        self.links.get(&of).into_iter().flatten().copied()
+    }
+
+    /// Whether any text writes an object's label.
+    pub fn has_links(&self) -> bool {
+        !self.links.is_empty()
+    }
+
+    fn link(&mut self, stored: &Stored) {
+        if let Some(of) = link_of(stored) {
+            self.links.entry(of).or_default().insert(stored.slot());
+        }
+    }
+
+    fn unlink(&mut self, stored: &Stored) {
+        if let Some(of) = link_of(stored)
+            && let Some(texts) = self.links.get_mut(&of)
+        {
+            texts.remove(&stored.slot());
+            if texts.is_empty() {
+                self.links.remove(&of);
+            }
+        }
     }
 
     /// Every object in document order.
@@ -127,6 +165,10 @@ impl Store {
     /// its new layer's list when the layer changed); a new one goes last.
     pub fn put(&mut self, stored: Stored) {
         let slot = stored.slot();
+        if let Some(old) = self.items.get(&slot).map(|item| item.stored.clone()) {
+            self.unlink(&old);
+        }
+        self.link(&stored);
         let Some(item) = self.items.get_mut(&slot) else {
             let seq = self.vacated.remove(&slot).unwrap_or_else(|| {
                 self.next_seq += 1;
@@ -162,6 +204,7 @@ impl Store {
 
     pub fn remove(&mut self, slot: Slot) -> Option<Stored> {
         let item = self.items.remove(&slot)?;
+        self.unlink(&item.stored);
         self.order.remove(&item.seq);
         self.vacated.insert(slot, item.seq);
         if let Some(list) = self.layers.get_mut(item.stored.layer()) {

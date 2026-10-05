@@ -1,5 +1,6 @@
 import { op } from '../../wasm/core';
 import type { TextAlign } from '../../contracts/generated/TextAlign';
+import type { Entity } from '../entities';
 import type { Vec2 } from '../geometry';
 import type { LabelStyle } from '../layers';
 
@@ -77,3 +78,10 @@ export interface LabelWanted {
 
 /** The labels' texts at 1:`scale` in the given order (the first of overlapping labels stays); `thin` passes over a label touching an earlier one's cells. */
 export const labelTexts = op<(items: readonly LabelItem[], scale: number, thin: boolean) => LabelTexts>('labelTexts');
+
+/**
+ * One object's label as a text at 1:`scale`, as the rule writes it alone (nothing thins it): none when it writes
+ * nothing (no label, out of the style's scale range, too small). What keeps a linked text with its object
+ * (model/linkedTexts.ts, docs/adr/0175 §4); `font` is the drawing's typeface (`DrawingFont`).
+ */
+export const labelTextOf = op<(entity: Entity, label: string, style: LabelStyle, scale: number, font: string) => LabelText | undefined>('labelTextOf', true);

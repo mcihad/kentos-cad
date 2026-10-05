@@ -138,7 +138,27 @@ fn run_steps(doc: &mut Document, state: &mut State, steps: &Value, at: &str) -> 
     Ok(())
 }
 
+/// `v` with every `"$uid:name"` the persistent id `captureUid` kept as `name`
+/// (a linked text names its object by it, docs/adr/0175 §4).
+fn with_uids(v: &Value, uids: &HashMap<String, Uuid>) -> Value {
+    match v {
+        Value::String(s) => match s.strip_prefix("$uid:").and_then(|name| uids.get(name)) {
+            Some(uid) => Value::String(uid.to_string()),
+            None => v.clone(),
+        },
+        Value::Array(list) => Value::Array(list.iter().map(|x| with_uids(x, uids)).collect()),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, x)| (k.clone(), with_uids(x, uids)))
+                .collect(),
+        ),
+        _ => v.clone(),
+    }
+}
+
 fn run_step(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outcome<()> {
+    let step = &with_uids(step, &state.uids);
     let before = doc.revision();
     let caught = step.get("catch").and_then(Value::as_str);
     match (apply(doc, state, step, at), caught) {

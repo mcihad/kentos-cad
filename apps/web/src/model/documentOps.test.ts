@@ -95,6 +95,18 @@ const files = import.meta.glob<string>('../../../../fixtures/document-ops/v1/*.j
 /** The error a fixture's `throw` raises; only it can be caught by `catch`. */
 class Thrown extends Error {}
 
+/** `v` with every `"$uid:name"` the persistent id `captureUid` kept as `name` (a linked text names its object by it, docs/adr/0175 §4). */
+const withUids = (v: unknown, uids: ReadonlyMap<string, string>): unknown =>
+  typeof v === 'string'
+    ? v.startsWith('$uid:') && uids.has(v.slice(5))
+      ? uids.get(v.slice(5))
+      : v
+    : Array.isArray(v)
+      ? v.map((x) => withUids(x, uids))
+      : v && typeof v === 'object'
+        ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, withUids(x, uids)]))
+        : v;
+
 /** A patch as the web's API takes it: `null` in the file removes the field (undefined). */
 const patchOf = (patch: unknown): Record<string, unknown> => Object.fromEntries(Object.entries(patch as Record<string, unknown>).map(([k, v]) => [k, v === null ? undefined : v]));
 
@@ -113,7 +125,8 @@ class Run {
     this.doc.replaceWith(read.content);
   }
 
-  step(step: Step, where: string): void {
+  step(given: Step, where: string): void {
+    const step = withUids(given, this.uids) as Step;
     const before = this.doc.revision;
     let result: unknown;
     try {

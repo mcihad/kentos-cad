@@ -13,7 +13,8 @@ publish.workspace = true
 # uuid gives new objects their persistent UUIDv7 (docs/adr/0014).
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
-uuid = { workspace = true }
-
-[dev-dependencies]
+# Linked texts follow their objects by the shared label rule (docs/adr/0175 §4);
+# the core reads an object from the contract's JSON.
+kentos-geometry-core = { path = "../../shared/geometry-core" }
 serde_json = { workspace = true }
+uuid = { workspace = true }

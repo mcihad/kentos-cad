@@ -343,8 +343,10 @@ impl Document {
         }
     }
 
-    /// A finished step: into the open group, or onto the undo history as a new edit.
-    fn commit(&mut self, step: Step) {
+    /// A finished step: into the open group, or onto the undo history as a
+    /// new edit, with what keeps its linked texts with their objects
+    /// (linked.rs, docs/adr/0175 §4).
+    fn commit(&mut self, mut step: Step) {
         if let Some(open) = &mut self.history.group {
             open.step.ops.extend(step.ops);
             // The drawing changed all the same, and what shows it follows each
@@ -354,6 +356,8 @@ impl Document {
             self.mark_changed();
             return;
         }
+        let follow = self.follow_links(&step.ops);
+        step.ops.extend(follow);
         self.history.undo.push_back(step);
         if self.history.undo.len() > UNDO_LIMIT
             && let Some(oldest) = self.history.undo.pop_front()

@@ -1197,10 +1197,10 @@ mod tests {
     }
 
     /// The desktop's default label styles are the web's `DEFAULT_LABELS`
-    /// (apps/web/src/viewport/storeRecords.ts), read from its source.
+    /// (apps/web/src/model/labelDefaults.ts), read from its source.
     #[test]
     fn the_default_labels_are_the_webs() {
-        let source = include_str!("../../web/src/viewport/storeRecords.ts");
+        let source = include_str!("../../web/src/model/labelDefaults.ts");
         let start = source.find("DEFAULT_LABELS").expect("the web's defaults");
         let body = &source[start..];
         let body = &body[body.find('{').expect("an object") + 1..body.find("};").expect("its end")];

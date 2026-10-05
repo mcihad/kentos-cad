@@ -700,43 +700,9 @@ pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
 pub const LABELLED_KINDS: [&str; 5] = ["polygon", "circle", "point", "polyline", "line"];
 
 /// The label style of an object whose layer has none: the web's
-/// `DEFAULT_LABELS` (apps/web/src/viewport/storeRecords.ts); the desktop
-/// app's tests hold the two to each other (labels.rs).
-pub fn default_label(kind: &str) -> Option<LabelStyle> {
-    let style = |placement, size| LabelStyle {
-        placement,
-        size,
-        grow: None,
-        max_size: None,
-        weight: None,
-        template: None,
-        min_feature_px: None,
-        min_scale: None,
-        max_scale: None,
-        ink: None,
-    };
-    Some(match kind {
-        "polygon" => LabelStyle {
-            grow: Some(1.0),
-            max_size: Some(14.0),
-            min_feature_px: Some(26.0),
-            ..style(LabelPlacement::Center, 10.0)
-        },
-        "circle" => LabelStyle {
-            min_feature_px: Some(26.0),
-            ..style(LabelPlacement::Center, 10.0)
-        },
-        "point" => LabelStyle {
-            min_scale: Some(2.0),
-            ..style(LabelPlacement::Beside, 10.5)
-        },
-        "polyline" | "line" => LabelStyle {
-            min_scale: Some(1.6),
-            ..style(LabelPlacement::Along, 10.0)
-        },
-        _ => return None,
-    })
-}
+/// `DEFAULT_LABELS`, in the contract (`kentos_contracts::default_label`) so
+/// the document's linked texts follow the same (docs/adr/0175 §4).
+pub use kentos_contracts::default_label;
 
 /// What of a label style decides whether and where a label is drawn (the web's `labelRule`).
 fn label_rule(style: &LabelStyle) -> LabelRule {

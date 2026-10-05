@@ -34,6 +34,7 @@ mod hash;
 mod history;
 mod identity;
 mod layers;
+mod linked;
 mod snapshot;
 mod store;
 

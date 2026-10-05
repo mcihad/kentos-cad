@@ -13,12 +13,12 @@
 use std::collections::HashSet;
 
 use crate::api::Op;
-use crate::entity::{Shape, entity_anchor, entity_vertices, label_part};
+use crate::entity::{Entity, Shape, entity_anchor, entity_bounds_in, entity_vertices, label_part};
 use crate::geometry::Bounds;
 use crate::jsmath::{PI, atan2, cos, js_min, sin};
 use crate::op;
-use crate::store::labels::Placement;
-use crate::text::TextAlign;
+use crate::store::labels::{LabelLook, Placement};
+use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
 /// CSS px per metre of paper: 96 px an inch.
@@ -256,12 +256,72 @@ pub fn label_texts(items: &[LabelItem], scale: f64, thin: bool) -> LabelTexts {
     out
 }
 
-pub(crate) static OPS: &[Op] =
-    &[op!("labelTexts", |items: Vec<LabelItem>,
-                         scale: f64,
-                         thin: bool| {
-        label_texts(&items, scale, thin)
-    })];
+/// The label an object of `shape` with box `bounds` writes by style `look`:
+/// its place by the placement (`spot`), its text by the template, the text's
+/// width in `font`; none for an empty label or a shape with no place.
+pub fn label_item(
+    shape: &Shape,
+    bounds: &Bounds,
+    label: &str,
+    look: &LabelLook,
+    font: Font,
+) -> Option<LabelItem> {
+    if label.is_empty() {
+        return None;
+    }
+    let (p, q) = match spot(shape, bounds, look.placement)? {
+        Spot::At(p) => (p, None),
+        Spot::Between(p, q) => (p, Some(q)),
+    };
+    let text = fill_template(look.template.as_deref(), label);
+    let em = width_em(&text, font);
+    Some(LabelItem {
+        placement: look.placement,
+        p,
+        q,
+        feature: js_min(bounds.max_x - bounds.min_x, bounds.max_y - bounds.min_y),
+        text,
+        em,
+        size: look.size,
+        grow: look.grow,
+        max_size: look.max_size,
+        min_scale: look.min_scale,
+        max_scale: look.max_scale,
+        min_feature_px: look.min_feature_px,
+    })
+}
+
+/// One object's label as a text at 1:`scale`, thinned with nothing: what a
+/// linked text keeps writing as its object changes (docs/adr/0175 §4). The
+/// box is the object's own (the store's adds an insert's placed pieces).
+/// None when the rule writes nothing: no label, no place, out of the
+/// style's scale range, smaller than its smallest feature, of no size.
+pub fn label_text_of(
+    shape: &Shape,
+    label: &str,
+    look: &LabelLook,
+    scale: f64,
+    font: Font,
+) -> Option<LabelText> {
+    let bounds = entity_bounds_in(shape, font);
+    let item = label_item(shape, &bounds, label, look, font)?;
+    label_texts(&[item], scale, false).texts.into_iter().next()
+}
+
+pub(crate) static OPS: &[Op] = &[
+    op!("labelTexts", |items: Vec<LabelItem>,
+                       scale: f64,
+                       thin: bool| label_texts(
+        &items, scale, thin
+    )),
+    op!("labelTextOf", |entity: Entity,
+                        label: String,
+                        style: LabelLook,
+                        scale: f64,
+                        font: String| {
+        label_text_of(&entity.shape, &label, &style, scale, Font::from_id(&font))
+    }),
+];
 
 #[cfg(test)]
 mod tests {
@@ -311,6 +371,48 @@ mod tests {
             spot(&line, &b, Placement::Corner),
             Some(Spot::At(Vec2::new(0.0, 10.0)))
         );
+    }
+
+    /// A linked text's rule is one object's label, thinned with nothing:
+    /// the same text the store writes for it alone (docs/adr/0175 §4).
+    #[test]
+    fn one_objects_label_is_the_stores_for_it_alone() {
+        let parcel = Shape::Polygon {
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(30.0, 0.0),
+                Vec2::new(30.0, 20.0),
+                Vec2::new(0.0, 20.0),
+            ],
+            bulges: None,
+            holes: None,
+            parts: None,
+        };
+        let look = LabelLook {
+            placement: Placement::Corner,
+            size: 10.0,
+            grow: Some(1.0),
+            max_size: Some(14.0),
+            template: Some("Ada {label}".into()),
+            min_feature_px: Some(26.0),
+            min_scale: None,
+            max_scale: None,
+        };
+        let font = Font::from_id("overpass");
+        let mut store = crate::store::Store::new();
+        store.set_font(font);
+        store.put(1.0, "k", true, parcel.clone());
+        let wanted = [crate::store::labels::LabelWanted {
+            id: 1.0,
+            label: "12".into(),
+            style: look.clone(),
+        }];
+        let from_store = store.label_texts(&wanted, 1000.0, true);
+        let alone = label_text_of(&parcel, "12", &look, 1000.0, font).expect("a text");
+        assert_eq!(from_store.texts, [LabelText { item: 0, ..alone }]);
+        // No label, and too small at 1:10000 (20 m × 0.38 px/m under 26 px): none.
+        assert_eq!(label_text_of(&parcel, "", &look, 1000.0, font), None);
+        assert_eq!(label_text_of(&parcel, "12", &look, 10000.0, font), None);
     }
 
     #[test]

@@ -14,10 +14,7 @@ use crate::geom::leader::note_place;
 use crate::geometry::Bounds;
 use crate::jsmath::js_min;
 use crate::ops::grips::{entity_grips, mid_grip_segment};
-use crate::ops::label_text::{
-    LabelItem, LabelTexts, Spot, fill_template, label_texts as write_labels, spot,
-};
-use crate::text::width_em;
+use crate::ops::label_text::{LabelTexts, Spot, label_item, label_texts as write_labels, spot};
 
 /// Where a label sits (`LabelStyle.placement`).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -442,28 +439,11 @@ impl Store {
             ) {
                 continue;
             }
-            let b = &it.bounds;
-            let (p, q) = match spot(&it.shape, b, w.style.placement) {
-                Some(Spot::At(p)) => (p, None),
-                Some(Spot::Between(p, q)) => (p, Some(q)),
-                None => continue,
+            let Some(item) = label_item(&it.shape, &it.bounds, &w.label, &w.style, self.font)
+            else {
+                continue;
             };
-            let text = fill_template(w.style.template.as_deref(), &w.label);
-            let em = width_em(&text, self.font);
-            items.push(LabelItem {
-                placement: w.style.placement,
-                p,
-                q,
-                feature: js_min(b.max_x - b.min_x, b.max_y - b.min_y),
-                text,
-                em,
-                size: w.style.size,
-                grow: w.style.grow,
-                max_size: w.style.max_size,
-                min_scale: w.style.min_scale,
-                max_scale: w.style.max_scale,
-                min_feature_px: w.style.min_feature_px,
-            });
+            items.push(item);
             from.push(i);
         }
         let mut out = write_labels(&items, scale, thin);
@@ -540,6 +520,8 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::label_text::LabelItem;
+    use crate::text::width_em;
 
     #[test]
     fn places_labels_by_the_layer_rule_or_the_kinds_default() {

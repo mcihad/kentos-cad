@@ -87,10 +87,12 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
 - **Güncelleme, iki belgede kayıttan hemen önce:** bir adım (hangi komut, araç, Python ya da MCP yaptıysa) bağlı bir yazının nesnesini
   değiştirdiyse (geometrisi, etiketi ya da katmanı), adım kaydedilmeden yazı §1'in kuralıyla yeniden yazılır ve aynı adıma girer: metni ve
   yeri nesnenin şimdiki etiketinden, katmanının şimdiki etiket stilinden (yoksa türünün varsayılanı), projenin yazı tipinden ve
-  `labelScale`'den; inceltme yoktur (her yazı kendi nesnesini izler). Kural tek nesnelik çekirdek işlevidir (`label_text_of`): nesnenin
-  biçimi, etiketi, stili, ölçek ve yazı tipi alır, yazıyı ya da neden yazmadığını verir. Belge kuralını (web `CadDocument`, masaüstü
-  `kentos_domain::Document`) ortak belge fixture'ları (`fixtures/document-ops/v1`) tutar; geri alma ve yineleme yazıyı nesneyle birlikte
-  döndürür.
+  `labelScale`'den; inceltme yoktur (her yazı kendi nesnesini izler). Kural tek nesnelik çekirdek işlevidir (`label_text_of`, web'e
+  `labelTextOf` işlemiyle): nesnenin biçimi, etiketi, stili, ölçek ve yazı tipini alır, yazıyı verir; yazmıyorsa hiçbir şey vermez (bağ
+  kopar). Belge kuralını (web `CadDocument`'in `model/linkedTexts.ts`'i, masaüstü `kentos_domain::Document`'in `linked.rs`'i; iki belge bağlı
+  yazıları nesnenin kalıcı kimliğiyle dizinler) ortak belge fixture'ları (`fixtures/document-ops/v1/linked-texts.json`) tutar; geri alma ve
+  yineleme yazıyı nesneyle birlikte döndürür. Gruptaki (bir modelin, uzun bir işin) değişiklikler grubun sonunda izlenir; başka bir
+  düzenleyiciden gelen değişiklik izlenmez (onu yapan istemci izlemiştir).
 - **Bağın kopması:** nesnenin etiketi boşalır ya da kural onu artık yazmazsa (ölçek dışı, küçük) yazı yerinde kalır ve bağı kopar (iki alan
   silinir), aynı adımda; yazının kendisi düzenlenince (yeri, metni, boyu, dönüşü, hizası) bağı kopar: elle yerleştirilen yazı nesneyi izlemez.
 - **Silme:** nesnesi silinince bağlı yazı da aynı adımda silinir. Patlat ve Parçalara ayır yazıyı nesnenin yerinde kalan parçasına bağlı

@@ -9,6 +9,7 @@ import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
 import type { LayerInit, LayerNode, LayerStyle } from './layers';
 import { LayerStore } from './layers';
+import { followLinks } from './linkedTexts';
 import { sameJson } from './sameJson';
 import type { ProjectStyles } from './style';
 
@@ -168,6 +169,11 @@ export class CadDocument {
    * names objects by persistent id, the rest of the app by slot.
    */
   private uids = new Map<string, number>();
+  /**
+   * The texts that write an object's label, by that object's persistent id (docs/adr/0175 §4): what a step that
+   * changes the object updates (model/linkedTexts.ts).
+   */
+  private links = new Map<string, Set<number>>();
   /** The persistent id of a new object (UUIDv7; tests give their own maker). */
   private readonly newUid: () => string;
   /**
@@ -674,6 +680,8 @@ export class CadDocument {
     const touched = new Set([...this.entities.values()].map((e) => e.layerId));
     this.entities = new Map(entities.map((e) => [e.id, e]));
     this.uids = new Map(entities.map((e) => [e.uid, e.id]));
+    this.links.clear();
+    for (const e of entities) this.link(e);
     this.places = new Map(entities.map((e, i) => [e.id, i + 1]));
     this.nextPlace = entities.length + 1;
     this.tailPlace = entities.length;
@@ -912,10 +920,27 @@ export class CadDocument {
     }
   }
 
+  /**
+   * A finished step: into the open group, or onto the undo history as a new edit, with what keeps its linked texts
+   * with their objects (model/linkedTexts.ts, docs/adr/0175 §4).
+   */
   private commit(tx: Transaction): void {
     if (this.group && tx !== this.group) {
       for (const op of tx.ops) this.group.ops.push(op);
       return;
+    }
+    if (this.links.size) {
+      const follow = followLinks(tx.ops.filter(isObjectOp), {
+        get: (id) => this.entities.get(id),
+        byUid: (uid) => this.byUid(uid),
+        linkedTo: (uid) => this.links.get(uid) ?? [],
+        layerLabel: (layerId) => this.layers.get(layerId)?.style.label,
+        font: this.settings.drawingFont.value,
+      });
+      if (follow.length) {
+        for (const op of follow) tx.ops.push(op);
+        this.applyAll(follow);
+      }
     }
     this.undoStack.push(tx);
     if (this.undoStack.length > 200) this.undoStack.shift();
@@ -994,6 +1019,8 @@ export class CadDocument {
     this.entities.set(e.id, e);
     if (prev && prev.uid !== e.uid) this.uids.delete(prev.uid);
     this.uids.set(e.uid, e.id);
+    if (prev) this.unlink(prev);
+    this.link(e);
     if (prev && prev.layerId !== e.layerId) {
       this.layerIndex.get(prev.layerId)?.delete(e.id);
       this.reordered.add(e.layerId);
@@ -1007,7 +1034,22 @@ export class CadDocument {
     if (!e) return;
     this.entities.delete(id);
     this.uids.delete(e.uid);
+    this.unlink(e);
     this.layerIndex.get(e.layerId)?.delete(id);
+  }
+
+  /** Notes a linked text under the object it writes the label of. */
+  private link(e: DrawingEntity): void {
+    if (e.kind !== 'text' || e.labelOf === undefined) return;
+    let texts = this.links.get(e.labelOf);
+    if (!texts) this.links.set(e.labelOf, (texts = new Set()));
+    texts.add(e.id);
+  }
+
+  private unlink(e: DrawingEntity): void {
+    if (e.kind !== 'text' || e.labelOf === undefined) return;
+    const texts = this.links.get(e.labelOf);
+    if (texts?.delete(e.id) && !texts.size) this.links.delete(e.labelOf);
   }
 
   /**

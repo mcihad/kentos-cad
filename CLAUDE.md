@@ -828,7 +828,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   başvuru `label_text_cases.py`; paftayla karşılaştırma `mapLabels.test.ts`; çizimin şablonu iki platformda çekirdeğin kuralıyla) ve 2. adım
   (`cad.entities.create`'in `labels` işlemi, adım “Etiketleri yazıya çevir”) ve 3. adım (araç iki platformda: web `labelsToTextTool.ts`,
   masaüstü `kentos_interaction::labels_to_text`; önizlemede soluk yazılar `drawTextGhost`, `labels::ghost`; standart yazı katmanı türüne göre adıyla aynı
-  adımda; ortak iz `labels-to-text.json`) tamam; sıradaki 4. adım (nesneye bağlı yazı, `.kcad` şema 18). 4 Ekim: derleme ve test süreleri
+  adımda; ortak iz `labels-to-text.json`) tamam; 4. adım (nesneye bağlı yazı) üç parçada: 4a (yazının `labelOf` ve `labelScale`'i, `.kcad`
+  şema 18) ve 4b (çekirdeğin `label_text_of`'u, iki belgede kayıt öncesi izleme: web `model/linkedTexts.ts`, masaüstü `kentos_domain` `linked.rs`;
+  ortak belge durumları `linked-texts.json`) tamam; sıradaki 4c (araçta Nesneye bağlı, çizimde etiketin yerini alma, Öznitelikler, dışa
+  aktarma). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden
