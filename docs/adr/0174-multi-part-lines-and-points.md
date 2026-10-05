@@ -131,7 +131,12 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
    MultiPoint ve MultiLineString'i taşır; düz ve kotsuz çok parçalı çoklu çizginin kaynağı MultiLineString'i, kotsuz çok noktalının
    MultiPoint'idir, öbürlerinin kaynağı `cad_definition` (izdüşüm yine her parça); çoklu çizginin parçası en az iki köşelidir ve
    adası olamaz.
-4. Komutlar: `partsJoin` ve `partsSplit`'in yeni türleri; ortak durumlar.
+4. Komutlar: `partsJoin` ve `partsSplit`'in yeni türleri; ortak durumlar. Bitti (5 Ekim): Parçaları birleştir çizgi ve çoklu
+   çizgileri ilkinin yerinde tek, çok parçalı çoklu çizgi yapar (çizgi `replace` ile çoklu çizgi olur, uç kotları parçasının kotları),
+   noktaları tek, çok noktalı nesne; türler karışıksa ya da türünden tek nesne varsa söyler; Parçalara ayır çok parçalı çoklu çizgiyi ve
+   çok noktalı nesneyi de ayırır (alanlardan sonra, seçim sırasıyla; iki noktalı parça çoklu çizgi kalır). Masaüstünde
+   `kentos_interaction::line_parts`, web'de `tools/lineParts.ts`; `cad.entities.edit`'in ortak durumları (birleştirme, ayırma, Kot ver,
+   parçanın retleri) bağımsız `edit_command_cases.py`'den; ipuçları ve adımlar türleri sayar.
 5. Arayüz: Öznitelikler, üzerine gelme kartı, köşe tablosu; iki platformda, resimleriyle.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

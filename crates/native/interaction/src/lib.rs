@@ -136,6 +136,7 @@ mod junctions;
 pub mod leader;
 pub mod lengthen;
 pub mod line;
+mod line_parts;
 pub mod locks;
 pub mod look;
 mod log;

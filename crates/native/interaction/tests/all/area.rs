@@ -417,7 +417,9 @@ fn parts_join_in_the_first_ones_place_and_split_back() {
     b.start("partsSplit");
     assert_eq!(
         b.last_text(),
-        Some("Parçalarına ayrılacak çok parçalı bir alan seçin.")
+        Some(
+            "Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne."
+        )
     );
     select(&mut b, &[2]);
     b.start("partsJoin");
@@ -426,5 +428,78 @@ fn parts_join_in_the_first_ones_place_and_split_back() {
         Some(
             "Parçaları birleştirmek için en az iki alan seçin (kapalı alan, daire, elips ya da kapalı eğri)."
         )
+    );
+}
+
+/// Parçaları birleştir and Parçalara ayır on lines and points (docs/adr/0174
+/// §4), as the web's: lines 4 and 10 one polyline in line 4's place, a
+/// polyline's part of two points one again when split; points one object,
+/// each with its elevation; kinds mixed refused.
+#[test]
+fn lines_and_points_join_and_come_apart() {
+    let mut b = bench();
+    let count = b.doc.entities().count();
+    select(&mut b, &[4, 10]);
+    b.start("partsJoin");
+    assert!(!b.session.is_running(), "it acts and leaves");
+    assert_eq!(b.selected(), vec![4]);
+    assert!(b.doc.get(Slot(10)).is_none());
+    assert_eq!(b.doc.entities().count(), count - 1);
+    let Some(Entity::Polyline(joined)) = b.doc.get(Slot(4)) else {
+        panic!("a polyline")
+    };
+    assert_eq!(joined.pts.len(), 2);
+    assert_eq!(joined.parts.as_ref().map(Vec::len), Some(1));
+    // 10 m and 14 m.
+    assert_eq!(
+        b.last_text(),
+        Some("2 çizgi tek çoklu çizgide birleşti: 2 parça, toplam 24.000 m.")
+    );
+    select(&mut b, &[4]);
+    b.start("partsSplit");
+    let made = b.selected();
+    assert_eq!((made.len(), made[0]), (2, 4));
+    assert!(matches!(b.doc.get(Slot(made[1])), Some(Entity::Polyline(p)) if p.pts.len() == 2));
+    assert_eq!(
+        b.last_text(),
+        Some("1 nesne parçalarına ayrıldı (2 nesne).")
+    );
+    assert_eq!(undo(&mut b).as_deref(), Some("Parçalara ayır"));
+    assert_eq!(undo(&mut b).as_deref(), Some("Parçaları birleştir"));
+    assert!(matches!(b.doc.get(Slot(4)), Some(Entity::Line(_))));
+    // Points, each with its elevation.
+    let p = b.add_point_z("cizim", [0.0, 50.0], 50.0);
+    let q = b.add_point_z("cizim", [5.0, 50.0], 0.0);
+    select(&mut b, &[p.0, q.0]);
+    b.start("partsJoin");
+    let Some(Entity::Point(joined)) = b.doc.get(p) else {
+        panic!("a point")
+    };
+    assert_eq!(joined.z, Some(50.0));
+    assert_eq!(
+        joined
+            .parts
+            .as_ref()
+            .map(|ps| ps.iter().map(|q| q.z).collect::<Vec<_>>()),
+        Some(vec![Some(0.0)])
+    );
+    assert_eq!(
+        b.last_text(),
+        Some("2 nokta tek nesnede birleşti: 2 nokta.")
+    );
+    // Kinds mixed are refused; one of a kind is not enough.
+    select(&mut b, &[1, 5]);
+    b.start("partsJoin");
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Parçaları birleştir aynı türden nesneleri birleştirir: alanları, çizgileri ya da noktaları."
+        )
+    );
+    select(&mut b, &[5]);
+    b.start("partsJoin");
+    assert_eq!(
+        b.last_text(),
+        Some("Parçaları birleştirmek için en az iki çizgi ya da çoklu çizgi seçin.")
     );
 }

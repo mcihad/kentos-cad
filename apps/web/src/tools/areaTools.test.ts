@@ -292,7 +292,63 @@ describe('Parçalara ayır', () => {
     const { h, p2, run } = scene();
     const revision = h.doc.revision;
     run(new PartsSplitTool(h.ctx), p2);
-    expect(h.said().at(-1)).toBe('Parçalarına ayrılacak çok parçalı bir alan seçin.');
+    expect(h.said().at(-1)).toBe('Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne.');
+    expect(h.doc.revision).toBe(revision);
+  });
+});
+
+describe('Parçaları birleştir and Parçalara ayır on lines and points (docs/adr/0174)', () => {
+  it('makes a line and a polyline one multi-part polyline in the line’s place, and back', () => {
+    const { h, run, now, selected } = scene();
+    const line = h.add({ kind: 'line', a: { x: 0, y: 100 }, b: { x: 10, y: 100 }, za: 100, zb: 101.5, attrs: { Ad: 'Şerit' }, label: 'Ş1' });
+    const path = h.add({ kind: 'polyline', pts: [{ x: 20, y: 100 }, { x: 30, y: 100 }, { x: 30, y: 110 }], zs: [102, null, 104], attrs: {} }) as PolylineEntity;
+    const count = h.doc.size;
+    run(new PartsJoinTool(h.ctx), line, path);
+    const joined = now(line);
+    expect(joined).toMatchObject({ kind: 'polyline', pts: [{ x: 0, y: 100 }, { x: 10, y: 100 }], zs: [100, 101.5], attrs: { Ad: 'Şerit' }, label: 'Ş1' });
+    expect(joined.parts).toEqual([{ pts: path.pts, zs: [102, null, 104] }]);
+    expect(h.doc.get(path.id)).toBeUndefined();
+    expect(h.doc.size).toBe(count - 1);
+    expect(h.said().at(-1)).toBe('2 çizgi tek çoklu çizgide birleşti: 2 parça, toplam 30.000 m.');
+    run(new PartsSplitTool(h.ctx), joined);
+    const made = selected();
+    expect(made).toHaveLength(2);
+    expect(made[0]).toMatchObject({ id: line.id, kind: 'polyline', pts: [{ x: 0, y: 100 }, { x: 10, y: 100 }] });
+    expect(made[0].parts).toBeUndefined();
+    expect(made[1]).toMatchObject({ kind: 'polyline', pts: path.pts, zs: [102, null, 104], attrs: { Ad: 'Şerit' }, label: 'Ş1' });
+    expect(h.said().at(-1)).toBe('1 nesne parçalarına ayrıldı (2 nesne).');
+    expect(h.doc.undo()).toBe('Parçalara ayır');
+    expect(h.doc.undo()).toBe('Parçaları birleştir');
+    expect(h.doc.get(line.id)?.kind).toBe('line');
+  });
+
+  it('makes points one multi-point object, each with its elevation, and back', () => {
+    const { h, run, selected } = scene();
+    const a = h.add({ kind: 'point', p: { x: 0, y: 200 }, z: 50, attrs: { Kod: 'K' }, label: 'N1' });
+    const b = h.add({ kind: 'point', p: { x: 5, y: 200 }, attrs: {} });
+    const c = h.add({ kind: 'point', p: { x: 9, y: 200 }, z: 0, attrs: {} });
+    run(new PartsJoinTool(h.ctx), a, b, c);
+    const joined = h.doc.get(a.id);
+    expect(joined).toMatchObject({ kind: 'point', p: { x: 0, y: 200 }, z: 50, parts: [{ p: { x: 5, y: 200 } }, { p: { x: 9, y: 200 }, z: 0 }] });
+    expect(h.said().at(-1)).toBe('3 nokta tek nesnede birleşti: 3 nokta.');
+    run(new PartsSplitTool(h.ctx), joined!);
+    expect(selected().map((e) => (e as unknown as { z?: number }).z)).toEqual([50, undefined, 0]);
+    expect(h.said().at(-1)).toBe('1 nesne parçalarına ayrıldı (3 nesne).');
+  });
+
+  it('refuses kinds mixed, and asks for two of a kind', () => {
+    const { h, p1, run } = scene();
+    const line = h.add({ kind: 'line', a: { x: 0, y: 100 }, b: { x: 10, y: 100 }, attrs: {} });
+    const point = h.add({ kind: 'point', p: { x: 0, y: 200 }, attrs: {} });
+    const revision = h.doc.revision;
+    run(new PartsJoinTool(h.ctx), p1, line);
+    expect(h.said().at(-1)).toBe('Parçaları birleştir aynı türden nesneleri birleştirir: alanları, çizgileri ya da noktaları.');
+    run(new PartsJoinTool(h.ctx), line, point);
+    expect(h.said().at(-1)).toBe('Parçaları birleştir aynı türden nesneleri birleştirir: alanları, çizgileri ya da noktaları.');
+    run(new PartsJoinTool(h.ctx), line);
+    expect(h.said().at(-1)).toBe('Parçaları birleştirmek için en az iki çizgi ya da çoklu çizgi seçin.');
+    run(new PartsJoinTool(h.ctx), point);
+    expect(h.said().at(-1)).toBe('Parçaları birleştirmek için en az iki nokta seçin.');
     expect(h.doc.revision).toBe(revision);
   });
 });

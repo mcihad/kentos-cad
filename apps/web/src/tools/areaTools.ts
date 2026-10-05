@@ -14,6 +14,7 @@ import { SelectionActionTool } from './editTools';
 import { SelectionFirstTool } from './modifyTools';
 import { drawArea, drawTag, strokeGeometry, strokePath, tint } from './preview';
 import type { Tool, ToolPointer } from './Tool';
+import { joinLines, joinPoints, kindsOf, MIXED, ONE_LINE, ONE_POINT, present, splitOf } from './lineParts';
 import { drawTracking } from './tracking';
 import { VisibleFaces } from './visibleFaces';
 
@@ -314,6 +315,13 @@ export class PartsJoinTool extends SelectionActionTool {
 
   protected run(targets: Entity[]): void {
     const { log, selection, format } = this.ctx;
+    // Lines and points join as their own kind, kinds mixed are refused (docs/adr/0174 §4).
+    const kinds = kindsOf(targets);
+    if (present(kinds) > 1) return log.warn(MIXED);
+    if (kinds.lines.length === 1) return log.warn(ONE_LINE);
+    if (kinds.points.length === 1) return log.warn(ONE_POINT);
+    if (kinds.lines.length > 1) return joinLines(this.ctx, kinds.lines);
+    if (kinds.points.length > 1) return joinPoints(this.ctx, kinds.points);
     const list = wholesOf(targets);
     if (list.length < 2) return log.warn(`Parçaları birleştirmek için en az iki alan seçin (${AREA_KINDS}).`);
     const all = list.flatMap((x) => x.parts);
@@ -349,7 +357,8 @@ export class PartsJoinTool extends SelectionActionTool {
 
 /**
  * Parçalara ayır: each multi-part area becomes an area a part; the first part keeps the area's slot and persistent
- * id, the others are new with its layer and data, each part as it was, elevations too (docs/adr/0143).
+ * id, the others are new with its layer and data, each part as it was, elevations too (docs/adr/0143); a multi-part
+ * polyline and a multi-point object likewise, after the areas (docs/adr/0174).
  */
 export class PartsSplitTool extends SelectionActionTool {
   readonly id = 'partsSplit';
@@ -358,21 +367,33 @@ export class PartsSplitTool extends SelectionActionTool {
   protected run(targets: Entity[]): void {
     const { log, selection } = this.ctx;
     const areas = targets.filter((e): e is PolylineEntity => e.kind === 'polygon' && !!e.parts?.length);
-    if (!areas.length) return log.warn('Parçalarına ayrılacak çok parçalı bir alan seçin.');
+    const others = targets.flatMap((e) => {
+      const split = splitOf(this.ctx, e);
+      return split ? [{ e, ...split }] : [];
+    });
+    if (!areas.length && !others.length) return log.warn('Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne.');
     const changes: EntityEdit[] = [];
+    const each: { id: number; made: number }[] = [];
     for (const e of areas) {
       const uid = uidOf(this.ctx, e);
       changes.push({ kind: 'update', uid, geometry: partGeometry(ownPart(e)) });
       for (const part of e.parts ?? []) changes.push({ kind: 'add', from: uid, geometry: partGeometry(part), keepData: true });
+      each.push({ id: e.id, made: e.parts?.length ?? 0 });
+    }
+    // The lines' and the points' after the areas', in the selection's order.
+    for (const o of others) {
+      changes.push(...o.changes);
+      each.push({ id: o.e.id, made: o.made });
     }
     const out = writeEdit(this.ctx, 'partsSplit', changes);
     if (!out) return;
-    // Each area followed by the objects made from it.
+    // Each object followed by the objects made from it.
     const made = createdIds(this.ctx, out);
     let k = 0;
-    const created = areas.flatMap((e) => [e.id, ...made.slice(k, (k += e.parts?.length ?? 0))]);
+    const created = each.flatMap((x) => [x.id, ...made.slice(k, (k += x.made))]);
     selection.set(created);
-    log.success(`${areas.length} alan parçalarına ayrıldı (${created.length} alan).`);
+    const noun = others.length ? 'nesne' : 'alan';
+    log.success(`${each.length} ${noun} parçalarına ayrıldı (${created.length} ${noun}).`);
   }
 }
 

@@ -820,8 +820,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   miras parçalar düşer) ve 2. adım (hesap: çekirdeğin `Shape`'i ve `area_parts`'ı üç türde, deponun `MARKERS` kaydı ve paket türleri 16, 17,
   düzenlemeler ve `MULTI_PART_REFUSED` retleri, `EntityGeometry`'nin `parts`'ı, kotlar, iki çizici) ve 3. adım (GeoJSON'ın MultiLineString ve
   MultiPoint'i, Shapefile'ın PolyLine ve MultiPoint kaydı tek nesne, `tools/formats/gis.py` de; GeoJSON'a ve DXF'e yazım, `export/cizgiler`,
-  `dxf-write/parts`; EWKB'nin ve sunucunun MultiLineString ve MultiPoint'i) tamam; sıradaki 4. adım (`partsJoin` ve `partsSplit`'in çizgi
-  ve noktası). 4 Ekim: derleme ve test süreleri
+  `dxf-write/parts`; EWKB'nin ve sunucunun MultiLineString ve MultiPoint'i) ve 4. adım (`partsJoin` ve `partsSplit`'in çizgi ve noktası:
+  `kentos_interaction::line_parts`, web `tools/lineParts.ts`; ortak komut durumları) tamam; sıradaki 5. adım (Öznitelikler, üzerine gelme
+  kartı, köşe tablosu; resimleriyle). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

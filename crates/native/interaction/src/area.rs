@@ -20,6 +20,7 @@
 //!   the first one's place, overlapping ones merged into one part, the parts
 //!   from the largest to the smallest; Parçalara ayır: a multi-part area
 //!   becomes an area a part, the first keeping its place (docs/adr/0143).
+//!   Lines and points join and come apart likewise (`line_parts`, docs/adr/0174).
 //!
 //! Birleştir, kesiştir and çıkar take a multi-part area whole, as the union
 //! of its parts; with Tek nesne (T) their result is one multi-part area
@@ -52,6 +53,7 @@ use kentos_native_application::geometry::{edit_geometry, shape};
 use crate::Vec2;
 use crate::edge::{self, Outline};
 use crate::format::Format;
+use crate::line_parts;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::prompt::{Prompt, upper_tr};
@@ -346,6 +348,19 @@ impl AreaAction {
     /// no two overlap, every part is kept as it was, its elevations too;
     /// else the overlapping ones merge into one part (docs/adr/0143).
     fn parts_join_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
+        // Lines and points join as their own kind, kinds mixed are refused (docs/adr/0174 §4).
+        let kinds = line_parts::kinds(targets, cx.doc);
+        if kinds.present() > 1 {
+            cx.say(Level::Warn, line_parts::MIXED);
+            return;
+        }
+        match (kinds.lines.len(), kinds.points.len()) {
+            (1, _) => return cx.say(Level::Warn, line_parts::ONE_LINE),
+            (_, 1) => return cx.say(Level::Warn, line_parts::ONE_POINT),
+            (n, _) if n > 1 => return line_parts::join_lines(&kinds.lines, cx),
+            (_, n) if n > 1 => return line_parts::join_points(&kinds.points, cx),
+            _ => {}
+        }
         let list = wholes_of(targets, cx.doc);
         if list.len() < 2 {
             cx.say(
@@ -411,7 +426,8 @@ impl AreaAction {
 
     /// Parçalara ayır: each multi-part area an area a part; the first keeps
     /// its place and id, the others are new with its data, each part as it
-    /// was (docs/adr/0143).
+    /// was (docs/adr/0143); a multi-part polyline and a multi-point object
+    /// likewise (docs/adr/0174).
     fn parts_split_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
         let doc = &*cx.doc;
         let areas: Vec<(Slot, &kentos_contracts::PathEntity)> = targets
@@ -423,10 +439,14 @@ impl AreaAction {
                 _ => None,
             })
             .collect();
-        if areas.is_empty() {
+        let others: Vec<(Slot, (Vec<EntityEdit>, usize))> = targets
+            .iter()
+            .filter_map(|&s| Some((s, line_parts::split(doc.get(s)?, &edge::uid(doc, s))?)))
+            .collect();
+        if areas.is_empty() && others.is_empty() {
             cx.say(
                 Level::Warn,
-                "Parçalarına ayrılacak çok parçalı bir alan seçin.",
+                "Parçalarına ayrılacak çok parçalı bir nesne seçin: alan, çoklu çizgi ya da çok noktalı nesne.",
             );
             return;
         }
@@ -460,16 +480,23 @@ impl AreaAction {
             }));
             each.push((*slot, p.parts.as_ref().map_or(0, Vec::len)));
         }
-        let n = areas.len();
+        // The lines' and the points' after the areas', in the selection's order.
+        let only_areas = others.is_empty();
+        for (slot, (more, n)) in others {
+            changes.extend(more);
+            each.push((slot, n));
+        }
+        let n = each.len();
         let Some(out) = edge::write(EditOperation::PartsSplit, changes, cx) else {
             return;
         };
         let made = interleaved(&each, &created(&out, cx.doc));
         let count = made.len();
         cx.selection.set(made);
+        let noun = if only_areas { "alan" } else { "nesne" };
         cx.say(
             Level::Success,
-            format!("{n} alan parçalarına ayrıldı ({count} alan)."),
+            format!("{n} {noun} parçalarına ayrıldı ({count} {noun})."),
         );
     }
 

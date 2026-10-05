@@ -67,9 +67,9 @@ SETUP = {
 
 # The geometry fields of each kind: what `update` replaces.
 GEOMETRY = {
-    "point": ["p", "z"],
+    "point": ["p", "z", "parts"],
     "line": ["a", "b"],
-    "polyline": ["pts", "bulges", "holes"],
+    "polyline": ["pts", "bulges", "holes", "parts"],
     "polygon": ["pts", "bulges", "holes", "parts"],
     "circle": ["c", "r"],
     "arc": ["c", "r", "a0", "a1"],
@@ -1258,6 +1258,138 @@ cases.append({
     ],
 })
 
+
+# Çok parçalı çizgi ve çok noktalı nesne (docs/adr/0174): Parçaları birleştir makes a line and a polyline one
+# multi-part polyline in the first one's place (a line becomes a polyline: `replace`; its ends' elevations are its
+# part's), points one multi-point object; Parçalara ayır gives each part back, a part of two points a polyline still.
+# The geometry is the whole object; a polyline's part has two points or more and no holes, its elevations one a vertex.
+L_LINE = {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Ad": "Şerit"}, "label": "Ş1",
+          "a": P(487000, 4420100), "b": P(487010, 4420100), "za": 100, "zb": 101.5}
+L_PATH = {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {"Ad": "Şerit 2"},
+          "pts": [P(487020, 4420100), P(487030, 4420100), P(487030, 4420110)], "zs": [102, None, 104]}
+L_JOINED = {"kind": "polyline", "pts": [P(487000, 4420100), P(487010, 4420100)], "zs": [100, 101.5],
+            "parts": [{"pts": L_PATH["pts"], "zs": [102, None, 104]}]}
+
+
+def l_replaced(geometry):
+    """`replace` of the line with keepData: its layer, colour, attributes and label; the geometry given."""
+    out = json.loads(json.dumps(geometry))
+    out["id"] = 1
+    out["layerId"] = L_LINE["layerId"]
+    out["color"] = L_LINE["color"]
+    out["attrs"] = L_LINE["attrs"]
+    out["label"] = L_LINE["label"]
+    return out
+
+
+cases.append({
+    "name": "Parçaları birleştir: bir çizgi ve bir çoklu çizgi çizginin yerinde tek, çok parçalı çoklu çizgi olur; çizginin uç kotları ilk parçanın kotları; öbürü silinir; tek adım",
+    "setup": {**SETUP, "entities": [L_LINE, L_PATH]},
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "serit"},
+        {"op": "captureUid", "id": 2, "as": "diger"},
+        {"op": "execute", "input": {"operation": "partsJoin", "changes": [
+            {"kind": "replace", "uid": uid(1), "geometry": L_JOINED, "keepData": True},
+            {"kind": "remove", "uid": uid(2)}]},
+         "result": done(changed=[uid(1)], removed=["$uid:diger"]),
+         "expect": {"ids": [1], "entities": {"1": l_replaced(L_JOINED)}, "uids": {"1": "serit"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçaları birleştir", "expect": {"ids": [1, 2], "entities": {"1": L_LINE, "2": L_PATH}, "uids": {"1": "serit", "2": "diger"}, "canUndo": False}},
+    ],
+})
+
+N_ONE = {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Kod": "K"}, "label": "N1", "p": P(487000, 4420120), "z": 50}
+N_TWO = {"kind": "point", "id": 2, "layerId": "yapi", "attrs": {"Kod": "K"}, "label": "N2", "p": P(487005, 4420120)}
+N_JOINED = {"kind": "point", "p": N_ONE["p"], "z": 50, "parts": [{"p": N_TWO["p"]}]}
+cases.append({
+    "name": "Parçaları birleştir: iki nokta ilkinin yerinde tek, çok noktalı nesne olur; her nokta kendi kotuyla; öbürü silinir; tek adım",
+    "setup": {**SETUP, "entities": [N_ONE, N_TWO]},
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "captureUid", "id": 2, "as": "diger"},
+        {"op": "execute", "input": {"operation": "partsJoin", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": N_JOINED},
+            {"kind": "remove", "uid": uid(2)}]},
+         "result": done(changed=[uid(1)], removed=["$uid:diger"]),
+         "expect": {"ids": [1], "entities": {"1": reshaped(N_ONE, N_JOINED)}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçaları birleştir", "expect": {"ids": [1, 2], "entities": {"1": N_ONE, "2": N_TWO}, "uids": {"1": "nokta", "2": "diger"}, "canUndo": False}},
+    ],
+})
+
+S_PATH = {"kind": "polyline", "id": 1, "layerId": "yapi", "attrs": {"Ad": "Yol"}, "label": "Y1",
+          "pts": [P(487000, 4420140), P(487010, 4420140), P(487010, 4420150)], "zs": [1, 2, 3],
+          "parts": [{"pts": [P(487020, 4420140), P(487030, 4420140)], "zs": [4, 5]}]}
+S_OWN = {"kind": "polyline", "pts": S_PATH["pts"], "zs": [1, 2, 3]}
+S_OTHER = {"kind": "polyline", "pts": [P(487020, 4420140), P(487030, 4420140)], "zs": [4, 5]}
+S_POINTS = {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Kod": "K"}, "label": "N1", "p": P(487000, 4420160), "z": 7,
+            "parts": [{"p": P(487005, 4420160), "z": 8}, {"p": P(487010, 4420160)}]}
+
+
+def kept(e, geometry, slot):
+    """`add` from `e` with keepData: its layer, attributes and label, the geometry given; a new slot."""
+    out = json.loads(json.dumps(geometry))
+    out["id"] = slot
+    out["layerId"] = e["layerId"]
+    out["attrs"] = e["attrs"]
+    out["label"] = e["label"]
+    return out
+
+
+cases.append({
+    "name": "Parçalara ayır: çok parçalı çoklu çizginin ilk parçası yerinde ve kimliğiyle kalır, iki noktalı öbür parçası öznitelikleriyle yeni çoklu çizgi olur; kotlar parçalarıyla; tek adım",
+    "setup": {**SETUP, "entities": [S_PATH]},
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "yol"},
+        {"op": "execute", "input": {"operation": "partsSplit", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": S_OWN},
+            {"kind": "add", "from": uid(1), "geometry": S_OTHER, "keepData": True}]},
+         "result": done(changed=[uid(1)], created=[uid(2)]),
+         "expect": {"ids": [1, 2], "entities": {"1": reshaped(S_PATH, S_OWN), "2": kept(S_PATH, S_OTHER, 2)}, "uids": {"1": "yol", "2": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçalara ayır", "expect": {"ids": [1], "entities": {"1": S_PATH}, "uids": {"1": "yol"}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Parçalara ayır ve Kot ver: çok noktalı nesnenin ilk noktası yerinde kalır, öbürleri öznitelikleriyle yeni nokta olur; Kot ver her noktaya yazar",
+    "setup": {**SETUP, "entities": [S_POINTS]},
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {"kind": "point", "p": S_POINTS["p"], "z": 10, "parts": [{"p": P(487005, 4420160), "z": 10}, {"p": P(487010, 4420160), "z": 10}]}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"ids": [1], "entities": {"1": {**S_POINTS, "z": 10, "parts": [{"p": P(487005, 4420160), "z": 10}, {"p": P(487010, 4420160), "z": 10}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kot ver", "expect": {"ids": [1], "entities": {"1": S_POINTS}, "canUndo": False}},
+        {"op": "execute", "input": {"operation": "partsSplit", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {"kind": "point", "p": S_POINTS["p"], "z": 7}},
+            {"kind": "add", "from": uid(1), "geometry": {"kind": "point", "p": P(487005, 4420160), "z": 8}, "keepData": True},
+            {"kind": "add", "from": uid(1), "geometry": {"kind": "point", "p": P(487010, 4420160)}, "keepData": True}]},
+         "result": done(changed=[uid(1)], created=[uid(2), uid(3)]),
+         "expect": {"ids": [1, 2, 3], "entities": {
+             "1": reshaped(S_POINTS, {"kind": "point", "p": S_POINTS["p"], "z": 7}),
+             "2": kept(S_POINTS, {"kind": "point", "p": P(487005, 4420160), "z": 8}, 2),
+             "3": kept(S_POINTS, {"kind": "point", "p": P(487010, 4420160)}, 3)}, "uids": {"1": "nokta"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Parçalara ayır", "expect": {"ids": [1], "entities": {"1": S_POINTS}, "uids": {"1": "nokta"}}},
+    ],
+})
+
+S_NOTHING = {"ids": [1], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+cases.append({
+    "name": "Çok parçalı çoklu çizginin parçası en az iki noktalı, deliksiz ve köşe başına bir kotludur; hiçbir şey yazılmaz",
+    "setup": {**SETUP, "entities": [S_PATH]},
+    "steps": [
+        {"op": "execute", "input": {"operation": "grip", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {**S_OWN, "parts": [{"pts": [P(487020, 4420140)]}]}}]},
+         "result": failed("too_few_points", "2. parçanın en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin ya da parçayı çıkarın.", "changes[0].geometry.parts[0].pts"),
+         "expect": S_NOTHING},
+        {"op": "execute", "input": {"operation": "grip", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {**S_OWN, "parts": [{"pts": S_OTHER["pts"], "holes": [{"pts": [P(487021, 4420141), P(487022, 4420141), P(487022, 4420142)]}]}]}}]},
+         "result": failed("part_holes", "Çoklu çizginin 2. parçasının deliği olamaz; delik yalnız kapalı alanda olur. Deliği çıkarın.", "changes[0].geometry.parts[0].holes"),
+         "expect": S_NOTHING},
+        {"op": "execute", "input": {"operation": "elevation", "changes": [
+            {"kind": "update", "uid": uid(1), "geometry": {**S_OWN, "parts": [{"pts": S_OTHER["pts"], "zs": [4]}]}}]},
+         "result": failed("invalid_elevations", ELEVATIONS_MESSAGE.format(2, 1), "changes[0].geometry.parts[0].zs"),
+         "expect": S_NOTHING},
+    ],
+})
 
 # ── Blocks (docs/adr/0144) ────────────────────────────────────────────
 # An insert in a drawing of its own: Öznitelikler writes its placement (`update`), Patlat opens it into its

@@ -7145,7 +7145,7 @@
       "title": "Parçaları birleştir",
       "category": "Alan",
       "icon": "partsJoin",
-      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir; ilk seçilen alan yerini, kimliğini ve özniteliklerini verir.",
+      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir. Çizgi ve çoklu çizgileri tek, çok parçalı çoklu çizgi, noktaları tek, çok noktalı nesne yapar; değen çizgiler zincirlenmez. İlk seçilen nesne yerini, kimliğini ve özniteliklerini verir.",
       "aliases": [
         "PARCABIRLESTIR",
         "PARCALARIBIRLESTIR"
@@ -7178,7 +7178,7 @@
       "title": "Parçalara ayır",
       "category": "Alan",
       "icon": "partsSplit",
-      "description": "Çok parçalı alanı her parçası için bir alana ayırır: ilk parça alanın yerinde kalır, öbürleri öznitelikleriyle yeni alan olur.",
+      "description": "Çok parçalı alanı, çoklu çizgiyi ya da çok noktalı nesneyi parçalarına ayırır: ilk parça nesnenin yerinde kalır, öbürleri öznitelikleriyle yeni nesne olur.",
       "aliases": [
         "PARCALARAAYIR",
         "PARCAAYIR"
@@ -11096,7 +11096,7 @@
       "rare": false,
       "methods": [],
       "steps": 2,
-      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir; ilk seçilen alan yerini, kimliğini ve özniteliklerini verir.",
+      "description": "Seçili alanları tek, çok parçalı alan yapar: örtüşenler tek parçada birleşir, parçalar büyükten küçüğe dizilir. Çizgi ve çoklu çizgileri tek, çok parçalı çoklu çizgi, noktaları tek, çok noktalı nesne yapar; değen çizgiler zincirlenmez. İlk seçilen nesne yerini, kimliğini ve özniteliklerini verir.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
@@ -11121,7 +11121,7 @@
       "rare": false,
       "methods": [],
       "steps": 2,
-      "description": "Çok parçalı alanı her parçası için bir alana ayırır: ilk parça alanın yerinde kalır, öbürleri öznitelikleriyle yeni alan olur.",
+      "description": "Çok parçalı alanı, çoklu çizgiyi ya da çok noktalı nesneyi parçalarına ayırır: ilk parça nesnenin yerinde kalır, öbürleri öznitelikleriyle yeni nesne olur.",
       "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
