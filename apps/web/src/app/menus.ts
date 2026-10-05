@@ -108,6 +108,11 @@ export const MAIN_MENU: TopMenu[] = [
       'edit.invertSelection',
       sec('Bul'),
       'text.findReplace',
+      // The layer actions by an object (docs/adr/0177 §1–§2): no tab shows this menu whole, the ribbon has them under
+      // Giriş › Katmanlar ▾.
+      '@tools:layer',
+      sec('Katman'),
+      'layer.unisolate',
     ],
   },
   {
@@ -130,11 +135,6 @@ export const MAIN_MENU: TopMenu[] = [
       'view.coords',
       'view.keyTips',
       'view.fullscreen',
-      // The layer actions by an object (docs/adr/0177 §1), beside what the view shows.
-      '@tools:layer',
-      sec('Katman'),
-      'layer.unisolate',
-      'layer.showAll',
       sec('Görünüş'),
       { label: 'Proje türü', icon: 'projectType', primary: true, items: ['workspace.cad', 'workspace.gis', '-', 'workspace.plan3d', 'workspace.disaster'] },
       { label: 'Tema', icon: 'appearance', items: ['view.theme.dark', 'view.theme.light'] },

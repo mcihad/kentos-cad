@@ -238,7 +238,9 @@
     "tool.layerIsolate",
     "tool.layerLock",
     "tool.layerMakeActive",
-    "layer.unisolate"
+    "layer.unisolate",
+    "tool.layerMatch",
+    "tool.copyToLayer"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -46,7 +46,8 @@ Beş araç, imleç altındaki nesneye tıklanarak (nesne seçen araç gibi, kutu
 
 - **Katmanı eşle** (`layerMatch`; LAYMCH, Tabaka Değiştir): önce taşınacak nesneler seçilir (seçim varsa o), sonra hedef: bir nesneye
   tıklanır, katmanı hedeftir; ya da Etkin katman (E) seçeneği. Nesneler hedef katmana geçer (`cad.entities.set`'in `layerId`'si), tek
-  adım “Katmanı eşle”. Kilitli katmandaki nesne ve kilitli hedef komutun kuralıyla reddedilir (bütün ya da hiç).
+  adım “Katmanı eşle”. Kilitli katmandaki nesneler atlanır ve sayılır (öbür değiştirme araçları gibi); kilitli hedef söylenir, araç başka
+  hedef bekler; nesneler zaten hedefteyse söylenir.
 - **Katmana kopyala** (`copyToLayer`; COPYTOLAYER, Netcad'in kopyalayarak tabaka değiştirmesi): aynı seçimler; nesnelerin kopyaları
   yerlerinde, bütün özellikleriyle hedef katmana yazılır (Özgün koordinatlara yapıştır gibi), tek adım “Katmana kopyala”; kopyalar
   seçilir. Kilitli katmandaki nesnenin kopyası yapılmaz (CLAUDE.md §7), sayılır ve söylenir.
@@ -96,7 +97,8 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
 
 - Şeritte Giriş'in Katmanlar panelinin ▾'i (üç şeritte; panel katlanınca kutusunun altında): §1'in beş işi, sonraki adımlarda Katmanı
   eşle, Katmana kopyala, Katmanları birleştir…, Kullanılmayanları temizle…, Katman listesi…; Yönet › Temizlik'e Kullanılmayanları
-  temizle. Görünüm menüsünde (ve ondan kurulan Görünüm sekmesinde) “Katman” bölümü: araçlar, Yalıtımı kaldır ve Tüm katmanları göster.
+  temizle. Düzen menüsünde “Katman” bölümü (araçlar ve Yalıtımı kaldır; o menüyü hiçbir sekme bütün göstermez: şeritteki yerleri
+  Katmanlar ▾'idir; 1. adımda Görünüm menüsündeydi, CBS'nin Görünüm sekmesi geniş pencereye sığmayınca 2. adımda taşındı).
   Araçların grubu `layer`'dır (“Katman”). Komut arama, takma adlar ve komut satırı her birini bulur.
 - Katmanlar panelinde: katmanın menüsünde Kopyasını oluştur ve Başka katmanlarla birleştir…; araç çubuğunda Katman durumları ▾;
   panelin menüsünde Kullanılmayanları temizle… ve Katman listesini dışa aktar….
@@ -119,7 +121,11 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
    grubun menüsünde “Diğer araçlar”; web'de katlanmış panelin kutusunda ▾. İzlerin yeni beklentileri `hiddenLayers`, `lockedLayers`;
    ortak iz `layer-by-object.json`. Masaüstünde kendi gizli katmanının satırı da soluk (web'in `data-hidden`'ı). Resimler: iz `shot`
    adımlarıyla, Katmanlar ▾ masaüstünün ikon turunda (`katman-araclari`), web'in `shots.mjs ribbon`'unda (`layers-more`).
-2. Katmanı eşle ve Katmana kopyala (§2): araçlar iki platformda; ortak iz.
+2. Katmanı eşle ve Katmana kopyala (§2): araçlar iki platformda; ortak iz. **Tamam (5 Ekim):** web `tools/layerMoveTool.ts`
+   (`LayerMoveTool`, `SelectionFirstTool` tabanında), masaüstü `kentos_interaction::layer_move` (`LayerMove`, `Modify` tabanında, hedef
+   `Stages::pointer`'la); Katmanı eşle `cad.entities.set`'in `layer` işlemiyle, Katmana kopyala `cad.entities.create` ile (renk, kalınlık,
+   öznitelik, etiket ve sembol nesnenin kendi değeriyle); ikonlar `layerMatch`, `copyToLayer`; ikisi de Katmanlar ▾'inde ve Düzen
+   menüsünün Katman bölümünde. Ortak iz `layer-move.json` (1. adımın belgesiyle; `shot` adımlarıyla iki platformda resimlenir).
 3. Kopyasını oluştur ve Katmanları birleştir (§3): komutlar ve pencere iki platformda; ortak iz.
 4. Katman durumları (§4): sözleşme ve `.kcad` şema 19 (kodek, bağımsız Python okuyucu ve yazıcısı, örnek dosya); kurallar iki platformda,
    ortak durumlar; Katmanlar panelinde menü ve kayıt penceresi; ortak iz.

@@ -376,6 +376,9 @@ pub const PORTED: &[&str] = &[
     "tool.layerLock",
     "tool.layerMakeActive",
     "layer.unisolate",
+    // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
+    "tool.layerMatch",
+    "tool.copyToLayer",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

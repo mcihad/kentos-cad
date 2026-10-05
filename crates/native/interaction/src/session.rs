@@ -61,9 +61,10 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
     continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    labels_to_text, layer_tools, leader, match_properties, meeting, parallel, polygonize,
-    quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing, select_fence,
-    set_elevation, spline, split, station_offset, text, text_file, topology, vertex_points,
+    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, parallel,
+    polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing,
+    select_fence, set_elevation, spline, split, station_offset, text, text_file, topology,
+    vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -184,6 +185,9 @@ pub const TOOLS: &[&str] = &[
     layer_tools::ISOLATE_ID,
     layer_tools::LOCK_ID,
     layer_tools::ACTIVE_ID,
+    // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
+    layer_move::MATCH_ID,
+    layer_move::COPY_ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -336,6 +340,8 @@ impl Session {
             layer_tools::ISOLATE_ID => Box::new(layer_tools::LayerTool::isolate()),
             layer_tools::LOCK_ID => Box::new(layer_tools::LayerTool::lock()),
             layer_tools::ACTIVE_ID => Box::new(layer_tools::LayerTool::make_active()),
+            layer_move::MATCH_ID => Box::new(layer_move::LayerMove::layer_match()),
+            layer_move::COPY_ID => Box::new(layer_move::LayerMove::copy_to_layer()),
             sector::ID => Box::new(crate::sector::Sector::new()),
             between::ID => Box::new(crate::between::PointsBetween::new()),
             meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),

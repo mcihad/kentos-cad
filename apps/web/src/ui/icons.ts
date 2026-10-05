@@ -296,6 +296,11 @@ export const ICONS = {
     '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="6.8" y="5.6" width="6.4" height="4.8" rx=".9" stroke-width="1.2"/><path d="M8.3 5.6V4.2a1.7 1.7 0 0 1 3.4 0v1.4" stroke-width="1.2"/>',
   layerMakeActive:
     '<path d="m10 7.4 7 3.6-7 3.6-7-3.6z" fill="currentColor" fill-opacity=".3"/><path d="m3 14.6 7 3.6 7-3.6"/><path d="m7 3.9 2.2 2.2 4.4-4.3" stroke-width="1.4"/>',
+  // Katmanı eşle: an object carried onto the plates; Katmana kopyala: its copy carried, the object staying.
+  layerMatch:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="2.8" y="2.4" width="5" height="5" rx=".6" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/><path d="M9.2 4.9h4.6v4.6M12.1 7.8l1.7 1.7 1.7-1.7" stroke-width="1.2"/>',
+  copyToLayer:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="2.4" y="2" width="4.4" height="4.4" rx=".6" stroke-width="1.1"/><rect x="4.4" y="4" width="4.4" height="4.4" rx=".6" fill="currentColor" fill-opacity=".3" stroke-width="1.1"/><path d="M10.2 6.2h3.6v3.6M12.1 8.1l1.7 1.7 1.7-1.7" stroke-width="1.2"/>',
   layerUnisolate:
     '<path d="m10 6.6 7 3.6-7 3.6-7-3.6z"/><path d="m3 13.8 7 3.6 7-3.6"/><path d="M13.6 4.2a4 4 0 0 0-6.9.6M6.4 2v2.8h2.8" stroke-width="1.2"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',

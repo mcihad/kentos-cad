@@ -87,8 +87,8 @@ export const PRIMARY_COMMANDS: ReadonlySet<string> = new Set([
 /** Large buttons a panel may have; more would crowd out the small ones. */
 export const MAX_LARGE = 4;
 
-/** The layer actions by an object and Yalıtımı kaldır (docs/adr/0177 §1), under Katmanlar's ▾ in every ribbon. */
-const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive'];
+/** The layer actions by an object, Yalıtımı kaldır, Katmanı eşle and Katmana kopyala (docs/adr/0177 §1–§2), under Katmanlar's ▾ in every ribbon. */
+const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive', 'tool.layerMatch', 'tool.copyToLayer'];
 
 export const RIBBON_TABS: readonly RibbonTabSpec[] = [
   { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
