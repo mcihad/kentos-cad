@@ -133,6 +133,7 @@ pub mod ground;
 pub mod hatch;
 pub mod holes;
 mod junctions;
+pub mod labels_to_text;
 pub mod leader;
 pub mod lengthen;
 pub mod line;
@@ -219,7 +220,7 @@ pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRAVEL, S
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
-pub use tool::{Area, Label};
+pub use tool::{Area, Label, TextGhost};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,

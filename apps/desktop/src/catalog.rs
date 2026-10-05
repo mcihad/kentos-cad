@@ -237,6 +237,8 @@ pub const PORTED: &[&str] = &[
     "tool.adjoin",
     // Köşelere nokta: a named point at every vertex of the selection (vertex_points.rs, docs/adr/0152 §5).
     "tool.vertexPoints",
+    // Etiketleri yazıya çevir: the layers' labels as texts at a scale (labels_to_text.rs, docs/adr/0175 §3).
+    "tool.labelsToText",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

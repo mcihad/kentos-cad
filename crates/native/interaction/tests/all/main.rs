@@ -26,6 +26,7 @@ mod grips;
 mod hatch;
 mod join_chain;
 mod junctions;
+mod labels_to_text;
 mod leaders;
 mod line;
 mod line_weight;

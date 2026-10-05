@@ -2,7 +2,7 @@ import type { AppContext } from '../app/context';
 import type { CommandResult } from '../contracts/generated/CommandResult';
 import { Refusal } from '../model/document';
 import type { LayerInit } from '../model/layers';
-import { standardLayers } from '../model/standardLayers';
+import { cadLayers, standardLayers } from '../model/standardLayers';
 import { error, failed } from '../product/checks';
 
 /**
@@ -18,8 +18,11 @@ import { error, failed } from '../product/checks';
 /** Carries a refused write out of the transaction, which then takes the layer back. */
 class Refused extends Error {}
 
-/** The layer of a new project's tree by its id, as a fresh copy; the bare id when the tree lacks it. */
-function standardLayer(id: string, plotScale: number): LayerInit {
+/**
+ * The layer of a new project's tree by its id, as a fresh copy; the bare id when the tree lacks it. A CAD project
+ * looks in its own tree first (its `yazi` is “Yazı”, docs/adr/0175 §3), then in the CBS one (`parsel`, `kot`).
+ */
+function standardLayer(id: string, plotScale: number, cad: boolean): LayerInit {
   const find = (nodes: readonly LayerInit[]): LayerInit | undefined => {
     for (const n of nodes) {
       if (n.id === id && !n.children) return n;
@@ -28,24 +31,31 @@ function standardLayer(id: string, plotScale: number): LayerInit {
     }
     return undefined;
   };
-  return find(standardLayers(plotScale)) ?? { id, name: id };
+  return (cad ? find(cadLayers()) : undefined) ?? find(standardLayers(plotScale)) ?? { id, name: id };
+}
+
+/** The name layer `layerId` has, or the one it is opened with when the drawing lacks it. */
+export function standardLayerName(ctx: AppContext, layerId: string): string {
+  const { doc } = ctx;
+  return doc.layers.get(layerId)?.name ?? standardLayer(layerId, doc.settings.plotScale.value, doc.settings.workspace.value === 'cad').name;
 }
 
 /**
  * Runs `write` (a product command writing to layer `layerId`), opening that
- * layer first when the drawing has none: layer and object are one undo step
- * “Ekle”. Once the object is written, an info message says the layer was
- * opened, `what` being what it was opened for (“parsel”, “kot noktası”); the
- * tool's own messages follow it. A locked layer is not this function's: it
- * is there, and `write` meets it as ever. The command's answer.
+ * layer first when the drawing has none: layer and object are one undo step,
+ * named `step` (the command's own name for it; “Ekle” by default). Once the
+ * object is written, an info message says the layer was opened, `what` being
+ * what it was opened for (“parsel”, “kot noktası”); the tool's own messages
+ * follow it. A locked layer is not this function's: it is there, and `write`
+ * meets it as ever. The command's answer.
  */
-export function writeOnStandardLayer<T>(ctx: AppContext, layerId: string, what: string, write: () => CommandResult<T>): CommandResult<T> {
+export function writeOnStandardLayer<T>(ctx: AppContext, layerId: string, what: string, write: () => CommandResult<T>, step = 'Ekle'): CommandResult<T> {
   const { doc } = ctx;
   if (doc.layers.get(layerId)) return write();
   let result: CommandResult<T> | undefined;
   try {
-    doc.transact('Ekle', () => {
-      doc.addLayer(standardLayer(layerId, doc.settings.plotScale.value), null);
+    doc.transact(step, () => {
+      doc.addLayer(standardLayer(layerId, doc.settings.plotScale.value, doc.settings.workspace.value === 'cad'), null);
       result = write();
       if (result.status !== 'completed') throw new Refused();
     });

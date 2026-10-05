@@ -58,6 +58,8 @@ pub struct Seen {
     pub mask: Option<bool>,
     /// A text's turn in degrees.
     pub rotation: Option<f64>,
+    /// A text's height on the ground (docs/adr/0175).
+    pub height: Option<f64>,
     /// A leader's arrowhead's name; none the filled arrow (docs/adr/0146).
     pub arrow: Option<String>,
     /// A dimension's direction in degrees: a linear one's measured, an
@@ -178,6 +180,10 @@ impl Seen {
             rotation: match e {
                 Entity::Text(t) => Some(t.rotation),
                 Entity::Leader(l) => Some(l.rotation),
+                _ => None,
+            },
+            height: match e {
+                Entity::Text(t) => Some(t.height),
                 _ => None,
             },
             arrow: match e {

@@ -126,8 +126,10 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
 
 /// A layer of a new project's tree by its id (`parsel`), for a drawing that
 /// lacks it: a tool that writes to a standard layer opens it as a new
-/// project has it. None for an id the tree does not have, or a group.
-pub fn standard_layer(id: &str, plot_scale: f64) -> Option<LayerNode> {
+/// project has it. A CAD project looks in its own tree first (its `yazi` is
+/// “Yazı”, docs/adr/0175 §3), then in the CBS one (`parsel`, `kot`). None
+/// for an id the trees do not have, or a group.
+pub fn standard_layer(id: &str, plot_scale: f64, cad: bool) -> Option<LayerNode> {
     fn find(nodes: Vec<LayerNode>, id: &str) -> Option<LayerNode> {
         nodes.into_iter().find_map(|n| {
             if n.id == id && n.kind == LayerNodeType::Layer {
@@ -137,7 +139,9 @@ pub fn standard_layer(id: &str, plot_scale: f64) -> Option<LayerNode> {
             }
         })
     }
-    find(standard_layers(plot_scale), id)
+    cad.then(|| find(cad_layers(), id))
+        .flatten()
+        .or_else(|| find(standard_layers(plot_scale), id))
 }
 
 /// The middle of the zone at Türkiye's centre latitude (the web's `workAreaCentre`).

@@ -904,6 +904,45 @@ fn measure(text: &str, font: Font) -> Measure {
     m
 }
 
+/// A text to come, faint, drawn as a text object will be (Etiketleri yazıya
+/// çevir's preview, docs/adr/0175 §3; the web's `drawTextGhost`): `at` its
+/// point on the screen, `size` px high, turned `angle` (screen radians), its
+/// point on its alignment (`along` of its width, `up` of its height over its
+/// baseline); over its mask in `halo` when it will have one.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn ghost(
+    frame: &mut Frame,
+    text: &str,
+    at: Point,
+    size: f32,
+    angle: f32,
+    (along, up): (f32, f32),
+    drawing: DrawingFont,
+    (color, halo): (Color, Color),
+    mask: bool,
+) {
+    if size < SMALLEST || text.is_empty() {
+        return;
+    }
+    let font = drawing_fonts::font(drawing, 400, true);
+    let width = measure(text, font).width * size / REFERENCE;
+    // From its point to where its baseline starts, in the text's own frame (y down the screen).
+    let (dx, dy) = (-along * width, up * size);
+    let (sin, cos) = angle.sin_cos();
+    let piece = Piece {
+        text,
+        at: Point::new(at.x + dx * cos - dy * sin, at.y + dx * sin + dy * cos),
+        angle,
+        size,
+        font,
+        anchor: Anchor::LeftBaseline,
+        color,
+        width_factor: 1.0,
+        mask: if mask { width } else { 0.0 },
+    };
+    draw(frame, &piece, halo);
+}
+
 /// Draws a text with its halo: upright through the glyph cache, turned as outlines.
 /// A dimension value's mask (docs/adr/0147): its measured width on screen when it has one, else 0.
 fn value_mask(mask: bool, text: &str, font: Font, size: f32) -> f32 {

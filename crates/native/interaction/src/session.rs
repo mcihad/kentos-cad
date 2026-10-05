@@ -61,9 +61,9 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
     continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    leader, match_properties, meeting, parallel, polygonize, quick_dimension, reshape_by, revcloud,
-    sector, select_circle, select_containing, select_fence, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points,
+    labels_to_text, leader, match_properties, meeting, parallel, polygonize, quick_dimension,
+    reshape_by, revcloud, sector, select_circle, select_containing, select_fence, set_elevation,
+    spline, split, station_offset, text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -169,6 +169,8 @@ pub const TOOLS: &[&str] = &[
     polygonize::ID,
     // docs/adr/0152: Köşelere nokta.
     vertex_points::ID,
+    // docs/adr/0175 §3: Etiketleri yazıya çevir.
+    labels_to_text::ID,
     // docs/adr/0173 §5: Delik ekle, Deliği sil, Deliği doldur.
     holes::ADD_ID,
     holes::REMOVE_ID,
@@ -342,6 +344,7 @@ impl Session {
             select_containing::ID => Box::new(select_containing::SelectContaining::new()),
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
             topology::ID => Box::new(crate::topology::Topology::new()),
+            labels_to_text::ID => Box::new(crate::labels_to_text::LabelsToText::new()),
             polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),
             vertex_points::ID => Box::new(crate::vertex_points::VertexPoints::tool()),
             _ => return false,

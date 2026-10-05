@@ -210,7 +210,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Açıklama',
     // AutoCAD's Annotate tab, a panel a kind; a tool the draw menu's Açıklama block gains later shows in a panel of its own.
     sources: [
-      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.placeTextFile', 'text.findReplace'] },
+      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace'] },
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension'] },
       { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
       { pick: 'Tarama', icon: 'hatch', commands: ['tool.hatch'] },
@@ -272,6 +272,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'crs', sections: ['Koordinat sistemi'] },
       { menu: 'map', sections: ['Parsel', 'Ölçme'] },
       { menu: 'tools', sections: ['Stil'] },
+      // The layers' labels as texts (docs/adr/0175 §3), beside the styles that draw them.
+      { pick: 'Etiket', icon: 'labelsToText', commands: ['tool.labelsToText'] },
     ],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },

@@ -143,6 +143,7 @@
     "tool.polygonize",
     "tool.adjoin",
     "tool.vertexPoints",
+    "tool.labelsToText",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

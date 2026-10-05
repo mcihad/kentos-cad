@@ -323,6 +323,15 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.angle
         ));
     }
+    // A text's height (docs/adr/0175), within 1e-9.
+    if let Some(height) = want.height
+        && !seen.height.is_some_and(|h| (h - height).abs() <= 1e-9)
+    {
+        bad.push(format!(
+            "{name}.height: {:?}, beklenen {height}",
+            seen.height
+        ));
+    }
     if let Some(rotation) = want.rotation
         && seen.rotation != Some(rotation)
     {

@@ -25,15 +25,28 @@ pub fn open_if_missing(
     what: &'static str,
     cx: &mut Context<'_>,
 ) -> Result<Option<Opened>, ()> {
+    open_in_step(id, what, labels::ADD, cx)
+}
+
+/// `open_if_missing`, the layer and the object one undo step named `step`
+/// (the command's own name for it; docs/adr/0175 §3).
+pub fn open_in_step(
+    id: &str,
+    what: &'static str,
+    step: &str,
+    cx: &mut Context<'_>,
+) -> Result<Option<Opened>, ()> {
     if cx.doc.layers().get(id).is_some() {
         return Ok(None);
     }
-    let plot_scale = cx.doc.settings().plot_scale;
-    let (name, style) = match kentos_project::new_project::standard_layer(id, plot_scale) {
-        Some(node) => (node.name, node.style),
-        None => (id.to_owned(), NewLayer::layer(id).style),
-    };
-    let group = cx.doc.begin_group(labels::ADD);
+    let settings = cx.doc.settings();
+    let cad = settings.project_type() == Some(kentos_contracts::Workspace::Cad);
+    let (name, style) =
+        match kentos_project::new_project::standard_layer(id, settings.plot_scale, cad) {
+            Some(node) => (node.name, node.style),
+            None => (id.to_owned(), NewLayer::layer(id).style),
+        };
+    let group = cx.doc.begin_group(step);
     let layer = NewLayer {
         id: Some(id.to_owned()),
         style,
@@ -47,6 +60,17 @@ pub fn open_if_missing(
             Err(())
         }
     }
+}
+
+/// The name layer `id` has, or the one it is opened with when the drawing lacks it.
+pub fn name_of(id: &str, cx: &Context<'_>) -> String {
+    if let Some(layer) = cx.doc.layers().get(id) {
+        return layer.name.clone();
+    }
+    let settings = cx.doc.settings();
+    let cad = settings.project_type() == Some(kentos_contracts::Workspace::Cad);
+    kentos_project::new_project::standard_layer(id, settings.plot_scale, cad)
+        .map_or_else(|| id.to_owned(), |node| node.name)
 }
 
 impl Opened {

@@ -70,6 +70,8 @@ export const ICONS = {
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
   textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
+  // Etiketleri yazıya çevir (docs/adr/0175): a label's tag becoming a text.
+  labelsToText: '<path d="M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z"/><circle cx="4.7" cy="6.2" r=".9" fill="currentColor" stroke="none"/><path d="M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8"/><path d="M12.3 10.8h5.2M14.9 10.8v6.7"/>',
   // Kılavuz (docs/adr/0146): the arrow at the tip, the line, the landing and the note's lines.
   leader: '<path d="M4 16 10 9.5h2.5"/><path d="M4 16 7 14.2 5.6 12.8z" fill="currentColor" stroke="none"/><path d="M14 8.2h3.2M14 10.8h2.4" stroke-width="1.2"/>',
   // Its arrowheads (Ok's menu): filled, open, a dot, none.

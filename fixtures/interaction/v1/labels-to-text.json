@@ -1,0 +1,227 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "labels-to-text",
+  "title": "Etiketleri yazıya çevir (ADR 0175 §3), labels.kcad üzerinde, seçim yokken bütün çizim: beş etiket, gizli katmandaki ve yazı girmez; 1:1000'de bir numara öbürünün üstüne düşüp atlanır; Örtüşenler de (R) ve Zemin (Z) açılır, yazılan 500 ölçektir; Enter beş yazıyı yerleri, boyları, hizaları ve zeminleriyle tek adımda açılan Yazılar katmanına yazar ve seçer; Ctrl+Z geri alır; seçenekler hatırlanır, bellek başladığı gibi bırakılır, Esc çıkar",
+  "source": "Web'in LabelsToTextTool'u (labelsToTextTool.ts), masaüstünün kentos_interaction::labels_to_text'i; çekirdeğin label_text'i ve Store::label_texts'i; cad.entities.create labels, ADR 0175",
+  "covers": [
+    "UX-01",
+    "UX-06",
+    "CMD-04"
+  ],
+  "document": "labels.kcad",
+  "view": {
+    "center": [
+      487015,
+      4420005
+    ],
+    "metresPerPixel": 0.1
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.1,
+  "steps": [
+    {
+      "move": [
+        0,
+        -9
+      ]
+    },
+    {
+      "run": "tool.labelsToText",
+      "note": "Seçim yok: görünen katmanlardaki beş etiket; gizli katmandaki parsel ve yazı girmez. 1:1000'de 104'ün numarası 101'inkinin üstüne düşer.",
+      "expect": {
+        "tool": "labelsToText",
+        "options": [
+          "Ö",
+          "R",
+          "Z",
+          "K",
+          "Enter"
+        ],
+        "logged": [
+          "Etiketleri yazıya çevir: bütün çizimde 5 etiket; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak. Enter ile yazın."
+        ],
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Uygula (Enter)]"
+      }
+    },
+    {
+      "move": [
+        1,
+        -8
+      ],
+      "note": "İmlecin yanındaki etiket sayıları söyler."
+    },
+    {
+      "key": "R",
+      "note": "Örtüşenler de: 104'ün numarası da yazılacak.",
+      "expect": {
+        "logged": [
+          "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak."
+        ]
+      }
+    },
+    {
+      "key": "Z",
+      "note": "Zemin: yazılar zeminli.",
+      "expect": {
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+      }
+    },
+    {
+      "text": "500"
+    },
+    {
+      "key": "Enter",
+      "note": "Yazılan sayı ölçektir: parsel numaraları 14 px'lik üst sınıra büyür.",
+      "expect": {
+        "tool": "labelsToText",
+        "logged": [
+          "Etiketleri yazıya çevir: 1:500 ölçekte 5 yazı olacak."
+        ],
+        "prompt": "Etiketleri yazıya çevir: 1:500 ölçekte 5 yazı olacak [Ölçek (Ö): 1:500 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+      }
+    },
+    {
+      "shot": "etiket-onizleme"
+    },
+    {
+      "key": "Enter",
+      "note": "Yazılar tek adımda Yazılar katmanına (yoktu, aynı adımda açılır); seçili kalırlar.",
+      "expect": {
+        "tool": "select",
+        "log": "success",
+        "entities": 12,
+        "selected": [
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "logged": [
+          "“Yazılar” katmanı çizimde yoktu; etiketlerin yazıları için açıldı.",
+          "Etiketleri yazıya çevir: 5 etiket yazıya çevrildi."
+        ],
+        "objects": [
+          {
+            "id": 8,
+            "kind": "text",
+            "text": "101",
+            "points": [
+              [
+                -8,
+                0
+              ]
+            ],
+            "height": 1.8520833333333333,
+            "align": "middleCenter",
+            "rotation": 0,
+            "mask": true
+          },
+          {
+            "id": 9,
+            "kind": "text",
+            "text": "102",
+            "points": [
+              [
+                6,
+                0
+              ]
+            ],
+            "height": 1.8520833333333333,
+            "align": "middleCenter",
+            "rotation": 0,
+            "mask": true
+          },
+          {
+            "id": 10,
+            "kind": "text",
+            "text": "104",
+            "points": [
+              [
+                -8,
+                0
+              ]
+            ],
+            "height": 1.8520833333333333,
+            "align": "middleCenter",
+            "rotation": 0,
+            "mask": true
+          },
+          {
+            "id": 11,
+            "kind": "text",
+            "text": "P1",
+            "points": [
+              [
+                15.926041666666666,
+                -1.0739583333333336
+              ]
+            ],
+            "height": 1.3890625,
+            "align": "middleLeft",
+            "rotation": 0,
+            "mask": true
+          },
+          {
+            "id": 12,
+            "kind": "text",
+            "text": "Cumhuriyet Cd.",
+            "points": [
+              [
+                0,
+                10
+              ]
+            ],
+            "height": 1.3229166666666667,
+            "align": "middleCenter",
+            "rotation": 0,
+            "mask": true
+          }
+        ]
+      }
+    },
+    {
+      "shot": "etiket-sonuc"
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek adımda geri alınır: yazılar ve açılan katman.",
+      "expect": {
+        "entities": 7,
+        "canRedo": true
+      }
+    },
+    {
+      "run": "tool.labelsToText",
+      "note": "Örtüşenler de ve Zemin oturum boyunca hatırlanır; ölçek her çalışmada projeninkinden başlar.",
+      "expect": {
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "R",
+      "note": "Bellek başladığı gibi."
+    },
+    {
+      "key": "Z",
+      "expect": {
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Esc",
+      "note": "Esc araçtan çıkar; çizim değişmez.",
+      "expect": {
+        "tool": "select",
+        "entities": 7
+      }
+    }
+  ]
+}

@@ -546,6 +546,12 @@ pub struct Memory {
     pub point_name: Name,
     pub point_code: Name,
     pub point_z: Option<f64>,
+    /// Etiketleri yazıya çevir's Örtüşenler de, Zemin and Katman (the
+    /// active layer instead of the text layer) (`LabelsToTextTool.every`,
+    /// `.mask`, `.active`; docs/adr/0175 §3).
+    pub labels_every: bool,
+    pub labels_mask: bool,
+    pub labels_active: bool,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -719,6 +725,9 @@ impl Default for Memory {
             point_name: Name::EMPTY,
             point_code: Name::EMPTY,
             point_z: None,
+            labels_every: false,
+            labels_mask: false,
+            labels_active: false,
         }
     }
 }
@@ -914,6 +923,21 @@ pub struct Preview {
     pub labels: Vec<Label>,
     /// The lines of a hatch to come, drawn faint (the web's 60 %; docs/adr/0062).
     pub hatch: Vec<[Vec2; 2]>,
+    /// Texts to come, drawn faint as text objects are drawn (the web's
+    /// `drawTextGhost`; Etiketleri yazıya çevir, docs/adr/0175 §3).
+    pub texts: Vec<TextGhost>,
+}
+
+/// A text to come: where its alignment puts it, its text, its height on
+/// the ground, its turn in degrees and its alignment's name; over its mask.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TextGhost {
+    pub p: Vec2,
+    pub text: String,
+    pub height: f64,
+    pub rotation: f64,
+    pub align: kentos_geometry_core::text::TextAlign,
+    pub mask: bool,
 }
 
 /// An area of a draft, filled in its tone and outlined: the outer ring, then

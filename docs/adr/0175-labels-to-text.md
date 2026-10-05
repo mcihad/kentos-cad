@@ -67,7 +67,8 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
 - **Kapsam:** seçim varsa seçili nesnelerin etiketleri, yoksa bütün çizimdekiler; gizli katmandaki nesne girmez. Etiketin stili katmanınki,
   yoksa türünün varsayılanıdır (çizimdeki gibi; etiket stili olmayan katmanda alan, daire, nokta, çoklu çizgi ve çizgi). Etiketi boş olan, yazı,
   ölçü, kılavuz ve stilsiz türler girmez; hiç etiket yoksa araç söyler ve çıkar.
-- **Seçenekler** (oturum boyunca kalır): Ölçek (Ö): `1:N` ya da `N` yazılır, başta projenin çizim ölçeği; Örtüşenler de (R): kapalı başlar;
+- **Seçenekler**: Ölçek (Ö): `1:N` ya da `N` yazılır, her çalışmada projenin çizim ölçeğinden başlar; Örtüşenler de (R), Zemin (Z) ve
+  Katman (K) oturum boyunca kalır. Örtüşenler de (R): kapalı başlar;
   Zemin (Z): yazılara zemin (ADR 0145), kapalı başlar; Katman (K): projenin standart yazı katmanı (`yazi`, yeni projedeki adıyla:
   CBS'de “Yazılar”, CAD'de “Yazı”; yoksa aynı adımda açılır, ADR 0067'nin `parsel` ve `kot` katmanları gibi) ya da etkin katman.
   Nesneye bağlı (B) 4. adımla gelir (§4).
@@ -80,15 +81,26 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
 
 ### 4. Nesneye bağlı yazı
 
-- “Nesneye bağlı” açıkken yazı etiketlediği nesneyi bilir: yazının yeni alanı `labelOf` (nesnenin kalıcı kimliği) ve `labelScale` (N).
-  `.kcad` belge şeması 18; eski şemalı yükte bu alanlar bilinmeyen alandır (ADR 0174 gibi).
-- **Güncelleme:** bağlı yazının nesnesi bir ürün komutuyla değişince (geometrisi, etiketi ya da katmanı) yazı §1'in kuralıyla aynı adımda
-  yeniden yazılır: metni ve yeri nesnenin şimdiki etiketinden, katmanının şimdiki etiket stilinden ve `labelScale`'den. Nesnenin etiketi
-  boşalırsa ya da ölçek kuralı onu artık yazmazsa yazı yerinde kalır, bağı kopar ve söylenir.
-- **Silme:** nesnesi silinince bağlı yazı da aynı adımda silinir; Patlat ve Parçalara ayır yazıyı ilk parçanın nesnesine bağlı bırakır.
-- **Yazının kendisi düzenlenince** (taşıma, döndürme, metin) bağı kopar: elle yerleştirilen yazı nesneyi izlemez.
+- “Nesneye bağlı” (B) açıkken yazı etiketlediği nesneyi bilir: yazının yeni alanları `labelOf` (nesnenin kalıcı kimliği, ADR 0014) ve
+  `labelScale` (N). `.kcad` belge şeması 18 (yazının iki alanı; yazıcı 18'i yalnız bağlı yazı varken yazar); eski şemalı yükte bu alanlar
+  bilinmeyen alandır (ADR 0174 gibi). `cad.entities.create`'in yeni nesnesi bağı taşır; `cad.entities.set` bağı koparabilir (Bağı kopar).
+- **Güncelleme, iki belgede kayıttan hemen önce:** bir adım (hangi komut, araç, Python ya da MCP yaptıysa) bağlı bir yazının nesnesini
+  değiştirdiyse (geometrisi, etiketi ya da katmanı), adım kaydedilmeden yazı §1'in kuralıyla yeniden yazılır ve aynı adıma girer: metni ve
+  yeri nesnenin şimdiki etiketinden, katmanının şimdiki etiket stilinden (yoksa türünün varsayılanı), projenin yazı tipinden ve
+  `labelScale`'den; inceltme yoktur (her yazı kendi nesnesini izler). Kural tek nesnelik çekirdek işlevidir (`label_text_of`): nesnenin
+  biçimi, etiketi, stili, ölçek ve yazı tipi alır, yazıyı ya da neden yazmadığını verir. Belge kuralını (web `CadDocument`, masaüstü
+  `kentos_domain::Document`) ortak belge fixture'ları (`fixtures/document-ops/v1`) tutar; geri alma ve yineleme yazıyı nesneyle birlikte
+  döndürür.
+- **Bağın kopması:** nesnenin etiketi boşalır ya da kural onu artık yazmazsa (ölçek dışı, küçük) yazı yerinde kalır ve bağı kopar (iki alan
+  silinir), aynı adımda; yazının kendisi düzenlenince (yeri, metni, boyu, dönüşü, hizası) bağı kopar: elle yerleştirilen yazı nesneyi izlemez.
+- **Silme:** nesnesi silinince bağlı yazı da aynı adımda silinir. Patlat ve Parçalara ayır yazıyı nesnenin yerinde kalan parçasına bağlı
+  bırakır (o parça nesnenin kimliğini taşır).
+- **Çizimde:** bağlı yazısı olan nesnenin etiketi çizimde ve paftada çizilmez; yazı onun yerini alır. Bağsız yazıya çevrilen etiketler çizimde
+  yazılarıyla üst üste görünür; katmanın etiketini kapatmak kullanıcınındır.
 - Öznitelikler'de “Bağlı nesne” satırı (nesnenin türü ve etiketi) ve “Bağı kopar”; DXF ve GeoJSON bağı yazmaz (yazı düz yazıdır) ve bunu
-  söyler.
+  dışa aktarma penceresi söyler.
+- Parçalar: 4a sözleşme ve şema 18 (kodek, sütunlar, bağımsız Python okuyucu ve yazıcısı, örnek dosya); 4b çekirdeğin `label_text_of`'u ve iki
+  belgede kayıt öncesi izleme (ortak belge durumları); 4c araçta “Nesneye bağlı”, çizimde etiketin yerini alma, Öznitelikler, dışa aktarma.
 
 ### 5. Kapsam dışı
 
@@ -101,7 +113,8 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
    testi.
 2. Komut: `cad.entities.create`'in `labels` işlemi; ortak durumlar.
 3. Araç iki platformda: kapsam, seçenekler, önizleme, yazı katmanı, ileti; ortak iz ve resimler.
-4. Bağlı yazı: sözleşme ve `.kcad` şema 18, güncelleme ve silme kuralları ürün komutlarında, Öznitelikler, biçimlerin raporu.
+4. Bağlı yazı (4a, 4b, 4c; §4): sözleşme ve `.kcad` şema 18; çekirdeğin `label_text_of`'u ve iki belgede kayıt öncesi izleme; araçta
+   “Nesneye bağlı”, çizimde etiketin yerini alma, Öznitelikler, biçimlerin raporu.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

@@ -15,7 +15,7 @@
 use iced::widget::{button, column, container, row, stack, text};
 use iced::{Color, Element, Fill};
 
-use kentos_contracts::{LayerNode, LayerNodeType};
+use kentos_contracts::{DrawingFont, LayerNode, LayerNodeType};
 use kentos_interaction::Format;
 use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
@@ -657,6 +657,7 @@ impl App {
                         length_first: self.locks.length.is_some(),
                     }),
                     self.lock_tag(&format),
+                    doc.model.settings().drawing_font.unwrap_or(DrawingFont::Barlow),
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).

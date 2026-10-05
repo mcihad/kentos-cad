@@ -1,0 +1,239 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Etiketleri yazıya çevir",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35,
+        "label": {
+          "placement": "center",
+          "size": 10,
+          "grow": 1,
+          "maxSize": 14
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 7
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "label": {
+          "placement": "along",
+          "size": 10
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#6B7785",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "label": "101",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4420000
+        },
+        {
+          "x": 487014,
+          "y": 4420000
+        },
+        {
+          "x": 487014,
+          "y": 4420010
+        },
+        {
+          "x": 487000,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {},
+      "label": "102",
+      "pts": [
+        {
+          "x": 487014,
+          "y": 4420000
+        },
+        {
+          "x": 487028,
+          "y": 4420000
+        },
+        {
+          "x": 487028,
+          "y": 4420010
+        },
+        {
+          "x": 487014,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {},
+      "label": "104",
+      "pts": [
+        {
+          "x": 487002,
+          "y": 4420001
+        },
+        {
+          "x": 487012,
+          "y": 4420001
+        },
+        {
+          "x": 487012,
+          "y": 4420009
+        },
+        {
+          "x": 487002,
+          "y": 4420009
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "nokta",
+      "attrs": {},
+      "label": "P1",
+      "p": {
+        "x": 487030,
+        "y": 4420003
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {},
+      "label": "Cumhuriyet Cd.",
+      "pts": [
+        {
+          "x": 487030,
+          "y": 4420015
+        },
+        {
+          "x": 487000,
+          "y": 4420015
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "gizli",
+      "attrs": {},
+      "label": "999",
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4419992
+        },
+        {
+          "x": 487010,
+          "y": 4419992
+        },
+        {
+          "x": 487010,
+          "y": 4419997
+        },
+        {
+          "x": 487000,
+          "y": 4419997
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 7,
+      "layerId": "parsel",
+      "attrs": {},
+      "p": {
+        "x": 487020,
+        "y": 4419995
+      },
+      "text": "Not",
+      "height": 1.5,
+      "rotation": 0
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

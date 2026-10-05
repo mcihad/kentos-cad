@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 300,
-      "implemented": 288,
+      "total": 301,
+      "implemented": 289,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 94,
-      "implemented": 92,
+      "total": 95,
+      "implemented": 93,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 109,
-    "commandsOnDesktop": 228,
+    "commandsOnDesktop": 229,
     "desktop": {
       "commands": {
-        "total": 300,
-        "implemented": 228,
+        "total": 301,
+        "implemented": 229,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 94,
-        "implemented": 92,
+        "total": 95,
+        "implemented": 93,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -6678,6 +6678,39 @@
       ]
     },
     {
+      "id": "tool.labelsToText",
+      "title": "Etiketleri yazıya çevir",
+      "category": "Açıklama",
+      "icon": "labelsToText",
+      "description": "Katmanların etiketlerini (parsel numarası, nokta adı, yol adı) seçilen ölçekte, paftanın yazdığı gibi yazı nesnesine çevirir: boyları, yerleri ve dönüşleriyle; tek adımda.",
+      "aliases": [
+        "ETIKETYAZI",
+        "ETIKETCEVIR",
+        "LABELCONVERT"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Yazı",
+        "CBS › Harita › Etiket",
+        "CBS › Düzenle › Açıklama"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/labels-to-text.json"
+      ]
+    },
+    {
       "id": "tool.leader",
       "title": "Kılavuz",
       "category": "Açıklama",
@@ -10736,6 +10769,31 @@
         "fixtures/interaction/v1/join-chain.json",
         "fixtures/interaction/v1/object-tools.json",
         "fixtures/interaction/v1/usage-join-chain.json"
+      ]
+    },
+    {
+      "id": "labelsToText",
+      "label": "Etiketleri yazıya çevir",
+      "icon": "labelsToText",
+      "group": "annotate",
+      "aliases": [
+        "ETIKETYAZI",
+        "ETIKETCEVIR",
+        "LABELCONVERT"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Katmanların etiketlerini (parsel numarası, nokta adı, yol adı) seçilen ölçekte, paftanın yazdığı gibi yazı nesnesine çevirir: boyları, yerleri ve dönüşleriyle; tek adımda.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/labels-to-text.json"
       ]
     },
     {
@@ -19888,6 +19946,7 @@
               "tool.text",
               "tool.leader",
               "tool.placeTextFile",
+              "tool.labelsToText",
               "tool.dimension",
               "tool.dimContinue",
               "tool.dimBaseline",
@@ -20879,6 +20938,18 @@
             ],
             "overflow": [],
             "keep": false
+          },
+          {
+            "label": "Etiket",
+            "icon": "labelsToText",
+            "items": [
+              {
+                "command": "tool.labelsToText",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -21232,6 +21303,10 @@
               },
               {
                 "command": "tool.placeTextFile",
+                "size": "small"
+              },
+              {
+                "command": "tool.labelsToText",
                 "size": "small"
               },
               {
@@ -23113,6 +23188,10 @@
                   "size": "small"
                 },
                 {
+                  "command": "tool.labelsToText",
+                  "size": "small"
+                },
+                {
                   "command": "text.findReplace",
                   "size": "small"
                 }
@@ -24888,6 +24967,18 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Etiket",
+              "icon": "labelsToText",
+              "items": [
+                {
+                  "command": "tool.labelsToText",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -25241,6 +25332,10 @@
                 },
                 {
                   "command": "tool.placeTextFile",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.labelsToText",
                   "size": "small"
                 },
                 {
@@ -26321,6 +26416,7 @@
     "spline": "<path d=\"M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9\"/><rect x=\"1.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"4.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "text": "<path d=\"M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5\"/>",
     "textFile": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9.5h5M10 9.5v5\"/>",
+    "labelsToText": "<path d=\"M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z\"/><circle cx=\"4.7\" cy=\"6.2\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8\"/><path d=\"M12.3 10.8h5.2M14.9 10.8v6.7\"/>",
     "leader": "<path d=\"M4 16 10 9.5h2.5\"/><path d=\"M4 16 7 14.2 5.6 12.8z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 8.2h3.2M14 10.8h2.4\" stroke-width=\"1.2\"/>",
     "leaderArrowFilled": "<path d=\"M6.5 10H17\"/><path d=\"M2.5 10 7.2 7.6v4.8z\" fill=\"currentColor\" stroke=\"none\"/>",
     "leaderArrowOpen": "<path d=\"M2.5 10H17\"/><path d=\"M7.2 7.6 2.5 10l4.7 2.4\"/>",

@@ -204,6 +204,8 @@ pub struct Newest {
     pub(super) mask: Option<bool>,
     /// A text's turn in degrees, exact (Okunur yap, docs/adr/0145 §6).
     pub(super) rotation: Option<f64>,
+    /// A text's height, within 1e-9 (a label's size at a scale, docs/adr/0175).
+    pub(super) height: Option<f64>,
     /// A leader's arrowhead by its name, `null` the filled arrow (docs/adr/0146); absent, not compared.
     #[serde(default, deserialize_with = "present")]
     pub(super) arrow: Option<Option<String>>,

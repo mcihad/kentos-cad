@@ -279,6 +279,11 @@ async function setUp(t) {
   await b.eval(`(async () => {
     const k = window.kentos;
     k.tools.activate('select');
+    // Every trace starts from the layout's first state: the bottom panel folded on Komut geçmişi. A trace that opens
+    // a panel tab (Koordinat listesi, Noktalar) would otherwise leave the next one a shorter drawing area in the same
+    // browser, its points off the drawing (the desktop gives every play an app of its own).
+    k.ui.bottomExpanded.set(false);
+    k.ui.bottomTab.set('history');
     // Nothing typed in an earlier trace carries over.
     const line = document.querySelector('.cmdline__input');
     if (line) line.value = '';
@@ -493,6 +498,8 @@ const observe = (mark) =>
       widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
       mask: e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension' ? e.mask === true : null,
       rotation: e.kind === 'text' || e.kind === 'leader' ? e.rotation : null,
+      // A text's height on the ground (docs/adr/0175: from a label's size at a scale).
+      height: e.kind === 'text' ? e.height : null,
       // A leader's arrowhead (null: the filled arrow; docs/adr/0146).
       arrow: e.kind === 'leader' ? (e.arrow ?? null) : null,
       // A dimension's direction in degrees: a linear one's measured, an ordinate's axis (docs/adr/0147).
@@ -570,6 +577,9 @@ function compareShape(name, have, want, t) {
   // Its attributes, all of them, exact.
   const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   if (want.attrs !== undefined && sorted(have.attrs) !== sorted(want.attrs)) bad.push(`${name}.attrs: ${JSON.stringify(have.attrs)}, beklenen ${JSON.stringify(want.attrs)}`);
+  // A text's height (docs/adr/0175: a label's size at a scale), within 1e-9.
+  if (want.height !== undefined && (have.height === null || Math.abs(have.height - want.height) > 1e-9))
+    bad.push(`${name}.height: ${JSON.stringify(have.height)}, beklenen ${want.height}`);
   // A dimension's direction (docs/adr/0147), within 1e-9: a typed angle in grads comes back through radians.
   if (want.angle !== undefined && (have.angle === null || Math.abs(have.angle - want.angle) > 1e-9))
     bad.push(`${name}.angle: ${JSON.stringify(have.angle)}, beklenen ${want.angle}`);

@@ -15,6 +15,7 @@ use iced::widget::canvas::{self, LineDash, Path, Stroke};
 use iced::widget::{Space, canvas as canvas_widget, column, container, row, stack, text};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, Vector, border, mouse};
 
+use kentos_contracts::DrawingFont;
 use kentos_interaction::{MarkerShape, Preview, Tone, Vec2};
 use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
@@ -47,6 +48,7 @@ pub fn layer<'a>(
     preview: Option<Preview>,
     field: Option<FieldView<'a>>,
     lock_tag: Option<(String, Vec2)>,
+    font: DrawingFont,
 ) -> Element<'a, Message> {
     let screen = |p: Vec2| {
         let [x, y] = camera.world_to_screen(p);
@@ -55,6 +57,7 @@ pub fn layer<'a>(
     let mut layers: Vec<Element<'a, Message>> = Vec::new();
     // The snap colour of the drawing (`--canvas-snap`): a corner's reach is drawn in it.
     let snap = marks.colors.snap;
+    let halo = marks.colors.halo;
     if !marks.is_empty() {
         layers.push(canvas_widget(marks).width(Fill).height(Fill).into());
     }
@@ -66,6 +69,8 @@ pub fn layer<'a>(
                 preview,
                 camera: *camera,
                 snap,
+                font,
+                halo,
             })
             .width(Fill)
             .height(Fill)
@@ -288,6 +293,9 @@ struct Draft {
     preview: Preview,
     camera: Camera,
     snap: Color,
+    /// The drawing's face and the drawing area's colour: texts to come are drawn in them (docs/adr/0175 §3).
+    font: DrawingFont,
+    halo: Color,
 }
 
 impl Draft {
@@ -476,6 +484,20 @@ impl canvas::Program<Message> for Draft {
             frame.stroke(
                 &mark,
                 Stroke::default().with_color(tone(m.tone)).with_width(width),
+            );
+        }
+        // Texts to come, faint, as text objects will draw them (docs/adr/0175 §3).
+        for t in &self.preview.texts {
+            crate::labels::ghost(
+                &mut frame,
+                &t.text,
+                self.screen(t.p),
+                (t.height * self.camera.scale) as f32,
+                (-t.rotation.to_radians()) as f32,
+                (t.align.along() as f32, t.align.up() as f32),
+                self.font,
+                (accent.scale_alpha(0.65), self.halo),
+                t.mask,
             );
         }
         // Short texts beside points: a reference line's start “A” (docs/adr/0057).
