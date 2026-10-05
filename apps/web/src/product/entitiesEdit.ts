@@ -78,6 +78,12 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   topology: 'Topolojik temizlik',
   // Kenar eşleme (docs/adr/0159).
   edgematch: 'Kenar eşle',
+  // Biçim değiştir, Sürdür and the holes (docs/adr/0173).
+  reshape: 'Biçim değiştir',
+  continue: 'Sürdür',
+  holeAdd: 'Delik ekle',
+  holeRemove: 'Deliği sil',
+  holeFill: 'Deliği doldur',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */

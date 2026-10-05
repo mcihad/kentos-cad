@@ -240,6 +240,7 @@ python3 scripts/fixtures/field_gts7_cases.py --check   # Topcon GTS-7 okuyucusun
 python3 scripts/fixtures/gnss_gpx_cases.py --check   # GPX 1.1 okuyucusunu (yol, rota ve iz noktaları, ele ve geoidheight'tan elipsoit yüksekliği, fix, uydu, HDOP, fix none, bozuk konum ve değerler, XML değil, derin) şemadan yazılmış, expat'le okuyan başvurudan denetle; durumlar fixtures/gnss/v1/gpx.json (ADR 0169 §1)
 python3 scripts/vendor/geographiclib.py --check   # GeographicLib'in libm'li kopyasını (crates/shared/geographiclib-rs) crates.io sürümünden ve kuraldan denetle; değişince yeniden yaz (ADR 0171 §5)
 python3 scripts/fixtures/ground_survey_cases.py --check   # Hesap pencerelerinin zemin ile düzlem arası uzunluklarını (Kutupsal alım noktaları yerine koyar, Aplikasyon zemin uzunluğunu verir, Poligon hesabı noktalarını kapanmasız geri verir) bilinen düzlem noktalarından ve PROJ ile GeographicLib'in çarpanlarından denetle; durumlar fixtures/geodesy/v1/ground-survey.json (ADR 0171 §4)
+python3 scripts/fixtures/reshape_cases.py --check   # Biçim değiştir'in ve deliklerin durumlarını (alanda kırpma ve cep, çok parça, retler; çizgide iki ve tek buluşma, yaylı yol; delik ekleme, birleşme, silme ve halka) düz kenarlarda kesin kesirlerle halka ve yol ekleyen, yayda mpmath'le hesaplayan bağımsız başvurudan denetle; durumlar fixtures/reshape/v1/cases.json (ADR 0173)
 python3 scripts/fixtures/vertex_table_cases.py --check   # Köşe tablosunun satırlarını ve yazmalarını (taşıma, kot, yarıçap büyüklüğünü koruyarak ve payıyla, köşe ekleme, çoklu silme, retler) kurallardan ve mpmath'le 50 basamaklı yarıçap ile büküm arası çeviriden denetle; durumlar fixtures/vertex-table/v1/cases.json (ADR 0172)
 python3 scripts/fixtures/vertex_edit_cases.py --check   # Köşe tablosunun yazmalarını (hücreler, taslak satır, silme; iletiler, adımlar, açık kalan hücre; CAD'in eksen adları) kurallardan denetle; durumlar fixtures/vertex-table/v1/edits.json (ADR 0172)
 cargo test -p kentos-desktop vertices::tests::screens -- --ignored --nocapture   # Köşe tablosunun resimleri, .run/shots/kose-tablosu-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs vertextable))
@@ -802,8 +803,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `whyNotGrid`; pencerelerin tabloları, özetleri ve raporları iki platformda) tamam; `HYB-14` bitti (5 Ekim). `HYB-15` köşe tablosu
   ([ADR 0172](docs/adr/0172-vertex-table.md)): 1. adım (çekirdek `ops::vertex_table`, başvuru `vertex_table_cases.py`), 2. adım
   (düzenlenen Koordinat listesi iki platformda: web `VertexTable.ts`, `vertexEdit.ts`, masaüstü `vertices/`; `edits.json`) ve 3. adım
-  (Topoloji açıkken komşular: `neighbours_in`, `neighboursOf`; takma adlar) tamam; `HYB-15` bitti (5 Ekim). Sıradaki `HYB-16` biçim
-  değiştirme. 4 Ekim: derleme ve test süreleri
+  (Topoloji açıkken komşular: `neighbours_in`, `neighboursOf`; takma adlar) tamam; `HYB-15` bitti (5 Ekim). `HYB-16` biçim değiştirme,
+  sürdürme ve delikler ([ADR 0173](docs/adr/0173-reshape-continue-holes.md)): 1. adım (`cad.entities.edit`'in beş işlemi; çekirdek
+  `ops::holes`, `ops::reshape_by`; başvuru `reshape_cases.py`) tamam; sıradaki 2. adım (delik araçları iki platformda). 4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

@@ -269,6 +269,11 @@ class EditOperation(_StrEnum):
     - ``replaceText``: Bul ve değiştir (docs/adr/0145 §6): texts given new words, the step
     - ``topology``: Topolojik temizlik (docs/adr/0148): line work and area outlines put
     - ``edgematch``: Kenar eşle (docs/adr/0159): the line ends of two sheets put together
+    - ``reshape``: Biçim değiştir (docs/adr/0173 §2–§3): an area cut or grown, or a
+    - ``continue``: Sürdür (docs/adr/0173 §4): a line or a polyline continued from one
+    - ``holeAdd``: Delik ekle (docs/adr/0173 §5): a hole added to an area.
+    - ``holeRemove``: Deliği sil: a hole of an area removed.
+    - ``holeFill``: Deliği doldur: a new area filling a hole, made from the area.
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -303,9 +308,14 @@ class EditOperation(_StrEnum):
     REPLACE_TEXT = "replaceText"
     TOPOLOGY = "topology"
     EDGEMATCH = "edgematch"
+    RESHAPE = "reshape"
+    CONTINUE = "continue"
+    HOLE_ADD = "holeAdd"
+    HOLE_REMOVE = "holeRemove"
+    HOLE_FILL = "holeFill"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 

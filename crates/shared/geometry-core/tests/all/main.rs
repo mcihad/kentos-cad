@@ -21,6 +21,7 @@ mod numeric;
 mod point_editor;
 mod point_text;
 mod polygonize;
+mod reshape;
 mod snap;
 mod text;
 mod topology;

@@ -123,6 +123,19 @@ pub enum EditOperation {
     /// a line a polyline), each geometry with its elevations as the core's
     /// `ops::edgematch` gave them.
     Edgematch,
+    /// Biçim değiştir (docs/adr/0173 §2–§3): an area cut or grown, or a
+    /// path's stretch redrawn, by a sketched line; the object updated in
+    /// place (a line becomes a polyline).
+    Reshape,
+    /// Sürdür (docs/adr/0173 §4): a line or a polyline continued from one
+    /// of its ends, updated in place.
+    Continue,
+    /// Delik ekle (docs/adr/0173 §5): a hole added to an area.
+    HoleAdd,
+    /// Deliği sil: a hole of an area removed.
+    HoleRemove,
+    /// Deliği doldur: a new area filling a hole, made from the area.
+    HoleFill,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

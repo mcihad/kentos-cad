@@ -170,6 +170,12 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Topology => "Topolojik temizlik",
         // Kenar eşleme (docs/adr/0159).
         EditOperation::Edgematch => "Kenar eşle",
+        // Biçim değiştir, Sürdür and the holes (docs/adr/0173).
+        EditOperation::Reshape => "Biçim değiştir",
+        EditOperation::Continue => "Sürdür",
+        EditOperation::HoleAdd => "Delik ekle",
+        EditOperation::HoleRemove => "Deliği sil",
+        EditOperation::HoleFill => "Deliği doldur",
     }
 }
 
