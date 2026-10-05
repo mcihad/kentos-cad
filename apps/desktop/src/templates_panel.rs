@@ -774,4 +774,83 @@ mod tests {
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert!(!doc.styles().items.iter().any(|i| i["id"] == "p-ada"));
     }
+
+    /// The ribbon's Şablonlar panel (docs/adr/0176 §4c) before a template is
+    /// drawn with, then with one and its menu open, light and dark at
+    /// 1440 × 900 and dark at 1100 × 650; `.run/shots/sablon-serit-*` (the
+    /// web's: `node apps/web/scripts/e2e/shots.mjs templates`):
+    ///
+    /// ```text
+    /// cargo test -p kentos-desktop templates_panel::tests::ribbon_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn ribbon_screens() {
+        use iced::{Size, mouse};
+        use kentos_ui::snapshot::Snapshot;
+
+        use crate::files_testing::find_texts;
+
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        kentos_ui::theme::motion::set_reduced(true);
+        for (theme, w, h) in [
+            ("light", 1440.0, 900.0),
+            ("dark", 1440.0, 900.0),
+            ("dark", 1100.0, 650.0),
+        ] {
+            let mut app = app();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(Size::new(w, h)));
+            app.tab = "home";
+            let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            let mut picture = |snapshot: &mut Snapshot, app: &mut App, name: &str| {
+                snapshot.settle(app, App::view, &mut update);
+                let file = out.join(format!("sablon-serit-{name}-{theme}-{w}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            };
+            picture(&mut snapshot, &mut app, "bos");
+            let _ = app.update(Message::DrawTemplate("p-ada".into()));
+            let _ = app.update(Message::Run("tool.cancel"));
+            let _ = app.update(Message::DrawTemplate("p-parsel".into()));
+            picture(&mut snapshot, &mut app, "cizerken");
+            // The field in the ribbon (the highest of the name's texts), or the
+            // folded panel's button when the window is too narrow for it.
+            let ribbon = |snapshot: &mut Snapshot, app: &App, caption: &str| {
+                find_texts(snapshot, app, caption)
+                    .into_iter()
+                    .filter(|at| at.y < 160.0)
+                    .min_by(|a, b| a.y.total_cmp(&b.y))
+            };
+            let at = ribbon(&mut snapshot, &app, "Parsel sınırı")
+                .or_else(|| ribbon(&mut snapshot, &app, "Şablonlar"))
+                .expect("the panel on the ribbon");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.step(
+                &mut app,
+                App::view,
+                &mut update,
+                &[
+                    iced::Event::Mouse(mouse::Event::CursorMoved {
+                        position: at.center(),
+                    }),
+                    iced::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                    iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+                ],
+            );
+            picture(&mut snapshot, &mut app, "menu");
+        }
+    }
 }

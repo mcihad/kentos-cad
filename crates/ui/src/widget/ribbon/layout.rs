@@ -639,6 +639,10 @@ impl<'a, Message: 'a> From<Field<'a, Message>> for Element<'a, Message> {
 pub struct Choice<'a, Message> {
     label: Option<String>,
     swatch: Option<Color>,
+    /// The label's icon in its place (a narrow ribbon), muted as the label.
+    label_glyph: Option<Icon>,
+    /// The value's own icon (an object template's).
+    glyph: Option<Icon>,
     value: String,
     width: f32,
     menu: Rc<dyn Fn() -> Menu<Message> + 'a>,
@@ -651,6 +655,8 @@ impl<'a, Message: Clone + 'a> Choice<'a, Message> {
         Self {
             label: None,
             swatch: None,
+            label_glyph: None,
+            glyph: None,
             value: value.into(),
             width: 150.0,
             menu: Rc::new(menu),
@@ -670,6 +676,19 @@ impl<'a, Message: Clone + 'a> Choice<'a, Message> {
         self
     }
 
+    /// Adın yerine alanın ikonu (dar şeritte Renk, Tip, Kalınlık, Ölçek),
+    /// ad gibi soluk; verilince ad gösterilmez.
+    pub fn label_icon(mut self, glyph: Option<Icon>) -> Self {
+        self.label_glyph = glyph;
+        self
+    }
+
+    /// Değerin kendi ikonu, renk örneğinden önce (ör. nesne şablonunun).
+    pub fn icon(mut self, glyph: Option<Icon>) -> Self {
+        self.glyph = glyph;
+        self
+    }
+
     /// Tam genişlik (piksel, yazı ölçeğiyle büyütülmüş).
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
@@ -686,10 +705,14 @@ impl<'a, Message: Clone + 'a> From<Choice<'a, Message>> for Element<'a, Message>
     fn from(choice: Choice<'a, Message>) -> Self {
         const PAD: f32 = 6.0;
         const GAP: f32 = 5.0;
+        const GLYPH: f32 = 13.0;
         let size = typography::caption();
         let mut room = choice.width - PAD * 2.0 - 2.0 - GAP - 9.0;
         let mut face = row![].spacing(GAP).align_y(Center);
-        if let Some(label) = &choice.label {
+        if let Some(glyph) = choice.label_glyph {
+            room -= GLYPH + GAP;
+            face = face.push(icon(glyph).size(GLYPH).tone(Tone::Muted));
+        } else if let Some(label) = &choice.label {
             room -= typography::text_width(label, size) + GAP;
             face = face.push(
                 text(label.clone())
@@ -698,6 +721,10 @@ impl<'a, Message: Clone + 'a> From<Choice<'a, Message>> for Element<'a, Message>
                     .wrapping(iced::widget::text::Wrapping::None)
                     .style(style::text::muted),
             );
+        }
+        if let Some(glyph) = choice.glyph {
+            room -= GLYPH + GAP;
+            face = face.push(icon(glyph).size(GLYPH));
         }
         if let Some(color) = choice.swatch {
             room -= 10.0 + GAP;

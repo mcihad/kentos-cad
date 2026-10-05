@@ -37,11 +37,11 @@ Yok.
 - Proje türleri: `disaster` Afet ve risk analizi
 - Proje türleri: `plan3d` İmar planından 3D kent tasarımı
 
-## Arayüzde yeri görünmeyen komutlar (28)
+## Arayüzde yeri görünmeyen komutlar (27)
 
 Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
-`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.model`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`, `template.panel`
+`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.model`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`
 
 ## Masaüstü
 

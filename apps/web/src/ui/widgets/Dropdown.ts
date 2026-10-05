@@ -10,11 +10,16 @@ export class Dropdown {
   readonly el: HTMLButtonElement;
   private readonly value: HTMLElement;
 
-  constructor(opts: { label?: string; width?: number; className?: string; items: () => MenuItem[]; ariaLabel: string }) {
+  /**
+   * `glyph`: an icon that takes the label's place while the field has the
+   * `dropdown--glyph` class (a narrow ribbon's Renk, Tip, Kalınlık, Ölçek).
+   */
+  constructor(opts: { label?: string; glyph?: string; width?: number; className?: string; items: () => MenuItem[]; ariaLabel: string }) {
     this.value = h('span', { class: 'dropdown__value' });
     this.el = h(
       'button',
       { class: `dropdown ${opts.className ?? ''}`, type: 'button', 'aria-haspopup': 'listbox', 'aria-label': opts.ariaLabel },
+      opts.glyph ? h('span', { class: 'dropdown__glyph' }, icon(opts.glyph, 14)) : null,
       opts.label ? h('span', { class: 'dropdown__label' }, opts.label) : null,
       this.value,
       h('span', { class: 'dropdown__caret' }, icon('chevronDown', 14)),

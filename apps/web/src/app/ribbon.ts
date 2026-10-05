@@ -44,7 +44,7 @@ export type RibbonSource =
   /** Panels with live fields rather than commands. */
   | { readonly builtin: BuiltinPanel };
 
-export type BuiltinPanel = 'layers' | 'properties' | 'selection';
+export type BuiltinPanel = 'layers' | 'properties' | 'selection' | 'templates';
 
 export interface RibbonTabSpec {
   readonly id: string;
@@ -106,12 +106,14 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.hatch', 'text.findReplace'], more: 'draw' },
       { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map', workspaces: ['gis'] },
       { builtin: 'layers' },
+      { builtin: 'templates' },
       { builtin: 'properties' },
     ],
     lead: ['edit.paste'],
     keep: ['Çizim', 'Değiştir'],
     launchers: {
       Katmanlar: { command: 'style.layerStyle', title: 'Katman stili…' },
+      Şablonlar: { command: 'template.panel', title: 'Şablonlar paneli' },
       Özellikler: { command: 'file.settings', title: 'Proje ayarları: birimler, hassasiyet ve çizim ölçeği' },
     },
   },
@@ -160,6 +162,7 @@ const CAD_DRAW = [...EVERYDAY_DRAW, 'tool.ellipse', 'tool.spline', 'tool.point']
 const EVERYDAY_MODIFY = ['tool.move', 'tool.copy', 'tool.rotate', 'tool.mirror', 'tool.scale', 'tool.offset', 'tool.trim', 'tool.extend', 'tool.fillet'];
 const HOME_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = {
   Katmanlar: { command: 'style.layerStyle', title: 'Katman stili…' },
+  Şablonlar: { command: 'template.panel', title: 'Şablonlar paneli' },
   Özellikler: { command: 'file.settings', title: 'Proje ayarları: birimler, hassasiyet ve çizim ölçeği' },
 };
 const VIEW_LAUNCHERS: Readonly<Record<string, RibbonLauncher>> = { Görünüş: { command: 'tools.options', args: 'appearance', title: 'Uygulama ayarları: görünüm' } };
@@ -186,6 +189,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Değiştir', icon: 'move', commands: EVERYDAY_MODIFY, more: 'modify', compact: true },
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.leader', 'tool.hatch'], more: 'annotate' },
       { builtin: 'layers' },
+      { builtin: 'templates' },
       { pick: 'Blok', icon: 'blockInsert', commands: ['tool.blockInsert', 'tool.blockDefine', 'block.panel'], more: 'insert' },
       { builtin: 'properties' },
       { pick: 'Ölçme', icon: 'measure', commands: ['tool.measure', 'tool.area', 'tool.measureAngle', 'tool.stationOffset', 'crs.query'], under: ['calc.fieldbook', 'file.import.gnss', 'field.send', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection'] },
@@ -258,6 +262,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'text.findReplace'], more: 'edit' },
       { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map' },
       { builtin: 'layers' },
+      { builtin: 'templates' },
       { builtin: 'properties' },
     ],
     lead: ['edit.paste'],
@@ -418,6 +423,7 @@ const BUILTIN_LABEL: Record<BuiltinPanel, { label: string; icon: string }> = {
   layers: { label: 'Katmanlar', icon: 'layers' },
   properties: { label: 'Özellikler', icon: 'styles' },
   selection: { label: 'Seçim', icon: 'select' },
+  templates: { label: 'Şablonlar', icon: 'templates' },
 };
 
 /**

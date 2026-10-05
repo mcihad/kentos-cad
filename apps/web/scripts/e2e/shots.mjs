@@ -2151,6 +2151,35 @@ const pickRows = async (ui, a, b) => {
   await ui.clickAt(...(await rowCell(ui, b, 1)), { modifiers: 8 });
   await ui.sleep(200);
 };
+/** Two templates drawn with: the field shows the last, the menu lists both first. */
+const DRAW_TEMPLATES = `(() => {
+  const k = window.kentos;
+  k.commands.execute('template.draw', 'u-sablon-yol');
+  k.tools.activate('select');
+  k.commands.execute('template.draw', 'u-sablon-parsel');
+})()`;
+/** The ribbon's Şablonlar field opened: itself, or its folded panel's button first in a narrow window. */
+async function openTemplateField(ui) {
+  const shown = await ui.eval(`(() => { const d = document.querySelector('.dropdown--template'); return !!d && d.offsetParent !== null; })()`);
+  if (!shown) {
+    await ui.clickSel('.rpanel[data-panel="Şablonlar"] .rpanel__collapsed');
+    await ui.sleep(300);
+  }
+  await ui.clickSel('.dropdown--template');
+  await ui.sleep(300);
+}
+const closeTemplates = async (ui) => (await ui.escapeAll(3), await ui.eval(UNDO_ALL), await ui.eval(REMOVE_MINE), await ui.eval(`window.kentos.ui.dockTab.set('layers')`));
+/** Şablonlar on the ribbon's Giriş (docs/adr/0176 §4c): the desktop's `templates_panel::tests::ribbon_screens`. */
+SCENES.templates = [
+  { id: 'ribbon-empty', open: async (ui) => (await ui.eval(ADD_TEMPLATES), await ui.sleep(300)), close: closeTemplates },
+  { id: 'ribbon-drawing', open: async (ui) => (await ui.eval(ADD_TEMPLATES), await ui.eval(DRAW_TEMPLATES), await ui.sleep(400)), close: closeTemplates },
+  {
+    id: 'ribbon-menu',
+    open: async (ui) => (await ui.eval(ADD_TEMPLATES), await ui.eval(DRAW_TEMPLATES), await ui.sleep(300), await openTemplateField(ui)),
+    close: closeTemplates,
+  },
+];
+
 SCENES.pointeditor = [
   { id: 'noktalar', open: openPointEditor },
   {

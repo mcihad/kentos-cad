@@ -1,7 +1,7 @@
-//! The ribbon's own panels as the web's (docs/adr/0089): Giriş's Katmanlar
-//! and Özellikler, the contextual Seçim tab with its panel, the current
-//! colour of new objects. The sample drawing: Kadastro holds Parsel (active)
-//! and Bina (locked); Çizim is hidden.
+//! The ribbon's own panels as the web's (docs/adr/0089): Giriş's Katmanlar,
+//! Şablonlar (docs/adr/0176 §4c) and Özellikler, the contextual Seçim tab
+//! with its panel, the current colour of new objects. The sample drawing:
+//! Kadastro holds Parsel (active) and Bina (locked); Çizim is hidden.
 
 use kentos_contracts::{LineType, Workspace};
 use kentos_domain::Slot;
@@ -33,10 +33,10 @@ fn typed(app: &mut App, text: &str) {
 }
 
 #[test]
-fn giris_has_the_webs_katmanlar_and_ozellikler_which_step_down_to_one_button() {
+fn giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_button() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     let app = app_with_drawing();
-    for label in ["Katmanlar", "Özellikler"] {
+    for label in ["Katmanlar", "Şablonlar", "Özellikler"] {
         let group = app
             .ribbon_group("home", panel("home", label))
             .unwrap_or_else(|| panic!("{label} on the desktop"));
@@ -50,6 +50,66 @@ fn giris_has_the_webs_katmanlar_and_ozellikler_which_step_down_to_one_button() {
         .expect("Seçim");
     let w = group.widths();
     assert!(w[0] > w[2] && w[2] > w[3], "Seçim: {w:?}");
+}
+
+/// Şablonlar's field lists the templates drawn with last, then every
+/// category's, each with its tool; the one being drawn with is chosen, and
+/// a choice draws with it.
+#[test]
+fn the_template_field_lists_the_recent_then_the_categories_the_drawn_one_chosen() {
+    use super::menus::TemplateLine;
+    use serde_json::json;
+
+    let mut app = app_with_drawing();
+    let template = |id: &str, name: &str, path: &[&str], tool: &str| json!({ "kind": "template", "id": id, "name": name, "path": path, "template": { "tool": tool, "layer": { "path": [], "name": "Parsel" } } });
+    let styles = kentos_contracts::ProjectStyles {
+        items: vec![
+            template("p-parsel", "Parsel sınırı", &["Kadastro"], "polygon"),
+            template("p-ada", "Ada sınırı", &["Kadastro"], "polyline"),
+            template("p-nokta", "Poligon noktası", &[], "point"),
+        ],
+        categories: vec![json!({ "path": ["Kadastro"] })],
+    };
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .set_styles(styles);
+    let _ = app.update(Message::Swallowed);
+    let words = |app: &App| -> Vec<String> {
+        app.template_menu_lines()
+            .into_iter()
+            .map(|line| match line {
+                TemplateLine::Header(label) => format!("» {label}"),
+                TemplateLine::Template {
+                    name, tool, chosen, ..
+                } => format!("{}{name} ({tool})", if chosen { "• " } else { "" }),
+            })
+            .collect()
+    };
+    assert_eq!(
+        words(&app),
+        [
+            "» Kadastro",
+            "Ada sınırı (Çoklu çizgi)",
+            "Parsel sınırı (Kapalı alan)",
+            "» Kategorisiz",
+            "Poligon noktası (Nokta)"
+        ]
+    );
+    let _ = app.update(Message::DrawTemplate("p-parsel".into()));
+    assert_eq!(
+        words(&app),
+        [
+            "» Son kullanılanlar",
+            "• Parsel sınırı (Kapalı alan)",
+            "» Kadastro",
+            "Ada sınırı (Çoklu çizgi)",
+            "• Parsel sınırı (Kapalı alan)",
+            "» Kategorisiz",
+            "Poligon noktası (Nokta)"
+        ]
+    );
 }
 
 #[test]

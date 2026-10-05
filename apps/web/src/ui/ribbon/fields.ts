@@ -2,7 +2,11 @@ import type { AppContext } from '../../app/context';
 import type { DisposableStore } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/layers';
+import { TEMPLATE_TOOL_LABEL } from '../../model/objectTemplate';
+import type { LibraryTemplate, Sourced } from '../../model/style';
+import { listTemplates } from '../../style/templateList';
 import { h } from '../dom';
+import { icon } from '../icons';
 import { colorSwatch, layerSwatch } from '../layers/swatch';
 import { Dropdown } from '../widgets/Dropdown';
 import type { MenuItem } from '../widgets/PopupMenu';
@@ -10,9 +14,10 @@ import { fixed } from '../../core/displayNumber';
 
 /**
  * Current-property fields: the active layer, colour, line type and weight
- * for new objects, and the project's plot scale. The ribbon's Katmanlar and
- * Özellikler panels show them; each keeps itself current. The lists are
- * the panels' too (Katmanlar, Öznitelikler, the project settings).
+ * for new objects, the project's plot scale and the object template drawn
+ * with. The ribbon's Katmanlar, Şablonlar and Özellikler panels show them;
+ * each keeps itself current. The lists are the panels' too (Katmanlar,
+ * Şablonlar, Öznitelikler, the project settings).
  */
 
 /** Drawing colours. `ink` is CAD colour 7: black, drawn white on the dark theme. */
@@ -36,6 +41,9 @@ export interface FieldOptions {
   /** Leading label inside the field ("Renk"); false leaves it out. */
   label?: string | false;
 }
+
+/** The current-property fields' icons, shown in their labels' place in a narrow ribbon (`dropdown--glyph`). */
+const FIELD_GLYPHS = { color: 'color', lineType: 'lineType', weight: 'lineWeight', scale: 'plotScale' } as const;
 
 export function layerField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const { doc } = ctx;
@@ -134,6 +142,7 @@ export function weightItems(ctx: AppContext): MenuItem[] {
 export function colorField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const dd = new Dropdown({
     ariaLabel: 'Renk',
+    glyph: FIELD_GLYPHS.color,
     label: opts.label === false ? undefined : (opts.label ?? 'Renk'),
     width: opts.width ?? 150,
     items: () => colorItems(ctx),
@@ -150,6 +159,7 @@ export function colorField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
 export function lineTypeField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const dd = new Dropdown({
     ariaLabel: 'Çizgi tipi',
+    glyph: FIELD_GLYPHS.lineType,
     label: opts.label === false ? undefined : (opts.label ?? 'Tip'),
     width: opts.width ?? 150,
     items: () => lineTypeItems(ctx),
@@ -161,6 +171,7 @@ export function lineTypeField(ctx: AppContext, d: DisposableStore, opts: FieldOp
 export function weightField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const dd = new Dropdown({
     ariaLabel: 'Çizgi kalınlığı',
+    glyph: FIELD_GLYPHS.weight,
     label: opts.label === false ? undefined : (opts.label ?? 'Kalınlık'),
     width: opts.width ?? 160,
     items: () => weightItems(ctx),
@@ -173,10 +184,47 @@ export function scaleField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
   const s = ctx.doc.settings.plotScale;
   const dd = new Dropdown({
     ariaLabel: 'Çizim ölçeği',
+    glyph: FIELD_GLYPHS.scale,
     label: opts.label === false ? undefined : (opts.label ?? 'Ölçek'),
     width: opts.width ?? 128,
     items: () => PLOT_SCALES.map((v): MenuItem => ({ label: `1:${v}`, radio: true, checked: s.value === v, run: () => s.set(v) })),
   });
   d.add(s.subscribe((v) => dd.set(h('span', { class: 'dropdown__text num' }, `1:${v}`)), true));
+  return dd.el;
+}
+
+/**
+ * Şablonlar's field (docs/adr/0176 §4): the template being drawn with, or “Şablonla çiz”; its menu lists the templates
+ * drawn with last, then every template under its category (style/templateList.ts), each with its tool's icon; a
+ * choice draws with it. The desktop's is `ribbon_panels.rs`'s `templates_group`.
+ */
+export function templateField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
+  const lib = ctx.styles.library;
+  const item = (t: Sourced<LibraryTemplate>): MenuItem => ({
+    label: t.name,
+    icon: ctx.tools.get(t.template.tool)?.icon ?? 'templates',
+    hint: TEMPLATE_TOOL_LABEL[t.template.tool],
+    radio: true,
+    checked: ctx.settings.template.value?.id === t.id,
+    run: () => ctx.commands.execute('template.draw', t.id),
+  });
+  const dd = new Dropdown({
+    ariaLabel: 'Şablonla çiz',
+    className: 'dropdown--template',
+    width: opts.width ?? 196,
+    items: () => {
+      const out: MenuItem[] = [];
+      const recent = ctx.tools.recentTemplates.value.map((id) => lib.template(id)).filter((t): t is Sourced<LibraryTemplate> => !!t);
+      if (recent.length) out.push({ kind: 'header', label: 'Son kullanılanlar' }, ...recent.map(item));
+      for (const g of listTemplates(lib)) out.push({ kind: 'header', label: g.path.length ? g.path.join(' / ') : 'Kategorisiz' }, ...g.items.map(item));
+      if (!out.length) out.push({ label: 'Kitaplıkta nesne şablonu yok', disabled: true, run: () => {} });
+      return out;
+    },
+  });
+  const sync = () => {
+    const run = ctx.settings.template.value;
+    dd.set(icon(run ? 'templateDraw' : 'templates', 14), h('span', { class: 'dropdown__text' }, run ? run.name : 'Şablonla çiz'));
+  };
+  d.add(ctx.settings.template.subscribe(sync, true));
   return dd.el;
 }

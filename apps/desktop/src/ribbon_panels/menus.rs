@@ -1,10 +1,11 @@
 //! The menus of the ribbon's own panels (ribbon_panels.rs): the active
-//! layer's list, the current properties' choices, the plot scales, and the
-//! selection's kinds as the Seçim panel lists them.
+//! layer's list, the object templates, the current properties' choices, the
+//! plot scales, and the selection's kinds as the Seçim panel lists them.
 
 use iced::widget::{column, container, row, space, text};
 use iced::{Color, Element, Fill};
 use kentos_contracts::LineType;
+use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Menu;
@@ -44,6 +45,41 @@ pub(super) fn layer_menu(lines: &[LayerLine]) -> Menu<Message> {
             )
             .swatch(*color)
             .shortcut(count.to_string()),
+    })
+}
+
+/// A row of the Şablonlar field's menu: a category's (or the recent ones')
+/// header, or a template with its tool's icon and name.
+#[derive(Debug, Clone)]
+pub(super) enum TemplateLine {
+    Header(String),
+    Template {
+        id: String,
+        name: String,
+        icon: Icon,
+        tool: String,
+        chosen: bool,
+    },
+}
+
+/// The templates to draw with (the web's `templateField`); a choice draws
+/// with it, the one being drawn with is marked.
+pub(super) fn template_menu(lines: &[TemplateLine]) -> Menu<Message> {
+    if lines.is_empty() {
+        return Menu::new().item("Kitaplıkta nesne şablonu yok", None);
+    }
+    lines.iter().fold(Menu::new(), |menu, line| match line {
+        TemplateLine::Header(label) => menu.header(label.clone()),
+        TemplateLine::Template {
+            id,
+            name,
+            icon,
+            tool,
+            chosen,
+        } => menu
+            .radio(name.clone(), *chosen, Message::DrawTemplate(id.clone()))
+            .icon(*icon)
+            .hint(tool.clone()),
     })
 }
 

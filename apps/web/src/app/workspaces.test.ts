@@ -79,7 +79,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(tabs.filter((t) => !t.contextual).map((t) => t.label)).toEqual(['Dosya', 'Giriş', 'Ekle', 'Açıklama', 'Değiştir', 'Görünüm', 'Yönet', 'Çıktı']);
     expect(tabs.filter((t) => t.contextual).map((t) => t.label)).toEqual(['Seçim']);
     const home = tabs.find((t) => t.id === 'home')!;
-    expect(home.panels.map((p) => p.label)).toEqual(['Pano', 'Seçim', 'Çizim', 'Değiştir', 'Açıklama', 'Katmanlar', 'Blok', 'Özellikler', 'Ölçme']);
+    expect(home.panels.map((p) => p.label)).toEqual(['Pano', 'Seçim', 'Çizim', 'Değiştir', 'Açıklama', 'Katmanlar', 'Şablonlar', 'Blok', 'Özellikler', 'Ölçme']);
     const ölçme = home.panels.find((p) => p.label === 'Ölçme')!;
     expect(ölçme.overflow).toEqual(['calc.fieldbook', 'file.import.gnss', 'field.send', 'calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection']);
     // The other drawing tools under Çizim's ▾: there is no drawing tab. Elips, Eğri and Nokta show.

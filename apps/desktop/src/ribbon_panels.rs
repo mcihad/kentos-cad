@@ -5,6 +5,10 @@
 //!   layers under their groups, with their colours and object counts (a
 //!   locked layer cannot be chosen); Yeni katman, Yeni grup, Katmanları
 //!   göster and Katman paneli.
+//! - **Şablonlar** (Giriş): the object template being drawn with, or
+//!   “Şablonla çiz”, a drop-down of the last used templates and every
+//!   category's, each with its tool's icon (a choice draws with it,
+//!   docs/adr/0176 §4); Yeni şablon…, Nesneden şablon and Şablonlar.
 //! - **Özellikler** (Giriş): the colour, line type and weight new objects
 //!   take (“Katmana göre” at first; kept for the session, as on the web) and
 //!   the project's plot scale.
@@ -12,8 +16,9 @@
 //!   of which kinds; Seçime yakınlaştır, Seçimi kaldır, Seçimi ters çevir.
 //!
 //! Each steps down with the window as the web's does: the fields shorten, the
-//! buttons keep only their icons, then the panel folds into one button whose
-//! menu holds the same choices. The colour goes into the tools' draft
+//! buttons keep only their icons (Özellikler's fields their icons in their
+//! names' place), then the panel folds into one button whose menu holds the
+//! same choices. The colour goes into the tools' draft
 //! (`Draft::color`) and so is explicit in every drawing command's input
 //! (CMD-07); the line type and weight are kept for the session, which no tool
 //! reads yet, on the web either.
@@ -22,17 +27,20 @@ use iced::widget::{column, container, row, text};
 use iced::{Center, Color, Element, Fill};
 use kentos_contracts::{LayerNode, LayerNodeType, LineType};
 use kentos_interaction::DraftColor;
+use kentos_native_style::library::ItemKind;
+use kentos_native_style::object_template::{listed, tool_label};
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Menu;
 use kentos_ui::widget::ribbon::{Button, Choice, Group, Level};
 
 use crate::app::{App, Message};
-use crate::catalog::{Item, Panel as RibbonPanel};
+use crate::catalog::{Item, Panel as RibbonPanel, catalog};
 use crate::document::Document;
 
 use menus::{
-    LayerLine, color_menu, kinds_column, layer_menu, line_type_menu, scale_menu, weight_menu,
+    LayerLine, TemplateLine, color_menu, kinds_column, layer_menu, line_type_menu, scale_menu,
+    template_menu, weight_menu,
 };
 
 /// The colours new objects can take (the web's `DRAW_COLORS`). `ink` is CAD
@@ -128,6 +136,7 @@ impl App {
     ) -> Option<Group<'static, Message>> {
         let group = match name {
             "layers" => self.layers_group(panel)?,
+            "templates" => self.templates_group(panel)?,
             "properties" => self.properties_group(panel)?,
             "selection" => self.selection_group(panel),
             _ => return None,
@@ -245,6 +254,120 @@ impl App {
         out
     }
 
+    /// Şablonlar: the template field over Yeni şablon… and Nesneden şablon,
+    /// then Şablonlar (the web's templates panel).
+    fn templates_group(&self, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
+        self.document.as_ref()?;
+        let lines = self.template_menu_lines();
+        let run = self.template.as_ref().map(|t| t.name.clone());
+        let glyph = crate::icons::from_web(Some(if run.is_some() {
+            "templateDraw"
+        } else {
+            "templates"
+        }));
+        let folded_title = run.as_ref().map_or_else(
+            || "Şablonla çiz".to_owned(),
+            |name| format!("Şablon: {name}"),
+        );
+        let value = run.unwrap_or_else(|| "Şablonla çiz".to_owned());
+        let buttons: Vec<Button<'static, Message>> =
+            ["template.new", "template.fromSelection", "template.panel"]
+                .into_iter()
+                .filter_map(|id| self.small(id))
+                .collect();
+        let s = typography::scaled;
+        let field_width = move |level: Level| if level >= 2 { s(150.0) } else { s(196.0) };
+        let row_width = |pair: &[Button<'static, Message>], icons: bool| {
+            pair.iter()
+                .map(|b| b.clone().icon_only(icons).measure())
+                .sum::<f32>()
+                + ROW_GAP * pair.len().saturating_sub(1) as f32
+        };
+        let widths = [0, 1, 2].map(|level: Level| {
+            let icons = level >= 2;
+            buttons
+                .chunks(2)
+                .map(|pair| row_width(pair, icons))
+                .fold(field_width(level), f32::max)
+                + STACK_PAD * 2.0
+        });
+        let field_lines = lines.clone();
+        let view_buttons = buttons.clone();
+        let view = move |level: Level| -> Element<'static, Message> {
+            let lines = field_lines.clone();
+            let field = Choice::new(value.clone(), move || template_menu(&lines))
+                .icon(Some(glyph))
+                .width(field_width(level))
+                .tip(kentos_ui::widget::Tip::new("Nesne şablonu").body(
+                    "Seçilen şablonla çizilir: katmanı etkin olur, aracı başlar; nesneler şablonun sembolünü, özniteliklerini ve etiketini alır.",
+                ));
+            let mut stack = column![field].spacing(3);
+            for pair in view_buttons.chunks(2) {
+                stack = stack.push(pair.iter().fold(row![].spacing(ROW_GAP), |row, b| {
+                    row.push(b.clone().icon_only(level >= 2))
+                }));
+            }
+            container(stack).padding([0.0, STACK_PAD]).into()
+        };
+        let folded_buttons = buttons;
+        let folded = move || {
+            folded_buttons.iter().fold(
+                Menu::new()
+                    .submenu(folded_title.clone(), template_menu(&lines))
+                    .separator(),
+                |m, b| b.menu_entry(m),
+            )
+        };
+        Some(Group::new(panel.label).stepped(widths, view, folded))
+    }
+
+    /// The templates as the field's menu lists them (the web's
+    /// `templateField`): the last used ones, then every category's under
+    /// its path, each with its tool's icon and name.
+    fn template_menu_lines(&self) -> Vec<TemplateLine> {
+        let lib = &self.styles.library;
+        let chosen = self.template.as_ref().map(|t| t.id.as_str());
+        let line = |id: &str| -> Option<TemplateLine> {
+            let (item, _) = lib.get(id)?;
+            if item.kind() != ItemKind::Template {
+                return None;
+            }
+            let tool = item
+                .template()
+                .and_then(|t| t.get("tool"))
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+            Some(TemplateLine::Template {
+                id: id.to_owned(),
+                name: item.name().to_owned(),
+                icon: catalog()
+                    .get(&format!("tool.{tool}"))
+                    .map_or_else(|| crate::icons::from_web(Some("templates")), |c| c.icon),
+                tool: tool_label(tool).to_owned(),
+                chosen: chosen == Some(id),
+            })
+        };
+        let mut out = Vec::new();
+        let recent: Vec<TemplateLine> = self
+            .recent_templates
+            .iter()
+            .filter_map(|id| line(id))
+            .collect();
+        if !recent.is_empty() {
+            out.push(TemplateLine::Header("Son kullanılanlar".to_owned()));
+            out.extend(recent);
+        }
+        for group in listed(lib, "") {
+            out.push(TemplateLine::Header(if group.path.is_empty() {
+                "Kategorisiz".to_owned()
+            } else {
+                group.path.join(" / ")
+            }));
+            out.extend(group.items.iter().filter_map(|(id, _)| line(id)));
+        }
+        out
+    }
+
     /// Özellikler: the colour, line type and weight for new objects, and the
     /// plot scale beside them.
     fn properties_group(&self, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
@@ -261,7 +384,7 @@ impl App {
         let fields_width = move |level: Level| match level {
             0 => s(188.0),
             1 => s(162.0),
-            _ => s(132.0),
+            _ => s(136.0),
         };
         let scale_width = move |level: Level| if level >= 2 { s(112.0) } else { s(134.0) };
         let widths = [0, 1, 2]
@@ -280,9 +403,12 @@ impl App {
         let view_menus = menus.clone();
         let view = move |level: Level| -> Element<'static, Message> {
             let width = fields_width(level);
+            // Narrow, the fields' icons take their names' place (the web's `dropdown--glyph`).
+            let glyph = |name: &str| (level >= 2).then(|| crate::icons::from_web(Some(name)));
             let m = view_menus.clone();
             let colors = Choice::new(color_text(color), move || m().0)
                 .label("Renk")
+                .label_icon(glyph("color"))
                 .swatch(color_swatch)
                 .width(width)
                 .tip(
@@ -292,6 +418,7 @@ impl App {
             let m = view_menus.clone();
             let types = Choice::new(line_type_text(line_type), move || m().1)
                 .label("Tip")
+                .label_icon(glyph("lineType"))
                 .width(width)
                 .tip(
                     kentos_ui::widget::Tip::new("Çizgi tipi")
@@ -300,6 +427,7 @@ impl App {
             let m = view_menus.clone();
             let weights = Choice::new(weight_value_text(weight), move || m().2)
                 .label("Kalınlık")
+                .label_icon(glyph("lineWeight"))
                 .width(width)
                 .tip(kentos_ui::widget::Tip::new("Çizgi kalınlığı").body(
                     "Yeni nesnelerin çizim kalınlığı; “Katmana göre” katmanınkini kullanır.",
@@ -307,6 +435,7 @@ impl App {
             let m = view_menus.clone();
             let scales = Choice::new(format!("1:{scale}"), move || m().3)
                 .label("Ölçek")
+                .label_icon(glyph("plotScale"))
                 .width(scale_width(level))
                 .tip(kentos_ui::widget::Tip::new("Çizim ölçeği").body(
                     "Projenin çizim ölçeği: yazı boyları ve semboller buna göre çizilir. Proje ayarıdır; proje dosyasıyla saklanır.",

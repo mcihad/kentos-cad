@@ -336,6 +336,8 @@ export const ICONS = {
   // A layer's colour (a drop, half full) and line type (solid, dashed, dash-dot).
   color: '<path d="M10 2.8C7.6 6 5 8.9 5 12a5 5 0 0 0 10 0c0-3.1-2.6-6-5-9.2z"/><path d="M5 12h10a5 5 0 0 1-10 0z" fill="currentColor" fill-opacity=".35" stroke="none"/>',
   lineType: '<path d="M3 5h14"/><path d="M3 10h14" stroke-dasharray="3 2.6"/><path d="M3 15h14" stroke-dasharray="5 2.6 .1 2.6"/>',
+  // The project's plot scale (Özellikler's Ölçek): a scale bar, every other part filled.
+  plotScale: '<rect x="2.5" y="7.5" width="15" height="5"/><path d="M2.5 7.5h3.75v5H2.5zM10 7.5h3.75v5H10z" fill="currentColor" stroke="none"/><path d="M2.5 15v1.5M10 15v1.5M17.5 15v1.5" stroke-width="1.2"/>',
   ortho: '<path d="M4 3.5v12.5h12.5"/><path d="M4 12h4v4"/>',
   polar: '<path d="M3 16.5h14M3 16.5 14.5 5"/><path d="M9 16.5a6 6 0 0 0-1.8-4.2"/>',
   // Çizim motoru: a chip, a triangle on it (WebGL2) or a bolt (WebGPU).

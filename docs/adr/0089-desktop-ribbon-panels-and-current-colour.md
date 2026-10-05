@@ -44,8 +44,8 @@ Masaüstü bu panelleri hiç çizmiyordu. Bağlamsal sekmeyi katalogdan çıkar�
 
 **Daralma, web'in adımlarıyla:**
 
-- Katmanlar: alan 204 px, 2. seviyede 150 px.
-- Özellikler: alanlar 188, 162 ve 132 px; ölçek alanı 134 ve 112 px.
+- Katmanlar: alan 204 px, 2. seviyede 150 px. Şablonlar (ADR 0176): alan 196 px, 2. seviyede 150 px.
+- Özellikler: alanlar 188, 162 ve 136 px; ölçek alanı 134 ve 112 px. 2. seviyede alanların adlarının (Renk, Tip, Kalınlık, Ölçek) yerini ikonları alır; değer sığar (ADR 0176 4c'nin eki, 5 Ekim: 132 px'te web'de “Katmana göre” hiçbir alana sığmıyordu).
 - Seçim: türler 2. seviyede gizlenir.
 - 2. seviyede düğmeler yalnız ikondur.
 - 3. seviyede panel tek düğmeye katlanır.

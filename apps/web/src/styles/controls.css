@@ -104,6 +104,18 @@
   font-size: var(--fs-xs);
   flex: none;
 }
+/* A narrow ribbon's field: its icon in its label's place (ribbon/panels.ts). */
+.dropdown__glyph {
+  display: none;
+  color: var(--c-text-3);
+  flex: none;
+}
+.dropdown--glyph .dropdown__glyph {
+  display: inline-flex;
+}
+.dropdown--glyph .dropdown__label {
+  display: none;
+}
 .dropdown__value {
   display: flex;
   align-items: center;

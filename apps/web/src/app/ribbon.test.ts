@@ -167,7 +167,7 @@ describe('ribbon', () => {
   });
 
   it('names only known tabs, commands and menus', () => {
-    const known = new Set([...TOOL_CATALOG.map((t) => `tool.${t.id}`), ...allMenus(TOOL_CATALOG), 'style.assign', 'style.clearSymbol']);
+    const known = new Set([...TOOL_CATALOG.map((t) => `tool.${t.id}`), ...allMenus(TOOL_CATALOG), 'style.assign', 'style.clearSymbol', 'template.panel']);
     for (const spec of RIBBON_TABS) {
       for (const src of spec.sources) {
         if ('menu' in src) expect(menuById(src.menu), src.menu).toBeTruthy();

@@ -30,7 +30,8 @@ Nesne şablonu, bir nesne türünün çizim reçetesidir:
 - **Görünüş:** renk, kalınlık ve sembol (kitaplıktaki bir sembolün kimliği); verilmeyen katmanınki kalır.
 - **Öznitelikler ve etiket:** nesneye yazılacak öznitelikler (ad ve metin değer) ve etiket. Noktada ad ve kod Nokta aracının Ad ve Kod'u
   gibidir (ADR 0152): ad her noktada artar.
-- **Yazı şablonu:** yazının yüksekliği, hizası, zemini. **Blok şablonu:** yerleştirilecek bloğun adı.
+- **Yazı şablonu:** yazının kâğıttaki yüksekliği (mm, Yazı'nın Yükseklik'i gibi: yazı her ölçekte baskıda aynı boyda çıkar), hizası,
+  zemini. **Blok şablonu:** yerleştirilecek bloğun adı.
 - **Çizgi tipi ve tarama:** nesnenin kendi çizgi tipi yoktur; çizgi tipi şablonun katmanınındır. Alanın tarama görünüşü sembolündür
   (sembolün desenli dolgusu); ayrı bir tarama nesnesi grup şablonunun işidir (§5).
 - Kodda adı `ObjectTemplate`'tir (kitaplık öğesinin türü `template`).
@@ -115,7 +116,8 @@ da geçer:
      (`templates.kcad`; iz biçimine `template` eylemi, `activeLayer`, `currentColor`, `currentWeight` ve nesnenin `symbol`, `color`,
      `lineWeight`, `layer` beklentileri). Web'de kitaplığın proje bölümü artık açılan çizimi izler (masaüstününki gibi).
    - 3b: nokta, yazı ve blok şablonları: Nokta'nın Ad ve Kod'u şablondan, ad dizisi şablon başına sürer, bırakılınca aracın kendi
-     değerleri döner; Yazı'nın yüksekliği, hizası ve zemini; Blok ekle'nin bloğu adıyla (çizimde yoksa söylenir); ortak iz.
+     değerleri döner; Yazı'nın yüksekliği (kâğıtta mm), hizası ve zemini, bırakılınca aracınkiler döner; Blok ekle'nin bloğu adıyla
+     (çizimde yoksa şablon başlamaz, söylenir); nesneden şablonda yazının yerdeki yüksekliği çizim ölçeğiyle mm'ye çevrilir; ortak iz.
 4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler. 3b'den önce yapılır (sahibin 5 Ekim
    sorusu üzerine: şablon panel ve düzenleyici olmadan kullanılamıyor). Üç parçada: 4a Şablonlar paneli (sağ dokta Katmanlar, İşlemler ve
    Bloklar'ın yanında; kategorilere göre şablonlar resim ve adlarıyla, arama, son kullanılanlar; tıklama şablonla çizer; satırın menüsü),
@@ -140,6 +142,15 @@ da geçer:
      görünür. Girişler: `template.new` (Yeni şablon…), `template.fromSelection` (Seçili nesneden şablon…), panelin araç çubuğu ve satır
      menüsünde Düzenle (sistem şablonunda Kopyasını düzenle, kopya Kitaplığım'a), Stil yöneticisinde Düzenle; ikonlar `templateNew`,
      `templateFromSelection`.
+   - 4c **Tamam (5 Ekim):** şeridin üç Giriş sekmesinde (türsüz, CAD, CBS) Katmanlar'dan sonra Şablonlar paneli (web
+     `ui/ribbon/fields.ts`'in `templateField`'ı, `panels.ts`'in `templates` paneli; masaüstü `ribbon_panels.rs`'in `templates_group`'u):
+     çizilen şablonun adı ya da “Şablonla çiz”; açılır listede son kullanılanlar, sonra kategoriler, her şablon aracının ikonu ve adıyla,
+     çizilen işaretli, seçim şablonla çizer; altında Yeni şablon…, Nesneden şablon ve Şablonlar; köşedeki düğme paneli açar. Pencere
+     daraldıkça alan kısalır, düğmeler ikona iner, sonra panel tek düğmeye katlanır (menüsünde şablonlar ve üç komut). Şablonlar paneli
+     1440 px'te Özellikler'i bir kademe küçülttüğü için o kademede alanların adlarının yerini ikonları alır (Renk, Tip, Kalınlık ve yeni
+     `plotScale` ikonuyla Ölçek; web'de `dropdown--glyph`, masaüstünde KentOS UI `Choice::label_icon`): web'de “Katmana göre” o kademede
+     hiçbir alana sığmıyordu. Resimler: masaüstü `templates_panel::tests::ribbon_screens` (`.run/shots/sablon-serit-*`), web
+     `shots.mjs templates`.
 5. Grup şablonu; ortak iz.
 6. Şablonu uygula; ortak iz.
 

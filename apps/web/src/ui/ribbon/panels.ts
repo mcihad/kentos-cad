@@ -4,7 +4,7 @@ import { listen, type DisposableStore } from '../../core/disposable';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
-import { colorField, layerField, lineTypeField, scaleField, weightField } from './fields';
+import { colorField, layerField, lineTypeField, scaleField, templateField, weightField } from './fields';
 import { tooltip } from '../widgets/tooltip';
 import { commandControl, menuControl, overflowMenu, splitControl, type Control, type ControlHost } from './controls';
 import { RIBBON_TEXTS } from './ribbonPlan';
@@ -159,7 +159,7 @@ function arrangeSlots(body: HTMLElement, slots: readonly Slot[], level: Level): 
 
 type Arrange = (level: Level) => void;
 
-/** Panels with live fields: the current layer and properties, and what is selected. */
+/** Panels with live fields: the current layer, template and properties, and what is selected. */
 function builtinPanel(ctx: AppContext, name: BuiltinPanel, body: HTMLElement, d: DisposableStore, host: ControlHost, syncs: (() => void)[]): Arrange {
   const small = (ids: string[]) =>
     ids.map((id) => {
@@ -188,13 +188,33 @@ function builtinPanel(ctx: AppContext, name: BuiltinPanel, body: HTMLElement, d:
     };
   }
 
+  if (name === 'templates') {
+    const field = templateField(ctx, d, { width: 196 });
+    const buttons = small(['template.new', 'template.fromSelection', 'template.panel']);
+    body.append(
+      h(
+        'div',
+        { class: 'rpanel__stack' },
+        field,
+        h('div', { class: 'rpanel__row' }, buttons[0], buttons[1]),
+        h('div', { class: 'rpanel__row' }, buttons[2]),
+      ),
+    );
+    return (level) => {
+      width(field, level >= 2 ? 150 : 196);
+      iconOnly(buttons, level >= 2);
+    };
+  }
+
   if (name === 'properties') {
     const fields = [colorField(ctx, d), lineTypeField(ctx, d), weightField(ctx, d)];
     const scale = scaleField(ctx, d);
     body.append(h('div', { class: 'rpanel__stack' }, ...fields), h('div', { class: 'rpanel__stack' }, scale));
     return (level) => {
-      fields.forEach((f) => width(f, level >= 2 ? 132 : level === 1 ? 162 : 188));
+      fields.forEach((f) => width(f, level >= 2 ? 136 : level === 1 ? 162 : 188));
       width(scale, level >= 2 ? 112 : 134);
+      // Narrow, the fields' icons take their names' place: the values keep their room.
+      for (const f of [...fields, scale]) f.classList.toggle('dropdown--glyph', level >= 2);
     };
   }
 
