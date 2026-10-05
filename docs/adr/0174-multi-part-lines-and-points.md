@@ -122,7 +122,15 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
    reddedilir), kotları parça parça taşınır; Kot ver her noktaya ve parçaya. Masaüstünün wgpu çizicisi ve web'in sahnesi her parçayı
    ve noktayı çizer. Çekirdek testleri `tests/all/line_parts.rs`, web'in paket testleri (16, 17).
 3. Değişim biçimleri ve sunucu: GeoJSON, Shapefile, DXF yazımı, PostGIS izdüşümü; bağımsız okuyucunun (`tools/formats/gis.py`)
-   kuralları.
+   kuralları. Bitti (5 Ekim): GeoJSON'ın MultiLineString'i ve MultiPoint'i, Shapefile'ın PolyLine ve MultiPoint kaydı okunabilen
+   üyelerinin tek nesnesidir (bir üye kalırsa çizgi, yol ya da nokta; boş olan söylenir), bağımsız okuyucu da öyle okur, fixture'ların
+   beklenen çıktıları ve elle yazılmış özeti buna göre (`features`, `tm`, `nonfinite`, `kuyular`, `kotlu`, `yollar`, `yollarz`).
+   GeoJSON yazıcısı çok parçalı çoklu çizgiyi MultiLineString'e (yaylı parça örneklenir, kotlar yay boyunca karışır), çok noktalıyı
+   MultiPoint'e yazar (`export/cizgiler`); DXF yazıcısı her parçayı ayrı çoklu çizgi (kotlu ve yaysız parça 3B POLYLINE), her noktayı
+   ayrı POINT olarak, nesnenin verisiyle yazar ve bir kez söyler (`dxf-write/parts`, `dxf_write_reference.py`). Sunucuda EWKB
+   MultiPoint ve MultiLineString'i taşır; düz ve kotsuz çok parçalı çoklu çizginin kaynağı MultiLineString'i, kotsuz çok noktalının
+   MultiPoint'idir, öbürlerinin kaynağı `cad_definition` (izdüşüm yine her parça); çoklu çizginin parçası en az iki köşelidir ve
+   adası olamaz.
 4. Komutlar: `partsJoin` ve `partsSplit`'in yeni türleri; ortak durumlar.
 5. Arayüz: Öznitelikler, üzerine gelme kartı, köşe tablosu; iki platformda, resimleriyle.
 

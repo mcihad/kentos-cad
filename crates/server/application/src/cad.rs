@@ -2,7 +2,9 @@
 //! (CLAUDE.md §15, docs/adr/0006).
 //!
 //! - Point, line, straight polyline and straight polygon (a multi-part area
-//!   a MultiPolygon, docs/adr/0143) without vertex elevations: the PostGIS
+//!   a MultiPolygon, docs/adr/0143; a multi-part polyline a MultiLineString,
+//!   a multi-point object without elevations a MultiPoint, docs/adr/0174)
+//!   without vertex elevations: the PostGIS
 //!   geometry is the source, written and read as EWKB (every bit kept). The
 //!   geometry is 2D, so an object with elevations keeps its definition
 //!   (docs/adr/0142).
@@ -167,10 +169,13 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             if x.holes.is_some() {
                 return Err("Çoklu çizginin adası olamaz".into());
             }
-            if x.parts.is_some() {
-                return Err(
-                    "Çoklu çizginin parçası olamaz; yalnız kapalı alan çok parçalı olur".into(),
-                );
+            // A multi-part polyline's other parts, each as its own path (docs/adr/0174).
+            for p in x.parts.iter().flatten() {
+                check_len("Çoklu çizginin parçası", p.pts.len(), 2)?;
+                check_bulges("Çoklu çizginin parçası", &p.bulges, p.pts.len())?;
+                if p.holes.is_some() {
+                    return Err("Çoklu çizginin parçasının adası olamaz".into());
+                }
             }
         }
         Polygon(x) => {
@@ -240,7 +245,13 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 _ => {}
             }
         }
-        Point(_) | Line(_) => {}
+        // A multi-point object's points (docs/adr/0174).
+        Point(x) => {
+            if let Some(parts) = &x.parts {
+                check_len("Çok noktalı nesne", parts.len() + 1, 1)?;
+            }
+        }
+        Line(_) => {}
     }
     Ok(())
 }
@@ -282,9 +293,22 @@ fn geometry_is_source(e: &Entity) -> bool {
                 .is_none_or(|hs| !hs.is_empty() && hs.iter().all(|h| flat(&h.bulges, &h.zs)))
     };
     match e {
-        Entity::Point(_) => true,
+        // A multi-point object's MultiPoint is flat: none of its points may have an elevation (docs/adr/0174).
+        Entity::Point(x) => x
+            .parts
+            .as_ref()
+            .is_none_or(|ps| !ps.is_empty() && x.z.is_none() && ps.iter().all(|q| q.z.is_none())),
         Entity::Line(x) => x.za.is_none() && x.zb.is_none(),
-        Entity::Polyline(x) => flat(&x.bulges, &x.zs) && x.holes.is_none(),
+        Entity::Polyline(x) => {
+            flat(&x.bulges, &x.zs)
+                && x.holes.is_none()
+                && x.parts.as_ref().is_none_or(|ps| {
+                    !ps.is_empty()
+                        && ps
+                            .iter()
+                            .all(|q| flat(&q.bulges, &q.zs) && q.holes.is_none())
+                })
+        }
         Entity::Polygon(x) => {
             area(&x.bulges, &x.zs, &x.holes)
                 && x.parts.as_ref().is_none_or(|ps| {
@@ -311,10 +335,29 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         bulge_path(&pts(r), b.as_deref(), true, tol)
     };
     Some(match e {
-        Entity::Point(x) => Geometry::Point { p: p(x.p), z: x.z },
+        // A multi-point object is a MultiPoint, flat (docs/adr/0174).
+        Entity::Point(x) => match x.parts.as_deref() {
+            Some(parts) if !parts.is_empty() => Geometry::MultiPoint(
+                std::iter::once(p(x.p))
+                    .chain(parts.iter().map(|q| p(q.p)))
+                    .collect(),
+            ),
+            _ => Geometry::Point { p: p(x.p), z: x.z },
+        },
         Entity::Line(x) => Geometry::LineString(vec![p(x.a), p(x.b)]),
         Entity::Polyline(x) => {
-            Geometry::LineString(bulge_path(&pts(&x.pts), x.bulges.as_deref(), false, tol))
+            let path = |pts_: &[kentos_contracts::Vec2], b: &Option<Vec<f64>>| {
+                bulge_path(&pts(pts_), b.as_deref(), false, tol)
+            };
+            match x.parts.as_deref() {
+                // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
+                Some(parts) if !parts.is_empty() => Geometry::MultiLineString(
+                    std::iter::once(path(&x.pts, &x.bulges))
+                        .chain(parts.iter().map(|q| path(&q.pts, &q.bulges)))
+                        .collect(),
+                ),
+                _ => Geometry::LineString(path(&x.pts, &x.bulges)),
+            }
         }
         Entity::Polygon(x) => {
             let mut rings = vec![ring(&x.pts, &x.bulges)];
@@ -500,6 +543,21 @@ pub fn from_stored(s: &Stored) -> Result<Entity, String> {
                 }
                 ("polyline", Geometry::LineString(l)) => {
                     m.insert("pts".into(), ring_value(&l));
+                }
+                // The first member is the object's own, the others its parts (docs/adr/0174).
+                ("polyline", Geometry::MultiLineString(lines)) if lines.len() > 1 => {
+                    m.insert("pts".into(), ring_value(&lines[0]));
+                    let parts = lines[1..]
+                        .iter()
+                        .map(|l| serde_json::json!({ "pts": ring_value(l) }));
+                    m.insert("parts".into(), Value::Array(parts.collect()));
+                }
+                ("point", Geometry::MultiPoint(points)) if points.len() > 1 => {
+                    m.insert("p".into(), xy(points[0]));
+                    let parts = points[1..]
+                        .iter()
+                        .map(|&q| serde_json::json!({ "p": xy(q) }));
+                    m.insert("parts".into(), Value::Array(parts.collect()));
                 }
                 ("polygon", Geometry::Polygon(rings)) if !rings.is_empty() => {
                     area_value(&mut m, &rings);
@@ -752,14 +810,70 @@ mod tests {
                 .unwrap_err()
                 .contains("Alanın parçası")
         );
-        let path = entity(
+    }
+
+    #[test]
+    fn a_multi_part_polyline_and_a_multi_point_object_are_multi_geometries() {
+        // docs/adr/0174: straight and flat, the MultiLineString or the MultiPoint is the source.
+        let road = entity(
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": { "Ad": "Yol" },
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 10 }] }] }),
+        );
+        let s = to_stored(&road, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "geom");
+        let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert!(matches!(&g, Geometry::MultiLineString(l) if l.len() == 2 && l[1].len() == 3));
+        assert_eq!(back(&s, 1), road);
+        let marks = entity(
+            serde_json::json!({ "kind": "point", "id": 2, "layerId": "p", "attrs": {},
+            "p": { "x": 0, "y": 0 }, "parts": [{ "p": { "x": 5, "y": 5 } }, { "p": { "x": 6, "y": 7 } }] }),
+        );
+        let s = to_stored(&marks, 5256, &none()).unwrap();
+        assert_eq!(s.source_kind, "geom");
+        let (g, _) = ewkb::decode(s.geom.as_deref().unwrap()).unwrap();
+        assert!(matches!(&g, Geometry::MultiPoint(p) if p.len() == 3));
+        assert_eq!(back(&s, 2), marks);
+        // With an arc or an elevation, the definition is the source and the projection still every part.
+        for json in [
             serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
-            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }),
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }],
+                "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }], "bulges": [0.5, 0] }] }),
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }],
+                "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }], "zs": [1.5, null] }] }),
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+                "p": { "x": 0, "y": 0 }, "z": 100, "parts": [{ "p": { "x": 5, "y": 5 } }] }),
+            serde_json::json!({ "kind": "point", "id": 1, "layerId": "p", "attrs": {},
+                "p": { "x": 0, "y": 0 }, "parts": [{ "p": { "x": 5, "y": 5 }, "z": -0.5 }] }),
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+                "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [] }),
+        ] {
+            let e = entity(json);
+            let s = to_stored(&e, 5256, &none()).unwrap();
+            assert_eq!(s.source_kind, "cad", "{e:?}");
+            assert_eq!(back(&s, 1), e);
+        }
+        // A part is refused as the polyline's own path would be; it has no holes.
+        let short = entity(
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }], "parts": [{ "pts": [{ "x": 20, "y": 0 }] }] }),
         );
         assert!(
-            to_stored(&path, 5256, &none())
+            to_stored(&short, 5256, &none())
                 .unwrap_err()
-                .contains("parçası olamaz")
+                .contains("Çoklu çizginin parçası")
+        );
+        let holed = entity(
+            serde_json::json!({ "kind": "polyline", "id": 1, "layerId": "p", "attrs": {},
+            "pts": [{ "x": 0, "y": 0 }, { "x": 10, "y": 0 }],
+            "parts": [{ "pts": [{ "x": 20, "y": 0 }, { "x": 30, "y": 0 }],
+                "holes": [{ "pts": [{ "x": 21, "y": 1 }, { "x": 22, "y": 1 }, { "x": 22, "y": 2 }] }] }] }),
+        );
+        assert!(
+            to_stored(&holed, 5256, &none())
+                .unwrap_err()
+                .contains("adası olamaz")
         );
     }
 

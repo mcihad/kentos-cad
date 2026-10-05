@@ -3,8 +3,9 @@
 //! comes back with every bit (text forms such as WKT round to 15 digits).
 //! Only what KentOS stores is supported: points (optionally with Z), line
 //! strings, polygons and multi-polygons (a multi-part area, docs/adr/0143),
-//! and a collection of them (a block insert's objects placed, docs/adr/0144
-//! §5), with an SRID.
+//! multi-points and multi-line strings (a multi-point object and a
+//! multi-part polyline, docs/adr/0174), and a collection of them (a block
+//! insert's objects placed, docs/adr/0144 §5), with an SRID.
 
 use crate::Vec2;
 
@@ -22,6 +23,10 @@ pub enum Geometry {
     Polygon(Vec<Vec<Vec2>>),
     /// Polygons as [`Geometry::Polygon`]'s rings.
     MultiPolygon(Vec<Vec<Vec<Vec2>>>),
+    /// Points without Z (docs/adr/0174).
+    MultiPoint(Vec<Vec2>),
+    /// Line strings (docs/adr/0174).
+    MultiLineString(Vec<Vec<Vec2>>),
     /// Members of the kinds above (no collection in a collection).
     Collection(Vec<Geometry>),
 }
@@ -56,6 +61,8 @@ fn kind_of(geometry: &Geometry) -> (u32, bool) {
         Geometry::Point { z, .. } => (1, z.is_some()),
         Geometry::LineString(_) => (2, false),
         Geometry::Polygon(_) => (3, false),
+        Geometry::MultiPoint(_) => (4, false),
+        Geometry::MultiLineString(_) => (5, false),
         Geometry::MultiPolygon(_) => (6, false),
         Geometry::Collection(_) => (7, false),
     }
@@ -77,6 +84,18 @@ fn put_body(out: &mut Vec<u8>, geometry: &Geometry) {
             put_u32(out, polygons.len() as u32);
             for rings in polygons {
                 put_member(out, &Geometry::Polygon(rings.clone()));
+            }
+        }
+        Geometry::MultiPoint(points) => {
+            put_u32(out, points.len() as u32);
+            for &p in points {
+                put_member(out, &Geometry::Point { p, z: None });
+            }
+        }
+        Geometry::MultiLineString(lines) => {
+            put_u32(out, lines.len() as u32);
+            for line in lines {
+                put_member(out, &Geometry::LineString(line.clone()));
             }
         }
         Geometry::Collection(members) => {
@@ -181,6 +200,38 @@ fn body(r: &mut Reader, kind: u32, z: bool, member: bool) -> Result<Geometry, St
         }
         2 if !z => Geometry::LineString(r.points()?),
         3 if !z => Geometry::Polygon(r.rings()?),
+        4 if !z => {
+            let n = r.u32()? as usize;
+            if n > (r.bytes.len() - r.at) / 21 {
+                return Err("EWKB nokta sayısı veriden büyük".into());
+            }
+            let mut points = Vec::with_capacity(n);
+            for _ in 0..n {
+                // Each member is a WKB point of its own byte order, without an SRID or Z.
+                r.little = r.take::<1>()? == [1];
+                if r.u32()? != 1 {
+                    return Err("EWKB çoklu noktasının üyesi iki boyutlu nokta değil".into());
+                }
+                points.push(r.point(false)?.0);
+            }
+            Geometry::MultiPoint(points)
+        }
+        5 if !z => {
+            let n = r.u32()? as usize;
+            if n > (r.bytes.len() - r.at) / 9 {
+                return Err("EWKB çizgi sayısı veriden büyük".into());
+            }
+            let mut lines = Vec::with_capacity(n);
+            for _ in 0..n {
+                // Each member is a WKB line string of its own byte order, without an SRID.
+                r.little = r.take::<1>()? == [1];
+                if r.u32()? != 2 {
+                    return Err("EWKB çoklu çizgisinin üyesi çizgi değil".into());
+                }
+                lines.push(r.points()?);
+            }
+            Geometry::MultiLineString(lines)
+        }
         6 if !z => {
             let n = r.u32()? as usize;
             let mut polygons = Vec::with_capacity(n.min(1024));
@@ -367,11 +418,43 @@ mod tests {
         );
         assert!(decode(&bytes[..bytes.len() - 1]).is_err());
         assert!(decode(&[]).is_err());
-        let mut multipoint = bytes.clone();
-        multipoint[1] = 4;
-        assert!(decode(&multipoint).unwrap_err().contains("desteklenmiyor"));
+        // A circular string (8) is not one KentOS stores.
+        let mut curve = bytes.clone();
+        curve[1] = 8;
+        assert!(decode(&curve).unwrap_err().contains("desteklenmiyor"));
         let mut long = bytes;
         long.push(0);
         assert!(decode(&long).is_err());
+    }
+
+    #[test]
+    fn multi_points_and_multi_line_strings_come_back_bit_for_bit() {
+        // docs/adr/0174: a multi-point object's points and a multi-part polyline's paths.
+        for g in [
+            Geometry::MultiPoint(vec![
+                Vec2::new(-0.0, 1e-300),
+                Vec2::new(487000.125, 4420000.5),
+            ]),
+            Geometry::MultiLineString(vec![
+                vec![Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)],
+                vec![
+                    Vec2::new(20.0, 0.0),
+                    Vec2::new(30.0, 0.0),
+                    Vec2::new(30.0, 10.0),
+                ],
+            ]),
+        ] {
+            let bytes = encode(&g, 5256);
+            let (back, srid) = decode(&bytes).expect("reads");
+            assert_eq!((back, srid), (g.clone(), 5256));
+            // Cut short anywhere, it is refused, never read past its end.
+            for n in 1..bytes.len() {
+                assert!(decode(&bytes[..n]).is_err(), "{n} bytes of {g:?}");
+            }
+        }
+        // A member of another type is refused.
+        let mut bytes = encode(&Geometry::MultiPoint(vec![Vec2::new(1.0, 2.0)]), 0);
+        bytes[14] = 2;
+        assert!(decode(&bytes).is_err());
     }
 }
