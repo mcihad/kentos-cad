@@ -377,7 +377,8 @@ impl Store {
                 }
                 _ => {}
             }
-            if !it.label {
+            // A text writes its label (docs/adr/0175 §4).
+            if !it.label || self.text_labelled.contains(&it.id.to_bits()) {
                 continue;
             }
             let Some(rule) = flags
@@ -560,6 +561,36 @@ mod tests {
         assert_eq!(s.labels(&view, 3.0, Some(4.0)), [parcel, street].concat());
         // At 1 px/m the street is below its scale range and the text below 5 px.
         assert_eq!(s.labels(&view, 1.0, None), parcel);
+    }
+
+    /// An object whose label a text writes shows none of its own (docs/adr/0175
+    /// §4): the text is its label; the list is replaced whole and goes with `clear`.
+    #[test]
+    fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
+        let mut s = Store::new();
+        let objects = r#"[{"id":1,"layerId":"parsel","label":"12","kind":"polygon","pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]},
+                {"id":2,"layerId":"parsel","label":"13","kind":"polygon","pts":[{"x":10,"y":0},{"x":20,"y":0},{"x":20,"y":10},{"x":10,"y":10}]},
+                {"id":3,"layerId":"yazi","kind":"text","p":{"x":5,"y":5},"text":"12","height":2,"rotation":0}]"#;
+        s.put_json(objects).unwrap();
+        s.set_layers_json(r#"[{"id":"parsel","visible":true,"locked":false,"pickInterior":true,"label":{"placement":"center"}}]"#)
+            .unwrap();
+        let view = Bounds {
+            min_x: -50.0,
+            min_y: -50.0,
+            max_x: 150.0,
+            max_y: 150.0,
+        };
+        let first = [1.0, LABEL_CENTER, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let second = [2.0, LABEL_CENTER, 15.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let text = [3.0, LABEL_TEXT, 5.0, 5.0, 0.0, 1.0, 0.0, 0.0, 0.0];
+        assert_eq!(s.labels(&view, 3.0, None), [first, second, text].concat());
+        s.set_text_labelled(&[1.0]);
+        assert_eq!(s.labels(&view, 3.0, None), [second, text].concat());
+        s.set_text_labelled(&[2.0]);
+        assert_eq!(s.labels(&view, 3.0, None), [first, text].concat());
+        s.clear();
+        s.put_json(objects).unwrap();
+        assert_eq!(s.labels(&view, 3.0, None), [first, second, text].concat());
     }
 
     /// A multi-part polyline's label along it sits on its longest part, a

@@ -174,6 +174,8 @@ export class CadDocument {
    * changes the object updates (model/linkedTexts.ts).
    */
   private links = new Map<string, Set<number>>();
+  /** Moves whenever which objects have linked texts may have changed (`textLabelled`). */
+  private linkEdits = 0;
   /** The persistent id of a new object (UUIDv7; tests give their own maker). */
   private readonly newUid: () => string;
   /**
@@ -291,6 +293,34 @@ export class CadDocument {
   byUid(uid: string): DrawingEntity | undefined {
     const slot = this.uids.get(uid);
     return slot === undefined ? undefined : this.entities.get(slot);
+  }
+
+  /** Whether a text writes the label of the object with this persistent id: that text is its label now (docs/adr/0175 §4). */
+  hasLinkedText(uid: string): boolean {
+    return !!this.links.get(uid)?.size;
+  }
+
+  /** The slots of the texts that write the label of the object with this persistent id, in slot order. */
+  linkedTexts(uid: string): number[] {
+    return [...(this.links.get(uid) ?? [])].sort((a, b) => a - b);
+  }
+
+  /**
+   * The slots of the objects whose label a text writes, in slot order: the drawing, the sheet and Etiketleri yazıya
+   * çevir leave their own labels out (docs/adr/0175 §4).
+   */
+  textLabelled(): number[] {
+    const out: number[] = [];
+    for (const uid of this.links.keys()) {
+      const slot = this.uids.get(uid);
+      if (slot !== undefined) out.push(slot);
+    }
+    return out.sort((a, b) => a - b);
+  }
+
+  /** Moves whenever `textLabelled` may answer otherwise. */
+  get linksVersion(): number {
+    return this.linkEdits;
   }
 
   /** The slot of the object with this persistent id, if it is in the drawing. */
@@ -681,6 +711,7 @@ export class CadDocument {
     this.entities = new Map(entities.map((e) => [e.id, e]));
     this.uids = new Map(entities.map((e) => [e.uid, e.id]));
     this.links.clear();
+    this.linkEdits++;
     for (const e of entities) this.link(e);
     this.places = new Map(entities.map((e, i) => [e.id, i + 1]));
     this.nextPlace = entities.length + 1;
@@ -1021,6 +1052,7 @@ export class CadDocument {
     this.uids.set(e.uid, e.id);
     if (prev) this.unlink(prev);
     this.link(e);
+    if (!prev && this.links.has(e.uid)) this.linkEdits++;
     if (prev && prev.layerId !== e.layerId) {
       this.layerIndex.get(prev.layerId)?.delete(e.id);
       this.reordered.add(e.layerId);
@@ -1035,6 +1067,7 @@ export class CadDocument {
     this.entities.delete(id);
     this.uids.delete(e.uid);
     this.unlink(e);
+    if (this.links.has(e.uid)) this.linkEdits++;
     this.layerIndex.get(e.layerId)?.delete(id);
   }
 
@@ -1042,14 +1075,20 @@ export class CadDocument {
   private link(e: DrawingEntity): void {
     if (e.kind !== 'text' || e.labelOf === undefined) return;
     let texts = this.links.get(e.labelOf);
-    if (!texts) this.links.set(e.labelOf, (texts = new Set()));
+    if (!texts) {
+      this.links.set(e.labelOf, (texts = new Set()));
+      this.linkEdits++;
+    }
     texts.add(e.id);
   }
 
   private unlink(e: DrawingEntity): void {
     if (e.kind !== 'text' || e.labelOf === undefined) return;
     const texts = this.links.get(e.labelOf);
-    if (texts?.delete(e.id) && !texts.size) this.links.delete(e.labelOf);
+    if (texts?.delete(e.id) && !texts.size) {
+      this.links.delete(e.labelOf);
+      this.linkEdits++;
+    }
   }
 
   /**

@@ -8,12 +8,14 @@
 //! - **Scope**, taken when it starts: the selection's labels, else every
 //!   labelled object's on a visible layer; a label's style is its layer's,
 //!   else its kind's default, as the drawing shows it. Texts, dimensions and
-//!   leaders show none.
+//!   leaders show none, and an object whose label a text writes already
+//!   (docs/adr/0175 §4) has its text for a label.
 //! - **Options**, as Topolojik temizlik's: a number typed is the scale (Ö
 //!   asks for it; each run starts at the project's drawing scale);
-//!   Örtüşenler de (R), Zemin (Z) and Katman (K: the standard text layer or
-//!   the active one) are kept for as long as the app lives
-//!   ([`crate::tool::Memory`]).
+//!   Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or
+//!   the active one) and Nesneye bağlı (B: the texts know their objects and
+//!   follow them, `labelOf`, `labelScale`) are kept for as long as the app
+//!   lives ([`crate::tool::Memory`]).
 //! - **Shown first**: the texts in place, faint, and the counts beside the
 //!   cursor. Enter, the Uygula button or a quick right click writes them
 //!   through `cad.entities.create` (`labels`) in one step, opening the text
@@ -59,12 +61,21 @@ pub struct LabelsToText {
     /// What was worked out, and from what: the drawing's generation, the scale, the thinning.
     plan: Option<(u64, u64, bool, LabelTexts)>,
     /// The options and the text layer's name as of the last event, for the prompt and the preview.
-    seen: Option<(bool, bool, bool, String)>,
+    seen: Option<Seen>,
     /// The finding last said, so a change that finds the same says nothing again.
     said: String,
     /// The cursor's world point: the tag beside it says the finding.
     hover: Option<Vec2>,
     done: bool,
+}
+
+/// The options and the text layer's name as of the last event.
+#[derive(Clone, Debug, Default)]
+struct Seen {
+    every: bool,
+    mask: bool,
+    linked: bool,
+    layer: String,
 }
 
 impl LabelsToText {
@@ -91,10 +102,12 @@ impl LabelsToText {
             .filter_map(|e| {
                 let base = e.base();
                 let label = base.label.as_deref().filter(|l| !l.is_empty())?;
+                // A text writes its label already (docs/adr/0175 §4).
                 if matches!(
                     e,
                     Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_)
                 ) || !layers.is_visible(&base.layer_id)
+                    || doc.has_linked_text(Slot(base.id))
                 {
                     return None;
                 }
@@ -133,7 +146,12 @@ impl LabelsToText {
         } else {
             standard_layer::name_of(TEXT_LAYER, cx)
         };
-        self.seen = Some((m.labels_every, m.labels_mask, m.labels_active, layer));
+        self.seen = Some(Seen {
+            every: m.labels_every,
+            mask: m.labels_mask,
+            linked: m.labels_linked,
+            layer,
+        });
         let generation = cx.doc.generation();
         let thin = !m.labels_every;
         if self
@@ -191,25 +209,39 @@ impl LabelsToText {
             return Flow::Exit;
         }
         let mask = cx.memory.labels_mask;
+        // Nesneye bağlı: each text knows its object and the scale (docs/adr/0175 §4).
+        let scale = self.scale as f64;
+        let link = |item: usize| {
+            let slot = Slot(self.wanted.get(item)?.id as u32);
+            let uid = cx.doc.uid(slot)?.to_string();
+            Some((uid, scale))
+        };
+        let linked = cx.memory.labels_linked;
         let objects = r
             .texts
             .iter()
-            .map(|t| NewObject {
-                geometry: EntityGeometry::Text {
-                    p: kentos_contracts::Vec2 { x: t.p.x, y: t.p.y },
-                    text: t.text.clone(),
-                    height: t.height,
-                    rotation: t.rotation,
-                    align: contract_align(t.align),
-                    width_factor: None,
-                    mask,
-                },
-                color: None,
-                line_weight: None,
-                attrs: None,
-                label: None,
-                label_of: None,
-                label_scale: None,
+            .map(|t| {
+                let (label_of, label_scale) = match linked.then(|| link(t.item)).flatten() {
+                    Some((uid, scale)) => (Some(uid), Some(scale)),
+                    None => (None, None),
+                };
+                NewObject {
+                    geometry: EntityGeometry::Text {
+                        p: kentos_contracts::Vec2 { x: t.p.x, y: t.p.y },
+                        text: t.text.clone(),
+                        height: t.height,
+                        rotation: t.rotation,
+                        align: contract_align(t.align),
+                        width_factor: None,
+                        mask,
+                    },
+                    color: None,
+                    line_weight: None,
+                    attrs: None,
+                    label: None,
+                    label_of,
+                    label_scale,
+                }
             })
             .collect();
         let active = cx.memory.labels_active;
@@ -370,7 +402,12 @@ impl Tool for LabelsToText {
                 format!("ölçeği 1:N ya da N olarak yazın (Enter: 1:{})", self.scale),
             );
         }
-        let (every, mask, _, layer) = self.seen.clone().unwrap_or_default();
+        let Seen {
+            every,
+            mask,
+            linked,
+            layer,
+        } = self.seen.clone().unwrap_or_default();
         let on = |b: bool| if b { "açık" } else { "kapalı" };
         let step = self
             .texts()
@@ -380,6 +417,7 @@ impl Tool for LabelsToText {
             .option_with("Örtüşenler de", "R", on(every))
             .option_with("Zemin", "Z", on(mask))
             .option_with("Katman", "K", layer)
+            .option_with("Nesneye bağlı", "B", on(linked))
             .option("Uygula", "Enter")
     }
 
@@ -421,6 +459,7 @@ impl Tool for LabelsToText {
                 "R" => Some(&mut cx.memory.labels_every),
                 "Z" => Some(&mut cx.memory.labels_mask),
                 "K" => Some(&mut cx.memory.labels_active),
+                "B" => Some(&mut cx.memory.labels_linked),
                 _ => None,
             };
             if let Some(flag) = flag {
@@ -487,7 +526,7 @@ impl Tool for LabelsToText {
         let Some(r) = self.texts() else {
             return Preview::default();
         };
-        let mask = self.seen.as_ref().is_some_and(|s| s.1);
+        let mask = self.seen.as_ref().is_some_and(|s| s.mask);
         Preview {
             texts: r
                 .texts

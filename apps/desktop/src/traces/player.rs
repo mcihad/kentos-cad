@@ -75,13 +75,18 @@ pub struct Seen {
     pub zs: Vec<Option<f64>>,
     /// An area's holes, in all its parts (docs/adr/0173 §5); none for other kinds.
     pub holes: Option<usize>,
+    /// The slot of the object a linked text writes the label of (0 when no
+    /// object of the drawing has its id) and its scale (docs/adr/0175 §4);
+    /// none for a text of its own and other kinds.
+    pub label_of: Option<u32>,
+    pub label_scale: Option<f64>,
 }
 
 impl Seen {
-    /// An object as a step sees it: a path's corners; a line's two ends; a
-    /// point's or a text's place; an arc's start and end; a dimension's
-    /// measured points (the web runner's `shape`).
-    pub fn of(e: &Entity) -> Self {
+    /// An object of `doc` as a step sees it: a path's corners; a line's two
+    /// ends; a point's or a text's place; an arc's start and end; a
+    /// dimension's measured points (the web runner's `shape`).
+    pub fn of(e: &Entity, doc: &kentos_domain::Document) -> Self {
         let (pts, bulges) = match e {
             Entity::Polygon(p) | Entity::Polyline(p) => (
                 p.pts.iter().map(|v| [v.x, v.y]).collect(),
@@ -216,6 +221,17 @@ impl Seen {
                             .map(|part| part.holes.as_ref().map_or(0, Vec::len))
                             .sum::<usize>(),
                 ),
+                _ => None,
+            },
+            label_of: match e {
+                Entity::Text(t) => t.label_of.map(|id| {
+                    doc.slot_of(kentos_domain::Uuid::from_bytes(id.0))
+                        .map_or(0, |slot| slot.0)
+                }),
+                _ => None,
+            },
+            label_scale: match e {
+                Entity::Text(t) => t.label_scale,
                 _ => None,
             },
         }
@@ -775,13 +791,16 @@ impl<'a> Player<'a> {
     pub fn observe(&self) -> Observation {
         let app = &*self.app;
         let doc = app.document.as_ref();
-        let newest = doc
-            .and_then(|d| d.model.entities().max_by_key(|e| e.base().id))
-            .map(Seen::of);
+        let newest = doc.and_then(|d| {
+            d.model
+                .entities()
+                .max_by_key(|e| e.base().id)
+                .map(|e| Seen::of(e, &d.model))
+        });
         let objects = doc.map_or_else(BTreeMap::new, |d| {
             d.model
                 .entities()
-                .map(|e| (e.base().id, Seen::of(e)))
+                .map(|e| (e.base().id, Seen::of(e, &d.model)))
                 .collect()
         });
         Observation {

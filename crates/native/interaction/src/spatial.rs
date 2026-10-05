@@ -60,6 +60,8 @@ pub struct Spatial {
     layers: Vec<(String, LayerFlags)>,
     /// The block definitions sent last.
     blocks: Vec<Arc<BlockDefinition>>,
+    /// The objects whose label a text writes, as sent last (docs/adr/0175 §4).
+    text_labelled: Vec<Slot>,
     /// How many times every object was read (a drawing opened, or the journal fell behind).
     reloads: u64,
 }
@@ -90,6 +92,8 @@ impl Spatial {
         self.blocks = doc.blocks().to_vec();
         self.store.set_blocks(core_blocks(&self.blocks));
         self.store.put_many(doc.entities().map(record));
+        self.text_labelled.clear();
+        self.sync_text_labelled(doc);
         self.mark = doc.change_mark();
         self.revision = Some(doc.revision());
         self.layers.clear();
@@ -137,11 +141,23 @@ impl Spatial {
                 }
                 self.store.remove(&gone);
                 self.store.put_many(changed.into_iter().map(record));
+                self.sync_text_labelled(doc);
             }
         }
         self.mark = mark;
         self.revision = Some(doc.revision());
         self.sync_layers(doc.layers());
+    }
+
+    /// Sends the objects whose label a text writes when they differ from
+    /// those sent last: they show no label of their own (docs/adr/0175 §4).
+    fn sync_text_labelled(&mut self, doc: &Document) {
+        let now = doc.text_labelled();
+        if now != self.text_labelled {
+            let ids: Vec<f64> = now.iter().map(|slot| f64::from(slot.0)).collect();
+            self.store.set_text_labelled(&ids);
+            self.text_labelled = now;
+        }
     }
 
     /// Sends the layer table when it differs from the one sent last.

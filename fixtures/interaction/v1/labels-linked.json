@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "labels-linked",
+  "title": "Nesneye bağlı yazı (ADR 0175 §4), labels.kcad üzerinde: Etiketleri yazıya çevir'de Nesneye bağlı (B) açılır, Enter dört yazıyı nesnelerine 1:1000'de bağlı yazar (104'ün numarası örtüşüp atlanır); 102 parseli taşınınca yazısı aynı adımda yeni yerine yazılır, Ctrl+Z ikisini birlikte geri alır; P1 silinince yazısı da silinir; araç yeniden açılınca bağlı yazısı olan nesnelerin etiketleri kapsama girmez, yalnız 104'ünki kalır; bellek başladığı gibi bırakılır, Esc çıkar",
+  "source": "Web'in LabelsToTextTool'u ve CadDocument'in bağlı yazıları (model/linkedTexts.ts), masaüstünün kentos_interaction::labels_to_text'i ve kentos_domain'in linked.rs'i; çekirdeğin label_text_of'u; cad.entities.create labels (labelOf, labelScale), ADR 0175",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "labels.kcad",
+  "view": { "center": [487015, 4420005], "metresPerPixel": 0.1 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "clickTolerance": 0.1,
+  "steps": [
+    { "move": [0, -9] },
+    { "run": "tool.labelsToText", "note": "Nesneye bağlı kapalı başlar.", "expect": { "tool": "labelsToText", "options": ["Ö", "R", "Z", "K", "B", "Enter"], "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]" } },
+    { "key": "B", "note": "Nesneye bağlı: yazılar nesnelerini bilir ve izler.", "expect": { "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): açık / Uygula (Enter)]" } },
+    { "key": "Enter", "note": "Dört yazı tek adımda, her biri nesnesinin kalıcı kimliği ve 1:1000 ile.", "expect": { "tool": "select", "log": "success", "entities": 11, "selected": [8, 9, 10, 11], "logged": ["“Yazılar” katmanı çizimde yoktu; etiketlerin yazıları için açıldı.", "Etiketleri yazıya çevir: 4 etiket yazıya çevrildi, 1 örtüşen etiket atlandı."], "objects": [{ "id": 8, "kind": "text", "text": "101", "points": [[-8, 0]], "labelOf": 1, "labelScale": 1000 }, { "id": 9, "kind": "text", "text": "102", "points": [[6, 0]], "labelOf": 2, "labelScale": 1000 }, { "id": 10, "kind": "text", "text": "P1", "labelOf": 4, "labelScale": 1000 }, { "id": 11, "kind": "text", "text": "Cumhuriyet Cd.", "points": [[0, 10]], "labelOf": 5, "labelScale": 1000 }] } },
+    { "shot": "bagli-yazilar" },
+    { "key": "Esc", "note": "Seçim bırakılır.", "expect": { "selected": [] } },
+    { "click": [11, -4], "note": "102 parseli, yazısından uzakta.", "expect": { "selected": [2] } },
+    { "run": "tool.move", "expect": { "tool": "move" } },
+    { "click": [11, -4] },
+    { "text": "@0,-10" },
+    { "key": "Enter", "note": "Parsel taşınır; bağlı yazısı aynı adımda yeni merkezine yazılır.", "expect": { "tool": "select", "log": "success", "objects": [{ "id": 2, "kind": "polygon", "points": [[-1, -15], [13, -15], [13, -5], [-1, -5]] }, { "id": 9, "kind": "text", "text": "102", "points": [[6, -10]], "labelOf": 2, "labelScale": 1000 }] } },
+    { "shot": "bagli-tasima" },
+    { "key": "Ctrl+Z", "note": "Tek adım: parsel ve yazısı birlikte döner.", "expect": { "objects": [{ "id": 2, "kind": "polygon", "points": [[-1, -5], [13, -5], [13, 5], [-1, 5]] }, { "id": 9, "kind": "text", "text": "102", "points": [[6, 0]], "labelOf": 2 }] } },
+    { "key": "Esc", "expect": { "selected": [] } },
+    { "click": [15, -2], "note": "P1 noktası.", "expect": { "selected": [4] } },
+    { "key": "Delete", "note": "Nokta silinince bağlı yazısı da aynı adımda silinir.", "expect": { "entities": 9, "ids": [1, 2, 3, 5, 6, 7, 8, 9, 11] } },
+    { "run": "tool.labelsToText", "note": "Bağlı yazısı olan nesnelerin etiketleri girmez: yalnız 104'ünki kalır. Nesneye bağlı oturum boyunca açık kalır.", "expect": { "tool": "labelsToText", "logged": ["Etiketleri yazıya çevir: bütün çizimde 1 etiket; 1:1000 ölçekte 1 yazı olacak. Enter ile yazın."], "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 1 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): açık / Uygula (Enter)]" } },
+    { "key": "B", "note": "Bellek başladığı gibi." },
+    { "key": "Esc", "note": "Esc araçtan çıkar; çizim değişmez.", "expect": { "tool": "select", "entities": 9 } }
+  ]
+}

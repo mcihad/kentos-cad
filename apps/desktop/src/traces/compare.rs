@@ -305,6 +305,23 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.mask: {:?}, beklenen {mask}", seen.mask));
     }
+    // A linked text's object and scale (docs/adr/0175 §4), exact.
+    if let Some(of) = want.label_of
+        && seen.label_of != of
+    {
+        bad.push(format!(
+            "{name}.labelOf: {:?}, beklenen {of:?}",
+            seen.label_of
+        ));
+    }
+    if let Some(scale) = want.label_scale
+        && seen.label_scale != Some(scale)
+    {
+        bad.push(format!(
+            "{name}.labelScale: {:?}, beklenen {scale}",
+            seen.label_scale
+        ));
+    }
     // A leader's arrowhead (docs/adr/0146), exact.
     if let Some(arrow) = &want.arrow
         && seen.arrow != *arrow

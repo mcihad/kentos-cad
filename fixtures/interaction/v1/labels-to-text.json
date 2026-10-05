@@ -42,12 +42,13 @@
           "R",
           "Z",
           "K",
+          "B",
           "Enter"
         ],
         "logged": [
           "Etiketleri yazıya çevir: bütün çizimde 5 etiket; 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak. Enter ile yazın."
         ],
-        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Uygula (Enter)]"
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
     },
     {
@@ -70,7 +71,7 @@
       "key": "Z",
       "note": "Zemin: yazılar zeminli.",
       "expect": {
-        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
     },
     {
@@ -84,7 +85,7 @@
         "logged": [
           "Etiketleri yazıya çevir: 1:500 ölçekte 5 yazı olacak."
         ],
-        "prompt": "Etiketleri yazıya çevir: 1:500 ölçekte 5 yazı olacak [Ölçek (Ö): 1:500 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+        "prompt": "Etiketleri yazıya çevir: 1:500 ölçekte 5 yazı olacak [Ölçek (Ö): 1:500 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
     },
     {
@@ -202,7 +203,7 @@
       "run": "tool.labelsToText",
       "note": "Örtüşenler de ve Zemin oturum boyunca hatırlanır; ölçek her çalışmada projeninkinden başlar.",
       "expect": {
-        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Uygula (Enter)]"
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 5 yazı olacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): açık / Zemin (Z): açık / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
     },
     {
@@ -212,7 +213,7 @@
     {
       "key": "Z",
       "expect": {
-        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Uygula (Enter)]"
+        "prompt": "Etiketleri yazıya çevir: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen etiket atlanacak [Ölçek (Ö): 1:1000 / Örtüşenler de (R): kapalı / Zemin (Z): kapalı / Katman (K): Yazılar / Nesneye bağlı (B): kapalı / Uygula (Enter)]"
       }
     },
     {

@@ -6,8 +6,8 @@ import type { Vec2 } from '../model/geometry';
 import type { LabelStyle } from '../model/layers';
 import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
 import { CREATE_LABEL, entitiesCreate } from '../product/entitiesCreate';
+import { DEFAULT_LABELS } from '../model/labelDefaults';
 import type { ViewTransform } from '../viewport/Camera';
-import { DEFAULT_LABELS } from '../viewport/storeRecords';
 import { drawTag, drawTextGhost } from './preview';
 import { standardLayerName, writeOnStandardLayer } from './standardLayer';
 import type { Tool, ToolPointer } from './Tool';
@@ -19,10 +19,11 @@ import type { Tool, ToolPointer } from './Tool';
  * `kentos_interaction::labels_to_text`, and both play `fixtures/interaction/v1/labels-to-text.json`.
  *
  * - Scope, taken when it starts: the selection's labels, else every labelled object's on a visible layer; a label's
- *   style is its layer's, else its kind's default, as the drawing shows it. Texts, dimensions and leaders show none.
+ *   style is its layer's, else its kind's default, as the drawing shows it. Texts, dimensions and leaders show none,
+ *   and an object whose label a text writes already (docs/adr/0175 §4) has its text for a label.
  * - Options, as Topolojik temizlik's: a number typed is the scale (Ö asks for it; each run starts at the project's
- *   drawing scale); Örtüşenler de (R), Zemin (Z) and Katman (K: the standard text layer or the active one) are kept
- *   for the session.
+ *   drawing scale); Örtüşenler de (R), Zemin (Z), Katman (K: the standard text layer or the active one) and Nesneye
+ *   bağlı (B: the texts know their objects and follow them, `labelOf`, `labelScale`) are kept for the session.
  * - The texts are shown in place, faint, and the counts beside the cursor. Enter, Uygula or a quick right click
  *   writes them through `cad.entities.create` (operation `labels`) in one step, opening the text layer in that step
  *   when the drawing lacks it, selects them and leaves; Esc leaves.
@@ -41,10 +42,11 @@ export class LabelsToTextTool implements Tool {
   readonly prompt = new Signal('');
   readonly cursor = 'pick' as const;
   readonly snaps = false;
-  /** Kept for the session (docs/adr/0175 §3): every label (no thinning), masks, the active layer as the target. */
+  /** Kept for the session (docs/adr/0175 §3): every label (no thinning), masks, the active layer as the target, linked texts. */
   static every = false;
   static mask = false;
   static active = false;
+  static linked = false;
   private readonly ctx: AppContext;
   /** The labels it converts, taken when it starts, in the drawing's order. */
   private wanted: LabelWanted[] = [];
@@ -79,7 +81,8 @@ export class LabelsToTextTool implements Tool {
     this.whole = selection.size === 0;
     const chosen = this.whole ? [...doc.all()] : [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
     this.wanted = chosen.flatMap((e): LabelWanted[] => {
-      if (!e.label || NO_LABEL.has(e.kind) || !doc.layers.isVisible(e.layerId)) return [];
+      // A text writes its label already (docs/adr/0175 §4).
+      if (!e.label || NO_LABEL.has(e.kind) || !doc.layers.isVisible(e.layerId) || doc.hasLinkedText(doc.uidOf(e.id) ?? '')) return [];
       const style: LabelStyle | undefined = doc.layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
       return style ? [{ id: e.id, label: e.label, style }] : [];
     });
@@ -113,7 +116,9 @@ export class LabelsToTextTool implements Tool {
     else {
       const { doc } = this.ctx;
       const layer = LabelsToTextTool.active ? (doc.layers.get(doc.layers.active.value)?.name ?? '') : standardLayerName(this.ctx, TEXT_LAYER);
-      this.prompt.set(`${LABEL}: ${finding(this.current(), this.scale)} [Ölçek (Ö): 1:${this.scale} / Örtüşenler de (R): ${on(LabelsToTextTool.every)} / Zemin (Z): ${on(LabelsToTextTool.mask)} / Katman (K): ${layer} / Uygula (Enter)]`);
+      this.prompt.set(
+        `${LABEL}: ${finding(this.current(), this.scale)} [Ölçek (Ö): 1:${this.scale} / Örtüşenler de (R): ${on(LabelsToTextTool.every)} / Zemin (Z): ${on(LabelsToTextTool.mask)} / Katman (K): ${layer} / Nesneye bağlı (B): ${on(LabelsToTextTool.linked)} / Uygula (Enter)]`,
+      );
     }
     this.ctx.view.requestOverlay();
   }
@@ -178,8 +183,14 @@ export class LabelsToTextTool implements Tool {
       return this.ctx.tools.exit();
     }
     const mask = LabelsToTextTool.mask;
+    // Nesneye bağlı: each text knows its object and the scale (docs/adr/0175 §4).
+    const linkOf = (item: number) => {
+      const uid = LabelsToTextTool.linked ? doc.uidOf(this.wanted[item]?.id ?? -1) : undefined;
+      return uid ? { labelOf: uid, labelScale: this.scale } : {};
+    };
     const objects = r.texts.map((t) => ({
       geometry: { kind: 'text', p: t.p, text: t.text, height: t.height, rotation: t.rotation, align: t.align, ...(mask && { mask: true }) } as NewGeometry,
+      ...linkOf(t.item),
     }));
     const layerId = LabelsToTextTool.active ? doc.layers.active.value : TEXT_LAYER;
     const write = () => entitiesCreate.execute({ doc }, { layerId, objects, operation: 'labels' });
@@ -206,7 +217,7 @@ export class LabelsToTextTool implements Tool {
 }
 
 /** The letters that turn the options on and off. */
-const OPTION_KEYS: Record<string, 'every' | 'mask' | 'active'> = { R: 'every', Z: 'mask', K: 'active' };
+const OPTION_KEYS: Record<string, 'every' | 'mask' | 'active' | 'linked'> = { R: 'every', Z: 'mask', K: 'active', B: 'linked' };
 
 /** `1:500`, `500`: a scale's denominator, a whole number from 1; null for anything else. */
 export function readScale(text: string): number | null {

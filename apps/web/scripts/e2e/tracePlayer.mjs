@@ -512,6 +512,9 @@ const observe = (mark) =>
       zs: e.kind === 'line' ? [e.za ?? null, e.zb ?? null] : e.kind === 'polygon' || e.kind === 'polyline' ? (e.zs ?? e.pts.map(() => null)) : [],
       // An area's holes, in all its parts (docs/adr/0173 §5).
       holes: e.kind === 'polygon' ? (e.holes?.length ?? 0) + (e.parts ?? []).reduce((n, part) => n + (part.holes?.length ?? 0), 0) : null,
+      // A linked text's object by its slot (0: no object has its id) and its scale (docs/adr/0175 §4).
+      labelOf: e.kind === 'text' && e.labelOf !== undefined ? (k.doc.slotOf(e.labelOf) ?? 0) : null,
+      labelScale: e.kind === 'text' ? (e.labelScale ?? null) : null,
     });
     return {
       tool: k.tools.activeId.value,
@@ -572,7 +575,8 @@ function compareShape(name, have, want, t) {
   // A text's alignment, width factor, mask and turn (docs/adr/0145), exact.
   // A survey point's name and elevation (docs/adr/0152), exact.
   // An area's hole count (docs/adr/0173 §5), exact.
-  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes'])
+  // A linked text's object, by its slot, and its scale (docs/adr/0175 §4), exact.
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   // Its attributes, all of them, exact.
   const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));

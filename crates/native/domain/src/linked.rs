@@ -79,6 +79,32 @@ fn unlinked(text: &TextEntity) -> TextEntity {
 }
 
 impl Document {
+    /// The texts that write the label of the object in `slot`, in slot order.
+    pub fn linked_texts(&self, slot: Slot) -> Vec<Slot> {
+        self.uid(slot)
+            .map(|uid| self.store.linked_to(uid).collect())
+            .unwrap_or_default()
+    }
+
+    /// Whether a text writes the label of the object in `slot`: that text is
+    /// its label now, so the drawing, the sheet and Etiketleri yazıya çevir
+    /// leave its own out.
+    pub fn has_linked_text(&self, slot: Slot) -> bool {
+        self.uid(slot)
+            .is_some_and(|uid| self.store.linked_to(uid).next().is_some())
+    }
+
+    /// The objects whose label a text writes, in slot order.
+    pub fn text_labelled(&self) -> Vec<Slot> {
+        let mut slots: Vec<Slot> = self
+            .store
+            .linked_objects()
+            .filter_map(|uid| self.store.slot_of(uid))
+            .collect();
+        slots.sort_unstable();
+        slots
+    }
+
     /// The linked text `text` written again for its object `object` now, or
     /// none when the rule writes nothing (docs/adr/0175 §4).
     fn rewritten(&self, text: &TextEntity, object: &Entity) -> Option<TextEntity> {

@@ -11,14 +11,18 @@ use crate::common;
 use common::{Bench, E, N};
 use kentos_contracts::{Entity, PathEntity, PointEntity, TextAlign, TextEntity, Vec2, Workspace};
 use kentos_domain::Slot;
-use kentos_interaction::Level;
 use kentos_interaction::labels_to_text::read_scale;
+use kentos_interaction::{LabelSpot, Level, Spatial};
 
 const LABEL: &str = "Etiketleri yazıya çevir";
 
 fn options(scale: u64, every: &str, mask: &str, layer: &str) -> String {
+    linked_options(scale, every, mask, layer, "kapalı")
+}
+
+fn linked_options(scale: u64, every: &str, mask: &str, layer: &str, linked: &str) -> String {
     format!(
-        "[Ölçek (Ö): 1:{scale} / Örtüşenler de (R): {every} / Zemin (Z): {mask} / Katman (K): {layer} / Uygula (Enter)]"
+        "[Ölçek (Ö): 1:{scale} / Örtüşenler de (R): {every} / Zemin (Z): {mask} / Katman (K): {layer} / Nesneye bağlı (B): {linked} / Uygula (Enter)]"
     )
 }
 
@@ -110,7 +114,7 @@ fn writes_the_labels_as_a_sheet_would_in_one_step_on_the_text_layer_it_opens() {
             options(1000, "kapalı", "kapalı", "Yazılar")
         )
     );
-    assert_eq!(b.options(), ["Ö", "R", "Z", "K", "Enter"]);
+    assert_eq!(b.options(), ["Ö", "R", "Z", "K", "B", "Enter"]);
     b.move_to(60.0, 10.0);
     let preview = b.run(|s, cx| s.preview(&cx.format())).expect("a preview");
     assert_eq!(
@@ -227,6 +231,130 @@ fn takes_a_selections_labels_only_writes_masked_texts_on_the_active_layer_and_ke
     );
     assert_eq!(b.doc.undo().as_deref(), Some(LABEL));
     assert!(b.memory.labels_mask && b.memory.labels_active);
+}
+
+#[test]
+fn writes_texts_linked_to_their_objects_which_they_follow_and_whose_labels_leave_the_scope() {
+    let mut b = drawing();
+    b.start("labelsToText");
+    assert!(b.type_text("B"));
+    assert_eq!(
+        b.session.prompt().text(),
+        format!(
+            "{LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak {}",
+            linked_options(1000, "kapalı", "kapalı", "Yazılar", "açık")
+        )
+    );
+    b.confirm();
+    let made = texts(&b);
+    assert_eq!(
+        made.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(),
+        ["101", "102", "P1", "Cumhuriyet Cd."]
+    );
+    // Each knows its object (the label it writes) and the scale.
+    let object = |t: &TextEntity| {
+        let uid = kentos_domain::Uuid::from_bytes(t.label_of.expect("a link").0);
+        b.doc.slot_of(uid).expect("its object")
+    };
+    for t in &made {
+        assert_eq!(
+            b.doc.get(object(t)).and_then(|e| e.base().label.as_deref()),
+            Some(t.text.as_str())
+        );
+        assert_eq!(t.label_scale, Some(1000.0));
+    }
+    // The parcel moves: its text follows in the same step, and one undo takes both back.
+    let parcel = object(&made[1]);
+    let Some(Entity::Polygon(mut moved)) = b.doc.get(parcel).cloned() else {
+        panic!("a parcel")
+    };
+    for p in &mut moved.pts {
+        p.y -= 10.0;
+    }
+    assert!(b.doc.update(parcel, Entity::Polygon(moved)));
+    let Some(Entity::Text(text)) = b.doc.get(Slot(made[1].base.id)).cloned() else {
+        panic!("a text")
+    };
+    assert!(near(text.p.x, made[1].p.x, 1e-9));
+    assert!(near(text.p.y, made[1].p.y - 10.0, 1e-9));
+    assert_eq!(text.label_of, made[1].label_of);
+    assert!(b.doc.undo().is_some());
+    assert_eq!(texts(&b)[1].p, made[1].p);
+    // Run again on the whole drawing: the linked objects' labels are texts now; 104's and the small 103's are left.
+    b.selection.set(Vec::<Slot>::new());
+    let before = b.log.len();
+    b.start("labelsToText");
+    assert_eq!(
+        b.said(before),
+        [(
+            Level::Info,
+            format!("{LABEL}: bütün çizimde 2 etiket; 1:1000 ölçekte 1 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.").as_str()
+        )]
+    );
+}
+
+/// An object whose label a text writes shows none of its own in the drawing
+/// (docs/adr/0175 §4): the store hears it from the document as it syncs,
+/// through undo and redo, the link's breaking and the object's removal (the
+/// web's `apps/web/src/viewport/linkedLabels.test.ts`).
+#[test]
+fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
+    let mut b = drawing();
+    let mut spatial = Spatial::of(&b.doc);
+    // The parcels whose own label the drawing places at 3 px/m (103 is too small).
+    let centred = |spatial: &mut Spatial, b: &Bench| -> Vec<u32> {
+        spatial.sync(&b.doc);
+        spatial
+            .labels(
+                kentos_interaction::Vec2::new(E - 100.0, N - 100.0),
+                kentos_interaction::Vec2::new(E + 200.0, N + 200.0),
+                3.0,
+            )
+            .into_iter()
+            .filter_map(|spot| match spot {
+                LabelSpot::Center { slot, .. } => Some(slot.0),
+                _ => None,
+            })
+            .collect()
+    };
+    assert_eq!(centred(&mut spatial, &b), [1, 2, 3]);
+    let parcel = b.doc.uid(Slot(1)).expect("a persistent id");
+    let text = b
+        .doc
+        .add(Entity::Text(TextEntity {
+            base: common::base("cizim"),
+            p: pt(10.0, 7.5),
+            text: "101".into(),
+            height: 2.0,
+            rotation: 0.0,
+            align: Some(TextAlign::MiddleCenter),
+            width_factor: None,
+            mask: false,
+            label_of: Some(kentos_contracts::EntityId(*parcel.as_bytes())),
+            label_scale: Some(1000.0),
+        }))
+        .expect("a slot");
+    assert_eq!(centred(&mut spatial, &b), [2, 3]);
+    assert!(b.doc.undo().is_some());
+    assert_eq!(centred(&mut spatial, &b), [1, 2, 3]);
+    assert!(b.doc.redo().is_some());
+    assert_eq!(centred(&mut spatial, &b), [2, 3]);
+    // The text moved by hand loses its link: the object's own label is back.
+    let Some(Entity::Text(mut moved)) = b.doc.get(text).cloned() else {
+        panic!("a text")
+    };
+    moved.p = pt(11.0, 8.5);
+    assert!(b.doc.update(text, Entity::Text(moved)));
+    assert_eq!(centred(&mut spatial, &b), [1, 2, 3]);
+    assert!(b.doc.undo().is_some());
+    assert_eq!(centred(&mut spatial, &b), [2, 3]);
+    // The object removed takes its text with it.
+    assert_eq!(b.doc.remove(&[Slot(1)]), 1);
+    assert!(b.doc.get(text).is_none());
+    assert_eq!(centred(&mut spatial, &b), [2, 3]);
+    assert!(b.doc.undo().is_some());
+    assert!(b.doc.get(text).is_some());
+    assert_eq!(centred(&mut spatial, &b), [2, 3]);
 }
 
 #[test]

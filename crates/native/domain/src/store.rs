@@ -88,6 +88,11 @@ impl Store {
         !self.links.is_empty()
     }
 
+    /// The persistent ids of the objects whose label a text writes.
+    pub fn linked_objects(&self) -> impl Iterator<Item = Uuid> + '_ {
+        self.links.keys().copied()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if let Some(of) = link_of(stored) {
             self.links.entry(of).or_default().insert(stored.slot());

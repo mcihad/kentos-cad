@@ -185,6 +185,8 @@ pub struct Store {
     font: Font,
     /// The drawing's block definitions, flattened (`set_blocks`).
     blocks: Blocks,
+    /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
+    text_labelled: IdSet,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -441,6 +443,13 @@ impl Store {
         self.label_defaults = defaults;
         self.font = font;
         self.blocks = blocks;
+    }
+
+    /// The objects whose label a text writes (docs/adr/0175 §4): `labels`
+    /// leaves their own out, the text is their label now. Replaces the list
+    /// sent before; `clear` empties it with the objects.
+    pub fn set_text_labelled(&mut self, ids: &[f64]) {
+        self.text_labelled = ids.iter().map(|id| id.to_bits()).collect();
     }
 
     /// Replaces the layer table: every node of the layer tree with its flags

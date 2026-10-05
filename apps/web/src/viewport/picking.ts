@@ -165,6 +165,8 @@ export class PickIndex {
   private blocksDirty = true;
   /** Blocks' pieces as the store numbers them, by block id, until the definitions change. */
   private readonly pieceTables = new Map<string, readonly BlockPiece[] | null>();
+  /** The document's `linksVersion` the store's text-labelled objects were sent at (-1: not since a reload). */
+  private sentLinks = -1;
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(doc: CadDocument) {
@@ -231,6 +233,7 @@ export class PickIndex {
       this.reload = false;
       this.pending.clear();
       this.store.clear();
+      this.sentLinks = -1;
       const p = packEntities(this.doc.all());
       this.store.putPacked(p.nums, p.strings);
     } else if (this.pending.size) {
@@ -246,6 +249,11 @@ export class PickIndex {
     if (this.layersDirty) {
       this.layersDirty = false;
       this.store.setLayers(JSON.stringify(layerTable(this.doc.layers)));
+    }
+    // The objects whose label a text writes show none of their own (docs/adr/0175 §4).
+    if (this.sentLinks !== this.doc.linksVersion) {
+      this.sentLinks = this.doc.linksVersion;
+      this.store.setTextLabelled(Float64Array.from(this.doc.textLabelled()));
     }
   }
 

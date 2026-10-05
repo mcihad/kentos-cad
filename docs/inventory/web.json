@@ -6707,6 +6707,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/labels-to-text.json"
       ]
     },
@@ -7016,6 +7017,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/move-copy.json",
         "fixtures/interaction/v1/usage-blocks-view.json"
       ]
@@ -10793,6 +10795,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/labels-to-text.json"
       ]
     },
@@ -11028,6 +11031,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/move-copy.json",
         "fixtures/interaction/v1/usage-blocks-view.json"
       ]

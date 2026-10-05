@@ -546,12 +546,13 @@ pub struct Memory {
     pub point_name: Name,
     pub point_code: Name,
     pub point_z: Option<f64>,
-    /// Etiketleri yazıya çevir's Örtüşenler de, Zemin and Katman (the
-    /// active layer instead of the text layer) (`LabelsToTextTool.every`,
-    /// `.mask`, `.active`; docs/adr/0175 §3).
+    /// Etiketleri yazıya çevir's Örtüşenler de, Zemin, Katman (the active
+    /// layer instead of the text layer) and Nesneye bağlı
+    /// (`LabelsToTextTool.every`, `.mask`, `.active`, `.linked`; docs/adr/0175 §3).
     pub labels_every: bool,
     pub labels_mask: bool,
     pub labels_active: bool,
+    pub labels_linked: bool,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -728,6 +729,7 @@ impl Default for Memory {
             labels_every: false,
             labels_mask: false,
             labels_active: false,
+            labels_linked: false,
         }
     }
 }

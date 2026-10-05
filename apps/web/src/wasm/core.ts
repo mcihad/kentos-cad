@@ -590,6 +590,11 @@ export class CoreStore {
     typed(() => this.raw.setLabelDefaults(json));
   }
 
+  /** The objects whose label a text writes (docs/adr/0175 §4): `labels` leaves their own out. */
+  setTextLabelled(ids: Float64Array): void {
+    typed(() => this.raw.setTextLabelled(ids));
+  }
+
   /** What the overlay draws in the view: eight numbers per record (geometry-core store/labels.rs). */
   labels(minX: number, minY: number, maxX: number, maxY: number, scale: number, editing: number | null): Float64Array {
     return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));

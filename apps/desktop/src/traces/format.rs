@@ -228,6 +228,12 @@ pub struct Newest {
     pub(super) zs: Option<Vec<Option<f64>>>,
     /// An area's holes, in all its parts (docs/adr/0173 §5), exact.
     pub(super) holes: Option<usize>,
+    /// A linked text's object by its slot, `null` a text of its own; its
+    /// scale (docs/adr/0175 §4). Exact; absent, not compared.
+    #[serde(rename = "labelOf", default, deserialize_with = "present")]
+    pub(super) label_of: Option<Option<u32>>,
+    #[serde(rename = "labelScale")]
+    pub(super) label_scale: Option<f64>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

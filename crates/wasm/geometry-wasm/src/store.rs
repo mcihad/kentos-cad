@@ -316,6 +316,12 @@ impl GeometryStore {
         })
     }
 
+    /// The objects whose label a text writes (docs/adr/0175 §4): their own labels are left out.
+    #[wasm_bindgen(js_name = setTextLabelled)]
+    pub fn set_text_labelled(&mut self, ids: &[f64]) {
+        self.inner.set_text_labelled(ids);
+    }
+
     #[wasm_bindgen(getter)]
     pub fn size(&self) -> u32 {
         self.inner.len() as u32

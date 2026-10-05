@@ -17,11 +17,13 @@ beforeEach(() => {
   LabelsToTextTool.every = false;
   LabelsToTextTool.mask = false;
   LabelsToTextTool.active = false;
+  LabelsToTextTool.linked = false;
 });
 afterEach(() => pickers.splice(0).forEach((p) => p.dispose()));
 
 const LABEL = 'Etiketleri yazıya çevir';
-const OPTIONS = (scale = 1000, every = 'kapalı', mask = 'kapalı', layer = 'Yazılar') => `[Ölçek (Ö): 1:${scale} / Örtüşenler de (R): ${every} / Zemin (Z): ${mask} / Katman (K): ${layer} / Uygula (Enter)]`;
+const OPTIONS = (scale = 1000, every = 'kapalı', mask = 'kapalı', layer = 'Yazılar', linked = 'kapalı') =>
+  `[Ölçek (Ö): 1:${scale} / Örtüşenler de (R): ${every} / Zemin (Z): ${mask} / Katman (K): ${layer} / Nesneye bağlı (B): ${linked} / Uygula (Enter)]`;
 
 /**
  * Two parcels with numbers, a third whose label falls on the first's, a parcel too small to label at 1:1000, a
@@ -101,6 +103,39 @@ describe('Etiketleri yazıya çevir', () => {
     ]);
     expect(h.doc.undo()).toBe(LABEL);
     expect(LabelsToTextTool.mask && LabelsToTextTool.active).toBe(true);
+  });
+
+  it('writes texts linked to their objects with Nesneye bağlı: they follow them, and their labels leave the scope', () => {
+    const h = drawing();
+    const tool = h.use(new LabelsToTextTool(h.ctx));
+    tool.activate();
+    expect(tool.input('B')).toBe(true);
+    expect(tool.prompt.value).toBe(`${LABEL}: 1:1000 ölçekte 4 yazı olacak, 1 örtüşen, 1 küçük etiket atlanacak ${OPTIONS(1000, 'kapalı', 'kapalı', 'Yazılar', 'açık')}`);
+    tool.confirm();
+    const made = texts(h);
+    expect(made.map((t) => t.text)).toEqual(['101', '102', 'P1', 'Cumhuriyet Cd.']);
+    // Each knows its object (the label it writes) and the scale.
+    expect(made.map((t) => [h.doc.byUid(t.labelOf!)?.label, t.labelScale])).toEqual([
+      ['101', 1000],
+      ['102', 1000],
+      ['P1', 1000],
+      ['Cumhuriyet Cd.', 1000],
+    ]);
+    // The parcel moves: its text follows in the same step, and one undo takes both back.
+    const parcel = h.doc.byUid(made[1].labelOf!)!;
+    if (parcel.kind !== 'polygon') throw new Error('a parcel');
+    h.doc.update(parcel.id, { pts: parcel.pts.map((p) => ({ x: p.x, y: p.y - 10 })) });
+    const moved = h.doc.get(made[1].id) as TextEntity;
+    expect(moved.p.x).toBeCloseTo(made[1].p.x, 9);
+    expect(moved.p.y).toBeCloseTo(made[1].p.y - 10, 9);
+    expect(moved.labelOf).toBe(made[1].labelOf);
+    expect(h.doc.undo()).toBe('Değiştir');
+    expect((h.doc.get(made[1].id) as TextEntity).p).toEqual(made[1].p);
+    // Run again on the whole drawing: the linked objects' labels are texts now; 104's and the small 103's are left.
+    h.ctx.selection.set([]);
+    const again = h.use(new LabelsToTextTool(h.ctx));
+    again.activate();
+    expect(h.said().at(-1)).toBe(`${LABEL}: bütün çizimde 2 etiket; 1:1000 ölçekte 1 yazı olacak, 1 küçük etiket atlanacak. Enter ile yazın.`);
   });
 
   it('asks for the scale with Ö, says a wrong one, and leaves at once when there is no label', () => {
