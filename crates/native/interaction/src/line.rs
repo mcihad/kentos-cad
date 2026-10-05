@@ -23,7 +23,8 @@
 use kentos_contracts::{EntitiesDelete, LineCreate};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
-use kentos_geometry_core::tools::point_input::Tracking;
+use kentos_geometry_core::ops::cogo;
+use kentos_geometry_core::tools::point_input::{AngleFrom, Tracking};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, delete, line};
 
@@ -54,6 +55,9 @@ pub struct Line {
     made: Vec<Slot>,
     /// The drawing's revision right after the newest of them was written or taken back.
     made_at: Option<u64>,
+    /// The text a point was typed as, while it is being accepted; none for a
+    /// click (Kayıtlı ölçüler, docs/adr/0180 §2).
+    typed: Option<String>,
 }
 
 impl Line {
@@ -94,13 +98,28 @@ impl Line {
     /// and the current colour. The new line's slot, or `None` with the
     /// command's message when it refused.
     fn create(&mut self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> Option<Slot> {
+        // A polar point typed as `d<a` records its values as the line's Kayıtlı
+        // uzunluk and, in a GIS project with grads, Kayıtlı semt: the texts as
+        // typed (docs/adr/0180 §2). A clicked point records nothing.
+        let recorded = self.typed.as_deref().and_then(|text| {
+            let format = cx.format();
+            let angles = format.angles();
+            let convention = if angles.from == AngleFrom::North {
+                "gis"
+            } else {
+                "cad"
+            };
+            let unit = if angles.grads { "grad" } else { "deg" };
+            cogo::record(text, convention, unit, format.length_unit_label())
+                .map(|attrs| attrs.0.into_iter().collect())
+        });
         let input = LineCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             a: wire(a),
             b: wire(b),
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
-            attrs: cx.template_attrs(None),
+            attrs: cx.template_attrs(recorded),
             expected_revision: None,
             label: cx.template_label(),
             symbol: cx.template_symbol(),
@@ -257,7 +276,9 @@ impl Tool for Line {
         // Object tracking has no line on the desktop yet: a bare number follows the cursor.
         match cx.typed_point(text, self.last(), self.hover) {
             Some(p) => {
+                self.typed = Some(text.to_owned());
                 self.accept(p, cx);
+                self.typed = None;
                 true
             }
             None => false,

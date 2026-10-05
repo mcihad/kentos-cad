@@ -169,6 +169,8 @@ pub enum Dialog {
     LayerList,
     /// Veri karşılaştır (data_compare.rs, docs/adr/0179); the window is `App::data_compare`.
     DataCompare,
+    /// Kayıtlı ölçüleri denetle (cogo.rs, docs/adr/0180); the window is `App::cogo`.
+    Cogo,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -311,6 +313,8 @@ pub enum Message {
     LayerList(crate::layer_list::Event),
     /// Veri karşılaştır's window (data_compare.rs).
     DataCompare(crate::data_compare::Event),
+    /// Kayıtlı ölçüleri denetle's window (cogo.rs).
+    Cogo(crate::cogo::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
@@ -618,6 +622,8 @@ pub struct App {
     pub(crate) layer_list: Option<crate::layer_list::Window>,
     /// Veri karşılaştır's window (data_compare.rs, docs/adr/0179).
     pub(crate) data_compare: Option<crate::data_compare::Window>,
+    /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
+    pub(crate) cogo: Option<crate::cogo::Window>,
     /// Cihaza gönder's last format, kept for the session (exchange/field_send.rs).
     pub(crate) field_send_format: usize,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
@@ -845,6 +851,7 @@ impl App {
             layer_purge: None,
             layer_list: None,
             data_compare: None,
+            cogo: None,
             field_send_format: 0,
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
@@ -1217,6 +1224,7 @@ impl App {
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
+            Message::Cogo(event) => return self.cogo_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
@@ -1757,6 +1765,11 @@ impl App {
             "layer.list" => self.open_layer_list(),
             // Veri karşılaştır (docs/adr/0179).
             "data.compare" => self.open_data_compare(),
+            // Kayıtlı ölçüler (docs/adr/0180): the check's window, and the selection's recorded values from the drawing.
+            "cogo.check" => self.open_cogo_check(),
+            "cogo.update" => {
+                self.cogo_update();
+            }
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {

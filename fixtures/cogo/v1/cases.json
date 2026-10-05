@@ -1,0 +1,526 @@
+{
+ "format": "kentos.cogo-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/cogo_cases.py from docs/adr/0180, not from either platform's code. Semts in grads, lengths in metres; a check's semt difference in cc, length differences in metres; `recorded` is the attributes a typed polar point gives a line (null: none).",
+ "measures": [
+  {
+   "name": "Doğuya çizgi: semt 100",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "measured": {
+    "semt": 100.0,
+    "length": 25.400000000023283
+   }
+  },
+  {
+   "name": "Kuzeye çizgi: semt 0",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487000,
+     "y": 4420010
+    }
+   },
+   "measured": {
+    "semt": 0.0,
+    "length": 10.0
+   }
+  },
+  {
+   "name": "Güneybatıya çizgi: semt 250",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487010,
+     "y": 4420010
+    },
+    "b": {
+     "x": 487000,
+     "y": 4420000
+    }
+   },
+   "measured": {
+    "semt": 250.0,
+    "length": 14.142135623730951
+   }
+  },
+  {
+   "name": "Kuzeybatıya çizgi (−3, 4)",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": -3,
+     "y": 4
+    }
+   },
+   "measured": {
+    "semt": 359.03344706017333,
+    "length": 5.0
+   }
+  },
+  {
+   "name": "Çeyrek yay: kirişin semti, uzunluğu, yarıçap ve yay uzunluğu",
+   "shape": {
+    "kind": "arc",
+    "c": {
+     "x": 100,
+     "y": 100
+    },
+    "r": 10,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   "measured": {
+    "semt": 350.0,
+    "length": 14.14213562373095,
+    "radius": 10.0,
+    "arc": 15.707963267948966
+   }
+  },
+  {
+   "name": "Sıfırdan geçen yay",
+   "shape": {
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 5,
+    "a0": 5.5,
+    "a1": 0.5
+   },
+   "measured": {
+    "semt": 9.014068289725596,
+    "length": 5.984721441039565,
+    "radius": 5.0,
+    "arc": 6.415926535897932
+   }
+  },
+  {
+   "name": "Başka tür ölçülmez",
+   "shape": {
+    "kind": "point",
+    "p": {
+     "x": 0,
+     "y": 0
+    }
+   },
+   "measured": null
+  }
+ ],
+ "checks": [
+  {
+   "name": "Kayıtlı değerler çizimle aynı: uyuyor",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Kayıtlı semt": "100",
+    "Kayıtlı uzunluk": "25.40"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "ok",
+    "items": [
+     {
+      "field": "semt",
+      "recorded": "100",
+      "measured": 100.0,
+      "difference": 0.0,
+      "over": false
+     },
+     {
+      "field": "length",
+      "recorded": "25.40",
+      "measured": 25.400000000023283,
+      "difference": -2.3283064365386964e-11,
+      "over": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Uzunluk 4 cm farklı: farklı",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Kayıtlı semt": "100.0000",
+    "Kayıtlı uzunluk": "25.44"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "differs",
+    "items": [
+     {
+      "field": "semt",
+      "recorded": "100.0000",
+      "measured": 100.0,
+      "difference": 0.0,
+      "over": false
+     },
+     {
+      "field": "length",
+      "recorded": "25.44",
+      "measured": 25.400000000023283,
+      "difference": 0.03999999997671694,
+      "over": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "Semt 30 cc farklı, tolerans 50 cc: uyuyor",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Kayıtlı semt": "100.0030",
+    "Kayıtlı uzunluk": "25,40"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "ok",
+    "items": [
+     {
+      "field": "semt",
+      "recorded": "100.0030",
+      "measured": 100.0,
+      "difference": 30.0,
+      "over": false
+     },
+     {
+      "field": "length",
+      "recorded": "25,40",
+      "measured": 25.400000000023283,
+      "difference": -2.3283064365386964e-11,
+      "over": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Semt 399.9990, çizim 0'a yakın: fark −10 cc değil, dönüşle bulunur",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 0,
+     "y": 10
+    }
+   },
+   "attrs": {
+    "Kayıtlı semt": "399.9990"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "ok",
+    "items": [
+     {
+      "field": "semt",
+      "recorded": "399.9990",
+      "measured": 0.0,
+      "difference": -10.0,
+      "over": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sayı olmayan kayıt: okunamadı",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Kayıtlı uzunluk": "25,4 m"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "unreadable",
+    "items": [
+     {
+      "field": "length",
+      "recorded": "25,4 m",
+      "measured": 25.400000000023283,
+      "difference": null,
+      "over": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Kayıtlı ölçüsü olmayan çizgi listede yok",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Ad": "Y1"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": null
+  },
+  {
+   "name": "Yayın dört ölçüsü uyuyor",
+   "shape": {
+    "kind": "arc",
+    "c": {
+     "x": 100,
+     "y": 100
+    },
+    "r": 10,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   "attrs": {
+    "Kayıtlı semt": "350",
+    "Kayıtlı uzunluk": "14.1421",
+    "Kayıtlı yarıçap": "10",
+    "Kayıtlı yay uzunluğu": "15.708"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "ok",
+    "items": [
+     {
+      "field": "semt",
+      "recorded": "350",
+      "measured": 350.0,
+      "difference": -1.9490859162596877e-11,
+      "over": false
+     },
+     {
+      "field": "length",
+      "recorded": "14.1421",
+      "measured": 14.14213562373095,
+      "difference": -3.562373095005504e-05,
+      "over": false
+     },
+     {
+      "field": "radius",
+      "recorded": "10",
+      "measured": 10.0,
+      "difference": 0.0,
+      "over": false
+     },
+     {
+      "field": "arc",
+      "recorded": "15.708",
+      "measured": 15.707963267948966,
+      "difference": 3.673205103442001e-05,
+      "over": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Yayın yarıçapı farklı",
+   "shape": {
+    "kind": "arc",
+    "c": {
+     "x": 100,
+     "y": 100
+    },
+    "r": 10,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   "attrs": {
+    "Kayıtlı yarıçap": "10.05"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": {
+    "status": "differs",
+    "items": [
+     {
+      "field": "radius",
+      "recorded": "10.05",
+      "measured": 10.0,
+      "difference": 0.05,
+      "over": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "Çizgide yarıçap anlamsız: sayılmaz",
+   "shape": {
+    "kind": "line",
+    "a": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "b": {
+     "x": 487025.4,
+     "y": 4420000
+    }
+   },
+   "attrs": {
+    "Kayıtlı yarıçap": "5"
+   },
+   "toleranceLength": 0.01,
+   "toleranceCc": 50,
+   "result": null
+  }
+ ],
+ "records": [
+  {
+   "name": "CBS, grad: uzunluk ve semt yazıldığı gibi",
+   "text": "@25.40<123.4567",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "m",
+   "recorded": {
+    "Kayıtlı uzunluk": "25.40",
+    "Kayıtlı semt": "123.4567"
+   }
+  },
+  {
+   "name": "@ yazılmadan, virgüllü ondalık ve boşluklar",
+   "text": " 25,40 < 123,4567 ",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "m",
+   "recorded": {
+    "Kayıtlı uzunluk": "25.40",
+    "Kayıtlı semt": "123.4567"
+   }
+  },
+  {
+   "name": "Artı işareti düşer, noktayla başlayan sayıya sıfır",
+   "text": "+.5<+100",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "m",
+   "recorded": {
+    "Kayıtlı uzunluk": "0.5",
+    "Kayıtlı semt": "100"
+   }
+  },
+  {
+   "name": "CBS, derece: yalnız uzunluk",
+   "text": "@10<45",
+   "convention": "gis",
+   "angleUnit": "deg",
+   "lengthUnit": "m",
+   "recorded": {
+    "Kayıtlı uzunluk": "10"
+   }
+  },
+  {
+   "name": "CAD: açı semt değildir, yalnız uzunluk",
+   "text": "@10<90",
+   "convention": "cad",
+   "angleUnit": "deg",
+   "lengthUnit": "m",
+   "recorded": {
+    "Kayıtlı uzunluk": "10"
+   }
+  },
+  {
+   "name": "Yerel proje milimetre: nokta üç basamak sola",
+   "text": "2540<100",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "mm",
+   "recorded": {
+    "Kayıtlı uzunluk": "2.540",
+    "Kayıtlı semt": "100"
+   }
+  },
+  {
+   "name": "Yerel proje santimetre: sıfırlar eklenir",
+   "text": "5<100",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "cm",
+   "recorded": {
+    "Kayıtlı uzunluk": "0.05",
+    "Kayıtlı semt": "100"
+   }
+  },
+  {
+   "name": "Kutupsal olmayan yazı kaydedilmez",
+   "text": "487010,4420000",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "m",
+   "recorded": null
+  },
+  {
+   "name": "Uzaklık eksi olamaz",
+   "text": "-5<100",
+   "convention": "gis",
+   "angleUnit": "grad",
+   "lengthUnit": "m",
+   "recorded": null
+  }
+ ]
+}

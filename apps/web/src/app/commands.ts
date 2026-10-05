@@ -843,6 +843,25 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       description: 'İki katmanı, grubu ya da çizimi karşılaştırır: konumla ya da anahtar alanla eşler, eklenen, silinen, geometrisi ya da özniteliği değişen nesneleri listeler; rapor verir, farkları renkli katmanlara yazar.',
       run: () => void import('../ui/data/DataCompareDialog').then((m) => m.openDataCompare(ctx)),
     },
+    {
+      id: 'cogo.check',
+      title: 'Kayıtlı ölçüleri denetle…',
+      category: 'Hesap',
+      icon: 'cogoCheck',
+      aliases: ['COGO', 'KAYITLIOLCU', 'KAYITLIOLCUDENETLE'],
+      description: 'Çizgi ve yayların kayıtlı semt, uzunluk, yarıçap ve yay uzunluğunu çizimden ölçülenle toleransla karşılaştırır; farklı ve okunamayanları listeler.',
+      run: () => void import('../ui/cogo/CogoCheckDialog').then((m) => m.openCogoCheck(ctx)),
+    },
+    {
+      id: 'cogo.update',
+      title: 'Kayıtlı ölçüleri çizimden yaz',
+      short: 'Çizimden yaz',
+      category: 'Hesap',
+      icon: 'cogoUpdate',
+      aliases: ['UPDATECOGO', 'KAYITLIOLCUYAZ'],
+      description: 'Seçili çizgi ve yayların kayıtlı ölçülerini çizimden ölçülenle yazar (semt 4, uzunluklar 3 ondalıkla); tek adımda geri alınır.',
+      run: () => void import('./cogo').then((m) => m.cogoUpdate(ctx, ctx.selection.ids.value)),
+    },
 
     // Araç akışı
     { id: 'tool.cancel', title: 'İptal', category: 'Komut', icon: 'close', run: () => tools.exit() },

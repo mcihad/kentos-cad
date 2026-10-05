@@ -1,0 +1,29 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "cogo",
+  "title": "Kayıtlı ölçüler: CBS projesinde Çizgi'ye kutupsal yazılan uzunluk ve semt çizginin kayıtlı ölçüleri olur; Kayıtlı ölçüleri denetle uyan, 5 cm farklı ve okunamayan kaydı söyler; seçili çizginin kayıtlı ölçüleri çizimden tek adımda yazılır, denetim uyar, geri alınır",
+  "source": "docs/adr/0180",
+  "covers": ["HYB-23"],
+  "document": "cogo.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "steps": [
+    {"run": "tool.line"},
+    {"click": [5, 5]},
+    {"text": "10<100"},
+    {"key": "Enter", "note": "Kutupsal yazılan değerler kaydedilir", "expect": {"entities": 5, "newest": {"kind": "line", "points": [[5, 5], [15, 5]], "attrs": {"Kayıtlı semt": "100", "Kayıtlı uzunluk": "10"}}}},
+    {"text": "8.5<0"},
+    {"key": "Enter", "expect": {"entities": 6, "newest": {"kind": "line", "points": [[15, 5], [15, 13.5]], "attrs": {"Kayıtlı semt": "0", "Kayıtlı uzunluk": "8.5"}}}},
+    {"key": "Enter", "note": "Zincir biter", "expect": {"logged": ["2 çizgi eklendi."]}},
+    {"key": "Esc"},
+    {"run": "cogo.check", "note": "Bütün çizim denetlenir", "expect": {"dialog": "Kayıtlı ölçüleri denetle", "logged": ["6 nesne denetlendi: 4 uyuyor, 1 farklı, 1 okunamadı."]}},
+    {"shot": "denetle-pencere", "note": "Kayıtlı ölçüleri denetle: farklı uzunluk ve okunamayan kayıt"},
+    {"dialog": "Kayıtlı ölçüleri denetle", "press": "Kapat", "expect": {"dialog": null}},
+    {"click": [-20, 0], "expect": {"selected": [2]}},
+    {"run": "cogo.update", "note": "Seçili çizginin kayıtlı ölçüleri çizimden", "expect": {"canUndo": true, "logged": ["1 nesnenin kayıtlı ölçüleri çizimden yazıldı."], "objects": [{"id": 2, "kind": "line", "attrs": {"Kayıtlı semt": "0.0000", "Kayıtlı uzunluk": "20.050"}}]}},
+    {"run": "cogo.check", "note": "Seçim varken yalnız seçim denetlenir", "expect": {"dialog": "Kayıtlı ölçüleri denetle", "logged": ["1 nesne denetlendi: 1 uyuyor."]}},
+    {"dialog": "Kayıtlı ölçüleri denetle", "press": "Kapat", "expect": {"dialog": null}},
+    {"key": "Ctrl+Z", "note": "Tek adımda geri alınır", "expect": {"objects": [{"id": 2, "kind": "line", "attrs": {"Kayıtlı semt": "0", "Kayıtlı uzunluk": "20.00"}}]}}
+  ]
+}

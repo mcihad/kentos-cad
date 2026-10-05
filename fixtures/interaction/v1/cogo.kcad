@@ -1,0 +1,108 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Kayıtlı ölçüler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "sinir",
+      "name": "Sınır",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "sinir",
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "sinir",
+      "attrs": {
+        "Kayıtlı semt": "100",
+        "Kayıtlı uzunluk": "25.40"
+      },
+      "a": {
+        "x": 486980,
+        "y": 4419985
+      },
+      "b": {
+        "x": 487005.4,
+        "y": 4419985
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "sinir",
+      "attrs": {
+        "Kayıtlı semt": "0",
+        "Kayıtlı uzunluk": "20.00"
+      },
+      "a": {
+        "x": 486980,
+        "y": 4419990
+      },
+      "b": {
+        "x": 486980,
+        "y": 4420010.05
+      }
+    },
+    {
+      "kind": "arc",
+      "id": 3,
+      "layerId": "sinir",
+      "attrs": {
+        "Kayıtlı yarıçap": "5",
+        "Kayıtlı yay uzunluğu": "7.854"
+      },
+      "c": {
+        "x": 487015,
+        "y": 4419988
+      },
+      "r": 5,
+      "a0": 0,
+      "a1": 1.5707963267948966
+    },
+    {
+      "kind": "line",
+      "id": 4,
+      "layerId": "sinir",
+      "attrs": {
+        "Kayıtlı uzunluk": "12,5 m"
+      },
+      "a": {
+        "x": 486990,
+        "y": 4420015
+      },
+      "b": {
+        "x": 487002.5,
+        "y": 4420015
+      }
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

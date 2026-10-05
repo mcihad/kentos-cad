@@ -232,7 +232,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
   {
     id: 'manage',
     label: 'Yönet',
-    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'analysis', sections: ['Karşılaştırma'] }, { menu: 'tools' }, { menu: 'help' }],
+    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'analysis', sections: ['Karşılaştırma'] }, { menu: 'calc', sections: ['Kayıtlı ölçüler'] }, { menu: 'tools' }, { menu: 'help' }],
     launchers: AIDS_LAUNCHER,
   },
   {

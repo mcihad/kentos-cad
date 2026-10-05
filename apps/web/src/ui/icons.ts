@@ -318,6 +318,11 @@ export const ICONS = {
     '<path d="m2.5 13.2 6.5 3.2 6.5-3.2-6.5-3.2z" stroke-dasharray="1.6 1.4"/><path d="m2.5 16.2 6.5 3.2 6.5-3.2"/><path d="M17.6 1.6 14.4 5.6" stroke-width="1.2"/><path d="M11.8 5.8h4.8l.9 3.6h-6.6z" stroke-width="1.2"/>',
   layerList:
     '<path d="m2.6 4.6 2.3-1.3 2.3 1.3-2.3 1.3zM2.6 10l2.3-1.3 2.3 1.3-2.3 1.3zM2.6 15.4l2.3-1.3 2.3 1.3-2.3 1.3z" stroke-width="1.1"/><path d="M9.5 4.6h8M9.5 10h8M9.5 15.4h8"/>',
+  // Kayıtlı ölçüler (docs/adr/0180): a measured edge with its recorded tick and value mark; written from the drawing.
+  cogoCheck:
+    '<path d="M3 15.5 14.5 4" stroke-width="1.3"/><path d="M2 12.5l3 3M11.5 1.5l3 3" stroke-width="1.1"/><path d="m11.5 15 2 2 4-4.5" stroke-width="1.4"/>',
+  cogoUpdate:
+    '<path d="M3 15.5 14.5 4" stroke-width="1.3"/><path d="M2 12.5l3 3M11.5 1.5l3 3" stroke-width="1.1"/><path d="M15 10.5v7M12 14.5l3 3 3-3" stroke-width="1.3"/>',
   // Veri karşılaştır (docs/adr/0179): two shapes side by side, the second one changed, arrows between them.
   dataCompare:
     '<path d="M2.5 4.5h6v6h-6z" stroke-width="1.2"/><path d="M11.5 9.5h6v6h-4.2l-1.8-2.1z" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/><path d="M5.5 13.5v3h3M14.5 6.5v-3h-3" stroke-width="1.1"/><path d="m7 15 1.5 1.5L7 18M13 2l-1.5 1.5L13 5" stroke-width="1.1"/>',

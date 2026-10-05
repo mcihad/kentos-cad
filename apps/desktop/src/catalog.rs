@@ -393,6 +393,9 @@ pub const PORTED: &[&str] = &[
     "layer.list",
     // docs/adr/0179: Veri karşılaştır (data_compare.rs).
     "data.compare",
+    // docs/adr/0180: Kayıtlı ölçüleri denetle and Kayıtlı ölçüleri çizimden yaz (cogo.rs).
+    "cogo.check",
+    "cogo.update",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

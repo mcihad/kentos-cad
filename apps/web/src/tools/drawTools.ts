@@ -25,6 +25,7 @@ import { joinCorners, sayJoined, withJoined, type Joining } from './junctions';
 import { followLocks } from './locks';
 import { withMembers } from './templateMembers';
 import { stamp } from './templateStamp';
+import { cogoRecord } from '../model/ops/cogo';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -49,6 +50,8 @@ export abstract class PointInputTool implements Tool {
    * take back one point; other tools without a Geri (G) start the object over.
    */
   protected readonly stepsFromPoints: boolean = false;
+  /** The text a point was typed as, while it is being accepted; null for a click (Kayıtlı ölçüler, docs/adr/0180 §2). */
+  protected typedText: string | null = null;
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -100,7 +103,12 @@ export abstract class PointInputTool implements Tool {
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const pt = pointFromText(this.ctx, text, this.last, this.hover);
     if (!pt) return false;
-    this.accept(pt);
+    this.typedText = text;
+    try {
+      this.accept(pt);
+    } finally {
+      this.typedText = null;
+    }
     return true;
   }
 
@@ -345,8 +353,15 @@ export class LineTool extends PointInputTool {
    * texts, word for word). The new line's slot, or null when refused.
    */
   private createLine(a: Vec2, b: Vec2): number | null {
+    // A polar point typed as `d<a` records its values as the line's Kayıtlı uzunluk and, in a GIS project with grads,
+    // Kayıtlı semt: the texts as typed (docs/adr/0180 §2). A clicked point records nothing.
+    const f = this.ctx.format;
+    const recorded = this.typedText === null ? null : cogoRecord(this.typedText, f.axes, f.angles.grads ? 'grad' : 'deg', f.lengthUnitLabel);
     // A group template's members are written with each line, in its step (docs/adr/0176 §5).
-    return withMembers(this.ctx, () => this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight(), ...stamp(this.ctx) }))?.id ?? null);
+    return withMembers(
+      this.ctx,
+      () => this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight(), ...stamp(this.ctx, recorded ?? undefined) }))?.id ?? null,
+    );
   }
 
   protected override option(key: string): boolean {

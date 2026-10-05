@@ -19,6 +19,7 @@ mod calc;
 mod catalog;
 mod clipboard;
 mod cloud;
+mod cogo;
 mod command_bar;
 mod crs;
 mod data_compare;

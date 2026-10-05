@@ -249,7 +249,9 @@
     "layer.stateSave",
     "layer.purge",
     "layer.list",
-    "data.compare"
+    "data.compare",
+    "cogo.check",
+    "cogo.update"
   ],
   "format": "kentos.desktop-ported",
   "version": 1
