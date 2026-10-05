@@ -1011,34 +1011,42 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
     b
 }
 
+/// The part a multi-part object's label goes on: an area's largest
+/// (docs/adr/0143), a polyline's longest (docs/adr/0174), the first of
+/// equals; any other object (a multi-point object too) is its own.
+pub fn label_part(e: &Shape) -> Cow<'_, Shape> {
+    let measure: fn(&Shape) -> Option<f64> = match e {
+        Shape::Polygon { .. } if is_multi_part(e) => entity_area,
+        Shape::Polyline { .. } if is_multi_part(e) => entity_length,
+        _ => return Cow::Borrowed(e),
+    };
+    let mut parts = area_parts(e).into_owned();
+    let mut best: Option<(f64, usize)> = None;
+    for (i, part) in parts.iter().enumerate() {
+        let m = measure(part).unwrap_or(0.0);
+        if best.is_none_or(|(most, _)| m > most) {
+            best = Some((m, i));
+        }
+    }
+    match best {
+        Some((_, i)) => Cow::Owned(parts.swap_remove(i)),
+        None => Cow::Borrowed(e),
+    }
+}
+
 /// Where a label sits; None for a path without vertices (the TypeScript's undefined).
 pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
     Some(match e {
-        // A multi-part area's label goes on its largest part (docs/adr/0143).
-        Shape::Polygon { .. } if is_multi_part(e) => {
-            let parts = area_parts(e);
-            let mut best: Option<(f64, &Shape)> = None;
-            for part in parts.iter() {
-                let a = entity_area(part).unwrap_or(0.0);
-                if best.is_none_or(|(most, _)| a > most) {
-                    best = Some((a, part));
-                }
-            }
-            return best.and_then(|(_, part)| entity_anchor(part));
+        // A multi-part area's or polyline's label goes on its `label_part`.
+        Shape::Polygon { .. } | Shape::Polyline { .. } if is_multi_part(e) => {
+            let part = label_part(e);
+            return if is_multi_part(&part) {
+                None
+            } else {
+                entity_anchor(&part)
+            };
         }
         Shape::Polygon { pts, bulges, .. } => centroid(&polygon_ring(pts, bulges.as_deref())),
-        // A multi-part polyline's goes on its longest part (docs/adr/0174).
-        Shape::Polyline { .. } if is_multi_part(e) => {
-            let parts = area_parts(e);
-            let mut best: Option<(f64, &Shape)> = None;
-            for part in parts.iter() {
-                let l = entity_length(part).unwrap_or(0.0);
-                if best.is_none_or(|(most, _)| l > most) {
-                    best = Some((l, part));
-                }
-            }
-            return best.and_then(|(_, part)| entity_anchor(part));
-        }
         Shape::Circle { c, .. } | Shape::Ellipse { c, .. } => *c,
         Shape::Arc { c, r, a0, a1 } => arc_mid(&ArcGeom {
             c: *c,

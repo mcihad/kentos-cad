@@ -9,6 +9,7 @@ import type { LayerNode, LayerSnap, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { ExprTable } from '../model/expression/expression';
+import type { LabelTexts, LabelWanted } from '../model/ops/labelText';
 import { CoreStore, op, type CoreStyleProgram, type ExprColumnData } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
@@ -271,6 +272,16 @@ export class PickIndex {
   labels(view: Bounds, scale: number, editingId: number | null): Float64Array {
     this.sync();
     return this.store.labels(view.minX, view.minY, view.maxX, view.maxY, scale, editingId);
+  }
+
+  /**
+   * Etiketleri yazıya çevir (docs/adr/0175 §1): the texts `wanted` labels make at 1:`scale`, each object's label
+   * placed by the store as the drawing's are, the template filled and the text measured in the drawing's typeface; a
+   * text's `item` is its place in `wanted`.
+   */
+  labelTexts(wanted: readonly LabelWanted[], scale: number, thin: boolean): LabelTexts {
+    this.sync();
+    return JSON.parse(this.store.labelTexts(JSON.stringify(wanted), scale, thin)) as LabelTexts;
   }
 
   /** Grips of these objects (unknown ids left out), in the given order. */

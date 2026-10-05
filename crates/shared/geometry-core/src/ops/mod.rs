@@ -15,6 +15,7 @@ pub mod fit;
 pub mod grips;
 pub mod holes;
 pub mod join;
+pub mod label_text;
 pub mod lengthen;
 pub mod offset;
 pub mod parts;

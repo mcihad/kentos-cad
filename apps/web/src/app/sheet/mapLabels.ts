@@ -2,6 +2,7 @@ import type { DrawingFont } from '../../contracts/generated/DrawingFont';
 import { pieceText, type BlockPiece } from '../../model/blocks';
 import type { CadDocument } from '../../model/document';
 import { dimensionMeasure, type DimensionLayout } from '../../model/geom/dimension';
+import { fillTemplate } from '../../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../../render/color';
 import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
 import type { VecPath } from './mapVectors';
@@ -163,7 +164,7 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     const st = doc.layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
     if (!st || !e.label) continue;
     const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * pxPerM);
-    const t = st.template ? st.template.replace('{label}', e.label) : e.label;
+    const t = fillTemplate(st.template, e.label);
     const color = ink[st.ink ?? 'label'];
     const weight = st.weight ?? 500;
     const w = o.measure(css(weight, size), t);

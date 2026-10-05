@@ -14,6 +14,7 @@ mod field_reduce;
 mod field_traverse;
 mod geodesy;
 mod golden;
+mod label_text;
 mod leader;
 mod line_parts;
 mod locks;

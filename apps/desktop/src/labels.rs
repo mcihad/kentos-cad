@@ -28,6 +28,7 @@ use iced::{
 };
 use kentos_contracts::{DrawingFont, Entity, LabelInk, LabelStyle};
 use kentos_domain::{Document, Slot};
+use kentos_geometry_core::ops::label_text::fill_template;
 use kentos_interaction::spatial::default_label;
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_render_wgpu::Camera;
@@ -756,10 +757,8 @@ impl Labels<'_> {
         let size = (style.max_size.unwrap_or(style.size))
             .min(style.size + style.grow.unwrap_or(0.0) * self.camera.scale)
             as f32;
-        let text = match &style.template {
-            Some(template) => template.replace("{label}", label),
-            None => label.to_owned(),
-        };
+        // The template's first `{label}`, literally: the converted texts' rule (docs/adr/0175 §1).
+        let text = fill_template(style.template.as_deref(), label);
         let color = match style.ink {
             Some(LabelInk::Fg) => self.colors.fg,
             Some(LabelInk::FgDim) => self.colors.fg_dim,

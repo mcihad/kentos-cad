@@ -11,6 +11,7 @@ use kentos_geometry_core::geom::affine::similarity;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
+use kentos_geometry_core::store::labels::LabelWanted;
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::text::Font;
@@ -571,6 +572,19 @@ impl GeometryStore {
             scale,
             has_editing.then_some(editing),
         )
+    }
+
+    /// Etiketleri yazıya çevir (docs/adr/0175 §1, `Store::label_texts`):
+    /// `wanted` as `[{ id, label, style }]` (the layer's `LabelStyle`), at
+    /// 1:`scale`; `{ texts, outOfScale, small, overlapping }` as JSON.
+    #[wasm_bindgen(js_name = labelTexts)]
+    pub fn label_texts(&self, wanted: &str, scale: f64, thin: bool) -> Result<String, JsError> {
+        let wanted = Json::parse(wanted)
+            .and_then(|v| Vec::<LabelWanted>::from_json(&v))
+            .map_err(|e| JsError::new(&format!("Çevrilecek etiketler okunamadı: {e}")))?;
+        let mut out = String::new();
+        json::ToJson::write_json(&self.inner.label_texts(&wanted, scale, thin), &mut out);
+        Ok(out)
     }
 
     /// Grips of these objects (see `Store::grips`).

@@ -7,13 +7,17 @@
 //! with the overlay: it reads them from the object.
 
 use super::Store;
-use crate::api::json::Json;
-use crate::entity::{Shape, TextPlace, dimension_geom, entity_anchor, entity_vertices};
+use crate::api::json::{FromJson, Json};
+use crate::entity::{Shape, TextPlace, dimension_geom};
 use crate::geom::dimension::layout_dimension;
 use crate::geom::leader::note_place;
 use crate::geometry::Bounds;
 use crate::jsmath::js_min;
 use crate::ops::grips::{entity_grips, mid_grip_segment};
+use crate::ops::label_text::{
+    LabelItem, LabelTexts, Spot, fill_template, label_texts as write_labels, spot,
+};
+use crate::text::width_em;
 
 /// Where a label sits (`LabelStyle.placement`).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -22,6 +26,46 @@ pub enum Placement {
     Corner,
     Beside,
     Along,
+}
+
+impl Placement {
+    /// Its name in the contract's `LabelPlacement` (`center` …).
+    pub fn name(self) -> &'static str {
+        match self {
+            Placement::Center => "center",
+            Placement::Corner => "corner",
+            Placement::Beside => "beside",
+            Placement::Along => "along",
+        }
+    }
+
+    /// The placement named `name`; none for any other name.
+    pub fn from_name(name: &str) -> Option<Placement> {
+        [
+            Placement::Center,
+            Placement::Corner,
+            Placement::Beside,
+            Placement::Along,
+        ]
+        .into_iter()
+        .find(|p| p.name() == name)
+    }
+}
+
+impl crate::api::json::FromJson for Placement {
+    fn from_json(v: &Json) -> Result<Placement, String> {
+        match v {
+            Json::Str(s) => Placement::from_name(s)
+                .ok_or_else(|| "etiket yerleşimi center, corner, beside ya da along olmalı".into()),
+            _ => Err("etiket yerleşimi center, corner, beside ya da along olmalı".into()),
+        }
+    }
+}
+
+impl crate::api::json::ToJson for Placement {
+    fn write_json(&self, out: &mut String) {
+        crate::api::json::write_str(out, self.name());
+    }
 }
 
 /// What of a `LabelStyle` decides whether and where a label is drawn.
@@ -35,13 +79,7 @@ pub struct LabelRule {
 
 /// Reads `{ placement, minScale?, maxScale?, minFeaturePx? }`.
 pub(crate) fn read_rule(v: &Json) -> Result<LabelRule, String> {
-    let placement = match v.get("placement") {
-        Json::Str(s) if s == "center" => Placement::Center,
-        Json::Str(s) if s == "corner" => Placement::Corner,
-        Json::Str(s) if s == "beside" => Placement::Beside,
-        Json::Str(s) if s == "along" => Placement::Along,
-        _ => return Err("etiket yerleşimi center, corner, beside ya da along olmalı".into()),
-    };
+    let placement = Placement::from_json(v.get("placement"))?;
     let num = |k: &str| match v.get(k) {
         Json::Num(x) => Ok(Some(*x)),
         Json::Null => Ok(None),
@@ -108,6 +146,42 @@ fn masked(s: &Shape) -> f64 {
         _ => 0.0,
     }
 }
+
+/// The label style's parts Etiketleri yazıya çevir reads (the contract's
+/// `LabelStyle`; its weight and ink have no text counterpart, docs/adr/0175 §1).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelLook {
+    pub placement: Placement,
+    pub size: f64,
+    pub grow: Option<f64>,
+    pub max_size: Option<f64>,
+    pub template: Option<String>,
+    pub min_feature_px: Option<f64>,
+    pub min_scale: Option<f64>,
+    pub max_scale: Option<f64>,
+}
+
+crate::json_struct!(LabelLook {
+    placement,
+    size,
+    grow,
+    max_size => "maxSize",
+    template,
+    min_feature_px => "minFeaturePx",
+    min_scale => "minScale",
+    max_scale => "maxScale",
+});
+
+/// A label to write as a text: the object, its label and its layer's (or
+/// its kind's default) label style.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelWanted {
+    pub id: f64,
+    pub label: String,
+    pub style: LabelLook,
+}
+
+crate::json_struct!(LabelWanted { id, label, style });
 
 impl Store {
     /// Label defaults by kind when the layer has no label style
@@ -326,50 +400,75 @@ impl Store {
             {
                 continue;
             }
-            match rule.placement {
-                Placement::Center | Placement::Beside => {
-                    // A path without vertices has no anchor (the TypeScript failed on it).
-                    let Some(a) = entity_anchor(&it.shape) else {
-                        continue;
-                    };
-                    let what = if rule.placement == Placement::Center {
-                        LABEL_CENTER
-                    } else {
-                        LABEL_BESIDE
+            // A path without vertices has no place (the TypeScript failed on it).
+            match spot(&it.shape, b, rule.placement) {
+                Some(Spot::At(a)) => {
+                    let what = match rule.placement {
+                        Placement::Center => LABEL_CENTER,
+                        Placement::Beside => LABEL_BESIDE,
+                        _ => LABEL_CORNER,
                     };
                     out.extend([it.id, what, a.x, a.y, 0.0, 0.0, 0.0, 0.0, 0.0]);
                 }
-                Placement::Corner => out.extend([
-                    it.id,
-                    LABEL_CORNER,
-                    b.min_x,
-                    b.max_y,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                ]),
-                Placement::Along => {
-                    // A third of the way along, between two vertices.
-                    let pts = entity_vertices(&it.shape);
-                    if pts.len() < 2 {
-                        continue;
-                    }
-                    let i = ((pts.len() as f64 * 0.35).floor() as usize).min(pts.len() - 2);
-                    out.extend([
-                        it.id,
-                        LABEL_ALONG,
-                        pts[i].x,
-                        pts[i].y,
-                        pts[i + 1].x,
-                        pts[i + 1].y,
-                        0.0,
-                        0.0,
-                        0.0,
-                    ]);
+                Some(Spot::Between(a, c)) => {
+                    out.extend([it.id, LABEL_ALONG, a.x, a.y, c.x, c.y, 0.0, 0.0, 0.0]);
                 }
+                None => {}
             }
+        }
+        out
+    }
+
+    /// The texts Etiketleri yazıya çevir writes for `wanted` (in the
+    /// drawing's order) at 1:`scale` (`ops::label_text`): each object's
+    /// place by its style (`spot`), its text by the template, the text's
+    /// width in the drawing's typeface. A text's `item` is its place in
+    /// `wanted`; an empty label, an unknown id, a text, dimension or leader
+    /// (they show no label) and a path without vertices give none and are
+    /// counted nowhere.
+    pub fn label_texts(&self, wanted: &[LabelWanted], scale: f64, thin: bool) -> LabelTexts {
+        let mut items = Vec::new();
+        let mut from = Vec::new();
+        for (i, w) in wanted.iter().enumerate() {
+            if w.label.is_empty() {
+                continue;
+            }
+            let Some(it) = self.get(w.id) else {
+                continue;
+            };
+            if matches!(
+                it.shape,
+                Shape::Text { .. } | Shape::Dimension { .. } | Shape::Leader { .. }
+            ) {
+                continue;
+            }
+            let b = &it.bounds;
+            let (p, q) = match spot(&it.shape, b, w.style.placement) {
+                Some(Spot::At(p)) => (p, None),
+                Some(Spot::Between(p, q)) => (p, Some(q)),
+                None => continue,
+            };
+            let text = fill_template(w.style.template.as_deref(), &w.label);
+            let em = width_em(&text, self.font);
+            items.push(LabelItem {
+                placement: w.style.placement,
+                p,
+                q,
+                feature: js_min(b.max_x - b.min_x, b.max_y - b.min_y),
+                text,
+                em,
+                size: w.style.size,
+                grow: w.style.grow,
+                max_size: w.style.max_size,
+                min_scale: w.style.min_scale,
+                max_scale: w.style.max_scale,
+                min_feature_px: w.style.min_feature_px,
+            });
+            from.push(i);
+        }
+        let mut out = write_labels(&items, scale, thin);
+        for t in &mut out.texts {
+            t.item = from[t.item];
         }
         out
     }
@@ -479,6 +578,115 @@ mod tests {
         assert_eq!(s.labels(&view, 3.0, Some(4.0)), [parcel, street].concat());
         // At 1 px/m the street is below its scale range and the text below 5 px.
         assert_eq!(s.labels(&view, 1.0, None), parcel);
+    }
+
+    /// A multi-part polyline's label along it sits on its longest part, a
+    /// multi-part area's at its largest part (docs/adr/0175 §1): never
+    /// between the end of one part and the start of the next.
+    #[test]
+    fn a_multi_part_objects_label_sits_on_its_main_part() {
+        let mut s = Store::new();
+        s.put_json(
+            r#"[{"id":1,"layerId":"yol","label":"Dere","kind":"polyline","pts":[{"x":0,"y":0},{"x":5,"y":0}],
+                 "parts":[{"pts":[{"x":0,"y":10},{"x":20,"y":10},{"x":40,"y":10},{"x":60,"y":10}]}]}]"#,
+        )
+        .unwrap();
+        s.set_layers_json(r#"[{"id":"yol","visible":true,"locked":false,"pickInterior":true,"label":{"placement":"along"}}]"#)
+            .unwrap();
+        let view = Bounds {
+            min_x: -50.0,
+            min_y: -50.0,
+            max_x: 150.0,
+            max_y: 150.0,
+        };
+        assert_eq!(
+            s.labels(&view, 3.0, None),
+            [1.0, LABEL_ALONG, 20.0, 10.0, 40.0, 10.0, 0.0, 0.0, 0.0]
+        );
+    }
+
+    /// Etiketleri yazıya çevir through the store (docs/adr/0175 §1): the
+    /// objects by id in the given order, each placed by the style it comes
+    /// with, the template filled, the text measured in the drawing's
+    /// typeface; a text's `item` is its place among the wanted.
+    #[test]
+    fn labels_become_texts_by_id_style_and_template() {
+        let mut s = Store::new();
+        s.set_font(crate::text::Font::from_id("arimo"));
+        s.put_json(
+            r#"[{"id":1,"layerId":"parsel","label":"12","kind":"polygon","pts":[{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":20},{"x":0,"y":20}]},
+                {"id":2,"layerId":"yazi","kind":"text","p":{"x":1,"y":1},"text":"Not","height":2,"rotation":0},
+                {"id":3,"layerId":"nokta","label":"P7","kind":"point","p":{"x":100,"y":50}}]"#,
+        )
+        .unwrap();
+        let look = |placement: Placement, template: Option<&str>| LabelLook {
+            placement,
+            size: 10.0,
+            grow: None,
+            max_size: None,
+            template: template.map(str::to_owned),
+            min_feature_px: None,
+            min_scale: None,
+            max_scale: None,
+        };
+        let wanted = [
+            LabelWanted {
+                id: 3.0,
+                label: "P7".into(),
+                style: look(Placement::Beside, None),
+            },
+            LabelWanted {
+                id: 2.0,
+                label: "Not".into(),
+                style: look(Placement::Center, None),
+            },
+            LabelWanted {
+                id: 99.0,
+                label: "yok".into(),
+                style: look(Placement::Center, None),
+            },
+            LabelWanted {
+                id: 1.0,
+                label: "12".into(),
+                style: look(Placement::Corner, Some("Parsel {label}")),
+            },
+        ];
+        let out = s.label_texts(&wanted, 1000.0, true);
+        let k = 96.0 / 0.0254 / 1000.0;
+        assert_eq!(out.texts.len(), 2, "{out:?}");
+        let (point, parcel) = (&out.texts[0], &out.texts[1]);
+        assert_eq!((point.item, point.text.as_str()), (0, "P7"));
+        assert!(
+            (point.p.x - (100.0 + 7.0 / k)).abs() < 1e-9
+                && (point.p.y - (50.0 + 7.0 / k)).abs() < 1e-9
+        );
+        assert_eq!((parcel.item, parcel.text.as_str()), (3, "Parsel 12"));
+        assert!(
+            (parcel.p.x - 8.0 / k).abs() < 1e-9 && (parcel.p.y - (20.0 - 14.0 / k)).abs() < 1e-9
+        );
+        assert!((parcel.height - 10.0 / k).abs() < 1e-12);
+        // The same through the rule, with the text measured as the store measures it.
+        let em = width_em("Parsel 12", crate::text::Font::from_id("arimo"));
+        let alone = write_labels(
+            &[LabelItem {
+                placement: Placement::Corner,
+                p: crate::vec2::Vec2::new(0.0, 20.0),
+                q: None,
+                feature: 20.0,
+                text: "Parsel 12".into(),
+                em,
+                size: 10.0,
+                grow: None,
+                max_size: None,
+                min_scale: None,
+                max_scale: None,
+                min_feature_px: None,
+            }],
+            1000.0,
+            true,
+        );
+        assert_eq!(alone.texts[0].p, parcel.p);
+        assert_eq!(out.overlapping + out.small + out.out_of_scale, 0);
     }
 
     /// A text's label starts where its alignment puts its baseline, with

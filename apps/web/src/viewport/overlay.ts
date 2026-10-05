@@ -3,6 +3,7 @@ import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import { dist, type Vec2 } from '../model/geometry';
 import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
+import { fillTemplate } from '../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../render/color';
 import type { ToolCursor } from '../tools/Tool';
 import type { Camera } from './Camera';
@@ -204,7 +205,7 @@ export function drawLabels(
     const st = layers.get(e.layerId)?.style.label ?? DEFAULT_LABELS[e.kind];
     if (!st || !e.label) continue;
     const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * cam.scale);
-    const text = st.template ? st.template.replace('{label}', e.label) : e.label;
+    const text = fillTemplate(st.template, e.label);
     const color = ink[st.ink ?? 'label'];
     g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${pal.drawingFont}`;
 

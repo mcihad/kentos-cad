@@ -595,6 +595,11 @@ export class CoreStore {
     return typed(() => this.raw.labels(minX, minY, maxX, maxY, scale, editing !== null, editing ?? 0));
   }
 
+  /** Etiketleri yazıya çevir (docs/adr/0175 §1): `[{ id, label, style }]` as JSON → `{ texts, outOfScale, small, overlapping }`. */
+  labelTexts(wantedJson: string, scale: number, thin: boolean): string {
+    return typed(() => this.raw.labelTexts(wantedJson, scale, thin));
+  }
+
   /** Grips of these objects: `id, count, vertices`, then `x, y, segment` per grip. */
   grips(ids: Float64Array): Float64Array {
     return typed(() => this.raw.grips(ids));
