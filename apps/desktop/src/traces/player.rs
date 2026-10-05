@@ -71,6 +71,8 @@ pub struct Seen {
     /// The outer path's vertex elevations, a line's two ends', `None` none
     /// (docs/adr/0142, 0160); empty for other kinds.
     pub zs: Vec<Option<f64>>,
+    /// An area's holes, in all its parts (docs/adr/0173 §5); none for other kinds.
+    pub holes: Option<usize>,
 }
 
 impl Seen {
@@ -198,6 +200,17 @@ impl Seen {
                     p.zs.clone().unwrap_or_else(|| vec![None; p.pts.len()])
                 }
                 _ => Vec::new(),
+            },
+            holes: match e {
+                Entity::Polygon(p) => Some(
+                    p.holes.as_ref().map_or(0, Vec::len)
+                        + p.parts
+                            .iter()
+                            .flatten()
+                            .map(|part| part.holes.as_ref().map_or(0, Vec::len))
+                            .sum::<usize>(),
+                ),
+                _ => None,
             },
         }
     }

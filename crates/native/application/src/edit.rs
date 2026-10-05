@@ -348,6 +348,9 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             | EditOperation::Offset
     );
     let mut lost = 0;
+    // Deliği doldur's area takes its hole's elevations, if it has any: its
+    // area keeps its own (docs/adr/0173 §5).
+    let keeps = input.operation == EditOperation::HoleFill;
     // Elevations written with the geometry are written as they are (Kot ver,
     // Öznitelikler, a script): `entity_of` already holds them.
     let mut elevate = |mut entity: Entity, from: &Entity, geometry: &EntityGeometry| -> Entity {
@@ -356,7 +359,10 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         }
         let before = elevation::paths(from);
         let same = if by_place { before.as_slice() } else { &[] };
-        if !elevation::carry(&mut entity, &sources, same, how) && elevation::elevated(&before) {
+        if !elevation::carry(&mut entity, &sources, same, how)
+            && elevation::elevated(&before)
+            && !keeps
+        {
             lost += 1;
         }
         entity

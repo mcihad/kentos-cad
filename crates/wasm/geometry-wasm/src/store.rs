@@ -516,6 +516,18 @@ impl GeometryStore {
             .collect()
     }
 
+    /// `[id, part, hole, id, part, hole, …]`: the visible areas with a hole
+    /// around the point, the smallest hole first (Deliği sil, Deliği doldur;
+    /// docs/adr/0173 §5).
+    #[wasm_bindgen(js_name = holesAt)]
+    pub fn holes_at(&self, x: f64, y: f64) -> Vec<f64> {
+        self.inner
+            .holes_at(Vec2::new(x, y))
+            .into_iter()
+            .flat_map(|(id, at)| [id, at.part as f64, at.hole as f64])
+            .collect()
+    }
+
     /// Ids of visible objects the fence `[x0, y0, x1, y1, …]` crosses; a
     /// point within `tol` counts (Çitle seç).
     #[wasm_bindgen(js_name = inFence)]

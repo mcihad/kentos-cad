@@ -407,6 +407,11 @@ export class ViewportController {
     return this.picker.containing(p);
   }
 
+  /** Deliği sil and Deliği doldur: the visible areas with a hole around a point, the smallest hole first. */
+  holesAt(p: Vec2): { entity: Entity; part: number; hole: number }[] {
+    return this.picker.holesAt(p);
+  }
+
   /** Edge-only pick for modify tools (ignores polygon interiors, points and text). */
   pickEdge(screen: Vec2, filter?: (e: Entity) => boolean): Entity | null {
     return this.picker.hitEdge(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale, filter);

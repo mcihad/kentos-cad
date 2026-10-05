@@ -543,6 +543,21 @@ export class PickIndex {
     return out;
   }
 
+  /**
+   * The visible areas with a hole around `p`, each with the hole's part and place, the smallest hole first (Deliği
+   * sil, Deliği doldur; docs/adr/0173 §5).
+   */
+  holesAt(p: Vec2): { entity: Entity; part: number; hole: number }[] {
+    this.sync();
+    const r = this.store.holesAt(p.x, p.y);
+    const out: { entity: Entity; part: number; hole: number }[] = [];
+    for (let i = 0; i + 2 < r.length; i += 3) {
+      const entity = this.doc.get(r[i]);
+      if (entity) out.push({ entity, part: r[i + 1], hole: r[i + 2] });
+    }
+    return out;
+  }
+
   /** What the fence (an open path) crosses; a point within `tol` counts (Çitle seç). */
   inFence(fence: readonly Vec2[], tol: number): number[] {
     this.sync();

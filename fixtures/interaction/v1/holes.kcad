@@ -1,0 +1,210 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Delikler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "#8E8C99",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "31"
+      },
+      "label": "31",
+      "pts": [
+        {
+          "x": 486958.0,
+          "y": 4419995.0
+        },
+        {
+          "x": 486998.0,
+          "y": 4419995.0
+        },
+        {
+          "x": 486998.0,
+          "y": 4420025.0
+        },
+        {
+          "x": 486958.0,
+          "y": 4420025.0
+        }
+      ],
+      "zs": [
+        99.5,
+        99.6,
+        99.7,
+        99.8
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 486963.0,
+              "y": 4420000.0
+            },
+            {
+              "x": 486973.0,
+              "y": 4420000.0
+            },
+            {
+              "x": 486973.0,
+              "y": 4420008.0
+            },
+            {
+              "x": 486963.0,
+              "y": 4420008.0
+            }
+          ],
+          "zs": [
+            100.0,
+            101.0,
+            102.0,
+            103.0
+          ]
+        },
+        {
+          "pts": [
+            {
+              "x": 486983.0,
+              "y": 4420013.0
+            },
+            {
+              "x": 486991.0,
+              "y": 4420013.0
+            },
+            {
+              "x": 486991.0,
+              "y": 4420020.0
+            },
+            {
+              "x": 486983.0,
+              "y": 4420020.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Parsel": "32"
+      },
+      "label": "32",
+      "pts": [
+        {
+          "x": 487002.0,
+          "y": 4419995.0
+        },
+        {
+          "x": 487032.0,
+          "y": 4419995.0
+        },
+        {
+          "x": 487032.0,
+          "y": 4420025.0
+        },
+        {
+          "x": 487002.0,
+          "y": 4420025.0
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "kilitli",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 486958.0,
+          "y": 4419970.0
+        },
+        {
+          "x": 486978.0,
+          "y": 4419970.0
+        },
+        {
+          "x": 486978.0,
+          "y": 4419985.0
+        },
+        {
+          "x": 486958.0,
+          "y": 4419985.0
+        }
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 486963.0,
+              "y": 4419975.0
+            },
+            {
+              "x": 486968.0,
+              "y": 4419975.0
+            },
+            {
+              "x": 486968.0,
+              "y": 4419980.0
+            },
+            {
+              "x": 486963.0,
+              "y": 4419980.0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

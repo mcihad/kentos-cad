@@ -130,6 +130,7 @@ pub mod gnss;
 pub mod grip_menu;
 pub mod ground;
 pub mod hatch;
+pub mod holes;
 mod junctions;
 pub mod leader;
 pub mod lengthen;

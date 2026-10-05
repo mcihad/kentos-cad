@@ -801,6 +801,11 @@ export class CoreStore {
     return typed(() => this.raw.containing(x, y));
   }
 
+  /** `[id, part, hole, …]`: the areas with a hole around the point, the smallest hole first (docs/adr/0173 §5). */
+  holesAt(x: number, y: number): Float64Array {
+    return typed(() => this.raw.holesAt(x, y));
+  }
+
   /** Ids of the objects the fence `[x0, y0, x1, y1, …]` crosses; a point within `tol` counts. */
   inFence(fence: Float64Array, tol: number): Float64Array {
     return typed(() => this.raw.inFence(fence, tol));

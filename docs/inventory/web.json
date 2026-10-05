@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 295,
-      "implemented": 283,
+      "total": 298,
+      "implemented": 286,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 89,
-      "implemented": 87,
+      "total": 92,
+      "implemented": 90,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 223,
+    "commandsOnDesktop": 226,
     "desktop": {
       "commands": {
-        "total": 295,
-        "implemented": 223,
+        "total": 298,
+        "implemented": 226,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 89,
-        "implemented": 87,
+        "total": 92,
+        "implemented": 90,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -6487,6 +6487,99 @@
       ]
     },
     {
+      "id": "tool.holeAdd",
+      "title": "Delik ekle",
+      "category": "Alan",
+      "icon": "holeAdd",
+      "description": "Alanın içine çizilen halkayı alandan delik olarak çıkarır; var olan bir deliğe değen ya da onu içine alan halka o delikle birleşir.",
+      "aliases": [
+        "ADDRING",
+        "DELIKEKLE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Delikler"
+      ],
+      "ribbon": [
+        "CAD › Değiştir › Delikler",
+        "CBS › Düzenle › Delikler"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
+      ]
+    },
+    {
+      "id": "tool.holeFill",
+      "title": "Deliği doldur",
+      "category": "Alan",
+      "icon": "holeFill",
+      "description": "Tıklanan deliğin biçiminde yeni bir alan yazar; delik yerinde kalır, yeni alan onu doldurur.",
+      "aliases": [
+        "FILLRING",
+        "DELIKDOLDUR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Delikler"
+      ],
+      "ribbon": [
+        "CAD › Değiştir › Delikler",
+        "CBS › Düzenle › Delikler"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
+      ]
+    },
+    {
+      "id": "tool.holeRemove",
+      "title": "Deliği sil",
+      "category": "Alan",
+      "icon": "holeRemove",
+      "description": "Tıklanan deliği alandan siler; alan orada doluya döner.",
+      "aliases": [
+        "DELETERING",
+        "DELIKSIL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Değiştir › Alan işlemleri › Delikler"
+      ],
+      "ribbon": [
+        "CAD › Değiştir › Delikler",
+        "CBS › Düzenle › Delikler"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
+      ]
+    },
+    {
       "id": "tool.intersectPoint",
       "title": "Kesişim noktası",
       "category": "Çizim",
@@ -10420,6 +10513,81 @@
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/hatches.json",
         "fixtures/interaction/v1/usage-parcel.json"
+      ]
+    },
+    {
+      "id": "holeAdd",
+      "label": "Delik ekle",
+      "icon": "holeAdd",
+      "group": "area",
+      "section": "hole",
+      "aliases": [
+        "ADDRING",
+        "DELIKEKLE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Alanın içine çizilen halkayı alandan delik olarak çıkarır; var olan bir deliğe değen ya da onu içine alan halka o delikle birleşir.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
+      ]
+    },
+    {
+      "id": "holeFill",
+      "label": "Deliği doldur",
+      "icon": "holeFill",
+      "group": "area",
+      "section": "hole",
+      "aliases": [
+        "FILLRING",
+        "DELIKDOLDUR"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Tıklanan deliğin biçiminde yeni bir alan yazar; delik yerinde kalır, yeni alan onu doldurur.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
+      ]
+    },
+    {
+      "id": "holeRemove",
+      "label": "Deliği sil",
+      "icon": "holeRemove",
+      "group": "area",
+      "section": "hole",
+      "aliases": [
+        "DELETERING",
+        "DELIKSIL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 2,
+      "description": "Tıklanan deliği alandan siler; alan orada doluya döner.",
+      "productCommand": "cad.entities.edit",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/holes.json"
       ]
     },
     {
@@ -19671,6 +19839,14 @@
                       "tool.partsSplit",
                       "tool.areaSplit"
                     ]
+                  },
+                  {
+                    "label": "Delikler",
+                    "items": [
+                      "tool.holeAdd",
+                      "tool.holeRemove",
+                      "tool.holeFill"
+                    ]
                   }
                 ]
               }
@@ -21155,6 +21331,26 @@
               {
                 "command": "tool.areaSplit",
                 "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
+            "label": "Delikler",
+            "icon": "holeAdd",
+            "items": [
+              {
+                "command": "tool.holeAdd",
+                "size": "small"
+              },
+              {
+                "command": "tool.holeRemove",
+                "size": "small"
+              },
+              {
+                "command": "tool.holeFill",
+                "size": "small"
               }
             ],
             "overflow": [],
@@ -23264,6 +23460,26 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Delikler",
+              "icon": "holeAdd",
+              "items": [
+                {
+                  "command": "tool.holeAdd",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeRemove",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeFill",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -25119,6 +25335,26 @@
               "keep": false
             },
             {
+              "label": "Delikler",
+              "icon": "holeAdd",
+              "items": [
+                {
+                  "command": "tool.holeAdd",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeRemove",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeFill",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Çizim yardımcıları",
               "icon": "snap",
               "items": [
@@ -26022,6 +26258,9 @@
     "partsJoin": "<path d=\"M3 3h6v6H3z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M11 11h6v6h-6z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M9 9l2 2\"/>",
     "partsSplit": "<path d=\"M2 2h13L2 15z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M18 5v13H5z\" fill=\"currentColor\" fill-opacity=\".22\"/>",
     "toPolyline": "<path d=\"M5.6 16 3.8 8l6-4.5 6.5 3.5-1.8 9H8\"/><rect x=\"2.3\" y=\"6.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.3\" y=\"2\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14.8\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"13\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "holeAdd": "<path d=\"M2.5 2.5h11v11h-11zM5.5 5.5h5v5h-5z\" fill=\"currentColor\" fill-opacity=\".22\" fill-rule=\"evenodd\" stroke=\"none\"/><path d=\"M2.5 2.5h11v11h-11z\"/><path d=\"M5.5 5.5h5v5h-5z\" stroke-dasharray=\"1.5 1.1\"/><path d=\"M16 12.5v6M13 15.5h6\"/>",
+    "holeRemove": "<path d=\"M2.5 2.5h11v11h-11z\" fill=\"currentColor\" fill-opacity=\".22\"/><path d=\"M5.5 5.5h5v5h-5z\" stroke-dasharray=\"1.5 1.1\"/><path d=\"m14.5 14.5 4.5 4.5m0-4.5-4.5 4.5\"/>",
+    "holeFill": "<path d=\"M2.5 2.5h15v15h-15zM6.5 6.5h7v7h-7z\" fill=\"currentColor\" fill-opacity=\".22\" fill-rule=\"evenodd\"/><path d=\"M6.5 6.5h7v7h-7z\" fill=\"currentColor\" fill-opacity=\".75\"/>",
     "snapEndpoint": "<path d=\"M3.5 16.5 11 9\" stroke-dasharray=\"2 1.6\"/><rect x=\"10.5\" y=\"3.5\" width=\"6\" height=\"6\"/>",
     "snapMidpoint": "<path d=\"M3 16.5 6.6 13M13.4 7 17 3.5\" stroke-dasharray=\"2 1.6\"/><path d=\"m10 5.8 4 7H6z\"/>",
     "snapCenter": "<circle cx=\"10\" cy=\"10\" r=\"7\" stroke-dasharray=\"2 1.6\"/><circle cx=\"10\" cy=\"10\" r=\"2.8\"/>",

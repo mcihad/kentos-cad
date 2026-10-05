@@ -349,6 +349,10 @@ pub const PORTED: &[&str] = &[
     // Çok parçalı alan (docs/adr/0143): the parts joined into one area, an area split into its parts.
     "tool.partsJoin",
     "tool.partsSplit",
+    // Delikler (docs/adr/0173 §5): a ring cut from an area, a hole removed, a hole filled with a new area.
+    "tool.holeAdd",
+    "tool.holeRemove",
+    "tool.holeFill",
     // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
     "sheet.model",
 ];

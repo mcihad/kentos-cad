@@ -82,6 +82,7 @@ use crate::adjoin;
 use crate::faces;
 use crate::format::Format;
 use crate::ground;
+use crate::holes;
 use crate::junctions;
 use crate::log::Level;
 use crate::overlap;
@@ -132,6 +133,8 @@ pub enum Shape {
     Parcel,
     /// Bitişik alan: an open path; the region it closes with the neighbouring areas is written.
     Adjoin,
+    /// Delik ekle: a ring cut from the area its first point is in (docs/adr/0173 §5).
+    Hole,
 }
 
 impl Shape {
@@ -143,6 +146,7 @@ impl Shape {
             Shape::MeasureArea => AREA_ID,
             Shape::Parcel => PARCEL_ID,
             Shape::Adjoin => adjoin::ID,
+            Shape::Hole => holes::ADD_ID,
         }
     }
 
@@ -154,12 +158,16 @@ impl Shape {
             Shape::MeasureArea => AREA_LABEL,
             Shape::Parcel => PARCEL_LABEL,
             Shape::Adjoin => adjoin::LABEL,
+            Shape::Hole => holes::ADD_LABEL,
         }
     }
 
     /// Whether it is a ring: closed on its first corner, with an area.
     fn closed(self) -> bool {
-        matches!(self, Shape::Closed | Shape::MeasureArea | Shape::Parcel)
+        matches!(
+            self,
+            Shape::Closed | Shape::MeasureArea | Shape::Parcel | Shape::Hole
+        )
     }
 
     /// Points the shape needs.
@@ -237,6 +245,10 @@ pub struct Path {
     /// Bitişik alan: the region the preview fills (the path to the cursor, or
     /// as the last click left it when the neighbours are many).
     region: Vec<Region>,
+    /// Delik ekle: the area the ring goes into, found at its first point.
+    target: Option<Slot>,
+    /// Delik ekle: that area's rings (or the one a click would take), lightly filled in the preview.
+    target_rings: Vec<Vec<Vec2>>,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -280,6 +292,8 @@ impl Path {
             way: None,
             neighbours: adjoin::NeighbourCache::default(),
             region: Vec::new(),
+            target: None,
+            target_rings: Vec::new(),
         }
     }
 
@@ -452,6 +466,14 @@ impl Path {
             return self.on_ray(p, cx);
         }
         let Some(last) = self.last() else {
+            // Delik ekle: the ring starts in the area it goes into.
+            if self.shape == Shape::Hole {
+                self.target = holes::target(p, cx);
+                if self.target.is_none() {
+                    cx.say(Level::Warn, holes::NO_TARGET);
+                    return;
+                }
+            }
             self.pts.push(p);
             // A new measurement starts: what was measured before is no more Alan olarak çiz's.
             self.measured = None;
@@ -877,6 +899,12 @@ impl Path {
                     cx.say(Level::Success, text);
                 }
             }
+            Shape::Hole => {
+                if let Some(slot) = self.target {
+                    holes::add(slot, Ring { pts, bulges }, cx);
+                }
+                cx.selection.set_hover(None);
+            }
             Shape::Adjoin => {}
         }
         self.reset();
@@ -1067,6 +1095,7 @@ impl Path {
         self.closing = 0.0;
         self.way = None;
         self.region.clear();
+        self.target_rings.clear();
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -1336,6 +1365,9 @@ impl Tool for Path {
                 "ilk noktayı komşu alanın içinde ya da sınırında belirtin",
             );
         }
+        if n == 0 && self.shape == Shape::Hole {
+            return Prompt::new(label, "deliğin ilk köşesini alanın içinde belirtin");
+        }
         if n == 0 {
             return self.first_chips(Prompt::new(label, "ilk noktayı belirtin"));
         }
@@ -1432,6 +1464,16 @@ impl Tool for Path {
         if self.inside_mode() {
             let region = self.face(point, cx);
             self.inside = Some((point, region));
+        }
+        // Delik ekle: the area the ring goes into, or would at a click here.
+        if self.shape == Shape::Hole {
+            let area = if self.pts.is_empty() {
+                holes::target(point, cx)
+            } else {
+                self.target
+            };
+            cx.selection.set_hover(area);
+            self.target_rings = area.map_or_else(Vec::new, |slot| holes::rings_of(slot, cx));
         }
         self.refill(true, cx);
     }
@@ -1601,10 +1643,21 @@ impl Tool for Path {
         };
         // The area last measured stays in view, dashed, until the next
         // measurement starts; Bitişik alan's region is filled.
-        let areas = self
-            .measured
-            .iter()
-            .map(|region| region_area(region, 0.1, Some([5.0, 4.0])))
+        // Delik ekle: the area the ring goes into, lightly filled under the ring.
+        let target = (!self.target_rings.is_empty()).then(|| Area {
+            rings: self.target_rings.clone(),
+            fill: 0.12,
+            width: 1.0,
+            dash: None,
+            fill_tone: Tone::Accent,
+        });
+        let areas = target
+            .into_iter()
+            .chain(
+                self.measured
+                    .iter()
+                    .map(|region| region_area(region, 0.1, Some([5.0, 4.0]))),
+            )
             .chain(self.region.iter().map(|r| region_area(r, 0.16, None)))
             .collect();
         Preview {

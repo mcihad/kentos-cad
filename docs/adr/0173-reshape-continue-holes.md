@@ -75,15 +75,23 @@ sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”
 
 ### 5. Delikler
 
-- **Delik ekle:** alan seçilir (yoksa ilk nokta hangi alanın içindeyse o; o da yoksa “Deliğin ekleneceği alanı seçin ya da alanın içine
-  tıklayın.”). Halka Kapalı alan aracı gibi çizilir (en az üç köşe, Enter kapatır; yay kipi yok). Halka parçanın içinde kalmalıdır:
-  sınırı aşan halka reddedilir, “Delik alanın içinde kalmalı; sınırı aşan bölümü çıkarmak için Alan çıkar'ı kullanın.”. Var olan bir
-  deliğe değen ya da onu içine alan halka o delikle birleşir (çıkarmanın sonucu). Delik halkanın parçasına eklenir.
-- **Deliği sil:** imleç bir deliğin içindeyken delik vurgulanır; tıklama siler (alan orada doluya döner). Araç açık kalır; birden çok delik
-  sırayla silinir. Deliğin dışına tıklama: “Bir deliğin içine tıklayın.”
+- **Delik ekle:** halkanın ilk köşesi alanı seçer: tek alan seçiliyse ve köşe onun içinde ya da bir deliğindeyse o; değilse köşenin
+  çevresindeki en küçük alan, o da yoksa deliği köşeyi çevreleyen alan (deliğin içinden başlayan halka onu genişletir); hiçbiri yoksa
+  köşe alınmaz: “Deliğin ekleneceği alanı seçin ya da halkaya bir alanın içinden başlayın.”. Kilitli katmandaki alan sayılmaz. Halkanın
+  gireceği alan (ilk köşeden önce imlecin altındaki) vurgulanır ve hafifçe dolar. Halka Kapalı alan aracı gibi çizilir (en az üç köşe;
+  ilk köşeye dönmek ya da Enter kapatır; Yay, İzle ve öbür seçenekler onunkiler). Halka parçanın içinde kalmalıdır: sınırı aşan halka
+  reddedilir, “Delik alanın içinde kalmalı; sınırı aşan bölümü çıkarmak için Alan çıkar'ı kullanın.”. Var olan bir deliğe değen ya da
+  onu içine alan halka o delikle birleşir (çıkarmanın sonucu); alanı parçalara ayıracak halka reddedilir (“Delik alanı parçalara
+  ayırırdı; alanı bölmek için Alan böl'ü kullanın.”). Delik halkanın parçasına eklenir. İleti: “Delik eklendi; alan 830.00 m² oldu.”,
+  birleşince “Delik eklendi, var olan delikle birleşti; alan … oldu.”.
+- **Deliği sil:** imleç bir deliğin içindeyken delik vurgulanır, alanı yazılır; tıklama siler (alan orada doluya döner): “Delik silindi;
+  alan … oldu.”. Araç açık kalır; birden çok delik sırayla silinir. Deliğin dışına tıklama: “Bir deliğin içine tıklayın.”. İç içe
+  deliklerde imlecin en küçük deliği alınır; kilitli katmandaki alanın deliği alınmaz.
 - **Deliği doldur:** imleç bir deliğin içindeyken delik vurgulanır; tıklama deliğin halkasıyla yeni bir alan yazar: üst nesnenin katmanı,
   rengi ve kalınlığı; öznitelikleri ve etiketi yok (parsel numarası kopyalanmaz). Delik yerinde kalır (QGIS'in Fill Ring'i): yeni alan
-  deliği doldurur, üst nesnenin alanı değişmez. Yeni alanın köşe kotları deliğin halkasınınkilerdir.
+  deliği doldurur, üst nesnenin alanı değişmez. Yeni alanın köşe kotları deliğin halkasınınkilerdir; kotsuz delikte yeni alan kotsuzdur
+  ve bu kot kaybı sayılmaz (komut “kotu korunmadı” uyarısını bu işlemde vermez). Yeni alan seçilir: “Delik dolduruldu: yeni alan
+  80.00 m².”.
 - Hesaplar bindirme motorundandır: halkanın parçayla kesişimi halkanın kendisiyse içtedir; ekleme parçadan halkanın çıkarılmasıdır.
 
 ### 6. Kapsam dışı
@@ -101,7 +109,11 @@ sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”
    durumlar kesin kesirlerle, yaylı durumlar elle türetilmiş (`scripts/fixtures/reshape_cases.py`). Bitti (5 Ekim): çekirdek bindirme
    motoruyla (kırpma `split_area`, cepler `FaceIndex` ve `union_areas`, birleşen delik `subtract_areas`), başvuru halka ve yol ekleyerek
    kesin kesirlerle; 36 durum iki platformda (`fixtures/reshape/v1/cases.json`).
-2. Delik ekle, Deliği sil, Deliği doldur iki platformda; ortak izler.
+2. Delik ekle, Deliği sil, Deliği doldur iki platformda; ortak izler. Bitti (5 Ekim): Delik ekle yol aracının `Hole` biçimi (masaüstü
+   `path.rs`, web `HoleAddTool`, `PathTool`'un `writeShape`'iyle), Deliği sil ve Deliği doldur (`kentos_interaction::holes`,
+   `holeTools.ts`); deliği imlecin altında olan alanlar deponun `Store::holes_at`'inden (en küçük delik önce; WASM `holesAt`); şeritte
+   alan işlemlerinin yanında Delikler paneli (CAD'de Değiştir, CBS'de Düzenle), ayırt edici simgeleriyle; iz oynatıcılarına alanın
+   delik sayısı (`holes`); ortak iz `holes.json` (sahne `holes.kcad`) iki platformda, resimleriyle.
 3. Sürdür iki platformda; ortak iz.
 4. Biçim değiştir iki platformda (alan ve çizgi); ortak izler; resimler.
 

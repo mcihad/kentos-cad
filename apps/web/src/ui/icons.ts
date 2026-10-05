@@ -230,6 +230,10 @@ export const ICONS = {
   partsJoin: '<path d="M3 3h6v6H3z" fill="currentColor" fill-opacity=".22"/><path d="M11 11h6v6h-6z" fill="currentColor" fill-opacity=".22"/><path d="M9 9l2 2"/>',
   partsSplit: '<path d="M2 2h13L2 15z" fill="currentColor" fill-opacity=".22"/><path d="M18 5v13H5z" fill="currentColor" fill-opacity=".22"/>',
   toPolyline: `<path d="M5.6 16 3.8 8l6-4.5 6.5 3.5-1.8 9H8"/>${grip(3.8, 8)}${grip(9.8, 3.5)}${grip(16.3, 7)}${grip(14.5, 16)}${grip(5.6, 16)}`,
+  // Delikler (docs/adr/0173 §5): the area with its hole, a plus by it (the ring dashed while drawn), a cross by it (the hole gone, its ghost dashed), or the hole filled anew.
+  holeAdd: '<path d="M2.5 2.5h11v11h-11zM5.5 5.5h5v5h-5z" fill="currentColor" fill-opacity=".22" fill-rule="evenodd" stroke="none"/><path d="M2.5 2.5h11v11h-11z"/><path d="M5.5 5.5h5v5h-5z" stroke-dasharray="1.5 1.1"/><path d="M16 12.5v6M13 15.5h6"/>',
+  holeRemove: '<path d="M2.5 2.5h11v11h-11z" fill="currentColor" fill-opacity=".22"/><path d="M5.5 5.5h5v5h-5z" stroke-dasharray="1.5 1.1"/><path d="m14.5 14.5 4.5 4.5m0-4.5-4.5 4.5"/>',
+  holeFill: '<path d="M2.5 2.5h15v15h-15zM6.5 6.5h7v7h-7z" fill="currentColor" fill-opacity=".22" fill-rule="evenodd"/><path d="M6.5 6.5h7v7h-7z" fill="currentColor" fill-opacity=".75"/>',
 
   // Object snaps: the marker (solid) as drawn on the canvas, on its context geometry (dashed).
   snapEndpoint: '<path d="M3.5 16.5 11 9" stroke-dasharray="2 1.6"/><rect x="10.5" y="3.5" width="6" height="6"/>',

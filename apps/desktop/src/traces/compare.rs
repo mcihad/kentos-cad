@@ -353,6 +353,12 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
     {
         bad.push(format!("{name}.z: {:?}, beklenen {z:?}", seen.z));
     }
+    // An area's hole count (docs/adr/0173 §5), exact.
+    if let Some(holes) = want.holes
+        && seen.holes != Some(holes)
+    {
+        bad.push(format!("{name}.holes: {:?}, beklenen {holes}", seen.holes));
+    }
     // A shared arc and an elevation along an edge (docs/adr/0160) come from
     // the core's arithmetic: within 1e-9.
     if let Some(want_bulges) = &want.bulges {

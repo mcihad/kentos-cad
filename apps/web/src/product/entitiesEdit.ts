@@ -415,12 +415,14 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   // reshapes, and its vertices take theirs by where they lie.
   const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties';
   let lost = 0;
+  // Deliği doldur's area takes its hole's elevations, if it has any: its area keeps its own (docs/adr/0173 §5).
+  const keeps = input.operation === 'holeFill';
   // Elevations written with the geometry are written as they are (Kot ver, Öznitelikler, a script).
   const elevate = (init: NewEntity, from: Entity, g: EntityGeometry): NewEntity => {
     if (written(g)) return held(init);
     if (!sources.length) return init;
     const before = elevatedPaths(from);
-    if (!carryInto(init, sources, byPlace ? before : [], offset) && hasElevation(before)) lost++;
+    if (!carryInto(init, sources, byPlace ? before : [], offset) && hasElevation(before) && !keeps) lost++;
     return init;
   };
   for (const [i, c] of input.changes.entries()) {

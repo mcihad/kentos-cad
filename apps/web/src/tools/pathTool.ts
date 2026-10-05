@@ -429,11 +429,16 @@ export class PathTool extends PointInputTool {
       saySecondMeasures(this.ctx, [{ pts, bulges: bulges ?? null }], this.closed);
       return super.finish();
     }
+    this.writeShape(pts, bulges, area);
+    super.finish();
+  }
+
+  /** Writes the finished shape: a parcel, a closed area or a polyline (Delik ekle cuts its ring from an area instead). */
+  protected writeShape(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const geom = { kind: this.closed ? ('polygon' as const) : ('polyline' as const), pts, ...(bulges && { bulges }) };
     if (this.parcelLayer) this.createParcel(geom, this.parcelLayer);
     else if (this.closed) this.createPolygon(pts, bulges, area);
     else this.createPolyline(pts, () => bulgePathLength(pts, bulges, false));
-    super.finish();
   }
 
   /**

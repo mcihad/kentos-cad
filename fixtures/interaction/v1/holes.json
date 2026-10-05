@@ -1,0 +1,89 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "holes",
+  "title": "Delikler (ADR 0173 §5): Delik ekle halkayı ilk köşesinin içinde olduğu alana ekler, alan dışında başlanamaz; var olan deliğin içinden başlayıp ona değen halka onunla birleşir; sınırı aşan halka reddedilir. Deliği sil tıklanan deliği siler (kilitli alanınkini değil), kotlar kalır, Ctrl+Z geri alır. Deliği doldur deliğin biçiminde yeni alan yazar, köşeleri deliğin kotlarıyla",
+  "source": "Web'in holeTools.ts'i (HoleAddTool, HoleClickTool), masaüstünün kentos_interaction::holes'u ve path'in Hole biçimi; çekirdeğin ops::holes'u ve Store::holes_at'i; cad.entities.edit holeAdd, holeRemove, holeFill, ADR 0173",
+  "covers": ["UX-01", "UX-06", "CMD-04"],
+  "document": "holes.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.holeAdd",
+      "note": "Delik ekle: seçim yok; halkanın ilk köşesi hangi alanın içindeyse delik ona eklenir.",
+      "expect": { "tool": "holeAdd", "options": [], "prompt": "Delik ekle: deliğin ilk köşesini alanın içinde belirtin" }
+    },
+    { "click": [0, 10], "note": "İki parselin arasında: alan yok, nokta alınmaz.", "expect": { "points": 0, "logged": ["Deliğin ekleneceği alanı seçin ya da halkaya bir alanın içinden başlayın."] } },
+    { "text": "487007,4420000" },
+    { "key": "Enter", "note": "32 numaralı parselin içinde: delik ona eklenecek, parsel vurgulanır.", "expect": { "points": 1 } },
+    { "text": "487017,4420000" },
+    { "key": "Enter" },
+    { "text": "487017,4420007" },
+    { "key": "Enter" },
+    { "move": [8, 6] },
+    { "shot": "delik-ekle" },
+    { "text": "487007,4420007" },
+    { "key": "Enter" },
+    { "text": "487007,4420000" },
+    {
+      "key": "Enter",
+      "note": "İlk köşe yeniden yazılınca halka kapanır: delik tek adımda eklenir (900 − 70 m²).",
+      "expect": { "points": 0, "entities": 3, "logged": ["Delik eklendi; alan 830.00 m² oldu."], "objects": [{ "id": 2, "kind": "polygon", "points": [[2, -5], [32, -5], [32, 25], [2, 25]], "holes": 1 }] }
+    },
+    { "text": "487012,4420005" },
+    { "key": "Enter", "note": "Yeni halka var olan deliğin içinden başlar: delik genişler.", "expect": { "points": 1 } },
+    { "text": "487022,4420005" },
+    { "key": "Enter" },
+    { "text": "487022,4420015" },
+    { "key": "Enter" },
+    { "text": "487012,4420015" },
+    { "key": "Enter" },
+    { "text": "487012,4420005" },
+    {
+      "key": "Enter",
+      "note": "Var olan deliğe değen halka onunla birleşir: tek delik (900 − 70 − 100 + 10 m²).",
+      "expect": { "entities": 3, "logged": ["Delik eklendi, var olan delikle birleşti; alan 740.00 m² oldu."], "objects": [{ "id": 2, "kind": "polygon", "holes": 1 }] }
+    },
+    { "shot": "delik-birlesti" },
+    { "click": [26, 19], "note": "Parselin doğu sınırını aşan halka, tıklanarak.", "expect": { "points": 1 } },
+    { "click": [36, 19] },
+    { "click": [36, 23] },
+    { "click": [26, 23], "expect": { "points": 4 } },
+    {
+      "click": [26, 19],
+      "note": "İlk köşeye tıklamak kapatır; halka reddedilir, parsel değişmez.",
+      "expect": { "points": 0, "entities": 3, "logged": ["Delik alanın içinde kalmalı; sınırı aşan bölümü çıkarmak için Alan çıkar'ı kullanın."], "objects": [{ "id": 2, "kind": "polygon", "holes": 1 }] }
+    },
+    { "key": "Esc" },
+    { "run": "tool.holeRemove", "note": "Deliği sil: imlecin altındaki delik vurgulanır.", "expect": { "tool": "holeRemove", "options": [], "prompt": "Deliği sil: silinecek deliğin içine tıklayın" } },
+    { "move": [-32, 4] },
+    { "shot": "deligi-sil" },
+    { "click": [-22, 18], "note": "Parselin dolu yeri.", "expect": { "entities": 3, "logged": ["Bir deliğin içine tıklayın."] } },
+    { "click": [-34, -22], "note": "Kilitli katmandaki alanın deliği seçilmez.", "expect": { "entities": 3, "logged": ["Bir deliğin içine tıklayın."] } },
+    {
+      "click": [-32, 4],
+      "note": "31'in kotlu deliği silinir; dış halkanın kotları kalır (1200 − 56 m²).",
+      "expect": { "tool": "holeRemove", "entities": 3, "logged": ["Delik silindi; alan 1144.00 m² oldu."], "objects": [{ "id": 1, "kind": "polygon", "holes": 1, "zs": [99.5, 99.6, 99.7, 99.8] }] }
+    },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri gelir.", "expect": { "objects": [{ "id": 1, "kind": "polygon", "holes": 2 }] } },
+    { "key": "Esc" },
+    { "run": "tool.holeFill", "note": "Deliği doldur.", "expect": { "tool": "holeFill", "options": [], "prompt": "Deliği doldur: doldurulacak deliğin içine tıklayın" } },
+    {
+      "click": [-32, 4],
+      "note": "Deliğin halkasıyla yeni alan, Parsel katmanında, öznitelik ve etiket almadan; köşeleri deliğin kotlarıyla. Delik yerinde kalır.",
+      "expect": { "entities": 4, "logged": ["Delik dolduruldu: yeni alan 80.00 m²."], "newest": { "kind": "polygon", "points": [[-37, 0], [-27, 0], [-27, 8], [-37, 8]], "zs": [100.0, 101.0, 102.0, 103.0], "holes": 0, "label": null, "attrs": {} }, "objects": [{ "id": 1, "kind": "polygon", "holes": 2 }] }
+    },
+    { "move": [-13, 16] },
+    { "shot": "deligi-doldur" },
+    {
+      "click": [-13, 16],
+      "note": "Kotsuz delik: yeni alan kotsuz.",
+      "expect": { "entities": 5, "logged": ["Delik dolduruldu: yeni alan 56.00 m²."], "newest": { "kind": "polygon", "points": [[-17, 13], [-9, 13], [-9, 20], [-17, 20]], "zs": [null, null, null, null], "holes": 0 } }
+    },
+    { "key": "Ctrl+Z", "expect": { "entities": 4 } },
+    { "key": "Esc" }
+  ]
+}

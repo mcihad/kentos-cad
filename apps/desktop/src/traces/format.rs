@@ -224,6 +224,8 @@ pub struct Newest {
     /// `null` none (docs/adr/0160: a shared arc, an elevation along an edge).
     pub(super) bulges: Option<Vec<f64>>,
     pub(super) zs: Option<Vec<Option<f64>>>,
+    /// An area's holes, in all its parts (docs/adr/0173 §5), exact.
+    pub(super) holes: Option<usize>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

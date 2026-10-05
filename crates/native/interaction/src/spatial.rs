@@ -35,6 +35,7 @@ use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::geom::dimension::dimension_measure;
+use kentos_geometry_core::ops::holes::HoleAt;
 use kentos_geometry_core::store::labels::{
     DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER,
     LABEL_DIMENSION, LABEL_LEADER, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT,
@@ -230,6 +231,16 @@ impl Spatial {
             .containing(at)
             .into_iter()
             .filter_map(|(id, area)| Some((slot(id)?, area)))
+            .collect()
+    }
+
+    /// The visible areas with a hole around `at`, the smallest hole first
+    /// (`Store::holes_at`, docs/adr/0173 §5), each with the hole's part and place.
+    pub fn holes_at(&self, at: Vec2) -> Vec<(Slot, HoleAt)> {
+        self.store
+            .holes_at(at)
+            .into_iter()
+            .filter_map(|(id, hole)| Some((slot(id)?, hole)))
             .collect()
     }
 

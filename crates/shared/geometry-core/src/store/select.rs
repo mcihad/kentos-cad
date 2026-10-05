@@ -1,6 +1,8 @@
 //! Selection beyond window and crossing (docs/adr/0141):
 //!
 //! - the closed shapes around a point, smallest first (İçeren alanı seç);
+//! - the areas with a hole around a point, the innermost hole first
+//!   (Deliği sil, Deliği doldur; docs/adr/0173 §5);
 //! - what a fence crosses (Çitle seç);
 //! - what a circle holds or touches (Daireyle seç);
 //! - the objects lying far from the rest of the drawing (Kapsam denetimi).
@@ -17,9 +19,11 @@ use crate::entity::{
 use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::leader;
+use crate::geom::region::ring_area;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
 use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min, stable_sort};
 use crate::ops::edges::{entity_edges, entity_edges_in};
+use crate::ops::holes::{HoleAt, hole_at, hole_ring};
 use crate::text::Font;
 use crate::vec2::Vec2;
 
@@ -69,6 +73,21 @@ impl Store {
         }
         stable_sort(&mut out, &mut |a, b| js_cmp(a.1, b.1));
         out
+    }
+
+    /// Visible areas with a hole around `p`, each with the hole's part and
+    /// place, the smallest hole first (for an area filling another's hole,
+    /// its own hole before the other's). Equal holes keep the document's order.
+    pub fn holes_at(&self, p: Vec2) -> Vec<(f64, HoleAt)> {
+        let mut out: Vec<(f64, HoleAt, f64)> = Vec::new();
+        for it in self.near(p, 0.0) {
+            let (Some(at), Ok(ring)) = (hole_at(&it.shape, p), hole_ring(&it.shape, p)) else {
+                continue;
+            };
+            out.push((it.id, at, ring_area(&ring).abs()));
+        }
+        stable_sort(&mut out, &mut |a, b| js_cmp(a.2, b.2));
+        out.into_iter().map(|(id, at, _)| (id, at)).collect()
     }
 
     /// Visible objects the fence (an open path) crosses: one of its edges,
@@ -353,6 +372,29 @@ mod tests {
         assert_eq!(s.containing(Vec2::new(5.0, 5.0)), vec![(2.0, 4.0)]);
         // Net area: 100 − 4.
         assert_eq!(s.containing(Vec2::new(1.0, 1.0)), vec![(1.0, 96.0)]);
+    }
+
+    #[test]
+    fn the_holes_around_a_point_come_smallest_first() {
+        // A district with a 40 m hole; in it a block with a 10 m hole and a
+        // second part with a 2 m one; the point (5, 5) is in both big holes.
+        let s = store(&[
+            r#"{"id":1,"layerId":"a","attrs":{},"kind":"polygon","pts":[{"x":-50,"y":-50},{"x":50,"y":-50},{"x":50,"y":50},{"x":-50,"y":50}],"holes":[{"pts":[{"x":-10,"y":-10},{"x":30,"y":-10},{"x":30,"y":30},{"x":-10,"y":30}]}]}"#.to_owned(),
+            r#"{"id":2,"layerId":"a","attrs":{},"kind":"polygon","pts":[{"x":-5,"y":-5},{"x":20,"y":-5},{"x":20,"y":20},{"x":-5,"y":20}],"holes":[{"pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}],"parts":[{"pts":[{"x":60,"y":0},{"x":70,"y":0},{"x":70,"y":10},{"x":60,"y":10}],"holes":[{"pts":[{"x":64,"y":4},{"x":66,"y":4},{"x":66,"y":6},{"x":64,"y":6}]}]}]}"#.to_owned(),
+        ]);
+        let at = |part, hole| HoleAt { part, hole };
+        assert_eq!(
+            s.holes_at(Vec2::new(5.0, 5.0)),
+            vec![(2.0, at(0, 0)), (1.0, at(0, 0))]
+        );
+        // The second part's hole; the filled block holds no hole there.
+        assert_eq!(s.holes_at(Vec2::new(65.0, 5.0)), vec![(2.0, at(1, 0))]);
+        assert!(
+            s.holes_at(Vec2::new(15.0, 15.0))
+                .iter()
+                .all(|(id, _)| *id == 1.0)
+        );
+        assert!(s.holes_at(Vec2::new(-30.0, -30.0)).is_empty());
     }
 
     #[test]
