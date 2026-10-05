@@ -154,6 +154,28 @@
       "shot": "noktalar-birlesti"
     },
     {
+      "key": "Esc",
+      "note": "Seçim bırakılınca çok noktalı nesnenin her noktası katmanın sembolüyle çizilir.",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "shot": "noktalar-secimsiz"
+    },
+    {
+      "click": [
+        2,
+        -8
+      ],
+      "note": "Noktalarından birine tıklamak bütün nesneyi seçer.",
+      "expect": {
+        "selected": [
+          4
+        ]
+      }
+    },
+    {
       "run": "tool.partsSplit",
       "note": "Parçalara ayır: üç nokta geri ayrılır, ilk nokta yerinde kalır.",
       "expect": {

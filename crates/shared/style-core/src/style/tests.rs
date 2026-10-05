@@ -7,14 +7,15 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::entity::{PointPart, Shape};
 use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, sin};
 use kentos_geometry_core::store::Store;
 
 use super::build::{
     LayerObjects, MODE_DIMENSION, MODE_RENDERER, MODE_SET, Program, build_layer, compile_one,
+    styled_parts,
 };
-use super::compile::{Env, to_drawn, to_world};
+use super::compile::{Env, Geom, to_drawn, to_world};
 use super::model::Unit;
 use super::place::{
     MAX_MARKERS_PER_PATH, PlaceGroup, WaveSpec, interior_point, place_along, wave_paths,
@@ -635,4 +636,49 @@ fn a_leader_strokes_its_lines_and_fills_its_arrowhead() {
     let (open, _) = build(&p, &[leader(Some("open"))], v(0.0, 0.0));
     assert_eq!(kinds(&open), ["stroke"]);
     assert_eq!(strokes(&open), [("#FF0000".into(), None, None)]);
+}
+
+/// A multi-point object (docs/adr/0174) is drawn point by point with the
+/// point symbol: its record's every point a marker, and through a layer's
+/// marker set the same batches as its points one by one.
+#[test]
+fn a_multi_point_object_draws_every_point() {
+    let pts = [v(0.0, 0.0), v(5.0, 1.0), v(9.0, -2.0)];
+    let multi = Shape::Point {
+        p: pts[0],
+        z: None,
+        parts: Some(
+            pts[1..]
+                .iter()
+                .map(|&p| PointPart { p, z: Some(100.0) })
+                .collect(),
+        ),
+    };
+    let mut buf = Vec::new();
+    let parts = styled_parts(&multi, None, &mut buf);
+    assert_eq!(parts.len(), 3);
+    for (g, p) in parts.iter().zip(pts) {
+        assert!(matches!(g, Geom::Marker(q) if *q == p), "{g:?}");
+    }
+    let marker = r##"{"type":"marker","layers":[{"id":"m","type":"shape","shape":"circle","size":2,"fill":"#FF0000"}]}"##;
+    let p = format!(
+        r##"{{"symbols":{{}},"renderer":null,"sets":[{{"marker":{marker}}}],"refs":[],"colors":["#FF0000"],"assets":{{}}}}"##
+    );
+    let obj = |shape: Shape| Obj {
+        shape,
+        attrs: &[],
+        how: [MODE_SET, 0, 0, 0],
+    };
+    let one = pts.map(|p| {
+        obj(Shape::Point {
+            p,
+            z: None,
+            parts: None,
+        })
+    });
+    let (together, a) = build(&p, &[obj(multi)], v(0.0, 0.0));
+    let (apart, b) = build(&p, &one, v(0.0, 0.0));
+    assert!(!together.is_empty());
+    assert_eq!(together, apart);
+    assert_eq!(a, b);
 }

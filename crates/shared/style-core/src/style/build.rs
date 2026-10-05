@@ -17,7 +17,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::draw::{
-    FILL, FILLS, LINE, MARKER, MIXED, REVERSED, SOURCE, drawn, measure_record,
+    FILL, FILLS, LINE, MARKER, MARKERS, MIXED, REVERSED, SOURCE, drawn, measure_record,
 };
 
 use super::batch::{BatchSink, Batches};
@@ -150,7 +150,8 @@ pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> 
 
 /// `styled_geometry`, every part: one geometry for most objects; a
 /// leader's lines, then its filled arrowhead's or dot's area when it has
-/// one (`MIXED`, docs/adr/0146 §5), each through its own kind of symbol.
+/// one (`MIXED`, docs/adr/0146 §5), each through its own kind of symbol; a
+/// multi-point object's every point (`MARKERS`, docs/adr/0174).
 pub fn styled_parts(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Vec<Geom> {
     buf.clear();
     drawn(s, true, clip, buf);
@@ -168,6 +169,17 @@ pub fn styled_parts(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Vec
         } else {
             vec![lines, Geom::Fill(rings)]
         };
+    }
+    if kind == MARKERS {
+        // A multi-point object's points, each through the point symbol (docs/adr/0174).
+        let n = (r.next() as usize).min(r.b.len() / 2);
+        return (0..n)
+            .map(|_| {
+                let x = r.next();
+                let y = r.next();
+                Geom::Marker(Vec2::new(x, y))
+            })
+            .collect();
     }
     let one = if kind == MARKER {
         let x = r.next();
