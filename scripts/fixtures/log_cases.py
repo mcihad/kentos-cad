@@ -31,6 +31,7 @@ TABS = [
     {'id': 'history', 'label': 'Komut geçmişi', 'icon': 'history'},
     {'id': 'coords', 'label': 'Koordinat listesi', 'icon': 'table'},
     {'id': 'points', 'label': 'Noktalar', 'icon': 'pointEditor'},
+    {'id': 'search', 'label': 'Arama', 'icon': 'dataSearch'},
     {'id': 'messages', 'label': 'Uyarılar', 'icon': 'warning'},
 ]
 TEXTS = {

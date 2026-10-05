@@ -291,6 +291,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Veri',
     sources: [
       { pick: 'Katman', icon: 'layerAdd', commands: ['layer.new', 'layer.newGroup', 'layer.showAll'] },
+      // Veride ara (docs/adr/0178): a value in the layers' data, and a place by its coordinates.
+      { pick: 'Ara', icon: 'dataSearch', commands: ['data.search', 'data.unmark'] },
       { menu: 'file', sections: ['Dosya alışverişi'] },
       { menu: 'crs', sections: ['Koordinatlar'] },
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },

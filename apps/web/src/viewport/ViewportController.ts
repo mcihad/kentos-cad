@@ -19,7 +19,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
@@ -711,6 +711,9 @@ export class ViewportController {
     d.add(selection.ids.subscribe(hl));
     d.add(selection.hover.subscribe(hl));
     d.add(selection.vertices.subscribe(() => this.requestOverlay()));
+    // The place Koordinata git marked is no more once another drawing is open (docs/adr/0178 §6).
+    d.add(selection.mark.subscribe(() => this.requestOverlay()));
+    d.add(doc.events.on('reset', () => selection.mark.set(null)));
     d.add(
       this.camera.changed.subscribe(() => {
         this.requestRender();
@@ -1384,6 +1387,8 @@ export class ViewportController {
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);
     drawMarkedVertices(g, this.ctx.selection.vertices.value, cam, pal);
+    const mark = this.ctx.selection.mark.value;
+    if (mark) drawSearchMark(g, mark, this.ctx.format.point(mark), cam, pal);
     const d0 = import.meta.env.DEV ? performance.now() : 0;
     this.ctx.tools.active.draw?.(g, cam);
     // The digitizing locks over the tool's preview (docs/adr/0166 §6).

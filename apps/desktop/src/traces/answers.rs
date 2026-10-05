@@ -17,6 +17,14 @@ pub enum Control<'a> {
     Check(&'a str, bool),
     /// The button with these words.
     Press(&'a str),
+    /// The item with these words of the list named so (the `panel` step's `pick`).
+    Pick(&'a str, &'a str),
+    /// The table's header with these words, pressed.
+    Sort(&'a str),
+    /// The n-th row of the table, 1 first, pressed.
+    Row(usize),
+    /// A key of the box that has the keyboard (`Enter`, `Esc`).
+    Key(&'a str),
 }
 
 impl std::fmt::Display for Control<'_> {
@@ -25,6 +33,10 @@ impl std::fmt::Display for Control<'_> {
             Control::Fill(label, _) => write!(f, "“{label}” alanı"),
             Control::Check(words, _) => write!(f, "“{words}” kutusu"),
             Control::Press(words) => write!(f, "“{words}” düğmesi"),
+            Control::Pick(list, item) => write!(f, "“{item}” öğesi (“{list}” listesi)"),
+            Control::Sort(header) => write!(f, "“{header}” başlığı"),
+            Control::Row(n) => write!(f, "{n}. sonuç satırı"),
+            Control::Key(key) => write!(f, "{key} tuşu"),
         }
     }
 }

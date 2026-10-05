@@ -6,6 +6,7 @@ pub mod breaking;
 pub mod compare;
 pub mod continuation;
 pub mod curve_cuts;
+pub mod data_search;
 pub mod edge_labels;
 pub mod edges;
 pub mod edgematch;

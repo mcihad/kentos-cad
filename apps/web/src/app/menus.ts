@@ -107,6 +107,8 @@ export const MAIN_MENU: TopMenu[] = [
       'edit.deselect',
       'edit.invertSelection',
       sec('Bul'),
+      'data.search',
+      'data.unmark',
       'text.findReplace',
       // The layer actions by an object (docs/adr/0177 §1–§2): no tab shows this menu whole, the ribbon has them under
       // Giriş › Katmanlar ▾.
@@ -137,6 +139,8 @@ export const MAIN_MENU: TopMenu[] = [
       'view.rightPanel',
       'view.bottomPanel',
       'view.coords',
+      'data.search',
+      'data.unmark',
       'view.keyTips',
       'view.fullscreen',
       sec('Görünüş'),

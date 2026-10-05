@@ -284,6 +284,9 @@ async function setUp(t) {
     // browser, its points off the drawing (the desktop gives every play an app of its own).
     k.ui.bottomExpanded.set(false);
     k.ui.bottomTab.set('history');
+    // Veride ara's choices and the place it marked start over too (docs/adr/0178).
+    (await import('/src/ui/bottom/SearchPanel.ts')).resetSearchPanel();
+    k.selection.mark.set(null);
     // Nothing typed in an earlier trace carries over.
     const line = document.querySelector('.cmdline__input');
     if (line) line.value = '';
@@ -402,9 +405,90 @@ async function answer(step) {
   await sleep(60);
 }
 
+/**
+ * A `panel` step (docs/adr/0178): the bottom panel's Arama tab, answered as a user does with the mouse and the keyboard:
+ * `fill` types over the search box (by its label), `check` sets the field buttons and the boxes (by their words), `pick`
+ * chooses an item of a list ({ "Katman": "Kadastro / Parsel (3)" }), `sort` presses a header, `row` presses the n-th result
+ * (1 first; `shift` and `ctrl` held as for a click), `press` presses a button by its words. The search waits for a pause in
+ * the typing, so the step waits for it too. The desktop answers the same (traces/answers.rs).
+ */
+async function panelAnswer(step) {
+  const missing = (what) => new Error(`“${step.panel}” sekmesinde ${what} yok`);
+  const open = await b.eval(`(() => { const p = document.querySelector('.bottom__panel'); return !!p && !p.hidden && !!document.querySelector('.dsearch'); })()`);
+  if (!open) throw new Error(`“${step.panel}” sekmesi açık değil`);
+  const find = (selector, words) =>
+    b.eval(`(() => {
+      const root = document.querySelector('.dsearch');
+      const words = (el) => (el.getAttribute('aria-label') ?? el.closest('label')?.textContent ?? el.textContent ?? '').trim();
+      const el = [...root.querySelectorAll(${JSON.stringify(selector)})].find((el) => words(el) === ${JSON.stringify(words)});
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, checked: el.checked ?? el.getAttribute('aria-pressed') === 'true' };
+    })()`);
+  for (const [label, text] of Object.entries(step.fill ?? {})) {
+    const at = await find('input', label);
+    if (!at) throw missing(`“${label}” alanı`);
+    await clickAt(at);
+    await chooseAll();
+    if (text) await b.send('Input.insertText', { text });
+    else await press('Delete');
+    await sleep(40);
+  }
+  for (const [words, on] of Object.entries(step.check ?? {})) {
+    const at = await find('input[type=checkbox], button.dsearch__chip', words);
+    if (!at) throw missing(`“${words}” düğmesi ya da kutusu`);
+    if (at.checked !== on) await clickAt(at);
+  }
+  for (const [list, item] of Object.entries(step.pick ?? {})) {
+    const at = await find('button.dropdown', list);
+    if (!at) throw missing(`“${list}” listesi`);
+    await clickAt(at);
+    await sleep(80);
+    const row = await b.eval(`(() => {
+      const el = [...document.querySelectorAll('.menu .menu__item')].find((el) => el.textContent.trim() === ${JSON.stringify(item)});
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    })()`);
+    if (!row) throw missing(`“${item}” öğesi (${list})`);
+    await clickAt(row);
+  }
+  if (step.sort !== undefined) {
+    const at = await find('th button', step.sort);
+    if (!at) throw missing(`“${step.sort}” başlığı`);
+    await clickAt(at);
+  }
+  if (step.row !== undefined) {
+    const at = await b.eval(`(() => {
+      const el = document.querySelectorAll('.dsearch tbody tr[data-at]')[${step.row - 1}]?.children[3];
+      if (!el) return null;
+      el.scrollIntoView({ block: 'nearest' });
+      const r = el.getBoundingClientRect();
+      return { x: r.left + Math.min(r.width / 2, 40), y: r.top + r.height / 2 };
+    })()`);
+    if (!at) throw missing(`${step.row}. sonuç satırı`);
+    const modifiers = (step.shift ? 8 : 0) | (step.ctrl ? 2 : 0);
+    await mouse('mouseMoved', at.x, at.y, { modifiers });
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1, modifiers });
+  }
+  if (step.press !== undefined) {
+    const at = await find('button', step.press);
+    if (!at) throw missing(`“${step.press}” düğmesi`);
+    await clickAt(at);
+  }
+  if (step.key !== undefined) await press(step.key);
+  // The typing's pause (120 ms) and the drawing's redraw; the pointer goes off the panel's buttons (a tooltip stays
+  // over the picture while it is on one).
+  await sleep(320);
+  await mouse('mouseMoved', -5, -5);
+}
+
 async function act(step) {
   // A picture is asked for (`shot`): no action, no expectation.
   if (step.shot !== undefined) return;
+  if (step.panel !== undefined) return panelAnswer(step);
   if (step.dialog !== undefined) return answer(step);
   if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
   // An object template, as choosing it does (docs/adr/0176 §3).
@@ -557,6 +641,20 @@ const observe = (mark) =>
       })(),
       ids: [...k.doc.all()].map((e) => e.id),
       dialog: ${TOP_TITLE},
+      // The bottom panel's open tab, Arama's count and rows (Katman, Tür, Alan, Değer), and the place Koordinata git marked (docs/adr/0178).
+      panel: (() => {
+        const p = document.querySelector('.bottom__panel');
+        return !p || p.hidden ? null : (document.querySelector('.bottom__tabs .tab[aria-selected="true"] span')?.textContent ?? null);
+      })(),
+      search: (() => {
+        const root = document.querySelector('.dsearch');
+        if (!root) return null;
+        return {
+          count: root.querySelector('.dsearch__count')?.textContent ?? '',
+          rows: [...root.querySelectorAll('tbody tr[data-at]')].map((tr) => [...tr.children].slice(1).map((td) => td.textContent.trim()).join(' | ')),
+        };
+      })(),
+      mark: k.selection.mark.value && [k.selection.mark.value.x, k.selection.mark.value.y],
       // The active layer's groups and name, and the colour and line weight new objects take (docs/adr/0176 §3).
       activeLayer: (() => {
         const names = [];
@@ -656,6 +754,11 @@ function compare(expect, got, t) {
       const c = [have[0] - origin.x, have[1] - origin.y];
       if (Math.hypot(c[0] - want[0], c[1] - want[1]) > t.clickTolerance)
         bad.push(`${key}: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
+    } else if (key === 'mark') {
+      // The marked place, east and north from the view's centre of the set-up, within the click tolerance (docs/adr/0178 §6).
+      const c = have && [have[0] - origin.x, have[1] - origin.y];
+      const ok = c === null || want === null ? c === want : Math.hypot(c[0] - want[0], c[1] - want[1]) <= t.clickTolerance;
+      if (!ok) bad.push(`mark: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (key === 'trackPoints') {

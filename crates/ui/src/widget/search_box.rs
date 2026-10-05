@@ -89,6 +89,7 @@ pub struct SearchBox<'a, Message> {
     on_run: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     on_reveal: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     on_down: Option<Message>,
+    on_enter: Option<Message>,
     id: widget::Id,
     compact: bool,
     fill: bool,
@@ -112,6 +113,7 @@ impl<'a, Message: Clone + 'a> SearchBox<'a, Message> {
             on_run: None,
             on_reveal: None,
             on_down: None,
+            on_enter: None,
             id: widget::Id::unique(),
             compact: false,
             fill: false,
@@ -169,6 +171,14 @@ impl<'a, Message: Clone + 'a> SearchBox<'a, Message> {
         self
     }
 
+    /// Enter'a basınca, listede çalıştırılacak sonuç yokken gönderilen
+    /// mesaj (sonuçsuz kullanımda kutunun kendi Enter'ı: ör. veri
+    /// aramasında ilk satıra gitmek).
+    pub fn on_enter(mut self, message: Message) -> Self {
+        self.on_enter = Some(message);
+        self
+    }
+
     /// Bulunduğu yerin bütün genişliği (ör. panelin arama kutusu).
     pub fn fill(mut self) -> Self {
         self.fill = true;
@@ -223,6 +233,7 @@ impl<'a, Message: Clone + 'a> From<SearchBox<'a, Message>> for Element<'a, Messa
             on_run: b.on_run,
             on_reveal: b.on_reveal,
             on_down: b.on_down,
+            on_enter: b.on_enter,
             id: b.id,
             compact: b.compact,
             fill: b.fill,
@@ -245,6 +256,7 @@ struct Search<'a, Message> {
     on_run: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     on_reveal: Option<Box<dyn Fn(usize) -> Message + 'a>>,
     on_down: Option<Message>,
+    on_enter: Option<Message>,
     id: widget::Id,
     compact: bool,
     fill: bool,
@@ -333,6 +345,12 @@ impl<Message: Clone> Search<'_, Message> {
                 } else {
                     self.run(index, shell);
                 }
+                Some(Clear::No)
+            }
+            // Listede çalıştırılacak sonuç yokken Enter, kutunun kendi mesajıdır.
+            Named::Enter => {
+                let message = self.on_enter.clone()?;
+                shell.publish(message);
                 Some(Clear::No)
             }
             // Yazı varken Esc onu siler; yoksa yazı alanı odağı bırakır (kendi Esc'i).

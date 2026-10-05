@@ -73,6 +73,11 @@ fn word_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_'
 }
 
+/// Whether the match `text[start..end]` has no letter, digit or `_` next to it.
+fn bounded(text: &[char], start: usize, end: usize) -> bool {
+    (start == 0 || !word_char(text[start - 1])) && (end == text.len() || !word_char(text[end]))
+}
+
 /// Whether `find` is at `text[at..]`.
 fn at(text: &[char], at: usize, find: &[char], caseless: bool) -> bool {
     at + find.len() <= text.len()
@@ -112,10 +117,7 @@ pub fn replace(text: &str, find: &str, with: &str, how: Find) -> Option<String> 
     while i < text.len() {
         if at(&text, i, &find, how.caseless) {
             let end = i + find.len();
-            let bounded = !how.whole_word
-                || ((i == 0 || !word_char(text[i - 1]))
-                    && (end == text.len() || !word_char(text[end])));
-            if bounded {
+            if !how.whole_word || bounded(&text, i, end) {
                 out.push_str(with);
                 i = end;
                 hit = true;
@@ -133,13 +135,27 @@ pub fn replace(text: &str, find: &str, with: &str, how: Find) -> Option<String> 
 /// pattern matches the whole text (`*` any run of characters), without one
 /// it is somewhere in it. An empty pattern is in every text.
 pub fn search(text: &str, pattern: &str) -> bool {
+    matches(text, pattern, true, false)
+}
+
+/// Whether `text` answers `pattern` as the data search asks (docs/adr/0178
+/// §2): [`search`]'s rule with Bul ve değiştir's two options. `caseless`
+/// folds the Turkish way (else letters match as they are); with a `*` the
+/// pattern matches the whole text, `*` any run of characters, and
+/// `whole_word` has no say; without one the pattern is somewhere in the
+/// text, and with `whole_word` somewhere with no letter, digit or `_` next to
+/// it. An empty pattern is in every text.
+pub fn matches(text: &str, pattern: &str, caseless: bool, whole_word: bool) -> bool {
     let text: Vec<char> = text.chars().collect();
     let pattern: Vec<char> = pattern.chars().collect();
     if pattern.contains(&'*') {
-        return glob(&text, &pattern, true).is_some();
+        return glob(&text, &pattern, caseless).is_some();
     }
     pattern.len() <= text.len()
-        && (0..=text.len() - pattern.len()).any(|i| at(&text, i, &pattern, true))
+        && (0..=text.len() - pattern.len()).any(|i| {
+            at(&text, i, &pattern, caseless)
+                && (!whole_word || bounded(&text, i, i + pattern.len()))
+        })
 }
 
 /// What each `*` of `pattern` takes when it matches all of `text`, each as

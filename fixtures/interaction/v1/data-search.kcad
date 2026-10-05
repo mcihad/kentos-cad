@@ -1,0 +1,453 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Veride ara",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 500,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3E63DD",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "yazi",
+      "name": "Yazılar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 7
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "altyapi",
+      "name": "Altyapı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "rogar",
+          "name": "Rögar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#3A7BD5",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "kilavuz",
+      "name": "Kılavuz",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#30A46C",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "eski",
+      "name": "Eski plan",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg-dim",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "point": {
+          "symbol": "ring",
+          "size": 7
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "onayli",
+      "name": "Onaylı",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "nokta",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1244",
+        "Parsel": "101",
+        "Tür": "Konut"
+      },
+      "label": "101",
+      "pts": [
+        {
+          "x": 486976,
+          "y": 4419986
+        },
+        {
+          "x": 486994,
+          "y": 4419986
+        },
+        {
+          "x": 486994,
+          "y": 4420002
+        },
+        {
+          "x": 486976,
+          "y": 4420002
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1244",
+        "Parsel": "102",
+        "Tür": "Ticaret"
+      },
+      "label": "102",
+      "pts": [
+        {
+          "x": 486994,
+          "y": 4419986
+        },
+        {
+          "x": 487012,
+          "y": 4419986
+        },
+        {
+          "x": 487012,
+          "y": 4420002
+        },
+        {
+          "x": 486994,
+          "y": 4420002
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+        "Ada": "1245",
+        "Parsel": "103",
+        "Tür": "Konut"
+      },
+      "label": "103",
+      "pts": [
+        {
+          "x": 487012,
+          "y": 4419986
+        },
+        {
+          "x": 487028,
+          "y": 4419986
+        },
+        {
+          "x": 487028,
+          "y": 4420002
+        },
+        {
+          "x": 487012,
+          "y": 4420002
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 4,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 486976,
+        "y": 4420005
+      },
+      "text": "Ada 1244",
+      "height": 1.6,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 5,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 487014,
+        "y": 4420005
+      },
+      "text": "Park alanı",
+      "height": 1.6,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 6,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 486976,
+        "y": 4420008.5
+      },
+      "text": "Parsel 101 kuzey sınırı",
+      "height": 1.6,
+      "rotation": 0
+    },
+    {
+      "kind": "point",
+      "id": 7,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "ST"
+      },
+      "label": "P1",
+      "p": {
+        "x": 486980,
+        "y": 4419990
+      }
+    },
+    {
+      "kind": "point",
+      "id": 8,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "ST"
+      },
+      "label": "P101",
+      "p": {
+        "x": 486998,
+        "y": 4420010
+      }
+    },
+    {
+      "kind": "point",
+      "id": 9,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "BK"
+      },
+      "label": "P102",
+      "p": {
+        "x": 487004,
+        "y": 4420010
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 10,
+      "layerId": "rogar",
+      "attrs": {
+        "NO": "R-1"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001",
+      "p": {
+        "x": 486988,
+        "y": 4419996
+      },
+      "scale": 1,
+      "rotation": 0
+    },
+    {
+      "kind": "insert",
+      "id": 11,
+      "layerId": "rogar",
+      "attrs": {
+        "NO": "R-2"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001",
+      "p": {
+        "x": 487006,
+        "y": 4419996
+      },
+      "scale": 1,
+      "rotation": 0
+    },
+    {
+      "kind": "point",
+      "id": 12,
+      "layerId": "eski",
+      "attrs": {
+        "Kod": "ST",
+        "Not": "eski ölçü"
+      },
+      "label": "P7",
+      "p": {
+        "x": 487020,
+        "y": 4420008
+      }
+    },
+    {
+      "kind": "text",
+      "id": 13,
+      "layerId": "onayli",
+      "attrs": {},
+      "p": {
+        "x": 487014,
+        "y": 4420011
+      },
+      "text": "Ada 1245 sınırı",
+      "height": 1.6,
+      "rotation": 0
+    },
+    {
+      "kind": "leader",
+      "id": 14,
+      "layerId": "kilavuz",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487008,
+          "y": 4419996
+        },
+        {
+          "x": 487016,
+          "y": 4420008.5
+        }
+      ],
+      "text": "Ø150 PVC boru",
+      "height": 1.2,
+      "rotation": 0
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1001",
+      "name": "Rögar",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "description": "Kanalizasyon rögarı",
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+            "x": 0,
+            "y": 0
+          },
+          "r": 0.75
+        },
+        {
+          "kind": "circle",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+            "x": 0,
+            "y": 0
+          },
+          "r": 0.5
+        },
+        {
+          "kind": "text",
+          "id": 3,
+          "layerId": "0",
+          "attrs": {},
+          "p": {
+            "x": -0.16,
+            "y": -0.18
+          },
+          "text": "R",
+          "height": 0.5,
+          "rotation": 0
+        }
+      ]
+    }
+  ]
+}

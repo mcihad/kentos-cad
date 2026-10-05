@@ -261,6 +261,8 @@ pub enum Message {
     BottomTab(crate::bottom::BottomTab),
     /// The Noktalar tab (points/, docs/adr/0153).
     Points(crate::points::Event),
+    /// The Arama tab (search/, docs/adr/0178).
+    Search(crate::search::Event),
     /// Köşe tablosu in the Koordinat listesi tab (vertices/, docs/adr/0172).
     Vertices(crate::vertices::Event),
     /// The bottom panel's top edge dragged: the open history's new height.
@@ -487,6 +489,8 @@ pub struct App {
     pub(crate) properties_cache: crate::properties::PanelCache,
     /// The bottom panel's Noktalar tab: its query and rows (points/, docs/adr/0153).
     pub(crate) points: crate::points::PointsPanel,
+    /// The bottom panel's Arama tab: its choices and rows, and the place it marked (search/, docs/adr/0178).
+    pub(crate) search: crate::search::SearchPanel,
     /// Köşe tablosu's rows selected and cell edited (vertices/, docs/adr/0172).
     pub(crate) vertices: crate::vertices::VertexPanel,
     /// The labels the view shows, as last asked of the geometry store (labels.rs).
@@ -768,6 +772,7 @@ impl App {
             props_closed: std::collections::HashSet::new(),
             properties_cache: Default::default(),
             points: Default::default(),
+            search: Default::default(),
             vertices: Default::default(),
             label_spots: Default::default(),
             last_click: None,
@@ -1149,6 +1154,7 @@ impl App {
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
             Message::Points(event) => return self.points_event(event),
+            Message::Search(event) => return self.data_event(event),
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -1721,6 +1727,9 @@ impl App {
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
             // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
             "point.editor" => self.show_bottom(crate::bottom::BottomTab::Points),
+            // Veride ara: the bottom panel's Arama tab, its box taking the keyboard (search/, docs/adr/0178).
+            "data.search" => return self.open_data_search(),
+            "data.unmark" => return self.data_event(crate::search::Event::Unmark),
             crate::catalog::PYTHON_CONSOLE => self.toggle_python(),
             // The navigation commands keep the view they leave (navigation.rs, docs/adr/0141).
             "view.zoomIn" => self.navigating(Self::zoom_in),
@@ -1866,6 +1875,8 @@ impl App {
             }
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            // Only while a place is marked (search/, docs/adr/0178 §6).
+            "data.unmark" => self.data_mark().is_some(),
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),
             "view.next" => self.view_history.can_forward(),

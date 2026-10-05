@@ -16,6 +16,7 @@ export const BOTTOM_TABS: readonly { id: BottomTab; label: string; icon: string 
   { id: 'history', label: 'Komut geçmişi', icon: 'history' },
   { id: 'coords', label: 'Koordinat listesi', icon: 'table' },
   { id: 'points', label: 'Noktalar', icon: 'pointEditor' },
+  { id: 'search', label: 'Arama', icon: 'dataSearch' },
   { id: 'messages', label: 'Uyarılar', icon: 'warning' },
 ];
 

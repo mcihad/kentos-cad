@@ -14,6 +14,7 @@ import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
 import { PointTable } from './PointTable';
+import { SearchPanel } from './SearchPanel';
 import { isEditable } from './vertexEdit';
 import { VERTEX_TEXTS, VertexTable } from './VertexTable';
 import { BOTTOM_TABS, BOTTOM_TEXTS, FOLLOW_WITHIN, ICON_SIZE, LEVEL_ICON, listedIn, logTime } from './logPlan';
@@ -40,6 +41,8 @@ export class BottomPanel extends Component {
   private points: PointTable | null = null;
   /** Köşe tablosu (docs/adr/0172), while the coordinate list shows line work: it follows its object's changes itself. */
   private vertices: VertexTable | null = null;
+  /** Arama, the data search (docs/adr/0178), while its tab is on screen. */
+  private search: SearchPanel | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -123,6 +126,7 @@ export class BottomPanel extends Component {
     this.d.add(() => this.rows?.dispose());
     this.d.add(() => this.points?.dispose());
     this.d.add(() => this.vertices?.dispose());
+    this.d.add(() => this.search?.dispose());
   }
 
   /**
@@ -178,6 +182,8 @@ export class BottomPanel extends Component {
     this.points = null;
     this.vertices?.dispose();
     this.vertices = null;
+    this.search?.dispose();
+    this.search = null;
     this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
@@ -185,6 +191,10 @@ export class BottomPanel extends Component {
     if (tab === 'points') {
       this.points = new PointTable(this.ctx);
       return replaceChildren(this.content, this.points.el);
+    }
+    if (tab === 'search') {
+      this.search = new SearchPanel(this.ctx);
+      return replaceChildren(this.content, this.search.el);
     }
     const entries = this.entriesOf(tab);
     if (!entries.length) {

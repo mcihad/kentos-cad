@@ -113,6 +113,17 @@ pub struct Step {
     pub(super) check: Option<InOrder<bool>>,
     /// Its button with these words, pressed last.
     pub(super) press: Option<String>,
+    /// The bottom panel's open tab, by its title (`Arama`), answered with
+    /// `fill`, `check`, `pick`, `sort`, `row`, `press` and `key`, in that
+    /// order (docs/adr/0178; answers.rs).
+    pub(super) panel: Option<String>,
+    /// Its lists by name, each given the item with these words, in order.
+    pub(super) pick: Option<InOrder<String>>,
+    /// Its table's header, pressed.
+    pub(super) sort: Option<String>,
+    /// Its n-th result row, pressed (1 first); `shift` and `ctrl` held.
+    pub(super) row: Option<usize>,
+    pub(super) ctrl: Option<bool>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -165,6 +176,16 @@ pub struct Expect {
     /// The open window's title; `null` (none) and absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) dialog: Option<Option<String>>,
+    /// The bottom panel's open tab; `null` (closed) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) panel: Option<Option<String>>,
+    /// Arama's count line and rows (Katman, Tür, Alan, Değer joined by “ | ”),
+    /// exact (docs/adr/0178).
+    pub(super) search: Option<SearchExpect>,
+    /// The place the data search's Git marked, east and north of
+    /// `view.center`, within `clickTolerance`; `null` none, and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) mark: Option<Option<[f64; 2]>>,
     /// The digitizing locks holding the next point, as their chips and
     /// the command line say them, in order (docs/adr/0166 §6); `[]` for none.
     pub(super) locks: Option<Vec<String>>,
@@ -183,6 +204,14 @@ pub struct Expect {
     pub(super) current_color: Option<Option<String>>,
     #[serde(default, deserialize_with = "present")]
     pub(super) current_weight: Option<Option<f64>>,
+}
+
+/// Arama as a step sees it: the count line and every row.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SearchExpect {
+    pub(super) count: String,
+    pub(super) rows: Vec<String>,
 }
 
 /// The expected lock: its point (within `clickTolerance`) and its lines in

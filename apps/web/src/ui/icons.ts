@@ -353,6 +353,9 @@ export const ICONS = {
   close: '<path d="m5 5 10 10M15 5 5 15"/>',
   check: '<path d="m4.5 10.5 3.5 3.5 7.5-8"/>',
   search: '<circle cx="8.5" cy="8.5" r="5"/><path d="m12.3 12.3 4.2 4.2"/>',
+  // Veride ara (docs/adr/0178): the drawing's rows, a magnifier over them; İşareti kaldır: the target's mark struck out.
+  dataSearch: '<path d="M2.5 4.5h9M2.5 8.5h5.5M2.5 12.5h4M2.5 16.5h4" stroke-width="1.2"/><circle cx="13" cy="11.5" r="3.6"/><path d="m15.7 14.2 2.3 2.4"/>',
+  markClear: '<circle cx="8.5" cy="8.5" r="4.2"/><path d="M8.5 2v2.8M8.5 12.2V15M2 8.5h2.8M12.2 8.5H15"/><path d="m12.8 12.8 4.7 4.7m0-4.7-4.7 4.7" stroke-width="1.3"/>',
   grip: '<circle cx="7.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="7.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="7.5" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="15" r="1" fill="currentColor" stroke="none"/>',
   columns: '<rect x="3.5" y="3.5" width="5" height="13" rx=".8"/><rect x="11.5" y="3.5" width="5" height="13" rx=".8"/>',
   dock: '<rect x="3" y="3.5" width="14" height="13" rx="1"/><path d="M7.5 3.5v13"/>',

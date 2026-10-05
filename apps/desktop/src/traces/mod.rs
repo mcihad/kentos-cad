@@ -195,6 +195,11 @@ mod tests {
             fill: None,
             check: None,
             press: None,
+            panel: None,
+            pick: None,
+            sort: None,
+            row: None,
+            ctrl: None,
             expect: None,
             note: None,
         });
