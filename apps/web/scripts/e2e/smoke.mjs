@@ -2642,7 +2642,7 @@ try {
       const out = [];
       for (const id of tabIds) {
         await tab(id);
-        out.push(await b.eval(`(() => { const s = document.querySelector('.ribbon__strip'); const levels = [...s.querySelectorAll('.rpanel')].map((p) => Number(p.dataset.level)); return { id: '${id}', over: s.scrollWidth > s.clientWidth + 1, shrunk: levels.some((l) => l > 0) }; })()`));
+        out.push(await b.eval(`(() => { const s = document.querySelector('.ribbon__strip'); const levels = [...s.querySelectorAll('.rpanel')].map((p) => Number(p.dataset.level)); return { id: '${id}', over: s.scrollWidth > s.clientWidth + 1, shrunk: levels.some((l) => l > 0), unlabelled: levels.some((l) => l > 1) }; })()`));
       }
       return out;
     };
@@ -2654,10 +2654,11 @@ try {
     await b.shot('ribbon-1100');
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(300);
+    // Labels stay down to level 1 (small buttons with their labels, three to a column; ui/ribbon/panels.ts).
     check(
       'at 1100 px every tab fits by shrinking its panels; at 1600 px Değiştir keeps its labels',
-      narrow.every((t) => !t.over) && narrow.some((t) => t.shrunk) && wide.every((t) => !t.over) && !wide.find((t) => t.id === 'modify').shrunk,
-      JSON.stringify(narrow.filter((t) => t.over || t.shrunk).map((t) => t.id)),
+      narrow.every((t) => !t.over) && narrow.some((t) => t.shrunk) && wide.every((t) => !t.over) && !wide.find((t) => t.id === 'modify').unlabelled,
+      JSON.stringify({ over: [...narrow, ...wide].filter((t) => t.over).map((t) => t.id), shrunk: narrow.filter((t) => t.shrunk).map((t) => t.id), unlabelled: wide.filter((t) => t.unlabelled).map((t) => t.id) }),
     );
 
     // A selection brings the contextual Seçim tab with its count and summary; clearing it takes the tab away.
