@@ -9,8 +9,10 @@
 //!   LineString → line (two positions) or path; Polygon → area, holes kept,
 //!   the repeated closing position dropped, ring order as written;
 //!   MultiPolygon → one area of the members that read, parts in order
-//!   (docs/adr/0143); MultiPoint, MultiLineString and GeometryCollection →
-//!   one object per member.
+//!   (docs/adr/0143); MultiPoint and MultiLineString → one object of the
+//!   members that read: a multi-point object, a multi-part polyline, a point,
+//!   line or path of one (docs/adr/0174); GeometryCollection → one object
+//!   per member.
 //! - A position's third number is that vertex's elevation, in a line, a path
 //!   or a ring as in a point (docs/adr/0142); a position without one has
 //!   none, even next to positions that have (RFC 7946 lets them mix). The
@@ -347,32 +349,51 @@ impl Shapes<'_> {
                 Nest::Bad(b) => self.bad(*b, "Point"),
                 Nest::List(_) => self.bad(Bad::Invalid, "Point"),
             },
+            // One object of the members that read (docs/adr/0174); a member that
+            // does not read is said and left out.
             "MultiPoint" => match coords {
                 Nest::List(items) => {
-                    self.multi("MultiPoint");
+                    let mut points = Vec::new();
                     for i in items {
                         match i {
                             Nest::Pos(p) => {
                                 self.more(&[*p]);
-                                self.out.push(Shape::Point {
-                                    p: Vec2 { x: p.x, y: p.y },
-                                    z: p.z,
-                                });
+                                points.push((Vec2 { x: p.x, y: p.y }, p.z));
                             }
                             Nest::Bad(b) => self.bad(*b, "o nokta"),
                             Nest::List(_) => self.bad(Bad::Invalid, "o nokta"),
                         }
                     }
+                    match Shape::points(points) {
+                        Some(s) => self.out.push(s),
+                        None if items.is_empty() => {
+                            self.c
+                                .report
+                                .skip("Boş MultiPoint", "noktası yok; alınmadı", self.line)
+                        }
+                        None => {}
+                    }
                 }
                 Nest::Bad(b) => self.bad(*b, "MultiPoint"),
                 Nest::Pos(_) => self.bad(Bad::Invalid, "MultiPoint"),
             },
-            "LineString" => self.line_string(coords),
+            "LineString" => {
+                if let Some(path) = self.path(coords) {
+                    self.out.push(Shape::path(path));
+                }
+            }
+            // One object of the members that read (docs/adr/0174).
             "MultiLineString" => match coords {
                 Nest::List(items) => {
-                    self.multi("MultiLineString");
-                    for i in items {
-                        self.line_string(i);
+                    let paths: Vec<Ring> = items.iter().filter_map(|i| self.path(i)).collect();
+                    match Shape::lines(paths) {
+                        Some(s) => self.out.push(s),
+                        None if items.is_empty() => self.c.report.skip(
+                            "Boş MultiLineString",
+                            "parçası yok; alınmadı",
+                            self.line,
+                        ),
+                        None => {}
                     }
                 }
                 Nest::Bad(b) => self.bad(*b, "MultiLineString"),
@@ -400,30 +421,27 @@ impl Shapes<'_> {
         }
     }
 
-    fn line_string(&mut self, n: &Nest) {
+    /// A LineString's (or a MultiLineString member's) vertices with their
+    /// heights; none, said in the report, when it cannot be a line.
+    fn path(&mut self, n: &Nest) -> Option<Ring> {
         let ps = match positions(n) {
             Ok(ps) => ps,
-            Err(b) => return self.bad(b, "o LineString"),
+            Err(b) => {
+                self.bad(b, "o LineString");
+                return None;
+            }
         };
         self.more(&ps);
-        match ps.as_slice() {
-            [] | [_] => self.c.report.skip(
+        if ps.len() < 2 {
+            self.c.report.skip(
                 "Kısa LineString",
                 "ikiden az konumu var; çizgi olamaz, alınmadı",
                 self.line,
-            ),
-            [a, b] => self.out.push(Shape::Line {
-                a: Vec2 { x: a.x, y: a.y },
-                b: Vec2 { x: b.x, y: b.y },
-                za: a.z,
-                zb: b.z,
-            }),
-            _ => {
-                let pts: Vec<Vec2> = ps.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
-                let path = Ring::new(pts, ps.iter().map(|p| p.z));
-                self.out.push(Shape::Polyline(path));
-            }
+            );
+            return None;
         }
+        let pts: Vec<Vec2> = ps.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
+        Some(Ring::new(pts, ps.iter().map(|p| p.z)))
     }
 
     fn polygon(&mut self, n: &Nest) {

@@ -89,6 +89,18 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                     if let Some(z) = p.z {
                         o.insert("z".into(), json!(z));
                     }
+                    // A multi-point object's other points (docs/adr/0174).
+                    if let Some(parts) = p.parts.as_ref().filter(|p| !p.is_empty()) {
+                        let parts = parts.iter().map(|q| {
+                            let mut m = Map::new();
+                            m.insert("p".into(), xy(q.p));
+                            if let Some(z) = q.z {
+                                m.insert("z".into(), json!(z));
+                            }
+                            Value::Object(m)
+                        });
+                        o.insert("parts".into(), Value::Array(parts.collect()));
+                    }
                     &p.base
                 }
                 Entity::Line(l) => {
@@ -107,6 +119,18 @@ fn canonical(r: &ImportResult, encoding: Option<&str>) -> Value {
                     o.insert("pts".into(), pts(&p.pts));
                     if let Some(z) = &p.zs {
                         o.insert("zs".into(), zs(z));
+                    }
+                    // A multi-part polyline's other parts (docs/adr/0174).
+                    if let Some(parts) = p.parts.as_ref().filter(|p| !p.is_empty()) {
+                        let parts = parts.iter().map(|part| {
+                            let mut m = Map::new();
+                            m.insert("pts".into(), pts(&part.pts));
+                            if let Some(z) = &part.zs {
+                                m.insert("zs".into(), zs(z));
+                            }
+                            Value::Object(m)
+                        });
+                        o.insert("parts".into(), Value::Array(parts.collect()));
                     }
                     &p.base
                 }
@@ -285,7 +309,8 @@ fn the_reports_say_what_was_left_out_and_why() {
     let (r, _) = read_fixture("yollarz");
     let said = r.report.notes.iter().find(|i| i.what == "Sonlu olmayan Z");
     assert_eq!(said.map(|i| i.count), Some(1), "{:?}", r.report.notes);
-    assert_eq!(fact(&r, "Kotlu nesne").as_deref(), Some("4"));
+    // The record of two parts is one object (docs/adr/0174).
+    assert_eq!(fact(&r, "Kotlu nesne").as_deref(), Some("3"));
     // A ring whose closing position holds another height than the first says so; the first's height stays.
     let (r, _) = read_fixture("bare-polygon");
     let said = r

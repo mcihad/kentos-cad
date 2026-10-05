@@ -21,6 +21,15 @@ holes), parts in order. The first part is the object's own `pts`, `zs`, `holes`
 and `holeZs`; the others are listed in `parts`, each an object of the same keys.
 An area of one part has no `parts`.
 
+Multi-part lines and multi-point objects (docs/adr/0174): a MultiLineString is
+one object of the members that read, and so is a Shapefile PolyLine record of its
+parts of two points or more: a line or a path of one, a polyline of more, whose
+first part is its own `pts` and `zs` and the others are listed in `parts` (`pts`,
+`zs`). A MultiPoint and a Shapefile MultiPoint record are one object of their
+points that read: a point of one, else the first point's `p` and `z` and the
+others in `parts` (`p`, `z`). A GeometryCollection's members are still objects
+of their own.
+
     python3 tools/formats/gis.py read PATH [--layer NAME]
 
 PATH is a GeoJSON file or a `.shp`; the .dbf, .prj and .cpg beside a .shp are
@@ -96,6 +105,33 @@ def polygon_geometry(outline, holes):
         if any(elevations(hole) is not None for hole in holes):
             geometry["holeZs"] = [elevations(hole) for hole in holes]
     return geometry
+
+
+def lines_geometry(paths):
+    """One polyline of paths (each of two vertices or more): the first the object's own keys, the others in `parts`."""
+    geometry = path_geometry(paths[0])
+    geometry["parts"] = [path_geometry(path) for path in paths[1:]]
+    return geometry
+
+
+def lines_object(paths):
+    """The one (kind, geometry) of paths that read: a line (two vertices) or a path of one, a multi-part polyline of more; None of none."""
+    if not paths:
+        return None
+    if len(paths) > 1:
+        return "polyline", lines_geometry(paths)
+    return ("line", line_geometry(*paths[0])) if len(paths[0]) == 2 else ("polyline", path_geometry(paths[0]))
+
+
+def points_object(vertices):
+    """The one (kind, geometry) of points that read: a point of one, else the first point's keys and the others in `parts`; None of none."""
+    if not vertices:
+        return None
+    x, y, z = vertices[0]
+    geometry = point_geometry(x, y, z)
+    if len(vertices) > 1:
+        geometry["parts"] = [point_geometry(x, y, z) for x, y, z in vertices[1:]]
+    return "point", geometry
 
 
 def area_geometry(areas):
@@ -265,17 +301,37 @@ def gj_point(coords, target):
         target.add("point", point_geometry(p[0], p[1], p[2] if len(p) > 2 else None))
 
 
-def gj_line_string(coords, target):
+def gj_path(coords):
+    """A LineString's (or a MultiLineString member's) vertices, or None when it gives nothing."""
     if not isinstance(coords, list):
-        return
+        return None
     positions = [position(p) for p in coords]
     if any(p is None for p in positions):
-        return  # a bad position: the whole LineString gives nothing
+        return None  # a bad position: the whole LineString gives nothing
     vertices = [vertex(p) for p in positions]
-    if len(vertices) == 2:
-        target.add("line", line_geometry(*vertices))
-    elif len(vertices) > 2:
-        target.add("polyline", path_geometry(vertices))
+    return vertices if len(vertices) >= 2 else None
+
+
+def gj_line_string(coords, target):
+    path = gj_path(coords)
+    if path is not None:
+        target.add(*lines_object([path]))
+
+
+def gj_multi_line_string(coords, target):
+    """One object of the members that give a path (docs/adr/0174); nothing when none does."""
+    if isinstance(coords, list):
+        obj = lines_object([p for p in (gj_path(member) for member in coords) if p is not None])
+        if obj is not None:
+            target.add(*obj)
+
+
+def gj_multi_point(coords, target):
+    """One object of the members that are positions (docs/adr/0174); nothing when none is."""
+    if isinstance(coords, list):
+        obj = points_object([vertex(p) for p in (position(member) for member in coords) if p is not None])
+        if obj is not None:
+            target.add(*obj)
 
 
 def gj_area(coords):
@@ -307,22 +363,11 @@ def gj_multi_polygon(coords, target):
             target.add("polygon", area_geometry(areas))
 
 
-def gj_each(read):
-    """A Multi* geometry: an array whose members are read on their own, each as the single geometry."""
-
-    def each(coords, target):
-        if isinstance(coords, list):
-            for member in coords:
-                read(member, target)
-
-    return each
-
-
 COORDINATE_READERS = {
     "Point": gj_point,
-    "MultiPoint": gj_each(gj_point),
+    "MultiPoint": gj_multi_point,
     "LineString": gj_line_string,
-    "MultiLineString": gj_each(gj_line_string),
+    "MultiLineString": gj_multi_line_string,
     "Polygon": gj_polygon,
     "MultiPolygon": gj_multi_polygon,
 }
@@ -515,17 +560,13 @@ def shp_objects(content):
         xy = struct.unpack_from(f"<{2 * n}d", content, 40)
         zs = struct.unpack_from(f"<{n}d", content, 40 + 16 * n + 16) if shape_type == 18 else (None,) * n
         points = [(xy[2 * i], xy[2 * i + 1], zs[i]) for i in range(n)]
-        return [("point", point_geometry(x, y, z)) for x, y, z in points if finite(x, y, z)]  # a bad point: that point nothing
+        obj = points_object([p for p in points if finite(*p)])  # a bad point: that point nothing; the others one object (docs/adr/0174)
+        return [obj] if obj is not None else []
     if shape_type in POLYLINES:
-        pairs = []
-        for part in shp_parts(content, shape_type) or []:
-            if not all(finite(x, y) for x, y, _ in part):
-                continue  # a bad point: that part nothing
-            if len(part) == 2:
-                pairs.append(("line", line_geometry(*part)))
-            elif len(part) > 2:
-                pairs.append(("polyline", path_geometry(part)))
-        return pairs
+        # A bad point: that part nothing; a part of fewer than two points nothing; the others one object (docs/adr/0174).
+        paths = [part for part in shp_parts(content, shape_type) or [] if all(finite(x, y) for x, y, _ in part) and len(part) >= 2]
+        obj = lines_object(paths)
+        return [obj] if obj is not None else []
     if shape_type in POLYGONS:
         parts = shp_parts(content, shape_type)
         if not parts or not all(finite(x, y) for part in parts for x, y, _ in part):

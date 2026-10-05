@@ -56,6 +56,8 @@ function canonical(r: ImportResult, encoding?: string): unknown {
     if (e.kind === 'point') {
       o.p = xy(e.p);
       if (e.z !== undefined && e.z !== null) o.z = e.z;
+      // A multi-point object's other points (docs/adr/0174).
+      if (e.parts?.length) o.parts = e.parts.map((q) => ({ p: xy(q.p), ...(q.z != null && { z: q.z }) }));
     } else if (e.kind === 'line') {
       o.a = xy(e.a);
       o.b = xy(e.b);
@@ -65,6 +67,8 @@ function canonical(r: ImportResult, encoding?: string): unknown {
     } else if (e.kind === 'polyline') {
       o.pts = e.pts.map(xy);
       if (e.zs) o.zs = e.zs;
+      // A multi-part polyline's other parts (docs/adr/0174).
+      if (e.parts?.length) o.parts = e.parts.map((part) => ({ pts: part.pts.map(xy), ...(part.zs && { zs: part.zs }) }));
     } else if (e.kind === 'polygon') {
       area(o, e);
       if (e.parts?.length) o.parts = e.parts.map((part) => area({}, part));

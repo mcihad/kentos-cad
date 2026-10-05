@@ -10,8 +10,10 @@
 //! specification defines them: clockwise rings are outlines,
 //! counter-clockwise ones holes of the first outline that contains them (the
 //! rules, which the independent reader in tools/formats/gis.py follows too,
-//! are in docs/adr/0046). A record is one area: several outlines are its
-//! parts, in the record's order (docs/adr/0143).
+//! are in docs/adr/0046). A record is one object: several outlines are an
+//! area's parts (docs/adr/0143), several parts of a PolyLine a polyline's
+//! and the points of a MultiPoint one object's (docs/adr/0174), in the
+//! record's order.
 
 use kentos_contracts::Vec2;
 
@@ -213,6 +215,7 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
             if n > 0 && (m_type || (z_type && block(end, n).is_some_and(|e| e <= c.len()))) {
                 found.m += 1;
             }
+            let mut points = Vec::with_capacity(n.min(1 << 16));
             for i in 0..n {
                 let (Some(x), Some(y)) = (f64_le(c, 40 + 16 * i), f64_le(c, 48 + 16 * i)) else {
                     found.short += 1;
@@ -227,8 +230,9 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                     found.not_finite += 1;
                     continue;
                 }
-                out.push(Shape::Point { p: point(x, y), z });
+                points.push((point(x, y), z));
             }
+            out.extend(Shape::points(points));
         }
         3 | 13 | 23 | 5 | 15 | 25 => {
             let (Some(np), Some(n)) = (
@@ -302,23 +306,17 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                 .collect();
             let finite = |r: &Ring| r.pts.iter().all(|p| p.x.is_finite() && p.y.is_finite());
             if matches!(t, 3 | 13 | 23) {
+                let mut paths = Vec::with_capacity(parts.len());
                 for r in parts {
                     if !finite(&r) {
                         found.not_finite += 1;
-                        continue;
-                    }
-                    match r.pts.as_slice() {
-                        [] | [_] => found.short_parts += 1,
-                        &[a, b] => {
-                            let (za, zb) = match r.zs.as_deref() {
-                                Some([za, zb]) => (*za, *zb),
-                                _ => (None, None),
-                            };
-                            out.push(Shape::Line { a, b, za, zb });
-                        }
-                        _ => out.push(Shape::Polyline(r)),
+                    } else if r.pts.len() < 2 {
+                        found.short_parts += 1;
+                    } else {
+                        paths.push(r);
                     }
                 }
+                out.extend(Shape::lines(paths));
             } else {
                 if !parts.iter().all(finite) {
                     found.not_finite += 1;
@@ -508,8 +506,8 @@ mod tests {
 
     #[test]
     fn the_z_of_lines_and_areas_is_each_vertexs_elevation() {
-        // A PolyLineZ: a part of two points is a line with its two heights, a part of three a path;
-        // a Z that is not a number leaves that vertex without one, and is counted; a 0 is a height.
+        // A PolyLineZ of two parts is one polyline (docs/adr/0174), each part with its heights: a
+        // Z that is not a number leaves that vertex without one, and is counted; a 0 is a height.
         let nan = f64::NAN;
         let record = record_z(
             13,
@@ -520,20 +518,25 @@ mod tests {
         );
         let (mut out, mut found) = (Vec::new(), Found::default());
         shapes(&record, &mut out, &mut found);
+        let [Shape::Lines(paths)] = out.as_slice() else {
+            panic!("{out:?}")
+        };
+        assert_eq!(paths[0].zs, Some(vec![Some(1.5), Some(-2.5)]));
+        assert_eq!(paths[1].zs, Some(vec![Some(10.0), None, Some(0.0)]));
+        assert_eq!((found.z_missing, found.not_finite), (1, 0));
+        // A record of one part of two points is a line with its two heights.
+        let record = record_z(13, &[&[(0.0, 0.0, 1.5), (10.0, 0.0, -2.5)]]);
+        let mut out = Vec::new();
+        shapes(&record, &mut out, &mut Found::default());
         assert_eq!(
-            out[0],
-            Shape::Line {
+            out,
+            [Shape::Line {
                 a: v(0.0, 0.0),
                 b: v(10.0, 0.0),
                 za: Some(1.5),
                 zb: Some(-2.5)
-            }
+            }]
         );
-        let Shape::Polyline(path) = &out[1] else {
-            panic!("{:?}", out[1])
-        };
-        assert_eq!(path.zs, Some(vec![Some(10.0), None, Some(0.0)]));
-        assert_eq!((found.z_missing, found.not_finite), (1, 0));
         // Without a Z block the same shapes are flat.
         let mut flat = record_z(13, &[&[(0.0, 0.0, 1.0), (10.0, 0.0, 2.0)]]);
         flat[..4].copy_from_slice(&3i32.to_le_bytes());

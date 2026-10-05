@@ -1,6 +1,7 @@
 //! What the GIS readers (GeoJSON, Shapefile; docs/adr/0046) share: the four
 //! kinds of object a GIS file holds (a point, a line, a path and an area
-//! with holes, each with the heights the file gave its vertices) made into
+//! with holes, each with the heights the file gave its vertices; an area, a
+//! polyline and a point of several parts, docs/adr/0143, 0174) made into
 //! the app's objects with their attributes, the layers in the order they are
 //! met, the extent, and the object limit. Coordinates are kept as read:
 //! never rounded, reprojected or reordered (CLAUDE.md §5, §23). A height is
@@ -11,7 +12,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{
     AreaPart, Bounds, DeclaredCrs, Entity, EntityBase, ImportLayer, ImportResult, LineEntity,
-    LineType, PathEntity, PointEntity, RingGeometry, Vec2,
+    LineType, PathEntity, PointEntity, PointPart, RingGeometry, Vec2,
 };
 
 use crate::report::Report;
@@ -60,6 +61,14 @@ pub enum Shape {
         zb: Option<f64>,
     },
     Polyline(Ring),
+    /// A polyline of two or more parts, each a path of two vertices or more,
+    /// in the file's order: a MultiLineString, a Shapefile PolyLine record of
+    /// several parts (docs/adr/0174). Made by [`Shape::lines`].
+    Lines(Vec<Ring>),
+    /// A multi-point object of two or more points, each with its height: a
+    /// MultiPoint, a Shapefile MultiPoint record (docs/adr/0174). Made by
+    /// [`Shape::points`].
+    Points(Vec<(Vec2, Option<f64>)>),
     /// An outline and its holes (rings without a repeated closing point).
     Polygon(Ring, Vec<Ring>),
     /// An area of two or more parts, each an outline and its holes, in the
@@ -71,10 +80,44 @@ pub enum Shape {
 impl Shape {
     fn kind(&self) -> &'static str {
         match self {
-            Shape::Point { .. } => "point",
+            Shape::Point { .. } | Shape::Points(_) => "point",
             Shape::Line { .. } => "line",
-            Shape::Polyline(_) => "polyline",
+            Shape::Polyline(_) | Shape::Lines(_) => "polyline",
             Shape::Polygon(..) | Shape::Parts(_) => "polygon",
+        }
+    }
+
+    /// A run of two vertices or more as one object: a line of two, a path of more.
+    pub fn path(r: Ring) -> Shape {
+        match r.pts.as_slice() {
+            &[a, b] => {
+                let (za, zb) = match r.zs.as_deref() {
+                    Some(&[za, zb]) => (za, zb),
+                    _ => (None, None),
+                };
+                Shape::Line { a, b, za, zb }
+            }
+            _ => Shape::Polyline(r),
+        }
+    }
+
+    /// One object of `paths` (each of two vertices or more): none of none, a
+    /// line or a path of one, a multi-part polyline of more (docs/adr/0174).
+    pub fn lines(mut paths: Vec<Ring>) -> Option<Shape> {
+        match paths.len() {
+            0 => None,
+            1 => paths.pop().map(Shape::path),
+            _ => Some(Shape::Lines(paths)),
+        }
+    }
+
+    /// One object of `points`: none of none, a point of one, a multi-point
+    /// object of more (docs/adr/0174).
+    pub fn points(mut points: Vec<(Vec2, Option<f64>)>) -> Option<Shape> {
+        match points.len() {
+            0 => None,
+            1 => points.pop().map(|(p, z)| Shape::Point { p, z }),
+            _ => Some(Shape::Points(points)),
         }
     }
 
@@ -165,6 +208,11 @@ impl Collect {
                 self.extend(*b);
             }
             Shape::Polyline(r) => r.pts.iter().for_each(|p| self.extend(*p)),
+            Shape::Lines(paths) => paths
+                .iter()
+                .flat_map(|r| r.pts.iter())
+                .for_each(|p| self.extend(*p)),
+            Shape::Points(points) => points.iter().for_each(|(p, _)| self.extend(*p)),
             // Holes lie inside their outline.
             Shape::Polygon(r, _) => r.pts.iter().for_each(|p| self.extend(*p)),
             Shape::Parts(parts) => {
@@ -198,6 +246,43 @@ impl Collect {
                 zs: r.zs,
                 parts: None,
             }),
+            // The first path is the polyline's own fields, the others its parts (docs/adr/0174).
+            Shape::Lines(paths) => {
+                let mut paths = paths.into_iter();
+                let Some(r) = paths.next() else {
+                    return;
+                };
+                Entity::Polyline(PathEntity {
+                    base,
+                    pts: r.pts,
+                    bulges: None,
+                    holes: None,
+                    zs: r.zs,
+                    parts: Some(
+                        paths
+                            .map(|r| AreaPart {
+                                pts: r.pts,
+                                bulges: None,
+                                holes: None,
+                                zs: r.zs,
+                            })
+                            .collect(),
+                    ),
+                })
+            }
+            // The first point is the object's own fields, the others its parts (docs/adr/0174).
+            Shape::Points(points) => {
+                let mut points = points.into_iter();
+                let Some((p, z)) = points.next() else {
+                    return;
+                };
+                Entity::Point(PointEntity {
+                    base,
+                    p,
+                    z,
+                    parts: Some(points.map(|(p, z)| PointPart { p, z }).collect()),
+                })
+            }
             Shape::Polygon(r, holes) => Entity::Polygon(PathEntity {
                 base,
                 pts: r.pts,

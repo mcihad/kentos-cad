@@ -560,7 +560,8 @@ SHAPEFILES = {
     "yollarz": dict(
         type=13,  # PolyLineZ (M too), ED50 / TM30
         shapes=[
-            # A part of two points is a line with both heights, a part of four a path (a 0 and a negative height are heights).
+            # A record of a two-point part and a four-point part is one polyline (docs/adr/0174), each part with its
+            # heights (a 0 and a negative height are heights).
             [
                 [(415000.5, 4540000.25, 812.5, 0.0), (415100.75, 4540050.5, 815.25, 1.0)],
                 [(415200.0, 4540100.0, 820.0, 2.0), (415250.5, 4540180.25, 0.0, 3.0), (415330.125, 4540210.0, -1.5, 4.0), (415400.0, 4540300.5, 830.75, 5.0)],
@@ -772,12 +773,12 @@ SUMMARY = {
         "declaredSrid": 4326,
         "objects": [
             {"kind": "point", "layer": "ornek", "p": [32.8597, 39.9334], "z": 938.5, "label": None, "attrs": F1_ATTRS},
-            {"kind": "point", "layer": "ornek", "p": [28.9784, 41.0082], "z": 39.25, "attrs": F2_ATTRS},
-            {"kind": "point", "p": [29.0277, 41.0422], "z": None, "attrs": F2_ATTRS},
+            # A MultiPoint is one object of its points (docs/adr/0174); the second has no height.
+            {"kind": "point", "layer": "ornek", "p": [28.9784, 41.0082], "z": 39.25, "parts": [{"p": [29.0277, 41.0422]}], "attrs": F2_ATTRS},
             {"kind": "line", "a": [27.1428, 38.4237], "b": [27.2, 38.46], "attrs": {"tur": "yol"}},
             {"kind": "polyline", "pts": [[30.7133, 36.8969], [30.72, 36.9], [30.7288, 36.8841], [30.74, 36.89]], "zs": [None, 12.5, None, None], "attrs": {}},
-            {"kind": "line", "a": [35.4787, 38.7312], "b": [35.49, 38.74], "attrs": {"tur": "dere"}},
-            {"kind": "polyline", "pts": [[35.5, 38.75], [35.51, 38.76], [35.52, 38.755]], "attrs": {"tur": "dere"}},
+            # A MultiLineString is one polyline of its members, its first of two points (docs/adr/0174).
+            {"kind": "polyline", "pts": [[35.4787, 38.7312], [35.49, 38.74]], "zs": None, "parts": [{"pts": [[35.5, 38.75], [35.51, 38.76], [35.52, 38.755]]}], "attrs": {"tur": "dere"}},
             {
                 "kind": "polygon",
                 "pts": [[32.4, 37.8], [32.6, 37.8], [32.6, 37.95], [32.4, 37.95]],
@@ -813,8 +814,15 @@ SUMMARY = {
                 "attrs": {"ada": "101", "parsel": "5", "alan": "2345.678", "mahalle": "Çamlıbel"},
             },
             {"kind": "polygon", "layer": "Bina", "label": "B-1", "pts": [[486545.125, 4420215.25], [486555.875, 4420215.25], [486555.875, 4420228.5], [486545.125, 4420228.5]], "holes": None, "attrs": {"kat": "4", "yapi": "betonarme"}},
-            {"kind": "point", "layer": "tm", "label": None, "p": [486512.3456789, 4420187.12345678], "z": 1021.345, "attrs": {"tur": "poligon noktası"}},
-            {"kind": "point", "layer": "tm", "p": [486562.3456789, 4420187.12345678], "z": 1019.8765},
+            {
+                "kind": "point",
+                "layer": "tm",
+                "label": None,
+                "p": [486512.3456789, 4420187.12345678],
+                "z": 1021.345,
+                "parts": [{"p": [486562.3456789, 4420187.12345678], "z": 1019.8765}],
+                "attrs": {"tur": "poligon noktası"},
+            },
             {"kind": "point", "layer": "Bina", "label": None, "p": [486550.0, 4420215.5], "z": None, "attrs": {"ad": "kapı"}},
         ],
     },
@@ -841,15 +849,13 @@ SUMMARY = {
     "nonfinite": {
         "declaredSrid": 4326,
         "objects": [
-            {"kind": "point", "p": [30.0, 40.0], "z": None, "attrs": {"ad": "coklu nokta", "buyuk": "1e999"}},
-            {"kind": "point", "p": [30.2, 40.2], "z": 0.0, "attrs": {"ad": "coklu nokta", "buyuk": "1e999"}},
+            {"kind": "point", "p": [30.0, 40.0], "z": None, "parts": [{"p": [30.2, 40.2], "z": 0.0}], "attrs": {"ad": "coklu nokta", "buyuk": "1e999"}},
             {"kind": "line", "a": [31.0, 40.5], "b": [31.1, 40.6], "attrs": {"ad": "koleksiyon"}},
             {"kind": "polyline", "pts": [[32.2, 41.2], [32.3, 41.3], [32.4, 41.2]], "attrs": {"ad": "coklu cizgi"}},
             {"kind": "polygon", "pts": [[34.5, 40.5], [34.7, 40.5], [34.7, 40.7]], "holes": None, "attrs": {"ad": "coklu cokgen"}},
             {"kind": "point", "p": [35.0, 39.5], "attrs": {"ad": "nokta"}},
             {"kind": "point", "p": [35.5, 39.6], "z": 12.5, "attrs": {"ad": "dorduncu sayi"}},
-            {"kind": "point", "p": [36.0, 40.0], "z": None, "attrs": {"ad": "bozuk konumlar"}},
-            {"kind": "point", "p": [36.4, 40.4], "z": None, "attrs": {"ad": "bozuk konumlar"}},
+            {"kind": "point", "p": [36.0, 40.0], "z": None, "parts": [{"p": [36.4, 40.4]}], "attrs": {"ad": "bozuk konumlar"}},
             {"kind": "point", "p": [37.0, 41.0], "z": None, "attrs": {"ad": "bozuk uyeler"}},
         ],
     },
@@ -866,8 +872,14 @@ SUMMARY = {
         "declaredSrid": 2320,
         "encoding": "UTF-8",
         "objects": [
-            {"kind": "line", "layer": "yollar", "a": [415000.5, 4540000.25], "b": [415100.75, 4540050.5], "attrs": YOL[0]},
-            {"kind": "polyline", "pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]], "attrs": YOL[0]},
+            # A record of two parts is one polyline (docs/adr/0174), its first part of two points.
+            {
+                "kind": "polyline",
+                "layer": "yollar",
+                "pts": [[415000.5, 4540000.25], [415100.75, 4540050.5]],
+                "parts": [{"pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]]}],
+                "attrs": YOL[0],
+            },
             {"kind": "polyline", "pts": [[415600.0, 4540500.0], [415650.25, 4540575.5], [415700.5, 4540600.0]], "attrs": YOL[1]},
         ],
     },
@@ -903,11 +915,16 @@ SUMMARY = {
         "declaredSrid": None,
         "encoding": "ISO-8859-9",
         "objects": [
-            {"kind": "point", "layer": "kuyular", "p": [452001.25, 4401002.5], "z": 850.75, "attrs": KUYU[0]},
-            {"kind": "point", "p": [452010.5, 4401020.0], "z": 851.0, "attrs": KUYU[0]},
-            {"kind": "point", "p": [452030.0, 4401005.75], "z": 849.5, "attrs": KUYU[0]},
-            {"kind": "point", "p": [452100.0, 4401100.0], "z": 860.25, "attrs": KUYU[1]},
-            {"kind": "point", "p": [452120.5, 4401130.5], "z": 861.5, "attrs": KUYU[1]},
+            # A MultiPointZ record is one object of its points, each with its height (docs/adr/0174).
+            {
+                "kind": "point",
+                "layer": "kuyular",
+                "p": [452001.25, 4401002.5],
+                "z": 850.75,
+                "parts": [{"p": [452010.5, 4401020.0], "z": 851.0}, {"p": [452030.0, 4401005.75], "z": 849.5}],
+                "attrs": KUYU[0],
+            },
+            {"kind": "point", "p": [452100.0, 4401100.0], "z": 860.25, "parts": [{"p": [452120.5, 4401130.5], "z": 861.5}], "attrs": KUYU[1]},
         ],
     },
     "karisik": {
@@ -942,11 +959,13 @@ SUMMARY = {
         "declaredSrid": 2320,
         "encoding": "Windows-1254",
         "objects": [
-            {"kind": "line", "layer": "yollarz", "a": [415000.5, 4540000.25], "b": [415100.75, 4540050.5], "za": 812.5, "zb": 815.25, "attrs": YOLZ[0]},
+            # A record of two parts is one polyline (docs/adr/0174): each part keeps its heights.
             {
                 "kind": "polyline",
-                "pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]],
-                "zs": [820.0, 0.0, -1.5, 830.75],
+                "layer": "yollarz",
+                "pts": [[415000.5, 4540000.25], [415100.75, 4540050.5]],
+                "zs": [812.5, 815.25],
+                "parts": [{"pts": [[415200.0, 4540100.0], [415250.5, 4540180.25], [415330.125, 4540210.0], [415400.0, 4540300.5]], "zs": [820.0, 0.0, -1.5, 830.75]}],
                 "attrs": YOLZ[0],
             },
             {"kind": "polyline", "pts": [[415600.0, 4540500.0], [415650.25, 4540575.5], [415700.5, 4540600.0]], "zs": [900.0, None, 905.5], "attrs": YOLZ[1]},
@@ -979,8 +998,14 @@ SUMMARY = {
                 "zs": [None, 55.5, None, 57.25],
                 "attrs": {"tur": "karisik konumlar"},
             },
-            {"kind": "polyline", "pts": [[486700.0, 4420300.0], [486710.0, 4420310.0], [486720.0, 4420320.0]], "zs": [100.0, 101.5, 103.0], "attrs": {"tur": "coklu cizgi, bir uyesi kotlu"}},
-            {"kind": "polyline", "pts": [[486730.0, 4420330.0], [486740.0, 4420340.0], [486750.0, 4420350.0]], "zs": None, "attrs": {"tur": "coklu cizgi, bir uyesi kotlu"}},
+            # One polyline of both members (docs/adr/0174): the second part has no heights.
+            {
+                "kind": "polyline",
+                "pts": [[486700.0, 4420300.0], [486710.0, 4420310.0], [486720.0, 4420320.0]],
+                "zs": [100.0, 101.5, 103.0],
+                "parts": [{"pts": [[486730.0, 4420330.0], [486740.0, 4420340.0], [486750.0, 4420350.0]]}],
+                "attrs": {"tur": "coklu cizgi, bir uyesi kotlu"},
+            },
             {
                 "kind": "polygon",
                 "layer": "Parsel",
@@ -1015,9 +1040,9 @@ SUMMARY = {
 }
 
 KEYS = {
-    "point": ("kind", "layer", "p", "z", "label", "attrs"),
+    "point": ("kind", "layer", "p", "z", "parts", "label", "attrs"),
     "line": ("kind", "layer", "a", "b", "za", "zb", "label", "attrs"),
-    "polyline": ("kind", "layer", "pts", "zs", "label", "attrs"),
+    "polyline": ("kind", "layer", "pts", "zs", "parts", "label", "attrs"),
     "polygon": ("kind", "layer", "pts", "zs", "holes", "holeZs", "parts", "label", "attrs"),
 }
 

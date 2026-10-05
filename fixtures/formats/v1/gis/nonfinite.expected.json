@@ -8,19 +8,15 @@
     30.0,
     40.0
    ],
-   "attrs": {
-    "ad": "coklu nokta",
-    "buyuk": "1e999"
-   }
-  },
-  {
-   "kind": "point",
-   "layer": "nonfinite",
-   "p": [
-    30.2,
-    40.2
+   "parts": [
+    {
+     "p": [
+      30.2,
+      40.2
+     ],
+     "z": 0.0
+    }
    ],
-   "z": 0.0,
    "attrs": {
     "ad": "coklu nokta",
     "buyuk": "1e999"
@@ -113,16 +109,13 @@
     36.0,
     40.0
    ],
-   "attrs": {
-    "ad": "bozuk konumlar"
-   }
-  },
-  {
-   "kind": "point",
-   "layer": "nonfinite",
-   "p": [
-    36.4,
-    40.4
+   "parts": [
+    {
+     "p": [
+      36.4,
+      40.4
+     ]
+    }
    ],
    "attrs": {
     "ad": "bozuk konumlar"
