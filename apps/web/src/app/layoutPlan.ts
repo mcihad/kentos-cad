@@ -11,7 +11,7 @@
  */
 
 export type Theme = 'dark' | 'light';
-export type BottomTab = 'history' | 'coords' | 'points' | 'messages';
+export type BottomTab = 'history' | 'coords' | 'points' | 'search' | 'messages';
 export type DockTab = 'layers' | 'processing' | 'blocks' | 'templates';
 export type ProcessingTab = 'tools' | 'history';
 
@@ -83,7 +83,7 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   layersFraction: { kind: 'number', min: LAYERS_FRACTION.min, max: LAYERS_FRACTION.max },
   bottomExpanded: { kind: 'boolean' },
   bottomHeight: { kind: 'number', min: BOTTOM_HEIGHT.min },
-  bottomTab: { kind: 'enum', values: ['history', 'coords', 'points', 'messages'] },
+  bottomTab: { kind: 'enum', values: ['history', 'coords', 'points', 'search', 'messages'] },
   dockTab: { kind: 'enum', values: ['layers', 'processing', 'blocks', 'templates'] },
   processingTab: { kind: 'enum', values: ['tools', 'history'] },
   processingFolded: { kind: 'texts' },

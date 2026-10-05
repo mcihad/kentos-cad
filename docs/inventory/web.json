@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 315,
-      "implemented": 303,
+      "total": 317,
+      "implemented": 305,
       "partial": 0,
       "pending": 12
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 97,
-      "implemented": 97,
+      "total": 98,
+      "implemented": 98,
       "partial": 0,
       "pending": 0
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 243,
+    "commandsOnDesktop": 245,
     "desktop": {
       "commands": {
-        "total": 315,
-        "implemented": 243,
+        "total": 317,
+        "implemented": 245,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 97,
-        "implemented": 79,
+        "total": 98,
+        "implemented": 80,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -1057,6 +1057,87 @@
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs"
+      ]
+    },
+    {
+      "id": "data.search",
+      "title": "Veride ara",
+      "short": "Ara",
+      "category": "Görünüm",
+      "icon": "dataSearch",
+      "description": "Alt panelin Arama sekmesi: bütün katmanlarda nesnelerin etiketinde (nokta adı, parsel numarası), yazısında, blok adında ve özniteliklerinde arar; * herhangi bir dizidir. Satıra tıklamak nesneyi seçer ve ona yakınlaşır. Y,X yazarsanız Git görünümü o koordinata getirir ve işaretler.",
+      "aliases": [
+        "VERIARA",
+        "ARAMA",
+        "VA",
+        "KOORDINATAGIT",
+        "GITXY",
+        "LOCATE"
+      ],
+      "kind": "action",
+      "shortcuts": [
+        "Ctrl+F"
+      ],
+      "shortcutsInInput": [
+        "Ctrl+F"
+      ],
+      "menus": [
+        "Düzen › Bul",
+        "Görünüm › Paneller"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Bul",
+        "CAD › Görünüm › Paneller",
+        "CBS › Veri › Ara",
+        "CBS › Görünüm › Paneller"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/bottom/SearchPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
+    },
+    {
+      "id": "data.unmark",
+      "title": "İşareti kaldır",
+      "category": "Görünüm",
+      "icon": "markClear",
+      "description": "Koordinata git’in çizimde bıraktığı işareti (artı ve halka) kaldırır.",
+      "aliases": [
+        "ISARETKALDIR",
+        "UNMARK"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Bul",
+        "Görünüm › Paneller"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Bul",
+        "CAD › Görünüm › Paneller",
+        "CBS › Veri › Ara",
+        "CBS › Görünüm › Paneller"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/data-search.json"
       ]
     },
     {
@@ -9978,6 +10059,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/bottom/PointTable.ts",
+        "apps/web/src/ui/bottom/SearchPanel.ts",
         "apps/web/src/ui/ribbon/panels.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
@@ -19283,6 +19365,18 @@
       "desktopWhere": "apps/desktop/src/points/ (ADR 0153)"
     },
     {
+      "id": "apps/web/src/ui/bottom/SearchPanel.ts#SearchPanel",
+      "name": "SearchPanel",
+      "role": "panel",
+      "source": "apps/web/src/ui/bottom/SearchPanel.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/search/ (ADR 0178)"
+    },
+    {
       "id": "apps/web/src/ui/bottom/VertexTable.ts#VertexTable",
       "name": "VertexTable",
       "role": "panel",
@@ -20455,6 +20549,8 @@
           {
             "label": "Bul",
             "items": [
+              "data.search",
+              "data.unmark",
               "text.findReplace"
             ]
           },
@@ -20496,6 +20592,8 @@
               "view.rightPanel",
               "view.bottomPanel",
               "view.coords",
+              "data.search",
+              "data.unmark",
               "view.keyTips",
               "view.fullscreen"
             ]
@@ -21677,6 +21775,22 @@
             "keep": false
           },
           {
+            "label": "Ara",
+            "icon": "dataSearch",
+            "items": [
+              {
+                "command": "data.search",
+                "size": "large"
+              },
+              {
+                "command": "data.unmark",
+                "size": "large"
+              }
+            ],
+            "overflow": [],
+            "keep": false
+          },
+          {
             "label": "Dosya alışverişi",
             "icon": "import",
             "items": [
@@ -22668,6 +22782,14 @@
               },
               {
                 "command": "view.coords",
+                "size": "small"
+              },
+              {
+                "command": "data.search",
+                "size": "small"
+              },
+              {
+                "command": "data.unmark",
                 "size": "small"
               },
               {
@@ -24114,6 +24236,22 @@
               ],
               "overflow": [],
               "keep": false
+            },
+            {
+              "label": "Bul",
+              "icon": "dataSearch",
+              "items": [
+                {
+                  "command": "data.search",
+                  "size": "large"
+                },
+                {
+                  "command": "data.unmark",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
             }
           ]
         },
@@ -24519,6 +24657,14 @@
                 },
                 {
                   "command": "view.coords",
+                  "size": "small"
+                },
+                {
+                  "command": "data.search",
+                  "size": "small"
+                },
+                {
+                  "command": "data.unmark",
                   "size": "small"
                 },
                 {
@@ -25754,6 +25900,22 @@
               "keep": false
             },
             {
+              "label": "Ara",
+              "icon": "dataSearch",
+              "items": [
+                {
+                  "command": "data.search",
+                  "size": "large"
+                },
+                {
+                  "command": "data.unmark",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Dosya alışverişi",
               "icon": "import",
               "items": [
@@ -26748,6 +26910,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "data.search",
+                  "size": "small"
+                },
+                {
+                  "command": "data.unmark",
+                  "size": "small"
+                },
+                {
                   "command": "view.keyTips",
                   "size": "small"
                 },
@@ -27356,6 +27526,8 @@
     "close": "<path d=\"m5 5 10 10M15 5 5 15\"/>",
     "check": "<path d=\"m4.5 10.5 3.5 3.5 7.5-8\"/>",
     "search": "<circle cx=\"8.5\" cy=\"8.5\" r=\"5\"/><path d=\"m12.3 12.3 4.2 4.2\"/>",
+    "dataSearch": "<path d=\"M2.5 4.5h9M2.5 8.5h5.5M2.5 12.5h4M2.5 16.5h4\" stroke-width=\"1.2\"/><circle cx=\"13\" cy=\"11.5\" r=\"3.6\"/><path d=\"m15.7 14.2 2.3 2.4\"/>",
+    "markClear": "<circle cx=\"8.5\" cy=\"8.5\" r=\"4.2\"/><path d=\"M8.5 2v2.8M8.5 12.2V15M2 8.5h2.8M12.2 8.5H15\"/><path d=\"m12.8 12.8 4.7 4.7m0-4.7-4.7 4.7\" stroke-width=\"1.3\"/>",
     "grip": "<circle cx=\"7.5\" cy=\"5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12.5\" cy=\"5\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.5\" cy=\"10\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12.5\" cy=\"10\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"7.5\" cy=\"15\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12.5\" cy=\"15\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
     "columns": "<rect x=\"3.5\" y=\"3.5\" width=\"5\" height=\"13\" rx=\".8\"/><rect x=\"11.5\" y=\"3.5\" width=\"5\" height=\"13\" rx=\".8\"/>",
     "dock": "<rect x=\"3\" y=\"3.5\" width=\"14\" height=\"13\" rx=\"1\"/><path d=\"M7.5 3.5v13\"/>",

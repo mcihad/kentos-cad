@@ -87,6 +87,7 @@ mod saving;
 mod screen_scale;
 #[cfg(test)]
 mod screens;
+mod search;
 mod second_crs;
 mod selecting;
 mod settings;

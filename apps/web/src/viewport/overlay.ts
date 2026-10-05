@@ -335,6 +335,38 @@ export function drawMarkedVertices(g: CanvasRenderingContext2D, pts: readonly Ve
   g.restore();
 }
 
+/**
+ * The place Koordinata git marked (docs/adr/0178 §6): an accent ring with four ticks and a dot in it, on a halo so it
+ * shows on any drawing, its coordinates written below it on the right.
+ */
+export function drawSearchMark(g: CanvasRenderingContext2D, p: Vec2, label: string, cam: Camera, pal: CanvasPalette): void {
+  const s = cam.worldToScreen(p);
+  const [x, y] = [Math.round(s.x) + 0.5, Math.round(s.y) + 0.5];
+  g.save();
+  const shape = (width: number, color: string) => {
+    g.lineWidth = width;
+    g.strokeStyle = color;
+    g.beginPath();
+    g.moveTo(x + 8, y);
+    g.arc(x, y, 8, 0, Math.PI * 2);
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      g.moveTo(x + dx * 8, y + dy * 8);
+      g.lineTo(x + dx * 15, y + dy * 15);
+    }
+    g.stroke();
+  };
+  shape(4, pal.labelHalo);
+  shape(2, pal.accent);
+  g.fillStyle = pal.accent;
+  g.beginPath();
+  g.arc(x, y, 2, 0, Math.PI * 2);
+  g.fill();
+  g.font = `600 11px ${pal.font}`;
+  g.textBaseline = 'top';
+  haloText(g, label, x + 12, y + 12, pal.accent, pal.labelHalo);
+  g.restore();
+}
+
 /** The snap marker; `label` is what it says instead of its kind's name (“Uzantı 12.063 m”, docs/adr/0163 §2). */
 export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera, pal: CanvasPalette, label?: string): void {
   const s = cam.worldToScreen(hit.point);

@@ -875,3 +875,126 @@
 .ptable__chip[hidden] {
   display: none;
 }
+
+/* ── Arama (docs/adr/0178): the point editor's bar and table, with the search's choices and a place's bar ── */
+.dsearch__input {
+  width: calc(250px * var(--ui-scale));
+}
+/* The second line of the bar: the fields asked for and the options. */
+.dsearch__choices {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+}
+.dsearch__fields {
+  gap: 6px;
+}
+.dsearch__bar-label {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* A field asked for: pressed. */
+.dsearch__chip {
+  display: inline-flex;
+  align-items: center;
+  height: calc(24px * var(--ui-scale));
+  padding: 0 10px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: none;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dsearch__chip:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.dsearch__chip[aria-pressed='true'] {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  font-weight: 600;
+}
+.dsearch__chip[aria-pressed='true']:hover {
+  background: var(--c-accent-line);
+}
+.dsearch__chip:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+.dsearch__attr:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+/* Koordinata git: the place typed with Git, the place marked with İşareti kaldır. */
+.dsearch__banner {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 28px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--c-line);
+  background: var(--c-accent-soft);
+}
+.dsearch__banner[hidden],
+.dsearch__bar-group[hidden] {
+  display: none;
+}
+.dsearch__bar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dsearch__place {
+  color: var(--c-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dsearch .dsearch__table {
+  table-layout: fixed;
+  min-width: calc(600px * var(--ui-scale));
+}
+.dsearch__th--0 {
+  width: calc(56px * var(--ui-scale));
+}
+.dsearch__th--1 {
+  width: 24%;
+}
+.dsearch__th--2 {
+  width: 12%;
+}
+.dsearch__th--3 {
+  width: 17%;
+}
+.dsearch td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dsearch tbody td:nth-child(2) {
+  font-weight: 400;
+}
+.dsearch__layer .icon {
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -2px;
+  color: var(--c-text-3);
+}
+.dsearch__field {
+  color: var(--c-text-2);
+}
+.dsearch__value {
+  font-weight: 500;
+}
+/* A hidden layer's rows are quiet, as its row in Katmanlar is. */
+.dsearch tbody tr.dsearch__row--quiet td {
+  color: var(--c-text-3);
+}

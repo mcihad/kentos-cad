@@ -8,6 +8,8 @@ export class Selection {
   readonly hover = new Signal<number | null>(null);
   /** The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3): ringed in the drawing. */
   readonly vertices = new Signal<readonly Vec2[]>([]);
+  /** The place Koordinata git marked (docs/adr/0178 §6): a cross and ring over the drawing, not part of it. */
+  readonly mark = new Signal<Vec2 | null>(null);
 
   get size(): number {
     return this.ids.value.size;

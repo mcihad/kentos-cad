@@ -59,8 +59,10 @@ export class Camera implements ViewTransform {
   fit(b: Bounds, paddingPx = 48): void {
     const w = Math.max(b.maxX - b.minX, 1e-6);
     const h = Math.max(b.maxY - b.minY, 1e-6);
-    const sx = (this.width - paddingPx * 2) / w;
-    const sy = (this.height - paddingPx * 2) / h;
+    // A view smaller than its padding (a tall bottom panel in a short window) still shows the box: at most a quarter of a side.
+    const pad = Math.min(paddingPx, this.width / 4, this.height / 4);
+    const sx = (this.width - pad * 2) / w;
+    const sy = (this.height - pad * 2) / h;
     this.scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.min(sx, sy)));
     this.center = { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
     this.bump();

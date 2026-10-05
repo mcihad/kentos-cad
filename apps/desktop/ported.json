@@ -89,6 +89,8 @@
     "view.bottomPanel",
     "view.coords",
     "point.editor",
+    "data.search",
+    "data.unmark",
     "edit.cut",
     "edit.copy",
     "edit.paste",

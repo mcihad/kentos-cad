@@ -285,6 +285,12 @@ pub struct Observation {
     pub track: Option<TrackSeen>,
     /// The open window's title (answers.rs).
     pub dialog: Option<String>,
+    /// The bottom panel's open tab, by its title (docs/adr/0178).
+    pub panel: Option<String>,
+    /// Arama's count line and rows, while its tab is open.
+    pub search: Option<(String, Vec<String>)>,
+    /// The place the data search marked, absolute.
+    pub mark: Option<[f64; 2]>,
     /// The digitizing locks' words (docs/adr/0166 §6).
     pub locks: Vec<String>,
     /// The active layer's groups and name (docs/adr/0176 §3).
@@ -487,6 +493,10 @@ impl<'a> Player<'a> {
                 .get(id)
                 .ok_or(format!("{id}: böyle bir komut yok"))?;
             return self.apply(Message::Run(command.id));
+        }
+        // The bottom panel's Arama tab, answered by its controls (docs/adr/0178).
+        if let Some(title) = &step.panel {
+            return self.answer_panel(title, step);
         }
         if let Some(key) = &step.key {
             // Yazı's field over the drawing: Enter keeps what is typed (its text box's submit).
@@ -732,6 +742,72 @@ impl<'a> Player<'a> {
         Ok(())
     }
 
+    /// A `panel` step (docs/adr/0178): the Arama tab is open; its box is
+    /// filled, its field buttons and boxes set, its lists given an item, a
+    /// header and a row pressed, a button pressed and a key sent to the box,
+    /// each through the message the control sends (search/mod.rs).
+    fn answer_panel(&mut self, title: &str, step: &Step) -> Result<(), String> {
+        if title != crate::log_plan::TAB_SEARCH {
+            return Err(format!("“{title}” sekmesi izden yanıtlanamıyor"));
+        }
+        if self.app.bottom_tab_title() != Some(title) {
+            let open = self
+                .app
+                .bottom_tab_title()
+                .map_or_else(|| "yok".to_owned(), |t| format!("“{t}”"));
+            return Err(format!("“{title}” sekmesi açık değil (açık: {open})"));
+        }
+        let mut controls: Vec<Control<'_>> = step
+            .fill
+            .iter()
+            .flat_map(|f| f.0.iter())
+            .map(|(label, text)| Control::Fill(label, text))
+            .collect();
+        controls.extend(
+            step.check
+                .iter()
+                .flat_map(|c| c.0.iter())
+                .map(|(words, on)| Control::Check(words, *on)),
+        );
+        controls.extend(
+            step.pick
+                .iter()
+                .flat_map(|p| p.0.iter())
+                .map(|(list, item)| Control::Pick(list, item)),
+        );
+        controls.extend(step.sort.as_deref().map(Control::Sort));
+        controls.extend(step.row.map(Control::Row));
+        controls.extend(step.press.as_deref().map(Control::Press));
+        controls.extend(step.key.as_deref().map(Control::Key));
+        for control in controls {
+            let Some(message) = self.app.data_control(control)? else {
+                continue;
+            };
+            // A row is pressed with the keys the step holds.
+            let held = match control {
+                Control::Row(_) => {
+                    let mut held = Modifiers::empty();
+                    if step.shift == Some(true) {
+                        held |= Modifiers::SHIFT;
+                    }
+                    if step.ctrl == Some(true) {
+                        held |= Modifiers::CTRL;
+                    }
+                    held
+                }
+                _ => Modifiers::empty(),
+            };
+            if !held.is_empty() {
+                self.apply(Message::Modifiers(held))?;
+            }
+            self.apply(message)?;
+            if !held.is_empty() {
+                self.apply(Message::Modifiers(Modifiers::empty()))?;
+            }
+        }
+        Ok(())
+    }
+
     /// A mouse event through the drawing area's own gesture code.
     fn mouse(&mut self, event: mouse::Event, cursor: mouse::Cursor) -> Result<(), String> {
         self.clock += Duration::from_millis(1);
@@ -870,6 +946,9 @@ impl<'a> Player<'a> {
                         .collect(),
                 }),
             dialog: app.dialog_title(),
+            panel: app.bottom_tab_title().map(str::to_owned),
+            search: app.data_seen(),
+            mark: app.data_mark().map(|p| [p.x, p.y]),
             active_layer: doc.map_or_else(Vec::new, |d| {
                 let layers = d.model.layers();
                 let mut names = Vec::new();
@@ -958,6 +1037,8 @@ fn describe(step: &Step) -> String {
         format!("focus {target}")
     } else if step.save_and_reopen.is_some() {
         "saveAndReopen".to_owned()
+    } else if let Some(title) = &step.panel {
+        format!("panel {title}")
     } else if let Some(title) = &step.dialog {
         let press = step
             .press

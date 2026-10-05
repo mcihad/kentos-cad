@@ -66,6 +66,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (kategoriler, arama, son kullanılanlar, tıklayınca çizer); Şablon düzenleyici ve Seçili nesneden şablon; grup şablonu (üyeleri: aynı
   geometri, öteleme, köşelere nokta, ağırlık merkezinde yazı; ana nesneyle tek adımda); Şablonu uygula (seçili nesnelere, `template.apply`) (ADR 0176);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
+  veride arama: alt panelin Arama sekmesi (Ctrl+F, `data.search`): bütün katmanlarda nesnelerin etiketi, yazısı, blok adı ve öznitelik değerleri, alanlar
+  düğmelerle seçilir, `*` kalıbı, Büyük küçük harf ve Tam sözcük, kapsam (bütün katmanlar, bir katman, yalnız seçim), satırdan yakınlaş ve seç, Hepsini seç;
+  `Y,X` (CAD'de `X,Y`) yazılınca Git görünümü koordinata getirir ve çizimde kaydedilmeyen bir işaret koyar, İşareti kaldır (`data.unmark`) (ADR 0178);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
   Vektör oturtma: kontrol noktalarından Helmert, afin ya da projektif dönüşüm, artıklar ve m0, Adla eşle, Kullan ile çift çıkarma,
@@ -222,6 +225,7 @@ python3 scripts/fixtures/topology_cases.py --check   # Topolojik temizliğin dur
 python3 scripts/fixtures/polygonize_cases.py --check   # Toplu alan'ın durumlarını (bölgeler, adalar, etiketler, var olan alan, boşta uçlar) kesin kesirlerle kurallardan denetle (ADR 0151)
 python3 scripts/fixtures/vertex_points_cases.py --check   # Köşelere nokta'nın durumlarını (paylaşılan köşe, var olan nokta, kot, ad artımı) kurallardan denetle (ADR 0152)
 python3 scripts/fixtures/label_text_cases.py --check   # Etiketleri yazıya çevir'in kuralını (dört yerleşim, büyüme ve üst sınır, ölçek aralığı, en küçük nesne, okunur yön, 8 px'lik hücrelerle inceltme) kesirle bağımsız başvurudan denetle (ADR 0175)
+python3 scripts/fixtures/data_search_cases.py --check   # Veride ara'nın eşleşmesini (Türkçe katlama, `*`, Tam sözcük), alan seçimini, “+n” sayısını, sıralamayı, sınırı, nesneden kaydı ve öznitelik adlarını KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/search/v1/cases.json (ADR 0178)
 python3 scripts/fixtures/template_layer_cases.py --check   # nesne şablonunun katmanını bulma ve açma kuralını (yol tercihi, kilitli grup, açılacak gruplar) kurallardan denetle; durumlar fixtures/style/v1/template-layers.json (ADR 0176 §3)
 python3 scripts/fixtures/template_from_object_cases.py --check   # Seçili nesneden şablon'u (araç, katman yolu ve görünüşü, noktanın adı ve kodu, yazının kâğıttaki yüksekliği, bloğun adı, retler) kesirle kurallardan denetle; durumlar fixtures/style/v1/template-from-object.json (ADR 0176 §4)
 python3 scripts/fixtures/template_form_cases.py --check   # Şablon düzenleyicinin form kuralını (alanlar, öznitelik satırları, yazı ve blok, grup şablonunun üye satırları) kurallardan denetle; durumlar fixtures/style/v1/template-form.json (ADR 0176 §4, §5)
@@ -876,6 +880,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (Kopyasını oluştur ve Katmanları birleştir: web `app/layerActions.ts`, `ui/layers/MergeLayersDialog.ts`, masaüstü `layer_merge.rs`;
   ortak iz `layer-merge.json`) tamam.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
+  `HYB-22` veride arama ([ADR 0178](docs/adr/0178-data-search.md)) tek parça, iki platformda bitti (5 Ekim): çekirdek `text::edit::matches` ve
+  `ops::data_search` (bağımsız başvuru `data_search_cases.py`, ortak `fixtures/search/v1`), web `ui/bottom/SearchPanel.ts` ve `model/dataSearch.ts`,
+  masaüstü `search/` ve `kentos_interaction::data_search`; ortak iz `data-search.json` (oynatıcılarda `panel` eylemi ve `panel`, `search`, `mark` beklentileri).
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

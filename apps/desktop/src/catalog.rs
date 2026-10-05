@@ -149,6 +149,9 @@ pub const PORTED: &[&str] = &[
     "view.coords",
     // Nokta editörü: the bottom panel's Noktalar tab (points/, docs/adr/0153).
     "point.editor",
+    // Veride ara: the bottom panel's Arama tab, and the mark its coordinate goes leaves (search/, docs/adr/0178).
+    "data.search",
+    "data.unmark",
     // The clipboard and the view tools (docs/adr/0056): cut, copy and the pastes over the
     // session's clipboard, written through the document as on the web; pan, zoom window,
     // zoom to the selection and repeating the last command.

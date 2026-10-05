@@ -653,6 +653,7 @@ impl App {
                     grips,
                     hot: self.session.active_grip(),
                     marked: self.vertex_marks(),
+                    found: self.data_mark_label(),
                     tracking: self.tracking_marks(&format),
                     crosshair: self.crosshair_mark(),
                     locks: self.lock_marks(&format),

@@ -43,6 +43,7 @@ fn the_panels_words_tabs_and_levels_are_the_webs() {
             plan::TAB_HISTORY,
             plan::TAB_COORDS,
             plan::TAB_POINTS,
+            plan::TAB_SEARCH,
             plan::TAB_MESSAGES
         ]
     );

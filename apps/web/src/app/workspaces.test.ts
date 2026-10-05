@@ -89,7 +89,9 @@ describe('project types (docs/adr/0165)', () => {
     expect(çizim.overflow).not.toContain('tool.ellipse');
     // Açıklama a panel a kind, as AutoCAD's Annotate; a pick shows what it names, seldom used or not.
     const panel = (tab: string, label: string) => tabs.find((t) => t.id === tab)!.panels.find((p) => p.label === label)!;
-    expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Kılavuz', 'Tarama', 'İşaretleme']);
+    expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Kılavuz', 'Tarama', 'İşaretleme', 'Bul']);
+    // Bul holds what Yazı does not already show: Veride ara and İşareti kaldır (docs/adr/0178).
+    expect(panelCommands(panel('annotate', 'Bul'))).toEqual(['data.search', 'data.unmark']);
     expect(panelCommands(panel('annotate', 'İşaretleme'))).toEqual(['tool.revcloud']);
     expect(panel('manage', 'Temizlik').overflow).toBeUndefined();
     expect(panelCommands(panel('manage', 'Temizlik'))).toEqual(['tool.cleanup', 'tool.topology', 'block.purge']);
@@ -105,7 +107,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi analizi']));
     expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
     // Blocks are the drawing's library, on Veri: Düzenle keeps to creating and changing objects.
-    expect(panels('data')).toEqual(['Katman', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok']);
+    expect(panels('data')).toEqual(['Katman', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok']);
     expect(panels('edit')).not.toContain('Blok');
   });
 

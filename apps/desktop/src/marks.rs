@@ -81,6 +81,9 @@ pub struct Marks {
     pub hot: Option<(Slot, usize)>,
     /// The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3).
     pub marked: Vec<Vec2>,
+    /// The place the data search's Git marked and its coordinates' words
+    /// (docs/adr/0178 §6).
+    pub found: Option<(Vec2, String)>,
     /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
     pub tracking: Option<TrackingMarks>,
     /// The crosshair at the pointer, when the pointer is over the drawing.
@@ -178,6 +181,7 @@ impl Marks {
             && self.select.is_none()
             && self.grips.is_empty()
             && self.marked.is_empty()
+            && self.found.is_none()
             && self.tracking.is_none()
             && self.crosshair.is_none()
             && self.locks.is_none()
@@ -199,6 +203,9 @@ impl<Message> canvas::Program<Message> for Marks {
         let accent = Tokens::of(theme).accent;
         grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
+        if let Some((p, words)) = &self.found {
+            found(&mut frame, *p, words, &self.camera, &self.colors, accent);
+        }
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
         }
@@ -314,6 +321,61 @@ fn marked(
         |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     frame.stroke(&rings, stroke(4.0, colors.halo));
     frame.stroke(&rings, stroke(2.0, accent));
+}
+
+/// The web's `drawSearchMark` (docs/adr/0178 §6): the place the data search
+/// marked, an accent ring with four ticks and a dot in it on a halo so it
+/// shows on any drawing, its coordinates written below on the right.
+fn found(
+    frame: &mut canvas::Frame,
+    p: Vec2,
+    words: &str,
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    let s = camera.world_to_screen(p);
+    let at = Point::new(s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5);
+    let shape = Path::new(|b| {
+        b.circle(at, 8.0);
+        for (dx, dy) in [(0.0, -1.0), (1.0, 0.0), (0.0, 1.0), (-1.0, 0.0)] {
+            b.move_to(Point::new(at.x + dx * 8.0, at.y + dy * 8.0));
+            b.line_to(Point::new(at.x + dx * 15.0, at.y + dy * 15.0));
+        }
+    });
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    frame.stroke(&shape, stroke(4.0, colors.halo));
+    frame.stroke(&shape, stroke(2.0, accent));
+    frame.fill(&Path::circle(at, 2.0), accent);
+    let label = Text {
+        content: words.to_owned(),
+        position: Point::new(at.x + 12.0, at.y + 12.0),
+        color: colors.halo,
+        size: Pixels(typography::scaled(11.0)),
+        font: typography::ui_strong(),
+        align_y: iced::alignment::Vertical::Top,
+        ..Text::default()
+    };
+    for (dx, dy) in [
+        (-1.0, 0.0),
+        (1.0, 0.0),
+        (0.0, -1.0),
+        (0.0, 1.0),
+        (-1.0, -1.0),
+        (1.0, 1.0),
+        (-1.0, 1.0),
+        (1.0, -1.0),
+    ] {
+        frame.fill_text(Text {
+            position: label.position + Vector::new(dx, dy),
+            ..label.clone()
+        });
+    }
+    frame.fill_text(Text {
+        color: accent,
+        ..label
+    });
 }
 
 /// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the

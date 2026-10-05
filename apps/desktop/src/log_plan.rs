@@ -17,6 +17,8 @@ pub(crate) const TAB_HISTORY: &str = "Komut geçmişi";
 pub(crate) const TAB_COORDS: &str = "Koordinat listesi";
 /// Nokta editörü (points/, docs/adr/0153).
 pub(crate) const TAB_POINTS: &str = "Noktalar";
+/// Veride ara (search/, docs/adr/0178).
+pub(crate) const TAB_SEARCH: &str = "Arama";
 pub(crate) const TAB_MESSAGES: &str = "Uyarılar";
 
 /// The panel's words: its two buttons, the command line's button, the empty lists.

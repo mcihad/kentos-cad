@@ -202,6 +202,41 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The bottom panel's tab, Arama's count and rows, and the place the data
+    // search marked (docs/adr/0178): the first two exact, the place within the click tolerance.
+    if let Some(want) = &expect.panel {
+        check(
+            "panel",
+            &got.panel == want,
+            format!("{:?}", got.panel),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.search {
+        let have = got.search.clone();
+        check(
+            "search",
+            have.as_ref() == Some(&(want.count.clone(), want.rows.clone())),
+            format!("{have:?}"),
+            format!("{:?}", (&want.count, &want.rows)),
+        );
+    }
+    if let Some(want) = &expect.mark {
+        let have = got
+            .mark
+            .map(|p| [p[0] - trace.view.center[0], p[1] - trace.view.center[1]]);
+        let same = match (have, want) {
+            (None, None) => true,
+            (Some(h), Some(w)) => (h[0] - w[0]).hypot(h[1] - w[1]) <= trace.click_tolerance,
+            _ => false,
+        };
+        check(
+            "mark",
+            same,
+            format!("{have:?}"),
+            format!("{want:?} (±{} m)", trace.click_tolerance),
+        );
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(

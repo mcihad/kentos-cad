@@ -12,6 +12,7 @@ mod colour;
 mod common;
 mod constructing;
 mod coordinate_z;
+mod data_search;
 mod dimension;
 mod dimension_chains;
 mod drawing;

@@ -123,7 +123,9 @@ fn play(
         // The command history open for the picture, so it shows what the tools said, where the
         // window has room for it (the status bar says the last message in a small one); closed
         // again while the steps play (its scrolling is no operation the trace player follows).
-        app.command_expanded = size.height >= 800.0;
+        // A panel the trace opened itself (a tab it works in, docs/adr/0178) stays open, as on the web.
+        let opened = app.command_expanded;
+        app.command_expanded = opened || size.height >= 800.0;
         snapshot.settle(app, App::view, &mut update);
         // At its newest line, as the app scrolls it when it shows (`message_log`).
         snapshot.operate(
@@ -149,7 +151,7 @@ fn play(
             Ok(()) => println!("{}", file.display()),
             Err(e) => failed = Some(format!("{}: {e}", file.display())),
         }
-        app.command_expanded = false;
+        app.command_expanded = opened;
     };
     let file = traces::scratch_file(trace, variant);
     let problems = {

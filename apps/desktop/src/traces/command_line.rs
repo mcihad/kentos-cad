@@ -76,6 +76,8 @@ impl CommandLine {
             // Yazı's field over the drawing (text_field.rs).
             Id::new(crate::text_field::ID),
             Id::new(crate::find_replace::FIND_FIELD),
+            // Arama's search box (search/, docs/adr/0178).
+            Id::new(crate::search::SEARCH_FIELD),
         ];
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();

@@ -114,6 +114,7 @@ pub mod construction;
 pub mod continuation;
 pub mod coordinate;
 pub mod corner;
+pub mod data_search;
 pub mod dimension;
 pub mod dimension_chain;
 pub mod quick_dimension;

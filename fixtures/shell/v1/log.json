@@ -19,6 +19,11 @@
    "icon": "pointEditor"
   },
   {
+   "id": "search",
+   "label": "Arama",
+   "icon": "dataSearch"
+  },
+  {
    "id": "messages",
    "label": "Uyarılar",
    "icon": "warning"

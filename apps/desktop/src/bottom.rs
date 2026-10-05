@@ -1,11 +1,13 @@
 //! The bottom panel (the web's `BottomPanel`, ui/bottom/BottomPanel.ts): the
 //! command line is always there, one row; F2 (`view.bottomPanel`) opens a
-//! panel over it with three tabs:
+//! panel over it with its tabs:
 //!
 //! - Komut geçmişi: every line of the log with its time and level
 //!   (message_log.rs, docs/adr/0114);
 //! - Noktalar (`point.editor` opens it on this tab): every point of the
 //!   drawing in a table, sorted, searched and filtered (points/, docs/adr/0153);
+//! - Arama (`data.search` opens it on this tab): the data search and the
+//!   place typed by its coordinates (search/, docs/adr/0178);
 //! - Koordinat listesi (`view.coords` opens it on this tab): the selection's
 //!   points with Y, X, Z and layer; line work in Köşe tablosu (vertices/,
 //!   docs/adr/0172), which edits it; any other object's vertices with each
@@ -44,15 +46,18 @@ pub enum BottomTab {
     Coords,
     /// Nokta editörü (points/, docs/adr/0153).
     Points,
+    /// Veride ara (search/, docs/adr/0178).
+    Search,
     Messages,
     Python,
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 5] = [
+    const ALL: [BottomTab; 6] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
+        BottomTab::Search,
         BottomTab::Messages,
         BottomTab::Python,
     ];
@@ -120,6 +125,9 @@ impl App {
                 Tab::new(plan::TAB_POINTS)
                     .icon(from_web(Some("pointEditor")))
                     .closable(false),
+                Tab::new(plan::TAB_SEARCH)
+                    .icon(from_web(Some("dataSearch")))
+                    .closable(false),
                 Tab::new(plan::TAB_MESSAGES)
                     .icon(from_web(Some("warning")))
                     .closable(false)
@@ -148,6 +156,7 @@ impl App {
             BottomTab::History => self.log_list(LogListing::History),
             BottomTab::Coords => self.coordinate_list(),
             BottomTab::Points => self.points_tab(),
+            BottomTab::Search => self.data_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
             BottomTab::Python => self.python_tab(),
         };
@@ -165,6 +174,19 @@ impl App {
             self.command_line(),
         ]
         .into()
+    }
+
+    /// The open panel's tab by its title, as the web's tab strip names it
+    /// (a trace's `panel`, docs/adr/0178); none while the panel is closed.
+    pub(crate) fn bottom_tab_title(&self) -> Option<&'static str> {
+        self.command_expanded.then_some(match self.bottom_tab {
+            BottomTab::History => plan::TAB_HISTORY,
+            BottomTab::Coords => plan::TAB_COORDS,
+            BottomTab::Points => plan::TAB_POINTS,
+            BottomTab::Search => plan::TAB_SEARCH,
+            BottomTab::Messages => plan::TAB_MESSAGES,
+            BottomTab::Python => "Python",
+        })
     }
 
     /// The panel's lists' height: the kept panel height as the window shows

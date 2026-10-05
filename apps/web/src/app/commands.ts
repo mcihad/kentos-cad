@@ -16,6 +16,8 @@ import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 import { lockCommands } from './lockCommands';
 import { duplicateLayer, unisolateLayers } from './layerActions';
+import { focusSearch } from '../ui/bottom/SearchPanel';
+import { SEARCH_PANEL_HEIGHT } from '../ui/bottom/searchPlan';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -601,6 +603,35 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         ui.bottomTab.set('points');
         ui.bottomExpanded.set(true);
       },
+    },
+    {
+      // Veride ara and Koordinata git (docs/adr/0178): the bottom panel's Arama tab, its search box taking the keyboard.
+      id: 'data.search',
+      title: 'Veride ara',
+      short: 'Ara',
+      category: V,
+      icon: 'dataSearch',
+      aliases: ['VERIARA', 'ARAMA', 'VA', 'KOORDINATAGIT', 'GITXY', 'LOCATE'],
+      description:
+        'Alt panelin Arama sekmesi: bütün katmanlarda nesnelerin etiketinde (nokta adı, parsel numarası), yazısında, blok adında ve özniteliklerinde arar; * herhangi bir dizidir. Satıra tıklamak nesneyi seçer ve ona yakınlaşır. Y,X yazarsanız Git görünümü o koordinata getirir ve işaretler.',
+      run: () => {
+        ui.bottomTab.set('search');
+        // The results want room: a shorter panel grows to this height (a taller one stays).
+        if (ui.bottomHeight.value < SEARCH_PANEL_HEIGHT) ui.bottomHeight.set(SEARCH_PANEL_HEIGHT);
+        ui.bottomExpanded.set(true);
+        focusSearch();
+      },
+    },
+    {
+      id: 'data.unmark',
+      title: 'İşareti kaldır',
+      category: V,
+      icon: 'markClear',
+      aliases: ['ISARETKALDIR', 'UNMARK'],
+      description: 'Koordinata git’in çizimde bıraktığı işareti (artı ve halka) kaldırır.',
+      run: () => selection.mark.set(null),
+      isEnabled: () => selection.mark.value !== null,
+      watch: [selection.mark],
     },
 
     // Çizim yardımcıları
