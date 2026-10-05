@@ -102,6 +102,15 @@ da geçer:
 
 - “Şablonu uygula” seçili nesnelere şablonun katmanını, görünüşünü, özniteliklerini ve etiketini `cad.entities.set` ile tek adımda verir
   (Özellik kopyala gibi); nesnenin türü şablonun aracına uymuyorsa söylenir ve dokunulmaz.
+- **Ayrıntılar (5 Ekim, bu ADR'nin varsayılanları):** nesne şablonun aracının yazdığı türdense uyar: Nokta noktaya, Çizgi çizgiye, Çoklu
+  çizgi çoklu çizgiye, Kapalı alan ve dikdörtgenler alana, Daire daireye, Yazı yazıya, Blok ekle yerleştirmeye. Uyan nesneler şablonun
+  katmanına geçer (katman yoksa yolundaki gruplarla açılır, aynı adımda; kilitliyse hiçbir şey değişmez, söylenir); renk, kalınlık ve
+  sembol şablonunki olur, şablonda yoksa katmanınki (Şablonla çiz'deki gibi); şablonun öznitelikleri yazılır, nesnenin öbür öznitelikleri
+  kalır; şablonun etiketi varsa yazılır, yoksa nesnenin etiketi kalır; nokta şablonunun kodu `Kod` özniteliği olur (ad değişmez); yazının
+  yüksekliği ve hizası değişmez. Uymayan nesneler değişmez ve sayılarıyla söylenir; hiçbiri uymuyorsa hiçbir şey olmaz. Grup şablonu
+  uygulanınca üyeleri yazılmaz (üyeler çizimin işidir). Hepsi tek adım “Şablonu uygula” (`cad.entities.set`'in yeni `template`
+  işlemi). Girişler: seçim varken Şablonlar panelindeki satırın menüsünde “Seçili nesnelere uygula”, Stil yöneticisinde şablonun
+  ayrıntılarında aynı düğme; komut `template.apply` (kimliksiz çağrı Şablonlar panelini açar).
 
 ### 7. Kapsam dışı
 
