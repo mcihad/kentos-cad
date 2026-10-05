@@ -226,15 +226,18 @@ export async function replacePointer() {
  * the canvas, so it stops the trace instead.
  */
 async function toScreen([de, dn]) {
-  const [x, y, inside] = await b.eval(`(() => {
+  const [x, y, inside, cover] = await b.eval(`(() => {
     const k = window.kentos;
     const s = k.view.camera.worldToScreen({ x: ${origin.x + de}, y: ${origin.y + dn} });
     const r = k.view.clientRect();
     const x = s.x + r.left;
     const y = s.y + r.top;
-    return [x, y, document.elementFromPoint(x, y)?.tagName === 'CANVAS'];
+    const at = document.elementFromPoint(x, y);
+    // What lies over the point when it is not the canvas, to tell a point off the drawing from a passing popup.
+    const cover = at ? at.tagName.toLowerCase() + (typeof at.className === 'string' && at.className ? '.' + at.className.trim().split(/\\s+/).join('.') : '') : 'yok';
+    return [x, y, at?.tagName === 'CANVAS', cover + ' (çizim alanı ' + [r.left, r.top, r.width, r.height].map(Math.round).join(', ') + ')'];
   })()`);
-  if (!inside) throw new Error(`[${de}, ${dn}] çizim alanının dışında (${x}, ${y} px); izin noktalarını README'deki kutuda tutun.`);
+  if (!inside) throw new Error(`[${de}, ${dn}] çizim alanının dışında (${x}, ${y} px; üstünde ${cover}); izin noktalarını README'deki kutuda tutun.`);
   return [x, y];
 }
 const mouse = (type, x, y, extra = {}) => b.send('Input.dispatchMouseEvent', { type, x, y, button: 'none', ...extra });
