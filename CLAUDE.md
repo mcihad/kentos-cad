@@ -867,7 +867,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   ve 6. adım (Şablonu uygula: kural `templateApplication`, `object_template::application`, ortak `template-apply.json`; `cad.entities.set`'in
   `template` işlemi; web `applyTemplate`, masaüstü `apply_template`; `template.apply`, Şablonlar panelinde ve Stil yöneticisinde “Seçili
   nesnelere uygula”; ortak iz `template-apply.json`, izlerin `applyTemplate` eylemi) tamam; `HYB-19` bitti (5 Ekim; BÖHYY takımı sahibin
-  tarifini bekler). Sıradaki `HYB-20` katman yönetimi ekleri.
+  tarifini bekler). Sıradaki `HYB-20` katman yönetimi ekleri ([ADR 0177](docs/adr/0177-layer-management-extras.md)): nesneden katman
+  işlemleri, Katmanı eşle ve Katmana kopyala, Kopyasını oluştur ve Katmanları birleştir, Katman durumları (`.kcad` şema 19),
+  Kullanılmayanları temizle, Katman listesi.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
