@@ -1,9 +1,9 @@
 {
  "format": "kentos.style-file-cases",
  "version": 1,
- "note": ".kstil stil dosyası (style/file.ts): okuma (neyin neden reddedildiği; kabul edilen dosyada SVG çizimleri temizlenmiş öğeler), sembol denetimi ve sözleri, SVG temizliği (XML başlığı, DOCTYPE, betik, olay işleyicisi, foreignObject, dışarıya bağlantı ve dış url() kalkar; iç bağlantı ve data:image kalır), dışa aktarmanın aldıkları (sembollerin kullandığı varlıklar, hangi kaynaktan olursa olsun; her öğe bir kez; kaynak alanı yazılmaz), içe aktarmanın her çakışma kipinde yaptıkları (varlıklar önce; değiştir yalnız aynı kaynakta, başka kaynakta ya da sistemde atlar; kopya yeni kimlik alır, semboller yeni varlık kimliğine döner; kategoriler eklenir) ve yeni SVG çiziminin boyu (viewBox, yoksa width/height, yoksa 100). Yeni kimlikler rastgeledir: {new:eski} ile yazılıdır, önekleri prefixes’tedir. exported zamanı karşılaştırılmaz. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
+ "note": ".kstil stil dosyası (style/file.ts): okuma (neyin neden reddedildiği; kabul edilen dosyada SVG çizimleri temizlenmiş öğeler; sürüm 2 nesne şablonlarını getirir, şablon kendi kurallarıyla denetlenir, ADR 0176), sembol denetimi ve sözleri, SVG temizliği (XML başlığı, DOCTYPE, betik, olay işleyicisi, foreignObject, dışarıya bağlantı ve dış url() kalkar; iç bağlantı ve data:image kalır), dışa aktarmanın aldıkları (sembollerin kullandığı varlıklar, şablonların çizdiği semboller, hangi kaynaktan olursa olsun; her öğe bir kez; kaynak alanı yazılmaz; şablonlu dosya sürüm 2, öbürü 1), içe aktarmanın her çakışma kipinde yaptıkları (varlıklar, sonra semboller, sonra şablonlar; değiştir yalnız aynı kaynakta, başka kaynakta ya da sistemde atlar; kopya yeni kimlik alır, semboller yeni varlık kimliğine, şablonlar yeni sembol kimliğine döner; kategoriler eklenir) ve yeni SVG çiziminin boyu (viewBox, yoksa width/height, yoksa 100). Yeni kimlikler rastgeledir: {new:eski} ile yazılıdır, önekleri prefixes’tedir. exported zamanı karşılaştırılmaz. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
  "styleFormat": "kentos-style",
- "styleVersion": 1,
+ "styleVersion": 2,
  "parse": [
   {
    "id": "not-json",
@@ -25,10 +25,10 @@
   },
   {
    "id": "newer",
-   "text": "{\"format\":\"kentos-style\",\"version\":2,\"items\":[]}",
+   "text": "{\"format\":\"kentos-style\",\"version\":3,\"items\":[]}",
    "expect": {
     "issues": [
-     "Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm 2); güncelleyip yeniden deneyin."
+     "Dosya daha yeni bir KentOS sürümüyle yazılmış (sürüm 3); güncelleyip yeniden deneyin."
     ]
    }
   },
@@ -188,6 +188,90 @@
       ],
       "order": 1
      }
+    ]
+   }
+  },
+  {
+   "id": "templates",
+   "text": "{\"format\":\"kentos-style\",\"version\":2,\"exported\":\"2026-09-27T08:00:00.000Z\",\"items\":[{\"kind\":\"symbol\",\"id\":\"s-benim\",\"name\":\"Benim sembolüm\",\"path\":[\"Semboller\"],\"symbol\":{\"type\":\"fill\",\"layers\":[{\"id\":\"f\",\"type\":\"simpleFill\",\"color\":\"#EDC948\"}]}},{\"kind\":\"template\",\"id\":\"t-parsel\",\"name\":\"Parsel sınırı\",\"path\":[\"Şablonlar\"],\"template\":{\"tool\":\"polygon\",\"layer\":{\"path\":[\"Kadastro\"],\"name\":\"Parsel\",\"color\":\"#E5484D\",\"lineWeight\":0.35},\"symbol\":\"s-benim\",\"attrs\":{\"Tür\":\"Parsel\"},\"label\":\"P\"}},{\"kind\":\"template\",\"id\":\"t-nokta\",\"name\":\"Poligon noktası\",\"path\":[\"Şablonlar\"],\"template\":{\"tool\":\"point\",\"layer\":{\"path\":[],\"name\":\"Nokta\"},\"color\":\"#3E63DD\",\"point\":{\"name\":\"P1\",\"code\":\"SN\"}}}]}",
+   "expect": {
+    "issues": [],
+    "items": [
+     {
+      "kind": "symbol",
+      "id": "s-benim",
+      "name": "Benim sembolüm",
+      "path": [
+       "Semboller"
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#EDC948"
+        }
+       ]
+      }
+     },
+     {
+      "kind": "template",
+      "id": "t-parsel",
+      "name": "Parsel sınırı",
+      "path": [
+       "Şablonlar"
+      ],
+      "template": {
+       "tool": "polygon",
+       "layer": {
+        "path": [
+         "Kadastro"
+        ],
+        "name": "Parsel",
+        "color": "#E5484D",
+        "lineWeight": 0.35
+       },
+       "symbol": "s-benim",
+       "attrs": {
+        "Tür": "Parsel"
+       },
+       "label": "P"
+      }
+     },
+     {
+      "kind": "template",
+      "id": "t-nokta",
+      "name": "Poligon noktası",
+      "path": [
+       "Şablonlar"
+      ],
+      "template": {
+       "tool": "point",
+       "layer": {
+        "path": [],
+        "name": "Nokta"
+       },
+       "color": "#3E63DD",
+       "point": {
+        "name": "P1",
+        "code": "SN"
+       }
+      }
+     }
+    ],
+    "categories": []
+   }
+  },
+  {
+   "id": "bad-templates",
+   "text": "{\"format\":\"kentos-style\",\"version\":2,\"exported\":\"2026-09-27T08:00:00.000Z\",\"items\":[{\"kind\":\"template\",\"id\":\"t-bozuk\",\"name\":\"Bozuk şablon\",\"path\":[\"Şablonlar\"],\"template\":{\"tool\":\"arc\",\"color\":\"mavi\"}},{\"kind\":\"template\",\"id\":\"t-2\",\"name\":\"Şablonsuz\",\"path\":[]}]}",
+   "expect": {
+    "issues": [
+     "öğe 1 (Bozuk şablon): bilinmeyen araç “arc”",
+     "öğe 1 (Bozuk şablon): katmanı yok",
+     "öğe 1 (Bozuk şablon): renk geçersiz “mavi”",
+     "öğe 2 (Şablonsuz): şablon tanımı yok"
     ]
    }
   }
@@ -493,6 +577,30 @@
       }
      ]
     }
+   },
+   {
+    "kind": "template",
+    "id": "t-parsel",
+    "name": "Parsel sınırı",
+    "path": [
+     "Şablonlar"
+    ],
+    "template": {
+     "tool": "polygon",
+     "layer": {
+      "path": [
+       "Kadastro"
+      ],
+      "name": "Parsel",
+      "color": "#E5484D",
+      "lineWeight": 0.35
+     },
+     "symbol": "s-benim",
+     "attrs": {
+      "Tür": "Parsel"
+     },
+     "label": "P"
+    }
    }
   ],
   "project": [
@@ -512,6 +620,26 @@
        "color": "#EDC948"
       }
      ]
+    }
+   },
+   {
+    "kind": "template",
+    "id": "t-nokta",
+    "name": "Poligon noktası",
+    "path": [
+     "Proje"
+    ],
+    "template": {
+     "tool": "point",
+     "layer": {
+      "path": [],
+      "name": "Nokta"
+     },
+     "color": "#3E63DD",
+     "point": {
+      "name": "P1",
+      "code": "SN"
+     }
     }
    }
   ]
@@ -705,6 +833,122 @@
      }
     ]
    }
+  },
+  {
+   "ids": [
+    "t-parsel"
+   ],
+   "expect": {
+    "format": "kentos-style",
+    "version": 2,
+    "items": [
+     {
+      "kind": "template",
+      "id": "t-parsel",
+      "name": "Parsel sınırı",
+      "path": [
+       "Şablonlar"
+      ],
+      "template": {
+       "tool": "polygon",
+       "layer": {
+        "path": [
+         "Kadastro"
+        ],
+        "name": "Parsel",
+        "color": "#E5484D",
+        "lineWeight": 0.35
+       },
+       "symbol": "s-benim",
+       "attrs": {
+        "Tür": "Parsel"
+       },
+       "label": "P"
+      }
+     },
+     {
+      "kind": "symbol",
+      "id": "s-benim",
+      "name": "Benim sembolüm",
+      "path": [
+       "Semboller"
+      ],
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "v",
+         "type": "svg",
+         "asset": "a-kullanici",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "kind": "asset",
+      "id": "a-kullanici",
+      "name": "Benim çizimim",
+      "path": [
+       "Çizimler"
+      ],
+      "format": "svg",
+      "data": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 30\"><circle cx=\"10\" cy=\"10\" r=\"8\" fill=\"param(fill) #2E7D32\"/></svg>",
+      "width": 20,
+      "height": 30
+     }
+    ]
+   }
+  },
+  {
+   "ids": [
+    "t-nokta",
+    "s-proje"
+   ],
+   "expect": {
+    "format": "kentos-style",
+    "version": 2,
+    "items": [
+     {
+      "kind": "template",
+      "id": "t-nokta",
+      "name": "Poligon noktası",
+      "path": [
+       "Proje"
+      ],
+      "template": {
+       "tool": "point",
+       "layer": {
+        "path": [],
+        "name": "Nokta"
+       },
+       "color": "#3E63DD",
+       "point": {
+        "name": "P1",
+        "code": "SN"
+       }
+      }
+     },
+     {
+      "kind": "symbol",
+      "id": "s-proje",
+      "name": "Proje sembolü",
+      "path": [
+       "Proje"
+      ],
+      "symbol": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "f",
+         "type": "simpleFill",
+         "color": "#EDC948"
+        }
+       ]
+      }
+     }
+    ]
+   }
   }
  ],
  "imports": [
@@ -714,7 +958,7 @@
    "mode": "replace",
    "expect": {
     "report": {
-     "added": 1,
+     "added": 2,
      "replaced": 2,
      "skipped": 1,
      "renamed": {}
@@ -773,6 +1017,30 @@
        }
       },
       {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
+      },
+      {
        "kind": "symbol",
        "id": "s-yeni",
        "name": "Yeni sembol",
@@ -788,6 +1056,30 @@
           "color": "#EDC948"
          }
         ]
+       }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
        }
       }
      ],
@@ -820,6 +1112,26 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
+       }
       }
      ],
      "categories": []
@@ -832,7 +1144,7 @@
    "mode": "replace",
    "expect": {
     "report": {
-     "added": 1,
+     "added": 2,
      "replaced": 0,
      "skipped": 3,
      "renamed": {}
@@ -889,6 +1201,30 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
       }
      ],
      "categories": []
@@ -914,6 +1250,26 @@
        }
       },
       {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
+       }
+      },
+      {
        "kind": "symbol",
        "id": "s-yeni",
        "name": "Yeni sembol",
@@ -929,6 +1285,30 @@
           "color": "#EDC948"
          }
         ]
+       }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
        }
       }
      ],
@@ -950,7 +1330,7 @@
    "mode": "copy",
    "expect": {
     "report": {
-     "added": 4,
+     "added": 5,
      "replaced": 0,
      "skipped": 0,
      "renamed": {
@@ -1017,6 +1397,30 @@
        }
       },
       {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
+      },
+      {
        "kind": "asset",
        "id": "{new:a-kullanici}",
        "name": "Gelen çizim",
@@ -1082,6 +1486,30 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "{new:s-benim}",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
       }
      ],
      "categories": [
@@ -1113,6 +1541,26 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
+       }
       }
      ],
      "categories": []
@@ -1125,7 +1573,7 @@
    "mode": "copy",
    "expect": {
     "report": {
-     "added": 4,
+     "added": 5,
      "replaced": 0,
      "skipped": 0,
      "renamed": {
@@ -1190,6 +1638,30 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
       }
      ],
      "categories": []
@@ -1212,6 +1684,26 @@
           "color": "#EDC948"
          }
         ]
+       }
+      },
+      {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
        }
       },
       {
@@ -1280,6 +1772,30 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "{new:s-benim}",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
       }
      ],
      "categories": [
@@ -1300,7 +1816,7 @@
    "mode": "skip",
    "expect": {
     "report": {
-     "added": 1,
+     "added": 2,
      "replaced": 0,
      "skipped": 3,
      "renamed": {}
@@ -1359,6 +1875,30 @@
        }
       },
       {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
+      },
+      {
        "kind": "symbol",
        "id": "s-yeni",
        "name": "Yeni sembol",
@@ -1374,6 +1914,30 @@
           "color": "#EDC948"
          }
         ]
+       }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
        }
       }
      ],
@@ -1406,6 +1970,26 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
+       }
       }
      ],
      "categories": []
@@ -1418,7 +2002,7 @@
    "mode": "skip",
    "expect": {
     "report": {
-     "added": 1,
+     "added": 2,
      "replaced": 0,
      "skipped": 3,
      "renamed": {}
@@ -1475,6 +2059,30 @@
          }
         ]
        }
+      },
+      {
+       "kind": "template",
+       "id": "t-parsel",
+       "name": "Parsel sınırı",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
+       }
       }
      ],
      "categories": []
@@ -1500,6 +2108,26 @@
        }
       },
       {
+       "kind": "template",
+       "id": "t-nokta",
+       "name": "Poligon noktası",
+       "path": [
+        "Proje"
+       ],
+       "template": {
+        "tool": "point",
+        "layer": {
+         "path": [],
+         "name": "Nokta"
+        },
+        "color": "#3E63DD",
+        "point": {
+         "name": "P1",
+         "code": "SN"
+        }
+       }
+      },
+      {
        "kind": "symbol",
        "id": "s-yeni",
        "name": "Yeni sembol",
@@ -1515,6 +2143,30 @@
           "color": "#EDC948"
          }
         ]
+       }
+      },
+      {
+       "kind": "template",
+       "id": "t-gelen",
+       "name": "Gelen şablon",
+       "path": [
+        "Şablonlar"
+       ],
+       "template": {
+        "tool": "polygon",
+        "layer": {
+         "path": [
+          "Kadastro"
+         ],
+         "name": "Parsel",
+         "color": "#E5484D",
+         "lineWeight": 0.35
+        },
+        "symbol": "s-benim",
+        "attrs": {
+         "Tür": "Parsel"
+        },
+        "label": "P"
        }
       }
      ],
@@ -1533,9 +2185,33 @@
  ],
  "importFile": {
   "format": "kentos-style",
-  "version": 1,
+  "version": 2,
   "exported": "2026-09-27T08:00:00.000Z",
   "items": [
+   {
+    "kind": "template",
+    "id": "t-gelen",
+    "name": "Gelen şablon",
+    "path": [
+     "Şablonlar"
+    ],
+    "template": {
+     "tool": "polygon",
+     "layer": {
+      "path": [
+       "Kadastro"
+      ],
+      "name": "Parsel",
+      "color": "#E5484D",
+      "lineWeight": 0.35
+     },
+     "symbol": "s-benim",
+     "attrs": {
+      "Tür": "Parsel"
+     },
+     "label": "P"
+    }
+   },
    {
     "kind": "symbol",
     "id": "s-benim",

@@ -1,6 +1,8 @@
 import type { AppContext } from '../../app/context';
 import type { LibraryItem, Symbol } from '../../model/style';
 import { drawSymbolPreview, type PreviewGeometry } from '../../render/symbolPreview';
+import type { StyleLibrary } from '../../style/library';
+import { templateSymbol } from '../../style/templateSymbol';
 import { h } from '../dom';
 
 /**
@@ -9,9 +11,10 @@ import { h } from '../dom';
  * and again when an SVG it needs has loaded.
  */
 
-/** A library item as something drawable: SVG and raster assets become a marker of themselves. */
-export function symbolOfItem(item: LibraryItem): Symbol {
+/** A library item as something drawable: SVG and raster assets become a marker of themselves, a template its symbol or its look (docs/adr/0176). */
+export function symbolOfItem(item: LibraryItem, lib?: StyleLibrary): Symbol {
   if (item.kind === 'symbol') return item.symbol;
+  if (item.kind === 'template') return templateSymbol(item.template, lib);
   return { type: 'marker', layers: [item.format === 'svg' ? { id: 'a', type: 'svg', asset: item.id, size: 14, fill: 'ink' } : { id: 'a', type: 'raster', asset: item.id, size: 14 }] };
 }
 

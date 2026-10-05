@@ -69,9 +69,13 @@ impl App {
                     Source::Project => "Proje",
                 };
                 let card = column![
-                    self.styles
-                        .thumbs
-                        .picture(&symbol_of_item(item), None, PICTURE, None, &look),
+                    self.styles.thumbs.picture(
+                        &symbol_of_item(item, &self.styles.library),
+                        None,
+                        PICTURE,
+                        None,
+                        &look,
+                    ),
                     container(
                         label::caption(item.name().to_owned())
                             .align_x(iced::alignment::Horizontal::Center)

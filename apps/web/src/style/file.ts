@@ -1,4 +1,5 @@
 import { assetsOfSymbol, newItemId, type EditableSource, type StyleLibrary } from './library';
+import { templateIssues } from '../model/objectTemplate';
 import type { LibraryAsset, LibraryCategory, LibraryItem, LibrarySymbol, ShapeName, Symbol } from '../model/style';
 
 /**
@@ -6,10 +7,16 @@ import type { LibraryAsset, LibraryCategory, LibraryItem, LibrarySymbol, ShapeNa
  * the assets its symbols draw with embedded, so a file is complete on its
  * own. Everything read from a file is checked (a shared file is untrusted
  * data) and SVG drawings are cleaned of scripts and outside references.
+ * Version 2 adds object templates (docs/adr/0176): a file is written as 2 only
+ * when it holds a template, so a file without one stays readable where 1 is.
  */
 
 export const STYLE_FORMAT = 'kentos-style';
-export const STYLE_VERSION = 1;
+/** The newest version this reads. */
+export const STYLE_VERSION = 2;
+
+/** The version a file with these items is written as: 2 with a template in it, else 1. */
+export const styleVersionOf = (items: readonly LibraryItem[]): number => (items.some((i) => i.kind === 'template') ? 2 : 1);
 
 export interface StyleFile {
   readonly format: typeof STYLE_FORMAT;
@@ -19,7 +26,7 @@ export interface StyleFile {
   readonly categories?: readonly LibraryCategory[];
 }
 
-/** The chosen items, and the assets their symbols use (from any source), as a file. */
+/** The chosen items, the assets their symbols use and the symbols their templates draw with (from any source), as a file. */
 export function exportStyles(lib: StyleLibrary, ids: readonly string[]): StyleFile {
   const items = new Map<string, LibraryItem>();
   const put = (id: string) => {
@@ -28,9 +35,11 @@ export function exportStyles(lib: StyleLibrary, ids: readonly string[]): StyleFi
     const { source: _s, ...plain } = it;
     items.set(id, JSON.parse(JSON.stringify(plain)) as LibraryItem);
     if (it.kind === 'symbol') assetsOfSymbol(it.symbol).forEach(put);
+    if (it.kind === 'template' && it.template.symbol) put(it.template.symbol);
   };
   ids.forEach(put);
-  return { format: STYLE_FORMAT, version: STYLE_VERSION, exported: new Date().toISOString(), items: [...items.values()] };
+  const list = [...items.values()];
+  return { format: STYLE_FORMAT, version: styleVersionOf(list), exported: new Date().toISOString(), items: list };
 }
 
 // ── Validation ─────────────────────────────────────────────────────────
@@ -192,7 +201,8 @@ function validateItem(it: unknown, i: number): string[] {
     else if (it.format === 'svg' && !/<svg[\s>]/i.test(it.data)) issues.push(`${w}: SVG çizimi değil`);
     else if (it.format !== 'svg' && !/^data:image\/(png|jpeg);base64,/.test(it.data)) issues.push(`${w}: görüntü verisi data: adresi olmalı`);
     if (typeof it.width !== 'number' || typeof it.height !== 'number' || !(it.width > 0) || !(it.height > 0)) issues.push(`${w}: boyut yok`);
-  } else issues.push(`${w}: bilinmeyen öğe türü “${String(it.kind)}”`);
+  } else if (it.kind === 'template') issues.push(...templateIssues(it.template, `${w} (${String(it.name)})`));
+  else issues.push(`${w}: bilinmeyen öğe türü “${String(it.kind)}”`);
   return issues;
 }
 
@@ -249,12 +259,14 @@ export interface ImportReport {
 /**
  * Adds a file's items to the user's or the project's library. An id that
  * already exists is replaced (only in the same editable source), taken as
- * a copy under a new id (symbols then point at the renamed assets), or
- * skipped. System items are never replaced.
+ * a copy under a new id (symbols then point at the renamed assets, templates at
+ * the renamed symbols), or skipped. System items are never replaced.
  */
 export function importStyles(lib: StyleLibrary, file: StyleFile, to: EditableSource, mode: ConflictMode): ImportReport {
   const report: ImportReport = { added: 0, replaced: 0, skipped: 0, renamed: {} };
-  const assetsFirst = [...file.items].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'asset' ? -1 : 1));
+  // Assets, then symbols, then templates: each before what draws with it (a stable sort keeps the file's order otherwise).
+  const rank = (i: LibraryItem) => (i.kind === 'asset' ? 0 : i.kind === 'template' ? 2 : 1);
+  const assetsFirst = [...file.items].sort((a, b) => rank(a) - rank(b));
   for (const raw of assetsFirst) {
     let item = raw;
     const existing = lib.get(item.id);
@@ -274,6 +286,8 @@ export function importStyles(lib: StyleLibrary, file: StyleFile, to: EditableSou
       item = { ...item, id };
     }
     if (item.kind === 'symbol' && Object.keys(report.renamed).length) item = { ...item, symbol: renameAssets(item.symbol, report.renamed) };
+    const symbol = item.kind === 'template' ? item.template.symbol : undefined;
+    if (item.kind === 'template' && symbol && Object.hasOwn(report.renamed, symbol)) item = { ...item, template: { ...item.template, symbol: report.renamed[symbol] } };
     lib.add(to, item);
     report.added++;
   }

@@ -56,6 +56,8 @@ pub enum KindFilter {
     Line,
     Marker,
     Asset,
+    /// Object templates (docs/adr/0176).
+    Template,
 }
 
 impl std::fmt::Display for KindFilter {
@@ -66,16 +68,18 @@ impl std::fmt::Display for KindFilter {
             KindFilter::Line => "Çizgi",
             KindFilter::Marker => "İşaret",
             KindFilter::Asset => "Çizim",
+            KindFilter::Template => "Şablon",
         })
     }
 }
 
-pub const KINDS: [KindFilter; 5] = [
+pub const KINDS: [KindFilter; 6] = [
     KindFilter::All,
     KindFilter::Fill,
     KindFilter::Line,
     KindFilter::Marker,
     KindFilter::Asset,
+    KindFilter::Template,
 ];
 
 impl KindFilter {
@@ -97,6 +101,7 @@ impl KindFilter {
             KindFilter::Line => of == "line",
             KindFilter::Marker => of == "marker",
             KindFilter::Asset => of == "asset",
+            KindFilter::Template => of == "template",
         }
     }
 }

@@ -5,6 +5,8 @@
  * kept in a user library, exported and shared. Nothing here draws.
  */
 
+import type { ObjectTemplate } from './objectTemplate';
+
 // ── Values ─────────────────────────────────────────────────────────────
 
 /**
@@ -337,7 +339,18 @@ export interface LibraryAsset {
   readonly tags?: readonly string[];
 }
 
-export type LibraryItem = LibrarySymbol | LibraryAsset;
+/** An object template (docs/adr/0176): the recipe for drawing one kind of object, kept beside the symbols it draws with. */
+export interface LibraryTemplate {
+  readonly kind: 'template';
+  readonly id: string;
+  readonly name: string;
+  readonly path: readonly string[];
+  readonly template: ObjectTemplate;
+  readonly description?: string;
+  readonly tags?: readonly string[];
+}
+
+export type LibraryItem = LibrarySymbol | LibraryAsset | LibraryTemplate;
 
 /** An item as the library hands it out: with its source. */
 export type Sourced<T extends LibraryItem = LibraryItem> = T & { readonly source: LibrarySource };

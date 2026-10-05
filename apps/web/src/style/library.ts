@@ -1,10 +1,10 @@
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { foldTurkish } from '../core/text';
-import type { LibraryAsset, LibraryCategory, LibraryItem, LibrarySource, LibrarySymbol, Sourced, Symbol } from '../model/style';
+import type { LibraryAsset, LibraryCategory, LibraryItem, LibraryTemplate, LibrarySource, LibrarySymbol, Sourced, Symbol } from '../model/style';
 
 /**
- * The style library: symbols and assets from three sources. System items
+ * The style library: symbols, assets and object templates (docs/adr/0176) from three sources. System items
  * ship with KentOS and can be copied but never changed or deleted; the
  * user's items follow the user across projects; project items travel in
  * the project file so everyone who opens it sees the same symbols.
@@ -94,6 +94,12 @@ export class StyleLibrary {
     return it?.kind === 'asset' ? it : undefined;
   }
 
+  /** An object template (docs/adr/0176). */
+  template(id: string): Sourced<LibraryTemplate> | undefined {
+    const it = this.get(id);
+    return it?.kind === 'template' ? (it as Sourced<LibraryTemplate>) : undefined;
+  }
+
   items(source?: LibrarySource): Sourced[] {
     const sources: LibrarySource[] = source ? [source] : ['system', 'user', 'project'];
     return sources.flatMap((s) => [...this.stores[s].values()].map((it) => ({ ...it, source: s }) as Sourced));
@@ -118,7 +124,7 @@ export class StyleLibrary {
     const items = this.items(filter.source).filter((i) => {
       if (filter.kind && i.kind !== filter.kind) return false;
       if (!words.length) return true;
-      const hay = foldTurkish([i.name, ...i.path, ...(i.tags ?? []), i.kind === 'symbol' ? (i.description ?? '') : ''].join(' '));
+      const hay = foldTurkish([i.name, ...i.path, ...(i.tags ?? []), i.kind !== 'asset' ? (i.description ?? '') : ''].join(' '));
       return words.every((w) => hay.includes(w));
     });
     const cats = (filter.source ? this.cats[filter.source] : [...this.cats.system, ...this.cats.user, ...this.cats.project]).filter(() => !words.length);
@@ -183,7 +189,7 @@ export class StyleLibrary {
    * cleared Kaynak or Açıklama), as the desktop's `update` removes one given
    * as null; copying the patch through JSON alone would keep the old text.
    */
-  update(id: string, patch: Partial<Omit<LibrarySymbol, 'id' | 'kind'>> | Partial<Omit<LibraryAsset, 'id' | 'kind'>>): void {
+  update(id: string, patch: Partial<Omit<LibrarySymbol, 'id' | 'kind'>> | Partial<Omit<LibraryAsset, 'id' | 'kind'>> | Partial<Omit<LibraryTemplate, 'id' | 'kind'>>): void {
     const { source, item } = this.editable(id);
     const next: Record<string, unknown> = { ...item, ...clone(patch), id, kind: item.kind };
     for (const [k, v] of Object.entries(patch)) if (v === undefined) delete next[k];
@@ -209,22 +215,26 @@ export class StyleLibrary {
   /**
    * Copies any item (a system one included) into the user's or the
    * project's library under a new id. A symbol copied into a project takes
-   * along the user assets it draws with, so the project stays complete for
-   * colleagues (system assets are always there).
+   * along the user assets it draws with, and a template its user symbol with
+   * that symbol's assets, so the project stays complete for colleagues
+   * (system items are always there).
    */
   copy(id: string, to: EditableSource, opts: { name?: string; path?: readonly string[] } = {}): LibraryItem {
     const src = this.get(id);
     if (!src) throw new Error(`Kitaplıkta yok: ${id}`);
     const { source: _s, ...plain } = src;
     const item = { ...clone(plain), id: newItemId(to === 'project' ? 'p' : 'u'), name: opts.name ?? `${src.name} (kopya)`, path: [...(opts.path ?? src.path)] } as LibraryItem;
-    if (to === 'project' && item.kind === 'symbol') {
-      for (const a of assetsOfSymbol(item.symbol)) {
-        const asset = this.get(a);
-        if (asset && asset.source === 'user' && !this.stores.project.has(a)) {
-          const { source: _x, ...rest } = asset;
-          this.stores.project.set(a, clone(rest) as LibraryItem);
-        }
-      }
+    if (to === 'project') {
+      // What the item draws with, taken along when it is the user's.
+      const take = (ref: string) => {
+        const it = this.get(ref);
+        if (!it || it.source !== 'user' || this.stores.project.has(ref)) return;
+        const { source: _x, ...rest } = it;
+        this.stores.project.set(ref, clone(rest) as LibraryItem);
+      };
+      const symbol = item.kind === 'symbol' ? item.symbol : item.kind === 'template' && item.template.symbol ? this.symbol(item.template.symbol) : undefined;
+      if (item.kind === 'template' && item.template.symbol) take(item.template.symbol);
+      if (symbol) assetsOfSymbol(symbol).forEach(take);
     }
     this.stores[to].set(item.id, item);
     this.touched(to);

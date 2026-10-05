@@ -25,10 +25,15 @@ use super::{Event, Field, ImportDraft, Manager, ev};
 use crate::app::Message;
 use crate::style::thumbs::{Look, Thumbs};
 
-/// The picture of an item: a symbol, or a drawing as a marker of itself (`symbolOfItem`).
-pub fn symbol_of_item(item: &Item) -> Value {
+/// The picture of an item: a symbol, a drawing as a marker of itself, or a
+/// template's symbol or look (docs/adr/0176) (`symbolOfItem`).
+pub fn symbol_of_item(item: &Item, lib: &StyleLibrary) -> Value {
     match item.kind() {
         ItemKind::Symbol => item.symbol().cloned().unwrap_or(Value::Null),
+        ItemKind::Template => kentos_native_style::object_template::preview_symbol(
+            item.template().unwrap_or(&Value::Null),
+            lib,
+        ),
         ItemKind::Asset if item.format() == Some("svg") => json!({ "type": "marker", "layers": [
             { "id": "a", "type": "svg", "asset": item.id(), "size": 14, "fill": "ink" },
         ] }),
@@ -169,7 +174,7 @@ pub fn details<'a>(
         .into();
     };
     let editable = source.editable();
-    let symbol = symbol_of_item(item);
+    let symbol = symbol_of_item(item, lib);
     let kind = kind_of(item.kind(), item.symbol());
     let options = if item.kind() == ItemKind::Symbol {
         samples(kind)
@@ -224,6 +229,15 @@ pub fn details<'a>(
     };
     let kind_text = match (item.kind(), kind) {
         (ItemKind::Asset, _) => format!("Çizim ({})", item.format().unwrap_or("").to_uppercase()),
+        (ItemKind::Template, _) => format!(
+            "Nesne şablonu · {}",
+            kentos_native_style::object_template::tool_label(
+                item.template()
+                    .and_then(|p| p.get("tool"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+            )
+        ),
         (_, "fill") => "Alan sembolü".into(),
         (_, "line") => "Çizgi sembolü".into(),
         _ => "İşaret sembolü".into(),
@@ -250,9 +264,9 @@ pub fn details<'a>(
             .style(style::text::muted)
             .into(),
     ));
-    if item.kind() == ItemKind::Symbol {
+    if item.kind() != ItemKind::Asset {
         let reference = item.text("reference").unwrap_or("").to_owned();
-        if !reference.is_empty() || editable {
+        if item.kind() == ItemKind::Symbol && (!reference.is_empty() || editable) {
             fields = fields.push(field_row(
                 "Kaynak",
                 if editable {
@@ -293,6 +307,12 @@ pub fn details<'a>(
             text_or_dash(tags)
         },
     ));
+    // A template's recipe (docs/adr/0176 §1): what it draws with, where, and what it writes.
+    if let Some(template) = item.template() {
+        for (name, value) in template_rows(lib, template) {
+            fields = fields.push(field_row(name, text_or_dash(value)));
+        }
+    }
     if item.kind() == ItemKind::Asset {
         let users = lib.users_of(item.id()).len();
         fields = fields.push(field_row(
@@ -336,7 +356,8 @@ pub fn details<'a>(
             "SVG çizim düzenleyicisinde açar",
             Some(ev(Event::Edit(id.clone()))),
         )),
-        ItemKind::Asset => None,
+        // A template opens in Şablon düzenleyici (docs/adr/0176, step 4).
+        ItemKind::Asset | ItemKind::Template => None,
     };
     if let Some((note, press)) = editor {
         actions = actions.push(tip(
@@ -454,7 +475,13 @@ fn import_panel<'a>(
         .iter()
         .filter(|i| i.get("kind").and_then(Value::as_str) == Some("symbol"))
         .count();
-    let assets = draft.file.items.len() - symbols;
+    let templates = draft
+        .file
+        .items
+        .iter()
+        .filter(|i| i.get("kind").and_then(Value::as_str) == Some("template"))
+        .count();
+    let assets = draft.file.items.len() - symbols - templates;
     let clashes = draft
         .file
         .items
@@ -466,6 +493,9 @@ fn import_panel<'a>(
         })
         .count();
     let mut what = format!("“{}”: {symbols} sembol", draft.name);
+    if templates > 0 {
+        what.push_str(&format!(", {templates} şablon"));
+    }
     if assets > 0 {
         what.push_str(&format!(", {assets} çizim"));
     }
@@ -562,4 +592,98 @@ fn import_panel<'a>(
     .padding([4, 4])
     .width(Length::Fill)
     .into()
+}
+
+/// A template's recipe as the details show it (the web's `templateRows`): the tool
+/// (its method and block), the layer's path, the look, the symbol's name,
+/// the attributes, the label, a point's name and code, a text's height.
+fn template_rows(lib: &StyleLibrary, template: &Value) -> Vec<(&'static str, String)> {
+    let text = |key: &str| template.get(key).and_then(Value::as_str).map(str::to_owned);
+    let tool = text("tool").unwrap_or_default();
+    let mut tool_text = kentos_native_style::object_template::tool_label(&tool).to_owned();
+    if let Some(m) = text("method") {
+        tool_text.push_str(&format!(" ({m})"));
+    }
+    if let Some(b) = text("block") {
+        tool_text.push_str(&format!(" · {b}"));
+    }
+    let layer = template.get("layer");
+    let mut path: Vec<String> = layer
+        .and_then(|l| l.get("path"))
+        .and_then(Value::as_array)
+        .map(|p| {
+            p.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        })
+        .unwrap_or_default();
+    path.push(
+        layer
+            .and_then(|l| l.get("name"))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+    );
+    let weight = |v: &Value| {
+        v.as_f64()
+            .map(|w| format!("{} mm", kentos_expression::js::number::to_string(w)))
+    };
+    let symbol = text("symbol").map(|id| match lib.get(&id) {
+        Some((s, _)) => s.name().to_owned(),
+        None => format!("{id} (kitaplıkta yok)"),
+    });
+    // By name, as the web's object keeps them after JSON's map.
+    let attrs: Vec<String> = template
+        .get("attrs")
+        .and_then(Value::as_object)
+        .map(|a| {
+            a.iter()
+                .map(|(k, v)| format!("{k} = {}", v.as_str().unwrap_or("")))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut rows = vec![
+        ("Araç", tool_text),
+        ("Katman", path.join(" / ")),
+        (
+            "Renk",
+            text("color").unwrap_or_else(|| "Katmana göre".into()),
+        ),
+        (
+            "Kalınlık",
+            template
+                .get("lineWeight")
+                .and_then(weight)
+                .unwrap_or_else(|| "Katmana göre".into()),
+        ),
+        (
+            "Sembol",
+            symbol.unwrap_or_else(|| "Katman stiline göre".into()),
+        ),
+        ("Öznitelikler", attrs.join(", ")),
+        ("Etiket", text("label").unwrap_or_default()),
+    ];
+    if let Some(point) = template.get("point") {
+        let parts: Vec<&str> = ["name", "code"]
+            .iter()
+            .filter_map(|k| point.get(*k).and_then(Value::as_str))
+            .filter(|s| !s.is_empty())
+            .collect();
+        rows.push(("Ad ve kod", parts.join(" · ")));
+    }
+    if let Some(t) = template.get("text") {
+        let height = t
+            .get("height")
+            .and_then(Value::as_f64)
+            .map(kentos_expression::js::number::to_string)
+            .unwrap_or_default();
+        let mask = if t.get("mask").and_then(Value::as_bool) == Some(true) {
+            ", zeminli"
+        } else {
+            ""
+        };
+        rows.push(("Yazı", format!("{height} m{mask}")));
+    }
+    rows
 }

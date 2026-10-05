@@ -288,6 +288,27 @@ fn manager_screens() {
         open(app);
         sm(app, Event::Copy("temel.cizgi.cift".into(), Source::User));
     }
+    /// Four object templates in Kitaplığım (docs/adr/0176), the web's `ADD_TEMPLATES`.
+    fn with_templates(app: &mut App) {
+        let templates = serde_json::json!([
+            { "kind": "template", "id": "u-sablon-parsel", "name": "Parsel sınırı", "path": ["Kadastro"], "description": "Kadastro parselinin sınırı",
+              "template": { "tool": "polygon", "layer": { "path": ["Kadastro"], "name": "Parsel", "color": "#E5484D", "lineWeight": 0.35 },
+                       "symbol": "temel.alan.kenar-ici", "attrs": { "Tür": "Parsel" }, "label": "P" } },
+            { "kind": "template", "id": "u-sablon-nokta", "name": "Poligon noktası", "path": ["Kadastro"],
+              "template": { "tool": "point", "layer": { "path": [], "name": "Nokta" }, "color": "#3E63DD", "point": { "name": "P1", "code": "SN" } } },
+            { "kind": "template", "id": "u-sablon-yol", "name": "Yol kenarı", "path": ["Kadastro"],
+              "template": { "tool": "polyline", "layer": { "path": ["Ulaşım"], "name": "Yol" }, "color": "#F5A524", "lineWeight": 0.5 } },
+            { "kind": "template", "id": "u-sablon-yazi", "name": "Ada numarası", "path": ["Kadastro"],
+              "template": { "tool": "text", "layer": { "path": [], "name": "Yazılar" }, "text": { "height": 2.5, "align": "middleCenter", "mask": true } } }
+        ]);
+        for template in templates.as_array().into_iter().flatten() {
+            let _ = app.styles.library.add(Source::User, template.clone());
+        }
+        open(app);
+        sm(app, Event::Go(Source::User, vec!["Kadastro".into()], true));
+        sm(app, Event::Kind(KindFilter::Template));
+        sm(app, Event::Press("u-sablon-parsel".into()));
+    }
     let states = [
         ManagerState {
             name: "acik",
@@ -321,6 +342,11 @@ fn manager_screens() {
                 open(app);
                 sm(app, Event::Kind(KindFilter::Marker));
             },
+            click: None,
+        },
+        ManagerState {
+            name: "sablonlar",
+            setup: with_templates,
             click: None,
         },
         ManagerState {

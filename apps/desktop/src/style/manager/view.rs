@@ -464,7 +464,7 @@ fn card<'a>(
     let Some((item, _)) = lib.get(id) else {
         return space().into();
     };
-    let symbol = symbol_of_item(item);
+    let symbol = symbol_of_item(item, lib);
     // The name on two lines at most (the web's line clamp), cut when longer.
     let name_h = name_height();
     let mut body = Column::new()

@@ -396,6 +396,21 @@ SCENES.stylemanager = [
     },
   },
   {
+    // Object templates in Kitaplığım (docs/adr/0176): the desktop's `with_templates`.
+    id: 'templates',
+    open: async (ui) => {
+      await ui.eval(ADD_TEMPLATES);
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .tree__row', 'Kitaplığım');
+      await ui.sleep(300);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'Şablon');
+      await ui.sleep(500);
+      await ui.clickText('.dialog--styles .scard', 'Parsel sınırı');
+      await ui.sleep(500);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
+  },
+  {
     id: 'kind-drawings',
     open: async (ui) => {
       await openManager(ui);
@@ -1911,6 +1926,19 @@ async function copyFirstToMine(ui) {
   await ui.clickText('.menu .menu__item', 'Kitaplığıma');
   await ui.sleep(700);
 }
+/** Four object templates put in Kitaplığım (docs/adr/0176). */
+const ADD_TEMPLATES = `(() => {
+  const lib = window.kentos.styles.library;
+  const templates = [
+    { kind: 'template', id: 'u-sablon-parsel', name: 'Parsel sınırı', path: ['Kadastro'], description: 'Kadastro parselinin sınırı',
+      template: { tool: 'polygon', layer: { path: ['Kadastro'], name: 'Parsel', color: '#E5484D', lineWeight: 0.35 }, symbol: 'temel.alan.kenar-ici', attrs: { Tür: 'Parsel' }, label: 'P' } },
+    { kind: 'template', id: 'u-sablon-nokta', name: 'Poligon noktası', path: ['Kadastro'],
+      template: { tool: 'point', layer: { path: [], name: 'Nokta' }, color: '#3E63DD', point: { name: 'P1', code: 'SN' } } },
+    { kind: 'template', id: 'u-sablon-yol', name: 'Yol kenarı', path: ['Kadastro'], template: { tool: 'polyline', layer: { path: ['Ulaşım'], name: 'Yol' }, color: '#F5A524', lineWeight: 0.5 } },
+    { kind: 'template', id: 'u-sablon-yazi', name: 'Ada numarası', path: ['Kadastro'], template: { tool: 'text', layer: { path: [], name: 'Yazılar' }, text: { height: 2.5, align: 'middleCenter', mask: true } } },
+  ];
+  for (const p of templates) if (!lib.get(p.id)) lib.add('user', p);
+})()`;
 /** Kitaplığım emptied again after a scene that copied into it. */
 const REMOVE_MINE = `(() => { const lib = window.kentos.styles.library; for (const i of lib.items('user')) lib.remove(i.id); })()`;
 

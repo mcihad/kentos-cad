@@ -6,4 +6,5 @@ mod classify;
 mod designer;
 mod kstil;
 mod legend;
+mod object_templates;
 mod tally;

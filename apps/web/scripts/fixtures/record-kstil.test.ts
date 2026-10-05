@@ -41,12 +41,16 @@ const symbol = (id: string, name: string, sym: Symbol, path = ['Semboller']): Li
 const svgMarker = (assetId: string): Symbol => ({ type: 'marker', layers: [{ id: 'v', type: 'svg', asset: assetId, size: 4 }] });
 const tileFill = (assetId: string): Symbol => ({ type: 'fill', layers: [{ id: 'i', type: 'imageFill', asset: assetId, tileSize: 5 }] });
 const plainFill: Symbol = { type: 'fill', layers: [{ id: 'f', type: 'simpleFill', color: '#EDC948' }] };
-const file = (items: unknown[], extra: Record<string, unknown> = {}) => JSON.stringify({ format: STYLE_FORMAT, version: STYLE_VERSION, exported: '2026-09-27T08:00:00.000Z', items, ...extra });
+const file = (items: unknown[], extra: Record<string, unknown> = {}, version = 1) => JSON.stringify({ format: STYLE_FORMAT, version, exported: '2026-09-27T08:00:00.000Z', items, ...extra });
+// Object templates (docs/adr/0176): a template that draws with a symbol of the library, and one with its own look.
+const template = (id: string, name: string, body: Record<string, unknown>, path = ['Şablonlar']): LibraryItem => ({ kind: 'template', id, name, path, template: body }) as unknown as LibraryItem;
+const parcelTemplate = { tool: 'polygon', layer: { path: ['Kadastro'], name: 'Parsel', color: '#E5484D', lineWeight: 0.35 }, symbol: 's-benim', attrs: { Tür: 'Parsel' }, label: 'P' };
+const pointTemplate = { tool: 'point', layer: { path: [], name: 'Nokta' }, color: '#3E63DD', point: { name: 'P1', code: 'SN' } };
 
 const PARSE: { id: string; text: string }[] = [
   { id: 'not-json', text: '{ "format": "kentos-style", ' },
   { id: 'not-kstil', text: JSON.stringify({ format: 'kentos.document', version: 1 }) },
-  { id: 'newer', text: JSON.stringify({ format: STYLE_FORMAT, version: 2, items: [] }) },
+  { id: 'newer', text: JSON.stringify({ format: STYLE_FORMAT, version: 3, items: [] }) },
   { id: 'no-version', text: JSON.stringify({ format: STYLE_FORMAT, items: [] }) },
   { id: 'version-not-whole', text: JSON.stringify({ format: STYLE_FORMAT, version: 1.5, items: [] }) },
   { id: 'no-items', text: JSON.stringify({ format: STYLE_FORMAT, version: 1 }) },
@@ -94,6 +98,9 @@ const PARSE: { id: string; text: string }[] = [
       { categories: [{ path: ['Semboller'], order: 1 }] },
     ),
   },
+  // Version 2 brings templates; a template is checked by its own rules (fixtures/style/v1/object-templates.json).
+  { id: 'templates', text: file([symbol('s-benim', 'Benim sembolüm', plainFill), template('t-parsel', 'Parsel sınırı', parcelTemplate), template('t-nokta', 'Poligon noktası', pointTemplate)], {}, 2) },
+  { id: 'bad-templates', text: file([template('t-bozuk', 'Bozuk şablon', { tool: 'arc', color: 'mavi' }), { kind: 'template', id: 't-2', name: 'Şablonsuz', path: [] }], {}, 2) },
 ];
 
 const SANITIZE = [
@@ -139,16 +146,30 @@ const SYMBOLS: { id: string; symbol: unknown; where?: string }[] = [
 
 const EXPORT_LIBRARY: State = {
   system: [asset('a-sistem', 'Sistem çizimi'), symbol('s-sistem', 'Sistem ağacı', svgMarker('a-sistem'), ['MPYY'])],
-  user: [asset('a-kullanici', 'Benim çizimim'), symbol('s-benim', 'Benim sembolüm', svgMarker('a-kullanici')), symbol('s-doku', 'Dokulu', tileFill('a-sistem'))],
-  project: [symbol('s-proje', 'Proje sembolü', plainFill, ['Proje'])],
+  user: [
+    asset('a-kullanici', 'Benim çizimim'),
+    symbol('s-benim', 'Benim sembolüm', svgMarker('a-kullanici')),
+    symbol('s-doku', 'Dokulu', tileFill('a-sistem')),
+    template('t-parsel', 'Parsel sınırı', parcelTemplate),
+  ],
+  project: [symbol('s-proje', 'Proje sembolü', plainFill, ['Proje']), template('t-nokta', 'Poligon noktası', pointTemplate, ['Proje'])],
 };
-const EXPORTS = [['s-benim'], ['s-doku', 's-benim', 's-doku'], ['s-proje', 'yok'], ['s-sistem']];
+// A template takes along the symbol it draws with, and that symbol its assets; a file with a template is version 2.
+const EXPORTS = [['s-benim'], ['s-doku', 's-benim', 's-doku'], ['s-proje', 'yok'], ['s-sistem'], ['t-parsel'], ['t-nokta', 's-proje']];
 
+// The template comes before the symbol it draws with: an import takes assets, then symbols, then templates, and a template copied
+// beside a renamed symbol points at the new one.
 const INCOMING: StyleFile = {
   format: STYLE_FORMAT,
-  version: STYLE_VERSION,
+  version: 2,
   exported: '2026-09-27T08:00:00.000Z',
-  items: [symbol('s-benim', 'Gelen sembol', svgMarker('a-kullanici')), asset('a-kullanici', 'Gelen çizim'), symbol('s-yeni', 'Yeni sembol', plainFill), symbol('s-sistem', 'Sisteme çakışan', plainFill)],
+  items: [
+    template('t-gelen', 'Gelen şablon', { ...parcelTemplate, symbol: 's-benim' }),
+    symbol('s-benim', 'Gelen sembol', svgMarker('a-kullanici')),
+    asset('a-kullanici', 'Gelen çizim'),
+    symbol('s-yeni', 'Yeni sembol', plainFill),
+    symbol('s-sistem', 'Sisteme çakışan', plainFill),
+  ],
   categories: [{ path: ['Semboller', 'Gelen'], order: 0 }],
 };
 const IMPORTS = (['replace', 'copy', 'skip'] as const).flatMap((mode) =>
@@ -166,7 +187,7 @@ it.runIf(!!process.env.GOLDEN_WRITE)('records the .kstil rules', () => {
   const out = {
     format: 'kentos.style-file-cases',
     version: 1,
-    note: '.kstil stil dosyası (style/file.ts): okuma (neyin neden reddedildiği; kabul edilen dosyada SVG çizimleri temizlenmiş öğeler), sembol denetimi ve sözleri, SVG temizliği (XML başlığı, DOCTYPE, betik, olay işleyicisi, foreignObject, dışarıya bağlantı ve dış url() kalkar; iç bağlantı ve data:image kalır), dışa aktarmanın aldıkları (sembollerin kullandığı varlıklar, hangi kaynaktan olursa olsun; her öğe bir kez; kaynak alanı yazılmaz), içe aktarmanın her çakışma kipinde yaptıkları (varlıklar önce; değiştir yalnız aynı kaynakta, başka kaynakta ya da sistemde atlar; kopya yeni kimlik alır, semboller yeni varlık kimliğine döner; kategoriler eklenir) ve yeni SVG çiziminin boyu (viewBox, yoksa width/height, yoksa 100). Yeni kimlikler rastgeledir: {new:eski} ile yazılıdır, önekleri prefixes’tedir. exported zamanı karşılaştırılmaz. Yanıtlar web’indir ve kaydedilirken okunmuştur.',
+    note: '.kstil stil dosyası (style/file.ts): okuma (neyin neden reddedildiği; kabul edilen dosyada SVG çizimleri temizlenmiş öğeler; sürüm 2 nesne şablonlarını getirir, şablon kendi kurallarıyla denetlenir, ADR 0176), sembol denetimi ve sözleri, SVG temizliği (XML başlığı, DOCTYPE, betik, olay işleyicisi, foreignObject, dışarıya bağlantı ve dış url() kalkar; iç bağlantı ve data:image kalır), dışa aktarmanın aldıkları (sembollerin kullandığı varlıklar, şablonların çizdiği semboller, hangi kaynaktan olursa olsun; her öğe bir kez; kaynak alanı yazılmaz; şablonlu dosya sürüm 2, öbürü 1), içe aktarmanın her çakışma kipinde yaptıkları (varlıklar, sonra semboller, sonra şablonlar; değiştir yalnız aynı kaynakta, başka kaynakta ya da sistemde atlar; kopya yeni kimlik alır, semboller yeni varlık kimliğine, şablonlar yeni sembol kimliğine döner; kategoriler eklenir) ve yeni SVG çiziminin boyu (viewBox, yoksa width/height, yoksa 100). Yeni kimlikler rastgeledir: {new:eski} ile yazılıdır, önekleri prefixes’tedir. exported zamanı karşılaştırılmaz. Yanıtlar web’indir ve kaydedilirken okunmuştur.',
     styleFormat: STYLE_FORMAT,
     styleVersion: STYLE_VERSION,
     parse: PARSE.map((c) => {

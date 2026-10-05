@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
-import type { LibraryItem, Sourced, Symbol } from '../../model/style';
+import { TEMPLATE_TOOL_LABEL, type ObjectTemplate } from '../../model/objectTemplate';
+import type { LibraryItem, LibraryTemplate, Sourced, Symbol } from '../../model/style';
 import type { PreviewGeometry } from '../../render/symbolPreview';
 import { importStyles, type ConflictMode, type StyleFile } from '../../style/file';
 import { h, replaceChildren, type Child } from '../dom';
@@ -62,7 +63,7 @@ export function renderDetails(host: DetailsHost, item: Sourced | undefined): Chi
   const ctx = host.ctx;
   const lib = ctx.styles.library;
   const editable = lib.canEdit(item.id);
-  const symbol = symbolOfItem(item);
+  const symbol = symbolOfItem(item, lib);
   const type = symbol.type;
 
   // Preview
@@ -113,7 +114,7 @@ export function renderDetails(host: DetailsHost, item: Sourced | undefined): Chi
   const kindLine = h(
     'div',
     { class: 'smgr__kindline' },
-    h('span', null, item.kind === 'symbol' ? KIND_LABEL[type] : `Çizim (${item.format.toUpperCase()})`),
+    h('span', null, item.kind === 'symbol' ? KIND_LABEL[type] : item.kind === 'template' ? `Nesne şablonu · ${TEMPLATE_TOOL_LABEL[item.template.tool]}` : `Çizim (${item.format.toUpperCase()})`),
     h('span', { class: `scard__src scard__src--${item.source}` }, item.source === 'system' ? 'Sistem · salt okunur' : SOURCE_LABEL[item.source]),
   );
   const fields: Child[] = [
@@ -124,7 +125,10 @@ export function renderDetails(host: DetailsHost, item: Sourced | undefined): Chi
     if (item.reference || editable) fields.push(field('Kaynak', edit(item.reference ?? '', (v) => lib.update(item.id, { reference: v || undefined }), { label: 'Kaynak', placeholder: 'Yönetmelik, sayfa' })));
     fields.push(field('Açıklama', edit(item.description ?? '', (v) => lib.update(item.id, { description: v || undefined }), { multiline: true, label: 'Açıklama' })));
   }
+  if (item.kind === 'template') fields.push(field('Açıklama', edit(item.description ?? '', (v) => lib.update(item.id, { description: v || undefined }), { multiline: true, label: 'Açıklama' })));
   fields.push(field('Etiketler', edit((item.tags ?? []).join(', '), (v) => lib.update(item.id, { tags: v.split(',').map((t) => t.trim()).filter(Boolean) }), { label: 'Etiketler', placeholder: 'virgülle ayırın' })));
+  // A template's recipe (docs/adr/0176 §1), after what every item has.
+  if (item.kind === 'template') for (const [label, value] of templateRows(host.ctx, item)) fields.push(field(label, value || h('span', { class: 'smgr__muted' }, '—')));
   if (item.kind === 'asset') {
     const users = lib.usersOf(item.id);
     fields.push(field('Kullanan', users.length ? `${users.length} sembol` : h('span', { class: 'smgr__muted' }, 'Hiçbir sembol kullanmıyor')));
@@ -138,6 +142,26 @@ export function renderDetails(host: DetailsHost, item: Sourced | undefined): Chi
     h('div', { class: 'smgr__fields' }, fields),
     actions(host, item, editable),
   );
+}
+
+/** A template's recipe as the details show it (docs/adr/0176 §1): what it draws with, where, and what it writes. */
+function templateRows(ctx: AppContext, item: LibraryTemplate): [string, string][] {
+  const template: ObjectTemplate = item.template;
+  const symbol = template.symbol ? ctx.styles.library.get(template.symbol) : undefined;
+  const weight = (w: number | undefined) => (w === undefined ? '' : `${w} mm`);
+  // By name, as the desktop's JSON map holds them.
+  const attrs = Object.entries(template.attrs ?? {}).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return [
+    ['Araç', TEMPLATE_TOOL_LABEL[template.tool] + (template.method ? ` (${template.method})` : '') + (template.block ? ` · ${template.block}` : '')],
+    ['Katman', [...template.layer.path, template.layer.name].join(' / ')],
+    ['Renk', template.color ?? 'Katmana göre'],
+    ['Kalınlık', template.lineWeight === undefined ? 'Katmana göre' : weight(template.lineWeight)],
+    ['Sembol', template.symbol ? (symbol?.name ?? `${template.symbol} (kitaplıkta yok)`) : 'Katman stiline göre'],
+    ['Öznitelikler', attrs.map(([k, v]) => `${k} = ${v}`).join(', ')],
+    ['Etiket', template.label ?? ''],
+    ...(template.point ? ([['Ad ve kod', [template.point.name, template.point.code].filter(Boolean).join(' · ')]] as [string, string][]) : []),
+    ...(template.text ? ([['Yazı', `${template.text.height} m${template.text.mask ? ', zeminli' : ''}`]] as [string, string][]) : []),
+  ];
 }
 
 function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLElement {
@@ -215,7 +239,8 @@ function applyToSelection(host: DetailsHost, item: Sourced): void {
 export function renderImport(host: DetailsHost, name: string, file: StyleFile, issues: readonly string[]): Child {
   const lib = host.ctx.styles.library;
   const symbols = file.items.filter((i) => i.kind === 'symbol').length;
-  const assets = file.items.length - symbols;
+  const templates = file.items.filter((i) => i.kind === 'template').length;
+  const assets = file.items.length - symbols - templates;
   const clashes = file.items.filter((i: LibraryItem) => lib.get(i.id)).length;
   let to: 'user' | 'project' = 'user';
   let mode: ConflictMode = 'copy';
@@ -224,7 +249,7 @@ export function renderImport(host: DetailsHost, name: string, file: StyleFile, i
     replaceChildren(
       body,
       h('h3', { class: 'smgr__name' }, 'İçe aktar'),
-      h('p', { class: 'smgr__muted' }, `“${name}”: ${symbols} sembol${assets ? `, ${assets} çizim` : ''}.`),
+      h('p', { class: 'smgr__muted' }, `“${name}”: ${symbols} sembol${templates ? `, ${templates} şablon` : ''}${assets ? `, ${assets} çizim` : ''}.`),
       issues.length ? note('warn', h('b', null, `${issues.length} öğe alınamayacak. `), issues.slice(0, 3).join('; ')) : null,
       h('div', { class: 'smgr__flabel' }, 'Nereye'),
       segmented({ label: 'Hedef', options: [{ value: 'user', label: 'Kitaplığım' }, { value: 'project', label: 'Proje' }], value: to, onChange: (v) => ((to = v), render()) }),

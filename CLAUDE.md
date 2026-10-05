@@ -836,7 +836,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   şema 18) ve 4b (çekirdeğin `label_text_of`'u, iki belgede kayıt öncesi izleme: web `model/linkedTexts.ts`, masaüstü `kentos_domain` `linked.rs`;
   ortak belge durumları `linked-texts.json`) ve 4c (komutlarda bağ, `invalid_link`, `link_not_found`, Bağı kopar; araçta Nesneye bağlı (B);
   çizimde etiketin yerini alma, deponun `set_text_labelled`'ı; ortak iz `labels-linked.json`; Öznitelikler'de Bağlı nesne; DXF penceresinin
-  notu) tamam; `HYB-18` bitti (5 Ekim). 4 Ekim: derleme ve test süreleri
+  notu) tamam; `HYB-18` bitti (5 Ekim). Sıradaki `HYB-19` nesne şablonları ([ADR 0176](docs/adr/0176-object-templates.md); TODOS'taki “çizim
+  kalemleri”, ad sahibin seçimi): şablon stil kitaplığının üçüncü öğe türü, şablonla çizmek, Şablonlar paneli, grup şablonu, Şablonu uygula;
+  BÖHYY takımı sahibin tarifini bekler. 1. adım (şablonun kuralları `model/objectTemplate.ts`, `kentos_native_style::object_template`, ortak
+  `object-templates.json`; kitaplıkta `template`, `.kstil` sürüm 2; Stil yöneticisinde Şablon türü) tamam.
+  4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:
   pafta düzeni dalı (PR #17, [ADR 0164](docs/adr/0164-sheet-layouts.md)) sahibin sözüyle `main`'e birleşti; birleştirmeden

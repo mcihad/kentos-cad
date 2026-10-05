@@ -2,9 +2,10 @@
 //! export, import and share. Versioned JSON with the assets its symbols draw
 //! with embedded, so a file is complete on its own. Everything read from a
 //! file is checked (a shared file is untrusted data) and SVG drawings are
-//! cleaned of scripts and outside references. Both platforms are held to
-//! `fixtures/style/v1/kstil.json`; where the TypeScript leans on regular
-//! expressions this scans the text the same way.
+//! cleaned of scripts and outside references. Version 2 adds object templates
+//! (docs/adr/0176): a file is written as 2 only when it holds a template. Both
+//! platforms are held to `fixtures/style/v1/kstil.json`; where the
+//! TypeScript leans on regular expressions this scans the text the same way.
 
 use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, trim};
@@ -12,9 +13,23 @@ use serde_json::{Map, Value, json};
 
 use crate::classify::js_number;
 use crate::library::{ItemKind, Source, StyleLibrary, assets_of_symbol, new_item_id};
+use crate::object_template::template_issues;
 
 pub const STYLE_FORMAT: &str = "kentos-style";
-pub const STYLE_VERSION: u32 = 1;
+/// The newest version this reads.
+pub const STYLE_VERSION: u32 = 2;
+
+/// The version a file with these items is written as: 2 with a template in it, else 1 (`styleVersionOf`).
+pub fn style_version_of(items: &[Value]) -> u32 {
+    if items
+        .iter()
+        .any(|i| i.get("kind").and_then(Value::as_str) == Some("template"))
+    {
+        2
+    } else {
+        1
+    }
+}
 
 /// The time now as JavaScript writes it (`toISOString`): `2026-09-27T12:34:56.789Z`.
 pub fn iso_now() -> String {
@@ -42,8 +57,9 @@ pub fn iso_now() -> String {
     )
 }
 
-/// The chosen items, and the assets their symbols use (from any source), as a
-/// file; each item once, an item before its assets (`exportStyles`).
+/// The chosen items, the assets their symbols use and the symbols their templates
+/// draw with (from any source), as a file; each item once, an item before
+/// what it draws with (`exportStyles`).
 pub fn export_styles(lib: &StyleLibrary, ids: &[&str]) -> Value {
     fn put(lib: &StyleLibrary, id: &str, out: &mut Vec<Value>, seen: &mut Vec<String>) {
         let Some((item, _)) = lib.get(id) else {
@@ -59,13 +75,18 @@ pub fn export_styles(lib: &StyleLibrary, ids: &[&str]) -> Value {
                 put(lib, &a, out, seen);
             }
         }
+        if let Some(symbol) = item.template_symbol() {
+            let symbol = symbol.to_owned();
+            put(lib, &symbol, out, seen);
+        }
     }
     let mut items = Vec::new();
     let mut seen = Vec::new();
     for id in ids {
         put(lib, id, &mut items, &mut seen);
     }
-    json!({ "format": STYLE_FORMAT, "version": STYLE_VERSION, "exported": iso_now(), "items": items })
+    let version = style_version_of(&items);
+    json!({ "format": STYLE_FORMAT, "version": version, "exported": iso_now(), "items": items })
 }
 
 // ── Validation ─────────────────────────────────────────────────────────
@@ -673,6 +694,10 @@ fn validate_item(it: &Value, i: usize) -> Vec<String> {
                 issues.push(format!("{w}: boyut yok"));
             }
         }
+        Some("template") => issues.extend(template_issues(
+            g("template").unwrap_or(&Value::Null),
+            &format!("{w} ({})", js_str(g("name"))),
+        )),
         _ => issues.push(format!("{w}: bilinmeyen öğe türü “{}”", js_str(g("kind")))),
     }
     issues
@@ -833,9 +858,10 @@ fn rename_assets(v: &mut Value, renamed: &[(String, String)]) {
 }
 
 /// Adds a file's items to the user's or the project's library
-/// (`importStyles`): assets first; an id the library has is replaced (only
-/// in the same editable source), taken as a copy under a new id (symbols
-/// then point at the renamed assets), or skipped. System items are never replaced.
+/// (`importStyles`): assets, then symbols, then templates; an id the library has
+/// is replaced (only in the same editable source), taken as a copy under a
+/// new id (symbols then point at the renamed assets, templates at the renamed
+/// symbols), or skipped. System items are never replaced.
 pub fn import_styles(
     lib: &mut StyleLibrary,
     file: &StyleFile,
@@ -843,12 +869,13 @@ pub fn import_styles(
     mode: ConflictMode,
 ) -> ImportReport {
     let mut report = ImportReport::default();
-    let is_asset = |v: &Value| v.get("kind").and_then(Value::as_str) == Some("asset");
-    let assets_first = file
-        .items
-        .iter()
-        .filter(|v| is_asset(v))
-        .chain(file.items.iter().filter(|v| !is_asset(v)));
+    // Each before what draws with it; the file's order otherwise.
+    let rank = |v: &Value| match v.get("kind").and_then(Value::as_str) {
+        Some("asset") => 0,
+        Some("template") => 2,
+        _ => 1,
+    };
+    let assets_first = (0..3).flat_map(|r| file.items.iter().filter(move |v| rank(v) == r));
     for raw in assets_first {
         let mut item = raw.clone();
         let id = raw
@@ -879,6 +906,14 @@ pub fn import_styles(
             && let Some(symbol) = item.get_mut("symbol")
         {
             rename_assets(symbol, &report.renamed);
+        }
+        // A template points at its symbol's new id.
+        if item.get("kind").and_then(Value::as_str) == Some("template")
+            && let Some(symbol) = item.get_mut("template").and_then(|p| p.get_mut("symbol"))
+            && let Some(id) = symbol.as_str()
+            && let Some((_, to)) = report.renamed.iter().find(|(from, _)| from == id)
+        {
+            *symbol = Value::from(to.clone());
         }
         if lib.add(to, item).is_ok() {
             report.added += 1;
@@ -991,13 +1026,14 @@ pub fn svg_asset(name: &str, path: &[String], svg: &str, id: &str) -> Value {
     })
 }
 
-/// The kind a library item is shown as in the manager: a symbol's type, or a drawing.
+/// The kind a library item is shown as in the manager: a symbol's type, a drawing or a template.
 pub fn kind_of(kind: ItemKind, symbol: Option<&Value>) -> &'static str {
     match (
         kind,
         symbol.and_then(|s| s.get("type")).and_then(Value::as_str),
     ) {
         (ItemKind::Asset, _) => "asset",
+        (ItemKind::Template, _) => "template",
         (_, Some("fill")) => "fill",
         (_, Some("line")) => "line",
         _ => "marker",

@@ -1,5 +1,5 @@
-//! The style library (the web's `style/library.ts`): symbols and assets
-//! from three sources. System items ship with KentOS and can be copied but
+//! The style library (the web's `style/library.ts`): symbols, assets and
+//! object templates (docs/adr/0176) from three sources. System items ship with KentOS and can be copied but
 //! never changed or deleted; the user's items follow the user across
 //! projects; project items travel in the project file, so everyone who opens
 //! it sees the same symbols. Items sit in a category tree of any depth
@@ -56,9 +56,11 @@ impl Source {
 pub enum ItemKind {
     Symbol,
     Asset,
+    /// An object template (docs/adr/0176, [`crate::object_template`]).
+    Template,
 }
 
-/// A library item: a symbol or an asset (an SVG drawing or a raster image).
+/// A library item: a symbol, an asset (an SVG drawing or a raster image) or an object template.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
     id: String,
@@ -73,6 +75,7 @@ impl Item {
         let kind = match value.get("kind")?.as_str()? {
             "symbol" => ItemKind::Symbol,
             "asset" => ItemKind::Asset,
+            "template" => ItemKind::Template,
             _ => return None,
         };
         Some(Item { id, kind, value })
@@ -117,8 +120,21 @@ impl Item {
     pub fn symbol(&self) -> Option<&Value> {
         match self.kind {
             ItemKind::Symbol => self.value.get("symbol"),
-            ItemKind::Asset => None,
+            ItemKind::Asset | ItemKind::Template => None,
         }
+    }
+
+    /// The recipe of a template item (docs/adr/0176 §1).
+    pub fn template(&self) -> Option<&Value> {
+        match self.kind {
+            ItemKind::Template => self.value.get("template"),
+            ItemKind::Symbol | ItemKind::Asset => None,
+        }
+    }
+
+    /// The library symbol a template draws with, by id.
+    pub fn template_symbol(&self) -> Option<&str> {
+        self.template()?.get("symbol")?.as_str()
     }
 
     /// `svg`, `png` or `jpeg`, for an asset.
@@ -469,7 +485,7 @@ impl StyleLibrary {
                 let mut hay = vec![i.name().to_owned()];
                 hay.extend(i.path().into_iter().map(str::to_owned));
                 hay.extend(i.tags().into_iter().map(str::to_owned));
-                if i.kind == ItemKind::Symbol {
+                if i.kind != ItemKind::Asset {
                     hay.push(i.text("description").unwrap_or("").to_owned());
                 }
                 let hay = fold_turkish(&hay.join(" "));
@@ -652,14 +668,15 @@ impl StyleLibrary {
     pub fn remove(&mut self, id: &str) -> Result<Source, String> {
         let source = self.editable(id)?;
         let kind = self.store_mut(source).remove(id).map(|i| i.kind);
-        self.touched(kind != Some(ItemKind::Symbol));
+        self.touched(kind == Some(ItemKind::Asset));
         Ok(source)
     }
 
     /// Copies any item (a system one included) into the user's or the
     /// project's library under a new id (`copy`). A symbol copied into a
-    /// project takes along the user assets it draws with, so the project
-    /// stays complete for colleagues (system assets are always there).
+    /// project takes along the user assets it draws with, and a template its user
+    /// symbol with that symbol's assets, so the project stays complete for
+    /// colleagues (system items are always there).
     pub fn copy(
         &mut self,
         id: &str,
@@ -686,15 +703,27 @@ impl StyleLibrary {
             o.insert("path".into(), json!(path));
         }
         let item = Item::from_value(value).ok_or("Öğe kopyalanamadı.")?;
-        if to == Source::Project
-            && let Some(symbol) = item.symbol()
-        {
-            for a in assets_of_symbol(symbol) {
-                if let Some((asset, Source::User)) = self.get(&a)
-                    && !self.project.contains(&a)
+        if to == Source::Project {
+            // What the item draws with, taken along when it is the user's.
+            let mut refs: Vec<String> = Vec::new();
+            let template_symbol = item.template_symbol().map(str::to_owned);
+            if let Some(s) = &template_symbol {
+                refs.push(s.clone());
+            }
+            let symbol = item.symbol().cloned().or_else(|| {
+                template_symbol
+                    .as_deref()
+                    .and_then(|s| self.symbol(s).cloned())
+            });
+            if let Some(symbol) = symbol {
+                refs.extend(assets_of_symbol(&symbol));
+            }
+            for r in refs {
+                if let Some((taken, Source::User)) = self.get(&r)
+                    && !self.project.contains(&r)
                 {
-                    let asset = asset.clone();
-                    self.project.set(asset);
+                    let taken = taken.clone();
+                    self.project.set(taken);
                 }
             }
         }

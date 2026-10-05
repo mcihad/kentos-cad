@@ -8,7 +8,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_native_style::file::{STYLE_FORMAT, STYLE_VERSION, parse_style_file};
+use kentos_native_style::file::{STYLE_FORMAT, parse_style_file, style_version_of};
 use kentos_native_style::library::{Source, StyleLibrary};
 use serde_json::{Value, json};
 
@@ -111,9 +111,11 @@ impl UserLibrary {
         };
         let (items, categories) = library.dump(Source::User);
         let exported = kentos_native_style::file::iso_now();
+        // Version 2 only with a template in it (docs/adr/0176): a library without one stays readable where 1 is.
+        let version = style_version_of(&items);
         let file = json!({
             "format": STYLE_FORMAT,
-            "version": STYLE_VERSION,
+            "version": version,
             "exported": exported,
             "items": items,
             "categories": categories,

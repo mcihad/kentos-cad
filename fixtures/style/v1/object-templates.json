@@ -1,0 +1,726 @@
+{
+ "format": "kentos.object-template-cases",
+ "version": 1,
+ "note": "Nesne şablonları (docs/adr/0176 §1): bir nesne şablonunun kuralları, iki platformda aynı sözlerle (web model/objectTemplate.ts templateIssues, masaüstü kentos_native_style::object_template::template_issues). Sorunlar alanların okunma sırasıyladır: araç ve yöntemi, katman (ad, yol, renk, çizgi tipi, kalınlık), renk, kalınlık, sembol, öznitelikler (ada göre sıralı), etiket, nokta, yazı, blok. Değer sözde JavaScript'in String(v)'si gibi yazılır (dizi virgülle, eksik öğe boş). Yerin adı verilmezse “şablon”. Durumlar ADR'den elle yazıldı.",
+ "cases": [
+  {
+   "id": "polygon-minimal",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": []
+  },
+  {
+   "id": "polygon-full",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel",
+     "color": "#E5484D",
+     "lineType": "continuous",
+     "lineWeight": 0.35
+    },
+    "color": "fg",
+    "lineWeight": 0.5,
+    "symbol": "mpyy-parsel",
+    "attrs": {
+     "Tür": "Parsel",
+     "Ada": ""
+    },
+    "label": "P"
+   },
+   "issues": []
+  },
+  {
+   "id": "point-name-code",
+   "template": {
+    "tool": "point",
+    "layer": {
+     "path": [],
+     "name": "Nokta"
+    },
+    "point": {
+     "name": "P1",
+     "code": "SN"
+    }
+   },
+   "issues": []
+  },
+  {
+   "id": "text-height-align-mask",
+   "template": {
+    "tool": "text",
+    "layer": {
+     "path": [],
+     "name": "Yazılar"
+    },
+    "text": {
+     "height": 2.5,
+     "align": "middleCenter",
+     "mask": true
+    }
+   },
+   "issues": []
+  },
+  {
+   "id": "text-without-text",
+   "template": {
+    "tool": "text",
+    "layer": {
+     "path": [],
+     "name": "Yazılar"
+    }
+   },
+   "issues": []
+  },
+  {
+   "id": "block",
+   "template": {
+    "tool": "blockInsert",
+    "layer": {
+     "path": [
+      "Altyapı"
+     ],
+     "name": "Rögar"
+    },
+    "block": "Rögar"
+   },
+   "issues": []
+  },
+  {
+   "id": "circle-method",
+   "template": {
+    "tool": "circle",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "method": "2N"
+   },
+   "issues": []
+  },
+  {
+   "id": "rotated-rectangle",
+   "template": {
+    "tool": "rectangle3",
+    "layer": {
+     "path": [],
+     "name": "Bina",
+     "color": "#3E63DD80"
+    }
+   },
+   "issues": []
+  },
+  {
+   "id": "weights-at-the-ends",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [],
+     "name": "Sınır",
+     "lineWeight": 0
+    },
+    "lineWeight": 100
+   },
+   "issues": []
+  },
+  {
+   "id": "null",
+   "template": null,
+   "issues": [
+    "şablon: şablon tanımı yok"
+   ]
+  },
+  {
+   "id": "text",
+   "template": "Parsel",
+   "issues": [
+    "şablon: şablon tanımı yok"
+   ]
+  },
+  {
+   "id": "array",
+   "template": [],
+   "issues": [
+    "şablon: şablon tanımı yok"
+   ]
+  },
+  {
+   "id": "unknown-tool",
+   "template": {
+    "tool": "arc",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: bilinmeyen araç “arc”"
+   ]
+  },
+  {
+   "id": "no-tool",
+   "template": {
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: bilinmeyen araç “undefined”"
+   ]
+  },
+  {
+   "id": "tool-null",
+   "template": {
+    "tool": null,
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: bilinmeyen araç “null”"
+   ]
+  },
+  {
+   "id": "method-of-a-tool-without-methods",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "method": "2N"
+   },
+   "issues": [
+    "şablon: Kapalı alan aracının seçilecek yöntemi yok"
+   ]
+  },
+  {
+   "id": "unknown-method",
+   "template": {
+    "tool": "circle",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "method": "XY"
+   },
+   "issues": [
+    "şablon: “XY” yöntemi Daire aracında yok"
+   ]
+  },
+  {
+   "id": "method-a-number",
+   "template": {
+    "tool": "circle",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "method": 2
+   },
+   "issues": [
+    "şablon: “2” yöntemi Daire aracında yok"
+   ]
+  },
+  {
+   "id": "method-of-an-unknown-tool",
+   "template": {
+    "tool": "arc",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "method": "M"
+   },
+   "issues": [
+    "şablon: bilinmeyen araç “arc”"
+   ]
+  },
+  {
+   "id": "no-layer",
+   "template": {
+    "tool": "polygon"
+   },
+   "issues": [
+    "şablon: katmanı yok"
+   ]
+  },
+  {
+   "id": "layer-not-an-object",
+   "template": {
+    "tool": "polygon",
+    "layer": "Parsel"
+   },
+   "issues": [
+    "şablon: katmanı yok"
+   ]
+  },
+  {
+   "id": "layer-name-blank",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [],
+     "name": "  "
+    }
+   },
+   "issues": [
+    "şablon: katmanın adı boş"
+   ]
+  },
+  {
+   "id": "layer-name-missing",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": []
+    }
+   },
+   "issues": [
+    "şablon: katmanın adı boş"
+   ]
+  },
+  {
+   "id": "layer-path-not-a-list",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": "Kadastro",
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: katmanın yolu metin listesi olmalı"
+   ]
+  },
+  {
+   "id": "layer-path-missing",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: katmanın yolu metin listesi olmalı"
+   ]
+  },
+  {
+   "id": "layer-path-not-texts",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro",
+      3
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: katmanın yolu metin listesi olmalı"
+   ]
+  },
+  {
+   "id": "layer-path-blank",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro",
+      ""
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: katmanın yolunda boş ad var"
+   ]
+  },
+  {
+   "id": "layer-look",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [],
+     "name": "Parsel",
+     "color": "kırmızı",
+     "lineType": "wavy",
+     "lineWeight": 120
+    }
+   },
+   "issues": [
+    "şablon: katmanın rengi geçersiz “kırmızı”",
+    "şablon: katmanın çizgi tipi bilinmiyor “wavy”",
+    "şablon: katmanın kalınlığı 0 ile 100 mm arasında olmalı"
+   ]
+  },
+  {
+   "id": "layer-colour-a-number",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [],
+     "name": "Parsel",
+     "color": 0.5
+    }
+   },
+   "issues": [
+    "şablon: katmanın rengi geçersiz “0.5”"
+   ]
+  },
+  {
+   "id": "layer-colour-a-list",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [],
+     "name": "Parsel",
+     "color": [
+      "#E5484D",
+      null
+     ]
+    }
+   },
+   "issues": [
+    "şablon: katmanın rengi geçersiz “#E5484D,”"
+   ]
+  },
+  {
+   "id": "look",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "color": "#12345",
+    "lineWeight": -1,
+    "symbol": " "
+   },
+   "issues": [
+    "şablon: renk geçersiz “#12345”",
+    "şablon: kalınlık 0 ile 100 mm arasında olmalı",
+    "şablon: sembolün kimliği boş"
+   ]
+  },
+  {
+   "id": "colour-null",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "color": null
+   },
+   "issues": [
+    "şablon: renk geçersiz “null”"
+   ]
+  },
+  {
+   "id": "weight-not-a-number",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "lineWeight": "0.35"
+   },
+   "issues": [
+    "şablon: kalınlık 0 ile 100 mm arasında olmalı"
+   ]
+  },
+  {
+   "id": "attrs-a-list",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "attrs": [
+     [
+      "Ada",
+      "101"
+     ]
+    ]
+   },
+   "issues": [
+    "şablon: öznitelikler ad ve metin değer olmalı"
+   ]
+  },
+  {
+   "id": "attrs-names-and-values",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "attrs": {
+     "Pafta": 7,
+     "": "x",
+     "Ada": "101"
+    }
+   },
+   "issues": [
+    "şablon: öznitelik adı boş",
+    "şablon: “Pafta” özniteliğinin değeri metin olmalı"
+   ]
+  },
+  {
+   "id": "label-not-a-text",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "label": 5
+   },
+   "issues": [
+    "şablon: etiket metin olmalı"
+   ]
+  },
+  {
+   "id": "point-on-an-area",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "point": {
+     "name": "P1"
+    }
+   },
+   "issues": [
+    "şablon: ad ve kod yalnız nokta şablonunda olur"
+   ]
+  },
+  {
+   "id": "point-name-a-number",
+   "template": {
+    "tool": "point",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "point": {
+     "name": 101
+    }
+   },
+   "issues": [
+    "şablon: noktanın adı ve kodu metin olmalı"
+   ]
+  },
+  {
+   "id": "point-not-an-object",
+   "template": {
+    "tool": "point",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "point": "P1"
+   },
+   "issues": [
+    "şablon: noktanın adı ve kodu metin olmalı"
+   ]
+  },
+  {
+   "id": "text-on-an-area",
+   "template": {
+    "tool": "polygon",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "text": {
+     "height": 2
+    }
+   },
+   "issues": [
+    "şablon: yazı bilgisi yalnız yazı şablonunda olur"
+   ]
+  },
+  {
+   "id": "text-not-an-object",
+   "template": {
+    "tool": "text",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "text": 2.5
+   },
+   "issues": [
+    "şablon: yazı bilgisi yok"
+   ]
+  },
+  {
+   "id": "text-wrong",
+   "template": {
+    "tool": "text",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "text": {
+     "height": 0,
+     "align": "baselineLeft",
+     "mask": "evet"
+    }
+   },
+   "issues": [
+    "şablon: yazının yüksekliği sıfırdan büyük olmalı",
+    "şablon: bilinmeyen hiza “baselineLeft”",
+    "şablon: zemin açık ya da kapalı olmalı"
+   ]
+  },
+  {
+   "id": "text-height-missing",
+   "template": {
+    "tool": "text",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "text": {
+     "align": "topLeft"
+    }
+   },
+   "issues": [
+    "şablon: yazının yüksekliği sıfırdan büyük olmalı"
+   ]
+  },
+  {
+   "id": "block-missing",
+   "template": {
+    "tool": "blockInsert",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    }
+   },
+   "issues": [
+    "şablon: blok şablonunun bloğu yok"
+   ]
+  },
+  {
+   "id": "block-blank",
+   "template": {
+    "tool": "blockInsert",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "block": "\t"
+   },
+   "issues": [
+    "şablon: blok şablonunun bloğu yok"
+   ]
+  },
+  {
+   "id": "block-on-a-line",
+   "template": {
+    "tool": "line",
+    "layer": {
+     "path": [
+      "Kadastro"
+     ],
+     "name": "Parsel"
+    },
+    "block": "Rögar"
+   },
+   "issues": [
+    "şablon: blok yalnız blok şablonunda olur"
+   ]
+  },
+  {
+   "id": "where-and-order",
+   "template": {
+    "tool": "fırça",
+    "method": "x",
+    "layer": {
+     "name": "",
+     "path": [
+      ""
+     ]
+    },
+    "color": "mavi",
+    "label": false,
+    "block": "B"
+   },
+   "issues": [
+    "öğe 3 (Yol kenarı): bilinmeyen araç “fırça”",
+    "öğe 3 (Yol kenarı): katmanın adı boş",
+    "öğe 3 (Yol kenarı): katmanın yolunda boş ad var",
+    "öğe 3 (Yol kenarı): renk geçersiz “mavi”",
+    "öğe 3 (Yol kenarı): etiket metin olmalı",
+    "öğe 3 (Yol kenarı): blok yalnız blok şablonunda olur"
+   ],
+   "where": "öğe 3 (Yol kenarı)"
+  }
+ ]
+}

@@ -223,8 +223,9 @@ impl App {
                 });
                 return;
             }
-            // A picture has nothing to edit, as on the web.
-            ItemKind::Asset => return,
+            // A picture has nothing to edit, as on the web; a template opens in
+            // Şablon düzenleyici (docs/adr/0176, step 4).
+            ItemKind::Asset | ItemKind::Template => return,
         }
         if source.editable() {
             self.open_designer(crate::style::designer::Opening {

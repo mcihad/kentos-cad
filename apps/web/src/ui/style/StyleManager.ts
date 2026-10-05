@@ -23,7 +23,7 @@ import { symbolOfItem, Thumbs } from './thumbs';
  * window picks a symbol for a layer style or for objects (`pick`).
  */
 
-export type KindFilter = 'all' | Symbol['type'] | 'asset';
+export type KindFilter = 'all' | Symbol['type'] | 'asset' | 'template';
 
 export interface PickOptions {
   /** Kind shown first (the geometry the symbol is for, or 'asset' to pick an SVG drawing); the user may widen it. */
@@ -56,9 +56,10 @@ const KIND_OPTIONS: { value: KindFilter; label: string }[] = [
   { value: 'line', label: 'Çizgi' },
   { value: 'marker', label: 'İşaret' },
   { value: 'asset', label: 'Çizim' },
+  { value: 'template', label: 'Şablon' },
 ];
 
-export const kindOf = (i: Sourced): KindFilter => (i.kind === 'asset' ? 'asset' : i.symbol.type);
+export const kindOf = (i: Sourced): KindFilter => (i.kind === 'symbol' ? i.symbol.type : i.kind);
 
 export function openStyleManager(ctx: AppContext, opts: { pick?: PickOptions; select?: string; stack?: boolean } = {}): void {
   new StyleManager(ctx, opts);
@@ -273,7 +274,7 @@ class StyleManager implements DetailsHost {
       const card = h(
         'button',
         { class: 'scard', type: 'button', role: 'option', 'aria-selected': String(item.id === this.selected), 'aria-label': item.name, dataset: { id: item.id } },
-        this.thumbs.canvas(symbolOfItem(item), 116, 66),
+        this.thumbs.canvas(symbolOfItem(item, this.ctx.styles.library), 116, 66),
         h('span', { class: 'scard__name' }, item.name),
         this.query ? h('span', { class: `scard__src scard__src--${item.source}` }, SOURCES.find((s) => s.source === item.source)!.label) : null,
       );
