@@ -158,6 +158,8 @@ class DxfExportDialog {
     const data = list.some((e) => e.label || e.symbol || Object.keys(e.attrs).length);
     // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
     const masked = list.filter((e) => e.kind === 'text' && e.mask).length;
+    // A linked text is a plain text in DXF (docs/adr/0175 §4).
+    const linked = list.filter((e) => e.kind === 'text' && e.labelOf !== undefined).length;
     // A leader is a LEADER and its note's MTEXT; its open and dot arrowheads KentOS's data (docs/adr/0146 §8).
     const leaders = list.filter((e) => e.kind === 'leader');
     const ownArrows = leaders.filter((e) => e.kind === 'leader' && (e.arrow === 'open' || e.arrow === 'dot')).length;
@@ -190,6 +192,7 @@ class DxfExportDialog {
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,
       masked ? summaryLine('info', `${masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.`) : null,
+      linked ? summaryLine('info', `${linked} bağlı yazı düz yazı olarak yazılır: nesnesine bağı DXF'e geçmez, geri okununca kendi başına bir yazıdır.`) : null,
       leaders.length
         ? summaryLine(
             'info',

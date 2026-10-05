@@ -37,7 +37,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
-use crate::geometry::{drawing_font, shape, with_shape};
+use crate::geometry::{drawing_font, shape, unlinked, with_shape};
 use crate::transform::finite_shape;
 
 /// Less than this far apart, a spacing or a fill angle is none (the web's
@@ -362,9 +362,10 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
             let Some(mut copy) = with_shape(entity, after) else {
                 return Err(refuse(codes::NOT_FINITE, "Nesne kopyalanamadı.", "layout"));
             };
-            // A copy's slot is given when it is written.
+            // A copy's slot is given when it is written; a linked text's copy
+            // writes no object's label (docs/adr/0175 §4).
             copy.base_mut().id = 0;
-            copies.push(copy);
+            copies.push(unlinked(copy));
         }
     }
     if overflow {

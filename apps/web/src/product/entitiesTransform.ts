@@ -6,6 +6,7 @@ import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { Transform } from '../contracts/generated/Transform';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
+import { withoutLink } from '../model/linkedTexts';
 import { geometryIsFinite, transformObjects, withGeometry } from '../model/ops/transform';
 import { rubberSheet } from '../model/ops/rubber';
 import { rubberShapes, warpShapes, type Warp } from '../model/ops/warp';
@@ -300,7 +301,7 @@ const isStop = (c: Stop | Checked): c is Stop => 'status' in c;
 /** An object as the plan shows it: without its persistent id; a copy's slot is 0, given when it is written. */
 function planned(e: Entity, copy: boolean): PlannedEntity {
   const { uid: _uid, ...rest } = e as Entity & { uid?: string };
-  return (copy ? { ...rest, id: 0 } : rest) as unknown as PlannedEntity;
+  return (copy ? { ...withoutLink(rest), id: 0 } : rest) as unknown as PlannedEntity;
 }
 
 export const entitiesTransform: ProductCommand<EntitiesTransform, EntitiesTransformed, EntitiesTransformPlan> = {
@@ -341,8 +342,9 @@ export const entitiesTransform: ProductCommand<EntitiesTransform, EntitiesTransf
     let changed: string[] = [];
     let created: string[] = [];
     if (copy) {
+      // A linked text's copy is a text of its own (docs/adr/0175 §4).
       const copies = checked.moved.map((e) => {
-        const { id: _id, uid: _uid, ...rest } = e as Entity & { uid?: string };
+        const { id: _id, uid: _uid, ...rest } = withoutLink(e) as Entity & { uid?: string };
         return rest as NewEntity;
       });
       created = cx.doc.addMany(copies, label).map((e) => e.uid);

@@ -273,6 +273,21 @@ define.append({
     ],
 })
 
+# A text that writes an object's label (docs/adr/0175 §4; here the line's, by a persistent id of its own): a
+# definition's objects have no persistent ids, so its copy in the definition is a text of its own.
+LINKED_TO = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"
+LINKED = {"kind": "text", "id": 9, "layerId": "yapi", "attrs": {}, "p": P(487005, 4420002), "text": "D1", "height": 1, "rotation": 0,
+          "align": "middleCenter", "labelOf": LINKED_TO, "labelScale": 1000}
+linked_copy = {k: v for k, v in LINKED.items() if k not in ("labelOf", "labelScale")}
+define.append({
+    "name": "bağlı yazı bloğa kendi başına bir yazı olarak girer: tanımın nesnelerinin kalıcı kimliği yoktur (ADR 0175 §4)",
+    "setup": setup(entities=ENTITIES + [LINKED]),
+    "steps": [
+        {"op": "execute", "input": {"name": "Etiketli duvar", "base": BASE, "uids": ["$uidOf:1", "$uidOf:9"]}, "result": defined("Etiketli duvar"),
+         "expect": {"entities": {"9": LINKED}, "blocks": SETUP_BLOCKS + [{"name": "Etiketli duvar", "base": BASE, "entities": [{**E(1), "id": 1}, {**linked_copy, "id": 2}]}], "revision": "changed"}},
+    ],
+})
+
 define.append({
     "name": "açıklamasıyla; nesneler girdinin sırasıyla numaralanır",
     "steps": [

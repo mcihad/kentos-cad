@@ -61,6 +61,19 @@ function unlinked(text: LinkedText): LinkedText {
   return out;
 }
 
+/**
+ * An object copied into a new one (Kopyala, Dizi, a block's definition): a linked text's copy writes no object's
+ * label, it is a text of its own; every other object as it is. The desktop's is kentos_native_application's
+ * `geometry::unlinked`.
+ */
+export function withoutLink<T extends { kind: string }>(e: T): T {
+  if (e.kind !== 'text' || !('labelOf' in e || 'labelScale' in e)) return e;
+  const out = { ...e } as T & { labelOf?: string; labelScale?: number };
+  delete out.labelOf;
+  delete out.labelScale;
+  return out;
+}
+
 /** The linked text `text` written again for its object `object` now, or none when the rule writes nothing. */
 function rewritten(text: LinkedText, object: Entity, d: LinkedDrawing): LinkedText | undefined {
   const label = object.label;

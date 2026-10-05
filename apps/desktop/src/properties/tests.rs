@@ -428,6 +428,84 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     assert_eq!(value(&app, "Geometri", "Alan"), "10.00 m²");
 }
 
+/// A linked text's Bağlı nesne row (docs/adr/0175 §4): its object's kind,
+/// Nesneyi seç and Bağı kopar (one step, `cad.entities.set`), for several
+/// texts how many are linked; on a locked layer only Nesneyi seç; an object
+/// not in the drawing is said. The web's `textRows.test.ts` walks the same.
+#[test]
+fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
+    let mut app = objects();
+    let parcel = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.uid(Slot(4)))
+        .expect("the parcel's persistent id");
+    let text = |label_of: Option<kentos_domain::Uuid>, words: &str| {
+        Entity::Text(TextEntity {
+            base: base("cizim"),
+            p: Wire { x: E, y: N },
+            text: words.to_owned(),
+            height: 2.5,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
+            label_of: label_of.map(|u| kentos_contracts::EntityId(*u.as_bytes())),
+            label_scale: label_of.map(|_| 1000.0),
+        })
+    };
+    let linked = add(&mut app, text(Some(parcel), "12"));
+    let free = add(&mut app, text(None, "Not"));
+    select(&mut app, &[free]);
+    assert!(!has_row(&app, "Geometri", "Bağlı nesne"));
+    select(&mut app, &[linked]);
+    assert_eq!(value(&app, "Geometri", "Bağlı nesne"), "Kapalı alan");
+    let labels = |app: &App| -> Vec<String> {
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, rows)| rows)
+            .find(|r| r.label == "Bağlı nesne")
+            .and_then(|r| match r.editor {
+                Some(Editor::Select { items, .. }) => Some(
+                    items
+                        .into_iter()
+                        .filter_map(|c| match c {
+                            Choice::Pick { label, .. } => Some(label),
+                            _ => None,
+                        })
+                        .collect(),
+                ),
+                _ => None,
+            })
+            .unwrap_or_default()
+    };
+    assert_eq!(labels(&app), ["Nesneyi seç", "Bağı kopar"]);
+    event(&mut app, Event::SelectObject(Slot(4)));
+    assert_eq!(app.selection.ids(), [Slot(4)]);
+    select(&mut app, &[linked]);
+    event(&mut app, Event::Unlink(vec![Slot(linked)]));
+    let Entity::Text(t) = entity(&app, linked) else {
+        panic!("a text")
+    };
+    assert_eq!((t.label_of, t.label_scale), (None, None));
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Bağı kopar"));
+    // Several texts: how many are linked, Bağı kopar for them all.
+    select(&mut app, &[linked, free]);
+    assert_eq!(value(&app, "Yazı", "Bağlı nesne"), "1 yazı bağlı");
+    assert_eq!(labels(&app), ["Bağı kopar"]);
+    // Its object gone (with the text), a text naming it says so.
+    let removed = app
+        .document
+        .as_mut()
+        .map(|d| d.model.remove(&[Slot(4)]))
+        .unwrap_or(0);
+    assert_eq!(removed, 1);
+    let orphan = add(&mut app, text(Some(parcel), "12"));
+    select(&mut app, &[orphan]);
+    assert_eq!(value(&app, "Geometri", "Bağlı nesne"), "Çizimde yok");
+    assert_eq!(labels(&app), ["Bağı kopar"]);
+}
+
 /// The last line said in the command history, when it is a warning.
 /// A block made of `slot`'s object from (E, N): with `replace`, the insert that took its place.
 fn block_of(

@@ -8,6 +8,7 @@ import { uuidv7 } from '../core/uuid';
 import { blockFaultMessage, definitionsFault, nameOk, type BlockDefinition } from '../model/blocks';
 import { Refusal, type CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
+import { withoutLink } from '../model/linkedTexts';
 import { checkLayer, checkRevision, checkUids, error, failed, findObjects, notFinite, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
@@ -46,12 +47,13 @@ export const noLayer = (): Stop =>
 
 /**
  * The objects as a definition holds them: every field kept (their own
- * copies, in their own order), local ids 1, 2, … in order, no persistent id.
+ * copies, in their own order), local ids 1, 2, … in order, no persistent id;
+ * a linked text's copy writes no object's label (docs/adr/0175 §4).
  */
 export function copies(objects: readonly Entity[]): Entity[] {
   return objects.map((e, k) => {
     const out: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(structuredClone(e) as unknown as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(structuredClone(withoutLink(e)) as unknown as Record<string, unknown>)) {
       if (key === 'uid') continue;
       out[key] = key === 'id' ? k + 1 : value;
     }

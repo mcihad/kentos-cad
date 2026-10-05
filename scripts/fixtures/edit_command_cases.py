@@ -586,6 +586,38 @@ cases.append({
     ],
 })
 
+# A text that writes an object's label (docs/adr/0175 §4; its object is not in this drawing, the rule here is the
+# text's own): an update keeps its link; the document then breaks it when the text's place, text, height, turn or
+# alignment changed, and keeps it when only its mask or width did.
+LINKED_TO = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"
+LINKED = {"kind": "text", "id": 6, "layerId": "yapi", "attrs": {}, "p": P(487090, 4420010), "text": "7", "height": 2.6458333333333335,
+          "rotation": 0, "align": "middleCenter", "labelOf": LINKED_TO, "labelScale": 1000}
+L_SETUP = {**SETUP, "entities": PROPS_ENTITIES + [LINKED]}
+
+
+def unlinked(e):
+    """A text without its link: its object and scale gone, nothing else of it changed."""
+    out = json.loads(json.dumps(e))
+    out.pop("labelOf", None)
+    out.pop("labelScale", None)
+    return out
+
+
+linked_geometry = {k: v for k, v in LINKED.items() if k == "kind" or k in GEOMETRY["text"]}
+masked = {**linked_geometry, "mask": True, "widthFactor": 0.8}
+shifted = {**masked, "p": P(487091, 4420012)}
+cases.append({
+    "name": "properties: bağlı yazı bağını taşır; zemini ve genişliği değişince bağı kalır, yeri değişince belge bağı koparır (ADR 0175 §4)",
+    "setup": L_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(6, masked), "result": done(changed=[uid(6)]),
+         "expect": {"entities": {"6": reshaped(LINKED, masked)}, "revision": "changed"}},
+        {"op": "execute", "input": properties(6, shifted), "result": done(changed=[uid(6)]),
+         "note": "Yazı kendi başına taşındı: artık nesneyi izlemez.", "expect": {"entities": {"6": unlinked(reshaped(LINKED, shifted))}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"6": reshaped(LINKED, masked)}}},
+    ],
+})
+
 farther = geometry_of(3, offset=5, height=0.75)
 measured = geometry_of(3, offset=5, height=0.75, text=None)
 cases.append({

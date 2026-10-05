@@ -495,6 +495,17 @@ fn held(zs: Option<Vec<Option<f64>>>) -> Option<Vec<Option<f64>>> {
     zs.filter(|z| z.iter().any(Option::is_some))
 }
 
+/// An object copied into a new one (Kopyala, Dizi, a block's definition): a
+/// linked text's copy writes no object's label, it is a text of its own
+/// (docs/adr/0175 §4); every other object as it is.
+pub fn unlinked(mut entity: Entity) -> Entity {
+    if let Entity::Text(text) = &mut entity {
+        text.label_of = None;
+        text.label_scale = None;
+    }
+    entity
+}
+
 /// An object of `geometry` with the fields every object has from `base`:
 /// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {

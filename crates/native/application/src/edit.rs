@@ -370,11 +370,20 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     for (change, (slot, entity)) in input.changes.iter().zip(found) {
         let base = entity.base();
         match change {
-            EntityEdit::Update { uid, geometry } => checked.changed.push(Changed {
-                slot,
-                uid: uid.clone(),
-                entity: elevate(entity_of(geometry, base.clone()), entity, geometry),
-            }),
+            EntityEdit::Update { uid, geometry } => {
+                let mut next = entity_of(geometry, base.clone());
+                // A text keeps its link (docs/adr/0175 §4); the document breaks
+                // it when the text's place, text, height, turn or alignment changed.
+                if let (Entity::Text(was), Entity::Text(now)) = (entity, &mut next) {
+                    now.label_of = was.label_of;
+                    now.label_scale = was.label_scale;
+                }
+                checked.changed.push(Changed {
+                    slot,
+                    uid: uid.clone(),
+                    entity: elevate(next, entity, geometry),
+                });
+            }
             EntityEdit::Replace {
                 uid,
                 geometry,

@@ -582,6 +582,14 @@ impl App {
         if masked > 0 {
             lines.push(words::text_line(Line::Info, format!("{masked} yazının zemini KentOS verisi olarak yazılır: DXF yazısında zemin yoktur, başka programlar göstermez; KentOS geri okur.")));
         }
+        // A linked text is a plain text in DXF (docs/adr/0175 §4).
+        let linked = list
+            .iter()
+            .filter(|e| matches!(e, kentos_contracts::Entity::Text(t) if t.label_of.is_some()))
+            .count();
+        if linked > 0 {
+            lines.push(words::text_line(Line::Info, format!("{linked} bağlı yazı düz yazı olarak yazılır: nesnesine bağı DXF'e geçmez, geri okununca kendi başına bir yazıdır.")));
+        }
         if !leaders.is_empty() {
             let arrows = if own_arrows > 0 {
                 format!(" {own_arrows} kılavuzun açık ya da nokta oku KentOS verisidir: başka programlar dolu ok gösterir.")

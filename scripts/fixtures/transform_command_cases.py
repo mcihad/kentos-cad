@@ -226,6 +226,38 @@ cases.append({
     ],
 })
 
+# A text that writes an object's label (docs/adr/0175 §4; its object is not in this drawing): its copy is a text of
+# its own; moved by itself it follows its object no more (the document's rule).
+LINKED_TO = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"
+LINKED = {"kind": "text", "id": 22, "layerId": "yapi", "attrs": {}, "p": P(487005, 4420045), "text": "7", "height": 2, "rotation": 0,
+          "align": "middleCenter", "labelOf": LINKED_TO, "labelScale": 1000}
+L_SETUP = {**SETUP, "entities": ENTITIES + [LINKED]}
+L_IDS = IDS + [22]
+
+
+def unlinked(e):
+    """A text without its link: its object and scale gone, nothing else of it changed."""
+    out = json.loads(json.dumps(e))
+    out.pop("labelOf", None)
+    out.pop("labelScale", None)
+    return out
+
+
+cases.append({
+    "name": "bağlı yazının kopyası kendi başına bir yazıdır (plan da öyle gösterir); bağlı yazı kendi başına taşınınca bağı kopar (ADR 0175 §4)",
+    "setup": L_SETUP,
+    "steps": [
+        {"op": "plan", "input": {"uids": [U(22)], "transform": move(0, 20), "copy": True}, "result": planned([U(22)], [unlinked(moved(LINKED, M_UP, 0))]),
+         "expect": {"ids": L_IDS, "canUndo": False, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": move(0, 20), "copy": True}, "result": done(created=[U(23)]),
+         "expect": {"ids": L_IDS + [23], "entities": entities((22, LINKED), (23, unlinked(moved(LINKED, M_UP, 23)))), "revision": "changed"}},
+        {"op": "undo", "returns": "Kopyala", "expect": {"ids": L_IDS}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": move(0, 20)}, "result": done(changed=[U(22)]),
+         "expect": {"entities": entities((22, unlinked(moved(LINKED, M_UP)))), "revision": "changed"}},
+        {"op": "undo", "returns": "Taşı", "expect": {"entities": entities((22, LINKED))}},
+    ],
+})
+
 cases.append({
     "name": "birden çok nesne ve tekrarlanan kimlik: her nesne bir kez, girdinin sırasıyla; yayın açıları ve noktanın kotu, yazısı, öznitelikleri kalır",
     "steps": [

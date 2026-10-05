@@ -100,3 +100,50 @@ describe("Öznitelikler's text rows", () => {
     expect(textRows(h.ctx, [locked], true).every((r) => r.editor === undefined)).toBe(true);
   });
 });
+
+describe("Öznitelikler's Bağlı nesne row (docs/adr/0175 §4)", () => {
+  function linked() {
+    const h = toolHarness();
+    const parcel = h.add({ kind: 'polygon', pts: [pt(0, 0), pt(20, 0), pt(20, 15), pt(0, 15)], label: '101' });
+    const uid = h.doc.uidOf(parcel.id)!;
+    const t = h.add({ kind: 'text', p: pt(10, 7.5), text: '101', height: 2.6, rotation: 0, align: 'middleCenter', labelOf: uid, labelScale: 1000 }) as TextEntity;
+    const free = h.add({ kind: 'text', p: pt(30, 7.5), text: 'Not', height: 2, rotation: 0 }) as TextEntity;
+    return { h, parcel, t, free };
+  }
+
+  it("names one linked text's object; Nesneyi seç selects it, Bağı kopar breaks the link in one step", () => {
+    const { h, parcel, t, free } = linked();
+    expect(textRows(h.ctx, [free], false).map((r) => r.label)).not.toContain('Bağlı nesne');
+    const r = row(textRows(h.ctx, [t], false), 'Bağlı nesne');
+    expect(r.value).toBe('Kapalı alan “101”');
+    expect(items(r).map((i) => i.label)).toEqual(['Nesneyi seç', 'Bağı kopar']);
+    choose(r, 'Nesneyi seç');
+    expect([...h.ctx.selection.ids.value]).toEqual([parcel.id]);
+    choose(r, 'Bağı kopar');
+    expect([get(h, t).labelOf, get(h, t).labelScale]).toEqual([undefined, undefined]);
+    expect(get(h, t).p).toEqual(t.p);
+    expect(h.doc.undo()).toBe('Bağı kopar');
+    expect(get(h, t).labelOf).toBe(t.labelOf);
+    // On a locked layer only Nesneyi seç.
+    expect(items(row(textRows(h.ctx, [t], true), 'Bağlı nesne')).map((i) => i.label)).toEqual(['Nesneyi seç']);
+  });
+
+  it('counts the linked texts of a selection, and Bağı kopar breaks them all', () => {
+    const { h, t, free } = linked();
+    const r = row(textRows(h.ctx, [t, free], false), 'Bağlı nesne');
+    expect(r.value).toBe('1 yazı bağlı');
+    expect(items(r).map((i) => i.label)).toEqual(['Bağı kopar']);
+    choose(r, 'Bağı kopar');
+    expect(get(h, t).labelOf).toBeUndefined();
+  });
+
+  it('says when its object is not in the drawing', () => {
+    const { h, parcel, t } = linked();
+    // The parcel removed takes its text: put a text back that names it.
+    h.doc.remove([parcel.id]);
+    const orphan = h.add({ kind: 'text', p: pt(10, 7.5), text: '101', height: 2.6, rotation: 0, labelOf: t.labelOf, labelScale: 1000 }) as TextEntity;
+    const r = row(textRows(h.ctx, [orphan], false), 'Bağlı nesne');
+    expect(r.value).toBe('Çizimde yok');
+    expect(items(r).map((i) => i.label)).toEqual(['Bağı kopar']);
+  });
+});

@@ -1,9 +1,9 @@
 import type { AppContext } from '../../app/context';
-import { TEXT_ALIGN_ROWS, textAlignName, type TextAlign, type TextEntity } from '../../model/entities';
+import { ENTITY_KIND_LABEL, TEXT_ALIGN_ROWS, textAlignName, type TextAlign, type TextEntity } from '../../model/entities';
 import { textRealign } from '../../model/textEdit';
 import type { MenuItem } from '../widgets/PopupMenu';
 import type { PropRow } from '../widgets/PropertyGrid';
-import { setGeometries } from './write';
+import { setGeometries, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
 
 /**
@@ -11,7 +11,8 @@ import { fixed } from '../../core/displayNumber';
  * selection: their common value, or “Çeşitli”. A new alignment keeps each text where it is (its point moves to that
  * alignment's point of its box, the core's `textRealign`); a new width factor keeps each text's point; the texts are
  * written in one step “Değiştir”, those that already have the value left out. On a locked layer the rows only show.
- * The desktop's `properties::text_rows` are the same.
+ * A linked text's Bağlı nesne row follows (docs/adr/0175 §4). The desktop's `properties::text_rows` and `link_rows`
+ * are the same.
  */
 
 const MIXED = 'Çeşitli';
@@ -91,5 +92,24 @@ export function textRows(ctx: AppContext, texts: readonly TextEntity[], locked: 
             items: () => [true, false].map((on): MenuItem => ({ label: maskText(on), radio: true, checked: mask === on, run: () => setMask(on) })),
           },
     },
+    ...linkRows(ctx, texts, locked),
   ];
+}
+
+/**
+ * A linked text's Bağlı nesne row (docs/adr/0175 §4): for one text its object's kind and label, with Nesneyi seç and
+ * Bağı kopar (`cad.entities.set`, `unlink`); for several, how many are linked, with Bağı kopar for them all. None when
+ * no text of them is linked; on a locked layer only Nesneyi seç.
+ */
+function linkRows(ctx: AppContext, texts: readonly TextEntity[], locked: boolean): PropRow[] {
+  const linked = texts.filter((t) => t.labelOf !== undefined);
+  if (!linked.length) return [];
+  const object = texts.length === 1 ? ctx.doc.byUid(linked[0].labelOf!) : undefined;
+  const value =
+    texts.length > 1 ? `${linked.length} yazı bağlı` : !object ? 'Çizimde yok' : object.label ? `${ENTITY_KIND_LABEL[object.kind]} “${object.label}”` : ENTITY_KIND_LABEL[object.kind];
+  const items: MenuItem[] = [
+    ...(object ? [{ label: 'Nesneyi seç', run: () => ctx.selection.set([object.id]) }] : []),
+    ...(locked ? [] : [{ label: 'Bağı kopar', run: () => void setProperties(ctx, { uids: uidsOf(ctx, linked.map((t) => t.id)), unlink: true, operation: 'unlink' }) }]),
+  ];
+  return [{ label: 'Bağlı nesne', value, editor: items.length ? { type: 'select', display: () => ({ text: value }), items: () => items } : undefined }];
 }

@@ -6,6 +6,7 @@ import type { EntitiesArrayPlan } from '../contracts/generated/EntitiesArrayPlan
 import type { Entity as PlannedEntity } from '../contracts/generated/Entity';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
+import { withoutLink } from '../model/linkedTexts';
 import { pathOf } from '../model/ops/path';
 import { arrayCopies, geometryIsFinite, pathArrayTransforms } from '../model/ops/transform';
 import { isUuid } from '../core/uuid';
@@ -155,15 +156,15 @@ function pathMaps(doc: CadDocument, layout: ArrayLayout): Stop | Affine[] | null
 
 const isStop = (c: Stop | Checked): c is Stop => 'status' in c;
 
-/** A copy as it is added: without its original's slot and persistent id. */
+/** A copy as it is added: without its original's slot and persistent id; a linked text's writes no object's label (docs/adr/0175 §4). */
 function added(e: Entity): NewEntity {
-  const { id: _id, uid: _uid, ...rest } = e as Entity & { uid?: string };
+  const { id: _id, uid: _uid, ...rest } = withoutLink(e) as Entity & { uid?: string };
   return rest as NewEntity;
 }
 
-/** A copy as the plan shows it: slot 0, given when it is written, and no persistent id. */
+/** A copy as the plan shows it: slot 0, given when it is written, and no persistent id or link. */
 function planned(e: Entity): PlannedEntity {
-  const { uid: _uid, ...rest } = e as Entity & { uid?: string };
+  const { uid: _uid, ...rest } = withoutLink(e) as Entity & { uid?: string };
   return { ...rest, id: 0 } as unknown as PlannedEntity;
 }
 

@@ -1,6 +1,6 @@
 # ADR 0175: Etiketleri yazıya çevirme
 
-- **Durum:** kabul edildi (2026-10-05). Sıra sahibin kararıdır: TODOS.md §16.0'ın on sekizinci işi `HYB-18`. Ayrıntılar bu ADR'nin
+- **Durum:** kabul edildi (2026-10-05); dört adımı bitti (2026-10-05). Sıra sahibin kararıdır: TODOS.md §16.0'ın on sekizinci işi `HYB-18`. Ayrıntılar bu ADR'nin
   varsayılanlarıdır.
 - **Bağlam belgesi:** TODOS.md `HYB-18`, `CAD-06` (ilişkilendirme), `GIS-16` (etiket motoru); [araştırma kaydı](../research/2026-10-01-netcad-arcgis-qgis.md);
   ADR 0055 (çizimin yazıları), ADR 0145 (yazı ekleri: hiza, genişlik, zemin), ADR 0164 (pafta: etiketlerin kağıttaki kuralı), ADR 0060
@@ -101,14 +101,22 @@ izle (`fixtures/interaction/v1`) sınanır; pencere yoktur.
   düzenleyiciden gelen değişiklik izlenmez (onu yapan istemci izlemiştir).
 - **Bağın kopması:** nesnenin etiketi boşalır ya da kural onu artık yazmazsa (ölçek dışı, küçük) yazı yerinde kalır ve bağı kopar (iki alan
   silinir), aynı adımda; yazının kendisi düzenlenince (yeri, metni, boyu, dönüşü, hizası) bağı kopar: elle yerleştirilen yazı nesneyi izlemez.
+  Düzenleme komutu (`cad.entities.edit`'in `update`'i) yazının bağını taşır; zemini ya da genişliği değişen yazı bağlı kalır.
+- **Kopyalar:** bağlı yazının kopyası (Kopyala, Dizi, Kutupsal dizi, yol boyunca dizi; Yapıştır zaten yeni yazı yazar) ve blok tanımına
+  giren yazı bağ taşımaz, kendi başına yazıdır: aynı nesnenin iki yazısı olmaz, tanımın nesnelerinin kalıcı kimliği yoktur (`.kcad` de
+  reddeder).
 - **Silme:** nesnesi silinince bağlı yazı da aynı adımda silinir. Patlat ve Parçalara ayır yazıyı nesnenin yerinde kalan parçasına bağlı
   bırakır (o parça nesnenin kimliğini taşır).
 - **Çizimde:** bağlı yazısı olan nesnenin etiketi çizimde ve paftada çizilmez; yazı onun yerini alır. Bağsız yazıya çevrilen etiketler çizimde
   yazılarıyla üst üste görünür; katmanın etiketini kapatmak kullanıcınındır.
-- Öznitelikler'de “Bağlı nesne” satırı (nesnenin türü ve etiketi) ve “Bağı kopar”; DXF ve GeoJSON bağı yazmaz (yazı düz yazıdır) ve bunu
-  dışa aktarma penceresi söyler.
+- Öznitelikler'de “Bağlı nesne” satırı (nesnenin türü ve etiketi; nesnesi çizimde yoksa “Çizimde yok”; birden çok yazıda kaçının bağlı
+  olduğu) ve menüsünde “Nesneyi seç” ile “Bağı kopar” (kilitli katmanda yalnız “Nesneyi seç”); DXF bağı yazmaz (yazı düz yazıdır) ve bunu
+  dışa aktarma penceresi söyler; GeoJSON yazıları zaten yazmaz.
 - Parçalar: 4a sözleşme ve şema 18 (kodek, sütunlar, bağımsız Python okuyucu ve yazıcısı, örnek dosya); 4b çekirdeğin `label_text_of`'u ve iki
   belgede kayıt öncesi izleme (ortak belge durumları); 4c araçta “Nesneye bağlı”, çizimde etiketin yerini alma, Öznitelikler, dışa aktarma.
+  Hepsi tamam (5 Ekim): 4c komutlarda (`cad.entities.create`'in `labelOf` ve `labelScale`'i, `invalid_link`, `link_not_found`;
+  `cad.entities.set`'in `unlink`'i; düzenleme bağı taşır, kopya ve blok tanımı taşımaz; ortak durumlar), araçta ve çizimde (deponun
+  `set_text_labelled`'ı; ortak iz `labels-linked.json`), Öznitelikler'de ve DXF penceresinde.
 
 ### 5. Kapsam dışı
 

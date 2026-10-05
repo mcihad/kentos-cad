@@ -53,7 +53,7 @@ use crate::checks::{self, Stop};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 use crate::elevation;
-use crate::geometry::{edit_geometry, entity_of, shape, with_shape};
+use crate::geometry::{edit_geometry, entity_of, shape, unlinked, with_shape};
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesTransform) -> CommandResult<()> {
@@ -81,9 +81,10 @@ pub fn plan(
                     .moved
                     .into_iter()
                     .map(|mut e| {
-                        // A copy's slot is given when it is written.
+                        // A copy's slot is given when it is written; it writes no object's label.
                         if copy {
                             e.base_mut().id = 0;
+                            e = unlinked(e);
                         }
                         e
                     })
@@ -111,7 +112,9 @@ pub fn execute(
     };
     let label = label(&input.transform, copy);
     let (changed, created) = if copy {
-        match cx.doc.add_many(checked.moved, label) {
+        // A linked text's copy is a text of its own (docs/adr/0175 §4).
+        let copies = checked.moved.into_iter().map(unlinked).collect();
+        match cx.doc.add_many(copies, label) {
             Ok(slots) => {
                 let doc = &*cx.doc;
                 let created = slots

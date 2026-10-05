@@ -811,6 +811,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             ]);
             // Hiza, Genişlik çarpanı and Zemin (docs/adr/0145 §6).
             geo.extend(text_rows(&[t], &ids, locked));
+            // Bağlı nesne (docs/adr/0175 §4).
+            geo.extend(link_rows(&doc.model, &[t], &ids, locked));
             geo.extend([len("Konum Y", t.p.x), len("Konum X", t.p.y)]);
         }
         // The block, its place, scale, turn and mirroring, through
@@ -1017,6 +1019,65 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
 /// A leader's Not, Yükseklik, Dönüş, Ok and Zemin rows (docs/adr/0146 §7),
 /// for one leader or the leaders of a selection: their common value, or
 /// “Çeşitli”; each change is one step “Değiştir”. The web's `leaderRows`.
+/// A linked text's Bağlı nesne row (docs/adr/0175 §4): for one text its
+/// object's kind and label, with Nesneyi seç and Bağı kopar; for several,
+/// how many are linked, with Bağı kopar for them all. None when no text of
+/// them is linked; on a locked layer only Nesneyi seç. The web's `linkRow`
+/// (ui/properties/textRows.ts) is the same.
+fn link_rows(
+    model: &kentos_domain::Document,
+    texts: &[&kentos_contracts::TextEntity],
+    slots: &[Slot],
+    locked: bool,
+) -> Vec<Row> {
+    let linked: Vec<Slot> = texts
+        .iter()
+        .zip(slots)
+        .filter(|(t, _)| t.label_of.is_some())
+        .map(|(_, slot)| *slot)
+        .collect();
+    if linked.is_empty() {
+        return Vec::new();
+    }
+    let object = match texts {
+        [one] => one
+            .label_of
+            .and_then(|id| model.slot_of(kentos_domain::Uuid::from_bytes(id.0)))
+            .and_then(|slot| Some((slot, model.get(slot)?))),
+        _ => None,
+    };
+    let value = match (texts.len(), object) {
+        (1, Some((_, e))) => match e.base().label.as_deref().filter(|l| !l.is_empty()) {
+            Some(label) => format!("{} “{label}”", kind_title(e.kind())),
+            None => kind_title(e.kind()).to_owned(),
+        },
+        (1, None) => "Çizimde yok".to_owned(),
+        (_, _) => format!("{} yazı bağlı", linked.len()),
+    };
+    let action = |label: &str, event: Event| Choice::Pick {
+        label: label.to_owned(),
+        swatch: None,
+        icon: None,
+        chosen: false,
+        enabled: true,
+        message: Message::Properties(event),
+    };
+    let mut items = Vec::new();
+    if let Some((slot, _)) = object {
+        items.push(action("Nesneyi seç", Event::SelectObject(slot)));
+    }
+    if !locked {
+        items.push(action("Bağı kopar", Event::Unlink(linked)));
+    }
+    let editor = (!items.is_empty()).then(|| Editor::Select {
+        text: value.clone(),
+        swatch: None,
+        icon: None,
+        items,
+    });
+    vec![Row::text("Bağlı nesne", value).editor(editor)]
+}
+
 fn leader_rows(
     leaders: &[&kentos_contracts::LeaderEntity],
     slots: &[Slot],
@@ -1180,7 +1241,11 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             } else {
                 format!("Yazılar ({})", texts.len()).into()
             },
-            rows: text_rows(&texts, &slots, any_locked),
+            rows: [
+                text_rows(&texts, &slots, any_locked),
+                link_rows(&doc.model, &texts, &slots, any_locked),
+            ]
+            .concat(),
         });
     }
     // The selection's leaders: their note, height, turn, arrowhead and mask, common or “Çeşitli” (docs/adr/0146 §7).

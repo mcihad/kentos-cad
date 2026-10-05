@@ -315,6 +315,27 @@ cases.append({
     ],
 })
 
+# A text that writes an object's label (docs/adr/0175 §4; its object is not in this drawing): its copies are texts of
+# their own.
+LINKED_TO = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4003"
+LINKED = {"kind": "text", "id": 21, "layerId": "yapi", "attrs": {}, "p": P(487005, 4420045), "text": "7", "height": 2, "rotation": 0,
+          "align": "middleCenter", "labelOf": LINKED_TO, "labelScale": 1000}
+L_IDS = IDS + [21]
+linked_copies = []
+for slot, m in zip((22, 23), grid(1, 3, 10, 0)):
+    copy = json.loads(json.dumps(moved(LINKED, m, slot)))
+    copy.pop("labelOf")
+    copy.pop("labelScale")
+    linked_copies.append((slot, copy))
+cases.append({
+    "name": "bağlı yazının kopyaları kendi başlarına yazılardır: nesneyi izlemezler (ADR 0175 §4)",
+    "setup": {**SETUP, "entities": ENTITIES + [LINKED]},
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(21)], "layout": G(1, 3, 10, 0)}, "result": done(linked_copies),
+         "expect": {"ids": L_IDS + [slot for slot, _ in linked_copies], "entities": {"21": LINKED, **{str(slot): e for slot, e in linked_copies}}, "revision": "changed"}},
+    ],
+})
+
 made = copies([13, 4], grid(1, 3, 10, 0))
 cases.append({
     "name": "birden çok nesne: her yerde nesneler girdinin sırasıyla; tekrarlanan kimlik bir kez; tek satırda satır aralığı gerekmez",
@@ -632,6 +653,8 @@ def write(command, title, note, cases):
         lines = ["    {", f'      "name": {compact(c["name"])},']
         if "note" in c:
             lines.append(f'      "note": {compact(c["note"])},')
+        if "setup" in c:
+            lines.append(f'      "setup": {compact(c["setup"])},')
         lines.append('      "steps": [')
         lines.append(",\n".join(f"        {compact(st)}" for st in c["steps"]))
         lines.append("      ]")

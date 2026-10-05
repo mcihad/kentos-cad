@@ -168,6 +168,11 @@ function reshaped(e: Entity, g: EntityGeometry): NewEntity {
     else if (!old.has(key)) out[key] = key === 'attrs' ? { ...e.attrs } : src[key];
   }
   for (const key of Object.keys(geometry)) if (!(key in out)) out[key] = geometry[key];
+  // A text keeps its link (docs/adr/0175 §4); what is no longer a text writes no object's label.
+  if (geometry.kind !== 'text') {
+    delete out.labelOf;
+    delete out.labelScale;
+  }
   return out as unknown as NewEntity;
 }
 

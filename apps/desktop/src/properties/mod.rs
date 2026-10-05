@@ -79,6 +79,10 @@ pub enum Event {
     /// angle, 0 for Y and 90 for X (docs/adr/0147 §7).
     DimensionMask(Vec<Slot>, bool),
     DimensionAxis(Vec<Slot>, f64),
+    /// Bağlı nesne ▾ of a linked text: Nesneyi seç selects its object,
+    /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
+    SelectObject(Slot),
+    Unlink(Vec<Slot>),
 }
 
 /// The value a cell edits.
@@ -361,12 +365,21 @@ impl App {
             }
             return;
         }
+        if let Event::SelectObject(slot) = event {
+            self.selection.set([slot]);
+            return;
+        }
         let Some(doc) = self.document.as_mut() else {
             return;
         };
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) => Vec::new(),
+            Event::Toggle(_) | Event::SelectObject(_) => Vec::new(),
+            Event::Unlink(ids) => {
+                let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
+                input.unlink = true;
+                properties::set_properties(model, input)
+            }
             // On a hidden layer they vanish from the drawing, still selected: the command's warning says so.
             Event::Layer(ids, layer) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Layer);

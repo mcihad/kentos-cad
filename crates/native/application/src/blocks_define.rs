@@ -28,6 +28,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
+use crate::geometry::unlinked;
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &BlocksDefine) -> CommandResult<()> {
@@ -162,12 +163,14 @@ pub(crate) fn no_layer() -> Stop {
     ))
 }
 
-/// The objects as a definition holds them: every field kept, local ids 1, 2, … in order.
+/// The objects as a definition holds them: every field kept, local ids 1, 2,
+/// … in order; a linked text's copy writes no object's label, a definition's
+/// objects have no persistent ids (docs/adr/0175 §4).
 pub(crate) fn copies<'a>(objects: impl Iterator<Item = &'a Entity>) -> Vec<Entity> {
     objects
         .enumerate()
         .map(|(k, e)| {
-            let mut copy = e.clone();
+            let mut copy = unlinked(e.clone());
             base_mut(&mut copy).id = u32::try_from(k + 1).unwrap_or(u32::MAX);
             copy
         })
