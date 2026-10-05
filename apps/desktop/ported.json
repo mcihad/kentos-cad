@@ -228,7 +228,8 @@
     "tool.holeFill",
     "tool.continue",
     "tool.reshape",
-    "sheet.model"
+    "sheet.model",
+    "template.draw"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

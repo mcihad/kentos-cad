@@ -231,6 +231,92 @@ pub fn template_issues(template: &Value, where_: &str) -> Vec<String> {
     out
 }
 
+/// A template as the app draws with it (docs/adr/0176 §3), read from a
+/// library item's `template`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Recipe {
+    /// One of [`TEMPLATE_TOOLS`].
+    pub tool: String,
+    /// One of the tool's [`template_methods`].
+    pub method: Option<String>,
+    /// The layer's groups from the top, its name and its look when opened.
+    pub layer_path: Vec<String>,
+    pub layer_name: String,
+    pub layer_color: Option<String>,
+    pub layer_line_type: Option<kentos_contracts::LineType>,
+    pub layer_line_weight: Option<f64>,
+    /// The objects' own colour and line weight; none: their layer's.
+    pub color: Option<String>,
+    pub line_weight: Option<f64>,
+    pub symbol: Option<String>,
+    pub attrs: std::collections::BTreeMap<String, String>,
+    pub label: Option<String>,
+    /// A point template's first name and code.
+    pub point_name: Option<String>,
+    pub point_code: Option<String>,
+    /// A text template's height, alignment and mask.
+    pub text_height: Option<f64>,
+    pub text_align: Option<String>,
+    pub text_mask: bool,
+    /// A block template's block, by name.
+    pub block: Option<String>,
+}
+
+/// A template's recipe; none for one with an issue ([`template_issues`]).
+pub fn read(template: &Value) -> Option<Recipe> {
+    if !template_issues(template, "şablon").is_empty() {
+        return None;
+    }
+    let text = |v: Option<&Value>| v.and_then(Value::as_str).map(str::to_owned);
+    let layer = template.get("layer")?;
+    let point = template.get("point");
+    let written = template.get("text");
+    Some(Recipe {
+        tool: text(template.get("tool"))?,
+        method: text(template.get("method")),
+        layer_path: layer
+            .get("path")
+            .and_then(Value::as_array)
+            .map(|p| {
+                p.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default(),
+        layer_name: text(layer.get("name"))?,
+        layer_color: text(layer.get("color")),
+        layer_line_type: layer
+            .get("lineType")
+            .and_then(|t| serde_json::from_value(t.clone()).ok()),
+        layer_line_weight: layer.get("lineWeight").and_then(Value::as_f64),
+        color: text(template.get("color")),
+        line_weight: template.get("lineWeight").and_then(Value::as_f64),
+        symbol: text(template.get("symbol")),
+        attrs: template
+            .get("attrs")
+            .and_then(Value::as_object)
+            .map(|a| {
+                a.iter()
+                    .filter_map(|(k, v)| Some((k.clone(), v.as_str()?.to_owned())))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        label: text(template.get("label")),
+        point_name: text(point.and_then(|p| p.get("name"))),
+        point_code: text(point.and_then(|p| p.get("code"))),
+        text_height: written
+            .and_then(|t| t.get("height"))
+            .and_then(Value::as_f64),
+        text_align: text(written.and_then(|t| t.get("align"))),
+        text_mask: written
+            .and_then(|t| t.get("mask"))
+            .and_then(Value::as_bool)
+            .unwrap_or(false),
+        block: text(template.get("block")),
+    })
+}
+
 /// What a template's card and preview show (docs/adr/0176): its own symbol when
 /// the library has it, else one made of the template's colour and line weight
 /// (its layer's when it gives none) in its tool's shape: a dot for a point

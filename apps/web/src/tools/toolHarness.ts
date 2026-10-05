@@ -11,6 +11,7 @@ import { extendEntity, trimEntity } from '../model/ops/trim';
 import { Selection } from '../model/selection';
 import type { TextInputRequest } from '../viewport/ViewportController';
 import type { ToolPointer } from './Tool';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * A document, a log, a selection and a stand-in for the viewport, for the tests
@@ -56,6 +57,8 @@ export function toolHarness() {
     settings: {
       color: new Signal<string | null>(null),
       lineWeight: new Signal<number | null>(null),
+      // Drawing with an object template (docs/adr/0176 §3): none, as every session starts.
+      template: new Signal<TemplateRun | null>(null),
       ortho: new Signal(false),
       polar: new Signal(false),
       // Topological editing (docs/adr/0160): off, as every session starts.

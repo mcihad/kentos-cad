@@ -60,7 +60,11 @@ da geçer:
   şablonun katmanı kalır (kullanıcı orada çiziyordu). Son komutu yinele şablonu yineler.
 - Ürün komutları değerleri açıkça alır (CMD-07): oluşturma komutlarının girdisi `symbol` alır, eksik olanlar `label` da; öznitelikleri
   zaten alırlar. Adım aracın adımıdır.
-- İstemin başında şablonun adı görünür (“Parsel sınırı · Kapalı alan: …”).
+- İstemin başında şablonun adı görünür (“Parsel sınırı · Kapalı alan: …”); komut geçmişi de şablonu böyle yazar.
+- Şablondan şablona geçilirken döndürülecek renk ve kalınlık ilk şablondan önceki değerlerdir. Şeridin Renk'i paletin dışındaki
+  bir şablon rengini kendi yazısıyla gösterir (“#7A5C3E”).
+- Komutu `template.draw`'dır (“Şablonla çiz”): şablonun kimliğiyle çizer; kimliksiz (komut satırı, Komut ara) Stil yöneticisini
+  Şablon türüyle açar. Kitaplıkta bulunmayan ya da kuralına uymayan şablon söylenir, başlamaz.
 
 ### 4. Şablonlar paneli ve düzenleyici
 
@@ -101,7 +105,17 @@ da geçer:
    `cad.entities.create`'in nesneleri `symbol` alır; değerler olduğu gibi yazılır, sembolün kimliği kitaplıkta aranmaz (kitaplıklar ev
    sahibinindir; kitaplıkta bulunmayan sembolün nesnesi çizimde düz görünüşle, rengi ve kalınlığıyla çizilir, kaybolmaz). Her komutun dosyasında bir ortak durum (`create_command_cases.py`
    üretir); TS sözleşmeleri, katalog ve Python SDK'sı yeniden üretildi.
-3. Şablonla çizmek: şablonun katmanı, rengi ve kalınlığı, araçların yazdığı sembol, öznitelik ve etiket; ortak iz.
+3. Şablonla çizmek: şablonun katmanı, rengi ve kalınlığı, araçların yazdığı sembol, öznitelik ve etiket; ortak iz. İki parçada:
+   - 3a **Tamam (5 Ekim):** katmanın kuralı iki platformda (`kentos_interaction::templates::find_layer`, `templateLayer`; bağımsız
+     başvurusu `scripts/fixtures/template_layer_cases.py`, 22 ortak durum `fixtures/style/v1/template-layers.json`), açılışı tek adım
+     “Katman ekle” (`open_layer`); şablonun koşusu (masaüstü `templates.rs`, `Context::template`, `Session::runs`; web
+     `app/objectTemplates.ts`, `tools/templateStamp.ts`, `DraftingSettings.template`, `ToolManager`'ın `activate(id, template)`'i);
+     masaüstünün taslak rengi her rengi taşır (`DraftColor`); Kapalı alan, Çoklu çizgi, Çizgi, Dikdörtgen, Döndürülmüş dikdörtgen,
+     Daire ve `cad.entities.create` ile yazan araçlar damgayı yazar; Stil yöneticisinde Şablonla çiz; ortak iz `template-draw.json`
+     (`templates.kcad`; iz biçimine `template` eylemi, `activeLayer`, `currentColor`, `currentWeight` ve nesnenin `symbol`, `color`,
+     `lineWeight`, `layer` beklentileri). Web'de kitaplığın proje bölümü artık açılan çizimi izler (masaüstününki gibi).
+   - 3b: nokta, yazı ve blok şablonları: Nokta'nın Ad ve Kod'u şablondan, ad dizisi şablon başına sürer, bırakılınca aracın kendi
+     değerleri döner; Yazı'nın yüksekliği, hizası ve zemini; Blok ekle'nin bloğu adıyla (çizimde yoksa söylenir); ortak iz.
 4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler.
 5. Grup şablonu; ortak iz.
 6. Şablonu uygula; ortak iz.

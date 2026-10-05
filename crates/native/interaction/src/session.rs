@@ -214,6 +214,8 @@ pub struct Session {
     construction: bool,
     /// The pointer's last place, for a distance typed as a reference.
     cursor: Option<Vec2>,
+    /// How many tools have started ([`Session::runs`]).
+    runs: u64,
 }
 
 /// What the web says when the command takes no point at its step.
@@ -362,6 +364,7 @@ impl Session {
     /// objects), dropping whatever ran; it is not remembered for repeat (the
     /// web's `ToolManager.run`). The host calls [`Session::activate`] right after.
     pub fn run(&mut self, tool: Box<dyn Tool>) {
+        self.runs += 1;
         self.tool = Some(tool);
         self.parent = None;
         self.select.reset();
@@ -530,6 +533,13 @@ impl Session {
     /// The last tool started, for Enter or Space with no command (repeat).
     pub fn last(&self) -> Option<&'static str> {
         self.last
+    }
+
+    /// How many tools have started in this session (a nested one not): what a
+    /// host keeps for one run (an object template's, docs/adr/0176 §3) ends
+    /// when this moves on or no tool runs.
+    pub fn runs(&self) -> u64 {
+        self.runs
     }
 
     /// Points the running command has taken; 0 when none runs.

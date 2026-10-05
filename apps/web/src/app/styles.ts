@@ -5,6 +5,7 @@ import { StyleLibrary } from '../style/library';
 import { geometryClassOf } from '../style/geometry';
 import { setProperties, uidsOf } from '../ui/properties/write';
 import type { AppContext } from './context';
+import { drawWithTemplate } from './objectTemplates';
 import { persistedSignals } from './state';
 
 /**
@@ -21,7 +22,8 @@ interface UserStyles {
   categories: LibraryCategory[];
 }
 
-const isItem = (v: unknown): v is LibraryItem => !!v && typeof v === 'object' && ((v as LibraryItem).kind === 'symbol' || (v as LibraryItem).kind === 'asset') && typeof (v as LibraryItem).id === 'string';
+const isItem = (v: unknown): v is LibraryItem =>
+  !!v && typeof v === 'object' && ['symbol', 'asset', 'template'].includes((v as LibraryItem).kind) && typeof (v as LibraryItem).id === 'string';
 
 /** `system` is the built-in library (style/system), a chunk of its own loaded before the app starts. */
 export function createStyles(doc: CadDocument, system: { items: readonly LibraryItem[]; categories?: readonly LibraryCategory[] }): StyleService {
@@ -29,12 +31,25 @@ export function createStyles(doc: CadDocument, system: { items: readonly Library
   const stored = persistedSignals<UserStyles>('kentos.styles.v1', { items: [], categories: [] });
   library.load('user', (stored.items.value ?? []).filter(isItem), stored.categories.value ?? []);
   library.load('project', doc.styles.value.items, doc.styles.value.categories);
+  let writing = false;
   library.events.on('changed', ({ source }) => {
     const d = library.dump(source);
     if (source === 'user') {
       stored.items.set(d.items);
       stored.categories.set(d.categories);
-    } else doc.styles.set(d);
+    } else {
+      writing = true;
+      try {
+        doc.styles.set(d);
+      } finally {
+        writing = false;
+      }
+    }
+  });
+  // The drawing's own part follows the drawing: another one opened, a change taken in from the cloud (as the desktop's
+  // `Styles::follow_project`); what the library itself wrote there is already in it.
+  doc.styles.subscribe((s) => {
+    if (!writing) library.load('project', s.items, s.categories);
   });
   return { library };
 }
@@ -117,6 +132,19 @@ export function registerStyleCommands(ctx: AppContext): void {
             },
           }),
         );
+      },
+    },
+    {
+      id: 'template.draw',
+      title: 'Şablonla çiz',
+      category: cat,
+      icon: 'polygon',
+      aliases: ['SABLONLACIZ', 'NESNESABLONU'],
+      description: 'Bir nesne şablonuyla çizer: şablonun katmanı etkin olur, aracı başlar; nesneler şablonun sembolünü, özniteliklerini ve etiketini alır.',
+      // With a template's id, it draws; without one, the Stil yöneticisi lists the templates (Şablonla çiz is there).
+      run: (args) => {
+        if (typeof args === 'string') return drawWithTemplate(ctx, args);
+        void manager().then((m) => m.openStyleManager(ctx, { kind: 'template' }));
       },
     },
     {

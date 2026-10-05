@@ -480,6 +480,11 @@ impl App {
                 self.commit_fields();
                 self.new_drawing();
             }
+            Event::Draw(id) => {
+                self.commit_fields();
+                self.close_style_manager();
+                return self.draw_template(&id);
+            }
             Event::Apply(id) => {
                 self.commit_fields();
                 let text = self.assign_symbol(Some(&id));

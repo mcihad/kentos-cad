@@ -79,6 +79,9 @@ pub struct Prefs {
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Step {
     pub(super) run: Option<String>,
+    /// Draws with the drawing's or a library's object template of this id,
+    /// as choosing it does (docs/adr/0176 §3).
+    pub(super) template: Option<String>,
     pub(super) key: Option<String>,
     pub(super) text: Option<String>,
     #[serde(rename = "move")]
@@ -162,6 +165,15 @@ pub struct Expect {
     /// The digitizing locks holding the next point, as their chips and
     /// the command line say them, in order (docs/adr/0166 §6); `[]` for none.
     pub(super) locks: Option<Vec<String>>,
+    /// The active layer: the names of the groups above it and its own
+    /// (docs/adr/0176 §3).
+    pub(super) active_layer: Option<Vec<String>>,
+    /// The colour and line weight new objects take now (the ribbon's
+    /// Renk and Kalınlık); `null` the layer's, and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) current_color: Option<Option<String>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) current_weight: Option<Option<f64>>,
 }
 
 /// The expected lock: its point (within `clickTolerance`) and its lines in
@@ -234,6 +246,15 @@ pub struct Newest {
     pub(super) label_of: Option<Option<u32>>,
     #[serde(rename = "labelScale")]
     pub(super) label_scale: Option<f64>,
+    /// Its own symbol, colour and line weight, `null` none; its layer's
+    /// name (docs/adr/0176 §3). Exact; absent, not compared.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) symbol: Option<Option<String>>,
+    #[serde(default, deserialize_with = "present")]
+    pub(super) color: Option<Option<String>>,
+    #[serde(rename = "lineWeight", default, deserialize_with = "present")]
+    pub(super) line_weight: Option<Option<f64>>,
+    pub(super) layer: Option<String>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

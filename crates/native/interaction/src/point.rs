@@ -271,7 +271,7 @@ impl Point {
             p: wire(p),
             z: m.point_z,
             label: (!name.is_empty()).then(|| name.to_owned()),
-            color: cx.draft.color.map(str::to_owned),
+            color: cx.draft.color_text(),
             attrs: (!code.is_empty())
                 .then(|| BTreeMap::from([("Kod".to_owned(), code.to_owned())])),
             expected_revision: None,
@@ -401,7 +401,7 @@ impl Point {
             z: Some(z),
             // Labelled in the unit it was typed in; kept, and its attribute written, in metres (docs/adr/0165 §2).
             label: Some(fixed(cx.format().from_metres(z), 2)),
-            color: cx.draft.color.map(str::to_owned),
+            color: cx.draft.color_text(),
             attrs: Some(BTreeMap::from([
                 ("Tür".to_owned(), "Kot noktası".to_owned()),
                 ("Z (m)".to_owned(), fixed(z, 3)),

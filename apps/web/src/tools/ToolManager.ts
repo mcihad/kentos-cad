@@ -8,6 +8,7 @@ import { drawLocks } from './lockGuides';
 import type { CanvasPalette } from '../render/color';
 import type { Camera } from '../viewport/Camera';
 import type { Tool, ToolDescriptor, ToolGroup, ToolPointer } from './Tool';
+import type { TemplateRun } from './templateStamp';
 
 export class ToolManager {
   readonly activeId = new Signal('select');
@@ -28,6 +29,8 @@ export class ToolManager {
   private current: Tool | null = null;
   private promptSub: Disposable | null = null;
   private lastRepeatable: string | null = null;
+  /** The object template the last remembered command drew with (docs/adr/0176 §3): Son komutu yinele starts it again. */
+  private lastTemplate: string | null = null;
   /** Tools suspended under a transparent one (point calculator), innermost last. */
   private parents: Tool[] = [];
   private readonly ctx: AppContext;
@@ -69,7 +72,12 @@ export class ToolManager {
     return this.registry.get(this.activeId.value);
   }
 
-  activate(id: string): void {
+  /**
+   * Starts a tool by its id, dropping whatever ran; with `template`, it draws with that object template
+   * (app/objectTemplates.ts, docs/adr/0176 §3): the template's colour and weight are the current ones until the tool
+   * ends, and every object it writes takes the template's stamp.
+   */
+  activate(id: string, template: TemplateRun | null = null): void {
     const d = this.registry.get(id);
     if (!d) return;
     if (this.hold) return this.hold();
@@ -80,12 +88,22 @@ export class ToolManager {
     this.ctx.settings.locks.set(NO_LOCKS);
     this.lockPick.set(null);
     this.dropReference();
+    // A template's run ends with its tool; the next one starts with its own.
+    this.releaseTemplate();
+    if (template) {
+      this.ctx.settings.template.set(template);
+      this.ctx.settings.color.set(template.color);
+      this.ctx.settings.lineWeight.set(template.lineWeight);
+    }
     this.current = d.create(this.ctx);
-    if (id !== 'select' && id !== 'pan') this.lastRepeatable = id;
+    if (id !== 'select' && id !== 'pan') {
+      this.lastRepeatable = id;
+      this.lastTemplate = template?.id ?? null;
+    }
     this.promptSub = this.current.prompt.subscribe(() => this.showPrompt(), true);
     // The command's name first, then what the tool says as it starts (the erase tool deletes a
     // selection at once): the history reads in order, as on the desktop (docs/adr/0029).
-    if (id !== 'select') this.ctx.log.command(d.label);
+    if (id !== 'select') this.ctx.log.command(template ? `${template.name} · ${d.label}` : d.label);
     this.current.activate?.();
     this.activeId.set(id);
     this.ctx.view.requestRender();
@@ -103,6 +121,7 @@ export class ToolManager {
     this.ctx.settings.locks.set(NO_LOCKS);
     this.lockPick.set(null);
     this.dropReference();
+    this.releaseTemplate();
     this.current = tool;
     this.promptSub = tool.prompt.subscribe(() => this.showPrompt(), true);
     this.ctx.log.command(label);
@@ -187,12 +206,24 @@ export class ToolManager {
         : this.construction.value
           ? 'yapım noktasını belirtin; köşe olmaz [Vazgeç (Esc)]'
           : null;
-    if (!step) return this.prompt.set(own);
+    // An object template's name before the tool's (“Parsel sınırı · Kapalı alan: …”, docs/adr/0176 §3); a tool run over it speaks for itself.
+    const template = this.parents.length ? null : this.ctx.settings.template.value;
+    const titled = (text: string) => (template && text ? `${template.name} · ${text}` : text);
+    if (!step) return this.prompt.set(titled(own));
     // The tool's name stays before the step, as the tool writes it (“Çoklu çizgi: …”; promptOptions.ts reads it so).
     const colon = own.indexOf(':');
     const bracket = own.indexOf('[');
     const name = colon > 0 && (bracket < 0 || colon < bracket) ? own.slice(0, colon) : '';
-    this.prompt.set(name ? `${name}: ${step}` : step);
+    this.prompt.set(titled(name ? `${name}: ${step}` : step));
+  }
+
+  /** Ends an object template's run, if one is: the colour and weight it found come back (docs/adr/0176 §3). */
+  private releaseTemplate(): void {
+    const run = this.ctx.settings.template.value;
+    if (!run) return;
+    this.ctx.settings.template.set(null);
+    this.ctx.settings.color.set(run.before.color);
+    this.ctx.settings.lineWeight.set(run.before.lineWeight);
   }
 
   /** No reference, none asked, Yapım kipi off: a new command's start. */
@@ -304,10 +335,14 @@ export class ToolManager {
   }
 
   repeatLast(): void {
+    // An object template is started again as itself (docs/adr/0176 §3).
+    if (this.lastTemplate !== null) return void this.ctx.commands.execute('template.draw', this.lastTemplate);
     if (this.lastRepeatable) this.activate(this.lastRepeatable);
   }
 
   get lastToolLabel(): string | null {
+    const template = this.lastTemplate === null ? undefined : this.ctx.styles.library.get(this.lastTemplate);
+    if (template) return template.name;
     return this.lastRepeatable ? (this.registry.get(this.lastRepeatable)?.label ?? null) : null;
   }
 }

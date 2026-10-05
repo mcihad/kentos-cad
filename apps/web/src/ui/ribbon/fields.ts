@@ -80,8 +80,11 @@ export function layerField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
 
 /** The current colour for new objects: its name and swatch, or “Katmana göre”. */
 export function currentColor(ctx: AppContext): { text: string; swatch?: string } {
-  const c = DRAW_COLORS.find((x) => x.value === ctx.settings.color.value);
-  return c ? { text: c.name, swatch: colorSwatch(c.value, ctx.view.palette) } : { text: 'Katmana göre' };
+  const value = ctx.settings.color.value;
+  if (value === null) return { text: 'Katmana göre' };
+  // An object template's colour that is none of the drawing colours (docs/adr/0176 §3): by itself.
+  const c = DRAW_COLORS.find((x) => x.value === value);
+  return { text: c ? c.name : value.toUpperCase(), swatch: colorSwatch(value, ctx.view.palette) };
 }
 
 /** The colours new objects can take (a menu: the field's list, the folded toolbar's submenu). */

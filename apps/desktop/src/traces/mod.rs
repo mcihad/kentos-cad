@@ -177,6 +177,7 @@ mod tests {
         trace.steps.truncate(1);
         trace.steps.push(Step {
             run: None,
+            template: None,
             key: None,
             text: None,
             move_to: None,

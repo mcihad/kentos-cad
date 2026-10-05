@@ -96,7 +96,7 @@ impl VertexPoints {
             return Flow::Exit;
         }
         let code = cx.memory.point_code.as_str().to_owned();
-        let color = cx.draft.color.map(str::to_owned);
+        let color = cx.draft.color_text();
         let objects = points
             .iter()
             .map(|pt| NewObject {

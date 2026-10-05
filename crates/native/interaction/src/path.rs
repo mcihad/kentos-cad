@@ -799,12 +799,12 @@ impl Path {
                 pts: wire_all(&area.outer.pts),
                 bulges: area.outer.bulges.clone(),
                 holes: (!area.holes.is_empty()).then(|| area.holes.iter().map(ring).collect()),
-                color: cx.draft.color.map(str::to_owned),
+                color: cx.draft.color_text(),
                 line_weight: cx.draft.line_weight,
-                attrs: None,
+                attrs: cx.template_attrs(None),
                 expected_revision: None,
-                label: None,
-                symbol: None,
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
             };
             let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
             points::written(result, cx).is_some()
@@ -1082,12 +1082,12 @@ impl Path {
                 pts: ring.pts.iter().copied().map(wire).collect(),
                 bulges: ring.bulges.clone(),
                 holes: None,
-                color: cx.draft.color.map(str::to_owned),
+                color: cx.draft.color_text(),
                 line_weight: cx.draft.line_weight,
-                attrs: None,
+                attrs: cx.template_attrs(None),
                 expected_revision: None,
-                label: None,
-                symbol: None,
+                label: cx.template_label(),
+                symbol: cx.template_symbol(),
             };
             let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
             points::written(result, cx).map(|_| ())
@@ -1105,12 +1105,12 @@ impl Path {
             layer_id: cx.doc.layers().active().to_owned(),
             pts: pts.iter().copied().map(wire).collect(),
             bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
-            color: cx.draft.color.map(str::to_owned),
+            color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
-            attrs: None,
+            attrs: cx.template_attrs(None),
             expected_revision: None,
-            label: None,
-            symbol: None,
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
         };
         let result = polyline::execute(&mut ExecutionContext::new(cx.doc), input);
         points::written(result, cx).is_some()
@@ -1172,7 +1172,7 @@ impl Path {
             layer_id: PARCEL_LAYER.to_owned(),
             objects: vec![NewObject {
                 geometry,
-                color: cx.draft.color.map(str::to_owned),
+                color: cx.draft.color_text(),
                 line_weight: cx.draft.line_weight,
                 attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),
                 label: Some(number.clone()),

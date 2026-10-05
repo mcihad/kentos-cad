@@ -15,7 +15,7 @@ type Draw<'a> = &'a dyn Fn(&mut Bench);
 /// Draws with `tool` in the current colour `color` and says the newest object's.
 fn drawn(tool: &str, color: Option<&'static str>, draw: impl FnOnce(&mut Bench)) -> Option<String> {
     let mut b = Bench::new(tool);
-    b.draft.color = color;
+    b.draft.color = color.and_then(kentos_interaction::DraftColor::new);
     let before = b.doc.len();
     draw(&mut b);
     assert!(b.doc.len() > before, "{tool} wrote an object");

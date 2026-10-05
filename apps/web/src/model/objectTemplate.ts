@@ -1,5 +1,5 @@
 import { MAX_LINE_WEIGHT, TEXT_ALIGNS, type TextAlign } from './entities';
-import type { LineType } from './layers';
+import type { LayerNode, LineType } from './layers';
 
 /**
  * Nesne şablonları (docs/adr/0176): a template is a drawing recipe for one kind of object (a parcel's boundary, a building, a
@@ -130,4 +130,53 @@ export function templateIssues(template: unknown, where = 'şablon'): string[] {
     if (typeof template.block !== 'string' || blank(template.block)) say('blok şablonunun bloğu yok');
   } else if (template.block !== undefined) say('blok yalnız blok şablonunda olur');
   return out;
+}
+
+/**
+ * Where a template draws in a drawing's layer tree (docs/adr/0176 §3): `found`, that layer; `locked`, that node is
+ * locked by itself or a group above it and the template does not start; `open`, the drawing lacks it and it is opened
+ * under `parent` (a group's id; null: at the top), inside the groups `create` names, made in this order.
+ */
+export type TemplateLayerAnswer = { readonly found: string } | { readonly locked: string } | { readonly open: { readonly parent: string | null; readonly create: readonly string[] } };
+
+/**
+ * Where a template with `layer` draws, in a tree whose `isLocked` says whether a node is locked by itself or a group
+ * above it. The layer is found by its name: of several, the one under the template's path, else the first in the
+ * tree. Without one, the path's groups are followed as far as the tree has them (the first group of each name), and
+ * the rest are opened. Names are compared without the white space around them. The desktop's is
+ * `kentos_interaction::templates::find_layer`; both pass fixtures/style/v1/template-layers.json.
+ */
+export function templateLayer(layers: { readonly tree: readonly LayerNode[]; isLocked(id: string): boolean }, layer: Pick<TemplateLayer, 'path' | 'name'>): TemplateLayerAnswer {
+  const name = layer.name.trim();
+  const path = layer.path.map((g) => g.trim());
+  const found: { node: LayerNode; groups: string[] }[] = [];
+  const walk = (nodes: readonly LayerNode[], groups: string[]): void => {
+    for (const n of nodes) {
+      if (n.type === 'group') walk(n.children, [...groups, n.name.trim()]);
+      else if (n.name.trim() === name) found.push({ node: n, groups });
+    }
+  };
+  walk(layers.tree, []);
+  const first = found[0];
+  if (first) {
+    const chosen = (found.find((f) => f.groups.length === path.length && f.groups.every((g, i) => g === path[i])) ?? first).node;
+    return layers.isLocked(chosen.id) ? { locked: chosen.id } : { found: chosen.id };
+  }
+  let level = layers.tree;
+  let parent: LayerNode | null = null;
+  let depth = 0;
+  for (const g of path) {
+    const next = level.find((n) => n.type === 'group' && n.name.trim() === g);
+    if (!next) break;
+    parent = next;
+    level = next.children;
+    depth++;
+  }
+  if (parent && layers.isLocked(parent.id)) return { locked: parent.id };
+  return { open: { parent: parent?.id ?? null, create: path.slice(depth) } };
+}
+
+/** What is said when a template's layer, or the group it would be opened in, is locked: the node by its name, the template by its. */
+export function lockedTemplateLayerText(node: Pick<LayerNode, 'name' | 'type'>, template: string): string {
+  return `“${node.name}” ${node.type === 'group' ? 'grubu' : 'katmanı'} kilitli; “${template}” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın.`;
 }

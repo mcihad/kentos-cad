@@ -49,6 +49,7 @@ mod shapes;
 mod snap_extras;
 mod splitting;
 mod survey_points;
+mod templates;
 mod text;
 mod text_file;
 mod topology;

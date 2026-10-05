@@ -662,7 +662,7 @@ impl App {
                             .as_ref()
                             .map(|doc| doc.model.layers().active().to_owned())
                             .unwrap_or_default();
-                        let color = self.draft.color.map(str::to_owned);
+                        let color = self.draft.color_text();
                         let Some(doc) = self.document.as_mut() else {
                             return Task::none();
                         };

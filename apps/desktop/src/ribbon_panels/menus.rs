@@ -48,7 +48,7 @@ pub(super) fn layer_menu(lines: &[LayerLine]) -> Menu<Message> {
 }
 
 /// “Katmana göre”, then the choices (the web's `colorItems`, `lineTypeItems`, `weightItems`).
-pub(super) fn color_menu(current: Option<&'static str>, swatches: &[Color]) -> Menu<Message> {
+pub(super) fn color_menu(current: Option<&str>, swatches: &[Color]) -> Menu<Message> {
     let set = |color| Message::RibbonPanel(Event::Color(color));
     DRAW_COLORS.iter().zip(swatches).fold(
         Menu::new()

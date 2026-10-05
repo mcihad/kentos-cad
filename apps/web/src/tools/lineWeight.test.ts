@@ -11,6 +11,7 @@ import { writeObjects } from './createCommand';
 import { ArcTool, CircleTool } from './curveTools';
 import { LineTool, PointTool } from './drawTools';
 import { PathTool } from './pathTool';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * New objects take the toolbar's Kalınlık (docs/adr/0139): every tool that
@@ -27,7 +28,7 @@ function harness(weight: number | null) {
     log: new MessageLog(),
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(weight), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()), topology: new Signal(false), topologyPoints: new Signal(false) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(weight), template: new Signal<TemplateRun | null>(null), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()), topology: new Signal(false), topologyPoints: new Signal(false) },
     view: { requestOverlay: () => {} },
     tools: { exit: () => {} },
   } as unknown as AppContext;

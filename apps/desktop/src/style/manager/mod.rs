@@ -176,6 +176,8 @@ pub enum Event {
     DeleteCancelled,
     /// Seçili nesnelere uygula.
     Apply(String),
+    /// Şablonla çiz: the window closes and the template draws (docs/adr/0176 §3).
+    Draw(String),
     /// Düzenle: a symbol opens in Sembol tasarımcısı (a system one's copy in Kitaplığım).
     Edit(String),
     /// Yeni sembol: a new symbol of a kind (fill, line, marker) in the designer.

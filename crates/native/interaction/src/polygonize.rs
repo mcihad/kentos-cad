@@ -387,7 +387,7 @@ impl Polygonize {
                         .then_some(cx.draft.line_weight)
                         .flatten(),
                     geometry: a.geometry.clone(),
-                    color: cx.draft.color.map(str::to_owned),
+                    color: cx.draft.color_text(),
                     attrs: a
                         .value
                         .as_ref()

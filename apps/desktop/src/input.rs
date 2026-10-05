@@ -116,6 +116,7 @@ impl App {
                 shift: self.modifiers.shift(),
                 overlap_layers: &self.overlap_layers,
                 locks: &mut self.locks,
+                template: self.template.as_ref().map(|run| &run.stamp),
             },
         );
         for change in changes {
@@ -166,7 +167,13 @@ impl App {
             return Task::none();
         }
         self.field = None;
+        // Another command ends an object template's run (docs/adr/0176 §3).
+        self.release_template();
         if self.session.start(id) {
+            // Kaydır is not repeated; any other command is, not the template before it.
+            if id != kentos_interaction::navigate::PAN_ID {
+                self.last_template = None;
+            }
             // The web logs the tool as a command, by its name (`ToolManager.activate`).
             let command = catalog().get(&format!("tool.{id}")).or_else(|| {
                 // Koordinat oku is a menu command, not `tool.<id>`.
@@ -208,6 +215,10 @@ impl App {
     /// `tool.repeat`: the last command started again, if there was one.
     /// Kaydır and Yapıştır are not remembered (docs/adr/0056).
     pub(crate) fn repeat_last(&mut self) -> Task<Message> {
+        // An object template is started again as itself (docs/adr/0176 §3).
+        if let Some(id) = self.last_template.clone() {
+            return self.draw_template(&id);
+        }
         match self.session.last() {
             Some(last) => self.start_tool(last),
             None => Task::none(),

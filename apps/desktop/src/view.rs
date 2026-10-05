@@ -880,12 +880,12 @@ impl App {
         // A running command's step, or a grip's while one moves (docs/adr/0068).
         (self.session.is_running() || self.session.grip_active())
             .then(|| {
-                let p = self.session.prompt();
+                let p = self.prompt();
                 // The notes after the step in brackets, as the web's command line reads them;
                 // the axes as the project's type names them (docs/adr/0165 §4).
                 p.options.iter().fold(
                     LinePrompt::new(self.format().axes_text(&p.step_with_notes()))
-                        .command(p.tool.unwrap_or("")),
+                        .command(p.title().unwrap_or_default()),
                     |prompt, o| {
                         // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
                         let name = match &o.value {

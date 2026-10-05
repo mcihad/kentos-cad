@@ -29,6 +29,7 @@ export interface DetailsHost {
   design(what: { id?: string }): void;
   edit(id: string): void;
   refreshDetails(): void;
+  close(): void;
 }
 
 const KIND_LABEL: Record<Symbol['type'], string> = { fill: 'Alan sembolü', line: 'Çizgi sembolü', marker: 'İşaret sembolü' };
@@ -173,6 +174,19 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
     return b;
   };
   const list: HTMLElement[] = [];
+  // Şablonla çiz (docs/adr/0176 §3): its layer active, its tool started.
+  if (item.kind === 'template')
+    list.push(
+      btn(
+        'Şablonla çiz',
+        'polygon',
+        () => {
+          host.close();
+          ctx.commands.execute('template.draw', item.id);
+        },
+        { title: 'Pencere kapanır; şablonun katmanı etkin olur, aracı başlar' },
+      ),
+    );
   if (item.kind === 'asset' && item.format === 'svg') list.push(btn(editable ? 'Düzenle' : 'Kopyasını düzenle', 'edit', () => host.edit(item.id), { title: 'SVG çizim düzenleyicisinde açar' }));
   if (item.kind === 'symbol') {
     list.push(btn(editable ? 'Düzenle' : 'Kopyasını düzenle', 'edit', () => host.edit(item.id), { title: editable ? 'Sembol tasarımcısında açar' : 'Kitaplığım\'a bir kopya alır ve onu açar' }));

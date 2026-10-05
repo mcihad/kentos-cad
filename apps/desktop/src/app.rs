@@ -192,6 +192,9 @@ pub enum Picker {
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
+    /// Draw with the style library's object template of this id
+    /// (`template.draw`, docs/adr/0176 §3; templates.rs).
+    DrawTemplate(String),
     /// One of a tool's methods from its ribbon menu (Daire: 2 nokta): the
     /// tool starts, then takes the method's option as if typed (docs/adr/0032).
     RunMethod {
@@ -550,6 +553,12 @@ pub struct App {
     /// The digitizing locks (docs/adr/0166): what holds the next point; the
     /// session's, the tools see them in their context.
     pub locks: kentos_interaction::LockState,
+    /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
+    /// its stamp is in the tools' context while its tool runs.
+    pub(crate) template: Option<crate::templates::TemplateRun>,
+    /// The last template started, for Son komutu yinele; none once another
+    /// command is.
+    pub(crate) last_template: Option<String>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
@@ -762,6 +771,8 @@ impl App {
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
             overlap_layers: Vec::new(),
             locks: kentos_interaction::LockState::default(),
+            template: None,
+            last_template: None,
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
@@ -929,6 +940,8 @@ impl App {
         let locks = (!matches!(message, Message::Viewport(_)))
             .then_some((self.locks.length, self.locks.toward));
         let task = self.handle(message);
+        // A template's run ends with its tool (templates.rs).
+        self.follow_template();
         if locks.is_some_and(|l| l != (self.locks.length, self.locks.toward)) {
             self.repoint();
         }
@@ -1007,7 +1020,10 @@ impl App {
         // and takes the keyboard from the layer tree (the web's button takes the focus).
         if matches!(
             message,
-            Message::Run(_) | Message::RunMethod { .. } | Message::SplitChosen { .. }
+            Message::Run(_)
+                | Message::RunMethod { .. }
+                | Message::SplitChosen { .. }
+                | Message::DrawTemplate(_)
         ) {
             // A command closes the folded ribbon open over the drawing (the web's).
             if !matches!(message, Message::Run("view.keyTips")) {
@@ -1020,6 +1036,7 @@ impl App {
         }
         match message {
             Message::Run(id) => return self.run(id),
+            Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
@@ -1583,6 +1600,8 @@ impl App {
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
+            // Şablonla çiz without a template: the Stil yöneticisi's templates (templates.rs).
+            "template.draw" => return self.template_list(),
             "style.legend" => self.open_legend(),
             "style.svgEditor" => self.open_svg_editor(crate::style::svgedit::Opening {
                 id: None,

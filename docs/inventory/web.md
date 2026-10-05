@@ -4,12 +4,12 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 301 | 289 | 0 | 12 |
+| Komutlar | 302 | 290 | 0 | 12 |
 | Araçlar | 95 | 93 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
-| Ayarlar | 80 | 80 | 0 | 0 |
+| Ayarlar | 81 | 81 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 335 | 0 | 0 |
 | Pencereler ve paneller | 94 | 94 | 0 | 0 |
@@ -49,12 +49,12 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 229 | 0 | 58 | 12 | 2 | 301 |
+| Komutlar | 230 | 0 | 58 | 12 | 2 | 302 |
 | Araçlar | 93 | 0 | 0 | 2 | 0 | 95 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
-| Ayarlar | 77 | 0 | 2 | 0 | 1 | 80 |
+| Ayarlar | 78 | 0 | 2 | 0 | 1 | 81 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 0 | 0 | 0 | 0 | 335 |
 | Pencereler ve paneller | 76 | 2 | 15 | 0 | 1 | 94 |
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 301; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 302; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -167,7 +167,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (2 / 80)
+#### Ayarlar (2 / 81)
 
 - `session.overlapLast`
 - `session.overlapLayers`
@@ -202,4 +202,4 @@ Yok.
 
 ## Test başvurusu
 
-109 / 301 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+109 / 302 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

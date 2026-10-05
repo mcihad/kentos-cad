@@ -61,7 +61,7 @@ const KIND_OPTIONS: { value: KindFilter; label: string }[] = [
 
 export const kindOf = (i: Sourced): KindFilter => (i.kind === 'symbol' ? i.symbol.type : i.kind);
 
-export function openStyleManager(ctx: AppContext, opts: { pick?: PickOptions; select?: string; stack?: boolean } = {}): void {
+export function openStyleManager(ctx: AppContext, opts: { pick?: PickOptions; select?: string; stack?: boolean; kind?: KindFilter } = {}): void {
   new StyleManager(ctx, opts);
 }
 
@@ -87,10 +87,10 @@ class StyleManager implements DetailsHost {
   selected: string | null = null;
   private listed: Sourced[] = [];
 
-  constructor(ctx: AppContext, opts: { pick?: PickOptions; select?: string; stack?: boolean }) {
+  constructor(ctx: AppContext, opts: { pick?: PickOptions; select?: string; stack?: boolean; kind?: KindFilter }) {
     this.ctx = ctx;
     this.pick = opts.pick;
-    this.kind = opts.pick?.kind ?? 'all';
+    this.kind = opts.pick?.kind ?? opts.kind ?? 'all';
     const lib = ctx.styles.library;
     const start = opts.select ?? opts.pick?.current;
     const startItem = start ? lib.get(start) : undefined;
@@ -287,6 +287,11 @@ class StyleManager implements DetailsHost {
     hideTooltip(this.grid);
     replaceChildren(this.grid, cards.length ? cards : h('div', { class: 'smgr__empty' }, this.query ? 'Aramayla eşleşen sembol yok.' : 'Bu kategoride sembol yok.'));
     this.refreshDetails();
+  }
+
+  /** Closes the window (Şablonla çiz: the drawing takes over). */
+  close(): void {
+    this.dialog.close();
   }
 
   refreshDetails(): void {

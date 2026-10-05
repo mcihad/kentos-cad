@@ -193,9 +193,9 @@ pub struct Draft {
     pub overlap: Overlap,
     /// The colour new objects take (the ribbon's Renk, the web's
     /// `ctx.settings.color`): one of the drawing colours (`ink`, `#E5484D`
-    /// …), explicit in the product command's input (CMD-07); `None`: the
-    /// layer's (“Katmana göre”).
-    pub color: Option<&'static str>,
+    /// …) or an object template's (docs/adr/0176 §3), explicit in the
+    /// product command's input (CMD-07); `None`: the layer's (“Katmana göre”).
+    pub color: Option<DraftColor>,
     /// The line weight new objects drawn with lines take, mm (the ribbon's
     /// Kalınlık, the web's `ctx.settings.lineWeight`; docs/adr/0139); `None`:
     /// the layer's (“Katmana göre”).
@@ -315,7 +315,51 @@ pub fn screen_scale(metres_per_px: f64) -> f64 {
     js_round(metres_per_px / METRES_PER_PX)
 }
 
+/// A colour new objects take, as a product command writes it: a theme token
+/// (`ink`) or a hex (`#E5484D`, with alpha `#E5484D80`). At most nine ASCII
+/// bytes, so [`Draft`] stays `Copy`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct DraftColor {
+    len: u8,
+    bytes: [u8; DraftColor::MAX_BYTES],
+}
+
+impl DraftColor {
+    const MAX_BYTES: usize = 9;
+
+    /// The colour, or `None` for a text longer than nine bytes or not ASCII
+    /// (no colour a command takes is).
+    pub fn new(text: &str) -> Option<Self> {
+        if text.len() > Self::MAX_BYTES || !text.is_ascii() {
+            return None;
+        }
+        let mut bytes = [0; Self::MAX_BYTES];
+        bytes[..text.len()].copy_from_slice(text.as_bytes());
+        Some(Self {
+            len: text.len() as u8,
+            bytes,
+        })
+    }
+
+    pub fn as_str(&self) -> &str {
+        // Written from ASCII in `new`: always UTF-8.
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or_default()
+    }
+}
+
+impl std::fmt::Debug for DraftColor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.as_str())
+    }
+}
+
 impl Draft {
+    /// The current colour as a command's input takes it (CMD-07); `None`:
+    /// the layer's.
+    pub fn color_text(&self) -> Option<String> {
+        self.color.map(|c| c.as_str().to_owned())
+    }
+
     /// Whether snapping works at screen scale 1:`n` (docs/adr/0163 §5):
     /// not nearer than `snap.scaleMin`, not farther than `snap.scaleMax`, 0
     /// no limit. Out of it no snap shows, a one-shot snap neither.
@@ -766,11 +810,37 @@ pub struct Context<'a> {
     /// session lets one-shot locks go when the tool's reference moves; the
     /// tools read them through [`crate::points`]'s cursor rule.
     pub locks: &'a mut crate::locks::LockState,
+    /// The object template being drawn with (docs/adr/0176 §3): what every
+    /// object the tool writes takes besides its geometry; none while the
+    /// tool runs by itself.
+    pub template: Option<&'a crate::templates::Stamp>,
 }
 
 impl Context<'_> {
     pub fn format(&self) -> Format {
         Format::of(self.doc.settings())
+    }
+
+    /// The symbol a new object takes: its object template's (docs/adr/0176
+    /// §3); none without one.
+    pub fn template_symbol(&self) -> Option<String> {
+        self.template.and_then(|t| t.symbol.clone())
+    }
+
+    /// The label a new object takes: its object template's; none without one.
+    pub fn template_label(&self) -> Option<String> {
+        self.template.and_then(|t| t.label.clone())
+    }
+
+    /// The attributes a new object takes: its object template's, the tool's
+    /// own (`own`: Nokta's Kod) over them; none when both are empty.
+    pub fn template_attrs(
+        &self,
+        own: Option<std::collections::BTreeMap<String, String>>,
+    ) -> Option<std::collections::BTreeMap<String, String>> {
+        let mut attrs = self.template.map(|t| t.attrs.clone()).unwrap_or_default();
+        attrs.extend(own.unwrap_or_default());
+        (!attrs.is_empty()).then_some(attrs)
     }
 
     /// The point `distance` along the tracking line the cursor is locked to

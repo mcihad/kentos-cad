@@ -11,6 +11,7 @@ import { entityGrips } from '../model/ops/grips';
 import { Selection } from '../model/selection';
 import { SelectTool } from './SelectTool';
 import { takesTypedInput, type ToolPointer } from './Tool';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * A grip clicked without dragging waits for its new place, and its prompt
@@ -27,7 +28,7 @@ function harness() {
     log: new MessageLog(),
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), topology: new Signal(false), topologyPoints: new Signal(false) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), template: new Signal<TemplateRun | null>(null), topology: new Signal(false), topologyPoints: new Signal(false) },
     prefs: { snapAperture: new Signal(8) },
     view: { gripAt: () => ({ id: line.id, index: end }), requestOverlay: () => {}, trackAlong: () => null, camera: { worldToScreen: (p: Vec2) => p } },
     tools: { exit: () => {} },

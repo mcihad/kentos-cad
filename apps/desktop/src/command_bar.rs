@@ -62,8 +62,8 @@ impl App {
         if !self.command_bar {
             return None;
         }
-        let p = self.session.prompt();
-        let tool = p.tool?;
+        let p = self.prompt();
+        let tool = p.title()?;
 
         let mut name = Row::new().spacing(6).align_y(Center);
         if let Some(command) = catalog().get(&format!("tool.{}", self.session.tool_id())) {

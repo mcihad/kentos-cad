@@ -202,6 +202,31 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
+    if let Some(want) = &expect.active_layer {
+        check(
+            "activeLayer",
+            &got.active_layer == want,
+            format!("{:?}", got.active_layer),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.current_color {
+        check(
+            "currentColor",
+            &got.current_color == want,
+            format!("{:?}", got.current_color),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.current_weight {
+        check(
+            "currentWeight",
+            &got.current_weight == want,
+            format!("{:?}", got.current_weight),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.snap {
         check(
             "snap",
@@ -378,6 +403,39 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
         && seen.z != z
     {
         bad.push(format!("{name}.z: {:?}, beklenen {z:?}", seen.z));
+    }
+    // An object template's symbol, colour, weight and layer (docs/adr/0176 §3), exact.
+    if let Some(symbol) = &want.symbol
+        && seen.symbol != *symbol
+    {
+        bad.push(format!(
+            "{name}.symbol: {:?}, beklenen {symbol:?}",
+            seen.symbol
+        ));
+    }
+    if let Some(color) = &want.color
+        && seen.color != *color
+    {
+        bad.push(format!(
+            "{name}.color: {:?}, beklenen {color:?}",
+            seen.color
+        ));
+    }
+    if let Some(weight) = want.line_weight
+        && seen.line_weight != weight
+    {
+        bad.push(format!(
+            "{name}.lineWeight: {:?}, beklenen {weight:?}",
+            seen.line_weight
+        ));
+    }
+    if let Some(layer) = &want.layer
+        && seen.layer != *layer
+    {
+        bad.push(format!(
+            "{name}.layer: {:?}, beklenen {layer:?}",
+            seen.layer
+        ));
     }
     // An area's hole count (docs/adr/0173 §5), exact.
     if let Some(holes) = want.holes

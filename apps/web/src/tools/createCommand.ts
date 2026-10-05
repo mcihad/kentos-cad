@@ -4,6 +4,7 @@ import type { EntitiesCreated } from '../contracts/generated/EntitiesCreated';
 import type { EntityGeometry as NewGeometry } from '../contracts/generated/EntityGeometry';
 import { drawsLines, type EntityGeometry } from '../model/entities';
 import { entitiesCreate } from '../product/entitiesCreate';
+import { stamp } from './templateStamp';
 
 /**
  * How the drawing tools write objects that have no command of their own
@@ -22,7 +23,8 @@ export function writeObjects(ctx: AppContext, geometries: readonly EntityGeometr
     geometry: g as unknown as NewGeometry,
     ...(color !== null && { color }),
     ...(lineWeight !== null && drawsLines(g) && { lineWeight }),
-    ...(attrs && Object.keys(attrs).length && { attrs: { ...attrs } }),
+    // An object template's symbol, attributes and label (docs/adr/0176 §3), the tool's own attributes over its.
+    ...stamp(ctx, attrs),
   }));
   const result = entitiesCreate.execute({ doc: ctx.doc }, { layerId: ctx.doc.layers.active.value, objects, ...(operation && { operation }) });
   if (result.status !== 'completed') {

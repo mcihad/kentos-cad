@@ -80,6 +80,11 @@ pub struct Seen {
     /// none for a text of its own and other kinds.
     pub label_of: Option<u32>,
     pub label_scale: Option<f64>,
+    /// Its own symbol, colour and line weight, and its layer's name (docs/adr/0176 §3).
+    pub symbol: Option<String>,
+    pub color: Option<String>,
+    pub line_weight: Option<f64>,
+    pub layer: String,
 }
 
 impl Seen {
@@ -234,6 +239,13 @@ impl Seen {
                 Entity::Text(t) => t.label_scale,
                 _ => None,
             },
+            symbol: e.base().symbol.clone(),
+            color: e.base().color.clone(),
+            line_weight: e.base().line_weight,
+            layer: doc
+                .layers()
+                .get(&e.base().layer_id)
+                .map_or_else(String::new, |l| l.name.clone()),
         }
     }
 }
@@ -275,6 +287,11 @@ pub struct Observation {
     pub dialog: Option<String>,
     /// The digitizing locks' words (docs/adr/0166 §6).
     pub locks: Vec<String>,
+    /// The active layer's groups and name (docs/adr/0176 §3).
+    pub active_layer: Vec<String>,
+    /// The colour and line weight new objects take now.
+    pub current_color: Option<String>,
+    pub current_weight: Option<f64>,
 }
 
 /// Object tracking's lock as a step sees it: the point and each line's origin and angle.
@@ -454,6 +471,10 @@ impl<'a> Player<'a> {
     }
 
     fn act_step(&mut self, step: &Step) -> Result<(), String> {
+        // An object template, as choosing it does (docs/adr/0176 §3).
+        if let Some(id) = &step.template {
+            return self.apply(Message::DrawTemplate(id.clone()));
+        }
         if let Some(id) = &step.run {
             let command = crate::catalog::catalog()
                 .get(id)
@@ -806,15 +827,9 @@ impl<'a> Player<'a> {
         Observation {
             tool: app.session.tool_id().to_owned(),
             points: app.session.point_count(),
-            prompt: app.session.prompt().text(),
+            prompt: app.prompt().text(),
             messages: Vec::new(),
-            options: app
-                .session
-                .prompt()
-                .keys()
-                .into_iter()
-                .map(str::to_owned)
-                .collect(),
+            options: app.prompt().keys().into_iter().map(str::to_owned).collect(),
             dynamic_input: app.field.as_ref().map(|f| f.text.clone()),
             locks: app.locks.words(&app.format()),
             command_line: app.command_input.clone(),
@@ -848,6 +863,18 @@ impl<'a> Player<'a> {
                         .collect(),
                 }),
             dialog: app.dialog_title(),
+            active_layer: doc.map_or_else(Vec::new, |d| {
+                let layers = d.model.layers();
+                let mut names = Vec::new();
+                let mut at = layers.get(layers.active());
+                while let Some(node) = at {
+                    names.insert(0, node.name.clone());
+                    at = layers.parent(&node.id);
+                }
+                names
+            }),
+            current_color: app.draft.color_text(),
+            current_weight: app.draft.line_weight,
         }
     }
 }
@@ -861,7 +888,9 @@ impl Drop for Player<'_> {
 /// A step's action for the report, without its expectations and note.
 fn describe(step: &Step) -> String {
     let pair = |[a, b]: [f64; 2]| format!("[{a}, {b}]");
-    if let Some(id) = &step.run {
+    if let Some(id) = &step.template {
+        format!("template {id}")
+    } else if let Some(id) = &step.run {
         format!("run {id}")
     } else if let Some(key) = &step.key {
         format!("key {key}")

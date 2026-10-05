@@ -244,10 +244,14 @@ impl App {
             }
             menu = menu.separator();
         }
+        // The last object template by its name (docs/adr/0176 §3), else the last command.
+        let template = self.last_template_name().map(str::to_owned);
         if let Some(last) = self.session.last() {
-            let title = catalog()
-                .get(&format!("tool.{last}"))
-                .map_or(last, |command| command.title);
+            let title = template.as_deref().unwrap_or_else(|| {
+                catalog()
+                    .get(&format!("tool.{last}"))
+                    .map_or(last, |command| command.title)
+            });
             menu = menu
                 .item(format!("Yinele: {title}"), Message::Run("tool.repeat"))
                 .shortcut("Enter");
@@ -278,9 +282,9 @@ impl App {
 
     /// A command running, the button held (the web's `commandItems`).
     fn command_menu(&self) -> Menu<Message> {
-        let prompt = self.session.prompt();
+        let prompt = self.prompt();
         let mut menu = Menu::new()
-            .header(prompt.tool.unwrap_or("Komut"))
+            .header(prompt.title().unwrap_or_else(|| "Komut".to_owned()))
             .item("Onayla / bitir", Message::Run("tool.confirm"))
             .icon(Icon::Check)
             .shortcut("Enter")

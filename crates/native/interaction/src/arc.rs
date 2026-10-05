@@ -240,7 +240,7 @@ impl Arc {
             r: g.r,
             a0: g.a0,
             a1: g.a1,
-            color: cx.draft.color.map(str::to_owned),
+            color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
             attrs: None,
             expected_revision: None,

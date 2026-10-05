@@ -13,6 +13,7 @@ import { PathTool, saySecondMeasures } from './pathTool';
 import { drawArea, drawTag, strokePath, tint } from './preview';
 import type { ToolPointer } from './Tool';
 import { VisibleFaces } from './visibleFaces';
+import { stamp } from './templateStamp';
 
 /**
  * Mesafe ölç and Alan hesapla with their ADR 0141 options, on top of the path tool they share the
@@ -291,6 +292,7 @@ export class AreaMeasureTool extends PathTool {
           ...(area.holes.length > 0 && { holes: area.holes }),
           ...this.colour(),
           ...this.weight(),
+          ...stamp(this.ctx),
         };
         return this.written(polygonCreate.execute({ doc }, input))?.id ?? null;
       }),

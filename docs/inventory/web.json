@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 301,
-      "implemented": 289,
+      "total": 302,
+      "implemented": 290,
       "partial": 0,
       "pending": 12
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 80,
-      "implemented": 80,
+      "total": 81,
+      "implemented": 81,
       "partial": 0,
       "pending": 0
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 109,
-    "commandsOnDesktop": 229,
+    "commandsOnDesktop": 230,
     "desktop": {
       "commands": {
-        "total": 301,
-        "implemented": 229,
+        "total": 302,
+        "implemented": 230,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -145,8 +145,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 80,
-        "implemented": 77,
+        "total": 81,
+        "implemented": 78,
         "partial": 0,
         "pending": 0,
         "none": 2,
@@ -5200,6 +5200,34 @@
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
+      ]
+    },
+    {
+      "id": "template.draw",
+      "title": "Şablonla çiz",
+      "category": "Stil",
+      "icon": "polygon",
+      "description": "Bir nesne şablonuyla çizer: şablonun katmanı etkin olur, aracı başlar; nesneler şablonun sembolünü, özniteliklerini ve etiketini alır.",
+      "aliases": [
+        "SABLONLACIZ",
+        "NESNESABLONU"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/style/managerDetails.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/tracePlayer.mjs"
       ]
     },
     {
@@ -13383,6 +13411,20 @@
         "web": "implemented",
         "desktop": "implemented"
       }
+    },
+    {
+      "id": "session.template",
+      "key": "template",
+      "scope": "session",
+      "persistence": "none",
+      "type": "null",
+      "default": null,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "Şablonla çizilirken: App::template, araçların Context::template'i (templates.rs, ADR 0176 §3)"
     },
     {
       "id": "session.topology",

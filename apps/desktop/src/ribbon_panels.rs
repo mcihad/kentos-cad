@@ -21,6 +21,7 @@
 use iced::widget::{column, container, row, text};
 use iced::{Center, Color, Element, Fill};
 use kentos_contracts::{LayerNode, LayerNodeType, LineType};
+use kentos_interaction::DraftColor;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Menu;
@@ -76,11 +77,17 @@ pub(crate) fn weight_text(weight: f64) -> String {
     format!("{} mm", kentos_interaction::fixed(weight, 2))
 }
 
-/// The current colour's name, “Katmana göre” without one.
-fn color_text(color: Option<&str>) -> &'static str {
-    color
-        .and_then(|value| DRAW_COLORS.iter().find(|(_, v)| *v == value))
-        .map_or("Katmana göre", |(name, _)| name)
+/// The current colour's name, “Katmana göre” without one; an object
+/// template's colour that is none of them by itself (`#7A5C3E`, docs/adr/0176 §3).
+fn color_text(color: Option<DraftColor>) -> String {
+    let Some(color) = color else {
+        return "Katmana göre".to_owned();
+    };
+    let value = color.as_str();
+    DRAW_COLORS
+        .iter()
+        .find(|(_, v)| *v == value)
+        .map_or_else(|| value.to_uppercase(), |(name, _)| (*name).to_owned())
 }
 
 fn line_type_text(line_type: Option<LineType>) -> &'static str {
@@ -98,7 +105,7 @@ impl App {
     /// plot scale (an edit of the drawing, as on the web; never an undo step).
     pub(crate) fn ribbon_panel_event(&mut self, event: Event) {
         match event {
-            Event::Color(color) => self.draft.color = color,
+            Event::Color(color) => self.draft.color = color.and_then(DraftColor::new),
             Event::LineType(line_type) => self.new_line_type = line_type,
             // New objects drawn with lines take it (docs/adr/0139).
             Event::Weight(weight) => self.draft.line_weight = weight,
@@ -243,7 +250,7 @@ impl App {
     fn properties_group(&self, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
         let doc = self.document.as_ref()?;
         let color = self.draft.color;
-        let color_swatch = color.map(|value| self.drawing_color(value));
+        let color_swatch = color.map(|value| self.drawing_color(value.as_str()));
         let swatches: Vec<Color> = DRAW_COLORS
             .iter()
             .map(|(_, value)| self.drawing_color(value))
@@ -263,7 +270,7 @@ impl App {
             let swatches = swatches.clone();
             move || {
                 (
-                    color_menu(color, &swatches),
+                    color_menu(color.as_ref().map(DraftColor::as_str), &swatches),
                     line_type_menu(line_type),
                     weight_menu(weight),
                     scale_menu(scale),

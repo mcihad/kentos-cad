@@ -98,12 +98,12 @@ impl Line {
             layer_id: cx.doc.layers().active().to_owned(),
             a: wire(a),
             b: wire(b),
-            color: cx.draft.color.map(str::to_owned),
+            color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
-            attrs: None,
+            attrs: cx.template_attrs(None),
             expected_revision: None,
-            label: None,
-            symbol: None,
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
         };
         let result = line::execute(&mut ExecutionContext::new(cx.doc), input);
         let slot = Slot(points::written(result, cx)?.id);

@@ -1,0 +1,194 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Nesne şablonuyla çizmek",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "eski",
+      "name": "Eski",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [],
+  "styles": {
+    "items": [
+      {
+        "kind": "template",
+        "id": "p-parsel",
+        "name": "Parsel sınırı",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polygon",
+          "layer": {
+            "path": [
+              "Kadastro"
+            ],
+            "name": "Parsel",
+            "color": "#E5484D",
+            "lineWeight": 0.35
+          },
+          "lineWeight": 0.5,
+          "symbol": "temel.alan.kenar-ici",
+          "attrs": {
+            "Tür": "Parsel"
+          },
+          "label": "Parsel"
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-bina",
+        "name": "Bina",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "rectangle",
+          "layer": {
+            "path": [],
+            "name": "Bina"
+          },
+          "color": "#7A5C3E",
+          "symbol": "temel.alan.tarama-45",
+          "attrs": {
+            "Tür": "Bina",
+            "Kat": "2"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-yol",
+        "name": "Yol kenarı",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polyline",
+          "layer": {
+            "path": [
+              "Ulaşım"
+            ],
+            "name": "Yol",
+            "lineType": "dashed"
+          },
+          "symbol": "temel.cizgi.cift",
+          "attrs": {
+            "Tür": "Yol"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-agac",
+        "name": "Ağaç",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "circle",
+          "method": "2N",
+          "layer": {
+            "path": [],
+            "name": "Bitki"
+          },
+          "color": "#5FBF77",
+          "attrs": {
+            "Tür": "Ağaç"
+          }
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-duvar",
+        "name": "Duvar",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "line",
+          "layer": {
+            "path": [],
+            "name": "Duvar"
+          }
+        }
+      }
+    ],
+    "categories": [
+      {
+        "path": [
+          "Şablonlar"
+        ]
+      }
+    ]
+  }
+}

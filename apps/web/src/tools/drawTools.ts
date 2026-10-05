@@ -23,6 +23,7 @@ import type { Area } from '../model/geom/overlay';
 import { clippedGeometry, clipNewArea, sayClipped, writtenArea } from './overlap';
 import { joinCorners, sayJoined, withJoined, type Joining } from './junctions';
 import { followLocks } from './locks';
+import { stamp } from './templateStamp';
 
 /**
  * Base for tools driven by a sequence of points (click or typed). Handles
@@ -242,7 +243,7 @@ export abstract class PointInputTool implements Tool {
    * layer, the current colour and line weight explicit. Whether it was written.
    */
   protected writeRing(pts: Vec2[], bulges?: number[]): boolean {
-    const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour(), ...this.weight() };
+    const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour(), ...this.weight(), ...stamp(this.ctx) };
     return this.written(polygonCreate.execute({ doc: this.ctx.doc }, input)) !== null;
   }
 
@@ -342,7 +343,7 @@ export class LineTool extends PointInputTool {
    * texts, word for word). The new line's slot, or null when refused.
    */
   private createLine(a: Vec2, b: Vec2): number | null {
-    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight() }))?.id ?? null;
+    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour(), ...this.weight(), ...stamp(this.ctx) }))?.id ?? null;
   }
 
   protected override option(key: string): boolean {

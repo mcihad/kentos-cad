@@ -7,6 +7,7 @@ import { CadDocument } from '../model/document';
 import { LayerStore } from '../model/layers';
 import { Selection } from '../model/selection';
 import { LineTool } from './drawTools';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * Çizgi's Geri (G) once the drawing changed after the chain's last line was
@@ -33,7 +34,7 @@ function harness() {
     log,
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), template: new Signal<TemplateRun | null>(null) },
     view: { requestOverlay: () => {} },
     tools: { exit: () => {} },
   } as unknown as AppContext;

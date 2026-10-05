@@ -31,6 +31,9 @@ enum Part {
 pub struct Prompt {
     /// The tool's name (`Kapalı alan`); none when no command runs.
     pub tool: Option<&'static str>,
+    /// The object template the tool draws with (docs/adr/0176 §3), its
+    /// name before the tool's: `Parsel sınırı · Kapalı alan: …`. The host's.
+    pub template: Option<String>,
     /// The step: `sonraki noktayı belirtin`; some steps carry a value
     /// (`yarıçapı yazın (Enter: 12.500 m)`).
     pub step: Cow<'static, str>,
@@ -48,6 +51,7 @@ impl Prompt {
     pub fn idle() -> Self {
         Self {
             tool: None,
+            template: None,
             step: Cow::Borrowed("Komut"),
             options: Vec::new(),
             notes: Vec::new(),
@@ -67,6 +71,7 @@ impl Prompt {
     pub fn new(tool: &'static str, step: impl Into<Cow<'static, str>>) -> Self {
         Self {
             tool: Some(tool),
+            template: None,
             step: step.into(),
             options: Vec::new(),
             notes: Vec::new(),
@@ -147,8 +152,8 @@ impl Prompt {
     /// The web's prompt text: `Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Geri (G)]`,
     /// `Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 0° / Boyutlar (B)]`.
     pub fn text(&self) -> String {
-        let mut text = match self.tool {
-            Some(tool) => format!("{tool}: {}", self.step),
+        let mut text = match self.title() {
+            Some(title) => format!("{title}: {}", self.step),
             None => self.step.to_string(),
         };
         let groups: Vec<String> = self
@@ -176,6 +181,16 @@ impl Prompt {
             text.push_str(&format!(" [{}]", groups.join("; ")));
         }
         text
+    }
+
+    /// What runs, as the command line names it: the tool (`Kapalı alan`),
+    /// after its object template (`Parsel sınırı · Kapalı alan`).
+    pub fn title(&self) -> Option<String> {
+        let tool = self.tool?;
+        Some(match &self.template {
+            Some(template) => format!("{template} · {tool}"),
+            None => tool.to_owned(),
+        })
     }
 
     /// The option keys in order, as the traces compare them.

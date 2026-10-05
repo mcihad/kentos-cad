@@ -366,6 +366,23 @@ pub fn details<'a>(
             iced::widget::tooltip::Position::Top,
         ));
     }
+    // Şablonla çiz (docs/adr/0176 §3): its layer active, its tool started.
+    if item.kind() == ItemKind::Template {
+        actions = actions.push(tip(
+            small_button(
+                "polygon",
+                "Şablonla çiz".into(),
+                project_open.then(|| ev(Event::Draw(id.clone()))),
+                false,
+            ),
+            Tip::new("Şablonla çiz").body(if project_open {
+                "Pencere kapanır; şablonun katmanı etkin olur, aracı başlar"
+            } else {
+                "Açık çizim yok."
+            }),
+            iced::widget::tooltip::Position::Top,
+        ));
+    }
     if item.kind() == ItemKind::Symbol {
         let label = if selected_objects > 0 {
             format!("Seçili nesnelere uygula ({selected_objects})")
@@ -436,7 +453,7 @@ pub fn details<'a>(
         ));
     }
     let mut buttons = Column::new().spacing(6);
-    if item.kind() == ItemKind::Symbol || item.format() == Some("svg") {
+    if item.kind() != ItemKind::Asset || item.format() == Some("svg") {
         buttons = buttons.push(actions.wrap());
     }
     column![

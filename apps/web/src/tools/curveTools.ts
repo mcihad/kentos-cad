@@ -23,6 +23,7 @@ import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
 import { fixed } from '../core/displayNumber';
+import { stamp } from './templateStamp';
 
 const deg = (rad: number) => (rad * 180) / Math.PI;
 
@@ -369,7 +370,7 @@ export class CircleTool extends PointInputTool {
 
   /** Written by the product command `cad.circle.create` (docs/adr/0032): the active layer, colour and line weight explicit. */
   private commit(c: Vec2, r: number): void {
-    if (r > 1e-9 && this.written(circleCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c, r, ...this.colour(), ...this.weight() }))) {
+    if (r > 1e-9 && this.written(circleCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, c, r, ...this.colour(), ...this.weight(), ...stamp(this.ctx) }))) {
       CircleTool.lastRadius = r;
       this.ctx.log.success(`Daire eklendi: r = ${this.ctx.format.length(r)}`);
     }

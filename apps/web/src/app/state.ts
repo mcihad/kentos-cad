@@ -7,6 +7,7 @@ import { LAYOUT_DEFAULTS, LAYOUT_KEY, readLayout, type UiLayoutData } from './la
 import type { SettingsStore } from './settings/store';
 import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
 import type { GeographicNotation } from '../model/secondCrs';
+import type { TemplateRun } from '../tools/templateStamp';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 
@@ -45,6 +46,8 @@ export class DraftingSettings {
   readonly valueCard = new Signal(false);
   /** Current properties for new entities; null = katmana göre. */
   readonly color = new Signal<string | null>(null);
+  /** The object template being drawn with (docs/adr/0176 §3): what every new object takes; null while none. */
+  readonly template = new Signal<TemplateRun | null>(null);
   readonly lineType = new Signal<LineType | null>(null);
   readonly lineWeight = new Signal<number | null>(null);
 }

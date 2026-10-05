@@ -92,7 +92,7 @@ fn a_chosen_colour_goes_into_the_next_objects_and_by_layer_leaves_it_out() {
     let _ = app.update(Message::RibbonPanel(Event::Color(Some("#E5484D"))));
     // A settings change keeps the session's colour.
     app.apply_settings();
-    assert_eq!(app.draft.color, Some("#E5484D"));
+    assert_eq!(app.draft.color_text().as_deref(), Some("#E5484D"));
     let _ = app.run("tool.line");
     typed(&mut app, "487000,4420000");
     typed(&mut app, "487010,4420000");
@@ -116,7 +116,10 @@ fn line_type_weight_and_scale_are_the_webs_fields() {
     assert_eq!(line_type_text(app.new_line_type), "Kesikli");
     assert_eq!(weight_value_text(app.draft.line_weight), "0.35 mm");
     assert_eq!(weight_value_text(None), "Katmana göre");
-    assert_eq!(color_text(Some("#4F8EF7")), "Mavi");
+    let color = |text| kentos_interaction::DraftColor::new(text);
+    assert_eq!(color_text(color("#4F8EF7")), "Mavi");
+    // An object template's colour that is none of the drawing colours (docs/adr/0176 §3).
+    assert_eq!(color_text(color("#7a5c3e")), "#7A5C3E");
     // Ölçek is the project's: an edit of the drawing, no undo step (the web's).
     let _ = app.update(Message::RibbonPanel(Event::Scale(2000.0)));
     let doc = app.document.as_ref().expect("a drawing");

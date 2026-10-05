@@ -59,6 +59,8 @@ pub struct Bench {
     pub overlap_layers: Vec<String>,
     /// The digitizing locks (docs/adr/0166).
     pub locks: LockState,
+    /// The object template drawn with (docs/adr/0176 §3): what new objects take.
+    pub template: Option<kentos_interaction::templates::Stamp>,
 }
 
 impl Bench {
@@ -87,6 +89,7 @@ impl Bench {
             views: Vec::new(),
             tracking: ObjectTracking::new(),
             locks: LockState::default(),
+            template: None,
         }
     }
 
@@ -111,6 +114,7 @@ impl Bench {
             shift: self.shift,
             overlap_layers: &self.overlap_layers,
             locks: &mut self.locks,
+            template: self.template.as_ref(),
         };
         act(&mut self.session, &mut cx)
     }

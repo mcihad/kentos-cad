@@ -8,6 +8,7 @@ import { LayerStore } from '../model/layers';
 import { Selection } from '../model/selection';
 import { CircleTool } from './curveTools';
 import { LineTool } from './drawTools';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * A local project's drawing unit (docs/adr/0165 §2): what is typed is in
@@ -28,7 +29,7 @@ function harness(unit: 'mm' | 'cm' | 'm') {
     log,
     selection: new Selection(),
     format: new Formatter(doc.settings),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), template: new Signal<TemplateRun | null>(null) },
     view: { requestOverlay: () => {}, trackAlong: () => null },
     tools: { exit: () => {} },
   } as unknown as AppContext;

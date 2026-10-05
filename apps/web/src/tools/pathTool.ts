@@ -20,6 +20,7 @@ import { drawTag, strokePath, tint } from './preview';
 import { writeOnStandardLayer } from './standardLayer';
 import type { ToolPointer } from './Tool';
 import { VisibleTrace } from './visibleTrace';
+import { stamp } from './templateStamp';
 
 /** Dik kapat with the first and the last edge parallel (docs/adr/0166 §4; the desktop's words). */
 const NO_SQUARE_CLOSE = 'Dik kapatılamıyor: ilk kenar ile son kenar paralel.';
@@ -476,7 +477,7 @@ export class PathTool extends PointInputTool {
     const segments = hasBulges(this.bulges) ? { bulges: [...this.bulges] } : {};
     const result = polylineCreate.execute(
       { doc: this.ctx.doc },
-      { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
+      { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }), ...stamp(this.ctx) },
     );
     if (result.status !== 'completed') {
       if ('error' in result) this.ctx.log.warn(result.error.message);
@@ -513,7 +514,7 @@ export class PathTool extends PointInputTool {
       const ring = joined[0].outer;
       const result = polygonCreate.execute(
         { doc: this.ctx.doc },
-        { layerId, pts: ring.pts, ...(ring.bulges && { bulges: ring.bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }) },
+        { layerId, pts: ring.pts, ...(ring.bulges && { bulges: ring.bulges }), ...(color !== null && { color }), ...(lineWeight !== null && { lineWeight }), ...stamp(this.ctx) },
       );
       if (result.status !== 'completed') {
         if ('error' in result) this.ctx.log.warn(result.error.message);

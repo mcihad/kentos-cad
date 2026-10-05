@@ -122,11 +122,11 @@ pub(crate) fn write_ring(
         pts: pts.iter().map(|p| wire(*p)).collect(),
         bulges,
         holes: None,
-        color: cx.draft.color.map(str::to_owned),
+        color: cx.draft.color_text(),
         line_weight: cx.draft.line_weight,
-        attrs: None,
-        label: None,
-        symbol: None,
+        attrs: cx.template_attrs(None),
+        label: cx.template_label(),
+        symbol: cx.template_symbol(),
         expected_revision: None,
     };
     let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
@@ -212,7 +212,8 @@ pub(crate) fn write_objects(
     write_objects_with(geometries, None, operation, cx)
 }
 
-/// `write_objects` with the objects' attributes (Blok ekle's values, docs/adr/0144 §7).
+/// `write_objects` with the objects' attributes (Blok ekle's values, docs/adr/0144 §7),
+/// over an object template's.
 pub(crate) fn write_objects_with(
     geometries: Vec<kentos_contracts::EntityGeometry>,
     attrs: Option<std::collections::BTreeMap<String, String>>,
@@ -231,12 +232,13 @@ pub(crate) fn write_objects_with(
                     .then_some(cx.draft.line_weight)
                     .flatten(),
                 geometry,
-                color: cx.draft.color.map(str::to_owned),
-                attrs: attrs.clone(),
-                label: None,
+                color: cx.draft.color_text(),
+                // An object template's symbol, attributes and label (docs/adr/0176 §3).
+                attrs: cx.template_attrs(attrs.clone()),
+                label: cx.template_label(),
                 label_of: None,
                 label_scale: None,
-                symbol: None,
+                symbol: cx.template_symbol(),
             })
             .collect(),
         operation,

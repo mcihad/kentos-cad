@@ -50,6 +50,7 @@
     "session.locks": { "desktop": "implemented", "where": "Oturumun kilitleri: App::locks, kentos_interaction::LockState (locks.rs, ADR 0166)" },
     "session.lockAsk": { "desktop": "implemented", "where": "Değer alanının kilit kipi: input.rs Field::mode (Uzunluk…, Açı…, Sapma…; ADR 0166 §6)" },
     "session.valueCard": { "desktop": "implemented", "where": "Değer alanı açık: App::field (input.rs); kilit etiketi o sırada çizilmez (locks.rs, ADR 0166 §6)" },
+    "session.template": { "desktop": "implemented", "where": "Şablonla çizilirken: App::template, araçların Context::template'i (templates.rs, ADR 0176 §3)" },
     "user.accent": { "desktop": "implemented", "where": "ayarlar.json appearance.accent: iki platformun ortak anahtarı, on hazır renk ya da #rrggbb (Görünüm sekmesi, ADR 0051, 0126)" },
     "user.textSize": { "desktop": "implemented", "where": "ayarlar.json appearance.textSize: iki platformun ortak anahtarı, piksel (Görünüm sekmesi, ADR 0051, 0126)" },
     "user.theme": { "desktop": "implemented", "where": "ayarlar.json appearance.theme: iki platformun ortak anahtarı, dört tema (Görünüm sekmesi, ADR 0051, 0126)" },

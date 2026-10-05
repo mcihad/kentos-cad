@@ -10,6 +10,7 @@ import { pointCreate } from '../product/pointCreate';
 import { Selection } from '../model/selection';
 import { PointTool } from './drawTools';
 import { PathTool } from './pathTool';
+import type { TemplateRun } from './templateStamp';
 
 /**
  * The path tool's G while U waits for a length, and the tools that write to
@@ -28,7 +29,7 @@ function harness(layers: LayerInit[] = [{ id: 'cizim', name: 'Çizim' }, { id: '
     log,
     selection: new Selection(),
     format: new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) }),
-    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()), topology: new Signal(false), topologyPoints: new Signal(false) },
+    settings: { color: new Signal<string | null>(null), lineWeight: new Signal<number | null>(null), template: new Signal<TemplateRun | null>(null), overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'), overlapLast: new Signal<'layer' | 'layers'>('layer'), overlapLayers: new Signal<ReadonlySet<string>>(new Set()), topology: new Signal(false), topologyPoints: new Signal(false) },
     prefs: { snapAperture: new Signal(8) },
     view: { requestOverlay: () => {}, trackAlong: () => null, camera: { worldToScreen: (p: unknown) => p } },
     tools: { exit: () => {} },

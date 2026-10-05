@@ -407,6 +407,8 @@ async function act(step) {
   if (step.shot !== undefined) return;
   if (step.dialog !== undefined) return answer(step);
   if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
+  // An object template, as choosing it does (docs/adr/0176 §3).
+  if (step.template) return void (await b.eval(`window.kentos.commands.execute('template.draw', ${JSON.stringify(step.template)})`));
   if (step.key) return press(step.key);
   if (step.text !== undefined) {
     for (const ch of step.text) {
@@ -515,6 +517,11 @@ const observe = (mark) =>
       // A linked text's object by its slot (0: no object has its id) and its scale (docs/adr/0175 §4).
       labelOf: e.kind === 'text' && e.labelOf !== undefined ? (k.doc.slotOf(e.labelOf) ?? 0) : null,
       labelScale: e.kind === 'text' ? (e.labelScale ?? null) : null,
+      // Its own symbol, colour and line weight, and its layer's name (docs/adr/0176 §3).
+      symbol: e.symbol ?? null,
+      color: e.color ?? null,
+      lineWeight: e.lineWeight ?? null,
+      layer: k.doc.layers.get(e.layerId)?.name ?? '',
     });
     return {
       tool: k.tools.activeId.value,
@@ -548,6 +555,14 @@ const observe = (mark) =>
       })(),
       ids: [...k.doc.all()].map((e) => e.id),
       dialog: ${TOP_TITLE},
+      // The active layer's groups and name, and the colour and line weight new objects take (docs/adr/0176 §3).
+      activeLayer: (() => {
+        const names = [];
+        for (let n = k.doc.layers.get(k.doc.layers.active.value); n; n = k.doc.layers.parentOf(n.id)) names.unshift(n.name);
+        return names;
+      })(),
+      currentColor: k.settings.color.value,
+      currentWeight: k.settings.lineWeight.value,
     };
   })()`);
 
@@ -576,7 +591,8 @@ function compareShape(name, have, want, t) {
   // A survey point's name and elevation (docs/adr/0152), exact.
   // An area's hole count (docs/adr/0173 §5), exact.
   // A linked text's object, by its slot, and its scale (docs/adr/0175 §4), exact.
-  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale'])
+  // An object template's symbol, colour, weight and layer (docs/adr/0176 §3), exact.
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'symbol', 'color', 'lineWeight', 'layer'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   // Its attributes, all of them, exact.
   const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
