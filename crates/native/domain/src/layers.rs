@@ -230,6 +230,28 @@ impl LayerTree {
         true
     }
 
+    /// Shows these nodes, the groups above them and everything below them;
+    /// hides the rest (Katmanı yalıt, docs/adr/0177 §1). Unknown ids are left
+    /// out; whether a node's visibility changed (none known, nothing did).
+    pub(crate) fn isolate_many(&mut self, ids: &[String]) -> bool {
+        let targets: Vec<Vec<usize>> = ids
+            .iter()
+            .filter_map(|id| self.paths.get(id).cloned())
+            .collect();
+        if targets.is_empty() {
+            return false;
+        }
+        let mut changed = false;
+        visit_mut(&mut self.roots, &mut Vec::new(), &mut |path, node| {
+            let shown = targets
+                .iter()
+                .any(|target| target.starts_with(path) || path.starts_with(target));
+            changed |= node.visible != shown;
+            node.visible = shown;
+        });
+        changed
+    }
+
     /// Shows every node; false when all were shown already (nothing changed, docs/adr/0020).
     pub(crate) fn show_all(&mut self) -> bool {
         let mut changed = false;

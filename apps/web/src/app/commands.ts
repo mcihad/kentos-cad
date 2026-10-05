@@ -15,6 +15,7 @@ import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 import { lockCommands } from './lockCommands';
+import { unisolateLayers } from './layerActions';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -725,6 +726,15 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       watch: [ctx.cloud.project],
     },
     { id: 'layer.showAll', title: 'Tüm katmanları göster', short: 'Katmanları göster', category: 'Katman', icon: 'layersShowAll', run: () => doc.layers.showAll() },
+    {
+      id: 'layer.unisolate',
+      title: 'Yalıtımı kaldır',
+      category: 'Katman',
+      icon: 'layerUnisolate',
+      aliases: ['LAYUNISO', 'YALITIMIKALDIR'],
+      description: 'Katmanı yalıt’ın bu çizimde gizlediği katman ve grupları yeniden gösterir; arada elle değiştirilenlere dokunmaz.',
+      run: () => unisolateLayers(ctx),
+    },
 
     // Araç akışı
     { id: 'tool.cancel', title: 'İptal', category: 'Komut', icon: 'close', run: () => tools.exit() },

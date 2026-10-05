@@ -1022,6 +1022,22 @@ SCENES.ribbon = [
     id: 'folded-open',
     open: async (ui) => (await ribbonOn(ui, { ribbonCollapsed: true }), await ui.clickSel('.ribbon__tab[data-tab="home"]'), await ui.sleep(500)),
   },
+  // Katmanlar's ▾: the layer actions by an object (docs/adr/0177 §7); the desktop's icon tour “katman-araclari”.
+  {
+    id: 'layers-more',
+    open: async (ui) => {
+      await ribbonOn(ui);
+      // A narrow window folds the panel: its ▾ is under the controls of its pop-up.
+      const folded = await ui.eval(`document.querySelector('.rpanel[data-panel="Katmanlar"]')?.dataset.level === '3'`);
+      if (folded) {
+        await ui.clickSel('.rpanel[data-panel="Katmanlar"] .rpanel__collapsed');
+        await ui.sleep(300);
+      }
+      await ui.clickSel(folded ? '.ribbon-pop .rpanel__more' : '.rpanel[data-panel="Katmanlar"] .rpanel__more');
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+  },
 ].map((s) => ({ close: (ui) => ribbonOff(ui), ...s }));
 
 // The new tools at work (docs/adr/0140): each one is started from the ribbon's command, its value typed in the command

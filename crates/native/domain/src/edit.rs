@@ -297,6 +297,17 @@ impl Document {
         }
     }
 
+    /// Shows only these nodes, the groups above them and everything below
+    /// them (Katmanı yalıt, docs/adr/0177 §1); an edit only when a node's
+    /// visibility changed, which it returns.
+    pub fn isolate_layers(&mut self, ids: &[String]) -> bool {
+        let changed = self.layers.isolate_many(ids);
+        if changed {
+            self.mark_edited();
+        }
+        changed
+    }
+
     /// Shows every layer and group; an edit only when one was hidden (docs/adr/0020).
     pub fn show_all_layers(&mut self) {
         if self.layers.show_all() {

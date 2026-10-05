@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 31] = [
+const SCENES: [Scene; 32] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -83,6 +83,8 @@ const SCENES: [Scene; 31] = [
         Open::Caption,
     ),
     scene("katman", None, "Bina", Open::Menu),
+    // Katmanlar's ▾: the layer actions by an object (docs/adr/0177 §7).
+    scene("katman-araclari", Some("Giriş"), "Katmanlar", Open::Caption),
     // The status bar's project type.
     scene("mod", None, "CAD", Open::Caption),
     on_sheet("pafta-yeni", "Yeni", Open::Caption),

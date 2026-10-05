@@ -289,6 +289,15 @@ export const ICONS = {
     '<path d="m10 3 7 3.8-7 3.8-7-3.8z" fill="currentColor" fill-opacity=".3"/><path d="m3 10.3 7 3.8 7-3.8M3 13.6l7 3.9 7-3.9" stroke-dasharray="1.6 1.6" stroke-width="1.1"/>',
   layersShowAll:
     '<path d="m10 8.6 7 3.3-7 3.3-7-3.3z"/><path d="m3 14.7 7 3.3 7-3.3"/><path d="M4.5 4.6S6.8 1.8 10 1.8s5.5 2.8 5.5 2.8-2.3 2.8-5.5 2.8-5.5-2.8-5.5-2.8z" stroke-width="1.2"/><circle cx="10" cy="4.6" r="1.2" fill="currentColor" stroke="none"/>',
+  // The layer actions by an object (docs/adr/0177 §1): two plates under what is done to the layer.
+  layerOff:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><path d="M4.4 6.4S6.6 3.4 10 3.4s5.6 3 5.6 3-2.2 3-5.6 3-5.6-3-5.6-3z" stroke-width="1.2"/><path d="M3.6 1.8 16.4 11" stroke-width="1.3"/>',
+  layerLock:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><rect x="6.8" y="5.6" width="6.4" height="4.8" rx=".9" stroke-width="1.2"/><path d="M8.3 5.6V4.2a1.7 1.7 0 0 1 3.4 0v1.4" stroke-width="1.2"/>',
+  layerMakeActive:
+    '<path d="m10 7.4 7 3.6-7 3.6-7-3.6z" fill="currentColor" fill-opacity=".3"/><path d="m3 14.6 7 3.6 7-3.6"/><path d="m7 3.9 2.2 2.2 4.4-4.3" stroke-width="1.4"/>',
+  layerUnisolate:
+    '<path d="m10 6.6 7 3.6-7 3.6-7-3.6z"/><path d="m3 13.8 7 3.6 7-3.6"/><path d="M13.6 4.2a4 4 0 0 0-6.9.6M6.4 2v2.8h2.8" stroke-width="1.2"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',
   folder: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v8z"/>',
   eye: '<path d="M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.4"/>',

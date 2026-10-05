@@ -171,6 +171,10 @@ pub struct Expect {
     /// The active layer: the names of the groups above it and its own
     /// (docs/adr/0176 §3).
     pub(super) active_layer: Option<Vec<String>>,
+    /// The layers and groups hidden or locked of their own, by their paths
+    /// (“Yapılar / Bina”), in tree order (docs/adr/0177 §1).
+    pub(super) hidden_layers: Option<Vec<String>>,
+    pub(super) locked_layers: Option<Vec<String>>,
     /// The colour and line weight new objects take now (the ribbon's
     /// Renk and Kalınlık); `null` the layer's, and absent differ.
     #[serde(default, deserialize_with = "present")]

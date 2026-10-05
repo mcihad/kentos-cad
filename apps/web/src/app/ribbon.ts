@@ -42,7 +42,8 @@ export type RibbonSource =
       readonly under?: readonly string[];
     }
   /** Panels with live fields rather than commands. */
-  | { readonly builtin: BuiltinPanel };
+  /** A panel with live fields (BuiltinPanel); `under` puts commands under its ▾ (Katmanlar's layer actions, docs/adr/0177 §7). */
+  | { readonly builtin: BuiltinPanel; readonly under?: readonly string[] };
 
 export type BuiltinPanel = 'layers' | 'properties' | 'selection' | 'templates';
 
@@ -86,6 +87,9 @@ export const PRIMARY_COMMANDS: ReadonlySet<string> = new Set([
 /** Large buttons a panel may have; more would crowd out the small ones. */
 export const MAX_LARGE = 4;
 
+/** The layer actions by an object and Yalıtımı kaldır (docs/adr/0177 §1), under Katmanlar's ▾ in every ribbon. */
+const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive'];
+
 export const RIBBON_TABS: readonly RibbonTabSpec[] = [
   { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
   {
@@ -105,7 +109,7 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
       },
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.hatch', 'text.findReplace'], more: 'draw' },
       { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map', workspaces: ['gis'] },
-      { builtin: 'layers' },
+      { builtin: 'layers', under: LAYER_ACTIONS },
       { builtin: 'templates' },
       { builtin: 'properties' },
     ],
@@ -188,7 +192,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Çizim', icon: 'line', commands: CAD_DRAW, rest: 'draw' },
       { pick: 'Değiştir', icon: 'move', commands: EVERYDAY_MODIFY, more: 'modify', compact: true },
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'tool.dimension', 'tool.leader', 'tool.hatch'], more: 'annotate' },
-      { builtin: 'layers' },
+      { builtin: 'layers', under: LAYER_ACTIONS },
       { builtin: 'templates' },
       { pick: 'Blok', icon: 'blockInsert', commands: ['tool.blockInsert', 'tool.blockDefine', 'block.panel'], more: 'insert' },
       { builtin: 'properties' },
@@ -261,7 +265,7 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { pick: 'Değiştir', icon: 'move', commands: EVERYDAY_MODIFY, more: 'edit', compact: true },
       { pick: 'Açıklama', icon: 'text', commands: ['tool.text', 'text.findReplace'], more: 'edit' },
       { pick: 'Harita', icon: 'parcel', commands: ['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area'], more: 'map' },
-      { builtin: 'layers' },
+      { builtin: 'layers', under: LAYER_ACTIONS },
       { builtin: 'templates' },
       { builtin: 'properties' },
     ],
@@ -468,7 +472,13 @@ export function ribbonTabs(inputs: RibbonInputs, specs: readonly RibbonTabSpec[]
     for (const src of spec.sources) {
       if ('builtin' in src) {
         const b = BUILTIN_LABEL[src.builtin];
-        panel(b.label, b.icon).entries.push({ kind: 'builtin', name: src.builtin });
+        const d = panel(b.label, b.icon);
+        d.entries.push({ kind: 'builtin', name: src.builtin });
+        for (const id of src.under ?? []) {
+          if (seen.has(id) || !filter.command(id)) continue;
+          seen.add(id);
+          d.under.push(id);
+        }
       } else if ('pick' in src) {
         // A type's own panel: left out where no type filters (the inventory's places).
         if (src.workspaces && (filter.id === null || !src.workspaces.includes(filter.id))) continue;

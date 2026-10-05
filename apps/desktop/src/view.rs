@@ -388,16 +388,32 @@ impl App {
         tab: &str,
         panel: &RibbonPanel,
     ) -> Option<Group<'static, Message>> {
-        // A panel the web draws itself (ribbon_panels.rs, docs/adr/0089).
+        use crate::ribbon_keys::{TipKey, folded_id, more_id};
+        // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
+        let (flash_here, flash_more) = self.flash_in(panel);
+        // A panel the web draws itself (ribbon_panels.rs, docs/adr/0089), with
+        // the commands under its ▾ (Katmanlar's layer actions, docs/adr/0177 §7).
         if let Some(name) = panel.items.iter().find_map(|item| match item {
             Item::Builtin(name) => Some(*name),
             _ => None,
         }) {
-            return self.builtin_group(name, panel);
+            let mut group = self
+                .builtin_group(name, panel)?
+                .flash_more(flash_more)
+                .flash_folded(flash_here)
+                .menu_ids(more_id(panel.label), folded_id(panel.label))
+                .key_tips(
+                    self.key_tip(&TipKey::Folded(panel.label)),
+                    self.key_tip(&TipKey::More(panel.label)),
+                    self.key_tip(&TipKey::Launcher(panel.label)),
+                );
+            if !panel.overflow.is_empty() {
+                let ids = panel.overflow.clone();
+                let checked = self.checks(&ids);
+                group = group.more(move || menu_of(&ids, &checked));
+            }
+            return Some(group);
         }
-        // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
-        let (flash_here, flash_more) = self.flash_in(panel);
-        use crate::ribbon_keys::{TipKey, folded_id, more_id};
         let mut group = Group::new(panel.label)
             .icon(panel.icon)
             .keep(panel.keep)
@@ -791,7 +807,8 @@ impl App {
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
             .active(active)
-            .muted(!parent_visible)
+            // Hidden of its own or under a hidden group, faint (the web's `data-hidden`).
+            .muted(!parent_visible || !node.visible)
             .toggle(Toggle::visible(
                 node.visible,
                 Message::LayerVisible(node.id.clone()),

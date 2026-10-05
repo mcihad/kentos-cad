@@ -219,6 +219,8 @@ class Run {
         return layers.setSnap(layerId, (s.snap ?? null) as LayerSnap | null);
       case 'isolate':
         return layers.isolate(layerId);
+      case 'isolateLayers':
+        return layers.isolateLayers(s.ids as string[]);
       case 'showAll':
         return layers.showAll();
       case 'setExpanded':

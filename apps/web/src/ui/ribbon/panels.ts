@@ -40,6 +40,8 @@ export class PanelView {
   readonly model: RibbonPanel;
   readonly syncs: (() => void)[] = [];
   readonly collapsedButton: HTMLButtonElement;
+  /** The ▾ beside the title with the seldom used commands; a folded panel's pop-up shows it under the panel (Ribbon.openCollapsed). */
+  readonly more: HTMLButtonElement | null;
   level: Level = 0;
   private readonly arrange: (level: Level) => void;
 
@@ -89,14 +91,14 @@ export class PanelView {
 
     // Seldom used commands wait under a ▾ beside the title (AutoCAD's panel expander).
     const overflow = model.overflow;
-    const more = overflow
+    const more = (this.more = overflow
       ? h(
           'button',
           { class: 'rpanel__more', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': RIBBON_TEXTS.panelMore(model.label), dataset: { commands: overflow.join(' ') } },
           h('span', { class: 'rpanel__label' }, model.label),
           icon('chevronDown', 10),
         )
-      : null;
+      : null);
     if (more && overflow) {
       d.add(
         listen<PointerEvent>(more, 'pointerdown', (e) => {

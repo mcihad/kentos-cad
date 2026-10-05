@@ -186,6 +186,19 @@ export class LayerStore {
     return out;
   }
 
+  /** Every node, layers and groups, in tree order (a group before what it holds). */
+  all(): LayerNode[] {
+    const out: LayerNode[] = [];
+    const walk = (nodes: readonly LayerNode[]) => {
+      for (const n of nodes) {
+        out.push(n);
+        walk(n.children);
+      }
+    };
+    walk(this.roots);
+    return out;
+  }
+
   leavesOf(id: string): LayerNode[] {
     const n = this.get(id);
     if (!n) return [];
@@ -256,6 +269,29 @@ export class LayerStore {
     for (const n of this.index.values()) n.visible = keep.has(n.id) || this.isDescendant(n.id, id);
     this.events.emit('state', { ids: this.leaves().map((l) => l.id) });
     this.version.update((v) => v + 1);
+  }
+
+  /**
+   * Shows only these nodes, the groups above them and everything below them, and hides every other node (Katmanı
+   * yalıt, docs/adr/0177 §1). Unknown ids are left out; with none known, or nothing to change, nothing changes and it
+   * is no edit (docs/adr/0020). Returns whether a node's visibility changed.
+   */
+  isolateLayers(ids: readonly string[]): boolean {
+    const known = ids.filter((id) => this.get(id));
+    if (!known.length) return false;
+    const keep = new Set<string>();
+    for (const id of known) for (let n: LayerNode | null | undefined = this.get(id); n; n = this.parentOf(n.id)) keep.add(n.id);
+    let changed = false;
+    for (const n of this.index.values()) {
+      const shown = keep.has(n.id) || known.some((id) => this.isDescendant(n.id, id));
+      if (n.visible === shown) continue;
+      n.visible = shown;
+      changed = true;
+    }
+    if (!changed) return false;
+    this.events.emit('state', { ids: this.leaves().map((l) => l.id) });
+    this.version.update((v) => v + 1);
+    return true;
   }
 
   showAll(): void {

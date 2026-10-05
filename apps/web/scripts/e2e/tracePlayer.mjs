@@ -565,6 +565,9 @@ const observe = (mark) =>
       })(),
       currentColor: k.settings.color.value,
       currentWeight: k.settings.lineWeight.value,
+      // The layers and groups hidden or locked of their own, by their paths, in tree order (docs/adr/0177 §1).
+      hiddenLayers: k.doc.layers.all().filter((n) => !n.visible).map((n) => k.doc.layers.path(n.id)),
+      lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
     };
   })()`);
 

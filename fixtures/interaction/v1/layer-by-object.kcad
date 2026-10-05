@@ -1,0 +1,175 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Nesneden katman işlemleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "yapilar",
+      "name": "Yapılar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        },
+        {
+          "id": "duvar",
+          "name": "Duvar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 486970,
+          "y": 4419990
+        },
+        {
+          "x": 486990,
+          "y": 4419990
+        },
+        {
+          "x": 486990,
+          "y": 4420010
+        },
+        {
+          "x": 486970,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+        "x": 486970,
+        "y": 4420020
+      },
+      "b": {
+        "x": 486990,
+        "y": 4420020
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486970,
+        "y": 4419980
+      },
+      "b": {
+        "x": 487030,
+        "y": 4419980
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4420010
+        },
+        {
+          "x": 487000,
+          "y": 4420010
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

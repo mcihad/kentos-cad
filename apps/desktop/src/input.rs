@@ -126,6 +126,7 @@ impl App {
                 overlap_layers: &self.overlap_layers,
                 locks: &mut self.locks,
                 template: self.template.as_ref().map(|run| &run.stamp),
+                isolated_layers: &mut self.isolated_layers,
             },
         );
         if let Some(group) = group {

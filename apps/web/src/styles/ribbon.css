@@ -443,6 +443,8 @@
   top: 0;
   left: 0;
   display: flex;
+  /* The panel's controls, and its ▾ under them as in the panel (Ribbon.openCollapsed). */
+  flex-direction: column;
   height: calc(var(--ribbon-h) - 4px);
   padding: 6px 6px 4px;
   background: var(--c-toolbar);
@@ -451,6 +453,17 @@
   box-shadow: var(--shadow-pop);
   font-size: var(--fs-sm);
   color: var(--c-text);
+}
+/* With a ▾, the pop-up grows by its row: the controls keep the panel's height. */
+.ribbon-pop:has(> .ribbon-pop__foot) {
+  height: calc(var(--ribbon-h) - 4px + 17px * var(--ui-scale));
+}
+.ribbon-pop__foot {
+  display: flex;
+  justify-content: center;
+  height: calc(17px * var(--ui-scale));
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */

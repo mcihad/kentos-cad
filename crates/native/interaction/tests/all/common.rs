@@ -61,6 +61,8 @@ pub struct Bench {
     pub locks: LockState,
     /// The object template drawn with (docs/adr/0176 §3): what new objects take.
     pub template: Option<kentos_interaction::templates::Stamp>,
+    /// What Katmanı yalıt hid (docs/adr/0177 §1).
+    pub isolated_layers: Vec<String>,
 }
 
 impl Bench {
@@ -90,6 +92,7 @@ impl Bench {
             tracking: ObjectTracking::new(),
             locks: LockState::default(),
             template: None,
+            isolated_layers: Vec::new(),
         }
     }
 
@@ -115,6 +118,7 @@ impl Bench {
             overlap_layers: &self.overlap_layers,
             locks: &mut self.locks,
             template: self.template.as_ref(),
+            isolated_layers: &mut self.isolated_layers,
         };
         act(&mut self.session, &mut cx)
     }

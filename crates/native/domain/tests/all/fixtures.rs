@@ -337,6 +337,19 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             doc.isolate_layer(id()?);
             Value::Null
         }
+        "isolateLayers" => {
+            let ids: Vec<String> = step
+                .get("ids")
+                .and_then(Value::as_array)
+                .map(|ids| {
+                    ids.iter()
+                        .filter_map(Value::as_str)
+                        .map(str::to_owned)
+                        .collect()
+                })
+                .unwrap_or_default();
+            Value::Bool(doc.isolate_layers(&ids))
+        }
         "showAll" => {
             doc.show_all_layers();
             Value::Null

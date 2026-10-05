@@ -401,7 +401,14 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let title = self.title.to_string();
         let more = self.more.clone();
         match &self.content {
-            Content::Custom { menu, .. } => menu.clone(),
+            // Kendi menüsü, ardından ▾'in araçları.
+            Content::Custom { menu, .. } => match more {
+                Some(more) => {
+                    let menu = menu.clone();
+                    Rc::new(move || menu().separator().submenu("Diğer araçlar", more()))
+                }
+                None => menu.clone(),
+            },
             Content::Tools(tools) => {
                 let tools = tools.clone();
                 Rc::new(move || {

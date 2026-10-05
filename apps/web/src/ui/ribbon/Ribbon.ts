@@ -587,7 +587,8 @@ export class Ribbon extends Component {
     if (this.pop?.panel === panel) return this.closePop();
     this.closePop();
     const d = new DisposableStore();
-    const el = h('div', { class: 'ribbon-pop', role: 'group', 'aria-label': panel.model.label }, panel.body);
+    // The panel's controls, and its ▾ under them: what a folded panel holds is all reachable (the desktop's “Diğer araçlar”).
+    const el = h('div', { class: 'ribbon-pop', role: 'group', 'aria-label': panel.model.label }, panel.body, panel.more ? h('div', { class: 'ribbon-pop__foot' }, panel.more) : null);
     overlayRoot().append(el);
     panel.el.dataset.open = '';
     panel.collapsedButton.setAttribute('aria-expanded', 'true');
@@ -603,8 +604,9 @@ export class Ribbon extends Component {
     if (!pop) return;
     this.pop = null;
     pop.d.dispose();
-    // The panel's controls go back into it (folded, they are hidden there).
+    // The panel's controls and its ▾ go back into it (folded, they are hidden there).
     pop.panel.el.prepend(pop.panel.body);
+    if (pop.panel.more) pop.panel.el.querySelector('.rpanel__foot')?.prepend(pop.panel.more);
     delete pop.panel.el.dataset.open;
     pop.panel.collapsedButton.setAttribute('aria-expanded', 'false');
     pop.el.remove();

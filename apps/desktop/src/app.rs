@@ -584,6 +584,9 @@ pub struct App {
     /// its id: its series goes on from run to run in the drawing (docs/adr/0176
     /// §3b), and a group's members take theirs from it (§5).
     pub(crate) template_names: std::collections::HashMap<String, String>,
+    /// The layers and groups Katmanı yalıt hid since the last Yalıtımı kaldır
+    /// (docs/adr/0177 §1): the drawing's, forgotten with it.
+    pub(crate) isolated_layers: Vec<String>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
@@ -802,6 +805,7 @@ impl App {
             template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
+            isolated_layers: Vec::new(),
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
@@ -1494,6 +1498,7 @@ impl App {
         // another drawing starts them again (docs/adr/0176 §3b).
         self.release_template();
         self.template_names.clear();
+        self.isolated_layers.clear();
         self.selected_layer = None;
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());
@@ -1688,6 +1693,17 @@ impl App {
             // An edit, not an undo step (web: LayerStore.showAll).
             "layer.showAll" => match &mut self.document {
                 Some(doc) => doc.model.show_all_layers(),
+                None => self.output("Açık çizim yok."),
+            },
+            // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
+            "layer.unisolate" => match &mut self.document {
+                Some(doc) => {
+                    let (level, text) = kentos_interaction::layer_tools::unisolate(
+                        &mut doc.model,
+                        &mut self.isolated_layers,
+                    );
+                    self.say(level, text);
+                }
                 None => self.output("Açık çizim yok."),
             },
             // Edits, not undo steps (layering.rs).

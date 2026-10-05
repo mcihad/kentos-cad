@@ -211,6 +211,23 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // The layers and groups hidden or locked of their own (docs/adr/0177 §1), exact.
+    if let Some(want) = &expect.hidden_layers {
+        check(
+            "hiddenLayers",
+            &got.hidden_layers == want,
+            format!("{:?}", got.hidden_layers),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.locked_layers {
+        check(
+            "lockedLayers",
+            &got.locked_layers == want,
+            format!("{:?}", got.locked_layers),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.current_color {
         check(
             "currentColor",

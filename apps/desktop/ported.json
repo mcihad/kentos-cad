@@ -233,7 +233,12 @@
     "template.panel",
     "template.new",
     "template.fromSelection",
-    "template.apply"
+    "template.apply",
+    "tool.layerOff",
+    "tool.layerIsolate",
+    "tool.layerLock",
+    "tool.layerMakeActive",
+    "layer.unisolate"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

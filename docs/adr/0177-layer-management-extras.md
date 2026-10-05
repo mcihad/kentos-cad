@@ -28,9 +28,10 @@ Beş araç, imleç altındaki nesneye tıklanarak (nesne seçen araç gibi, kutu
   Etkin katman da gizlenir ve bu söylenir (yeni nesneler gizli katmana çizilir; çizimdeki uyarı bilinen kuraldır, CLAUDE.md §7).
 - **Katmanı yalıt** (`layerIsolate`; LAYISO, “yalnız bu”): tıklanan nesnelerin katmanları görünür kalır, öbür bütün katmanlar gizlenir
   (üstlerindeki gruplar görünür kalır, “Yalnızca bunu göster” gibi). Birden çok katman yalıtılabilir: nesneler tıklandıkça toplanır,
-  Enter ya da sağ tık uygular. Yalıtma, gizlediği katmanları oturumda hatırlar.
-- **Yalıtımı kaldır** (`layer.unisolate`; LAYUNISO): son yalıtmanın gizlediği katmanlardan hâlâ gizli olanları gösterir; arada elle
-  değiştirilenlere dokunmaz. Yalıtma yoksa söylenir. Bellek oturumundur ve çizim değişince (aç, yeni) boşalır.
+  Enter ya da sağ tık uygular (Ctrl+Z son katmanı çıkarır, Esc hepsini). Yalıtma, gizlediği katman ve grupları oturumda hatırlar.
+- **Yalıtımı kaldır** (`layer.unisolate`; LAYUNISO): son Yalıtımı kaldır'dan beri yalıtmaların gizlediği katman ve gruplardan hâlâ
+  gizli olanları gösterir; arada elle değiştirilenlere dokunmaz. Yalıtma yoksa söylenir. Bellek oturumundur ve çizim değişince (aç, yeni)
+  boşalır (web `ToolManager.isolatedLayers`, masaüstü `Context::isolated_layers`).
 - **Katmanı kilitle** (`layerLock`; LAYLCK, Tabaka Kilitle): tıklanan nesnenin katmanı kilitlenir; araç sürer. Kilitli katmandaki nesne
   yine tıklanabilir (kilitlidir, söylenir).
 - **Katmanı etkin yap** (`layerMakeActive`; LAYMCUR, Tabaka Aktif): tıklanan nesnenin katmanı etkin katman olur; araç biter.
@@ -93,9 +94,10 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
 
 ### 7. Yerleri
 
-- Şeritte Giriş'in Katmanlar paneline “Katman araçları ▾”: §1'in beş işi, Katmanı eşle, Katmana kopyala, Katmanları birleştir…,
-  Kullanılmayanları temizle…, Katman listesi…; Yönet › Temizlik'e Kullanılmayanları temizle. Komut arama, takma adlar ve komut satırı
-  her birini bulur.
+- Şeritte Giriş'in Katmanlar panelinin ▾'i (üç şeritte; panel katlanınca kutusunun altında): §1'in beş işi, sonraki adımlarda Katmanı
+  eşle, Katmana kopyala, Katmanları birleştir…, Kullanılmayanları temizle…, Katman listesi…; Yönet › Temizlik'e Kullanılmayanları
+  temizle. Görünüm menüsünde (ve ondan kurulan Görünüm sekmesinde) “Katman” bölümü: araçlar, Yalıtımı kaldır ve Tüm katmanları göster.
+  Araçların grubu `layer`'dır (“Katman”). Komut arama, takma adlar ve komut satırı her birini bulur.
 - Katmanlar panelinde: katmanın menüsünde Kopyasını oluştur ve Başka katmanlarla birleştir…; araç çubuğunda Katman durumları ▾;
   panelin menüsünde Kullanılmayanları temizle… ve Katman listesini dışa aktar….
 
@@ -108,7 +110,15 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
 
 ## Adımlar
 
-1. Nesneden katman işlemleri (§1): iki belgede `isolate_layers`, ortak belge durumları; beş araç iki platformda; ortak iz.
+1. Nesneden katman işlemleri (§1): iki belgede `isolate_layers`, ortak belge durumları; beş araç iki platformda; ortak iz. **Tamam
+   (5 Ekim):** iki belgede `isolateLayers` / `isolate_layers` (ortak `layers.json`'un “Katmanı yalıt” senaryosu: gizli katman görünür
+   olur, grup altındakilerle, hiçbir şey değişmezse düzenleme değildir); araçlar web'de `tools/layerTools.ts` (`LayerTool`), masaüstünde
+   `kentos_interaction::layer_tools` (`LayerTool`, `unisolate`); Yalıtımı kaldır web'de `app/layerActions.ts`, masaüstünde `app.rs`;
+   ikonlar `layerOff`, `layerLock`, `layerMakeActive`, `layerUnisolate` (Katmanı yalıt panelin `layerIsolate`'i). Şeridin planına
+   yerleşik panelin ▾'i (`under`); masaüstünde yerleşik panelin ▾'i, harf ipuçları ve Komut ara vurgusu, KentOS UI'da katlanmış özel
+   grubun menüsünde “Diğer araçlar”; web'de katlanmış panelin kutusunda ▾. İzlerin yeni beklentileri `hiddenLayers`, `lockedLayers`;
+   ortak iz `layer-by-object.json`. Masaüstünde kendi gizli katmanının satırı da soluk (web'in `data-hidden`'ı). Resimler: iz `shot`
+   adımlarıyla, Katmanlar ▾ masaüstünün ikon turunda (`katman-araclari`), web'in `shots.mjs ribbon`'unda (`layers-more`).
 2. Katmanı eşle ve Katmana kopyala (§2): araçlar iki platformda; ortak iz.
 3. Kopyasını oluştur ve Katmanları birleştir (§3): komutlar ve pencere iki platformda; ortak iz.
 4. Katman durumları (§4): sözleşme ve `.kcad` şema 19 (kodek, bağımsız Python okuyucu ve yazıcısı, örnek dosya); kurallar iki platformda,

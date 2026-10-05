@@ -370,6 +370,12 @@ pub const PORTED: &[&str] = &[
     "template.fromSelection",
     // Şablonu uygula (docs/adr/0176 §6): without a template's id it shows the Şablonlar panel (templates.rs).
     "template.apply",
+    // docs/adr/0177 §1: the layer actions by an object and Yalıtımı kaldır.
+    "tool.layerOff",
+    "tool.layerIsolate",
+    "tool.layerLock",
+    "tool.layerMakeActive",
+    "layer.unisolate",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -869,7 +869,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   nesnelere uygula”; ortak iz `template-apply.json`, izlerin `applyTemplate` eylemi) tamam; `HYB-19` bitti (5 Ekim; BÖHYY takımı sahibin
   tarifini bekler). Sıradaki `HYB-20` katman yönetimi ekleri ([ADR 0177](docs/adr/0177-layer-management-extras.md)): nesneden katman
   işlemleri, Katmanı eşle ve Katmana kopyala, Kopyasını oluştur ve Katmanları birleştir, Katman durumları (`.kcad` şema 19),
-  Kullanılmayanları temizle, Katman listesi.
+  Kullanılmayanları temizle, Katman listesi. 1. adım (nesneden katman işlemleri: web `tools/layerTools.ts`, masaüstü
+  `kentos_interaction::layer_tools`; iki belgede `isolateLayers`/`isolate_layers`; Yalıtımı kaldır `layer.unisolate`; şeridin yerleşik
+  panelinin ▾'i `under`; izlerin `hiddenLayers` ve `lockedLayers`'ı; ortak iz `layer-by-object.json`) tamam.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

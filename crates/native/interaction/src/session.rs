@@ -61,9 +61,9 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
     continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    labels_to_text, leader, match_properties, meeting, parallel, polygonize, quick_dimension,
-    reshape_by, revcloud, sector, select_circle, select_containing, select_fence, set_elevation,
-    spline, split, station_offset, text, text_file, topology, vertex_points,
+    labels_to_text, layer_tools, leader, match_properties, meeting, parallel, polygonize,
+    quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing, select_fence,
+    set_elevation, spline, split, station_offset, text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -179,6 +179,11 @@ pub const TOOLS: &[&str] = &[
     continuation::ID,
     // docs/adr/0173 §2–§3: Biçim değiştir, the path tool's shape that reshapes an area or a path.
     reshape_by::ID,
+    // docs/adr/0177 §1: the layer actions by an object.
+    layer_tools::OFF_ID,
+    layer_tools::ISOLATE_ID,
+    layer_tools::LOCK_ID,
+    layer_tools::ACTIVE_ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -327,6 +332,10 @@ impl Session {
             split::ID => Box::new(crate::split::Split::new()),
             cleanup::ID => Box::new(crate::cleanup::Cleanup::new()),
             match_properties::ID => Box::new(crate::match_properties::MatchProperties::new()),
+            layer_tools::OFF_ID => Box::new(layer_tools::LayerTool::off()),
+            layer_tools::ISOLATE_ID => Box::new(layer_tools::LayerTool::isolate()),
+            layer_tools::LOCK_ID => Box::new(layer_tools::LayerTool::lock()),
+            layer_tools::ACTIVE_ID => Box::new(layer_tools::LayerTool::make_active()),
             sector::ID => Box::new(crate::sector::Sector::new()),
             between::ID => Box::new(crate::between::PointsBetween::new()),
             meeting::ID => Box::new(crate::meeting::IntersectPoint::new()),

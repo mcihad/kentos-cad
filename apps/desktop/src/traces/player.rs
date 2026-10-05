@@ -289,6 +289,9 @@ pub struct Observation {
     pub locks: Vec<String>,
     /// The active layer's groups and name (docs/adr/0176 §3).
     pub active_layer: Vec<String>,
+    /// The layers and groups hidden or locked of their own, by their paths (docs/adr/0177 §1).
+    pub hidden_layers: Vec<String>,
+    pub locked_layers: Vec<String>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -877,10 +880,37 @@ impl<'a> Player<'a> {
                 }
                 names
             }),
+            hidden_layers: doc
+                .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| !n.visible)),
+            locked_layers: doc
+                .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| n.locked)),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
         }
     }
+}
+
+/// The paths of the tree's nodes that `which` takes, in tree order.
+fn layer_paths(
+    layers: &kentos_domain::LayerTree,
+    which: impl Fn(&kentos_contracts::LayerNode) -> bool,
+) -> Vec<String> {
+    fn walk(
+        nodes: &[kentos_contracts::LayerNode],
+        layers: &kentos_domain::LayerTree,
+        which: &dyn Fn(&kentos_contracts::LayerNode) -> bool,
+        out: &mut Vec<String>,
+    ) {
+        for node in nodes {
+            if which(node) {
+                out.push(layers.path(&node.id));
+            }
+            walk(&node.children, layers, which, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(layers.nodes(), layers, &which, &mut out);
+    out
 }
 
 impl Drop for Player<'_> {

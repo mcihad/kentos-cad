@@ -178,6 +178,86 @@
       ]
     },
     {
+      "name": "Katmanı yalıt: birden çok katman ya da grup, üstlerindeki gruplar ve altındakiler görünür, öbürleri gizlenir; hiçbir şey değişmezse düzenleme değildir (docs/adr/0177 §1)",
+      "steps": [
+        {
+          "op": "isolateLayers",
+          "ids": ["b"],
+          "returns": true,
+          "note": "Gizli katman yalıtılınca görünür olur.",
+          "expect": {
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "layers": {
+              "g": {"visible": true},
+              "a": {"visible": false},
+              "b": {"visible": true, "isVisible": true},
+              "c": {"visible": false}
+            }
+          }
+        },
+        {
+          "op": "isolateLayers",
+          "ids": ["a", "c"],
+          "returns": true,
+          "expect": {
+            "revision": "changed",
+            "layers": {
+              "g": {"visible": true},
+              "a": {"visible": true, "isVisible": true},
+              "b": {"visible": false},
+              "c": {"visible": true}
+            }
+          }
+        },
+        {
+          "op": "captureRevision",
+          "as": "yalıtık"
+        },
+        {
+          "op": "markSaved",
+          "revision": "yalıtık",
+          "expect": {"dirty": false}
+        },
+        {
+          "op": "isolateLayers",
+          "ids": ["c", "yok", "a"],
+          "returns": false,
+          "note": "Aynı katmanlar yeniden: hiçbir şey değişmez, düzenleme değildir; bilinmeyen kimlik atlanır.",
+          "expect": {"dirty": false, "revision": "same"}
+        },
+        {
+          "op": "isolateLayers",
+          "ids": ["g"],
+          "returns": true,
+          "note": "Grup altındakilerle görünür.",
+          "expect": {
+            "dirty": true,
+            "layers": {
+              "g": {"visible": true},
+              "a": {"visible": true},
+              "b": {"visible": true},
+              "c": {"visible": false, "isVisible": false}
+            }
+          }
+        },
+        {
+          "op": "isolateLayers",
+          "ids": ["yok"],
+          "returns": false,
+          "note": "Bilinen kimlik yoksa hiçbir şey değişmez.",
+          "expect": {"revision": "same", "layers": {"c": {"visible": false}}}
+        },
+        {
+          "op": "isolateLayers",
+          "ids": [],
+          "returns": false,
+          "expect": {"revision": "same"}
+        }
+      ]
+    },
+    {
       "name": "Kilit üst gruptan miras alınır; model kilitli katmandaki düzenlemeyi reddetmez",
       "note": "Kilitli katmana yazmayı araçlar, komutlar, işlem çalıştırıcısı ve içe aktarma isLocked ile sorup reddeder; CadDocument'in kendisi denetlemez (web bugün böyle).",
       "steps": [

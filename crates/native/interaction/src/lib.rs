@@ -134,6 +134,7 @@ pub mod hatch;
 pub mod holes;
 mod junctions;
 pub mod labels_to_text;
+pub mod layer_tools;
 pub mod leader;
 pub mod lengthen;
 pub mod line;

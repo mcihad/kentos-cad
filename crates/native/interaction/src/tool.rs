@@ -814,6 +814,10 @@ pub struct Context<'a> {
     /// object the tool writes takes besides its geometry; none while the
     /// tool runs by itself.
     pub template: Option<&'a crate::templates::Stamp>,
+    /// The layers and groups Katmanı yalıt hid since the last Yalıtımı
+    /// kaldır, by id, in order (docs/adr/0177 §1): the drawing's, the host
+    /// forgets them with it.
+    pub isolated_layers: &'a mut Vec<String>,
 }
 
 impl Context<'_> {

@@ -39,6 +39,11 @@ export class ToolManager {
    * the drawing (docs/adr/0176 §3b), and a group's members take theirs from it (§5).
    */
   readonly templateNames = new Map<string, string>();
+  /**
+   * The layers and groups Katmanı yalıt hid since the last Yalıtımı kaldır, by id, in order (docs/adr/0177 §1): the
+   * drawing's, another drawing forgets them.
+   */
+  readonly isolatedLayers: string[] = [];
   /** Puts back the tool's own options the running template set (tools/templateSeeds.ts). */
   private templateBack: (() => void) | null = null;
   /** Tools suspended under a transparent one (point calculator), innermost last. */
@@ -57,6 +62,7 @@ export class ToolManager {
     ctx.doc.events.on('reset', () => {
       this.releaseTemplate();
       this.templateNames.clear();
+      this.isolatedLayers.length = 0;
     });
   }
 
