@@ -134,8 +134,15 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
    `layerDuplicate`, `layerMerge`. Ortak iz `layer-merge.json`; hedefin listeden değiştirilmesi izde olmadığından etkin katmanın
    birleşmesi, kilitli katman ve kopyaların adları iki platformun birim testlerinde (`layerActions.test.ts`, `layer_merge::tests`).
    Resimler: iz `shot` adımıyla iki platformda, katmanın menüsü masaüstünün ikon turunda (`katman`) ve web'in `shots.mjs layers`'ında.
-4. Katman durumları (§4): sözleşme ve `.kcad` şema 19 (kodek, bağımsız Python okuyucu ve yazıcısı, örnek dosya); kurallar iki platformda,
-   ortak durumlar; Katmanlar panelinde menü ve kayıt penceresi; ortak iz.
+4. Katman durumları (§4), üç parçada:
+   - 4a sözleşme ve `.kcad` şema 19: `ProjectSettings.layerStates`, her durum `{ id, name, nodes: [{ node, visible, locked?, style? }] }`
+     (düğüm kimliği, katman ya da grup; `locked` ve `style` kayıtta seçildiyse; stil yalnız katmanda); temizleyici (boş ya da yinelenen
+     kimlik ve ad, yinelenen düğüm düşer); KCAD kodeki (`layerStates` anahtarı, şema kapısı), spesifikasyon, bağımsız Python okuyucu ve
+     yazıcısı, örnek ve bozuk dosyalar; web'in ayar sinyali ve görüntüsü, TS ve Python tipleri.
+   - 4b kurallar iki platformda ortak durumlarla: şimdiki hâlin kaydı (hangi parçalar), uygulamanın değişiklikleri (görünürlük ve kilit
+     ağacın değişikliği, stil tek geri alma adımı; durumda olmayan ve silinmiş düğümler), şimdiki hâle uyan durum (menüdeki işaret).
+   - 4c arayüz: Katmanlar panelinin araç çubuğunda Katman durumları ▾ (durumlar, Yeni durum kaydet…, Güncelle, Yeniden adlandır…, Sil),
+     kayıt penceresi (Ad, Kilit, Stil); komutlar; ortak iz.
 5. Kullanılmayanları temizle (§5): kural iki platformda ortak durumlarla; pencere; ortak iz.
 6. Katman listesi (§6): kural ortak durumlarla; dışa aktarma iki platformda.
 
