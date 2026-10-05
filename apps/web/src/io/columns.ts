@@ -399,6 +399,12 @@ class Packer {
         if (e.widthFactor !== undefined) (flags |= OPT[1]), this.float(e.widthFactor, 'widthFactor');
         if (e.mask === true) flags |= OPT[2];
         else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz yazıda alan yoktur');
+        // A linked text's object, as its text, and scale (docs/adr/0175 §4); the codec checks the pair.
+        if (e.labelOf !== undefined || e.labelScale !== undefined) {
+          flags |= OPT[3];
+          this.text(e.labelOf ?? '', 'labelOf');
+          this.float(e.labelScale ?? Number.NaN, 'labelScale');
+        }
         break;
       case 'dimension': {
         this.point(e.a, 'a', kind);
@@ -708,6 +714,10 @@ export class ColumnsReader {
         if (has(0)) e.align = TEXT_ALIGNS[this.readInt()];
         if (has(1)) e.widthFactor = this.num();
         if (has(2)) e.mask = true;
+        if (has(3)) {
+          e.labelOf = this.readText();
+          e.labelScale = this.num();
+        }
         break;
       case 'dimension':
         e.a = this.pt();

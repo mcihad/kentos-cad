@@ -177,8 +177,15 @@ pub const SCHEMA_WITH_GROUND: u32 = 16;
 /// those refuses a drawing that has them rather than keep its first part.
 pub const SCHEMA_WITH_LINE_PARTS: u32 = 17;
 
+/// Document schema 18 (docs/specs/kcad-v2.md §6.1): schema 17 and the text
+/// that writes an object's label and follows it, a text's `labelOf` and
+/// `labelScale` (docs/adr/0175 §4). A writer writes it only when a text has
+/// them: any other drawing stays 17 or older, byte for byte; a reader of
+/// those refuses a drawing that has them rather than keep its texts unlinked.
+pub const SCHEMA_WITH_LINKED_TEXTS: u32 = 18;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 16] = [
+pub const SCHEMAS: [u32; 17] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -195,6 +202,7 @@ pub const SCHEMAS: [u32; 16] = [
     SCHEMA_WITH_TRAVERSE_TOLERANCES,
     SCHEMA_WITH_GROUND,
     SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_LINKED_TEXTS,
 ];
 
 /// The file a drawing is saved as.

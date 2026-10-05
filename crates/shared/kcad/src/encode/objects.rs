@@ -11,7 +11,8 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     AreaPart, BlockId, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchPattern,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, Vec2, width_factor_ok,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, Vec2, label_scale_ok,
+    width_factor_ok,
 };
 
 use super::Encoder;
@@ -228,6 +229,51 @@ impl<'d> Encoder<'d> {
                 }
                 if e.mask {
                     f.push(("mask", Val::Bool(true)));
+                }
+                // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
+                // drawing's texts (a block definition's objects have no persistent ids to name).
+                if e.label_of.is_some() || e.label_scale.is_some() {
+                    let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                        this.path.push(Seg::Name(kind));
+                        this.path.push(Seg::Name(field));
+                        Err(this.fail(Code::BadValue, words))
+                    };
+                    let (Some(of), Some(scale)) = (&e.label_of, e.label_scale) else {
+                        let field = if e.label_of.is_none() {
+                            "labelOf"
+                        } else {
+                            "labelScale"
+                        };
+                        return refuse(
+                            self,
+                            field,
+                            "bağlı yazının nesnesi ve ölçeği birlikte verilir",
+                        );
+                    };
+                    if uid.is_none() {
+                        return refuse(
+                            self,
+                            "labelOf",
+                            "blok tanımının yazısı bir nesneye bağlı olamaz",
+                        );
+                    }
+                    if of.is_nil() {
+                        return refuse(
+                            self,
+                            "labelOf",
+                            "bağlı yazının nesnesinin kimliği boş olamaz",
+                        );
+                    }
+                    // Not finite: the float's own refusal (`non_finite`), with its place.
+                    if scale.is_finite() && !label_scale_ok(scale) {
+                        return refuse(
+                            self,
+                            "labelScale",
+                            &format!("bağlı yazının ölçeği 1:{scale}; sıfırdan büyük olmalı"),
+                        );
+                    }
+                    f.push(("labelOf", Val::Uid(of)));
+                    f.push(("labelScale", Val::Float(scale)));
                 }
             }
             Entity::Dimension(e) => {

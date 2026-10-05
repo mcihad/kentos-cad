@@ -205,6 +205,14 @@ export interface TextEntity extends EntityBase {
   widthFactor?: number;
   /** The text's box filled with the drawing area's colour before the text: what lies under it does not show. */
   mask?: boolean;
+  /**
+   * The object whose label this text writes (Etiketleri yazıya çevir's “Nesneye bağlı”, docs/adr/0175 §4): its
+   * persistent id. The text follows the object as its label at `labelScale`; absent, a text of its own. Given with
+   * `labelScale` or not at all.
+   */
+  labelOf?: string;
+  /** The scale's denominator (1:N) the linked label is written at; finite, over 0. */
+  labelScale?: number;
 }
 
 /**

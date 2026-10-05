@@ -318,6 +318,8 @@ fn named_point_gives_the_running_tool_its_place_as_if_clicked() {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }))
         .expect("a slot");
     b.start("line");

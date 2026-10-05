@@ -62,7 +62,9 @@ use crate::layer::LineType;
 /// 28: multi-part polylines and points (docs/adr/0174): `.kcad` document schema 17 and the typed
 ///    columns' layout, a polyline's `parts` as an area's, a point's `parts` (each its flags, place
 ///    and elevation).
-pub const FORMATS_VERSION: u32 = 28;
+/// 29: linked texts (docs/adr/0175 §4): `.kcad` document schema 18 and the typed columns' layout,
+///    a text's `labelOf` (as its text) and `labelScale` behind a fourth option flag.
+pub const FORMATS_VERSION: u32 = 29;
 
 // ── Every import ────────────────────────────────────────────────────────
 

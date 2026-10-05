@@ -1840,6 +1840,8 @@ impl<'l> Emitter<'l> {
             align: f.align,
             width_factor: width_factor_of(f.width_factor * widen),
             mask,
+            label_of: None,
+            label_scale: None,
         }));
     }
 

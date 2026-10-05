@@ -31,8 +31,9 @@ use crate::watch::{Step, Watch, report};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -633,7 +634,8 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 17 when a polyline or a point,
+/// The oldest schema that holds the drawing: 18 when a text of it writes an
+/// object's label (`labelOf`, `labelScale`), 17 when a polyline or a point,
 /// of it or of a block definition, has parts, 16 when its survey settings
 /// name the ground, 15 when they name a traverse tolerance, 14 when the project has survey settings, 13 when it has its own systems or datum choices, 12 when it has
 /// a second system, 11 when it names a drawing unit, 10 when a layer has its own
@@ -656,6 +658,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             _ => false,
         })
     };
+    // A block definition's texts have no link: only the drawing's (docs/adr/0175 §4).
+    if doc
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Text(t) if t.label_of.is_some() || t.label_scale.is_some()))
+    {
+        return SCHEMA_WITH_LINKED_TEXTS;
+    }
     if line_parts(&doc.entities) || doc.blocks.iter().any(|b| line_parts(&b.entities)) {
         return SCHEMA_WITH_LINE_PARTS;
     }

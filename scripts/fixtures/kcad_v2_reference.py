@@ -454,6 +454,9 @@ KINDS = {
         "align": (enum(TEXT_ALIGNS), False),
         "widthFactor": (f64, False),
         "mask": (lambda b: boolean(b) if b is True else None, False),
+        # Schema 18 (docs/adr/0175 §4): the object whose label it writes, its persistent id, and the scale's denominator.
+        "labelOf": (lambda u: blob(uid_bytes(u)), False),
+        "labelScale": (f64, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -561,7 +564,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 17 with a multi-part polyline or a multi-point object, in the drawing or
+    """The oldest schema that holds the drawing: 18 with a text that writes an object's label (docs/adr/0175 §4), 17
+    with a multi-part polyline or a multi-point object, in the drawing or
     a block definition (docs/adr/0174), 16 with the survey settings' ground height or reduction to the grid
     (docs/adr/0171), 15 with their traverse tolerances, 14 with survey settings (docs/adr/0169 §3), 13 with the project's
     own systems or datum choices (docs/adr/0168), 12 with a second coordinate system (docs/adr/0167 §1), 11 with a local
@@ -578,6 +582,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def line_parts(es):
         return any(e["kind"] in ("polyline", "point") and "parts" in e for e in es)
 
+    # A block definition's texts have no link (their objects have no persistent ids).
+    if any(e["kind"] == "text" and ("labelOf" in e or "labelScale" in e) for e in entities):
+        return 18
     if line_parts(entities) or any(line_parts(b["entities"]) for b in blocks or []):
         return 17
     if settings and any(k in settings.get("survey", {}) for k in ("groundHeight", "reduceToGrid")):
@@ -800,7 +807,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-18.kcad"] = container(root(cmap(parts), version=b"\x12"))
+    files["schema-version-19.kcad"] = container(root(cmap(parts), version=b"\x13"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -856,6 +863,17 @@ def broken(minimal_content, minimal_file):
     files["polyline-part-one-point.kcad"] = in_schema(17, path("polyline", 3, parts=array([cmap({"pts": array([point(one["p"])])})])))
     files["polyline-part-holes.kcad"] = in_schema(17, path("polyline", 3, parts=array([cmap({"pts": two(5), "holes": array([])})])))
     files["point-part-without-place.kcad"] = in_schema(17, point_with(parts=array([cmap({"z": f64(100.0)})])))
+    # A text's link to the object whose label it writes is schema 18's (docs/adr/0175 §4): in schema 17 unknown
+    # fields; both or neither; a scale finite and over 0; an id of 16 bytes, not nil; no link in a block definition.
+    linked = lambda **extra: cmap({"text": cmap({**common, "p": point(one["p"]), "text": text("101"), "height": f64(2.5), "rotation": f64(0.0), **extra})})
+    of = blob(uid_bytes("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"))
+    files["text-label-of-in-schema-17.kcad"] = in_schema(17, linked(labelOf=of, labelScale=f64(1000.0)))
+    files["text-label-of-without-scale.kcad"] = in_schema(18, linked(labelOf=of))
+    files["text-label-scale-without-of.kcad"] = in_schema(18, linked(labelScale=f64(1000.0)))
+    files["text-label-scale-zero.kcad"] = in_schema(18, linked(labelOf=of, labelScale=f64(0.0)))
+    files["text-label-scale-nan.kcad"] = in_schema(18, linked(labelOf=of, labelScale=b"\xfb\x7f\xf8\x00\x00\x00\x00\x00\x00"))
+    files["text-label-of-short.kcad"] = in_schema(18, linked(labelOf=blob(bytes(8)), labelScale=f64(1000.0)))
+    files["text-label-of-nil.kcad"] = in_schema(18, linked(labelOf=blob(bytes(16)), labelScale=f64(1000.0)))
     # Blocks are schema 6's (docs/adr/0144): in schema 5 `blocks` is an unknown field and `insert` an unknown kind.
     # A definition's objects have no persistent id; its name (Turkish case folded) and id are once in a drawing; an
     # insert names a definition, its scale is positive, `mirror` is written only when true; no definition holds
@@ -878,6 +896,9 @@ def broken(minimal_content, minimal_file):
         entries = {**parts, "blocks": array(blocks), "entities": array(entities if entities is not None else [insert_of(1)])}
         return container(root(cmap(entries), version=uint(version)))
 
+    # A block definition's text names no object: its objects have no persistent ids (docs/adr/0175 §4).
+    block_text = cmap({"text": cmap({"attrs": cmap({}), "layerId": text("0"), "p": point({"x": 0.0, "y": 0.0}), "text": text("A"), "height": f64(1.0), "rotation": f64(0.0), "labelOf": of, "labelScale": f64(1000.0)})})
+    files["block-text-label-of.kcad"] = with_blocks([block(1, "Pafta", [block_text])], version=18)
     files["blocks-in-schema-5.kcad"] = with_blocks([block(1, "Rögar")], entities=[], version=5)
     files["insert-in-schema-5.kcad"] = in_schema(5, insert_of(1))
     files["unknown-block.kcad"] = with_blocks([block(1, "Rögar")], entities=[insert_of(2)])
@@ -1104,6 +1125,7 @@ def build():
     out["survey-traverse.kcad"] = container(document(load("survey-traverse.json")))
     out["survey-ground.kcad"] = container(document(load("survey-ground.json")))
     out["multi-part-lines.kcad"] = container(document(load("multi-part-lines.json")))
+    out["linked-texts.kcad"] = container(document(load("linked-texts.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

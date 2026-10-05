@@ -606,6 +606,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             align,
             width_factor: width_factor.filter(|w| *w != 1.0),
             mask,
+            // A geometry is no link: a text written or moved by a command follows no object (docs/adr/0175 §4).
+            label_of: None,
+            label_scale: None,
         }),
         EntityGeometry::Dimension {
             a,

@@ -1187,6 +1187,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "FeatureChange": {
             "oneOf": [
               {
@@ -2662,6 +2667,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -5548,6 +5572,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "GeographicDefinition": {
             "description": "Latitude and longitude on a datum.",
             "properties": {
@@ -7063,6 +7092,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -13493,6 +13541,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -14249,6 +14302,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -15271,6 +15343,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -16027,6 +16104,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -17010,6 +17106,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -17766,6 +17867,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -18891,6 +19011,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -19647,6 +19772,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -20615,6 +20759,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -21371,6 +21520,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -22349,6 +22517,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -23105,6 +23278,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -24333,6 +24525,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -25089,6 +25286,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -27266,6 +27482,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -28022,6 +28243,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -29136,6 +29376,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -29892,6 +30137,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -31856,6 +32120,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -32612,6 +32881,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -33722,6 +34010,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -34478,6 +34771,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -35589,6 +35901,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -36345,6 +36662,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },
@@ -37620,6 +37956,11 @@
               }
             ]
           },
+          "EntityId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
           "HatchEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -38376,6 +38717,25 @@
               "label": {
                 "type": [
                   "string",
+                  "null"
+                ]
+              },
+              "labelOf": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EntityId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The object whose label this text writes (Etiketleri yazıya çevir's\n“Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text\nfollows the object as its label at `label_scale`; absent: a text of\nits own. Given with `label_scale` or not at all."
+              },
+              "labelScale": {
+                "description": "The scale's denominator (1:N) the linked label is written at; finite, over 0.",
+                "format": "double",
+                "type": [
+                  "number",
                   "null"
                 ]
               },

@@ -271,6 +271,8 @@ fn objects() -> Vec<Entity> {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -281,6 +283,8 @@ fn objects() -> Vec<Entity> {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
@@ -931,6 +935,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),

@@ -448,6 +448,8 @@ impl Emitter {
                         align: None,
                         width_factor: None,
                         mask: false,
+                        label_of: None,
+                        label_scale: None,
                     }),
                 );
             }
@@ -660,6 +662,8 @@ impl Emitter {
                                 align: align_of(*anchor),
                                 width_factor: None,
                                 mask: false,
+                                label_of: None,
+                                label_scale: None,
                             }),
                         );
                     }

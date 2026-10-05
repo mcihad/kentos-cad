@@ -439,6 +439,8 @@ impl Packer {
                 align,
                 width_factor,
                 mask,
+                label_of,
+                label_scale,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*height, *rotation]);
@@ -454,6 +456,12 @@ impl Packer {
                 }
                 if *mask {
                     flags |= OPT[2];
+                }
+                // A linked text's object, as its text, and scale (docs/adr/0175 §4); the codec checks the pair.
+                if label_of.is_some() || label_scale.is_some() {
+                    flags |= OPT[3];
+                    self.text(&label_of.map(|u| u.to_text()).unwrap_or_default());
+                    self.float(label_scale.unwrap_or(f64::NAN));
                 }
             }
             Entity::Dimension(DimensionEntity {
@@ -852,7 +860,9 @@ fn allowed(kind: u8) -> u32 {
         // A polyline's parts are schema 17's (docs/adr/0174).
         2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        10 | 14 => OPT[0] | OPT[1] | OPT[2],
+        // A text's alignment, width factor and mask, then schema 18's link (docs/adr/0175 §4); a leader's three.
+        10 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        14 => OPT[0] | OPT[1] | OPT[2],
         // A dimension: text, style, angle, c, then schema 9's mask, za, zb (docs/adr/0147).
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
         12 | 13 => OPT[0],
@@ -1012,6 +1022,14 @@ fn geometry(
                 None
             };
             let width_factor = if has(1) { Some(c.float()?) } else { None };
+            let (label_of, label_scale) = if has(3) {
+                let of = c.text(|| place("labelOf"))?;
+                let id = EntityId::parse(&of)
+                    .ok_or_else(|| broken(&format!("bağlı yazının nesnesi “{of}”")))?;
+                (Some(id), Some(c.float()?))
+            } else {
+                (None, None)
+            };
             Entity::Text(TextEntity {
                 base,
                 p,
@@ -1021,6 +1039,8 @@ fn geometry(
                 align,
                 width_factor,
                 mask: has(2),
+                label_of,
+                label_scale,
             })
         }
         11 => {

@@ -413,6 +413,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 align: None,
                 width_factor: None,
                 mask: false,
+                label_of: None,
+                label_scale: None,
             }),
             _ => Entity::Hatch(HatchEntity {
                 base: b,

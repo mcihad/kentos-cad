@@ -5657,6 +5657,11 @@ class TextEntity(Entity):
         rotation: Degrees, counter-clockwise from east.
         align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
         color: Colour override; absent = the layer's colour ("katmana göre").
+        label_of: The object whose label this text writes (Etiketleri yazıya çevir's
+            “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
+            follows the object as its label at `label_scale`; absent: a text of
+            its own. Given with `label_scale` or not at all.
+        label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
@@ -5678,6 +5683,8 @@ class TextEntity(Entity):
     align: TextAlign | TextAlignName | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
+    label_of: str | None | Unset = UNSET
+    label_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
     symbol: str | None | Unset = UNSET
@@ -5698,6 +5705,10 @@ class TextEntity(Entity):
             out["color"] = self.color
         if self.label is not UNSET:
             out["label"] = self.label
+        if self.label_of is not UNSET:
+            out["labelOf"] = self.label_of
+        if self.label_scale is not UNSET:
+            out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
@@ -5721,6 +5732,8 @@ class TextEntity(Entity):
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
+            label_of=data.get("labelOf", UNSET),
+            label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
             symbol=data.get("symbol", UNSET),

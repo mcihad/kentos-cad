@@ -18,7 +18,7 @@ use kentos_contracts::{
     DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
     HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity,
     MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity, PointEntity, PointPart, RingGeometry,
-    SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
+    SplineEntity, TextAlign, TextEntity, Vec2, label_scale_ok, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -28,8 +28,9 @@ use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LEADERS,
-    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS,
+    SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -107,6 +108,9 @@ pub(super) struct Features {
     pub(super) ground: bool,
     /// Schema 17: a polyline's and a point's parts (`parts`, docs/adr/0174).
     pub(super) line_parts: bool,
+    /// Schema 18: a text's link to the object whose label it writes
+    /// (`labelOf`, `labelScale`, docs/adr/0175 §4).
+    pub(super) linked_texts: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -130,6 +134,7 @@ impl Features {
             traverse_tolerances: schema >= SCHEMA_WITH_TRAVERSE_TOLERANCES,
             ground: schema >= SCHEMA_WITH_GROUND,
             line_parts: schema >= SCHEMA_WITH_LINE_PARTS,
+            linked_texts: schema >= SCHEMA_WITH_LINKED_TEXTS,
             uids: true,
         }
     }
@@ -172,6 +177,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
+                    || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
             }
             Kind::Dimension => {
                 matches!(
@@ -245,6 +251,10 @@ struct Fields {
     arrow: Option<LeaderArrow>,
     width_factor: Option<f64>,
     mask: Option<bool>,
+    /// A linked text's object and scale (docs/adr/0175 §4), and where the first of them is.
+    label_of: Option<EntityId>,
+    label_scale: Option<f64>,
+    link_at: usize,
 }
 
 /// The objects and their persistent ids, each id once (§6.8); each insert
@@ -485,6 +495,27 @@ pub(super) fn object(
             "align" => f.align = Some(text_align(r)?),
             "arrow" => f.arrow = Some(leader_arrow(r)?),
             "widthFactor" => f.width_factor = Some(width_factor(r)?),
+            "labelOf" => {
+                if f.label_scale.is_none() {
+                    f.link_at = r.position();
+                }
+                f.label_of = Some(EntityId(id16(r)?));
+            }
+            "labelScale" => {
+                if f.label_of.is_none() {
+                    f.link_at = r.position();
+                }
+                let at = r.position();
+                let n = r.float()?;
+                if !label_scale_ok(n) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("bağlı yazının ölçeği 1:{n}; sıfırdan büyük olmalı"),
+                    ));
+                }
+                f.label_scale = Some(n);
+            }
             "mask" => {
                 let at = r.position();
                 if !r.bool()? {
@@ -597,16 +628,28 @@ fn build(
                 Entity::Ray(line)
             }
         }
-        Kind::Text => Entity::Text(TextEntity {
-            base,
-            p: required(r, f.p, "p")?,
-            text: required(r, f.text.take(), "text")?,
-            height: required(r, f.height, "height")?,
-            rotation: required(r, f.rotation, "rotation")?,
-            align: f.align,
-            width_factor: f.width_factor,
-            mask: f.mask.unwrap_or(false),
-        }),
+        Kind::Text => {
+            // A linked text names its object and its scale together (docs/adr/0175 §4).
+            if f.label_of.is_some() != f.label_scale.is_some() {
+                return Err(r.fail_at(
+                    Code::BadValue,
+                    f.link_at,
+                    "bağlı yazının nesnesi ve ölçeği birlikte verilir",
+                ));
+            }
+            Entity::Text(TextEntity {
+                base,
+                p: required(r, f.p, "p")?,
+                text: required(r, f.text.take(), "text")?,
+                height: required(r, f.height, "height")?,
+                rotation: required(r, f.rotation, "rotation")?,
+                align: f.align,
+                width_factor: f.width_factor,
+                mask: f.mask.unwrap_or(false),
+                label_of: f.label_of,
+                label_scale: f.label_scale,
+            })
+        }
         Kind::Dimension => {
             // What a style needs, and what only a slope has (docs/adr/0147).
             let style = f.style;

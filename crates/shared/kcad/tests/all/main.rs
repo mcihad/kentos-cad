@@ -9,6 +9,7 @@ mod elevations;
 mod fixtures;
 mod leaders;
 mod line_parts;
+mod linked_texts;
 mod parts;
 mod robustness;
 mod texts;

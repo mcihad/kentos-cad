@@ -273,6 +273,9 @@ impl Fields {
                 align: self.align,
                 width_factor: self.width_factor,
                 mask: self.mask.unwrap_or(false),
+                // The written file keeps no link: a DXF text is a text (docs/adr/0175 §4).
+                label_of: None,
+                label_scale: None,
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,

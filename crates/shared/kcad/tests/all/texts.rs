@@ -60,6 +60,8 @@ fn text(align: Option<TextAlign>, width_factor: Option<f64>, mask: bool) -> Enti
         align,
         width_factor,
         mask,
+        label_of: None,
+        label_scale: None,
     })
 }
 

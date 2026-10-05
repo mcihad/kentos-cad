@@ -119,6 +119,8 @@ impl Placing {
                         align: align.and_then(contract_align),
                         width_factor,
                         mask: mask == Some(true),
+                        label_of: None,
+                        label_scale: None,
                     },
                 ))
             })
@@ -501,6 +503,8 @@ fn entity(s: &Shape) -> Option<Entity> {
             align: align.and_then(contract_align),
             width_factor: *width_factor,
             mask: *mask == Some(true),
+            label_of: None,
+            label_scale: None,
         }),
         Shape::Dimension {
             a,

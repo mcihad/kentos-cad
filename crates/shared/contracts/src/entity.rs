@@ -273,6 +273,22 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
+    /// The object whose label this text writes (Etiketleri yazıya çevir's
+    /// “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
+    /// follows the object as its label at `label_scale`; absent: a text of
+    /// its own. Given with `label_scale` or not at all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label_of: Option<crate::identity::EntityId>,
+    /// The scale's denominator (1:N) the linked label is written at; finite, over 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label_scale: Option<f64>,
+}
+
+/// Whether `n` may be a linked text's scale (docs/adr/0175 §4): finite, over 0.
+pub fn label_scale_ok(n: f64) -> bool {
+    n.is_finite() && n > 0.0
 }
 
 /// The widest a text's letters may be drawn, times their width (DXF's own bound).

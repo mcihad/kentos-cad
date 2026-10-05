@@ -87,6 +87,8 @@ SCHEMA_WITH_TRAVERSE_TOLERANCES = 15
 SCHEMA_WITH_GROUND = 16
 # Schema 17: schema 16 and multi-part polylines and points, a polyline's and a point's `parts` (docs/adr/0174).
 SCHEMA_WITH_LINE_PARTS = 17
+# Schema 18: schema 17 and the text that writes an object's label, a text's `labelOf` and `labelScale` (docs/adr/0175 §4).
+SCHEMA_WITH_LINKED_TEXTS = 18
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
@@ -99,7 +101,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -433,6 +435,7 @@ class _Schema:
         self.elevations = False
         self.parts = False
         self.line_parts = False
+        self.linked_texts = False
         self.blocks = False
         self.texts = False
         # While a block definition's objects are read: how many so far (they have no persistent ids).
@@ -587,6 +590,7 @@ class _Schema:
         self.elevations = version >= SCHEMA_WITH_ELEVATIONS
         self.parts = version >= SCHEMA_WITH_PARTS
         self.line_parts = version >= SCHEMA_WITH_LINE_PARTS
+        self.linked_texts = version >= SCHEMA_WITH_LINKED_TEXTS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -913,6 +917,9 @@ class _Schema:
                 self.same_length(fields)
             if kind == "dimension":
                 self.dimension_rules(fields)
+            if kind == "text" and ("labelOf" in fields) != ("labelScale" in fields):
+                self.path.append("labelOf" if "labelOf" in fields else "labelScale")
+                self.fail("bad_value", "bağlı yazının nesnesi ve ölçeği birlikte verilir")
             # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
             if kind == "insert" and self.inside is None and fields["block"] not in self.index:
                 self.path.append("block")
@@ -984,6 +991,12 @@ class _Schema:
         if self.bool(v) is not True:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz yazıda alan yoktur")
         return True
+
+    def label_scale(self, v):
+        x = self.float(v)
+        if not x > 0.0:
+            self.fail("bad_value", f"bağlı yazının ölçeği 1:{x:g}; sıfırdan büyük olmalı")
+        return x
 
     def dimension_mask(self, v):
         if self.bool(v) is not True:
@@ -1193,6 +1206,8 @@ ENTITY_KINDS = {
         "height": (s.float, True),
         "rotation": (s.float, True),
         **(text_extras(s, mask=True) if s.texts else {}),
+        # Schema 18 (docs/adr/0175 §4): the object whose label it writes and the scale, only where objects have ids.
+        **({"labelOf": (s.id16, False), "labelScale": (s.label_scale, False)} if s.linked_texts and s.inside is None else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {

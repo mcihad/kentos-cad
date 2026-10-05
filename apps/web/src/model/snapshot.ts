@@ -642,6 +642,10 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       textExtrasAt(v, w);
       // The mask only when true (docs/adr/0145), as an insert's mirror.
       if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz yazıda alan yoktur');
+      // The object whose label it writes and the scale, both or neither (docs/adr/0175 §4).
+      if ((v.labelOf === undefined) !== (v.labelScale === undefined)) fail(at(w, 'bağlı nesne'), 'nesnesi ve ölçeği birlikte verilir');
+      if (v.labelOf !== undefined && !isUuid(v.labelOf)) fail(at(w, 'bağlı nesne'), 'küçük harfli, tireli bir UUID olmalı');
+      if (v.labelScale !== undefined && !(numAt(v.labelScale, w, 'bağlı ölçek') > 0)) fail(at(w, 'bağlı ölçek'), "sıfırdan büyük olmalı");
       break;
     case 'dimension': {
       pointAt(v.a, w, 'a');

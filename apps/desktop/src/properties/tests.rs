@@ -336,6 +336,8 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }),
     );
     let s = Slot(text);
@@ -552,6 +554,8 @@ fn what_the_commands_refuse_is_said_and_not_written() {
             align: None,
             width_factor: None,
             mask: false,
+            label_of: None,
+            label_scale: None,
         }),
     );
     event(
@@ -1458,6 +1462,8 @@ fn two_texts(app: &mut App) -> (u32, u32) {
         align: None,
         width_factor: None,
         mask: false,
+        label_of: None,
+        label_scale: None,
     };
     let a = add(
         app,

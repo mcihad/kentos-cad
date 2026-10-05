@@ -323,6 +323,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                 align: None,
                 width_factor: None,
                 mask: false,
+                label_of: None,
+                label_scale: None,
             }));
         }
     }

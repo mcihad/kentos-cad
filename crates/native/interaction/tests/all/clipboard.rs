@@ -367,6 +367,8 @@ fn a_paste_goes_through_the_commands_in_one_step() {
         align: None,
         width_factor: None,
         mask: false,
+        label_of: None,
+        label_scale: None,
     });
     let mut blank = Clipboard::new();
     blank.set(vec![board.items()[0].clone(), text], None);
