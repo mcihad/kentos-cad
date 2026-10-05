@@ -130,7 +130,8 @@ sürdürülmez: “Sürdür çizgi ve çoklu çizgi içindir.”; kilitli katman
 4. Biçim değiştir iki platformda (alan ve çizgi); ortak izler; resimler. Bitti (5 Ekim): masaüstü yol aracının `Reshape` biçimi ve
    `kentos_interaction::reshape_by` (hedef, önizleme, yazma, retlerin iletileri), web `ReshapeTool` (`PathTool`'un `straight`
    seçeneğiyle); ortak iz `reshape.json` (sahne `reshape.kcad`; kesim, cep, delik reddi, yol, tek buluşmalı çizgi, Topoloji uyarısı)
-   iki platformda, resimleriyle. Şerit 1440 px'te yazılı kalsın diye Sürdür ve Deliği doldur seyrek araçtır (Kenar ▾, Delikler ▾).
+   iki platformda, resimleriyle. Şerit 1440 px'te yazılı kalsın ve CBS'nin Düzenle sekmesi tasarlandığı gibi 3000 px'e sığsın diye
+   Sürdür seyrek araçtır (Kenar ▾); Delikler panelinin üç aracı küçük düğmelerdir.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

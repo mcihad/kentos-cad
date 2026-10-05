@@ -10639,7 +10639,7 @@
         "DELIKDOLDUR"
       ],
       "primary": false,
-      "rare": true,
+      "rare": false,
       "methods": [],
       "steps": 2,
       "description": "Tıklanan deliğin biçiminde yeni bir alan yazar; delik yerinde kalır, yeni alan onu doldurur.",
@@ -21464,16 +21464,18 @@
             "items": [
               {
                 "command": "tool.holeAdd",
-                "size": "large"
+                "size": "small"
               },
               {
                 "command": "tool.holeRemove",
-                "size": "large"
+                "size": "small"
+              },
+              {
+                "command": "tool.holeFill",
+                "size": "small"
               }
             ],
-            "overflow": [
-              "tool.holeFill"
-            ],
+            "overflow": [],
             "keep": false
           },
           {
@@ -23592,16 +23594,18 @@
               "items": [
                 {
                   "command": "tool.holeAdd",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.holeRemove",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeFill",
+                  "size": "small"
                 }
               ],
-              "overflow": [
-                "tool.holeFill"
-              ],
+              "overflow": [],
               "keep": false
             }
           ]
@@ -25469,16 +25473,18 @@
               "items": [
                 {
                   "command": "tool.holeAdd",
-                  "size": "large"
+                  "size": "small"
                 },
                 {
                   "command": "tool.holeRemove",
-                  "size": "large"
+                  "size": "small"
+                },
+                {
+                  "command": "tool.holeFill",
+                  "size": "small"
                 }
               ],
-              "overflow": [
-                "tool.holeFill"
-              ],
+              "overflow": [],
               "keep": false
             },
             {
