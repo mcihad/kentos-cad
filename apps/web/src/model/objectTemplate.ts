@@ -56,7 +56,7 @@ export interface ObjectTemplate {
   readonly label?: string;
   /** A point template's first name (it goes up with each point, as Nokta's Ad) and code (docs/adr/0152). */
   readonly point?: { readonly name?: string; readonly code?: string };
-  /** A text template's height (metres on the ground), alignment and mask. */
+  /** A text template's height on paper (mm, as Yazı's Yükseklik: the same size printed at every scale), alignment and mask. */
   readonly text?: { readonly height: number; readonly align?: TextAlign; readonly mask?: boolean };
   /** A block template's block, by name. */
   readonly block?: string;
@@ -189,13 +189,16 @@ const TOOL_OF_KIND: Partial<Record<Entity['kind'], TemplateTool>> = { point: 'po
  * category: the tool is the object's kind's; the layer is its own, with the groups above it and its look; the
  * object's own colour, line weight and symbol go with it when it has them, and so do its attributes (by name) and
  * label, but a point's label is the template's first name and its `Kod` its code (docs/adr/0152); a text gives its
- * height, alignment and mask, an insert its block by name. Another kind is refused, said by its name. The desktop's
- * is `kentos_native_style::object_template::from_object`; both pass fixtures/style/v1/template-from-object.json.
+ * height on paper in millimetres, as Yazı's Yükseklik is given (its height on the ground × 1000 / the drawing's
+ * `plotScale`), its alignment and mask, an insert its block by name. Another kind is refused, said by its name. The
+ * desktop's is `kentos_native_style::object_template::from_object`; both pass
+ * fixtures/style/v1/template-from-object.json.
  */
 export function templateFromObject(
   e: Entity,
   layers: { get(id: string): LayerNode | undefined; parentOf(id: string): LayerNode | null },
   blockName: (id: string) => string | undefined,
+  plotScale: number,
 ): { readonly name: string; readonly template: ObjectTemplate } | { readonly refused: string } {
   const tool = TOOL_OF_KIND[e.kind];
   if (!tool) return { refused: `${ENTITY_KIND_LABEL[e.kind]} nesnesinden şablon yapılamaz: şablon nokta, çizgi, çoklu çizgi, kapalı alan, daire, yazı ya da blok çizer.` };
@@ -221,7 +224,7 @@ export function templateFromObject(
     ...(point && Object.keys(point).length > 0 && { point }),
     ...(Object.keys(sorted).length > 0 && { attrs: sorted }),
     ...(label && { label }),
-    ...(e.kind === 'text' && { text: { height: e.height, ...(e.align && { align: e.align }), ...(e.mask === true && { mask: true }) } }),
+    ...(e.kind === 'text' && { text: { height: (e.height * 1000) / plotScale, ...(e.align && { align: e.align }), ...(e.mask === true && { mask: true }) } }),
     ...(e.kind === 'insert' && { block: blockName(e.block) ?? e.block }),
   };
   return { name, template };

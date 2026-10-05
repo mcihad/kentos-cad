@@ -10,6 +10,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { parseLength } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag } from './preview';
+import { stamp } from './templateStamp';
 import type { ToolPointer } from './Tool';
 
 /**
@@ -244,12 +245,13 @@ export class SurveyPointTool extends PointInputTool {
   private write(p: Vec2): void {
     const S = SurveyPointTool;
     const layerId = this.ctx.doc.layers.active.value;
+    // An object template's symbol, attributes and label (docs/adr/0176 §3b); the point's name before its label.
     const input = {
       layerId,
       p,
       ...(S.z !== null && { z: S.z }),
+      ...stamp(this.ctx, S.code ? { Kod: S.code } : undefined),
       ...(S.next && { label: S.next }),
-      ...(S.code && { attrs: { Kod: S.code } }),
       ...this.colour(),
     };
     if (this.written(pointCreate.execute({ doc: this.ctx.doc }, input))) this.advance();

@@ -256,7 +256,7 @@ pub struct Recipe {
     /// A point template's first name and code.
     pub point_name: Option<String>,
     pub point_code: Option<String>,
-    /// A text template's height, alignment and mask.
+    /// A text template's height on paper (mm, as Yazı's Yükseklik), alignment and mask.
     pub text_height: Option<f64>,
     pub text_align: Option<String>,
     pub text_mask: bool,
@@ -451,14 +451,16 @@ fn kind_label(kind: &str) -> &'static str {
 /// look; the object's own colour, line weight and symbol go with it when it has
 /// them, and so do its attributes and label, but a point's label is the
 /// template's first name and its `Kod` its code (docs/adr/0152); a text gives
-/// its height, alignment and mask, an insert its block by name (`block_name`).
-/// Another kind is refused, said by its name. The web's is
-/// `model/objectTemplate.ts`'s `templateFromObject`; both pass
-/// fixtures/style/v1/template-from-object.json.
+/// its height on paper in millimetres, as Yazı's Yükseklik is given (its height
+/// on the ground × 1000 / the drawing's `plot_scale`), its alignment and mask,
+/// an insert its block by name (`block_name`). Another kind is refused, said by
+/// its name. The web's is `model/objectTemplate.ts`'s `templateFromObject`;
+/// both pass fixtures/style/v1/template-from-object.json.
 pub fn from_object(
     entity: &kentos_contracts::Entity,
     layers: &[kentos_contracts::LayerNode],
     block_name: impl Fn(&kentos_contracts::BlockId) -> Option<String>,
+    plot_scale: f64,
 ) -> Result<(String, Value), String> {
     use kentos_contracts::Entity;
     let kind = entity.kind();
@@ -523,7 +525,10 @@ pub fn from_object(
     match entity {
         Entity::Text(text) => {
             let mut written = Map::new();
-            written.insert("height".into(), Value::from(text.height));
+            written.insert(
+                "height".into(),
+                Value::from(text.height * 1000.0 / plot_scale),
+            );
             if let Some(align) = text.align {
                 written.insert("align".into(), Value::from(align.name()));
             }

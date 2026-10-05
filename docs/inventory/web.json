@@ -5313,6 +5313,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/ribbon.test.ts",
         "fixtures/interaction/v1/template-draw.json"
       ]
     },
@@ -7493,6 +7494,7 @@
         "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json",
         "fixtures/interaction/v1/survey-points.json",
+        "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/vertex-points.json"
       ]
     },
@@ -8563,6 +8565,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/text-options.json"
       ]
     },
@@ -11420,6 +11423,7 @@
         "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json",
         "fixtures/interaction/v1/survey-points.json",
+        "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/vertex-points.json"
       ]
     },
@@ -12254,6 +12258,7 @@
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/text-options.json"
       ]
     },

@@ -1,4 +1,5 @@
 import type { AppContext } from '../app/context';
+import type { TextAlign } from '../model/entities';
 
 /**
  * What a template being drawn with gives every object its tool writes (docs/adr/0176 §3): the run the session keeps
@@ -13,6 +14,16 @@ export interface TemplateStamp {
   readonly label?: string;
 }
 
+/**
+ * A point, text or block template's own options for its tool's run (docs/adr/0176 §3b, tools/templateSeeds.ts):
+ * Nokta's Ad (absent: Nokta's own series goes on) and Kod, Yazı's height on paper, alignment and mask, Blok ekle's
+ * block (its id).
+ */
+export type TemplateSeed =
+  | { readonly kind: 'point'; readonly name?: string; readonly code: string }
+  | { readonly kind: 'text'; readonly heightMm: number; readonly align: TextAlign | null; readonly mask: boolean }
+  | { readonly kind: 'block'; readonly block: string };
+
 /** A template being drawn with: its library id and name, its stamp, and what it found and gives back at its end. */
 export interface TemplateRun {
   readonly id: string;
@@ -23,6 +34,8 @@ export interface TemplateRun {
   readonly lineWeight: number | null;
   /** The session's colour and line weight before it. */
   readonly before: { readonly color: string | null; readonly lineWeight: number | null };
+  /** The tool's own options it sets; the run's end gives the tool's back. */
+  readonly seed?: TemplateSeed;
 }
 
 /**

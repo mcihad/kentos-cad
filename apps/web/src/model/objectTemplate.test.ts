@@ -63,11 +63,13 @@ describe('where a template draws (fixtures/style/v1/template-layers.json)', () =
 interface FromObjectCase {
   name: string;
   entity: Entity;
+  /** The drawing's plot scale when it is not the file's. */
+  plotScale?: number;
   result: { name: string; template: unknown } | { refused: string };
 }
 
 const fromObjectFiles = import.meta.glob<string>('../../../../fixtures/style/v1/template-from-object.json', { query: '?raw', import: 'default', eager: true });
-const fromObject = JSON.parse(Object.values(fromObjectFiles)[0]) as { format: string; version: number; layers: LayerInit[]; blocks: { id: string; name: string }[]; cases: FromObjectCase[] };
+const fromObject = JSON.parse(Object.values(fromObjectFiles)[0]) as { format: string; version: number; plotScale: number; layers: LayerInit[]; blocks: { id: string; name: string }[]; cases: FromObjectCase[] };
 
 describe('a template made from an object (fixtures/style/v1/template-from-object.json)', () => {
   const layers = new LayerStore(fromObject.layers, 'cizim');
@@ -78,7 +80,7 @@ describe('a template made from an object (fixtures/style/v1/template-from-object
   });
   for (const c of fromObject.cases) {
     it(c.name, () => {
-      const got = templateFromObject(c.entity, layers, blockName);
+      const got = templateFromObject(c.entity, layers, blockName, c.plotScale ?? fromObject.plotScale);
       expect(got).toEqual(c.result);
       // What it makes is a template the app draws with.
       if ('template' in got) expect(templateIssues(got.template)).toEqual([]);

@@ -67,6 +67,19 @@ export class TextTool extends PointInputTool {
     return { heightMm: S.heightMm, angle: S.angle, align: S.align, widthFactor: S.widthFactor, mask: S.mask };
   }
 
+  /**
+   * A text template's height on paper, alignment and mask for its run (docs/adr/0176 §3b, tools/templateSeeds.ts);
+   * gives back the ones it replaced, which the run's end puts back.
+   */
+  static useOptions(o: { readonly heightMm: number; readonly align: TextAlign | null; readonly mask: boolean }): { heightMm: number; align: TextAlign | null; mask: boolean } {
+    const S = TextTool;
+    const before = { heightMm: S.heightMm, align: S.align, mask: S.mask };
+    S.heightMm = o.heightMm;
+    S.align = o.align;
+    S.mask = o.mask;
+    return before;
+  }
+
   protected promptFor(): string {
     const S = TextTool;
     switch (this.stage) {

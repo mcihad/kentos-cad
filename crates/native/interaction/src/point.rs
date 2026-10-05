@@ -262,7 +262,9 @@ impl Point {
 
     /// Nokta's point through `cad.point.create` (docs/adr/0152 §2): the
     /// active layer, its name, code and elevation, the current colour
-    /// explicit in its input (CMD-07); then the name moves on.
+    /// explicit in its input (CMD-07), and an object template's symbol,
+    /// attributes and label (its name before the label; docs/adr/0176 §3b);
+    /// then the name moves on.
     fn write_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
         let m = *cx.memory;
         let (name, code) = (m.point_name.as_str(), m.point_code.as_str());
@@ -270,12 +272,15 @@ impl Point {
             layer_id: cx.doc.layers().active().to_owned(),
             p: wire(p),
             z: m.point_z,
-            label: (!name.is_empty()).then(|| name.to_owned()),
+            label: (!name.is_empty())
+                .then(|| name.to_owned())
+                .or_else(|| cx.template_label()),
             color: cx.draft.color_text(),
-            attrs: (!code.is_empty())
-                .then(|| BTreeMap::from([("Kod".to_owned(), code.to_owned())])),
+            attrs: cx.template_attrs(
+                (!code.is_empty()).then(|| BTreeMap::from([("Kod".to_owned(), code.to_owned())])),
+            ),
             expected_revision: None,
-            symbol: None,
+            symbol: cx.template_symbol(),
         };
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(written) = points::written(result, cx) {

@@ -172,19 +172,22 @@ fn a_template_made_from_an_object_is_the_webs() {
     };
     let cases = fixture["cases"].as_array().expect("cases");
     assert!(cases.len() >= 12, "{} cases", cases.len());
+    let plot_scale = fixture["plotScale"].as_f64().expect("plotScale");
     for c in cases {
         let name = c["name"].as_str().unwrap_or("?");
         let entity: kentos_contracts::Entity =
             serde_json::from_value(c["entity"].clone()).expect("an entity");
-        let got =
-            match kentos_native_style::object_template::from_object(&entity, &layers, block_name) {
-                Ok((name, template)) => {
-                    // What it makes is a template the app draws with.
-                    assert!(template_issues(&template, "şablon").is_empty(), "{name}");
-                    json!({ "name": name, "template": template })
-                }
-                Err(refused) => json!({ "refused": refused }),
-            };
+        let scale = c["plotScale"].as_f64().unwrap_or(plot_scale);
+        let got = match kentos_native_style::object_template::from_object(
+            &entity, &layers, block_name, scale,
+        ) {
+            Ok((name, template)) => {
+                // What it makes is a template the app draws with.
+                assert!(template_issues(&template, "şablon").is_empty(), "{name}");
+                json!({ "name": name, "template": template })
+            }
+            Err(refused) => json!({ "refused": refused }),
+        };
         assert_eq!(got, c["result"], "{name}");
     }
 }

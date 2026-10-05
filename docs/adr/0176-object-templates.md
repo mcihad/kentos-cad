@@ -118,6 +118,15 @@ da geçer:
    - 3b: nokta, yazı ve blok şablonları: Nokta'nın Ad ve Kod'u şablondan, ad dizisi şablon başına sürer, bırakılınca aracın kendi
      değerleri döner; Yazı'nın yüksekliği (kâğıtta mm), hizası ve zemini, bırakılınca aracınkiler döner; Blok ekle'nin bloğu adıyla
      (çizimde yoksa şablon başlamaz, söylenir); nesneden şablonda yazının yerdeki yüksekliği çizim ölçeğiyle mm'ye çevrilir; ortak iz.
+     **Tamam (5 Ekim):** şablonun koşusu aracın kendi seçeneklerini verir ve sonunda geri alır (masaüstü `templates.rs`'in `seed_tool`
+     ve `give_tool_back`'i, `Memory`'nin alanlarıyla; web `tools/templateSeeds.ts`, `TemplateRun.seed`, `TextTool.useOptions`): nokta
+     şablonu Kod'u her zaman (yoksa kodsuz), Ad'ı ilk adı varsa verir, adsız şablon Nokta'nın kendi dizisine dokunmaz; şablonun sonraki
+     adı oturumda kimliğiyle saklanır (`template_names`, `ToolManager.templateNames`); yazı şablonu yazı bölümü varsa yüksekliği, hizayı
+     ve zemini verir; blok şablonu bloğunu adıyla bulur, bulamazsa katmana dokunmadan söyler (“Çizimde “Vana” bloğu yok: …”). Nokta aracı
+     da artık damgayı yazar (sembol, öznitelikler; adı yoksa şablonun etiketi), iki platformda. Nesneden şablonun yazı yüksekliği
+     `height × 1000 / plotScale` (`from_object`, `templateFromObject`; başvuru tam kesirle, iki yeni durum 1:500 ve 1:2000);
+     düzenleyicilerde “Yükseklik (mm)”. Ortak iz `template-tools.json` (`template-tools.kcad`, 1:500), `shot` adımlarıyla iki platformda
+     resimlenir.
 4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler. 3b'den önce yapılır (sahibin 5 Ekim
    sorusu üzerine: şablon panel ve düzenleyici olmadan kullanılamıyor). Üç parçada: 4a Şablonlar paneli (sağ dokta Katmanlar, İşlemler ve
    Bloklar'ın yanında; kategorilere göre şablonlar resim ve adlarıyla, arama, son kullanılanlar; tıklama şablonla çizer; satırın menüsü),

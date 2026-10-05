@@ -216,9 +216,12 @@ impl App {
             self.warn("Önce çizimde bir nesne seçin; şablon onun katmanını, görünüşünü ve özniteliklerini alır.");
             return Task::none();
         };
-        let made = from_object(entity, model.layers().nodes(), |id| {
-            model.block(*id).map(|b| b.name.clone())
-        });
+        let made = from_object(
+            entity,
+            model.layers().nodes(),
+            |id| model.block(*id).map(|b| b.name.clone()),
+            doc.settings().plot_scale,
+        );
         match made {
             Err(refused) => {
                 self.warn(refused);
@@ -711,7 +714,7 @@ impl App {
                 body = body.push(
                     row![
                         labelled(
-                            "Yükseklik (m)",
+                            "Yükseklik (mm)",
                             text(None, &f.text_height, "2.5", Event::TextHeight),
                             None
                         ),

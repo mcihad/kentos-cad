@@ -852,7 +852,9 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   kuralları `template_form`, `model/templateForm.ts`; Seçili nesneden şablon `object_template::from_object`, `templateFromObject`; ortak
   `template-form.json`, `template-from-object.json`) ve 4c (şeridin Giriş'inde Şablonlar paneli: web `templateField`, masaüstü
   `templates_group`; dar kademede Özellikler'in alanları adları yerine ikonlarıyla, KentOS UI `Choice::label_icon`, web `dropdown--glyph`)
-  tamam; sıradaki 3b (nokta, yazı ve blok şablonları; sahibin 5 Ekim sorusu üzerine panel ve düzenleyici öne alınmıştı).
+  ve 3b (nokta, yazı ve blok şablonları: masaüstü `seed_tool`, `give_tool_back`, web `tools/templateSeeds.ts`; ad dizisi şablon başına;
+  bloğu olmayan şablon başlamaz; nesneden şablonda yazı kâğıtta mm; ortak iz `template-tools.json`) tamam; sıradaki 5 (grup şablonu),
+  sonra 6 (Şablonu uygula).
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

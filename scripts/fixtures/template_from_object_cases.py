@@ -11,9 +11,12 @@ its look (colour, line type, weight) as the layer has it. The object's own
 colour, line weight and symbol go with it when it has them, and so do its
 attributes and its label; a point's label is the template's first name and
 its `Kod` attribute its code, not attributes or a label (docs/adr/0152). A
-text gives its height, its alignment when it has one and its mask when it is
-on; an insert its block, by name. The template is named after its layer and
-has no category. The desktop (`kentos_native_style::object_template::from_object`)
+text gives its height on paper, in millimetres, as Yazı's Yükseklik is given
+(its height on the ground × 1000 / the drawing's plot scale, worked out
+exactly and rounded once), its alignment when it has one and its mask when it
+is on; an insert its block, by name. The template is named after its layer and
+has no category. The cases' plot scale is the file's `plotScale`, or the
+case's own. The desktop (`kentos_native_style::object_template::from_object`)
 and the web (`model/objectTemplate.ts`'s `templateFromObject`) both read these
 cases.
 
@@ -23,6 +26,7 @@ cases.
 
 import json
 import sys
+from fractions import Fraction
 
 PATH = "fixtures/style/v1/template-from-object.json"
 
@@ -51,7 +55,7 @@ def find(nodes, id_, groups=()):
     return None
 
 
-def answer(entity, layers, blocks):
+def answer(entity, layers, blocks, plot_scale):
     kind = entity["kind"]
     if kind not in TOOLS:
         return {"refused": f"{KIND_LABEL[kind]} nesnesinden şablon yapılamaz: şablon nokta, çizgi, çoklu çizgi, kapalı alan, daire, yazı ya da blok çizer."}
@@ -80,7 +84,8 @@ def answer(entity, layers, blocks):
     if label:
         t["label"] = label
     if kind == "text":
-        text = {"height": entity["height"]}
+        # Paper millimetres: exactly, then the nearest double.
+        text = {"height": float(Fraction(entity["height"]) * 1000 / Fraction(plot_scale))}
         if entity.get("align"):
             text["align"] = entity["align"]
         if entity.get("mask") is True:
@@ -117,6 +122,8 @@ CASES = [
     ("yalnız kodlu nokta", {"kind": "point", "id": 10, "layerId": "nokta", "attrs": {"Kod": "SN"}, "p": P(0, 0)}),
     ("yazı: yüksekliği, hizası ve zemini", {"kind": "text", "id": 11, "layerId": "yazi", "attrs": {}, "p": P(0, 0), "text": "Ada 101", "height": 2.5, "rotation": 0, "align": "middleCenter", "mask": True}),
     ("hizasız, zeminsiz yazı: yalnız yüksekliği", {"kind": "text", "id": 12, "layerId": "yazi", "attrs": {}, "p": P(0, 0), "text": "Not", "height": 1.8, "rotation": 0}),
+    ("yazı 1:500'de: yerdeki 1,25 m kâğıtta 2,5 mm", {"kind": "text", "id": 17, "layerId": "yazi", "attrs": {}, "p": P(0, 0), "text": "Ada 102", "height": 1.25, "rotation": 0}, 500),
+    ("yazı 1:2000'de: yerdeki 0,6 m kâğıtta 0,3 mm", {"kind": "text", "id": 18, "layerId": "yazi", "attrs": {}, "p": P(0, 0), "text": "Not", "height": 0.6, "rotation": 0}, 2000),
     ("blok yerleştirmesi: bloğu adıyla", {"kind": "insert", "id": 13, "layerId": "blok", "attrs": {"NO": "R-9"}, "block": BLOCKS[0]["id"], "p": P(0, 0), "scale": 1, "rotation": 0}),
     ("yay reddedilir", {"kind": "arc", "id": 14, "layerId": "cizim", "attrs": {}, "c": P(0, 0), "r": 5, "a0": 0, "a1": 1}),
     ("tarama reddedilir", {"kind": "hatch", "id": 15, "layerId": "cizim", "attrs": {}, "ring": [P(0, 0), P(4, 0), P(4, 4)], "pattern": {"type": "solid", "angle": 0, "spacing": 1}}),
@@ -124,8 +131,17 @@ CASES = [
 ]
 
 
+PLOT_SCALE = 1000
+
+
 def build():
-    cases = [{"name": name, "entity": entity, "result": answer(entity, LAYERS, BLOCKS)} for name, entity in CASES]
+    cases = []
+    for name, entity, *scale in CASES:
+        case = {"name": name, "entity": entity}
+        if scale:
+            case["plotScale"] = scale[0]
+        case["result"] = answer(entity, LAYERS, BLOCKS, scale[0] if scale else PLOT_SCALE)
+        cases.append(case)
     return {
         "format": "kentos.template-from-object-cases",
         "version": 1,
@@ -134,10 +150,13 @@ def build():
             "alan Kapalı alan, daire Daire, yazı Yazı, blok yerleştirmesi Blok ekle); başka tür adıyla söylenip reddedilir. Katman nesnenin "
             "katmanıdır: adı, üstündeki grupların adları en üstten ve katmanın görünüşü (renk, çizgi tipi, kalınlık). Nesnenin kendi rengi, "
             "kalınlığı ve sembolü varsa, öznitelikleri ve etiketi de şablona geçer; noktanın etiketi şablonun ilk adı, Kod özniteliği kodudur, "
-            "öznitelik ya da etiket değil (ADR 0152). Yazı yüksekliğini, varsa hizasını, açıksa zeminini verir; yerleştirme bloğunu adıyla. "
+            "öznitelik ya da etiket değil (ADR 0152). Yazı kâğıttaki yüksekliğini mm olarak (Yazı'nın Yükseklik'i gibi: yerdeki yükseklik × "
+            "1000 / çizim ölçeği, tam hesaplanıp bir kez yuvarlanır), varsa hizasını, açıksa zeminini verir; yerleştirme bloğunu adıyla. "
+            "Çizim ölçeği dosyanın `plotScale`'idir ya da durumun kendisininki. "
             "Şablonun adı katmanınkidir, kategorisi yoktur. Öznitelikler adlarının sırasıyladır. Üretici: "
             "scripts/fixtures/template_from_object_cases.py (KentOS kodu olmadan)."
         ),
+        "plotScale": PLOT_SCALE,
         "layers": LAYERS,
         "blocks": BLOCKS,
         "cases": cases,
@@ -150,7 +169,7 @@ def compact(value):
 
 def text_of(doc):
     lines = ["{"]
-    for key in ("format", "version", "note", "layers", "blocks"):
+    for key in ("format", "version", "note", "plotScale", "layers", "blocks"):
         lines.append(f"  {json.dumps(key)}: {compact(doc[key])},")
     lines.append('  "cases": [')
     lines.append(",\n".join(f"    {compact(c)}" for c in doc["cases"]))

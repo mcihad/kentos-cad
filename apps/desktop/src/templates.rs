@@ -3,16 +3,22 @@
 //! (opened under its path, one undo step “Katman ekle”, when the drawing lacks
 //! it), takes its colour and line weight into the draft and starts its tool,
 //! with its method; every object the tool writes takes its symbol, attributes
-//! and label (`Context::template`). The run ends with the tool: Esc, another
-//! command or another template give the colour and weight back; the active
-//! layer stays. Son komutu yinele starts the template again. A locked layer
-//! keeps the template from starting, and says so.
+//! and label (`Context::template`). A point, text or block template also sets
+//! its tool's own options for the run (docs/adr/0176 §3b): Nokta's Ad and Kod
+//! (a template's names go on from run to run), Yazı's height on paper,
+//! alignment and mask, Blok ekle's block, found by its name (a template whose
+//! block the drawing lacks does not start, and says so). The run ends with the
+//! tool: Esc, another command or another template give the colour, the weight
+//! and the tool's own options back; the active layer stays. Son komutu yinele
+//! starts the template again. A locked layer keeps the template from starting,
+//! and says so.
 
 use iced::Task;
+use kentos_contracts::{BlockId, TextAlign};
 use kentos_interaction::templates::{
     LayerAnswer, Stamp, TemplateLayer, find_layer, locked_text, open_layer,
 };
-use kentos_interaction::{DraftColor, Level, Prompt};
+use kentos_interaction::{DraftColor, Level, Name, Prompt};
 use kentos_native_style::library::ItemKind;
 use kentos_native_style::object_template::{self, Recipe, template_issues};
 
@@ -31,6 +37,22 @@ pub(crate) struct TemplateRun {
     runs: u64,
     /// The draft's colour and line weight before it.
     before: (Option<DraftColor>, Option<f64>),
+    /// The tool's own options it set, as they were before it.
+    tool_back: ToolBack,
+}
+
+/// A tool's own options as a point, text or block template found them
+/// (docs/adr/0176 §3b), given back at the run's end; none for what the
+/// template leaves alone.
+#[derive(Clone, Copy, Default)]
+struct ToolBack {
+    /// Nokta's Ad, when the template names its points, and its Kod.
+    point_name: Option<Name>,
+    point_code: Option<Name>,
+    /// Yazı's height on paper, alignment and mask.
+    text: Option<(f64, Option<TextAlign>, bool)>,
+    /// Blok ekle's block.
+    block: Option<Option<BlockId>>,
 }
 
 impl App {
@@ -63,22 +85,45 @@ impl App {
             self.warn(format!("{issue}; şablonu Stil yöneticisinde düzeltin."));
             return Task::none();
         };
+        // A block template's block, by its name: without it the template does not start.
+        let block = match recipe
+            .block
+            .as_deref()
+            .filter(|_| recipe.tool == "blockInsert")
+        {
+            Some(block_name) => {
+                let found = self.document.as_ref().and_then(|doc| {
+                    doc.model
+                        .blocks()
+                        .iter()
+                        .find(|b| b.name == block_name)
+                        .map(|b| b.id)
+                });
+                let Some(found) = found else {
+                    self.warn(missing_block_text(block_name, &name));
+                    return Task::none();
+                };
+                Some(found)
+            }
+            None => None,
+        };
         if !self.template_layer(&recipe, &name) {
             return Task::none();
         }
-        // Another template's run gives way, its colour and weight kept as the ones to give back.
-        let before = self
-            .template
-            .take()
+        // Another template's run gives way, its colour and weight kept as the
+        // ones to give back; its tool's own options come back now.
+        let previous = self.template.take();
+        let before = previous
+            .as_ref()
             .map_or((self.draft.color, self.draft.line_weight), |run| run.before);
+        if let Some(run) = &previous {
+            self.give_tool_back(run);
+        }
         self.draft.color = recipe.color.as_deref().and_then(DraftColor::new);
         self.draft.line_weight = recipe.line_weight;
         self.field = None;
-        if !self.session.start(&recipe.tool) {
-            (self.draft.color, self.draft.line_weight) = before;
-            return Task::none();
-        }
-        self.template = Some(TemplateRun {
+        let tool_back = self.seed_tool(id, &recipe, block);
+        let mut run = TemplateRun {
             id: id.to_owned(),
             name: name.clone(),
             stamp: Stamp {
@@ -86,9 +131,17 @@ impl App {
                 attrs: recipe.attrs.clone(),
                 label: recipe.label.clone(),
             },
-            runs: self.session.runs(),
+            runs: 0,
             before,
-        });
+            tool_back,
+        };
+        if !self.session.start(&recipe.tool) {
+            (self.draft.color, self.draft.line_weight) = before;
+            self.give_tool_back(&run);
+            return Task::none();
+        }
+        run.runs = self.session.runs();
+        self.template = Some(run);
         self.last_template = Some(id.to_owned());
         // The Şablonlar panel's first group (templates_panel.rs).
         self.recent_templates.retain(|r| r != id);
@@ -152,7 +205,7 @@ impl App {
     }
 
     /// After every message: a template's run ends with its tool (Esc, another
-    /// command, the tool done) and gives the colour and weight back.
+    /// command, the tool done) and gives back what it set.
     pub(crate) fn follow_template(&mut self) {
         if self
             .template
@@ -163,10 +216,80 @@ impl App {
         }
     }
 
-    /// Ends a template's run, if one is: the colour and weight it found come back.
+    /// Ends a template's run, if one is: the colour, the weight and the
+    /// tool's own options it found come back.
     pub(crate) fn release_template(&mut self) {
         if let Some(run) = self.template.take() {
             (self.draft.color, self.draft.line_weight) = run.before;
+            self.give_tool_back(&run);
+        }
+    }
+
+    /// Sets a point, text or block template's own options in its tool's
+    /// memory (docs/adr/0176 §3b); what they were, to give back. A point
+    /// template's names go on from its last run; one without a first name
+    /// leaves Nokta's own series alone. A text template without its text
+    /// part leaves Yazı's options alone.
+    fn seed_tool(&mut self, id: &str, recipe: &Recipe, block: Option<BlockId>) -> ToolBack {
+        let next_name = self.template_names.get(id).copied();
+        let m = &mut self.memory;
+        let mut back = ToolBack::default();
+        match recipe.tool.as_str() {
+            "point" => {
+                back.point_code = Some(m.point_code);
+                m.point_code = recipe
+                    .point_code
+                    .as_deref()
+                    .and_then(Name::new)
+                    .unwrap_or(Name::EMPTY);
+                let first = recipe
+                    .point_name
+                    .as_deref()
+                    .filter(|n| !n.is_empty())
+                    .and_then(Name::new);
+                if let Some(first) = first {
+                    back.point_name = Some(m.point_name);
+                    m.point_name = next_name.unwrap_or(first);
+                }
+            }
+            "text" => {
+                if let Some(height_mm) = recipe.text_height {
+                    back.text = Some((m.text_height_mm, m.text_align, m.text_mask));
+                    m.text_height_mm = height_mm;
+                    m.text_align = recipe.text_align.as_deref().and_then(TextAlign::from_name);
+                    m.text_mask = recipe.text_mask;
+                }
+            }
+            "blockInsert" => {
+                if let Some(block) = block {
+                    back.block = Some(m.block_insert);
+                    m.block_insert = Some(block);
+                }
+            }
+            _ => {}
+        }
+        back
+    }
+
+    /// Gives a template run's tool options back; a point template's next
+    /// name is kept for its next run.
+    fn give_tool_back(&mut self, run: &TemplateRun) {
+        let back = run.tool_back;
+        if let Some(name) = back.point_name {
+            self.template_names
+                .insert(run.id.clone(), self.memory.point_name);
+            self.memory.point_name = name;
+        }
+        if let Some(code) = back.point_code {
+            self.memory.point_code = code;
+        }
+        if let Some((height_mm, align, mask)) = back.text {
+            self.memory.text_height_mm = height_mm;
+            self.memory.text_align = align;
+            self.memory.text_mask = mask;
+        }
+        if let Some(block) = back.block {
+            self.memory.block_insert = block;
         }
     }
 
@@ -186,6 +309,13 @@ impl App {
         let id = self.last_template.as_deref()?;
         self.styles.library.get(id).map(|(item, _)| item.name())
     }
+}
+
+/// Why a block template does not start: the drawing lacks its block.
+pub(crate) fn missing_block_text(block: &str, template: &str) -> String {
+    format!(
+        "Çizimde “{block}” bloğu yok: “{template}” şablonu bu bloğu yerleştirir. Bloğu Blok oluştur ile tanımlayın ya da bir DXF'ten alın."
+    )
 }
 
 #[cfg(test)]

@@ -8,6 +8,7 @@ import { drawLocks } from './lockGuides';
 import type { CanvasPalette } from '../render/color';
 import type { Camera } from '../viewport/Camera';
 import type { Tool, ToolDescriptor, ToolGroup, ToolPointer } from './Tool';
+import { seedTool } from './templateSeeds';
 import type { TemplateRun } from './templateStamp';
 
 export class ToolManager {
@@ -33,6 +34,10 @@ export class ToolManager {
   private lastTemplate: string | null = null;
   /** The object templates drawn with in this session, the newest first (at most five; the Şablonlar panel's first group). */
   readonly recentTemplates = new Signal<readonly string[]>([]);
+  /** Each point template's next name, by its id: its series goes on from run to run in the session (docs/adr/0176 §3b). */
+  private readonly templateNames = new Map<string, string>();
+  /** Puts back the tool's own options the running template set (tools/templateSeeds.ts). */
+  private templateBack: (() => void) | null = null;
   /** Tools suspended under a transparent one (point calculator), innermost last. */
   private parents: Tool[] = [];
   private readonly ctx: AppContext;
@@ -96,6 +101,7 @@ export class ToolManager {
       this.ctx.settings.template.set(template);
       this.ctx.settings.color.set(template.color);
       this.ctx.settings.lineWeight.set(template.lineWeight);
+      this.templateBack = seedTool(template, this.templateNames);
       this.recentTemplates.set([template.id, ...this.recentTemplates.value.filter((id) => id !== template.id)].slice(0, 5));
     }
     this.current = d.create(this.ctx);
@@ -220,13 +226,15 @@ export class ToolManager {
     this.prompt.set(titled(name ? `${name}: ${step}` : step));
   }
 
-  /** Ends an object template's run, if one is: the colour and weight it found come back (docs/adr/0176 §3). */
+  /** Ends an object template's run, if one is: the colour, the weight and the tool's own options it found come back (docs/adr/0176 §3). */
   private releaseTemplate(): void {
     const run = this.ctx.settings.template.value;
     if (!run) return;
     this.ctx.settings.template.set(null);
     this.ctx.settings.color.set(run.before.color);
     this.ctx.settings.lineWeight.set(run.before.lineWeight);
+    this.templateBack?.();
+    this.templateBack = null;
   }
 
   /** No reference, none asked, Yapım kipi off: a new command's start. */

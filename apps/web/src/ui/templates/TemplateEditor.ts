@@ -142,7 +142,7 @@ export function openTemplateEditor(ctx: AppContext, opts: { id?: string; form?: 
       const alignChoices: Choice<'' | TextAlign>[] = [{ value: '', label: 'sol taban' }, ...TEXT_ALIGNS.map((a) => ({ value: a, label: textAlignName(a) }))];
       const mask = h('input', { type: 'checkbox', checked: form.textMask, dataset: { key: 'textMask' } });
       mask.addEventListener('change', () => ((form.textMask = mask.checked), refresh()));
-      own.push(h('div', { class: 'io-row' }, text('Yükseklik (m)', 'textHeight', '2.5', 'auto'), choice('Hiza', 'textAlign', alignChoices), field('Zemin', h('label', { class: 'io-check' }, mask, 'Yazının arkası boyansın'))));
+      own.push(h('div', { class: 'io-row' }, text('Yükseklik (mm)', 'textHeight', '2.5', 'auto'), choice('Hiza', 'textAlign', alignChoices), field('Zemin', h('label', { class: 'io-check' }, mask, 'Yazının arkası boyansın'))));
     }
     if (form.tool === 'blockInsert') {
       const names = ctx.doc.blocks.value.map((b) => b.name);
