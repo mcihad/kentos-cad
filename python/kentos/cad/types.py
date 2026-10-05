@@ -547,6 +547,7 @@ class PropertiesOperation(_StrEnum):
     - ``attributes``: An attribute row of Öznitelikler, with the label that shows the
     - ``label``: The label alone. “Etiket değiştir”.
     - ``unlink``: Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
+    - ``template``: Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,
     """
     LAYER = "layer"
     COLOR = "color"
@@ -555,9 +556,10 @@ class PropertiesOperation(_StrEnum):
     ATTRIBUTES = "attributes"
     LABEL = "label"
     UNLINK = "unlink"
+    TEMPLATE = "template"
 
 
-PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink"]
+PropertiesOperationName = Literal["layer", "color", "lineWeight", "symbol", "attributes", "label", "unlink", "template"]
 """The names of :class:`PropertiesOperation`, for a plain string."""
 
 

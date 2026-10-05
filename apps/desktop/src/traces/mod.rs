@@ -178,6 +178,7 @@ mod tests {
         trace.steps.push(Step {
             run: None,
             template: None,
+            apply_template: None,
             key: None,
             text: None,
             move_to: None,

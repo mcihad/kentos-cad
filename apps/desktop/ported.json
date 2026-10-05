@@ -232,7 +232,8 @@
     "template.draw",
     "template.panel",
     "template.new",
-    "template.fromSelection"
+    "template.fromSelection",
+    "template.apply"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

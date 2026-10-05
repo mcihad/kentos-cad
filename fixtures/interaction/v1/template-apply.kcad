@@ -1,0 +1,172 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Şablonu uygula",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {
+        "Ada": "101"
+      },
+      "pts": [
+        {
+          "x": 486970,
+          "y": 4419990
+        },
+        {
+          "x": 486990,
+          "y": 4419990
+        },
+        {
+          "x": 486990,
+          "y": 4420010
+        },
+        {
+          "x": 486970,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4420010
+        },
+        {
+          "x": 487000,
+          "y": 4420010
+        }
+      ],
+      "label": "eski"
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+        "x": 486970,
+        "y": 4420020
+      },
+      "b": {
+        "x": 487020,
+        "y": 4420020
+      }
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+        "x": 487030,
+        "y": 4420000
+      },
+      "label": "N7"
+    }
+  ],
+  "styles": {
+    "items": [
+      {
+        "kind": "template",
+        "id": "p-parsel",
+        "name": "Parsel sınırı",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "polygon",
+          "layer": {
+            "path": [
+              "Kadastro"
+            ],
+            "name": "Parsel",
+            "color": "#E5484D"
+          },
+          "color": "#7A5C3E",
+          "lineWeight": 0.5,
+          "symbol": "temel.alan.kenar-ici",
+          "attrs": {
+            "Tür": "Parsel"
+          },
+          "label": "P"
+        }
+      },
+      {
+        "kind": "template",
+        "id": "p-nokta",
+        "name": "Poligon noktası",
+        "path": [
+          "Şablonlar"
+        ],
+        "template": {
+          "tool": "point",
+          "layer": {
+            "path": [],
+            "name": "Nokta"
+          },
+          "attrs": {
+            "Tür": "Poligon"
+          },
+          "point": {
+            "name": "P1",
+            "code": "PN"
+          }
+        }
+      }
+    ],
+    "categories": [
+      {
+        "path": [
+          "Şablonlar"
+        ]
+      }
+    ]
+  }
+}

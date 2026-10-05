@@ -187,6 +187,18 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
         { title: 'Pencere kapanır; şablonun katmanı etkin olur, aracı başlar' },
       ),
     );
+    // Şablonu uygula (docs/adr/0176 §6): the selected objects of its kind take its layer and look.
+    list.push(
+      btn(
+        'Seçili nesnelere uygula',
+        'templateApply',
+        () => {
+          host.close();
+          ctx.commands.execute('template.apply', item.id);
+        },
+        { disabled: ctx.selection.size === 0, title: ctx.selection.size === 0 ? 'Önce çizimde nesne seçin' : 'Pencere kapanır; seçili nesneler şablonun katmanını ve görünüşünü alır' },
+      ),
+    );
     list.push(
       btn(
         editable ? 'Düzenle' : 'Kopyasını düzenle',

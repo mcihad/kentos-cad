@@ -185,6 +185,14 @@ export class TemplatesPanel extends Panel {
     const edit = () => void import('./TemplateEditor').then((m) => m.openTemplateEditor(ctx, { id: t.id }));
     return [
       { label: 'Şablonla çiz', icon: 'templateDraw', shortcut: 'Enter', run: () => this.draw(t.id) },
+      // Şablonu uygula (docs/adr/0176 §6): the selected objects of its kind take its layer and look.
+      {
+        label: 'Seçili nesnelere uygula',
+        icon: 'templateApply',
+        disabled: ctx.selection.size === 0,
+        detail: ctx.selection.size === 0 ? 'Önce çizimde nesne seçin.' : undefined,
+        run: () => ctx.commands.execute('template.apply', t.id),
+      },
       { label: editable ? 'Düzenle…' : 'Kopyasını düzenle…', icon: 'edit', detail: editable ? undefined : 'Sistem şablonu değişmez; kopyası Kitaplığım’a kaydedilir.', run: edit },
       { label: 'Stil yöneticisinde göster', icon: 'styles', run: () => void import('../style/StyleManager').then((m) => m.openStyleManager(ctx, { select: t.id })) },
       { kind: 'separator' },

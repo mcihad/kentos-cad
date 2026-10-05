@@ -63,7 +63,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   nesne şablonları: stil kitaplığının üçüncü öğe türü (araç, katman, renk, kalınlık, sembol, öznitelik, etiket; `.kstil` sürüm 2),
   Şablonla çiz: katmanı adıyla bulunur ya da yolundaki gruplarla açılır, renk ve kalınlık şablonun olur ve araç bitince döner, nesneler
   sembolünü, özniteliklerini ve etiketini alır, istemde şablonun adı, Son komutu yinele şablonu yineler; sağ dokta Şablonlar paneli
-  (kategoriler, arama, son kullanılanlar, tıklayınca çizer); Şablon düzenleyici ve Seçili nesneden şablon (ADR 0176);
+  (kategoriler, arama, son kullanılanlar, tıklayınca çizer); Şablon düzenleyici ve Seçili nesneden şablon; grup şablonu (üyeleri: aynı
+  geometri, öteleme, köşelere nokta, ağırlık merkezinde yazı; ana nesneyle tek adımda); Şablonu uygula (seçili nesnelere, `template.apply`) (ADR 0176);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -863,7 +864,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `templateMemberCentroid`, web `model/ops/templateMembers.ts`; başvuru `template_member_cases.py`) ve 5c (grup şablonuyla çizmek: web
   `tools/templateMembers.ts`'in `withMembers`'ı grup araçlarının yazma yerlerinde, masaüstünde `with_tool`'un belge grubu ve
   `template_members.rs`; belgenin `nextSlot`/`next_slot`'u; ortak iz `template-group.json`) ve 5d (düzenleyicide Grup üyeleri tablosu)
-  tamam; 5. adım bitti; sıradaki 6 (Şablonu uygula).
+  ve 6. adım (Şablonu uygula: kural `templateApplication`, `object_template::application`, ortak `template-apply.json`; `cad.entities.set`'in
+  `template` işlemi; web `applyTemplate`, masaüstü `apply_template`; `template.apply`, Şablonlar panelinde ve Stil yöneticisinde “Seçili
+  nesnelere uygula”; ortak iz `template-apply.json`, izlerin `applyTemplate` eylemi) tamam; `HYB-19` bitti (5 Ekim; BÖHYY takımı sahibin
+  tarifini bekler). Sıradaki `HYB-20` katman yönetimi ekleri.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

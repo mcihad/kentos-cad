@@ -180,6 +180,8 @@ pub enum Event {
     Apply(String),
     /// Şablonla çiz: the window closes and the template draws (docs/adr/0176 §3).
     Draw(String),
+    /// Şablonu uygula: the window closes and the selected objects take the template (§6).
+    ApplyTemplate(String),
     /// A template's Düzenle: the window closes and Şablon düzenleyici opens (§4).
     EditTemplate(String),
     /// Düzenle: a symbol opens in Sembol tasarımcısı (a system one's copy in Kitaplığım).

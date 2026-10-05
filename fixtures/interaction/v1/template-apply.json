@@ -1,0 +1,28 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "template-apply",
+  "title": "Şablonu uygula: seçili nesnelerden şablonun türünde olanlar katmanını, görünüşünü, özniteliklerini ve etiketini tek adımda alır; ötekiler değişmez ve sayılır",
+  "source": "docs/adr/0176 §6",
+  "covers": ["HYB-19"],
+  "document": "template-apply.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "steps": [
+    {"applyTemplate": "p-parsel", "note": "Seçim yok: söylenir, hiçbir şey değişmez", "expect": {"log": "warn", "logged": ["Önce “Parsel sınırı” şablonunun uygulanacağı nesneleri seçin."], "canUndo": false}},
+    {"click": [-30, 0], "expect": {"selected": [1]}},
+    {"click": [0, 0], "shift": true, "expect": {"selected": [1, 2]}},
+    {"click": [-5, 20], "shift": true, "expect": {"selected": [1, 2, 3]}},
+    {"shot": "uygula-once", "note": "İki alan ve çizgi seçili; Şablonlar panelinde Parsel sınırı"},
+    {"applyTemplate": "p-parsel", "note": "İki alan şablonun katmanına geçer (Kadastro / Parsel aynı adımda açılır), görünüşünü, özniteliğini ve etiketini alır; çizgi değişmez; etkin katman kalır", "expect": {"log": "success", "activeLayer": ["Çizim"], "logged": ["“Parsel sınırı” şablonu 2 nesneye uygulandı. 1 nesne şablonun türünde (Kapalı alan) değil, değişmedi."], "objects": [{"id": 1, "kind": "polygon", "layer": "Parsel", "color": "#7A5C3E", "lineWeight": 0.5, "symbol": "temel.alan.kenar-ici", "label": "P", "attrs": {"Ada": "101", "Tür": "Parsel"}}, {"id": 2, "kind": "polygon", "layer": "Parsel", "color": "#7A5C3E", "lineWeight": 0.5, "symbol": "temel.alan.kenar-ici", "label": "P", "attrs": {"Tür": "Parsel"}}, {"id": 3, "kind": "line", "layer": "Çizim", "color": null, "lineWeight": null, "symbol": null, "label": null, "attrs": {}}]}},
+    {"shot": "uygula-sonra", "note": "Alanlar Parsel sınırı şablonunun katmanında, rengi, kalınlığı, sembolü ve etiketiyle; çizgi değişmedi"},
+    {"key": "Ctrl+Z", "note": "Tek adımda geri alınır, açılan katman da", "expect": {"objects": [{"id": 1, "kind": "polygon", "layer": "Çizim", "color": null, "lineWeight": null, "symbol": null, "label": null, "attrs": {"Ada": "101"}}, {"id": 2, "kind": "polygon", "layer": "Çizim", "label": "eski", "attrs": {}}]}},
+    {"key": "Esc", "expect": {"selected": []}},
+    {"click": [30, 0], "expect": {"selected": [4]}},
+    {"applyTemplate": "p-nokta", "note": "Nokta şablonunun kodu Kod özniteliği olur, adı değişmez", "expect": {"logged": ["“Poligon noktası” şablonu 1 nesneye uygulandı."], "objects": [{"id": 4, "kind": "point", "layer": "Nokta", "label": "N7", "attrs": {"Kod": "PN", "Tür": "Poligon"}}]}},
+    {"key": "Esc", "expect": {"selected": []}},
+    {"click": [-5, 20], "expect": {"selected": [3]}},
+    {"applyTemplate": "p-parsel", "note": "Seçili nesnelerin hiçbiri alan değil: söylenir, değişen olmaz", "expect": {"log": "warn", "logged": ["Seçili nesnelerin hiçbiri “Parsel sınırı” şablonunun türünde (Kapalı alan) değil; değişen olmadı."], "objects": [{"id": 3, "kind": "line", "layer": "Çizim"}]}},
+    {"key": "Esc"}
+  ]
+}

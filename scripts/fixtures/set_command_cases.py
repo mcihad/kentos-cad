@@ -325,6 +325,23 @@ cases.append({
     ],
 })
 
+def templated(i):
+    """The object as Şablonu uygula leaves it in the case below: its layer, look, attribute and label the template's."""
+    e = after(i, layerId="yol", color=RED, symbol="agac", attrs={"Tür": "Yol"}, label="Y")
+    e["lineWeight"] = 0.35
+    return e
+
+
+cases.append({
+    "name": "Şablonu uygula: katman, renk, kalınlık, sembol, öznitelik ve etiket tek adımda “Şablonu uygula” (ADR 0176 §6)",
+    "steps": [
+        {"op": "execute", "input": {"uids": uids(2, 3), "layerId": "yol", "color": RED, "lineWeight": 0.35, "symbol": "agac", "attrs": {"Tür": "Yol"}, "label": "Y", "operation": "template"},
+         "result": done([2, 3]),
+         "expect": {"entities": {"2": templated(2), "3": templated(3)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Şablonu uygula", "expect": {"entities": {"2": E(2), "3": E(3)}, "canUndo": False}},
+    ],
+})
+
 cases.append({
     "name": "aynı kimlik iki kez verilirse nesne bir kez değişir, çıktıda bir kez geçer",
     "steps": [

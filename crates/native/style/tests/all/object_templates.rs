@@ -6,7 +6,9 @@
 use std::path::PathBuf;
 
 use kentos_native_style::library::{Source, StyleLibrary, TreeFilter};
-use kentos_native_style::object_template::{member_issues, preview_symbol, template_issues};
+use kentos_native_style::object_template::{
+    application, member_issues, preview_symbol, template_issues,
+};
 use serde_json::{Value, json};
 
 #[test]
@@ -229,5 +231,31 @@ fn a_group_templates_members_are_found_as_the_web_finds_them() {
             .map(str::to_owned)
             .collect();
         assert_eq!(member_issues(&c["template"], find), want, "{name}");
+    }
+}
+
+/// Şablonu uygula (docs/adr/0176 §6), as `fixtures/style/v1/template-apply.json`
+/// has it: which objects fit and what they are given, the web's way.
+#[test]
+fn a_template_is_applied_as_the_web_applies_it() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/style/v1/template-apply.json");
+    let fixture: Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("template-apply.json"))
+            .expect("JSON");
+    assert_eq!(fixture["format"], "kentos.template-apply-cases");
+    assert_eq!(fixture["version"], 1);
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 10, "{} cases", cases.len());
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or("?");
+        let kinds: Vec<&str> = c["kinds"]
+            .as_array()
+            .expect("kinds")
+            .iter()
+            .filter_map(Value::as_str)
+            .collect();
+        let (fits, set) = application(&c["template"], &kinds);
+        assert_eq!(json!({ "fits": fits, "set": set }), c["result"], "{name}");
     }
 }

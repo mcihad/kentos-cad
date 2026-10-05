@@ -126,14 +126,16 @@ fn collect<'a>(
 }
 
 /// Opens a template's layer where [`find_layer`] said, inside the groups it
-/// names, with the template's look, and makes it active: one undo step
-/// “Katman ekle” (the user sees where the objects will go). Returns the new
-/// layer's id; a refusal changes nothing.
+/// names, with the template's look, and with `activate` makes it active
+/// (drawing with the template: the user sees where the objects will go;
+/// Şablonu uygula keeps the active layer): one undo step “Katman ekle”.
+/// Returns the new layer's id; a refusal changes nothing.
 pub fn open_layer(
     doc: &mut Document,
     layer: &TemplateLayer,
     parent: Option<&str>,
     create: &[String],
+    activate: bool,
 ) -> Result<String, Refusal> {
     let group = doc.begin_group(labels::LAYER_ADD);
     let opened = (|| {
@@ -151,7 +153,7 @@ pub fn open_layer(
         if let Some(weight) = layer.line_weight {
             new.style.line_weight = weight;
         }
-        doc.add_layer(new, under.as_deref(), true)
+        doc.add_layer(new, under.as_deref(), activate)
     })();
     match opened {
         Ok(id) => {

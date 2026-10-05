@@ -120,7 +120,7 @@ fn a_missing_layer_opens_inside_its_groups_as_one_step_and_becomes_active() {
         (parent.as_deref(), create.as_slice()),
         (Some("kadastro"), &["Ulaşım".to_owned()][..])
     );
-    let id = open_layer(&mut doc, &layer, parent.as_deref(), &create).expect("opens");
+    let id = open_layer(&mut doc, &layer, parent.as_deref(), &create, true).expect("opens");
     let layers = doc.layers();
     assert_eq!(layers.active(), id);
     let node = layers.get(&id).expect("the layer");

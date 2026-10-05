@@ -38,6 +38,8 @@ const LABEL: Record<Exclude<PropertiesOperation, 'symbol'>, string> = {
   label: 'Etiket değiştir',
   // Öznitelikler's Bağı kopar (docs/adr/0175 §4).
   unlink: 'Bağı kopar',
+  // An object template given to objects (docs/adr/0176 §6).
+  template: 'Şablonu uygula',
 };
 
 /** The step a call is named: its operation's, or for a symbol whether it is given or taken away. */

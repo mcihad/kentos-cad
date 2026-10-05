@@ -2213,6 +2213,20 @@ SCENES.templates = [
     open: async (ui) => (await ui.eval(ADD_TEMPLATES), await ui.eval(DRAW_TEMPLATES), await ui.sleep(300), await openTemplateField(ui)),
     close: closeTemplates,
   },
+  {
+    // The Şablonlar panel's row menu with the drawing's objects selected: Seçili nesnelere uygula (docs/adr/0176 §6);
+    // the desktop's `templates_panel::tests::panel_screens`.
+    id: 'panel-menu',
+    open: async (ui) => {
+      await ui.eval(ADD_TEMPLATES);
+      await ui.eval(`(() => { const k = window.kentos; k.commands.execute('edit.selectAll'); k.commands.execute('template.panel'); })()`);
+      await ui.sleep(400);
+      const at = await ui.eval(`(() => { const r = [...document.querySelectorAll('.panel--templates .tree__row')].find((e) => e.querySelector('.tree__name')?.textContent === 'Parsel sınırı'); const b = r.getBoundingClientRect(); return [Math.round(b.left + b.width / 2), Math.round(b.top + b.height / 2)]; })()`);
+      await ui.contextClick(...at);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await closeTemplates(ui), await ui.eval(`window.kentos.commands.execute('edit.deselect')`)),
+  },
 ];
 
 SCENES.pointeditor = [

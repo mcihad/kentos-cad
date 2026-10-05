@@ -314,6 +314,65 @@ fn member_shape_issues(m: &Value, closed: bool) -> Vec<String> {
     out
 }
 
+/// The kind of object a tool writes: the objects a template is applied to
+/// are of it (docs/adr/0176 §6).
+pub fn kind_of_tool(tool: &str) -> &'static str {
+    match tool {
+        "rectangle" | "rectangle3" | "polygon" => "polygon",
+        "point" => "point",
+        "line" => "line",
+        "polyline" => "polyline",
+        "circle" => "circle",
+        "text" => "text",
+        "blockInsert" => "insert",
+        _ => "",
+    }
+}
+
+/// Şablonu uygula (docs/adr/0176 §6): which of the objects (`kinds`, the
+/// selection's, in order) the template fits, by their places, and what
+/// `cad.entities.set` gives them besides their layer (the host's, found or
+/// opened for the template's): colour, weight and symbol the template's,
+/// their layer's (null) without them; its attributes, a point template's
+/// code as `Kod`, the objects' others kept; its label when it has one,
+/// theirs kept otherwise. A text's height and alignment, a point's name and
+/// a group's members are not applied. The web's is `model/objectTemplate.ts`'s
+/// `templateApplication`; both pass fixtures/style/v1/template-apply.json.
+pub fn application(template: &Value, kinds: &[&str]) -> (Vec<usize>, Map<String, Value>) {
+    let get = |key: &str| template.get(key);
+    let tool = get("tool").and_then(Value::as_str).unwrap_or("");
+    let kind = kind_of_tool(tool);
+    let fits = kinds
+        .iter()
+        .enumerate()
+        .filter(|(_, k)| !kind.is_empty() && **k == kind)
+        .map(|(i, _)| i)
+        .collect();
+    let mut set = Map::new();
+    for key in ["color", "lineWeight", "symbol"] {
+        set.insert(key.into(), get(key).cloned().unwrap_or(Value::Null));
+    }
+    let mut attrs: Map<String, Value> = get("attrs")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    if tool == "point"
+        && let Some(code) = get("point")
+            .and_then(|p| p.get("code"))
+            .and_then(Value::as_str)
+            .filter(|c| !c.is_empty())
+    {
+        attrs.insert("Kod".into(), Value::from(code));
+    }
+    if !attrs.is_empty() {
+        set.insert("attrs".into(), Value::Object(attrs));
+    }
+    if let Some(label) = get("label") {
+        set.insert("label".into(), label.clone());
+    }
+    (fits, set)
+}
+
 /// What keeps a group template from starting with this library (docs/adr/0176
 /// §5), a problem for each member that has one, in their order: its template
 /// the library lacks (`find` gives a template's name and definition by its

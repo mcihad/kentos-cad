@@ -4,4 +4,4 @@
  * What a change of properties is; it names the undo step, and nothing else:
  * it does not limit which properties the input sets.
  */
-export type PropertiesOperation = "layer" | "color" | "lineWeight" | "symbol" | "attributes" | "label" | "unlink";
+export type PropertiesOperation = "layer" | "color" | "lineWeight" | "symbol" | "attributes" | "label" | "unlink" | "template";

@@ -368,6 +368,8 @@ pub const PORTED: &[&str] = &[
     // Şablon düzenleyici: a new template, or one made from the selected object (template_editor.rs).
     "template.new",
     "template.fromSelection",
+    // Şablonu uygula (docs/adr/0176 §6): without a template's id it shows the Şablonlar panel (templates.rs).
+    "template.apply",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

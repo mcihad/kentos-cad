@@ -1,5 +1,17 @@
 import type { AppContext } from './context';
-import { lockedTemplateLayerText, memberIssues, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayer, type TemplateMember } from '../model/objectTemplate';
+import {
+  lockedTemplateLayerText,
+  memberIssues,
+  TEMPLATE_TOOL_LABEL,
+  templateApplication,
+  templateFromObject,
+  templateIssues,
+  templateLayer,
+  type ObjectTemplate,
+  type TemplateLayer,
+  type TemplateMember,
+} from '../model/objectTemplate';
+import { entitiesSet } from '../product/entitiesSet';
 import { formOfTemplate } from '../model/templateForm';
 import type { RunMember, TemplateRun, TemplateSeed } from '../tools/templateStamp';
 import { RIBBON_TEXTS } from '../ui/ribbon/ribbonPlan';
@@ -98,11 +110,51 @@ function runMember(m: TemplateMember, item: { readonly id: string; readonly name
 }
 
 /**
- * Finds or opens the template's layers (its own first, then its members'), the opened ones in one step “Katman ekle”,
- * and makes the first active: their ids, in order; null (said) when one of them, or the group it would go in, is locked
- * or the drawing refuses it, and then nothing changes.
+ * `template.apply` (Şablonu uygula, docs/adr/0176 §6; the desktop's `templates.rs` `apply_template`): the selected objects
+ * of the template's kind take its layer (found, or opened in the same step), look, attributes and label, one undo step
+ * “Şablonu uygula” through `cad.entities.set` (model/objectTemplate.ts's `templateApplication`). The others stay as
+ * they are and are counted; with none of its kind nothing changes. Said either way.
  */
-function useLayers(ctx: AppContext, layers: readonly TemplateLayer[], name: string): string[] | null {
+export function applyTemplate(ctx: AppContext, id: string): void {
+  const item = ctx.styles.library.template(id);
+  if (!item) return void ctx.log.warn(`“${id}” kimlikli şablon kitaplıkta yok: silinmiş olabilir. Şablonu Stil yöneticisinde seçin.`);
+  const issue = templateIssues(item.template, `“${item.name}” şablonu`)[0];
+  if (issue) return void ctx.log.warn(`${issue}; şablonu Stil yöneticisinde düzeltin.`);
+  const t = item.template;
+  const { doc } = ctx;
+  const selected = [...ctx.selection.ids.value].flatMap((sid) => {
+    const e = doc.get(sid);
+    return e ? [e] : [];
+  });
+  if (!selected.length) return void ctx.log.warn(`Önce “${item.name}” şablonunun uygulanacağı nesneleri seçin.`);
+  const { fits, set } = templateApplication(t, selected.map((e) => e.kind));
+  const kind = TEMPLATE_TOOL_LABEL[t.tool];
+  if (!fits.length) return void ctx.log.warn(`Seçili nesnelerin hiçbiri “${item.name}” şablonunun türünde (${kind}) değil; değişen olmadı.`);
+  let written = false;
+  try {
+    doc.transact('Şablonu uygula', () => {
+      const layer = useLayers(ctx, [t.layer], item.name, false);
+      if (!layer) return;
+      const uids = fits.flatMap((i) => (selected[i].uid ? [selected[i].uid] : []));
+      const result = entitiesSet.execute({ doc }, { uids, layerId: layer[0], ...set, operation: 'template' });
+      if (result.status !== 'completed') throw new Error('error' in result ? result.error.message : 'Şablon uygulanamadı.');
+      for (const w of result.warnings) ctx.log.warn(w.message);
+      written = true;
+    });
+  } catch (e) {
+    return void ctx.log.warn(e instanceof Error ? e.message : String(e));
+  }
+  if (!written) return;
+  const skipped = selected.length - fits.length;
+  ctx.log.success(`“${item.name}” şablonu ${fits.length} nesneye uygulandı.${skipped ? ` ${skipped} nesne şablonun türünde (${kind}) değil, değişmedi.` : ''}`);
+}
+
+/**
+ * Finds or opens the template's layers (its own first, then its members'), the opened ones in one step “Katman ekle”,
+ * and makes the first active (`activate`): their ids, in order; null (said) when one of them, or the group it would go
+ * in, is locked or the drawing refuses it, and then nothing changes.
+ */
+function useLayers(ctx: AppContext, layers: readonly TemplateLayer[], name: string, activate = true): string[] | null {
   const doc = ctx.doc;
   for (const layer of layers) {
     const answer = templateLayer(doc.layers, layer);
@@ -125,7 +177,7 @@ function useLayers(ctx: AppContext, layers: readonly TemplateLayer[], name: stri
         return doc.addLayer({ name: layer.name.trim(), type: 'layer', style }, under).id;
       }),
     );
-    doc.layers.setActive(ids[0]);
+    if (activate) doc.layers.setActive(ids[0]);
     return ids;
   } catch (e) {
     ctx.log.warn(e instanceof Error ? e.message : String(e));

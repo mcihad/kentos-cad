@@ -475,6 +475,10 @@ impl<'a> Player<'a> {
         if let Some(id) = &step.template {
             return self.apply(Message::DrawTemplate(id.clone()));
         }
+        // Şablonu uygula, as the panel's Seçili nesnelere uygula does (§6).
+        if let Some(id) = &step.apply_template {
+            return self.apply(Message::ApplyTemplate(id.clone()));
+        }
         if let Some(id) = &step.run {
             let command = crate::catalog::catalog()
                 .get(id)
@@ -890,6 +894,8 @@ fn describe(step: &Step) -> String {
     let pair = |[a, b]: [f64; 2]| format!("[{a}, {b}]");
     if let Some(id) = &step.template {
         format!("template {id}")
+    } else if let Some(id) = &step.apply_template {
+        format!("applyTemplate {id}")
     } else if let Some(id) = &step.run {
         format!("run {id}")
     } else if let Some(key) = &step.key {

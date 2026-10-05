@@ -110,6 +110,8 @@ pub fn label(input: &EntitiesSetProperties) -> &'static str {
         PropertiesOperation::Label => "Etiket değiştir",
         // Öznitelikler's Bağı kopar (docs/adr/0175 §4).
         PropertiesOperation::Unlink => "Bağı kopar",
+        // An object template given to objects (docs/adr/0176 §6).
+        PropertiesOperation::Template => "Şablonu uygula",
     }
 }
 

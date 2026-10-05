@@ -33287,6 +33287,11 @@
                 "const": "unlink",
                 "description": "Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow\ntheir objects no more (`unlink`). “Bağı kopar”.",
                 "type": "string"
+              },
+              {
+                "const": "template",
+                "description": "Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,\nattributes and label given to objects of its kind. “Şablonu uygula”.",
+                "type": "string"
               }
             ]
           }

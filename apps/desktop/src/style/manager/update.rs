@@ -492,6 +492,11 @@ impl App {
                 self.close_style_manager();
                 return self.draw_template(&id);
             }
+            Event::ApplyTemplate(id) => {
+                self.commit_fields();
+                self.close_style_manager();
+                self.apply_template(&id);
+            }
             Event::EditTemplate(id) => {
                 self.commit_fields();
                 self.close_style_manager();

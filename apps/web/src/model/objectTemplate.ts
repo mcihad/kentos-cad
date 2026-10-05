@@ -184,6 +184,46 @@ export function templateIssues(template: unknown, where = 'şablon'): string[] {
   return out;
 }
 
+/** The kind of object each tool writes: the objects a template is applied to are of it (docs/adr/0176 §6). */
+export const KIND_OF_TOOL: Record<TemplateTool, Entity['kind']> = {
+  point: 'point',
+  line: 'line',
+  polyline: 'polyline',
+  polygon: 'polygon',
+  rectangle: 'polygon',
+  rectangle3: 'polygon',
+  circle: 'circle',
+  text: 'text',
+  blockInsert: 'insert',
+};
+
+/**
+ * Şablonu uygula (docs/adr/0176 §6): which of the objects (`kinds`, the selection's, in order) the template fits, by
+ * their places, and what `cad.entities.set` gives them besides their layer (the host's, found or opened for the
+ * template's): colour, weight and symbol the template's, its layer's (null) without them; its attributes, a point
+ * template's code as `Kod`, the objects' others kept; its label when it has one, theirs kept otherwise. A text's height
+ * and alignment, a point's name and a group's members are not applied. The desktop's is
+ * `kentos_native_style::object_template::application`; both pass fixtures/style/v1/template-apply.json.
+ */
+export function templateApplication(
+  t: ObjectTemplate,
+  kinds: readonly Entity['kind'][],
+): { readonly fits: number[]; readonly set: { color: string | null; lineWeight: number | null; symbol: string | null; attrs?: Record<string, string>; label?: string } } {
+  const kind = KIND_OF_TOOL[t.tool];
+  const fits = kinds.flatMap((k, i) => (k === kind ? [i] : []));
+  const attrs: Record<string, string> = { ...t.attrs, ...(t.tool === 'point' && t.point?.code && { Kod: t.point.code }) };
+  return {
+    fits,
+    set: {
+      color: t.color ?? null,
+      lineWeight: t.lineWeight ?? null,
+      symbol: t.symbol ?? null,
+      ...(Object.keys(attrs).length > 0 && { attrs }),
+      ...(t.label !== undefined && { label: t.label }),
+    },
+  };
+}
+
 /**
  * What keeps a group template from starting with this library (docs/adr/0176 §5), a problem for each member that has
  * one, in their order: its template the library lacks, has a problem of its own, or is itself a group (one with

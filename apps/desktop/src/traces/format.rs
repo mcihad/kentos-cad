@@ -82,6 +82,9 @@ pub struct Step {
     /// Draws with the drawing's or a library's object template of this id,
     /// as choosing it does (docs/adr/0176 §3).
     pub(super) template: Option<String>,
+    /// Applies the template of this id to the selected objects, as the
+    /// Şablonlar panel's Seçili nesnelere uygula does (docs/adr/0176 §6).
+    pub(super) apply_template: Option<String>,
     pub(super) key: Option<String>,
     pub(super) text: Option<String>,
     #[serde(rename = "move")]

@@ -409,6 +409,8 @@ async function act(step) {
   if (step.run) return void (await b.eval(`window.kentos.commands.execute(${JSON.stringify(step.run)})`));
   // An object template, as choosing it does (docs/adr/0176 §3).
   if (step.template) return void (await b.eval(`window.kentos.commands.execute('template.draw', ${JSON.stringify(step.template)})`));
+  // Şablonu uygula (docs/adr/0176 §6), as the Şablonlar panel's Seçili nesnelere uygula does.
+  if (step.applyTemplate) return void (await b.eval(`window.kentos.commands.execute('template.apply', ${JSON.stringify(step.applyTemplate)})`));
   if (step.key) return press(step.key);
   if (step.text !== undefined) {
     for (const ch of step.text) {

@@ -228,7 +228,17 @@ da geçer:
      `memberIssues`, masaüstü `template_member_issues`). Kuralların ve yanların adları web'de `MEMBER_RULE_LABEL`, `MEMBER_SIDE_LABEL`.
      Resimler: masaüstü `template_editor::tests::screens`'in `sablon-duzenleyici-grup-*`'ı, web `shots.mjs stylemanager`'ın
      `template-editor-group`'u.
-6. Şablonu uygula; ortak iz.
+6. Şablonu uygula; ortak iz. **Tamam (5 Ekim):** kural iki platformda (web `templateApplication`, `KIND_OF_TOOL`; masaüstü
+   `object_template::application`, `kind_of_tool`; ortak `fixtures/style/v1/template-apply.json`, 10 durum: uyan türler, yoksa katmanınki
+   olan renk, kalınlık ve sembol, öznitelikler ve noktanın `Kod`'u, etiketin kalması, grup şablonunun üyeleri yazmaması);
+   `cad.entities.set`'in `template` işlemi, adım “Şablonu uygula” (ortak komut durumu); uygulama web'de `app/objectTemplates.ts`'in
+   `applyTemplate`'i, masaüstünde `templates.rs`'in `apply_template`'i: şablonun katmanı bulunur ya da aynı adımda açılır, etkin katman
+   değişmez; uymayanlar sayılır. Girişler iki platformda: Şablonlar panelinde satırın menüsünde “Seçili nesnelere uygula” (seçim yokken
+   kapalı), Stil yöneticisinde şablonun ayrıntılarında aynı düğme, komut `template.apply` (takma ad `SABLONUYGULA`; kimliksiz çağrı
+   Şablonlar panelini açar), ikonu `templateApply`. Ortak iz `template-apply.json` (izlerin yeni `applyTemplate` eylemiyle): seçimsiz
+   uyarı, iki alan ve bir çizgi (alanlar katmanına geçer, çizgi sayılır), tek adımda geri alma, noktanın `Kod`'u, hiçbiri uymayan seçim.
+   Resimler: iz `shot` adımlarıyla iki platformda (`kentos-cad kullan template-apply`, `e2e:use template-apply`); satırın menüsü
+   masaüstünde `templates_panel::tests::panel_screens` (`sablon-panel-menu-*`), web'de `shots.mjs templates --only panel-menu`.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

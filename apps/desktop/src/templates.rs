@@ -14,13 +14,17 @@
 //! template from starting, and says so.
 
 use iced::Task;
-use kentos_contracts::{BlockId, TextAlign};
+use kentos_contracts::{
+    BlockId, CommandResult, EntitiesSetProperties, PropertiesOperation, TextAlign,
+};
 use kentos_interaction::templates::{
     LayerAnswer, Stamp, TemplateLayer, find_layer, locked_text, open_layer,
 };
 use kentos_interaction::{DraftColor, Level, Name, Prompt};
+use kentos_native_application::{ExecutionContext, set};
 use kentos_native_style::library::ItemKind;
 use kentos_native_style::object_template::{self, Recipe, member_issues, template_issues};
+use serde_json::Value;
 
 use crate::app::{App, Message};
 use crate::catalog::catalog;
@@ -140,7 +144,7 @@ impl App {
             .chain(members.iter().map(|(_, _, own)| own))
             .map(layer_of)
             .collect();
-        let Some(layer_ids) = self.template_layers(&layers, &name) else {
+        let Some(layer_ids) = self.template_layers(&layers, &name, true) else {
             return Task::none();
         };
         // Another template's run gives way, its colour and weight kept as the
@@ -204,12 +208,138 @@ impl App {
         Task::none()
     }
 
+    /// `template.apply` (Şablonu uygula, docs/adr/0176 §6; the web's
+    /// `applyTemplate`): the selected objects of the template's kind take its
+    /// layer (found, or opened in the same step), look, attributes and label,
+    /// one undo step “Şablonu uygula” through `cad.entities.set`
+    /// (`object_template::application`). The others stay as they are and are
+    /// counted; with none of its kind nothing changes. Said either way.
+    pub(crate) fn apply_template(&mut self, id: &str) {
+        let Some(doc) = self.document.as_ref() else {
+            self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
+            return;
+        };
+        let item = self
+            .styles
+            .library
+            .get(id)
+            .map(|(item, _)| item)
+            .filter(|item| item.kind() == ItemKind::Template);
+        let Some(item) = item else {
+            self.warn(format!(
+                "“{id}” kimlikli şablon kitaplıkta yok: silinmiş olabilir. Şablonu Stil yöneticisinde seçin."
+            ));
+            return;
+        };
+        let name = item.name().to_owned();
+        let template = item.template().cloned().unwrap_or_default();
+        let Some(recipe) = object_template::read(&template) else {
+            let issue = template_issues(&template, &format!("“{name}” şablonu"))
+                .into_iter()
+                .next()
+                .unwrap_or_default();
+            self.warn(format!("{issue}; şablonu Stil yöneticisinde düzeltin."));
+            return;
+        };
+        let selected: Vec<(String, &str)> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|&slot| {
+                Some((
+                    doc.model.uid(slot)?.to_string(),
+                    doc.model.get(slot)?.kind(),
+                ))
+            })
+            .collect();
+        if selected.is_empty() {
+            self.warn(format!(
+                "Önce “{name}” şablonunun uygulanacağı nesneleri seçin."
+            ));
+            return;
+        }
+        let kinds: Vec<&str> = selected.iter().map(|(_, kind)| *kind).collect();
+        let (fits, set) = object_template::application(&template, &kinds);
+        let kind = object_template::tool_label(&recipe.tool).to_owned();
+        if fits.is_empty() {
+            self.warn(format!(
+                "Seçili nesnelerin hiçbiri “{name}” şablonunun türünde ({kind}) değil; değişen olmadı."
+            ));
+            return;
+        }
+        let uids: Vec<String> = fits.iter().map(|&i| selected[i].0.clone()).collect();
+        let skipped = selected.len() - fits.len();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let group = doc.model.begin_group("Şablonu uygula");
+        let Some(layer_ids) = self.template_layers(&[layer_of(&recipe)], &name, false) else {
+            if let Some(doc) = self.document.as_mut() {
+                doc.model.cancel_group(group);
+            }
+            return;
+        };
+        let text = |key: &str| set.get(key).map(|v| v.as_str().map(str::to_owned));
+        let input = EntitiesSetProperties {
+            uids,
+            layer_id: layer_ids.into_iter().next(),
+            color: text("color"),
+            line_weight: set.get("lineWeight").map(Value::as_f64),
+            symbol: text("symbol"),
+            attrs: set.get("attrs").and_then(Value::as_object).map(|attrs| {
+                attrs
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.as_str().map(str::to_owned)))
+                    .collect()
+            }),
+            label: text("label"),
+            unlink: false,
+            operation: PropertiesOperation::Template,
+            expected_revision: None,
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        match set::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { warnings, .. } => {
+                doc.model.end_group(group);
+                for warning in warnings {
+                    self.warn(warning.message);
+                }
+                let n = fits.len();
+                let more = if skipped > 0 {
+                    format!(" {skipped} nesne şablonun türünde ({kind}) değil, değişmedi.")
+                } else {
+                    String::new()
+                };
+                self.say(
+                    Level::Success,
+                    format!("“{name}” şablonu {n} nesneye uygulandı.{more}"),
+                );
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                doc.model.cancel_group(group);
+                self.warn(error.message);
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                doc.model.cancel_group(group);
+            }
+        }
+    }
+
     /// Finds or opens the template's layers (its own first, then its
     /// members'), the opened ones in one step “Katman ekle”, and makes the
-    /// first active: their ids, in order; none (said) when one of them, or the
-    /// group it would go in, is locked or the drawing refuses it, and then
-    /// nothing changes.
-    fn template_layers(&mut self, layers: &[TemplateLayer], name: &str) -> Option<Vec<String>> {
+    /// first active (`activate`): their ids, in order; none (said) when one of
+    /// them, or the group it would go in, is locked or the drawing refuses it,
+    /// and then nothing changes.
+    fn template_layers(
+        &mut self,
+        layers: &[TemplateLayer],
+        name: &str,
+        activate: bool,
+    ) -> Option<Vec<String>> {
         let doc = self.document.as_mut()?;
         let locked = layers.iter().find_map(|layer| {
             let tree = doc.model.layers();
@@ -239,7 +369,7 @@ impl App {
                     .get(&id)
                     .map_or_else(String::new, |node| locked_text(node, name))),
                 LayerAnswer::Open { parent, create } => {
-                    open_layer(&mut doc.model, layer, parent.as_deref(), &create)
+                    open_layer(&mut doc.model, layer, parent.as_deref(), &create, activate)
                         .map_err(|refusal| refusal.to_string())
                 }
             };
@@ -253,7 +383,9 @@ impl App {
             }
         }
         doc.model.end_group(group);
-        doc.model.set_active_layer(&ids[0]);
+        if activate {
+            doc.model.set_active_layer(&ids[0]);
+        }
         Some(ids)
     }
 

@@ -390,6 +390,26 @@ pub fn details<'a>(
             }),
             iced::widget::tooltip::Position::Top,
         ));
+        // Şablonu uygula (docs/adr/0176 §6): the selected objects of its kind take its layer and look.
+        let label = if selected_objects > 0 {
+            format!("Seçili nesnelere uygula ({selected_objects})")
+        } else {
+            "Seçili nesnelere uygula".into()
+        };
+        actions = actions.push(tip(
+            small_button(
+                "templateApply",
+                label,
+                (selected_objects > 0).then(|| ev(Event::ApplyTemplate(id.clone()))),
+                false,
+            ),
+            Tip::new("Seçili nesnelere uygula").body(if selected_objects > 0 {
+                "Pencere kapanır; seçili nesneler şablonun katmanını ve görünüşünü alır"
+            } else {
+                "Önce çizimde nesne seçin"
+            }),
+            iced::widget::tooltip::Position::Top,
+        ));
     }
     if item.kind() == ItemKind::Symbol {
         let label = if selected_objects > 0 {

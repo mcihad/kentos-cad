@@ -5,7 +5,7 @@ import { StyleLibrary } from '../style/library';
 import { geometryClassOf } from '../style/geometry';
 import { setProperties, uidsOf } from '../ui/properties/write';
 import type { AppContext } from './context';
-import { drawWithTemplate, templateFromSelection } from './objectTemplates';
+import { applyTemplate, drawWithTemplate, templateFromSelection } from './objectTemplates';
 import { persistedSignals } from './state';
 
 /**
@@ -144,6 +144,19 @@ export function registerStyleCommands(ctx: AppContext): void {
       // With a template's id, it draws; without one, the Şablonlar panel shows the templates to choose from.
       run: (args) => {
         if (typeof args === 'string') return drawWithTemplate(ctx, args);
+        ctx.commands.execute('template.panel');
+      },
+    },
+    {
+      id: 'template.apply',
+      title: 'Şablonu uygula',
+      category: cat,
+      icon: 'templateApply',
+      aliases: ['SABLONUYGULA'],
+      description: 'Seçili nesnelere bir nesne şablonunun katmanını, rengini, kalınlığını, sembolünü, özniteliklerini ve etiketini tek adımda verir; şablonun türünde olmayanlar değişmez.',
+      // With a template's id, it applies it; without one, the Şablonlar panel shows the templates to choose from.
+      run: (args) => {
+        if (typeof args === 'string') return applyTemplate(ctx, args);
         ctx.commands.execute('template.panel');
       },
     },

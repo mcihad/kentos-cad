@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LayerStore, type LayerInit } from './layers';
 import type { Entity } from './entities';
-import { lockedTemplateLayerText, memberIssues, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayerAnswer } from './objectTemplate';
+import { lockedTemplateLayerText, memberIssues, templateApplication, templateFromObject, templateIssues, templateLayer, type ObjectTemplate, type TemplateLayerAnswer } from './objectTemplate';
 
 /**
  * A template's rules (docs/adr/0176 §1) as fixtures/style/v1/object-templates.json holds them, written by hand from the ADR: every
@@ -111,4 +111,23 @@ describe('a group template’s members in the library (fixtures/style/v1/templat
       expect(memberIssues(c.template, find)).toEqual(c.issues);
     });
   }
+});
+
+/** A case of fixtures/style/v1/template-apply.json: a template, the selection's kinds, what Şablonu uygula does (docs/adr/0176 §6). */
+interface ApplyCase {
+  name: string;
+  template: ObjectTemplate;
+  kinds: Entity['kind'][];
+  result: unknown;
+}
+
+const applyFiles = import.meta.glob<string>('../../../../fixtures/style/v1/template-apply.json', { query: '?raw', import: 'default', eager: true });
+const applying = JSON.parse(Object.values(applyFiles)[0]) as { format: string; version: number; cases: ApplyCase[] };
+
+describe('Şablonu uygula (fixtures/style/v1/template-apply.json)', () => {
+  it('is a template-apply-cases v1 file', () => {
+    expect([applying.format, applying.version]).toEqual(['kentos.template-apply-cases', 1]);
+    expect(applying.cases.length).toBeGreaterThanOrEqual(10);
+  });
+  for (const c of applying.cases) it(c.name, () => expect(templateApplication(c.template, c.kinds)).toEqual(c.result));
 });

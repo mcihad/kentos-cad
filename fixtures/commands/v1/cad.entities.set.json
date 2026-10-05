@@ -142,6 +142,13 @@
       ]
     },
     {
+      "name": "Şablonu uygula: katman, renk, kalınlık, sembol, öznitelik ve etiket tek adımda “Şablonu uygula” (ADR 0176 §6)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "layerId": "yol", "color": "#E5484D", "lineWeight": 0.35, "symbol": "agac", "attrs": {"Tür": "Yol"}, "label": "Y", "operation": "template"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yol", "attrs": {"Ada": "101", "Parsel": "7", "Tür": "Yol"}, "label": "Y", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "color": "#E5484D", "symbol": "agac", "lineWeight": 0.35}, "3": {"kind": "point", "id": 3, "layerId": "yol", "attrs": {"Tür": "Yol"}, "p": {"x": 487060, "y": 4420000}, "color": "#E5484D", "symbol": "agac", "label": "Y", "lineWeight": 0.35}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Şablonu uygula", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
       "name": "aynı kimlik iki kez verilirse nesne bir kez değişir, çıktıda bir kez geçer",
       "steps": [
         {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:3"], "color": "#E5484D", "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "color": "#E5484D"}}, "revision": "changed"}}

@@ -519,10 +519,21 @@ impl App {
         let editable = self.styles.library.can_edit(id);
         let project_open = self.document.is_some();
         let owned = id.to_owned();
+        let selected = !self.selection.is_empty();
         let mut menu = Menu::new()
             .item("Şablonla çiz", msg(Event::Draw(owned.clone())))
             .icon(crate::icons::from_web(Some("templateDraw")))
             .shortcut("Enter")
+            // Şablonu uygula (docs/adr/0176 §6): the selected objects of its kind take its layer and look.
+            .item(
+                "Seçili nesnelere uygula",
+                selected.then(|| Message::ApplyTemplate(owned.clone())),
+            )
+            .icon(crate::icons::from_web(Some("templateApply")));
+        if !selected {
+            menu = menu.detail("Önce çizimde nesne seçin.");
+        }
+        menu = menu
             .item(
                 if editable {
                     "Düzenle…"
@@ -851,6 +862,70 @@ mod tests {
                 ],
             );
             picture(&mut snapshot, &mut app, "menu");
+        }
+    }
+
+    /// The Şablonlar panel's row menu with the drawing's objects selected:
+    /// Seçili nesnelere uygula (docs/adr/0176 §6), light and dark at
+    /// 1440 × 900 and dark at 1100 × 650; `.run/shots/sablon-panel-menu-*`
+    /// (the web's: `node apps/web/scripts/e2e/shots.mjs templates --only panel-menu`):
+    ///
+    /// ```text
+    /// cargo test -p kentos-desktop templates_panel::tests::panel_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn panel_screens() {
+        use iced::{Size, mouse};
+        use kentos_ui::snapshot::Snapshot;
+
+        use crate::files_testing::find_texts;
+
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        kentos_ui::theme::motion::set_reduced(true);
+        for (theme, w, h) in [
+            ("light", 1440.0, 900.0),
+            ("dark", 1440.0, 900.0),
+            ("dark", 1100.0, 650.0),
+        ] {
+            let mut app = app();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(Size::new(w, h)));
+            let _ = app.update(Message::Run("edit.selectAll"));
+            let _ = app.show_templates_panel();
+            let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            // The panel's row: the rightmost of the name's texts.
+            let at = find_texts(&mut snapshot, &app, "Parsel sınırı")
+                .into_iter()
+                .max_by(|a, b| a.x.total_cmp(&b.x))
+                .expect("the panel's row");
+            snapshot.step(
+                &mut app,
+                App::view,
+                &mut update,
+                &[
+                    iced::Event::Mouse(mouse::Event::CursorMoved {
+                        position: at.center(),
+                    }),
+                    iced::Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)),
+                    iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)),
+                ],
+            );
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("sablon-panel-menu-{theme}-{w}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
         }
     }
 }

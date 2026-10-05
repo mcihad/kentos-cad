@@ -204,6 +204,8 @@ pub enum Message {
     /// Draw with the style library's object template of this id
     /// (`template.draw`, docs/adr/0176 §3; templates.rs).
     DrawTemplate(String),
+    /// Şablonu uygula with the library's template of this id (docs/adr/0176 §6).
+    ApplyTemplate(String),
     /// One of a tool's methods from its ribbon menu (Daire: 2 nokta): the
     /// tool starts, then takes the method's option as if typed (docs/adr/0032).
     RunMethod {
@@ -1052,6 +1054,7 @@ impl App {
                 | Message::RunMethod { .. }
                 | Message::SplitChosen { .. }
                 | Message::DrawTemplate(_)
+                | Message::ApplyTemplate(_)
         ) {
             // A command closes the folded ribbon open over the drawing (the web's).
             if !matches!(message, Message::Run("view.keyTips")) {
@@ -1066,6 +1069,7 @@ impl App {
         match message {
             Message::Run(id) => return self.run(id),
             Message::DrawTemplate(id) => return self.draw_template(&id),
+            Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
@@ -1638,7 +1642,9 @@ impl App {
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
             // Şablonla çiz without a template: the Şablonlar panel, to choose one (templates_panel.rs).
-            "template.draw" | "template.panel" => return self.show_templates_panel(),
+            "template.draw" | "template.panel" | "template.apply" => {
+                return self.show_templates_panel();
+            }
             // Şablon düzenleyici, new or from the selection (template_editor.rs, docs/adr/0176 §4).
             "template.new" => return self.open_template_editor(None, None),
             "template.fromSelection" => return self.template_from_selection(),

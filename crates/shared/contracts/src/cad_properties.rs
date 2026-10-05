@@ -51,6 +51,9 @@ pub enum PropertiesOperation {
     /// Öznitelikler's Bağı kopar (docs/adr/0175 §4): linked texts follow
     /// their objects no more (`unlink`). “Bağı kopar”.
     Unlink,
+    /// Şablonu uygula (docs/adr/0176 §6): an object template's layer, look,
+    /// attributes and label given to objects of its kind. “Şablonu uygula”.
+    Template,
 }
 
 /// Input of `cad.entities.set` v1: properties set for objects named by their
