@@ -80,6 +80,23 @@ da geçer:
 - Grup şablonu bir çizimden birkaç nesne yazar: üyeleri şablonlardır, her biri aynı çizimden kendi nesnesini kendi kuralıyla alır: aynı
   geometri (başka katmana), ötelenmiş çizgi (iki yana, uzaklıkla), köşelere nokta (ADR 0152), ağırlık merkezine nokta ya da yazı.
   Hepsi tek adımda yazılır.
+- **Ayrıntılar (5 Ekim, bu ADR'nin varsayılanları):** grup şablonu sıradan bir şablondur, `members` listesi olan: kendi aracıyla
+  çizilen ana nesne kendi katmanına, görünüşüyle, öznitelikleri ve etiketiyle yazılır (tek şablon gibi); üyelerin nesneleri onunla
+  aynı geri alma adımındadır (adımın adı aracınkidir). Üye, kitaplıktaki bir şablonun kimliği ve kuralıdır; üyenin şablonu nesnenin
+  katmanını, görünüşünü, özniteliklerini ve etiketini verir, aracı ve yöntemi kullanılmaz:
+  - **Aynı geometri** (`same`): çizilen geometri üyenin katmanına.
+  - **Ötelenmiş** (`offset`): çizgide, çoklu çizgide ve kapalı alanda; uzaklık (m, sıfırdan büyük) ve yan: sol, sağ ya da iki yan
+    (çizim yönüne göre); Ötele'nin kuralıyla.
+  - **Köşelere nokta** (`vertices`): üye nokta şablonudur; Köşelere nokta'nın kuralıyla (ADR 0152): ortak köşe bir kez, noktası olan
+    köşe atlanır; adlar üyenin ad dizisinden (şablon başına sürer, §3b), kod üyenin.
+  - **Ağırlık merkezine** (`centroid`): alanın ağırlık merkezine, çizginin ortasına (etiketin yeri, ADR 0175); üye nokta şablonuysa
+    nokta (adı dizisinden), yazı şablonuysa yazı: metni üyenin etiketidir, her çizimde Artır'ın kuralıyla bir artar (101, 102 …;
+    ADR 0145), yüksekliği, hizası ve zemini üyenin.
+- Grup şablonunun aracı Çizgi, Çoklu çizgi, Kapalı alan, Dikdörtgen ya da Döndürülmüş dikdörtgendir. Üyenin şablonu kitaplıkta yoksa,
+  kendisi grup şablonuysa ya da kurala uymuyorsa (köşelere nokta üyesi nokta şablonu değil; ağırlık merkezi üyesi nokta ya da yazı
+  şablonu değil ya da etiketsiz yazı şablonu) grup başlamaz, söylenir. Üyelerin katmanları grup seçilince bulunur ya da açılır (ana
+  katmanla aynı “Katman ekle” adımında); kilitli üye katmanı grubu başlatmaz.
+- Bir üyenin nesnesi yapılamazsa (öteleme şekil vermezse) o üye atlanır ve söylenir; ana nesne ve öbür üyeler yazılır.
 
 ### 6. Var olan nesneye şablon uygulamak
 
@@ -121,7 +138,8 @@ da geçer:
      **Tamam (5 Ekim):** şablonun koşusu aracın kendi seçeneklerini verir ve sonunda geri alır (masaüstü `templates.rs`'in `seed_tool`
      ve `give_tool_back`'i, `Memory`'nin alanlarıyla; web `tools/templateSeeds.ts`, `TemplateRun.seed`, `TextTool.useOptions`): nokta
      şablonu Kod'u her zaman (yoksa kodsuz), Ad'ı ilk adı varsa verir, adsız şablon Nokta'nın kendi dizisine dokunmaz; şablonun sonraki
-     adı oturumda kimliğiyle saklanır (`template_names`, `ToolManager.templateNames`); yazı şablonu yazı bölümü varsa yüksekliği, hizayı
+     adı çizim boyunca kimliğiyle saklanır, başka çizim açılınca şablonlar ilk adlarından başlar (`template_names`,
+     `ToolManager.templateNames`; web'in iz oynatıcısı aynı tarayıcıda izden ize geçerken bunu yakaladı); yazı şablonu yazı bölümü varsa yüksekliği, hizayı
      ve zemini verir; blok şablonu bloğunu adıyla bulur, bulamazsa katmana dokunmadan söyler (“Çizimde “Vana” bloğu yok: …”). Nokta aracı
      da artık damgayı yazar (sembol, öznitelikler; adı yoksa şablonun etiketi), iki platformda. Nesneden şablonun yazı yüksekliği
      `height × 1000 / plotScale` (`from_object`, `templateFromObject`; başvuru tam kesirle, iki yeni durum 1:500 ve 1:2000);
@@ -160,7 +178,10 @@ da geçer:
      `plotScale` ikonuyla Ölçek; web'de `dropdown--glyph`, masaüstünde KentOS UI `Choice::label_icon`): web'de “Katmana göre” o kademede
      hiçbir alana sığmıyordu. Resimler: masaüstü `templates_panel::tests::ribbon_screens` (`.run/shots/sablon-serit-*`), web
      `shots.mjs templates`.
-5. Grup şablonu; ortak iz.
+5. Grup şablonu; ortak iz. Dört parçada: 5a model (şablonun `members`'ı, kuralları ve sorunları iki platformda,
+   `object-templates.json`'a durumlar; düzenleyicinin formunda üyeler, `template-form.json`); 5b çekirdek (üyelerin geometrisi:
+   `ops::template_members`, aynı, ötelenmiş, ağırlık merkezi; bağımsız başvuru ve ortak durumlar); 5c grup şablonuyla çizmek (üyelerin
+   katmanları, ana nesneyle tek adım, köşelere nokta ve yazının artışı; ortak iz); 5d Şablon düzenleyicide üyeler tablosu, resimler.
 6. Şablonu uygula; ortak iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.

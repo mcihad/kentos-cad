@@ -34,7 +34,7 @@ export class ToolManager {
   private lastTemplate: string | null = null;
   /** The object templates drawn with in this session, the newest first (at most five; the Şablonlar panel's first group). */
   readonly recentTemplates = new Signal<readonly string[]>([]);
-  /** Each point template's next name, by its id: its series goes on from run to run in the session (docs/adr/0176 §3b). */
+  /** Each point template's next name, by its id: its series goes on from run to run in the drawing (docs/adr/0176 §3b). */
   private readonly templateNames = new Map<string, string>();
   /** Puts back the tool's own options the running template set (tools/templateSeeds.ts). */
   private templateBack: (() => void) | null = null;
@@ -50,6 +50,11 @@ export class ToolManager {
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
+    // A point template's names go on in the drawing they were drawn in: another drawing starts them again (docs/adr/0176 §3b).
+    ctx.doc.events.on('reset', () => {
+      this.releaseTemplate();
+      this.templateNames.clear();
+    });
   }
 
   register(d: ToolDescriptor): void {

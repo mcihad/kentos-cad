@@ -10,10 +10,11 @@ import { RIBBON_TEXTS } from '../ui/ribbon/ribbonPlan';
  * line weight into the session's current ones and starts its tool, with its method; every object the tool writes
  * takes its symbol, attributes and label (tools/templateStamp.ts). A point, text or block template also sets its tool's
  * own options for the run (docs/adr/0176 §3b, tools/templateSeeds.ts): Nokta's Ad and Kod (a template's names go on
- * from run to run), Yazı's height on paper, alignment and mask, Blok ekle's block, found by its name (a template whose
- * block the drawing lacks does not start, and says so). The run ends with the tool (the ToolManager lets it go): Esc,
- * another command or another template give the colour, the weight and the tool's own options back; the active layer
- * stays. Son komutu yinele starts the template again. A locked layer keeps the template from starting, and says so.
+ * from run to run in the drawing), Yazı's height on paper, alignment and mask, Blok ekle's block, found by its name
+ * (a template whose block the drawing lacks does not start, and says so). The run ends with the tool (the ToolManager
+ * lets it go): Esc, another command or another template give the colour, the weight and the tool's own options back;
+ * the active layer stays. Son komutu yinele starts the template again. A locked layer keeps the template from
+ * starting, and says so.
  */
 
 /** `template.draw`: draws with the library's template `id` (Stil yöneticisi's Şablonla çiz, a trace's `template` step). */

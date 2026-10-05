@@ -579,7 +579,7 @@ pub struct App {
     /// command is.
     pub(crate) last_template: Option<String>,
     /// Each point template's next name, by its id: its series goes on from
-    /// run to run in the session (docs/adr/0176 §3b).
+    /// run to run in the drawing (docs/adr/0176 §3b).
     pub(crate) template_names: std::collections::HashMap<String, kentos_interaction::Name>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
@@ -1485,6 +1485,10 @@ impl App {
     pub(crate) fn show_document(&mut self, doc: Document) {
         self.close_cloud_project();
         self.cancel();
+        // A point template's names go on in the drawing they were drawn in:
+        // another drawing starts them again (docs/adr/0176 §3b).
+        self.release_template();
+        self.template_names.clear();
         self.selected_layer = None;
         self.spatial.reload(&doc.model);
         self.viewport.opened(&doc, self.spatial.extent());

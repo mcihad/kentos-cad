@@ -5,13 +5,13 @@
 //! with its method; every object the tool writes takes its symbol, attributes
 //! and label (`Context::template`). A point, text or block template also sets
 //! its tool's own options for the run (docs/adr/0176 §3b): Nokta's Ad and Kod
-//! (a template's names go on from run to run), Yazı's height on paper,
-//! alignment and mask, Blok ekle's block, found by its name (a template whose
-//! block the drawing lacks does not start, and says so). The run ends with the
-//! tool: Esc, another command or another template give the colour, the weight
-//! and the tool's own options back; the active layer stays. Son komutu yinele
-//! starts the template again. A locked layer keeps the template from starting,
-//! and says so.
+//! (a template's names go on from run to run in the drawing), Yazı's height
+//! on paper, alignment and mask, Blok ekle's block, found by its name (a
+//! template whose block the drawing lacks does not start, and says so). The
+//! run ends with the tool: Esc, another command or another template give the
+//! colour, the weight and the tool's own options back; the active layer stays.
+//! Son komutu yinele starts the template again. A locked layer keeps the
+//! template from starting, and says so.
 
 use iced::Task;
 use kentos_contracts::{BlockId, TextAlign};
