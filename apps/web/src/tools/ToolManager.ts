@@ -31,6 +31,8 @@ export class ToolManager {
   private lastRepeatable: string | null = null;
   /** The object template the last remembered command drew with (docs/adr/0176 §3): Son komutu yinele starts it again. */
   private lastTemplate: string | null = null;
+  /** The object templates drawn with in this session, the newest first (at most five; the Şablonlar panel's first group). */
+  readonly recentTemplates = new Signal<readonly string[]>([]);
   /** Tools suspended under a transparent one (point calculator), innermost last. */
   private parents: Tool[] = [];
   private readonly ctx: AppContext;
@@ -94,6 +96,7 @@ export class ToolManager {
       this.ctx.settings.template.set(template);
       this.ctx.settings.color.set(template.color);
       this.ctx.settings.lineWeight.set(template.lineWeight);
+      this.recentTemplates.set([template.id, ...this.recentTemplates.value.filter((id) => id !== template.id)].slice(0, 5));
     }
     this.current = d.create(this.ctx);
     if (id !== 'select' && id !== 'pan') {

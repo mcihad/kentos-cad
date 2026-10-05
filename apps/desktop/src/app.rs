@@ -48,6 +48,8 @@ pub enum Panel {
     Processing,
     /// Bloklar: the drawing's blocks, a tab beside Katmanlar and İşlemler (blocks_panel.rs, docs/adr/0144).
     Blocks,
+    /// Şablonlar: the library's object templates, a tab beside Bloklar (templates_panel.rs, docs/adr/0176 §4).
+    Templates,
     Properties,
 }
 
@@ -57,6 +59,7 @@ impl Panel {
             Panel::Layers => "Katmanlar",
             Panel::Processing => "İşlemler",
             Panel::Blocks => "Bloklar",
+            Panel::Templates => "Şablonlar",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -66,6 +69,7 @@ impl Panel {
             Panel::Layers => Icon::Layers,
             Panel::Processing => crate::icons::from_web(Some("processing")),
             Panel::Blocks => crate::icons::from_web(Some("blocks")),
+            Panel::Templates => crate::icons::from_web(Some("templates")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -73,9 +77,10 @@ impl Panel {
     fn layout() -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
-        // İşlemler and Bloklar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
+        // İşlemler, Bloklar and Şablonlar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
         docks.dock(Panel::Processing, Side::Right);
         docks.dock(Panel::Blocks, Side::Right);
+        docks.dock(Panel::Templates, Side::Right);
         docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
         docks.split(Panel::Properties, Side::Right);
         docks.set_size(Side::Right, DOCK_WIDTH);
@@ -135,6 +140,8 @@ pub enum Dialog {
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
+    /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
+    RemoveTemplate,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
     /// Çöp kutusuna taşı.
     CloudRename,
@@ -272,6 +279,8 @@ pub enum Message {
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
     BlocksPanel(crate::blocks_panel::Event),
+    /// Şablonlar panel (templates_panel.rs).
+    TemplatesPanel(crate::templates_panel::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
     BlockAttributes(crate::block_attributes::Event),
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
@@ -433,6 +442,10 @@ pub struct App {
     pub(crate) blocks: crate::blocks::Blocks,
     /// The Bloklar panel (blocks_panel.rs).
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
+    /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
+    /// in this session, the newest first (templates.rs).
+    pub(crate) templates_panel: crate::templates_panel::PanelState,
+    pub(crate) recent_templates: Vec<String>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
     /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
@@ -699,6 +712,8 @@ impl App {
             text_field_focus: false,
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
+            templates_panel: crate::templates_panel::PanelState::default(),
+            recent_templates: Vec::new(),
             block_attributes: None,
             attribute_values: None,
             find_replace: None,
@@ -1032,6 +1047,7 @@ impl App {
             self.close_text_field(true);
             self.layers_keyboard = false;
             self.blocks_panel.keyboard = false;
+            self.templates_panel.keyboard = false;
             self.vertices.keyboard = false;
         }
         match message {
@@ -1097,6 +1113,7 @@ impl App {
                     self.field = None;
                     self.layers_keyboard = false;
                     self.blocks_panel.keyboard = false;
+                    self.templates_panel.keyboard = false;
                     self.vertices.keyboard = false;
                 }
             }
@@ -1128,6 +1145,7 @@ impl App {
             Message::Properties(event) => self.properties_event(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
+            Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
@@ -1268,6 +1286,7 @@ impl App {
                         self.remove_layer(&id);
                     }
                 }
+                Some(Dialog::RemoveTemplate) => self.remove_template(),
                 _ => {}
             },
             Message::DialogClosed => self.close_dialog(),
@@ -1600,8 +1619,8 @@ impl App {
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
-            // Şablonla çiz without a template: the Stil yöneticisi's templates (templates.rs).
-            "template.draw" => return self.template_list(),
+            // Şablonla çiz without a template: the Şablonlar panel, to choose one (templates_panel.rs).
+            "template.draw" | "template.panel" => return self.show_templates_panel(),
             "style.legend" => self.open_legend(),
             "style.svgEditor" => self.open_svg_editor(crate::style::svgedit::Opening {
                 id: None,

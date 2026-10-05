@@ -116,7 +116,18 @@ da geçer:
      `lineWeight`, `layer` beklentileri). Web'de kitaplığın proje bölümü artık açılan çizimi izler (masaüstününki gibi).
    - 3b: nokta, yazı ve blok şablonları: Nokta'nın Ad ve Kod'u şablondan, ad dizisi şablon başına sürer, bırakılınca aracın kendi
      değerleri döner; Yazı'nın yüksekliği, hizası ve zemini; Blok ekle'nin bloğu adıyla (çizimde yoksa söylenir); ortak iz.
-4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler.
+4. Şablonlar paneli ve şeridin listesi; Şablon düzenleyici, Seçili nesneden şablon; resimler. 3b'den önce yapılır (sahibin 5 Ekim
+   sorusu üzerine: şablon panel ve düzenleyici olmadan kullanılamıyor). Üç parçada: 4a Şablonlar paneli (sağ dokta Katmanlar, İşlemler ve
+   Bloklar'ın yanında; kategorilere göre şablonlar resim ve adlarıyla, arama, son kullanılanlar; tıklama şablonla çizer; satırın menüsü),
+   4b Şablon düzenleyici ve Seçili nesneden şablon (nesneden şablonun kuralı ortak durumlarla), 4c şeridin Giriş sekmesinde Şablonlar
+   listesi.
+   - 4a **Tamam (5 Ekim):** listenin kuralı iki platformda (`object_template::listed`, `style/templateList.ts`; elle yazılmış ortak
+     durumlar `fixtures/style/v1/template-list.json`: gruplar kategori yollarının Türkçe sırasıyla, kategorisizler sonda; aramada ad,
+     açıklama, kategori, araç ve katman); panel masaüstünde `templates_panel.rs`, web'de `ui/templates/TemplatesPanel.ts`: resim, ad ve
+     “araç · katman”, son kullanılan beş şablon önce (oturumun; web `ToolManager.recentTemplates`), çizilen şablon işaretli, tıklama
+     çizer, ↓ ve Enter, grup açılıp kapanır, satırın menüsü (Şablonla çiz, Stil yöneticisinde göster, Kitaplığıma ve Projeye kopyala,
+     Sil sorarak); `template.panel` (“Şablonlar”), kimliksiz `template.draw` paneli açar; dok sekmesi `templates` (`fixtures/shell/v1/
+     layout.json`); ikonlar `templates`, `templateDraw`; ortak iz `template-draw.json` paneli de resimler.
 5. Grup şablonu; ortak iz.
 6. Şablonu uygula; ortak iz.
 

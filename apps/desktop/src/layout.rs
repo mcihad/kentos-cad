@@ -230,6 +230,7 @@ impl App {
         let in_front = match keeper.text("dockTab") {
             "processing" => Panel::Processing,
             "blocks" => Panel::Blocks,
+            "templates" => Panel::Templates,
             _ => Panel::Layers,
         };
         let fraction = keeper.number("layersFraction");
@@ -332,6 +333,7 @@ impl App {
             Value::from(match in_front {
                 Some(Panel::Processing) => "processing",
                 Some(Panel::Blocks) => "blocks",
+                Some(Panel::Templates) => "templates",
                 _ => "layers",
             }),
             now,

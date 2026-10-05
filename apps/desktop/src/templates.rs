@@ -22,7 +22,9 @@ use crate::catalog::catalog;
 /// A template being drawn with: what the tools' context carries, and what
 /// its end gives back.
 pub(crate) struct TemplateRun {
-    /// The template's name: the prompt says it before the tool's.
+    /// The template's library id (the Şablonlar panel marks its rows) and
+    /// name (the prompt says it before the tool's).
+    pub(crate) id: String,
     pub(crate) name: String,
     pub(crate) stamp: Stamp,
     /// The session's tool run it is (`Session::runs`): another one ends it.
@@ -77,6 +79,7 @@ impl App {
             return Task::none();
         }
         self.template = Some(TemplateRun {
+            id: id.to_owned(),
             name: name.clone(),
             stamp: Stamp {
                 symbol: recipe.symbol.clone(),
@@ -87,6 +90,11 @@ impl App {
             before,
         });
         self.last_template = Some(id.to_owned());
+        // The Şablonlar panel's first group (templates_panel.rs).
+        self.recent_templates.retain(|r| r != id);
+        self.recent_templates.insert(0, id.to_owned());
+        self.recent_templates
+            .truncate(crate::templates_panel::RECENT);
         let title = catalog()
             .get(&format!("tool.{}", recipe.tool))
             .map_or(recipe.tool.as_str(), |command| command.title);
@@ -171,16 +179,6 @@ impl App {
             prompt.template = self.template.as_ref().map(|run| run.name.clone());
         }
         prompt
-    }
-
-    /// `template.draw` without a template (the command line, Komut ara): the
-    /// Stil yöneticisi lists the templates, where Şablonla çiz starts one.
-    pub(crate) fn template_list(&mut self) -> Task<Message> {
-        let task = self.open_style_manager(None, None);
-        if let Some(m) = &mut self.styles.manager {
-            m.kind = crate::style::manager::KindFilter::Template;
-        }
-        task
     }
 
     /// The last template's name, for the drawing menu's Yinele.

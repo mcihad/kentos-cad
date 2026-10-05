@@ -62,7 +62,7 @@ impl App {
     }
 
     /// After an edit of the library: Kitaplığım to its file, the project's part into the drawing.
-    pub(in crate::style) fn library_changed(&mut self, source: Source) {
+    pub(crate) fn library_changed(&mut self, source: Source) {
         let doc = self.document.as_mut().map(|d| &mut d.model);
         if let Some(problem) = self.styles.changed(source, doc) {
             self.warn(problem);

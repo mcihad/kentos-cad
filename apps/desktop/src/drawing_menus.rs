@@ -132,6 +132,7 @@ impl App {
         // The drawing takes the keyboard from the layer tree (web: its blur).
         self.layers_keyboard = false;
         self.blocks_panel.keyboard = false;
+        self.templates_panel.keyboard = false;
         self.drawing_menu = self.modifiers.shift().then_some(Open {
             kind: Kind::Snap,
             at,

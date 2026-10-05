@@ -52,7 +52,7 @@ FIELDS = {
     'bottomExpanded': {'kind': 'boolean'},
     'bottomHeight': {'kind': 'number', 'min': BOTTOM['min']},
     'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'messages']},
-    'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks']},
+    'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks', 'templates']},
     'processingTab': {'kind': 'enum', 'values': ['tools', 'history']},
     'processingFolded': {'kind': 'texts'},
     'ribbonTab': {'kind': 'text'},
@@ -176,6 +176,7 @@ READS = [
         'ribbonQuickAccess': ['tool.line', ['tool.arc']], 'ribbonSplits': {'circle': 'tool.circle|2N', 'rectangle': 5, 'arc': None},
     })),
     ('the Bloklar tab in front is kept (docs/adr/0144)', compact({'dockTab': 'blocks'})),
+    ('the Şablonlar tab in front is kept (docs/adr/0176 §4)', compact({'dockTab': 'templates'})),
     ('a dock tab the dock does not have is not taken', compact({'dockTab': 'styles'})),
     ('fields the layout does not know are dropped', compact({'theme': 'light', 'oldPanel': True, 'ribbonTabs': ['home']})),
     ('the toolbox of the classic shell is no longer kept: its fields are dropped (docs/adr/0155)', compact({

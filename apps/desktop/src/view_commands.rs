@@ -21,10 +21,11 @@ pub const COMMANDS: [&str; 4] = [
 ];
 
 /// The side panels F4 hides and shows together (the web's right panel).
-const SIDE_PANELS: [Panel; 4] = [
+const SIDE_PANELS: [Panel; 5] = [
     Panel::Layers,
     Panel::Processing,
     Panel::Blocks,
+    Panel::Templates,
     Panel::Properties,
 ];
 

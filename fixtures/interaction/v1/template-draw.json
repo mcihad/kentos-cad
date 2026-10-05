@@ -33,6 +33,8 @@
     {"click": [0, 10]},
     {"click": [4, 10], "expect": {"entities": 4, "newest": {"kind": "circle", "center": [2, 10], "radius": 2, "attrs": {"Tür": "Ağaç"}, "symbol": null, "color": "#5FBF77", "layer": "Bitki"}}},
     {"template": "p-duvar", "note": "Kilitli katmana şablon başlamaz; çalışan şablon sürer", "expect": {"tool": "circle", "currentColor": "#5FBF77", "logged": ["“Duvar” katmanı kilitli; “Duvar” şablonu bu katmana çizer. Kilidi Katmanlar panelinden açın."]}},
-    {"key": "Esc", "expect": {"tool": "select", "currentColor": null, "activeLayer": ["Bitki"]}}
+    {"key": "Esc", "expect": {"tool": "select", "currentColor": null, "activeLayer": ["Bitki"]}},
+    {"run": "template.panel", "note": "Şablonlar paneli: son kullanılanlar önce, sonra kategoriler", "expect": {"tool": "select"}},
+    {"shot": "sablon-paneli", "note": "Şablonlar paneli: son kullanılan dört şablon, Şablonlar kategorisinde beşi"}
   ]
 }

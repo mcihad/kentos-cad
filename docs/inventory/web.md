@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 302 | 290 | 0 | 12 |
+| Komutlar | 303 | 291 | 0 | 12 |
 | Araçlar | 95 | 93 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 81 | 81 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 335 | 0 | 0 |
-| Pencereler ve paneller | 94 | 94 | 0 | 0 |
+| Pencereler ve paneller | 95 | 95 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -37,11 +37,11 @@ Yok.
 - Proje türleri: `disaster` Afet ve risk analizi
 - Proje türleri: `plan3d` İmar planından 3D kent tasarımı
 
-## Arayüzde yeri görünmeyen komutlar (27)
+## Arayüzde yeri görünmeyen komutlar (28)
 
 Menüde ve şeritte yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
-`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.model`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`
+`sheet.align.bottom`, `sheet.align.center`, `sheet.align.left`, `sheet.align.middle`, `sheet.align.right`, `sheet.align.top`, `sheet.alignTo.margins`, `sheet.alignTo.page`, `sheet.alignTo.selection`, `sheet.distribute.hCenters`, `sheet.distribute.hGaps`, `sheet.distribute.vCenters`, `sheet.distribute.vGaps`, `sheet.escape`, `sheet.export.kpafta`, `sheet.export.pdf`, `sheet.export.png`, `sheet.export.svg`, `sheet.matchSize.height`, `sheet.matchSize.width`, `sheet.model`, `sheet.nudge`, `sheet.print`, `sheet.redo`, `sheet.tool.hand`, `sheet.tool.select`, `sheet.undo`, `template.panel`
 
 ## Masaüstü
 
@@ -49,7 +49,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 230 | 0 | 58 | 12 | 2 | 302 |
+| Komutlar | 231 | 0 | 58 | 12 | 2 | 303 |
 | Araçlar | 93 | 0 | 0 | 2 | 0 | 95 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 78 | 0 | 2 | 0 | 1 | 81 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 0 | 0 | 0 | 0 | 335 |
-| Pencereler ve paneller | 76 | 2 | 15 | 0 | 1 | 94 |
+| Pencereler ve paneller | 77 | 2 | 15 | 0 | 1 | 95 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 302; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 303; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -180,7 +180,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 94)
+#### Pencereler ve paneller (17 / 95)
 
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
@@ -202,4 +202,4 @@ Yok.
 
 ## Test başvurusu
 
-109 / 302 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+109 / 303 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

@@ -101,3 +101,49 @@ fn templates_in_the_library_are_found_copied_with_what_they_draw_with_and_pictur
         json!({ "type": "fill", "layers": [{ "id": "l", "type": "simpleLine", "color": "#E5484D", "width": 0.35 }] })
     );
 }
+
+/// The Şablonlar panel's list (docs/adr/0176 §4) as
+/// `fixtures/style/v1/template-list.json` has it, written by hand from the
+/// rule: the groups by their category paths in Turkish order, the templates
+/// by their names, a search in the name, description, category, tool and
+/// layer (`style/templateList.test.ts` runs the same cases).
+#[test]
+fn the_templates_panel_lists_what_the_web_lists() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/style/v1/template-list.json");
+    let fixture: Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("template-list.json"))
+            .expect("JSON");
+    assert_eq!(fixture["format"], "kentos.template-list-cases");
+    let items = |source: &str| -> Vec<Value> {
+        fixture["library"][source]
+            .as_array()
+            .expect("items")
+            .clone()
+    };
+    let system = items("system")
+        .into_iter()
+        .filter_map(kentos_native_style::library::Item::from_value)
+        .collect();
+    let mut lib = StyleLibrary::with_system(system, Vec::new());
+    lib.load(Source::User, &items("user"), &[]);
+    lib.load(Source::Project, &items("project"), &[]);
+    let cases = fixture["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 8, "{} cases", cases.len());
+    for c in cases {
+        let name = c["name"].as_str().unwrap_or("?");
+        let got: Vec<Value> = kentos_native_style::object_template::listed(
+            &lib,
+            c["query"].as_str().expect("a query"),
+        )
+        .into_iter()
+        .map(|g| {
+            json!({
+                "path": g.path,
+                "ids": g.items.into_iter().map(|(id, _)| id).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+        assert_eq!(Value::from(got), c["groups"], "{name}");
+    }
+}

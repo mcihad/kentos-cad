@@ -363,6 +363,8 @@ pub const PORTED: &[&str] = &[
     "sheet.model",
     // Şablonla çiz (docs/adr/0176 §3): an object template's layer, colour and tool (templates.rs).
     "template.draw",
+    // Şablonlar: the templates' panel in the dock (templates_panel.rs, docs/adr/0176 §4).
+    "template.panel",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -137,6 +137,7 @@ impl App {
         self.layers_keyboard = true;
         self.vertices.keyboard = false;
         self.blocks_panel.keyboard = false;
+        self.templates_panel.keyboard = false;
         // The pressed row is in view already.
         self.layer_reveal = None;
         if double {

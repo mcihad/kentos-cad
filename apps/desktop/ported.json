@@ -229,7 +229,8 @@
     "tool.continue",
     "tool.reshape",
     "sheet.model",
-    "template.draw"
+    "template.draw",
+    "template.panel"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

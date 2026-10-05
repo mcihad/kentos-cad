@@ -61,7 +61,8 @@
    "values": [
     "layers",
     "processing",
-    "blocks"
+    "blocks",
+    "templates"
    ]
   },
   "processingTab": {
@@ -373,6 +374,26 @@
     "bottomHeight": 190,
     "bottomTab": "history",
     "dockTab": "blocks",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {}
+   }
+  },
+  {
+   "title": "the Şablonlar tab in front is kept (docs/adr/0176 §4)",
+   "stored": "{\"dockTab\":\"templates\"}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "dockTab": "templates",
     "processingTab": "tools",
     "processingFolded": [],
     "ribbonTab": "home",

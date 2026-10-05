@@ -106,6 +106,7 @@ mod snapshot;
 mod start;
 mod style;
 mod templates;
+mod templates_panel;
 mod text_field;
 mod text_file;
 mod traces;

@@ -329,6 +329,7 @@ impl App {
                 self.line_focused = false;
                 self.layers_keyboard = false;
                 self.blocks_panel.keyboard = false;
+                self.templates_panel.keyboard = false;
                 self.vertices.keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
@@ -611,6 +612,12 @@ impl App {
         // 1. So has the Bloklar list, once a row was pressed (blocks_panel.rs).
         if self.blocks_panel.keyboard
             && let Some(task) = self.blocks_key(&press)
+        {
+            return task;
+        }
+        // 1. So has the Şablonlar list, after ↓ in its search (templates_panel.rs).
+        if self.templates_panel.keyboard
+            && let Some(task) = self.templates_key(&press)
         {
             return task;
         }

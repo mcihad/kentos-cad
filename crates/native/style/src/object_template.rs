@@ -5,6 +5,8 @@
 //! (`kind: "template"`, [`crate::library`]). The web's rules are
 //! `apps/web/src/model/objectTemplate.ts`; both pass `fixtures/style/v1/object-templates.json`.
 
+use kentos_contracts::blocks::name_key;
+use kentos_style_core::js::collate::compare_tr;
 use kentos_style_core::js::number;
 use serde_json::{Map, Value};
 
@@ -315,6 +317,96 @@ pub fn read(template: &Value) -> Option<Recipe> {
             .unwrap_or(false),
         block: text(template.get("block")),
     })
+}
+
+/// A group of the Şablonlar panel (docs/adr/0176 §4): a category path
+/// (empty: the templates without one) and its templates, by id and source.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TemplateGroup {
+    pub path: Vec<String>,
+    pub items: Vec<(String, crate::library::Source)>,
+}
+
+/// Where a source's template goes among those of one name: the project's
+/// first, then Kitaplığım's, then the system's.
+fn source_rank(source: crate::library::Source) -> u8 {
+    match source {
+        crate::library::Source::Project => 0,
+        crate::library::Source::User => 1,
+        crate::library::Source::System => 2,
+    }
+}
+
+/// Two category paths in Turkish order, part by part; a shorter path before
+/// the longer one it begins; the empty one last.
+fn compare_paths(a: &[&str], b: &[&str]) -> std::cmp::Ordering {
+    if a.is_empty() || b.is_empty() {
+        return a.is_empty().cmp(&b.is_empty());
+    }
+    a.iter()
+        .zip(b)
+        .map(|(x, y)| compare_tr(x, y))
+        .find(|o| o.is_ne())
+        .unwrap_or_else(|| a.len().cmp(&b.len()))
+}
+
+/// The library's object templates as the Şablonlar panel lists them
+/// (docs/adr/0176 §4): every source's (not its symbols nor its assets),
+/// grouped by their category paths. The groups go by their paths in Turkish
+/// order, part by part, those without a category last; in a group the
+/// templates go by their names in Turkish order, one name's templates
+/// project first, then Kitaplığım, then the system's. `query`, its white
+/// space around left out and folded the Turkish way (`name_key`), is found
+/// in a template's name, description, category path, tool's name and
+/// layer's name; an empty one keeps every template, and a group left without
+/// one is not listed. The web's is `style/templateList.ts`; both pass
+/// fixtures/style/v1/template-list.json.
+pub fn listed(lib: &crate::library::StyleLibrary, query: &str) -> Vec<TemplateGroup> {
+    let q = name_key(query.trim());
+    let mut found: Vec<(&crate::library::Item, crate::library::Source)> = lib
+        .items(None)
+        .into_iter()
+        .filter(|(item, _)| item.kind() == crate::library::ItemKind::Template)
+        .filter(|(item, _)| {
+            if q.is_empty() {
+                return true;
+            }
+            let template = item.template();
+            let field = |key: &str| template.and_then(|t| t.get(key)).and_then(Value::as_str);
+            let layer = template
+                .and_then(|t| t.get("layer"))
+                .and_then(|l| l.get("name"))
+                .and_then(Value::as_str);
+            let path = item.path().join(" / ");
+            [
+                Some(item.name()),
+                item.text("description"),
+                Some(path.as_str()),
+                Some(tool_label(field("tool").unwrap_or(""))),
+                layer,
+            ]
+            .into_iter()
+            .flatten()
+            .any(|words| name_key(words).contains(&q))
+        })
+        .collect();
+    found.sort_by(|(x, xs), (y, ys)| {
+        compare_paths(&x.path(), &y.path())
+            .then_with(|| compare_tr(x.name(), y.name()))
+            .then_with(|| source_rank(*xs).cmp(&source_rank(*ys)))
+    });
+    let mut groups: Vec<TemplateGroup> = Vec::new();
+    for (item, source) in found {
+        let path: Vec<String> = item.path().into_iter().map(str::to_owned).collect();
+        match groups.last_mut() {
+            Some(group) if group.path == path => group.items.push((item.id().to_owned(), source)),
+            _ => groups.push(TemplateGroup {
+                path,
+                items: vec![(item.id().to_owned(), source)],
+            }),
+        }
+    }
+    groups
 }
 
 /// What a template's card and preview show (docs/adr/0176): its own symbol when

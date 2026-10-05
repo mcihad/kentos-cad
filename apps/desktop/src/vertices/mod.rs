@@ -403,6 +403,7 @@ impl App {
                 self.vertices.keyboard = true;
                 self.layers_keyboard = false;
                 self.blocks_panel.keyboard = false;
+                self.templates_panel.keyboard = false;
                 let (ctrl, shift) = (self.modifiers.control(), self.modifiers.shift());
                 let panel = &mut self.vertices;
                 panel.selected = click_rows(&panel.selected, &keys, i, panel.anchor, ctrl, shift);

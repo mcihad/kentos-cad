@@ -62,7 +62,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   nesnenin etiketi çizilmez; Öznitelikler'de Bağlı nesne ve Bağı kopar (ADR 0175);
   nesne şablonları: stil kitaplığının üçüncü öğe türü (araç, katman, renk, kalınlık, sembol, öznitelik, etiket; `.kstil` sürüm 2),
   Şablonla çiz: katmanı adıyla bulunur ya da yolundaki gruplarla açılır, renk ve kalınlık şablonun olur ve araç bitince döner, nesneler
-  sembolünü, özniteliklerini ve etiketini alır, istemde şablonun adı, Son komutu yinele şablonu yineler (ADR 0176);
+  sembolünü, özniteliklerini ve etiketini alır, istemde şablonun adı, Son komutu yinele şablonu yineler; sağ dokta Şablonlar paneli
+  (kategoriler, arama, son kullanılanlar, tıklayınca çizer) (ADR 0176);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -845,8 +846,10 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `object-templates.json`; kitaplıkta `template`, `.kstil` sürüm 2; Stil yöneticisinde Şablon türü) ve 2. adım (oluşturma komutlarının
   `symbol`'ü, eksik olanlarda `label`; ortak komut durumları) ve 3a (şablonla çizmek: katmanın kuralı `templates::find_layer`,
   `templateLayer`, başvuru `template_layer_cases.py`; koşu masaüstünde `templates.rs`, web'de `app/objectTemplates.ts`; damga
-  `Context::template`, `tools/templateStamp.ts`; `template.draw`; ortak iz `template-draw.json`) tamam; sıradaki 3b (nokta, yazı ve blok
-  şablonları).
+  `Context::template`, `tools/templateStamp.ts`; `template.draw`; ortak iz `template-draw.json`) ve 4a (Şablonlar paneli: masaüstü
+  `templates_panel.rs`, web `ui/templates/TemplatesPanel.ts`; liste kuralı `object_template::listed`, `style/templateList.ts`, ortak
+  `template-list.json`; `template.panel`) tamam; sıradaki 4b (Şablon düzenleyici, Seçili nesneden şablon), sonra 4c ve 3b (sahibin 5 Ekim
+  sorusu üzerine panel ve düzenleyici öne alındı).
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

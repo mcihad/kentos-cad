@@ -138,13 +138,25 @@ export function registerStyleCommands(ctx: AppContext): void {
       id: 'template.draw',
       title: 'Şablonla çiz',
       category: cat,
-      icon: 'polygon',
+      icon: 'templateDraw',
       aliases: ['SABLONLACIZ', 'NESNESABLONU'],
       description: 'Bir nesne şablonuyla çizer: şablonun katmanı etkin olur, aracı başlar; nesneler şablonun sembolünü, özniteliklerini ve etiketini alır.',
-      // With a template's id, it draws; without one, the Stil yöneticisi lists the templates (Şablonla çiz is there).
+      // With a template's id, it draws; without one, the Şablonlar panel shows the templates to choose from.
       run: (args) => {
         if (typeof args === 'string') return drawWithTemplate(ctx, args);
-        void manager().then((m) => m.openStyleManager(ctx, { kind: 'template' }));
+        ctx.commands.execute('template.panel');
+      },
+    },
+    {
+      id: 'template.panel',
+      title: 'Şablonlar',
+      category: cat,
+      icon: 'templates',
+      aliases: ['SABLONLAR', 'NESNESABLONLARI'],
+      description: 'Nesne şablonlarını kategorilerine göre gösteren paneli açar: tıklanan şablonla çizilir.',
+      run: () => {
+        ctx.ui.rightVisible.set(true);
+        ctx.ui.dockTab.set('templates');
       },
     },
     {

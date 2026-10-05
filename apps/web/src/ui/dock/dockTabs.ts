@@ -8,6 +8,7 @@ const TABS: { id: DockTab; label: string; icon: string }[] = [
   { id: 'layers', label: 'Katmanlar', icon: 'layers' },
   { id: 'processing', label: 'İşlemler', icon: 'processing' },
   { id: 'blocks', label: 'Bloklar', icon: 'blocks' },
+  { id: 'templates', label: 'Şablonlar', icon: 'templates' },
 ];
 
 /**

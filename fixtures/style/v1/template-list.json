@@ -1,0 +1,32 @@
+{
+  "format": "kentos.template-list-cases",
+  "version": 1,
+  "note": "ADR 0176 §4: Şablonlar panelinin listesi. Kitaplığın bütün kaynaklarındaki nesne şablonları (semboller ve varlıklar değil), kategori yollarına göre gruplanır; gruplar yollarının Türkçe sırasıyla (yol parça parça karşılaştırılır), kategorisizler en sonda; bir grupta şablonlar adlarının Türkçe sırasıyla, aynı adda proje, Kitaplığım, sistem sırasıyla. Arama baştaki ve sondaki boşluk atılıp Türkçe katlanarak (İ → i, I → ı, sonra küçük harf) adda, açıklamada, kategori yolunda, aracın adında ve katmanın adında geçer; boş arama her şablonu verir; şablonu kalmayan grup listelenmez. Elle yazılmıştır.",
+  "library": {
+    "system": [
+      {"kind": "template", "id": "s-parsel", "description": "Tescilli parsel", "name": "Parsel sınırı", "path": ["Kadastro"], "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}}},
+      {"kind": "template", "id": "s-bina", "name": "Bina", "path": ["Yapı"], "template": {"tool": "rectangle", "layer": {"path": [], "name": "Bina"}}},
+      {"kind": "template", "id": "s-agac", "name": "Ağaç", "path": ["Bitki"], "template": {"tool": "circle", "layer": {"path": [], "name": "Bitki"}}},
+      {"kind": "symbol", "id": "s-sembol", "name": "Bir sembol", "path": ["Kadastro"], "symbol": {"type": "line", "layers": []}}
+    ],
+    "user": [
+      {"kind": "template", "id": "u-ada", "description": "İmar adası", "name": "Ada sınırı", "path": ["Kadastro"], "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Parsel"}}},
+      {"kind": "template", "id": "u-cit", "name": "Çit", "path": ["Yapı"], "template": {"tool": "polyline", "layer": {"path": [], "name": "Çit"}}},
+      {"kind": "template", "id": "u-nokta", "name": "Poligon noktası", "path": [], "template": {"tool": "point", "layer": {"path": [], "name": "Nokta"}, "point": {"name": "P1", "code": "PN"}}}
+    ],
+    "project": [
+      {"kind": "template", "id": "p-yol", "name": "Yol kenarı", "path": ["Ulaşım", "Kent içi"], "template": {"tool": "polyline", "layer": {"path": ["Ulaşım"], "name": "Yol"}}},
+      {"kind": "template", "id": "p-ikinci", "name": "İkinci parsel", "path": ["Kadastro"], "template": {"tool": "polygon", "layer": {"path": ["Kadastro"], "name": "Tapu sınırı"}}}
+    ]
+  },
+  "cases": [
+    {"name": "boş arama: bütün şablonlar, kategorileri Türkçe sırayla, kategorisizler en sonda; bir kategoride adlarıyla; semboller listelenmez", "query": "", "groups": [{"path": ["Bitki"], "ids": ["s-agac"]}, {"path": ["Kadastro"], "ids": ["u-ada", "p-ikinci", "s-parsel"]}, {"path": ["Ulaşım", "Kent içi"], "ids": ["p-yol"]}, {"path": ["Yapı"], "ids": ["s-bina", "u-cit"]}, {"path": [], "ids": ["u-nokta"]}]},
+    {"name": "ad, Türkçe büyük-küçük harf katlanarak (İ → i, I → ı)", "query": "İKİNCİ", "groups": [{"path": ["Kadastro"], "ids": ["p-ikinci"]}]},
+    {"name": "açıklamada da aranır", "query": "imar", "groups": [{"path": ["Kadastro"], "ids": ["u-ada"]}]},
+    {"name": "kategoride de aranır", "query": "kent", "groups": [{"path": ["Ulaşım", "Kent içi"], "ids": ["p-yol"]}]},
+    {"name": "aracın adında da aranır (Çoklu çizgi)", "query": "çoklu", "groups": [{"path": ["Ulaşım", "Kent içi"], "ids": ["p-yol"]}, {"path": ["Yapı"], "ids": ["u-cit"]}]},
+    {"name": "katmanın adında da aranır", "query": "tapu", "groups": [{"path": ["Kadastro"], "ids": ["p-ikinci"]}]},
+    {"name": "baştaki ve sondaki boşluk sayılmaz", "query": "  bina ", "groups": [{"path": ["Yapı"], "ids": ["s-bina"]}]},
+    {"name": "bulunamayan arama: grup yok", "query": "köprü", "groups": []}
+  ]
+}

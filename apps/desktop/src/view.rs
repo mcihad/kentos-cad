@@ -109,6 +109,7 @@ impl App {
                         pane.actions(label::caption(self.processing_meta()))
                     }
                     (Panel::Blocks, Some(_)) => pane.actions(self.blocks_panel_actions()),
+                    (Panel::Templates, _) => pane.actions(self.templates_panel_actions()),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.actions(label::caption(meta)).scrollable(),
                         None => pane.scrollable(),
@@ -762,6 +763,8 @@ impl App {
             Panel::Processing => self.processing_panel(),
             // Bloklar: the drawing's blocks (blocks_panel.rs, docs/adr/0144).
             Panel::Blocks => self.blocks_panel_view(),
+            // Şablonlar: the library's object templates (templates_panel.rs, docs/adr/0176 §4).
+            Panel::Templates => self.templates_panel_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.properties_view(doc),
         }
@@ -1340,6 +1343,7 @@ impl App {
                 )
             }
             Asking::RemoveLayer => self.remove_layer_question(),
+            Asking::RemoveTemplate => self.remove_template_question(),
             Asking::CloudRename => self.rename_view(),
             Asking::CloudTrash => self.trash_view(),
             Asking::Settings => self.settings_dialog(),
