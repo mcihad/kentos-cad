@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7) and leaders (docs/adr/0146 §8).
+"""Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7), leaders (docs/adr/0146 §8) and
+multi-part lines and points (docs/adr/0174 §5).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -790,6 +791,46 @@ def check(name: str) -> list[str]:
         check_dimension(o, e, spec["dimensionValues"].get(str(e["id"])), blocks, f"ölçü {n + 1} ({e.get('style', 'aligned')})")
     if dims:
         said.append(f"{len(dims)} ölçü ({sum(1 for e in dims if e.get('mask'))} zeminli)")
+
+    # The drawing's points and polylines (docs/adr/0174 §5), in the input's order: DXF has no multi-part line or
+    # multi-point object, so each point of a multi-point object is a POINT and each part of a multi-part polyline a
+    # polyline (a 3D POLYLINE of VERTEXes when the part has elevations and no arc, else an open LWPOLYLINE with its
+    # arcs' bulges), every one on the object's layer with its attributes in KentOS's data.
+    points = [(q, e) for e in spec["entities"] if e["kind"] == "point" for q in [e, *(e.get("parts") or [])]]
+    written = [o for o in drawn if o[0] == (0, "POINT")]
+    ensure(len(written) == len(points), f"{len(points)} POINTs")
+    for n, ((q, e), o) in enumerate(zip(points, written)):
+        where = f"nokta {n + 1}"
+        ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its object's layer")
+        ensure((float(group(o, 10)), float(group(o, 20))) == xy(q["p"]), f"{where}: its place")
+        ensure(float(group(o, 30)) == float(q.get("z") or 0.0), f"{where}: its height (0 without one)")
+        ensure(kentos_attrs(o) == e["attrs"], f"{where}: its object's attributes")
+    paths = [(q, e) for e in spec["entities"] if e["kind"] == "polyline" for q in [e, *(e.get("parts") or [])]]
+    # The open ones: an area's ring and its holes are closed (70 bit 1).
+    heads = [k for k, o in enumerate(drawn) if o[0] in ((0, "LWPOLYLINE"), (0, "POLYLINE")) and int(group(o, 70) or "0") & 1 == 0]
+    ensure(len(heads) == len(paths), f"{len(paths)} polylines")
+    for n, ((q, e), k) in enumerate(zip(paths, heads)):
+        o, where = drawn[k], f"çoklu çizgi parçası {n + 1}"
+        ensure(group(o, 8) == layers[e["layerId"]], f"{where}: on its object's layer")
+        want = [xy(p) for p in q["pts"]]
+        bulges = q.get("bulges") or []
+        if o[0] == (0, "POLYLINE"):
+            ensure(not any(bulges) and q.get("zs") is not None, f"{where}: 3D only with elevations and no arc")
+            vertices = []
+            for v in drawn[k + 1 :]:
+                if v[0] != (0, "VERTEX"):
+                    break
+                vertices.append(((float(group(v, 10)), float(group(v, 20))), float(group(v, 30))))
+            ensure([p for p, _ in vertices] == want, f"{where}: its vertices")
+            ensure([z for _, z in vertices] == [float(z) for z in q["zs"]], f"{where}: each vertex's height")
+        else:
+            got = [(float(a[1]), float(b[1])) for a, b in zip(o, o[1:]) if a[0] == 10 and b[0] == 20]
+            ensure(got == want, f"{where}: its vertices")
+            ensure([float(v) for c, v in o if c == 42] == [float(b) for b in bulges if b != 0], f"{where}: its arcs' bulges")
+        ensure(kentos_attrs(o) == e["attrs"], f"{where}: its object's attributes")
+    several = sum(1 for e in spec["entities"] if e["kind"] in ("point", "polyline") and e.get("parts"))
+    if several:
+        said.append(f"{several} çok parçalı nesne: {len(points)} POINT, {len(paths)} çoklu çizgi")
 
     # Handles unique; owners name handles of the file.
     body = p[next(k for k, g in enumerate(p) if g == (2, "CLASSES")) :]

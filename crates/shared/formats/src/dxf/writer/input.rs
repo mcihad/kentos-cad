@@ -14,8 +14,8 @@ use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
     ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
     EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
-    LeaderEntity, LineEntity, PathEntity, PointEntity, RingGeometry, SplineEntity, TextAlign,
-    TextEntity, Vec2,
+    LeaderEntity, LineEntity, PathEntity, PointEntity, PointPart, RingGeometry, SplineEntity,
+    TextAlign, TextEntity, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -48,6 +48,19 @@ impl<'de> Deserialize<'de> for Hole {
     }
 }
 
+/// A part of a multi-part object, every field either kind of part may have:
+/// an area's or a polyline's (`pts` …), a multi-point object's (`p`, `z`;
+/// docs/adr/0174). The object's kind says which it is.
+#[derive(serde::Deserialize)]
+struct Part {
+    pts: Option<Vec<Vec2>>,
+    bulges: Option<Vec<f64>>,
+    holes: Option<Vec<RingGeometry>>,
+    zs: Option<Vec<Option<f64>>>,
+    p: Option<Vec2>,
+    z: Option<f64>,
+}
+
 /// Every field an object of any kind may have.
 #[derive(Default)]
 struct Fields {
@@ -70,7 +83,7 @@ struct Fields {
     zs: Option<Vec<Option<f64>>>,
     bulges: Option<Vec<f64>>,
     holes: Option<Vec<Hole>>,
-    parts: Option<Vec<AreaPart>>,
+    parts: Option<Vec<Part>>,
     r: Option<f64>,
     a0: Option<f64>,
     a1: Option<f64>,
@@ -139,18 +152,53 @@ impl Fields {
                 })
                 .transpose()
         };
+        // A path's parts (an area's, a polyline's) or a point's, as its kind takes them.
         let (zs, parts) = (self.zs, self.parts);
-        let path =
-            |base: EntityBase, pts: Option<Vec<Vec2>>, bulges, holes| -> Result<PathEntity, E> {
-                Ok(PathEntity {
-                    base,
-                    pts: need(pts, "pts")?,
-                    bulges,
-                    holes: rings(holes)?,
-                    zs,
-                    parts,
+        let path_parts = |parts: Option<Vec<Part>>| -> Result<Option<Vec<AreaPart>>, E> {
+            parts
+                .map(|ps| {
+                    ps.into_iter()
+                        .map(|q| {
+                            Ok(AreaPart {
+                                pts: need(q.pts, "pts")?,
+                                bulges: q.bulges,
+                                holes: q.holes,
+                                zs: q.zs,
+                            })
+                        })
+                        .collect()
                 })
-            };
+                .transpose()
+        };
+        let point_parts = |parts: Option<Vec<Part>>| -> Result<Option<Vec<PointPart>>, E> {
+            parts
+                .map(|ps| {
+                    ps.into_iter()
+                        .map(|q| {
+                            Ok(PointPart {
+                                p: need(q.p, "p")?,
+                                z: q.z,
+                            })
+                        })
+                        .collect()
+                })
+                .transpose()
+        };
+        let path = |base: EntityBase,
+                    pts: Option<Vec<Vec2>>,
+                    bulges,
+                    holes,
+                    parts|
+         -> Result<PathEntity, E> {
+            Ok(PathEntity {
+                base,
+                pts: need(pts, "pts")?,
+                bulges,
+                holes: rings(holes)?,
+                zs,
+                parts,
+            })
+        };
         let construction = |base: EntityBase,
                             p: Option<Vec2>,
                             dir: Option<Vec2>|
@@ -166,7 +214,7 @@ impl Fields {
                 base,
                 p: need(self.p, "p")?,
                 z: self.z,
-                parts: None,
+                parts: point_parts(parts)?,
             }),
             "line" => Entity::Line(LineEntity {
                 base,
@@ -175,8 +223,20 @@ impl Fields {
                 za: self.za,
                 zb: self.zb,
             }),
-            "polyline" => Entity::Polyline(path(base, self.pts, self.bulges, self.holes)?),
-            "polygon" => Entity::Polygon(path(base, self.pts, self.bulges, self.holes)?),
+            "polyline" => Entity::Polyline(path(
+                base,
+                self.pts,
+                self.bulges,
+                self.holes,
+                path_parts(parts)?,
+            )?),
+            "polygon" => Entity::Polygon(path(
+                base,
+                self.pts,
+                self.bulges,
+                self.holes,
+                path_parts(parts)?,
+            )?),
             "circle" => Entity::Circle(CircleEntity {
                 base,
                 c: need(self.c, "c")?,

@@ -2333,3 +2333,59 @@ fn the_new_dimensions_read_back_as_they_were() {
     assert_eq!(dims(&r.entities), dims(&input.entities));
     assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
 }
+
+/// Multi-part lines and multi-point objects (docs/adr/0174 §5): DXF has
+/// none, so each part goes out as a polyline and each point as a POINT, in
+/// the committed bytes `scripts/fixtures/dxf_write_reference.py` checks
+/// without KentOS's code; the report says so once for each; read back,
+/// every part is a polyline and every point a point of its own with the
+/// object's layer, colour, attributes and label.
+#[test]
+fn multi_part_lines_and_points_go_out_part_by_part() {
+    let report = written_as_committed("parts");
+    let notes: Vec<&str> = report.notes.iter().map(|n| n.what.as_str()).collect();
+    assert!(notes.contains(&"Çok parçalı çoklu çizgi"), "{notes:?}");
+    assert!(notes.contains(&"Çok noktalı nesne"), "{notes:?}");
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+    let input = fixture_input("parts");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let paths: Vec<&kentos_contracts::PathEntity> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Polyline(p) => Some(p),
+            _ => None,
+        })
+        .collect();
+    let Entity::Polyline(road) = &input.entities[0] else {
+        panic!("a polyline")
+    };
+    // The road's four parts, then the one-part polyline.
+    assert_eq!(paths.len(), 5);
+    for (k, p) in paths[..4].iter().enumerate() {
+        assert_eq!(p.base.attrs, road.base.attrs, "part {k}");
+        assert_eq!(p.base.label, road.base.label, "part {k}");
+        assert_eq!(p.base.color, road.base.color, "part {k}");
+        assert!(p.parts.is_none(), "part {k}");
+    }
+    let parts = road.parts.as_deref().expect("parts");
+    assert_eq!(paths[1].pts, parts[0].pts);
+    assert_eq!(paths[2].bulges.as_deref().map(|b| b[0]), Some(0.5));
+    assert_eq!(paths[3].zs, parts[2].zs);
+    let points: Vec<&kentos_contracts::PointEntity> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Point(p) => Some(p),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(points.len(), 4);
+    assert_eq!(
+        points[..3].iter().map(|p| p.z).collect::<Vec<_>>(),
+        [Some(850.5), None, Some(0.0)]
+    );
+    assert!(points.iter().all(|p| p.parts.is_none()));
+    assert_eq!(points[1].base.label.as_deref(), Some("N-1"));
+}

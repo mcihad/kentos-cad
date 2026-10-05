@@ -1426,9 +1426,42 @@ def full_turn(ellipse):
     return abs(float(ellipse["t1"]) - float(ellipse["t0"])) >= 2 * math.pi - 1e-9
 
 
+def exported_part(entity, obj):
+    """What is wrong with a polyline's part (its own first included) read back as a MultiLineString member: its points as
+    given, or, with arcs, a path from its first vertex to its last whose elevations blend along its arcs (docs/adr/0174)."""
+    pts, path = [xy_of(p) for p in entity["pts"]], obj["pts"]
+    if not has_arcs(entity.get("bulges")):
+        if bits(path) != bits(pts):
+            return ["noktalar girdidekiler değil"]
+        return [] if bits(obj.get("zs")) == bits(zs_of(entity)) else ["köşe kotları girdidekiler değil"]
+    if len(path) < 2 or bits([path[0], path[-1]]) != bits([pts[0], pts[-1]]):
+        return ["yaylı parça ilk köşesinden başlayıp son köşesinde bitmiyor"]
+    return arc_elevations(entity, {**obj, "kind": "polyline"}, False)
+
+
 def exported(entity, obj):
     """What is wrong with the object read back from one written entity (nothing: an empty list)."""
     kind, path = entity["kind"], path_of(obj)
+    if kind == "polyline" and entity.get("parts"):
+        # A multi-part polyline is a MultiLineString, read back as one polyline of its parts (docs/adr/0174).
+        if obj["kind"] != "polyline":
+            return ["çok parçalı çoklu çizgi çoklu çizgi olarak okunmadı"]
+        want = [entity, *entity["parts"]]
+        got = [obj, *obj.get("parts", [])]
+        if len(got) != len(want):
+            return [f"{len(got)} parça okundu, girdide {len(want)} parça var"]
+        return [f"{k + 1}. parça: {p}" for k, (e, o) in enumerate(zip(want, got)) for p in exported_part(e, o)]
+    if kind == "point" and entity.get("parts"):
+        # A multi-point object is a MultiPoint, read back as one object of its points (docs/adr/0174).
+        want = [entity, *entity["parts"]]
+        got = [obj, *obj.get("parts", [])] if obj["kind"] == "point" else []
+        if len(got) != len(want):
+            return [f"{len(got)} nokta okundu, girdide {len(want)} nokta var"]
+        return [
+            f"{k + 1}. noktanın konumu ya da z'si girdidekiyle aynı değil"
+            for k, (e, o) in enumerate(zip(want, got))
+            if bits(o["p"]) != bits(xy_of(e["p"])) or bits(o.get("z")) != bits(fz(e.get("z")))
+        ]
     if kind == "polygon" and entity.get("parts"):
         # A multi-part area is a MultiPolygon: each part read back as a plain area is (docs/adr/0143).
         if obj["kind"] != "polygon":

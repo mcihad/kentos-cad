@@ -9,7 +9,9 @@
 //! said: curves (circles, arcs, ellipses, splines, bulged paths) sampled
 //! exactly as the app samples its own; hatches as their areas; area rings
 //! turned to RFC 7946's right-hand rule. Text, dimensions and infinite
-//! lines are left out. A multi-part area is a MultiPolygon (docs/adr/0143).
+//! lines are left out. A multi-part area is a MultiPolygon (docs/adr/0143), a
+//! multi-part polyline a MultiLineString and a multi-point object a
+//! MultiPoint (docs/adr/0174).
 //! GeoJSON has no blocks: an insert is its block's objects placed (the
 //! core's expansion, nested blocks opened), one GeometryCollection with the
 //! insert's attributes (docs/adr/0144 §5); it reads back as those objects.
@@ -52,7 +54,11 @@ const SPLINE_PER_SPAN: f64 = 16.0;
 /// A feature's geometry as it will be written.
 enum Geometry {
     Point(Vec2, Option<f64>),
+    /// A multi-point object's points, each with its elevation (docs/adr/0174).
+    Points(Vec<(Vec2, Option<f64>)>),
     Line(Ring),
+    /// A multi-part polyline's paths, the polyline's own first (docs/adr/0174).
+    Lines(Vec<Ring>),
     /// Closed rings, the outline first, turned to the right-hand rule.
     Area(Vec<Ring>),
     /// A multi-part area: each part's rings as [`Geometry::Area`]'s.
@@ -154,7 +160,14 @@ fn mixed(rings: &[&Ring]) -> bool {
 /// What an object becomes, or None (said in the report).
 fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> {
     let g = match e {
-        Entity::Point(p) => Some(Geometry::Point(p.p, p.z)),
+        Entity::Point(p) => Some(match p.parts.as_deref() {
+            Some(parts) if !parts.is_empty() => Geometry::Points(
+                std::iter::once((p.p, p.z))
+                    .chain(parts.iter().map(|q| (q.p, q.z)))
+                    .collect(),
+            ),
+            _ => Geometry::Point(p.p, p.z),
+        }),
         Entity::Line(l) => Some(Geometry::Line(Ring::new(vec![l.a, l.b], [l.za, l.zb]))),
         Entity::Polyline(p) => {
             if p.holes.as_ref().is_some_and(|h| !h.is_empty()) {
@@ -164,25 +177,51 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
                     0,
                 );
             }
-            let zs = heights(&p.zs, p.pts.len());
-            match p.bulges.as_deref() {
-                Some(b) if has_arcs(b) => {
-                    let pts = from_core(bulge_path_outline(
-                        &to_core(&p.pts),
-                        Some(b),
-                        false,
-                        DEFAULT_STEP,
-                    ));
-                    let zs = zs.map(|z| bulge_path_zs(&p.pts, b, z, false));
-                    curve(
-                        rep,
-                        "Yaylı çoklu çizgi",
-                        Ring::new(pts, zs.into_iter().flatten()),
-                    )
+            let one = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs, rep: &mut Report| {
+                let zs = heights(zs, pts.len());
+                match bulges {
+                    Some(b) if has_arcs(b) => {
+                        let out = from_core(bulge_path_outline(
+                            &to_core(pts),
+                            Some(b),
+                            false,
+                            DEFAULT_STEP,
+                        ));
+                        let zs = zs.map(|z| bulge_path_zs(pts, b, z, false));
+                        curve(
+                            rep,
+                            "Yaylı çoklu çizgi",
+                            Ring::new(out, zs.into_iter().flatten()),
+                        )
+                    }
+                    _ => (pts.len() >= 2).then(|| {
+                        Geometry::Line(Ring::new(pts.to_vec(), zs.into_iter().flatten().copied()))
+                    }),
                 }
-                _ => (p.pts.len() >= 2).then(|| {
-                    Geometry::Line(Ring::new(p.pts.clone(), zs.into_iter().flatten().copied()))
-                }),
+            };
+            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, rep);
+            match p.parts.as_deref() {
+                // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
+                Some(parts) if !parts.is_empty() => {
+                    let mut paths: Vec<Ring> = Vec::new();
+                    let members = std::iter::once(first).chain(
+                        parts
+                            .iter()
+                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, rep)),
+                    );
+                    for member in members.collect::<Vec<_>>() {
+                        match member {
+                            Some(Geometry::Line(r)) => paths.push(r),
+                            _ => rep.skip("Parça", "iki köşesi yok; yazılmadı", 0),
+                        }
+                    }
+                    match paths.len() {
+                        0 => None,
+                        1 => paths.pop().map(Geometry::Line),
+                        _ => Some(Geometry::Lines(paths)),
+                    }
+                }
+                _ => first,
             }
         }
         Entity::Polygon(p) => {
@@ -350,7 +389,13 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
     let finite = |p: &Vec2| p.x.is_finite() && p.y.is_finite();
     let ok = match &g {
         Geometry::Point(p, z) => finite(p) && z.is_none_or(f64::is_finite),
+        Geometry::Points(ps) => ps
+            .iter()
+            .all(|(p, z)| finite(p) && z.is_none_or(f64::is_finite)),
         Geometry::Line(r) => r.pts.iter().all(finite) && zs_finite(&r.zs),
+        Geometry::Lines(paths) => paths
+            .iter()
+            .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
         Geometry::Area(rings) => rings
             .iter()
             .all(|r| r.pts.iter().all(finite) && zs_finite(&r.zs)),
@@ -371,6 +416,11 @@ fn geometry(e: &Entity, blocks: &Placing, rep: &mut Report) -> Option<Geometry> 
     }
     let mixes = match &g {
         Geometry::Line(r) => mixed(&[r]),
+        Geometry::Lines(paths) => mixed(&paths.iter().collect::<Vec<_>>()),
+        // Points with an elevation and points without (docs/adr/0174).
+        Geometry::Points(ps) => {
+            ps.iter().any(|(_, z)| z.is_some()) && ps.iter().any(|(_, z)| z.is_none())
+        }
         Geometry::Area(rings) => mixed(&rings.iter().collect::<Vec<_>>()),
         Geometry::Areas(parts) => mixed(&parts.iter().flatten().collect::<Vec<_>>()),
         Geometry::Point(..) | Geometry::Collection(_) => false,
@@ -415,9 +465,29 @@ fn write_geometry(g: &Geometry, out: &mut String) {
             out.push_str("{\"type\":\"Point\",\"coordinates\":");
             position(*p, *z, out);
         }
+        Geometry::Points(ps) => {
+            out.push_str("{\"type\":\"MultiPoint\",\"coordinates\":[");
+            for (k, (p, z)) in ps.iter().enumerate() {
+                if k > 0 {
+                    out.push(',');
+                }
+                position(*p, *z, out);
+            }
+            out.push(']');
+        }
         Geometry::Line(ring) => {
             out.push_str("{\"type\":\"LineString\",\"coordinates\":");
             positions(ring, out);
+        }
+        Geometry::Lines(paths) => {
+            out.push_str("{\"type\":\"MultiLineString\",\"coordinates\":[");
+            for (k, ring) in paths.iter().enumerate() {
+                if k > 0 {
+                    out.push(',');
+                }
+                positions(ring, out);
+            }
+            out.push(']');
         }
         Geometry::Area(rings) => {
             out.push_str("{\"type\":\"Polygon\",\"coordinates\":");

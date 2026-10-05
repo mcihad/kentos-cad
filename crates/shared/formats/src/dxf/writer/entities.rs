@@ -112,7 +112,14 @@ fn elevation_meta(m: &mut Meta, zs: &[Option<f64>]) {
 /// Every number of an object is finite (a file can hold nothing else).
 fn finite(e: &Entity) -> bool {
     match e {
-        Entity::Point(p) => ok(p.p) && p.z.is_none_or(f64::is_finite),
+        Entity::Point(p) => {
+            ok(p.p)
+                && p.z.is_none_or(f64::is_finite)
+                && p.parts
+                    .iter()
+                    .flatten()
+                    .all(|q| ok(q.p) && q.z.is_none_or(f64::is_finite))
+        }
         Entity::Line(l) => {
             ok(l.a) && ok(l.b) && l.za.is_none_or(f64::is_finite) && l.zb.is_none_or(f64::is_finite)
         }
@@ -355,16 +362,29 @@ impl Writer<'_> {
         }
         let written = match e {
             Entity::Point(p) => {
-                self.begin("POINT", &p.base);
-                self.out.str(100, "AcDbPoint");
-                self.out.xy(10, p.p);
-                self.out.real(30, p.z.unwrap_or(0.0));
-                self.grow(p.p);
+                // A multi-point object's every point a POINT with the object's data (docs/adr/0174).
+                let points = std::iter::once((p.p, p.z))
+                    .chain(p.parts.iter().flatten().map(|q| (q.p, q.z)))
+                    .collect::<Vec<_>>();
+                for (at, z) in points {
+                    self.begin("POINT", &p.base);
+                    self.out.str(100, "AcDbPoint");
+                    self.out.xy(10, at);
+                    self.out.real(30, z.unwrap_or(0.0));
+                    self.grow(at);
+                    let mut m = Self::base_meta(&p.base);
+                    // DXF points always have a Z; the reader takes 0 as "none" unless told.
+                    m.z = z == Some(0.0);
+                    self.end(m);
+                }
                 self.points = true;
-                let mut m = Self::base_meta(&p.base);
-                // DXF points always have a Z; the reader takes 0 as "none" unless told.
-                m.z = p.z == Some(0.0);
-                self.end(m);
+                if p.parts.as_ref().is_some_and(|ps| !ps.is_empty()) {
+                    self.report.note(
+                        "Çok noktalı nesne",
+                        "DXF'te çok noktalı nesne yok: her noktası nesnenin verisini taşıyan ayrı nokta (POINT) olarak yazıldı (KentOS'a geri okununca ayrı noktalar olur)",
+                        0,
+                    );
+                }
                 true
             }
             Entity::Line(l) => {
@@ -781,12 +801,9 @@ impl Writer<'_> {
                 0,
             );
         }
-        // A multi-part area's other parts: each a closed polyline with the object's data.
-        let parts = if closed {
-            p.parts.as_deref().unwrap_or(&[])
-        } else {
-            &[]
-        };
+        // A multi-part area's or polyline's other parts: each a polyline with the
+        // object's data, closed for an area (docs/adr/0143, 0174).
+        let parts = p.parts.as_deref().unwrap_or(&[]);
         for part in parts {
             let part = PathEntity {
                 base: p.base.clone(),
@@ -796,12 +813,18 @@ impl Writer<'_> {
                 zs: part.zs.clone(),
                 parts: None,
             };
-            self.path(&part, true);
+            self.path(&part, closed);
         }
-        if !parts.is_empty() {
+        if !parts.is_empty() && closed {
             self.report.note(
                 "Çok parçalı alan",
                 "DXF'te çok parçalı alan yok: her parça nesnenin verisini taşıyan ayrı kapalı çoklu çizgi olarak yazıldı (KentOS'a geri okununca ayrı alanlar olur)",
+                0,
+            );
+        } else if !parts.is_empty() {
+            self.report.note(
+                "Çok parçalı çoklu çizgi",
+                "DXF'te çok parçalı çizgi yok: her parça nesnenin verisini taşıyan ayrı çoklu çizgi olarak yazıldı (KentOS'a geri okununca ayrı çoklu çizgiler olur)",
                 0,
             );
         }
