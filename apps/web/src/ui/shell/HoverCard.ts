@@ -126,12 +126,19 @@ export function cardRows(e: Entity, format: Formatter): [string, string][] {
     if (e.parts?.length) rows.push(['Parça', String(parts)]);
     if (holes) rows.push(['Ada (delik)', String(holes)]);
   }
+  // A multi-part polyline's parts (docs/adr/0174).
+  if (e.kind === 'polyline' && e.parts?.length) rows.push(['Parça', String(e.parts.length + 1)]);
   const length = entityLength(e);
   if (length !== null) rows.push([e.kind === 'polygon' || e.kind === 'circle' ? 'Çevre' : 'Uzunluk', format.length(length)]);
   const space = spaceLength(e);
   if (space) rows.push([space.label, format.length(space.value)]);
   if (e.kind === 'circle' || e.kind === 'arc') rows.push(['Yarıçap', format.length(e.r)]);
   if (e.kind === 'text') rows.push(['Metin', e.text]);
-  if (e.kind === 'point' && e.z !== undefined) rows.push(['Kot', format.length(e.z)]);
+  if (e.kind === 'point') {
+    // A multi-point object's points, and their elevation when they share one (docs/adr/0174).
+    if (e.parts?.length) rows.push(['Nokta', String(e.parts.length + 1)]);
+    const z = e.z;
+    if (z !== undefined && (e.parts ?? []).every((q) => q.z === z)) rows.push(['Kot', format.length(z)]);
+  }
   return rows;
 }

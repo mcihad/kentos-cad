@@ -156,6 +156,12 @@ pub(crate) fn card(
             rows.push(("Ada (delik)", holes.to_string(), true));
         }
     }
+    // A multi-part polyline's parts (docs/adr/0174).
+    if let Entity::Polyline(p) = e
+        && let Some(parts) = p.parts.as_deref().filter(|ps| !ps.is_empty())
+    {
+        rows.push(("Parça", (parts.len() + 1).to_string(), true));
+    }
     if let Some(length) = length {
         let name = if matches!(e, Entity::Polygon(_) | Entity::Circle(_)) {
             "Çevre"
@@ -172,8 +178,14 @@ pub(crate) fn card(
         Entity::Circle(c) => rows.push(("Yarıçap", format.length(c.r), true)),
         Entity::Arc(a) => rows.push(("Yarıçap", format.length(a.r), true)),
         Entity::Text(t) => rows.push(("Metin", t.text.clone(), false)),
+        // A multi-point object's points, and their elevation when they share one (docs/adr/0174).
         Entity::Point(p) => {
-            if let Some(z) = p.z {
+            let parts = p.parts.as_deref().unwrap_or(&[]);
+            if !parts.is_empty() {
+                rows.push(("Nokta", (parts.len() + 1).to_string(), true));
+            }
+            let z = p.z.filter(|z| parts.iter().all(|q| q.z == Some(*z)));
+            if let Some(z) = z {
                 rows.push(("Kot", format.length(z), true));
             }
         }
@@ -356,6 +368,73 @@ mod tests {
         let Some(Entity::Circle(_)) = doc.model.get(Slot(5)) else {
             panic!("a circle");
         };
+    }
+
+    /// docs/adr/0174 §6: a multi-part polyline's parts before its length; a
+    /// multi-point object's points, and their elevation only when they share one.
+    #[test]
+    fn a_multi_part_polyline_says_its_parts_and_a_multi_point_object_its_points() {
+        use kentos_contracts::{
+            AreaPart, EntityBase, PathEntity, PointEntity, PointPart, Vec2 as Wire,
+        };
+
+        let app = app_with_drawing();
+        let doc = app.document.as_ref().expect("open");
+        let format = Format::of(doc.settings());
+        let black = |_: &str| Color::BLACK;
+        let base = || EntityBase {
+            id: 0,
+            layer_id: "cizim".into(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+        };
+        let at = |x: f64, y: f64| Wire {
+            x: 487_000.0 + x,
+            y: 4_420_000.0 + y,
+        };
+        let rows_of = |e: &Entity| -> Vec<(&'static str, String)> {
+            card(e, &doc.model, &format, black)
+                .rows
+                .into_iter()
+                .map(|(name, value, _)| (name, value))
+                .collect()
+        };
+        let road = Entity::Polyline(PathEntity {
+            base: base(),
+            pts: vec![at(0.0, 0.0), at(10.0, 0.0)],
+            bulges: None,
+            holes: None,
+            zs: None,
+            parts: Some(vec![AreaPart {
+                pts: vec![at(20.0, 0.0), at(25.0, 0.0)],
+                bulges: None,
+                holes: None,
+                zs: None,
+            }]),
+        });
+        assert_eq!(
+            rows_of(&road),
+            [
+                ("Parça", "2".to_owned()),
+                ("Uzunluk", "15.000 m".to_owned())
+            ]
+        );
+        let marks = |z: Option<f64>| {
+            Entity::Point(PointEntity {
+                base: base(),
+                p: at(0.0, 0.0),
+                z: Some(100.0),
+                parts: Some(vec![PointPart { p: at(5.0, 0.0), z }]),
+            })
+        };
+        assert_eq!(
+            rows_of(&marks(Some(100.0))),
+            [("Nokta", "2".to_owned()), ("Kot", "100.000 m".to_owned())]
+        );
+        assert_eq!(rows_of(&marks(None)), [("Nokta", "2".to_owned())]);
     }
 
     /// docs/adr/0142: beside the length or the perimeter, the one in space, when every vertex has an elevation.

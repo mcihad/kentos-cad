@@ -101,7 +101,7 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 110,
+    "commandsWithoutTests": 109,
     "commandsOnDesktop": 228,
     "desktop": {
       "commands": {
@@ -7170,7 +7170,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/areas.json"
+        "fixtures/interaction/v1/areas.json",
+        "fixtures/interaction/v1/usage-line-parts.json"
       ]
     },
     {
@@ -7203,7 +7204,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/areas.json"
+        "fixtures/interaction/v1/areas.json",
+        "fixtures/interaction/v1/usage-line-parts.json"
       ]
     },
     {
@@ -8917,7 +8919,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/usage-line-parts.json"
+      ]
     },
     {
       "id": "view.extentCheck",
@@ -11104,7 +11108,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/areas.json"
+        "fixtures/interaction/v1/areas.json",
+        "fixtures/interaction/v1/usage-line-parts.json"
       ]
     },
     {
@@ -11129,7 +11134,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/areas.json"
+        "fixtures/interaction/v1/areas.json",
+        "fixtures/interaction/v1/usage-line-parts.json"
       ]
     },
     {

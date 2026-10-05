@@ -1,0 +1,160 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Çok parçalı çizgi ve nokta",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#3E63DD",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "yol",
+  "entities": [
+    {
+      "kind": "line",
+      "id": 1,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Atatürk Bulvarı"
+      },
+      "label": "Y-1",
+      "a": {
+        "x": 486983.0,
+        "y": 4420008.0
+      },
+      "b": {
+        "x": 486993.0,
+        "y": 4420008.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+    },
+    {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Atatürk Bulvarı"
+      },
+      "pts": [
+        {
+          "x": 486997.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487007.0,
+          "y": 4420008.0
+        },
+        {
+          "x": 487013.0,
+          "y": 4420013.0
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 3,
+      "layerId": "yol",
+      "attrs": {
+        "Ad": "Çevre Yolu"
+      },
+      "label": "Y-2",
+      "pts": [
+        {
+          "x": 486983.0,
+          "y": 4419998.0
+        },
+        {
+          "x": 486993.0,
+          "y": 4419998.0
+        },
+        {
+          "x": 486997.0,
+          "y": 4419994.0
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "KY"
+      },
+      "label": "K-1",
+      "p": {
+        "x": 487002.0,
+        "y": 4419992.0
+      },
+      "z": 850.5
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "KY"
+      },
+      "p": {
+        "x": 487008.0,
+        "y": 4419989.0
+      },
+      "z": 851.0
+    },
+    {
+      "kind": "point",
+      "id": 6,
+      "layerId": "nokta",
+      "attrs": {
+        "Kod": "KY"
+      },
+      "p": {
+        "x": 487014.0,
+        "y": 4419993.0
+      },
+      "z": 849.75
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

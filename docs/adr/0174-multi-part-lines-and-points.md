@@ -1,6 +1,6 @@
 # ADR 0174: Çok parçalı çizgi ve çok noktalı nesne
 
-- **Durum:** kabul edildi (2026-10-05). Sıra sahibin kararıdır: TODOS.md §16.0'ın on yedinci işi `HYB-17`. Ayrıntılar bu ADR'nin
+- **Durum:** kabul edildi (2026-10-05); beş adımı bitti (2026-10-05). Sıra sahibin kararıdır: TODOS.md §16.0'ın on yedinci işi `HYB-17`. Ayrıntılar bu ADR'nin
   varsayılanlarıdır.
 - **Bağlam belgesi:** TODOS.md `HYB-17`, [araştırma kaydı](../research/2026-10-01-netcad-arcgis-qgis.md); ADR 0143 (çok parçalı alan:
   aynı biçim, `AreaPart`, şema 5), ADR 0142 (köşe kotu), ADR 0025 (KCAD v2), ADR 0046 (GeoJSON, Shapefile), ADR 0009 (DXF), ADR 0006 (CAD
@@ -137,7 +137,12 @@ ADR 0143 alanı çok parçalı yaptı; çoklu çizgi ve nokta tek parçalı kald
    çok noktalı nesneyi de ayırır (alanlardan sonra, seçim sırasıyla; iki noktalı parça çoklu çizgi kalır). Masaüstünde
    `kentos_interaction::line_parts`, web'de `tools/lineParts.ts`; `cad.entities.edit`'in ortak durumları (birleştirme, ayırma, Kot ver,
    parçanın retleri) bağımsız `edit_command_cases.py`'den; ipuçları ve adımlar türleri sayar.
-5. Arayüz: Öznitelikler, üzerine gelme kartı, köşe tablosu; iki platformda, resimleriyle.
+5. Arayüz: Öznitelikler, üzerine gelme kartı, köşe tablosu; iki platformda, resimleriyle. Bitti (5 Ekim): Öznitelikler çok parçalı
+   çoklu çizgide Köşe sayısı ve Uzunluk'u bütün parçaların, Parça sayısı'nı; çok noktalıda Nokta sayısı'nı ve bütün noktaların tek Kot
+   satırını gösterir (yazılan kot her noktaya). Üzerine gelme kartı “Parça: n” ve “Nokta: n” der, çok noktalının kotunu yalnız noktaları
+   aynı kottaysa. Koordinat listesi çoklu çizginin parçalarını Parça 1, Parça 2 diye sıralar; çok noktalının her noktasını adıyla ve
+   sırasıyla (K-1, K-1 (2)) listeler. Kullanım senaryosu `usage-line-parts.json` (`line-parts.kcad`) iki platformda resimli; web'in resim
+   oynatıcısı izin açtığı alt panel sekmesini resimde tutar.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
 

@@ -215,14 +215,20 @@ export class BottomPanel extends Component {
     const ents = [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
     if (!ents.length) return h('div', { class: 'empty empty--inline' }, 'Koordinat listesi için çizimde bir nesne seçin.');
 
-    const points = ents.filter((e) => e.kind === 'point');
-    if (points.length === ents.length) {
+    if (ents.every((e) => e.kind === 'point')) {
+      // Every point of a multi-point object, its name followed by its place in it (docs/adr/0174 §6).
+      const points = ents.flatMap((e) => {
+        if (e.kind !== 'point') return [];
+        const name = e.label ?? `#${e.id}`;
+        const layer = doc.layers.get(e.layerId)?.name ?? '';
+        return [{ p: e.p, z: e.z }, ...(e.parts ?? [])].map((q, k) => ({ name: k ? `${name} (${k + 1})` : name, p: q.p, z: q.z ?? undefined, layer }));
+      });
       return this.table(
         ['Nokta', f.axesText('Y (sağa)'), f.axesText('X (yukarı)'), 'Z (kot)', 'Katman'],
         points.length,
         (i) => {
           const p = points[i];
-          return p.kind === 'point' ? [p.label ?? `#${p.id}`, f.coord(p.p.x), f.coord(p.p.y), p.z !== undefined ? f.length(p.z, false) : '—', doc.layers.get(p.layerId)?.name ?? ''] : [];
+          return [p.name, f.coord(p.p.x), f.coord(p.p.y), p.z !== undefined ? f.length(p.z, false) : '—', p.layer];
         },
         `${points.length} nokta`,
         [1, 2, 3],

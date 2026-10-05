@@ -1243,6 +1243,66 @@ fn a_multi_part_area_counts_every_part() {
     assert_eq!(value(&app, "Geometri", "Alan"), "216.00 m²");
 }
 
+/// A multi-part polyline counts every part and a multi-point object its
+/// points (docs/adr/0174 §6): Köşe sayısı and Uzunluk are every part's, with
+/// Parça sayısı; Nokta sayısı and one Kot row for every point.
+#[test]
+fn multi_part_lines_and_points_count_every_part() {
+    let mut app = objects();
+    let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
+    let doc = app.document.as_mut().expect("open");
+    let Some(Entity::Line(line)) = doc.model.get(Slot(1)).cloned() else {
+        panic!("the line");
+    };
+    let road = Entity::Polyline(kentos_contracts::PathEntity {
+        base: line.base.clone(),
+        pts: vec![at(-24.0, -12.0), at(-8.0, -12.0)],
+        bulges: None,
+        holes: None,
+        zs: None,
+        parts: Some(vec![kentos_contracts::AreaPart {
+            pts: vec![at(0.0, -20.0), at(0.0, -10.0), at(5.0, -10.0)],
+            bulges: None,
+            holes: None,
+            zs: None,
+        }]),
+    });
+    assert!(doc.model.update(Slot(1), road));
+    let Some(Entity::Point(mut marks)) = doc.model.get(Slot(5)).cloned() else {
+        panic!("the point");
+    };
+    marks.z = Some(100.0);
+    marks.parts = Some(vec![
+        kentos_contracts::PointPart {
+            p: at(25.0, -8.0),
+            z: Some(100.0),
+        },
+        kentos_contracts::PointPart {
+            p: at(30.0, -8.0),
+            z: Some(102.5),
+        },
+    ]);
+    assert!(doc.model.update(Slot(5), Entity::Point(marks)));
+    select(&mut app, &[1]);
+    assert_eq!(value(&app, "Geometri", "Köşe sayısı"), "5");
+    assert_eq!(value(&app, "Geometri", "Parça sayısı"), "2");
+    // 16 + 10 + 5 m.
+    assert_eq!(value(&app, "Geometri", "Uzunluk"), "31.000 m");
+    select(&mut app, &[5]);
+    assert_eq!(value(&app, "Geometri", "Nokta sayısı"), "3");
+    assert_eq!(value(&app, "Geometri", "Kot"), "100.000–102.500 m");
+    // Typed into Kot, every point takes it.
+    event(
+        &mut app,
+        Event::Commit(Field::Elevation(Slot(5), Spot::All), "99".into()),
+    );
+    let Entity::Point(p) = entity(&app, 5) else {
+        panic!("a point");
+    };
+    assert_eq!(p.z, Some(99.0));
+    assert!(p.parts.iter().flatten().all(|q| q.z == Some(99.0)));
+}
+
 /// The KCAD v2 blocks fixture (fixtures/kcad/v2/blocks.kcad): Rögar's attributes
 /// are NO (default "R-1") and KOT (no default); insert 1 has both, insert 2 none.
 fn blocks_drawing() -> App {

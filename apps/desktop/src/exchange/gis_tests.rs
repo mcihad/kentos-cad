@@ -68,8 +68,9 @@ fn a_geojson_in_the_projects_system_goes_in_as_one_undo_step() {
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     let model = &app.document.as_ref().expect("open").model;
     // “Parsel” joins the drawing's layer, the objects without a layer go to a
-    // new “tm”, the locked “Bina” takes nothing: 1 area and 2 points of 5.
-    assert_eq!(model.len() - before, 3);
+    // new “tm”, the locked “Bina” takes nothing: 1 area and the two-point
+    // object of the file's MultiPoint (docs/adr/0174) of 4.
+    assert_eq!(model.len() - before, 2);
     let parcel = model
         .entities()
         .find(|e| e.base().label.as_deref() == Some("101/5"))
@@ -82,7 +83,7 @@ fn a_geojson_in_the_projects_system_goes_in_as_one_undo_step() {
     );
     assert_eq!(
         last_said(&app),
-        "“tm.geojson”: 3 nesne 2 katmana alındı; 1 yeni katman “tm.geojson” grubunda. Tek adımda geri alınabilir."
+        "“tm.geojson”: 2 nesne 2 katmana alındı; 1 yeni katman “tm.geojson” grubunda. Tek adımda geri alınabilir."
     );
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(count(&app), before, "one undo step takes all of it back");

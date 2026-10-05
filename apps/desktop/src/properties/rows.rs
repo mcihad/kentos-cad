@@ -546,8 +546,22 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             };
             geo.push(metres(east, p.p.x).editor(number(Field::PointX(slot))));
             geo.push(metres(north, p.p.y).editor(number(Field::PointY(slot))));
-            if let Some(z) = p.z {
-                geo.push(metres("Z (kot)", z));
+            match p.parts.as_deref().filter(|ps| !ps.is_empty()) {
+                // A multi-point object: how many points, and their elevations as one row (docs/adr/0174).
+                Some(parts) => {
+                    geo.push(Row::figure("Nokta sayısı", (parts.len() + 1).to_string()));
+                    geo.extend(elevation_row(
+                        "Kot",
+                        Elevations::of_object(e),
+                        &f,
+                        number(Field::Elevation(slot, Spot::All)),
+                    ));
+                }
+                None => {
+                    if let Some(z) = p.z {
+                        geo.push(metres("Z (kot)", z));
+                    }
+                }
             }
         }
         Entity::Line(l) => {

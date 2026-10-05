@@ -2272,7 +2272,12 @@ try {
         const xy = (p) => [p.x, p.y];
         return [...k.doc.all()].filter((e) => e.id > ${last}).map((e) => {
           const o = { kind: e.kind, layer: k.doc.layers.get(e.layerId)?.name };
-          if (e.kind === 'point') { o.p = xy(e.p); if (e.z !== undefined && e.z !== null) o.z = e.z; }
+          if (e.kind === 'point') {
+            o.p = xy(e.p);
+            if (e.z !== undefined && e.z !== null) o.z = e.z;
+            // A multi-point object's other points (docs/adr/0174).
+            if (e.parts?.length) o.parts = e.parts.map((q) => (q.z !== undefined && q.z !== null ? { p: xy(q.p), z: q.z } : { p: xy(q.p) }));
+          }
           else if (e.kind === 'line') { o.a = xy(e.a); o.b = xy(e.b); }
           else { o.pts = e.pts.map(xy); if (e.holes?.length) o.holes = e.holes.map((h) => h.pts.map(xy)); }
           if (e.label) o.label = e.label;
@@ -2295,7 +2300,7 @@ try {
     const tm = await gisDialog();
     check(
       'GeoJSON import: the file\'s layers with their objects; its crs member names the project\'s system, which is chosen, and the import is open',
-      tm?.title === 'GeoJSON içe aktar' && JSON.stringify(tm.rows.map((r) => [r[0], r[1]])) === '[["Parsel","1"],["Bina","2"],["tm","2"]]' && tm.crs === '5256' && /Dosyanın crs üyesi: “urn:ogc:def:crs:EPSG::5256” \(EPSG:5256\)/.test(tm.crsText) && tm.enabled,
+      tm?.title === 'GeoJSON içe aktar' && JSON.stringify(tm.rows.map((r) => [r[0], r[1]])) === '[["Parsel","1"],["Bina","2"],["tm","1"]]' && tm.crs === '5256' && /Dosyanın crs üyesi: “urn:ogc:def:crs:EPSG::5256” \(EPSG:5256\)/.test(tm.crsText) && tm.enabled,
       JSON.stringify(tm),
     );
     await gisThemed('io-geojson-import');
@@ -2307,7 +2312,7 @@ try {
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     const tmUndone = await b.eval('window.kentos.doc.size');
     await b.eval(`window.kentos.commands.execute('edit.redo')`);
-    check('GeoJSON import is one undo step', tmUndone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 5, `${n0} → ${tmUndone}`);
+    check('GeoJSON import is one undo step', tmUndone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 4, `${n0} → ${tmUndone}`);
 
     // features.geojson: RFC 7946, WGS 84 longitude and latitude. Not taken in a TM project; saying the file is in TM
     // after all is the user's choice, and the window says what that means (and that the numbers look like degrees).
@@ -2335,7 +2340,7 @@ try {
     );
     await ioPress('.dialog--io .dialog__foot .btn', 'Vazgeç');
     await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
-    check('GeoJSON import: Vazgeç takes nothing', (await b.eval('window.kentos.doc.size')) === n0 + 5);
+    check('GeoJSON import: Vazgeç takes nothing', (await b.eval('window.kentos.doc.size')) === n0 + 4);
 
     // noktalar.*: a Shapefile layer, its files chosen together (another layer's .dbf among them is not used).
     await gisPick(['noktalar.shp', 'noktalar.shx', 'noktalar.dbf', 'noktalar.prj', 'yollar.dbf']);
@@ -2356,7 +2361,7 @@ try {
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     const shpUndone = await b.eval('window.kentos.doc.size');
     await b.eval(`window.kentos.commands.execute('edit.redo')`);
-    check('Shapefile import is one undo step', shpUndone === n0 + 5 && (await b.eval('window.kentos.doc.size')) === n0 + 8, `${n0 + 5} → ${shpUndone}`);
+    check('Shapefile import is one undo step', shpUndone === n0 + 4 && (await b.eval('window.kentos.doc.size')) === n0 + 7, `${n0 + 4} → ${shpUndone}`);
 
     // GeoJSON export of the three points: the project's coordinates, named by the crs member (the window says the file
     // is not RFC 7946), read back onto the same layer as the same objects.

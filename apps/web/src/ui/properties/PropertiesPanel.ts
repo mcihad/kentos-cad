@@ -240,7 +240,9 @@ export class PropertiesPanel extends Panel {
               } as const);
         // East and north as the project's type names them (docs/adr/0165 §4).
         geo.push({ ...num(f.axesText('Y (sağa)'), e.p.x, 'm'), editor: edit('x') }, { ...num(f.axesText('X (yukarı)'), e.p.y, 'm'), editor: edit('y') });
-        if (e.z !== undefined) geo.push(num('Z (kot)', e.z, 'm'));
+        // A multi-point object: how many points, and their elevations as one row (docs/adr/0174).
+        if (e.parts?.length) geo.push({ label: 'Nokta sayısı', value: String(e.parts.length + 1), numeric: true }, pathElevationRow(this.ctx, e, locked));
+        else if (e.z !== undefined) geo.push(num('Z (kot)', e.z, 'm'));
         break;
       }
       case 'line':

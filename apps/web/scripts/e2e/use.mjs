@@ -80,12 +80,15 @@ function readTrace(name) {
 }
 
 // ── Pictures ────────────────────────────────────────────────────────────
-/** The bottom panel's Komut geçmişi open at its newest line, for a picture; what it was before is given back by `restore`. */
+/**
+ * The bottom panel's Komut geçmişi open at its newest line, for a picture; another tab the trace opened (Koordinat
+ * listesi, Noktalar) stays, as the desktop's player keeps it. What it was before is given back by `restore`.
+ */
 async function openHistory(b) {
   const before = await b.eval(`(() => {
     const { ui } = window.kentos;
     const before = { open: ui.bottomExpanded.value, tab: ui.bottomTab.value };
-    ui.bottomTab.set('history');
+    if (!before.open) ui.bottomTab.set('history');
     ui.bottomExpanded.set(true);
     return before;
   })()`);

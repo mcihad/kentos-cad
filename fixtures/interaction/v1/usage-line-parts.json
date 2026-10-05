@@ -1,0 +1,171 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "usage-line-parts",
+  "title": "Kullanım: çok parçalı çizgi ve nokta; bir çizgi ve bir çoklu çizgi Parçaları birleştir ile tek, iki parçalı çoklu çizgi olur (Öznitelikler'de Parça sayısı, kartta Parça, Koordinat listesinde Parça 1 ve 2); üç nokta tek, çok noktalı nesne olur (Nokta sayısı ve kotları); Parçalara ayır onları geri ayırır",
+  "source": "Kullanım senaryosu (kentos-cad kullan, apps/web/scripts/e2e/use.mjs), ADR 0174",
+  "covers": [
+    "UX-01",
+    "UX-09"
+  ],
+  "document": "line-parts.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.1
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.1,
+  "steps": [
+    {
+      "run": "tool.partsJoin",
+      "note": "Parçaları birleştir: seçim yokken araç önce seçtirir."
+    },
+    {
+      "click": [
+        -12,
+        8
+      ],
+      "note": "Kotlu “Y-1” çizgisi seçilir.",
+      "expect": {
+        "selected": [
+          1
+        ]
+      }
+    },
+    {
+      "click": [
+        2,
+        8
+      ],
+      "note": "Ona değmeyen çoklu çizgi de seçilir.",
+      "expect": {
+        "selected": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "Tek, iki parçalı çoklu çizgi: çizginin yeri, kimliği ve verisi; ötekisi silinir.",
+      "expect": {
+        "tool": "select",
+        "entities": 5,
+        "selected": [
+          1
+        ],
+        "logged": [
+          "2 çizgi tek çoklu çizgide birleşti: 2 parça, toplam 27.810 m."
+        ]
+      }
+    },
+    {
+      "shot": "cizgiler-birlesti"
+    },
+    {
+      "run": "view.coords",
+      "note": "Koordinat listesi: parçalar halkalar gibi, Parça 1 ve Parça 2."
+    },
+    {
+      "shot": "kose-tablosu"
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "selected": []
+      }
+    },
+    {
+      "move": [
+        2,
+        8
+      ],
+      "note": "Üzerine gelme kartı: Parça 2, uzunluk her parçanın."
+    },
+    {
+      "shot": "kart"
+    },
+    {
+      "run": "tool.partsJoin"
+    },
+    {
+      "click": [
+        2,
+        -8
+      ],
+      "expect": {
+        "selected": [
+          4
+        ]
+      }
+    },
+    {
+      "click": [
+        8,
+        -11
+      ],
+      "expect": {
+        "selected": [
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "click": [
+        14,
+        -7
+      ],
+      "expect": {
+        "selected": [
+          4,
+          5,
+          6
+        ]
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "Tek, üç noktalı nesne: her nokta kendi kotuyla.",
+      "expect": {
+        "tool": "select",
+        "entities": 3,
+        "selected": [
+          4
+        ],
+        "logged": [
+          "3 nokta tek nesnede birleşti: 3 nokta."
+        ]
+      }
+    },
+    {
+      "shot": "noktalar-birlesti"
+    },
+    {
+      "run": "tool.partsSplit",
+      "note": "Parçalara ayır: üç nokta geri ayrılır, ilk nokta yerinde kalır.",
+      "expect": {
+        "tool": "select",
+        "entities": 5,
+        "logged": [
+          "1 nesne parçalarına ayrıldı (3 nesne)."
+        ]
+      }
+    },
+    {
+      "shot": "noktalar-ayrildi"
+    }
+  ]
+}

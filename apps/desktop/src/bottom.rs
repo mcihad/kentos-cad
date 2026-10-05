@@ -266,22 +266,35 @@ impl App {
                 .map_or_else(String::new, |l| l.name.clone())
         };
         if entities.iter().all(|e| matches!(e, Entity::Point(_))) {
+            // Every point of a multi-point object, its name followed by its place in it (docs/adr/0174 §6).
             return Listing::Points(
                 entities
                     .iter()
                     .filter_map(|e| match e {
-                        Entity::Point(p) => Some(Point {
-                            name: p
-                                .base
-                                .label
-                                .clone()
-                                .unwrap_or_else(|| format!("#{}", p.base.id)),
-                            x: p.p.x,
-                            y: p.p.y,
-                            z: p.z,
-                            layer: layer_name(&p.base.layer_id),
-                        }),
+                        Entity::Point(p) => Some(p),
                         _ => None,
+                    })
+                    .flat_map(|p| {
+                        let name = p
+                            .base
+                            .label
+                            .clone()
+                            .unwrap_or_else(|| format!("#{}", p.base.id));
+                        let layer = layer_name(&p.base.layer_id);
+                        let others = p.parts.iter().flatten().map(|q| (q.p, q.z));
+                        std::iter::once((p.p, p.z)).chain(others).enumerate().map(
+                            move |(k, (at, z))| Point {
+                                name: if k == 0 {
+                                    name.clone()
+                                } else {
+                                    format!("{name} ({})", k + 1)
+                                },
+                                x: at.x,
+                                y: at.y,
+                                z,
+                                layer: layer.clone(),
+                            },
+                        )
                     })
                     .collect(),
             );

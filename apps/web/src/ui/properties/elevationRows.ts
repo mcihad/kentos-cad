@@ -79,7 +79,7 @@ export function lineEndRow(ctx: AppContext, e: Extract<Entity, { kind: 'line' }>
 }
 
 /** A polyline's or an area's `Kot`: typing sets every vertex, holes included. */
-export function pathElevationRow(ctx: AppContext, e: Extract<Entity, { kind: 'polyline' | 'polygon' }>, locked: boolean): PropRow {
+export function pathElevationRow(ctx: AppContext, e: Extract<Entity, { kind: 'polyline' | 'polygon' | 'point' }>, locked: boolean): PropRow {
   const write = locked ? undefined : (v: number | null) => void writeElevations(ctx, [e], () => v);
   return elevationRow(ctx, 'Kot', vertexElevations(e), write);
 }

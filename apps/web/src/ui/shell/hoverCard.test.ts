@@ -103,3 +103,27 @@ describe('the hover card’s Parça and Ada (delik) of a multi-part area', () =>
     expect(names(deed)).toEqual(['Ada', 'Tapu alanı', 'Hesaplanan alan', 'Parça', 'Ada (delik)', 'Çevre']);
   });
 });
+
+/** The card of a multi-part polyline and of a multi-point object (docs/adr/0174 §6): as the desktop's. */
+describe('the hover card’s Parça and Nokta', () => {
+  const format = new Formatter({ lengthDecimals: new Signal(3), areaDecimals: new Signal(2), areaUnit: new Signal('m2' as const), angleUnit: new Signal('grad' as const) });
+  const p = (x: number, y: number) => ({ x, y });
+  const base = { id: 1, layerId: 'cizim', attrs: {} };
+  const rows = (e: object) => cardRows({ ...base, ...e } as Entity, format);
+
+  it('a multi-part polyline says its parts before its length, every part’s', () => {
+    expect(rows({ kind: 'polyline', pts: [p(0, 0), p(10, 0)], parts: [{ pts: [p(20, 0), p(25, 0)] }] })).toEqual([
+      ['Parça', '2'],
+      ['Uzunluk', '15.000 m'],
+    ]);
+  });
+
+  it('a multi-point object says its points, and their elevation only when they share one', () => {
+    const marks = (z?: number) => ({ kind: 'point', p: p(0, 0), z: 100, parts: [{ p: p(5, 0), ...(z !== undefined && { z }) }] });
+    expect(rows(marks(100))).toEqual([
+      ['Nokta', '2'],
+      ['Kot', '100.000 m'],
+    ]);
+    expect(rows(marks())).toEqual([['Nokta', '2']]);
+  });
+});
