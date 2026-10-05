@@ -41,6 +41,11 @@ export type MemberSide = (typeof MEMBER_SIDES)[number];
 export const OPEN_SIDES: readonly MemberSide[] = ['left', 'right', 'both'];
 export const CLOSED_SIDES: readonly MemberSide[] = ['inside', 'outside', 'both'];
 
+/** The rules' names, as the Şablon düzenleyici says them. */
+export const MEMBER_RULE_LABEL: Record<MemberRule, string> = { same: 'Aynı geometri', offset: 'Ötelenmiş', vertices: 'Köşelere nokta', centroid: 'Ağırlık merkezine' };
+/** The sides' names. */
+export const MEMBER_SIDE_LABEL: Record<MemberSide, string> = { left: 'Sola', right: 'Sağa', inside: 'İçe', outside: 'Dışa', both: 'İki yana' };
+
 /** A group template's member: another template of the library, by its id, and the rule it makes its object by. */
 export interface TemplateMember {
   readonly template: string;

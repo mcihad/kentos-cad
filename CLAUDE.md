@@ -862,8 +862,8 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `template-groups.json`) ve 5b (üyelerin geometrisi: çekirdek `ops::template_members`, işlemler `templateMemberOffsets` ve
   `templateMemberCentroid`, web `model/ops/templateMembers.ts`; başvuru `template_member_cases.py`) ve 5c (grup şablonuyla çizmek: web
   `tools/templateMembers.ts`'in `withMembers`'ı grup araçlarının yazma yerlerinde, masaüstünde `with_tool`'un belge grubu ve
-  `template_members.rs`; belgenin `nextSlot`/`next_slot`'u; ortak iz `template-group.json`) tamam; sıradaki 5d (düzenleyicide üyeler),
-  sonra 6 (Şablonu uygula).
+  `template_members.rs`; belgenin `nextSlot`/`next_slot`'u; ortak iz `template-group.json`) ve 5d (düzenleyicide Grup üyeleri tablosu)
+  tamam; 5. adım bitti; sıradaki 6 (Şablonu uygula).
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`
   yolu dahil, bilinen tek fark TUREF'e 0,1 mm, ADR 0168 Doğrulama). 3 Ekim:

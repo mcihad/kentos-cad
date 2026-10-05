@@ -2,10 +2,26 @@ import '../../styles/io.css';
 import type { AppContext } from '../../app/context';
 import { TEXT_ALIGNS, textAlignName, type TextAlign } from '../../model/entities';
 import { LINE_TYPE_LABEL, type LayerNode, type LineType } from '../../model/layers';
-import { TEMPLATE_METHODS, TEMPLATE_TOOL_LABEL, TEMPLATE_TOOLS, type TemplateTool } from '../../model/objectTemplate';
+import {
+  CLOSED_SIDES,
+  CLOSED_TOOLS,
+  GROUP_TOOLS,
+  MEMBER_RULE_LABEL,
+  MEMBER_RULES,
+  MEMBER_SIDE_LABEL,
+  memberIssues,
+  OPEN_SIDES,
+  TEMPLATE_METHODS,
+  TEMPLATE_TOOL_LABEL,
+  TEMPLATE_TOOLS,
+  type MemberRule,
+  type MemberSide,
+  type TemplateTool,
+} from '../../model/objectTemplate';
 import type { LibraryTemplate } from '../../model/style';
 import { EMPTY_TEMPLATE_FORM, formOfTemplate, templateFromForm, type TemplateForm } from '../../model/templateForm';
 import { newItemId } from '../../style/library';
+import { listTemplates } from '../../style/templateList';
 import { templateSymbol } from '../../style/templateSymbol';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
@@ -44,8 +60,10 @@ export function openTemplateEditor(ctx: AppContext, opts: { id?: string; form?: 
   /** The problems under the fields, the picture of what it draws and Kaydet, after every change. */
   const refresh = () => {
     const made = templateFromForm(form);
-    save.disabled = 'issues' in made;
-    replaceChildren(issues, ...('issues' in made ? made.issues.map((i) => summaryLine('error', i)) : []));
+    // A group's members must be templates the library has, of the kind their rule needs (docs/adr/0176 §5).
+    const problems = 'issues' in made ? made.issues : memberIssues(made.template, (mid) => lib.template(mid));
+    save.disabled = problems.length > 0;
+    replaceChildren(issues, ...problems.map((i) => summaryLine('error', i)));
     if ('template' in made) drawNow(ctx, picture, templateSymbol(made.template, lib));
   };
   const text = (label: string, key: keyof TemplateForm, placeholder = '', size: 'auto' | 'grow' | 'wide' = 'grow') => {
@@ -148,6 +166,58 @@ export function openTemplateEditor(ctx: AppContext, opts: { id?: string; form?: 
       const names = ctx.doc.blocks.value.map((b) => b.name);
       own.push(choice('Blok', 'block', [{ value: '', label: names.length ? 'Blok seçin' : 'Çizimde blok yok' }, ...names.map((n) => ({ value: n, label: n }))]));
     }
+    const members: HTMLElement[] = [];
+    if (GROUP_TOOLS.includes(form.tool)) {
+      const closed = CLOSED_TOOLS.includes(form.tool);
+      // Every other template of the library, by name and kind; the rule's fit shows under the fields.
+      const choices: Choice<string>[] = [
+        { value: '', label: 'Şablon seçin' },
+        ...listTemplates(lib)
+          .flatMap((g) => g.items)
+          .filter((t) => t.id !== opts.id)
+          .map((t) => ({ value: t.id, label: `${t.name} (${TEMPLATE_TOOL_LABEL[t.template.tool]})` })),
+      ];
+      const ruleChoices: Choice<'' | MemberRule>[] = [{ value: '', label: 'Kural seçin' }, ...MEMBER_RULES.map((r) => ({ value: r, label: MEMBER_RULE_LABEL[r] }))];
+      const sideChoices: Choice<'' | MemberSide>[] = [{ value: '', label: 'Yan seçin' }, ...(closed ? CLOSED_SIDES : OPEN_SIDES).map((v) => ({ value: v, label: MEMBER_SIDE_LABEL[v] }))];
+      const rows = form.members.map((m, i) => {
+        const n = `${i + 1}. üyenin`;
+        const template = select(`${n} şablonu`, choices.some((c) => c.value === m.template) ? choices : [...choices, { value: m.template, label: m.template }], m.template, (v) => {
+          m.template = v;
+          refresh();
+        });
+        const rule = select(`${n} kuralı`, ruleChoices, m.rule, (v) => {
+          m.rule = v;
+          render();
+        });
+        const offset = m.rule === 'offset';
+        const distance = h('input', { class: 'field', value: m.distance, placeholder: 'Uzaklık (m)', 'aria-label': `${n} uzaklığı`, spellcheck: 'false' });
+        distance.addEventListener('input', () => {
+          m.distance = distance.value;
+          refresh();
+        });
+        const side = select(`${n} yanı`, sideChoices, m.side, (v) => {
+          m.side = v;
+          refresh();
+        });
+        const remove = h('button', { class: 'ibtn', type: 'button', title: 'Üyeyi sil', 'aria-label': `${i + 1}. üyeyi sil` }, icon('trash', 14));
+        remove.addEventListener('click', () => {
+          form.members.splice(i, 1);
+          render();
+        });
+        return h('div', { class: 'tpl-editor__member' }, template, rule, offset ? distance : h('span'), offset ? side : h('span'), remove);
+      });
+      const add = h('button', { class: 'btn btn--small', type: 'button' }, icon('plus', 14), 'Üye ekle');
+      add.addEventListener('click', () => {
+        form.members.push({ template: '', rule: '', distance: '', side: '' });
+        render();
+        body.querySelector<HTMLSelectElement>('.tpl-editor__member:last-of-type select')?.focus();
+      });
+      members.push(
+        h('h4', { class: 'tpl-editor__section' }, 'Grup üyeleri'),
+        h('div', { class: 'tpl-editor__attrs' }, ...rows, add),
+        h('p', { class: 'io-field__hint' }, 'Çizilen her nesneyle birlikte üyelerin nesneleri de aynı adımda yazılır: aynı geometri, öteleme, köşelere nokta ya da ağırlık merkezine nokta veya yazı.'),
+      );
+    }
     const where: HTMLElement[] = [];
     if (!inPlace) {
       const seg = segmented<'user' | 'project'>({
@@ -195,6 +265,7 @@ export function openTemplateEditor(ctx: AppContext, opts: { id?: string; form?: 
       h('div', { class: 'tpl-editor__attrs' }, ...rows, addRow),
       text('Etiket', 'label', 'Nesnenin yanında yazılacak metin'),
       ...own,
+      ...members,
       ...where,
     );
     refresh();

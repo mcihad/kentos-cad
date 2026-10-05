@@ -428,6 +428,26 @@ SCENES.stylemanager = [
     close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
   },
   {
+    // A group template's members in Şablon düzenleyici (docs/adr/0176 §5): the desktop's `template_editor` screens' “grup”.
+    id: 'template-editor-group',
+    open: async (ui) => {
+      await ui.eval(ADD_TEMPLATES);
+      await ui.eval(ADD_GROUP_TEMPLATE);
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .tree__row', 'Kitaplığım');
+      await ui.sleep(300);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'Şablon');
+      await ui.sleep(500);
+      await ui.clickText('.dialog--styles .scard', 'Parsel ve köşeleri');
+      await ui.sleep(500);
+      await ui.clickText('.dialog--styles .smgr__actions .btn', 'Düzenle');
+      await ui.sleep(900);
+      await ui.eval(`(() => { const b = [...document.querySelectorAll('.dialog__body')].at(-1); b.scrollTop = b.scrollHeight; })()`);
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
+  },
+  {
     id: 'kind-drawings',
     open: async (ui) => {
       await openManager(ui);
@@ -1955,6 +1975,21 @@ const ADD_TEMPLATES = `(() => {
     { kind: 'template', id: 'u-sablon-yazi', name: 'Ada numarası', path: ['Kadastro'], template: { tool: 'text', layer: { path: [], name: 'Yazılar' }, text: { height: 2.5, align: 'middleCenter', mask: true } } },
   ];
   for (const p of templates) if (!lib.get(p.id)) lib.add('user', p);
+})()`;
+/** A group template over ADD_TEMPLATES' (docs/adr/0176 §5): a parcel with its corner points, its number and an inner line. */
+const ADD_GROUP_TEMPLATE = `(() => {
+  const lib = window.kentos.styles.library;
+  const items = [
+    { kind: 'template', id: 'u-sablon-numara', name: 'Parsel numarası', path: ['Kadastro'],
+      template: { tool: 'text', layer: { path: [], name: 'Yazılar' }, label: '101', text: { height: 2.5 } } },
+    { kind: 'template', id: 'u-sablon-grup', name: 'Parsel ve köşeleri', path: ['Kadastro'],
+      template: { tool: 'polygon', layer: { path: ['Kadastro'], name: 'Parsel' }, members: [
+        { template: 'u-sablon-nokta', rule: 'vertices' },
+        { template: 'u-sablon-numara', rule: 'centroid' },
+        { template: 'u-sablon-parsel', rule: 'offset', distance: 0.5, side: 'inside' },
+      ] } },
+  ];
+  for (const p of items) if (!lib.get(p.id)) lib.add('user', p);
 })()`;
 /** Kitaplığım emptied again after a scene that copied into it. */
 const REMOVE_MINE = `(() => { const lib = window.kentos.styles.library; for (const i of lib.items('user')) lib.remove(i.id); })()`;

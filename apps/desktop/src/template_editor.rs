@@ -15,9 +15,10 @@ use iced::{Center, Element, Fill, Length, Task};
 use kentos_expression::js::number;
 use kentos_native_style::library::{ItemKind, Source, new_item_id};
 use kentos_native_style::object_template::{
-    TEMPLATE_TOOLS, from_object, preview_symbol, template_methods,
+    CLOSED_TOOLS, GROUP_TOOLS, TEMPLATE_TOOLS, from_object, listed, member_issues, preview_symbol,
+    template_methods, tool_label,
 };
-use kentos_native_style::template_form::{TemplateForm, from_form, to_form};
+use kentos_native_style::template_form::{MemberRow, TemplateForm, from_form, to_form};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::{Dialog as Window, Menu, MenuButton, Segmented, overlay};
 use kentos_ui::{label, style};
@@ -96,6 +97,13 @@ pub enum Event {
     AttrValue(usize, String),
     AttrAdd,
     AttrRemove(usize),
+    /// A group member's template (its id), rule, distance and side; a row added or taken off.
+    MemberTemplate(usize, String),
+    MemberRule(usize, &'static str),
+    MemberDistance(usize, String),
+    MemberSide(usize, &'static str),
+    MemberAdd,
+    MemberRemove(usize),
     Label(String),
     PointName(String),
     PointCode(String),
@@ -118,6 +126,28 @@ fn tool_choices() -> Vec<(&'static str, &'static str)> {
 }
 
 /// A text's alignments by their names (the web's `textAlignName`), the left of the baseline first.
+/// A group member's rules and an offset's sides, as the window names them
+/// (the web's `MEMBER_RULE_LABEL`, `MEMBER_SIDE_LABEL`).
+const RULES: [(&str, &str); 5] = [
+    ("", "Kural seçin"),
+    ("same", "Aynı geometri"),
+    ("offset", "Ötelenmiş"),
+    ("vertices", "Köşelere nokta"),
+    ("centroid", "Ağırlık merkezine"),
+];
+const OPEN_SIDES: [(&str, &str); 4] = [
+    ("", "Yan seçin"),
+    ("left", "Sola"),
+    ("right", "Sağa"),
+    ("both", "İki yana"),
+];
+const CLOSED_SIDES: [(&str, &str); 4] = [
+    ("", "Yan seçin"),
+    ("inside", "İçe"),
+    ("outside", "Dışa"),
+    ("both", "İki yana"),
+];
+
 const ALIGNS: [(&str, &str); 12] = [
     ("", "sol taban"),
     ("baselineCenter", "orta taban"),
@@ -309,6 +339,32 @@ impl App {
                     f.attrs.remove(i);
                 }
             }
+            Event::MemberTemplate(i, t) => {
+                if let Some(m) = f.members.get_mut(i) {
+                    m.template = t;
+                }
+            }
+            Event::MemberRule(i, r) => {
+                if let Some(m) = f.members.get_mut(i) {
+                    r.clone_into(&mut m.rule);
+                }
+            }
+            Event::MemberDistance(i, t) => {
+                if let Some(m) = f.members.get_mut(i) {
+                    m.distance = t;
+                }
+            }
+            Event::MemberSide(i, side) => {
+                if let Some(m) = f.members.get_mut(i) {
+                    side.clone_into(&mut m.side);
+                }
+            }
+            Event::MemberAdd => f.members.push(MemberRow::default()),
+            Event::MemberRemove(i) => {
+                if i < f.members.len() {
+                    f.members.remove(i);
+                }
+            }
             Event::Label(t) => f.label = t,
             Event::PointName(t) => f.point_name = t,
             Event::PointCode(t) => f.point_code = t,
@@ -348,6 +404,10 @@ impl App {
         let Ok(made) = from_form(&editor.form) else {
             return;
         };
+        // A group's members must be templates the library has, of the kind their rule needs.
+        if !self.template_member_issues(&made.template).is_empty() {
+            return;
+        }
         let (in_place, to) = (editor.in_place.clone(), editor.to);
         let (source, done) = match &in_place {
             Some((id, source)) => {
@@ -394,6 +454,106 @@ impl App {
             }
             Err(e) => self.warn(e),
         }
+    }
+
+    /// What keeps a group template from starting with the library (docs/adr/0176 §5).
+    fn template_member_issues(&self, template: &Value) -> Vec<String> {
+        let lib = &self.styles.library;
+        member_issues(template, |id| {
+            lib.get(id)
+                .filter(|(item, _)| item.kind() == ItemKind::Template)
+                .and_then(|(item, _)| Some((item.name(), item.template()?)))
+        })
+    }
+
+    /// A group's member rows: the template (every other one of the library,
+    /// by name and kind), the rule, an offset's distance and side, and Sil;
+    /// then Üye ekle.
+    fn member_rows(&self, f: &TemplateForm, editing: Option<&str>) -> Element<'_, Message> {
+        let lib = &self.styles.library;
+        let mut choices: Vec<(String, String)> = vec![(String::new(), "Şablon seçin".to_owned())];
+        for group in listed(lib, "") {
+            for (id, _) in group.items {
+                if Some(id.as_str()) == editing {
+                    continue;
+                }
+                if let Some((item, _)) = lib.get(&id) {
+                    let tool = item
+                        .template()
+                        .and_then(|t| t.get("tool"))
+                        .and_then(Value::as_str)
+                        .unwrap_or("");
+                    choices.push((
+                        id.clone(),
+                        format!("{} ({})", item.name(), tool_label(tool)),
+                    ));
+                }
+            }
+        }
+        let sides: &[(&str, &str)] = if CLOSED_TOOLS.contains(&f.tool.as_str()) {
+            &CLOSED_SIDES
+        } else {
+            &OPEN_SIDES
+        };
+        let mut rows = Column::new().spacing(6);
+        for (i, m) in f.members.iter().enumerate() {
+            let mut own = choices.clone();
+            if !own.iter().any(|(v, _)| *v == m.template) {
+                own.push((m.template.clone(), m.template.clone()));
+            }
+            let offset = m.rule == "offset";
+            let distance: Element<'_, Message> = if offset {
+                form_fields::input(None, "Uzaklık (m)", &m.distance, false, false)
+                    .on_input(move |t| msg(Event::MemberDistance(i, t)))
+                    .width(96.0)
+                    .into()
+            } else {
+                iced::widget::space().width(96.0).into()
+            };
+            let side: Element<'_, Message> = if offset {
+                container(form_fields::select(sides, &m.side, move |s| {
+                    msg(Event::MemberSide(i, s))
+                }))
+                .width(104.0)
+                .into()
+            } else {
+                iced::widget::space().width(104.0).into()
+            };
+            rows = rows.push(
+                row![
+                    container(form_fields::select_owned(own, &m.template, move |t| {
+                        msg(Event::MemberTemplate(i, t))
+                    }))
+                    .width(Length::FillPortion(16)),
+                    container(form_fields::select(&RULES, &m.rule, move |r| {
+                        msg(Event::MemberRule(i, r))
+                    }))
+                    .width(Length::FillPortion(11)),
+                    distance,
+                    side,
+                    button(icon(crate::icons::from_web(Some("trash"))).size(14.0))
+                        .on_press(msg(Event::MemberRemove(i)))
+                        .padding([4, 6])
+                        .style(style::button::ghost),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        rows.push(
+            button(
+                row![
+                    icon(crate::icons::from_web(Some("plus"))).size(13.0),
+                    label::body("Üye ekle")
+                ]
+                .spacing(5)
+                .align_y(Center),
+            )
+            .on_press(msg(Event::MemberAdd))
+            .padding([4, 10])
+            .style(style::button::secondary),
+        )
+        .into()
     }
 
     /// Şablon düzenleyici.
@@ -760,6 +920,15 @@ impl App {
             }
             _ => {}
         }
+        if GROUP_TOOLS.contains(&f.tool.as_str()) {
+            let editing = editor.in_place.as_ref().map(|(id, _)| id.as_str());
+            body = body
+                .push(form_fields::group_title("Grup üyeleri"))
+                .push(self.member_rows(f, editing))
+                .push(form_fields::hint(
+                    "Çizilen her nesneyle birlikte üyelerin nesneleri de aynı adımda yazılır: aynı geometri, öteleme, köşelere nokta ya da ağırlık merkezine nokta veya yazı.",
+                ));
+        }
         if editor.in_place.is_none() {
             let hint = match editor.to {
                 Where::User => "Bu bilgisayarda, bütün çizimlerde.",
@@ -773,9 +942,14 @@ impl App {
                 Some(hint),
             ));
         }
-        if let Err(issues) = &made {
+        // A group's members must be templates the library has, of the kind their rule needs (docs/adr/0176 §5).
+        let problems = match &made {
+            Err(issues) => issues.clone(),
+            Ok(item) => self.template_member_issues(&item.template),
+        };
+        if !problems.is_empty() {
             body = body.push(words::summary(
-                issues
+                problems
                     .iter()
                     .map(|i| words::text_line(Kind::Error, i.clone()))
                     .collect(),
@@ -788,7 +962,7 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
                 .action(words::primary(
                     "Kaydet",
-                    made.is_ok().then(|| msg(Event::Save)),
+                    problems.is_empty().then(|| msg(Event::Save)),
                 ))
                 .width(640.0)
                 .max_height(820.0),
@@ -854,6 +1028,58 @@ mod tests {
             .filter(|(i, _)| i.kind() == kentos_native_style::library::ItemKind::Template)
             .map(|(i, _)| i.value().clone())
             .collect()
+    }
+
+    /// A group's members (docs/adr/0176 §5): a row's template and rule, an
+    /// offset's distance and side; a member whose template does not fit its
+    /// rule keeps Kaydet closed and says why; once it fits, the group is saved
+    /// with its members.
+    #[test]
+    fn a_groups_members_are_chosen_checked_and_saved() {
+        let mut app = app();
+        let lib_point = json!({ "kind": "template", "id": "p-nokta", "name": "Parsel noktası", "path": [],
+            "template": { "tool": "point", "layer": { "path": [], "name": "Nokta" }, "point": { "name": "P1" } } });
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut styles = doc.model.styles().clone();
+        styles.items.push(lib_point);
+        doc.model.set_styles(styles);
+        let _ = app.update(Message::Swallowed);
+        let _ = app.update(Message::Run("template.new"));
+        send(&mut app, Event::Name("Parsel grubu".into()));
+        send(&mut app, Event::MemberAdd);
+        send(&mut app, Event::MemberTemplate(0, "p-parsel".into()));
+        send(&mut app, Event::MemberRule(0, "vertices"));
+        let editor = app.template_editor.as_ref().expect("open");
+        let made = super::from_form(&editor.form).expect("a template");
+        assert_eq!(
+            app.template_member_issues(&made.template),
+            [
+                "1. üye: köşelere nokta üyesi bir nokta şablonu olmalı; “Parsel sınırı” Kapalı alan şablonu."
+            ]
+        );
+        // Kaydet does nothing while a member does not fit.
+        send(&mut app, Event::Save);
+        assert!(app.template_editor.is_some());
+        send(&mut app, Event::MemberTemplate(0, "p-nokta".into()));
+        send(&mut app, Event::MemberAdd);
+        send(&mut app, Event::MemberTemplate(1, "p-parsel".into()));
+        send(&mut app, Event::MemberRule(1, "offset"));
+        send(&mut app, Event::MemberDistance(1, "0,5".into()));
+        send(&mut app, Event::MemberSide(1, "inside"));
+        send(&mut app, Event::Save);
+        assert_eq!(app.dialog, None);
+        let saved = user_templates(&app);
+        let item = saved
+            .iter()
+            .find(|i| i["name"] == "Parsel grubu")
+            .expect("saved");
+        assert_eq!(
+            item["template"]["members"],
+            json!([
+                { "template": "p-nokta", "rule": "vertices" },
+                { "template": "p-parsel", "rule": "offset", "distance": 0.5, "side": "inside" }
+            ])
+        );
     }
 
     #[test]
@@ -1011,6 +1237,34 @@ mod tests {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("sablon-duzenleyici-{theme}-{w}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+            // A group template (docs/adr/0176 §5): its members' table under the fields.
+            let doc = app.document.as_mut().expect("a drawing");
+            let mut styles = doc.model.styles().clone();
+            styles.items.extend([
+                json!({ "kind": "template", "id": "p-nokta", "name": "Parsel noktası", "path": ["Kadastro"],
+                    "template": { "tool": "point", "layer": { "path": [], "name": "Nokta" }, "point": { "name": "P1", "code": "PN" } } }),
+                json!({ "kind": "template", "id": "p-numara", "name": "Parsel numarası", "path": ["Kadastro"],
+                    "template": { "tool": "text", "layer": { "path": [], "name": "Yazılar" }, "label": "101", "text": { "height": 2.5 } } }),
+                json!({ "kind": "template", "id": "p-grup", "name": "Parsel ve köşeleri", "path": ["Kadastro"],
+                    "template": { "tool": "polygon", "layer": { "path": ["Kadastro"], "name": "Parsel" }, "members": [
+                        { "template": "p-nokta", "rule": "vertices" },
+                        { "template": "p-numara", "rule": "centroid" },
+                        { "template": "p-parsel", "rule": "offset", "distance": 0.5, "side": "inside" }
+                    ] } }),
+            ]);
+            doc.model.set_styles(styles);
+            let _ = app.update(Message::Swallowed);
+            let _ = app.open_template_editor(Some("p-grup"), None);
+            snapshot.settle(&mut app, App::view, &mut update);
+            // The members are at the window's foot: the body scrolled to its end.
+            snapshot.operate(app.view(), Box::new(crate::files_testing::SnapAll));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("sablon-duzenleyici-grup-{theme}-{w}.png"));
             snapshot
                 .render(app.view(), &app.theme())
                 .save(&file)

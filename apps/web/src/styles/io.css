@@ -440,3 +440,10 @@
   gap: 6px;
   width: 100%;
 }
+/* A group's member: its template, rule, an offset's distance and side, and Sil. */
+.tpl-editor__member {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr) calc(96px * var(--ui-scale)) calc(104px * var(--ui-scale)) auto;
+  gap: 6px;
+  width: 100%;
+}

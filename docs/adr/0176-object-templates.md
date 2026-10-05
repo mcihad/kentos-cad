@@ -221,6 +221,13 @@ da geçer:
      `template-group.json` (`template-group.kcad`): bozuk grup başlamaz; parsel köşe noktaları ve numarasıyla, tek adımda geri alınır ve
      yinelenir, komşu parselde ortak köşeler atlanır (P5, P6, 102); yol iki yanında kenarlarıyla; dikdörtgen dışa saçağıyla; `shot`
      adımlarıyla iki platformda resimlenir.
+   - 5d **Tamam (5 Ekim):** Şablon düzenleyicide grup araçlarında (Çizgi, Çoklu çizgi, Kapalı alan, dikdörtgenler) “Grup üyeleri”
+     tablosu iki platformda: satırda üyenin şablonu (kitaplığın öbür şablonları, adları ve araçlarıyla), kuralı (Aynı geometri,
+     Ötelenmiş, Köşelere nokta, Ağırlık merkezine), ötelemede uzaklığı ve şekle göre yanı (Sola, Sağa ya da İçe, Dışa; İki yana), Sil;
+     Üye ekle. Formun sorunlarının yanında üyelerin kitaplıktaki sorunları da söylenir, Kaydet ikisi de yokken açılır (web
+     `memberIssues`, masaüstü `template_member_issues`). Kuralların ve yanların adları web'de `MEMBER_RULE_LABEL`, `MEMBER_SIDE_LABEL`.
+     Resimler: masaüstü `template_editor::tests::screens`'in `sablon-duzenleyici-grup-*`'ı, web `shots.mjs stylemanager`'ın
+     `template-editor-group`'u.
 6. Şablonu uygula; ortak iz.
 
 Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
