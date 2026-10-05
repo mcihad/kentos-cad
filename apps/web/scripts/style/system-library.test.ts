@@ -6,14 +6,17 @@
 // Outside src/ so the app's type check does not need Node's types.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { STYLE_FORMAT, STYLE_VERSION } from '../../src/style/file';
+import { STYLE_FORMAT, styleVersionOf } from '../../src/style/file';
 import { SYSTEM_LIBRARY } from '../../src/style/system';
 
 const OUT = new URL('../../../../crates/native/style/assets/system-library.kstil', import.meta.url);
 
-/** The library as a .kstil file, the format the desktop's style files read. `exported` is fixed, so the file changes only with the symbols. */
+/**
+ * The library as a .kstil file, the format the desktop's style files read, its version as the writer gives it (2 only
+ * with object templates, docs/adr/0176 §2). `exported` is fixed, so the file changes only with the symbols.
+ */
 function text(): string {
-  const file = { format: STYLE_FORMAT, version: STYLE_VERSION, exported: 'system', items: SYSTEM_LIBRARY.items, categories: SYSTEM_LIBRARY.categories };
+  const file = { format: STYLE_FORMAT, version: styleVersionOf(SYSTEM_LIBRARY.items), exported: 'system', items: SYSTEM_LIBRARY.items, categories: SYSTEM_LIBRARY.categories };
   return `${JSON.stringify(file)}\n`;
 }
 
