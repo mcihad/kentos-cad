@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 315,
-      "implemented": 303,
+      "total": 319,
+      "implemented": 307,
       "partial": 0,
       "pending": 12
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 97,
-      "implemented": 97,
+      "total": 100,
+      "implemented": 100,
       "partial": 0,
       "pending": 0
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 243,
+    "commandsOnDesktop": 247,
     "desktop": {
       "commands": {
-        "total": 315,
-        "implemented": 243,
+        "total": 319,
+        "implemented": 247,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -169,8 +169,8 @@
         "n/a": 0
       },
       "screens": {
-        "total": 97,
-        "implemented": 79,
+        "total": 100,
+        "implemented": 82,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -3082,6 +3082,39 @@
       ]
     },
     {
+      "id": "layer.list",
+      "title": "Katman listesi…",
+      "category": "Katman",
+      "icon": "layerList",
+      "description": "Katmanları ve grupları ağacın sırasıyla durumları, görünüşleri ve nesne sayılarıyla listeler; panoya kopyalar ya da CSV olarak kaydeder.",
+      "aliases": [
+        "LAYLIST",
+        "KATMANLISTESI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Katman"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Katmanlar",
+        "CBS › Giriş › Katmanlar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-purge.json"
+      ]
+    },
+    {
       "id": "layer.merge",
       "title": "Katmanları birleştir…",
       "category": "Katman",
@@ -3168,6 +3201,40 @@
       ]
     },
     {
+      "id": "layer.purge",
+      "title": "Kullanılmayanları temizle…",
+      "category": "Katman",
+      "icon": "layerPurge",
+      "description": "Nesnesi olmayan katmanları, boş kalan grupları, yerleştirilmemiş blokları ve projenin kitaplığında kullanılmayan sembol ve varlıkları listeler; işaretlenenleri siler.",
+      "aliases": [
+        "PU",
+        "KULLANILMAYANLAR"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Katman"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Katmanlar",
+        "CAD › Yönet › Temizlik",
+        "CBS › Giriş › Katmanlar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-purge.json"
+      ]
+    },
+    {
       "id": "layer.showAll",
       "title": "Tüm katmanları göster",
       "short": "Katmanları göster",
@@ -3192,6 +3259,72 @@
       },
       "tests": [
         "fixtures/interaction/v1/layer-by-object.json"
+      ]
+    },
+    {
+      "id": "layer.stateSave",
+      "title": "Yeni katman durumu kaydet",
+      "short": "Durum kaydet",
+      "category": "Katman",
+      "icon": "layerStateSave",
+      "description": "Katmanların şimdiki görünürlüğünü ve stillerini “Durum n” adıyla projeye kaydeder; adı Katman durumları penceresinden değiştirilir.",
+      "aliases": [
+        "DURUMKAYDET"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Katman"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Katmanlar",
+        "CBS › Giriş › Katmanlar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-states.json"
+      ]
+    },
+    {
+      "id": "layer.states",
+      "title": "Katman durumları…",
+      "category": "Katman",
+      "icon": "layerStates",
+      "description": "Katmanların görünürlüğünü, istenirse kilitlerini ve stillerini adlı durum olarak projeye kaydeder; kayıtlı durumu uygular, günceller, yeniden adlandırır ya da siler.",
+      "aliases": [
+        "LAYERSTATE",
+        "LAS",
+        "KATMANDURUMU",
+        "KATMANDURUMLARI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Katman"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Katmanlar",
+        "CBS › Giriş › Katmanlar"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/layers/LayersPanel.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/layer-states.json"
       ]
     },
     {
@@ -7007,7 +7140,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/layer-by-object.json"
+        "fixtures/interaction/v1/layer-by-object.json",
+        "fixtures/interaction/v1/layer-states.json"
       ]
     },
     {
@@ -11277,7 +11411,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "fixtures/interaction/v1/layer-by-object.json"
+        "fixtures/interaction/v1/layer-by-object.json",
+        "fixtures/interaction/v1/layer-states.json"
       ]
     },
     {
@@ -19892,6 +20027,30 @@
       "note": "Çizim açılırken: dosya, proje (ad, nesne, katman), aşama ve ilerleme; Vazgeç açık çizime dokunmaz (ADR 0030). Masaüstünde opening.rs."
     },
     {
+      "id": "apps/web/src/ui/layers/LayerListDialog.ts#openLayerList",
+      "name": "openLayerList",
+      "role": "window",
+      "source": "apps/web/src/ui/layers/LayerListDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_list.rs (ADR 0177 §6)"
+    },
+    {
+      "id": "apps/web/src/ui/layers/LayerStatesDialog.ts#openLayerStates",
+      "name": "openLayerStates",
+      "role": "window",
+      "source": "apps/web/src/ui/layers/LayerStatesDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_states.rs (ADR 0177 §4)"
+    },
+    {
       "id": "apps/web/src/ui/layers/LayersPanel.ts#LayersPanel",
       "name": "LayersPanel",
       "role": "panel",
@@ -19914,6 +20073,18 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/layer_merge.rs (ADR 0177 §3)"
+    },
+    {
+      "id": "apps/web/src/ui/layers/PurgeDialog.ts#openPurge",
+      "name": "openPurge",
+      "role": "window",
+      "source": "apps/web/src/ui/layers/PurgeDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/layer_purge.rs (ADR 0177 §5)"
     },
     {
       "id": "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel",
@@ -20571,7 +20742,11 @@
               "tool.layerMakeActive",
               "tool.layerMatch",
               "tool.copyToLayer",
-              "layer.unisolate"
+              "layer.unisolate",
+              "layer.states",
+              "layer.stateSave",
+              "layer.purge",
+              "layer.list"
             ]
           }
         ]
@@ -21554,7 +21729,11 @@
               "tool.layerMakeActive",
               "tool.layerMatch",
               "tool.copyToLayer",
-              "layer.merge"
+              "layer.merge",
+              "layer.states",
+              "layer.stateSave",
+              "layer.purge",
+              "layer.list"
             ],
             "keep": false,
             "launcher": {
@@ -23819,7 +23998,11 @@
                 "tool.layerMakeActive",
                 "tool.layerMatch",
                 "tool.copyToLayer",
-                "layer.merge"
+                "layer.merge",
+                "layer.states",
+                "layer.stateSave",
+                "layer.purge",
+                "layer.list"
               ],
               "keep": false,
               "launcher": {
@@ -24734,6 +24917,10 @@
                 {
                   "command": "block.purge",
                   "size": "small"
+                },
+                {
+                  "command": "layer.purge",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -25631,7 +25818,11 @@
                 "tool.layerMakeActive",
                 "tool.layerMatch",
                 "tool.copyToLayer",
-                "layer.merge"
+                "layer.merge",
+                "layer.states",
+                "layer.stateSave",
+                "layer.purge",
+                "layer.list"
               ],
               "keep": false,
               "launcher": {
@@ -27436,6 +27627,10 @@
     "layerDuplicate": "<path d=\"m8 9.6 6 3.1-6 3.1-6-3.1z\"/><path d=\"m12 4.2 6 3.1-6 3.1\" fill=\"currentColor\" fill-opacity=\".3\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M14.5 13.6v4.6M12.2 15.9h4.6\" stroke-width=\"1.3\"/>",
     "layerMerge": "<path d=\"m10 12.4 7 3.6-7 3.6-7-3.6z\" fill=\"currentColor\" fill-opacity=\".3\"/><path d=\"M4.5 2.5v2.4A3 3 0 0 0 7.5 8H10m5.5-5.5v2.4a3 3 0 0 1-3 3.1H10v3.4m-1.6-1.6L10 11.4l1.6-1.6\" stroke-width=\"1.3\"/>",
     "layerUnisolate": "<path d=\"m10 6.6 7 3.6-7 3.6-7-3.6z\"/><path d=\"m3 13.8 7 3.6 7-3.6\"/><path d=\"M13.6 4.2a4 4 0 0 0-6.9.6M6.4 2v2.8h2.8\" stroke-width=\"1.2\"/>",
+    "layerStates": "<path d=\"m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4\"/><path d=\"M7 2.2h6v8.4l-3-2.2-3 2.2z\" fill=\"currentColor\" fill-opacity=\".3\" stroke-width=\"1.2\"/>",
+    "layerStateSave": "<path d=\"m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4\"/><path d=\"M4.4 2.2h5v7.6l-2.5-1.9-2.5 1.9z\" stroke-width=\"1.2\"/><path d=\"M14.2 2v6M11.2 5h6\" stroke-width=\"1.3\"/>",
+    "layerPurge": "<path d=\"m2.5 13.2 6.5 3.2 6.5-3.2-6.5-3.2z\" stroke-dasharray=\"1.6 1.4\"/><path d=\"m2.5 16.2 6.5 3.2 6.5-3.2\"/><path d=\"M17.6 1.6 14.4 5.6\" stroke-width=\"1.2\"/><path d=\"M11.8 5.8h4.8l.9 3.6h-6.6z\" stroke-width=\"1.2\"/>",
+    "layerList": "<path d=\"m2.6 4.6 2.3-1.3 2.3 1.3-2.3 1.3zM2.6 10l2.3-1.3 2.3 1.3-2.3 1.3zM2.6 15.4l2.3-1.3 2.3 1.3-2.3 1.3z\" stroke-width=\"1.1\"/><path d=\"M9.5 4.6h8M9.5 10h8M9.5 15.4h8\"/>",
     "folderAdd": "<path d=\"M2.5 15.5v-10h5l1.5 2h8.5v3\"/><path d=\"M2.5 15.5h9M15 11.5v6M12 14.5h6\"/>",
     "folder": "<path d=\"M2.5 15.5v-10h5l1.5 2h8.5v8z\"/>",
     "eye": "<path d=\"M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z\"/><circle cx=\"10\" cy=\"10\" r=\"2.4\"/>",

@@ -113,6 +113,10 @@ export const MAIN_MENU: TopMenu[] = [
       '@tools:layer',
       sec('Katman'),
       'layer.unisolate',
+      'layer.states',
+      'layer.stateSave',
+      'layer.purge',
+      'layer.list',
     ],
   },
   {

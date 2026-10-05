@@ -65,6 +65,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   sembolünü, özniteliklerini ve etiketini alır, istemde şablonun adı, Son komutu yinele şablonu yineler; sağ dokta Şablonlar paneli
   (kategoriler, arama, son kullanılanlar, tıklayınca çizer); Şablon düzenleyici ve Seçili nesneden şablon; grup şablonu (üyeleri: aynı
   geometri, öteleme, köşelere nokta, ağırlık merkezinde yazı; ana nesneyle tek adımda); Şablonu uygula (seçili nesnelere, `template.apply`) (ADR 0176);
+  katman yönetimi ekleri: Katmanı gizle, yalıt, kilitle, etkin yap ve Yalıtımı kaldır (nesneye tıklayarak), Katmanı eşle, Katmana
+  kopyala, Kopyasını oluştur, Katmanları birleştir; Katman durumları (görünürlük, isteğe bağlı kilit ve stil; projenin ayarı, `.kcad`
+  şema 19; Katmanlar panelinde Katman durumları ▾), Kullanılmayanları temizle (boş katmanlar ve gruplar, kullanılmayan bloklar,
+  projenin kullanılmayan sembolleri ve varlıkları), Katman listesi (pano, CSV) (ADR 0177);
   ölçü noktası: Nokta'nın Ad, Kod ve Kot'u, ad her noktada artar, aynı yerde nokta varsa Düzelt, Ekle ya da Atla, `#ad` ile adlı noktanın yeri, Köşelere nokta (ADR 0152);
   mesafe ölç, alan hesapla ve parsel oluştur (ADR 0067); seçili nesnelerin tutamaçları ve üzerine gelme kartı (ADR 0068);
   Hesap pencereleri: poligon hesabı, kutupsal alım, önden ve geriden kestirme, aplikasyon (ADR 0070, 0071);
@@ -874,7 +878,15 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   panelinin ▾'i `under`; izlerin `hiddenLayers` ve `lockedLayers`'ı; ortak iz `layer-by-object.json`) ve 2. adım (Katmanı eşle ve
   Katmana kopyala: web `tools/layerMoveTool.ts`, masaüstü `kentos_interaction::layer_move`; ortak iz `layer-move.json`) ve 3. adım
   (Kopyasını oluştur ve Katmanları birleştir: web `app/layerActions.ts`, `ui/layers/MergeLayersDialog.ts`, masaüstü `layer_merge.rs`;
-  ortak iz `layer-merge.json`) ve 4a (katman durumları: `ProjectSettings.layerStates`, `.kcad` şema 19, `layer-states.kcad`) tamam.
+  ortak iz `layer-merge.json`) ve 4a (katman durumları: `ProjectSettings.layerStates`, `.kcad` şema 19, `layer-states.kcad`) tamam;
+  kalanı tek parçada (sahibin 5 Ekim kararı: “her maddeyi tek parçada bitir”, bundan sonraki maddeler alt adımlara bölünmez): Katman
+  durumları penceresi ve Katmanlar panelinin Katman durumları ▾'i (web `app/layerStates.ts`, `ui/layers/LayerStatesDialog.ts`, masaüstü
+  `layer_states.rs`; kurallar `kentos_domain::layer_states`, `model/layerStates.ts`), Kullanılmayanları temizle (kural
+  `kentos_domain::layer_purge`, `model/layerPurge.ts`: kalanların kullanmadığı en büyük küme; web `ui/layers/PurgeDialog.ts`, masaüstü
+  `layer_purge.rs`), Katman listesi (pano ve CSV; web `app/layerList.ts`, masaüstü `layer_list.rs`); ortak durumlar `fixtures/layers/v1`
+  bağımsız Python başvurularıyla, ortak izler `layer-states.json` ve `layer-purge.json`, izlerin `layers` beklentisi; web kaydının
+  katman durumlarını ve katmanın kendi kenetini düşürmesi düzeldi (`io/kcad.ts` `projectHead`); `HYB-20` bitti (5 Ekim). Sıradaki
+  `HYB-21` veri karşılaştırma; `HYB-22` veride arama sahibin izniyle bir kezlik alt ajanda.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

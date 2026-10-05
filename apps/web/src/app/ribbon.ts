@@ -88,7 +88,7 @@ export const PRIMARY_COMMANDS: ReadonlySet<string> = new Set([
 export const MAX_LARGE = 4;
 
 /** The layer actions by an object, Yalıtımı kaldır, Katmanı eşle, Katmana kopyala and Katmanları birleştir (docs/adr/0177 §1–§3), under Katmanlar's ▾ in every ribbon. */
-const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive', 'tool.layerMatch', 'tool.copyToLayer', 'layer.merge'];
+const LAYER_ACTIONS = ['tool.layerOff', 'tool.layerIsolate', 'layer.unisolate', 'tool.layerLock', 'tool.layerMakeActive', 'tool.layerMatch', 'tool.copyToLayer', 'layer.merge', 'layer.states', 'layer.stateSave', 'layer.purge', 'layer.list'];
 
 export const RIBBON_TABS: readonly RibbonTabSpec[] = [
   { id: 'file', label: 'Dosya', sources: [{ menu: 'file' }] },
@@ -232,7 +232,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
   {
     id: 'manage',
     label: 'Yönet',
-    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge'] }, { menu: 'tools' }, { menu: 'help' }],
+    sources: [{ pick: 'Temizlik', icon: 'cleanup', commands: ['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge'] }, { menu: 'tools' }, { menu: 'help' }],
     launchers: AIDS_LAUNCHER,
   },
   {

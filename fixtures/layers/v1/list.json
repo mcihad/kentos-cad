@@ -1,0 +1,191 @@
+{
+ "format": "kentos.layer-list-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/layer_list_cases.py from docs/adr/0177 §6, not from either platform's code. `counts` are the objects on each layer; `rows` start with the header; `csv` is the file's text (with its byte order mark), `tsv` the clipboard's.",
+ "cases": [
+  {
+   "name": "Gruplu ağaç: gizli, kilitli ve etkin katman, adı ayırıcı ve tırnak taşıyan katman, renk adları, kalınlığın yarımı",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "ink",
+      "lineType": "dashdot",
+      "lineWeight": 0.35
+     },
+     "children": []
+    },
+    {
+     "id": "not",
+     "name": "Not; \"taslak\"",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "#123abc",
+      "lineType": "dotted",
+      "lineWeight": 0.125
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.13
+     },
+     "children": []
+    }
+   ],
+   "active": "parsel",
+   "counts": {
+    "parsel": 12,
+    "bina": 3,
+    "not": 1
+   },
+   "rows": [
+    [
+     "Yol",
+     "Ad",
+     "Tür",
+     "Görünür",
+     "Kilitli",
+     "Etkin",
+     "Renk",
+     "Çizgi tipi",
+     "Kalınlık (mm)",
+     "Nesne sayısı"
+    ],
+    [
+     "Kadastro",
+     "Kadastro",
+     "Grup",
+     "Evet",
+     "Hayır",
+     "Hayır",
+     "",
+     "",
+     "",
+     "15"
+    ],
+    [
+     "Kadastro / Parsel",
+     "Parsel",
+     "Katman",
+     "Evet",
+     "Hayır",
+     "Evet",
+     "Kırmızı",
+     "Sürekli",
+     "0,50",
+     "12"
+    ],
+    [
+     "Kadastro / Bina",
+     "Bina",
+     "Katman",
+     "Evet",
+     "Evet",
+     "Hayır",
+     "Gri",
+     "Kesikli",
+     "0,18",
+     "3"
+    ],
+    [
+     "Yol",
+     "Yol",
+     "Katman",
+     "Hayır",
+     "Hayır",
+     "Hayır",
+     "Siyah",
+     "Noktalı kesik",
+     "0,35",
+     "0"
+    ],
+    [
+     "Not; \"taslak\"",
+     "Not; \"taslak\"",
+     "Katman",
+     "Evet",
+     "Hayır",
+     "Hayır",
+     "#123ABC",
+     "Noktalı",
+     "0,13",
+     "1"
+    ],
+    [
+     "Çizim",
+     "Çizim",
+     "Katman",
+     "Evet",
+     "Hayır",
+     "Hayır",
+     "FG",
+     "Sürekli",
+     "0,13",
+     "0"
+    ]
+   ],
+   "csv": "﻿Yol;Ad;Tür;Görünür;Kilitli;Etkin;Renk;Çizgi tipi;Kalınlık (mm);Nesne sayısı\r\nKadastro;Kadastro;Grup;Evet;Hayır;Hayır;;;;15\r\nKadastro / Parsel;Parsel;Katman;Evet;Hayır;Evet;Kırmızı;Sürekli;0,50;12\r\nKadastro / Bina;Bina;Katman;Evet;Evet;Hayır;Gri;Kesikli;0,18;3\r\nYol;Yol;Katman;Hayır;Hayır;Hayır;Siyah;Noktalı kesik;0,35;0\r\n\"Not; \"\"taslak\"\"\";\"Not; \"\"taslak\"\"\";Katman;Evet;Hayır;Hayır;#123ABC;Noktalı;0,13;1\r\nÇizim;Çizim;Katman;Evet;Hayır;Hayır;FG;Sürekli;0,13;0\r\n",
+   "tsv": "Yol\tAd\tTür\tGörünür\tKilitli\tEtkin\tRenk\tÇizgi tipi\tKalınlık (mm)\tNesne sayısı\nKadastro\tKadastro\tGrup\tEvet\tHayır\tHayır\t\t\t\t15\nKadastro / Parsel\tParsel\tKatman\tEvet\tHayır\tEvet\tKırmızı\tSürekli\t0,50\t12\nKadastro / Bina\tBina\tKatman\tEvet\tEvet\tHayır\tGri\tKesikli\t0,18\t3\nYol\tYol\tKatman\tHayır\tHayır\tHayır\tSiyah\tNoktalı kesik\t0,35\t0\n\"Not; \"\"taslak\"\"\"\t\"Not; \"\"taslak\"\"\"\tKatman\tEvet\tHayır\tHayır\t#123ABC\tNoktalı\t0,13\t1\nÇizim\tÇizim\tKatman\tEvet\tHayır\tHayır\tFG\tSürekli\t0,13\t0\n"
+  }
+ ]
+}

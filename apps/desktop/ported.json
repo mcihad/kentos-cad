@@ -242,7 +242,11 @@
     "tool.layerMatch",
     "tool.copyToLayer",
     "layer.duplicate",
-    "layer.merge"
+    "layer.merge",
+    "layer.states",
+    "layer.stateSave",
+    "layer.purge",
+    "layer.list"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

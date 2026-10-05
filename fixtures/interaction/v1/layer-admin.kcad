@@ -1,0 +1,320 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Katman durumları ve temizlik",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#E5484D",
+            "lineType": "continuous",
+            "lineWeight": 0.5
+          },
+          "children": []
+        },
+        {
+          "id": "eski",
+          "name": "Eski parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "arsiv",
+      "name": "Arşiv",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "y2019",
+          "name": "2019",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        },
+        {
+          "id": "y2020",
+          "name": "2020",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "dashed",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#8C9AAA",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    },
+    {
+      "id": "lejant",
+      "name": "Lejant",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25,
+        "renderer": {
+          "type": "single",
+          "symbols": {
+            "line": {
+              "ref": "p-yol"
+            }
+          }
+        }
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 487000,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4419990
+        },
+        {
+          "x": 487020,
+          "y": 4420010
+        },
+        {
+          "x": 487000,
+          "y": 4420010
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+        "x": 486970,
+        "y": 4419980
+      },
+      "b": {
+        "x": 487030,
+        "y": 4419980
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 486975,
+          "y": 4420000
+        },
+        {
+          "x": 486990,
+          "y": 4420000
+        },
+        {
+          "x": 486990,
+          "y": 4420012
+        },
+        {
+          "x": 486975,
+          "y": 4420012
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+      "name": "Direk",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "entities": [
+        {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "yol",
+          "attrs": {},
+          "c": {
+            "x": 0,
+            "y": 0
+          },
+          "r": 0.5
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [
+      {
+        "kind": "symbol",
+        "id": "p-yol",
+        "name": "Yol çizgisi",
+        "path": [
+          "Proje"
+        ],
+        "symbol": {
+          "type": "line",
+          "layers": [
+            {
+              "id": "l1",
+              "type": "simpleLine",
+              "color": "#4F8EF7",
+              "width": 0.5
+            }
+          ]
+        }
+      },
+      {
+        "kind": "symbol",
+        "id": "p-bos",
+        "name": "Kullanılmayan simge",
+        "path": [
+          "Proje"
+        ],
+        "symbol": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "m1",
+              "type": "svg",
+              "asset": "p-resim",
+              "size": 4
+            }
+          ]
+        }
+      },
+      {
+        "kind": "asset",
+        "id": "p-resim",
+        "name": "resim.svg",
+        "path": [
+          "Proje"
+        ],
+        "format": "svg",
+        "data": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 10 10\"><circle cx=\"5\" cy=\"5\" r=\"4\"/></svg>",
+        "width": 10,
+        "height": 10
+      }
+    ],
+    "categories": [
+      {
+        "path": [
+          "Proje"
+        ]
+      }
+    ]
+  }
+}

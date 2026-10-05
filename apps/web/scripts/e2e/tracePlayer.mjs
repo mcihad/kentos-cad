@@ -568,6 +568,8 @@ const observe = (mark) =>
       // The layers and groups hidden or locked of their own, by their paths, in tree order (docs/adr/0177 §1).
       hiddenLayers: k.doc.layers.all().filter((n) => !n.visible).map((n) => k.doc.layers.path(n.id)),
       lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
+      // Every layer and group by its path, in tree order (docs/adr/0177 §5).
+      layers: k.doc.layers.all().map((n) => k.doc.layers.path(n.id)),
     };
   })()`);
 

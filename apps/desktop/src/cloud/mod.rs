@@ -933,6 +933,9 @@ impl App {
             Some(Dialog::AttributeValues) => self.attribute_values_closed(),
             Some(Dialog::FindReplace) => self.find_replace = None,
             Some(Dialog::LayerMerge) => self.layer_merge = None,
+            Some(Dialog::LayerStates) => self.layer_states_window = None,
+            Some(Dialog::LayerPurge) => self.layer_purge = None,
+            Some(Dialog::LayerList) => self.layer_list = None,
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
             Some(Dialog::TemplateEditor) => self.template_editor = None,
             Some(Dialog::PointBatch) => self.points.close_batch(),

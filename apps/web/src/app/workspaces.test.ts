@@ -92,7 +92,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Kılavuz', 'Tarama', 'İşaretleme']);
     expect(panelCommands(panel('annotate', 'İşaretleme'))).toEqual(['tool.revcloud']);
     expect(panel('manage', 'Temizlik').overflow).toBeUndefined();
-    expect(panelCommands(panel('manage', 'Temizlik'))).toEqual(['tool.cleanup', 'tool.topology', 'block.purge']);
+    expect(panelCommands(panel('manage', 'Temizlik'))).toEqual(['tool.cleanup', 'tool.topology', 'block.purge', 'layer.purge']);
     expect(cad.command('tool.parcel')).toBe(false);
     expect(cad.command('tool.hatch')).toBe(true);
   });

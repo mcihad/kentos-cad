@@ -308,6 +308,16 @@ export const ICONS = {
     '<path d="m10 12.4 7 3.6-7 3.6-7-3.6z" fill="currentColor" fill-opacity=".3"/><path d="M4.5 2.5v2.4A3 3 0 0 0 7.5 8H10m5.5-5.5v2.4a3 3 0 0 1-3 3.1H10v3.4m-1.6-1.6L10 11.4l1.6-1.6" stroke-width="1.3"/>',
   layerUnisolate:
     '<path d="m10 6.6 7 3.6-7 3.6-7-3.6z"/><path d="m3 13.8 7 3.6 7-3.6"/><path d="M13.6 4.2a4 4 0 0 0-6.9.6M6.4 2v2.8h2.8" stroke-width="1.2"/>',
+  // Katman durumları (docs/adr/0177 §4): a bookmark over the plates, a new one with its plus; Kullanılmayanları temizle:
+  // an empty plate swept; Katman listesi: the layers as rows.
+  layerStates:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><path d="M7 2.2h6v8.4l-3-2.2-3 2.2z" fill="currentColor" fill-opacity=".3" stroke-width="1.2"/>',
+  layerStateSave:
+    '<path d="m3 12.2 7 3.4 7-3.4M3 15.2l7 3.4 7-3.4"/><path d="M4.4 2.2h5v7.6l-2.5-1.9-2.5 1.9z" stroke-width="1.2"/><path d="M14.2 2v6M11.2 5h6" stroke-width="1.3"/>',
+  layerPurge:
+    '<path d="m2.5 13.2 6.5 3.2 6.5-3.2-6.5-3.2z" stroke-dasharray="1.6 1.4"/><path d="m2.5 16.2 6.5 3.2 6.5-3.2"/><path d="M17.6 1.6 14.4 5.6" stroke-width="1.2"/><path d="M11.8 5.8h4.8l.9 3.6h-6.6z" stroke-width="1.2"/>',
+  layerList:
+    '<path d="m2.6 4.6 2.3-1.3 2.3 1.3-2.3 1.3zM2.6 10l2.3-1.3 2.3 1.3-2.3 1.3zM2.6 15.4l2.3-1.3 2.3 1.3-2.3 1.3z" stroke-width="1.1"/><path d="M9.5 4.6h8M9.5 10h8M9.5 15.4h8"/>',
   folderAdd: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v3"/><path d="M2.5 15.5h9M15 11.5v6M12 14.5h6"/>',
   folder: '<path d="M2.5 15.5v-10h5l1.5 2h8.5v8z"/>',
   eye: '<path d="M1.8 10S5 4.6 10 4.6 18.2 10 18.2 10 15 15.4 10 15.4 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.4"/>',

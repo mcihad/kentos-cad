@@ -228,6 +228,15 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    // Every layer and group (docs/adr/0177 §5), exact.
+    if let Some(want) = &expect.layers {
+        check(
+            "layers",
+            &got.layers == want,
+            format!("{:?}", got.layers),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.current_color {
         check(
             "currentColor",

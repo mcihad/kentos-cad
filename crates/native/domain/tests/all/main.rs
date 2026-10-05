@@ -5,4 +5,5 @@
 mod external;
 mod fixtures;
 mod identity;
+mod layer_rules;
 mod snapshot_v2;

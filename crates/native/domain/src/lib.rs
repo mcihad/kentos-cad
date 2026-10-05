@@ -33,6 +33,8 @@ mod external;
 mod hash;
 mod history;
 mod identity;
+pub mod layer_purge;
+pub mod layer_states;
 mod layers;
 mod linked;
 mod snapshot;

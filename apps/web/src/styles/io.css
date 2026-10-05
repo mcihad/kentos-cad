@@ -140,6 +140,121 @@
   color: var(--c-text-3);
 }
 
+/* Katman durumları (docs/adr/0177 §4): the saved states as rows to choose, the mark of the one the layers are in. */
+.states-list {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(96px * var(--ui-scale));
+  max-height: min(calc(220px * var(--ui-scale)), 30vh);
+  overflow: auto;
+  padding: 2px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.states-row {
+  display: grid;
+  grid-template-columns: calc(18px * var(--ui-scale)) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: calc(28px * var(--ui-scale));
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.states-row:hover {
+  background: var(--c-hover);
+}
+.states-row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.states-row__mark {
+  display: inline-flex;
+  color: var(--c-accent-text);
+}
+.states-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.states-row__parts {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.states-list__empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+.states-actions {
+  gap: 8px;
+}
+.states-parts {
+  gap: 4px 18px;
+}
+
+/* Kullanılmayanları temizle (docs/adr/0177 §5): the kinds' headings and their rows, a locked layer muted. */
+.purge-rows {
+  height: min(calc(300px * var(--ui-scale)), 40vh);
+  padding: 4px 0;
+}
+.purge-heading {
+  padding: 6px 10px 2px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.purge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: calc(26px * var(--ui-scale));
+  padding: 0 10px 0 16px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.purge-row:hover {
+  background: var(--c-hover);
+}
+.purge-row input {
+  accent-color: var(--c-accent);
+}
+.purge-row__words {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.purge-row--locked {
+  color: var(--c-text-3);
+  cursor: default;
+}
+.purge-row__note {
+  margin-left: auto;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* Katman listesi (docs/adr/0177 §6): the rows as the file and the clipboard get them. */
+.layer-list {
+  max-height: min(calc(360px * var(--ui-scale)), 50vh);
+}
+.layer-list th,
+.layer-list td {
+  white-space: nowrap;
+}
+.layer-list .num {
+  text-align: right;
+}
+
 /* Cihaza gönder (docs/adr/0169 §4): the file's first lines as written, in the code face, scrolling sideways. */
 .send-preview {
   margin: 0;

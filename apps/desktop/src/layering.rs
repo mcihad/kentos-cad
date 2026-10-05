@@ -20,15 +20,15 @@
 
 use std::time::{Duration, Instant};
 
-use iced::widget::{button, row, tooltip};
+use iced::widget::{button, container, row, tooltip};
 use iced::{Center, Element, Task};
 use kentos_contracts::{LayerNode, LayerNodeType, LineType};
 use kentos_domain::{NewLayer, Slot};
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, icon};
+use kentos_ui::style;
 use kentos_ui::widget::tree_view::RENAME;
-use kentos_ui::widget::{Menu, Tip, tip};
-use kentos_ui::{label, style};
+use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
 use crate::app::{App, Message};
 
@@ -599,8 +599,8 @@ impl App {
                 tooltip::Position::Bottom,
             )
         };
+        // The count is the ⋯ menu's heading: the header keeps its room for the tab's title (the web's meta gives way the same).
         row![
-            label::caption(format!("{count} katman")),
             // The commands' own icons, as the web's panel draws them.
             add(
                 crate::icons::from_web(Some("layerAdd")),
@@ -612,10 +612,97 @@ impl App {
                 "Yeni grup",
                 "layer.newGroup"
             ),
+            self.states_button(),
+            self.more_button(count),
         ]
         .spacing(4)
         .align_y(Center)
         .into()
+    }
+
+    /// Katman durumları ▾ (docs/adr/0177 §4): the project's states, the one
+    /// the layers are in now marked, each applied by a click; Yeni durum
+    /// kaydet saves the layers at once as “Durum n”; Katman durumları… opens
+    /// the window (the web's `statesMenu`).
+    fn states_button(&self) -> Element<'_, Message> {
+        let states: Vec<(String, String, bool, String)> = self
+            .layer_states()
+            .iter()
+            .map(|s| {
+                let parts = kentos_domain::layer_states::parts_of(s);
+                (
+                    s.id.clone(),
+                    s.name.clone(),
+                    self.state_matches(s),
+                    crate::layer_states::parts_text(parts),
+                )
+            })
+            .collect();
+        let locked = self.states_locked().is_some();
+        let menu = MenuButton::new(
+            container(icon(crate::icons::from_web(Some("layerStates"))).size(14.0)).padding([2, 4]),
+            move || {
+                let mut m = Menu::new();
+                if states.is_empty() {
+                    m = m.item("Kayıtlı durum yok", None);
+                }
+                for (id, name, now, parts) in &states {
+                    m = m
+                        .radio(
+                            name.clone(),
+                            *now,
+                            Message::LayerStates(crate::layer_states::Event::Apply(id.clone())),
+                        )
+                        .hint(parts.clone());
+                }
+                m.separator()
+                    .item(
+                        "Yeni durum kaydet",
+                        (!locked).then_some(Message::Run("layer.stateSave")),
+                    )
+                    .icon(crate::icons::from_web(Some("layerStateSave")))
+                    .item("Katman durumları…", Message::Run("layer.states"))
+                    .icon(crate::icons::from_web(Some("layerStates")))
+            },
+        );
+        tip(
+            menu,
+            Tip::new("Katman durumları").body(
+                "Kayıtlı durumlar (işaretli olan şimdiki hâl), yeni durum kaydetme ve Katman durumları penceresi.",
+            ),
+            tooltip::Position::Bottom,
+        )
+    }
+
+    /// The panel's ⋯ (docs/adr/0177 §7): the actions on the whole tree, under
+    /// the tree's layer count.
+    fn more_button(&self, count: usize) -> Element<'_, Message> {
+        let locked = self.tree_locked().is_some();
+        let menu = MenuButton::new(
+            container(icon(crate::icons::from_web(Some("more"))).size(14.0)).padding([2, 4]),
+            move || {
+                Menu::new()
+                    .header(format!("{count} katman"))
+                    .item(
+                        "Katmanları birleştir…",
+                        (!locked).then_some(Message::Run("layer.merge")),
+                    )
+                    .icon(crate::icons::from_web(Some("layerMerge")))
+                    .item(
+                        "Kullanılmayanları temizle…",
+                        (!locked).then_some(Message::Run("layer.purge")),
+                    )
+                    .icon(crate::icons::from_web(Some("layerPurge")))
+                    .item("Katman listesi…", Message::Run("layer.list"))
+                    .icon(crate::icons::from_web(Some("layerList")))
+            },
+        );
+        tip(
+            menu,
+            Tip::new("Katman işlemleri")
+                .body("Katmanları birleştir, Kullanılmayanları temizle ve Katman listesi."),
+            tooltip::Position::Bottom,
+        )
     }
 }
 

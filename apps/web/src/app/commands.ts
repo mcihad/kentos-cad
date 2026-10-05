@@ -16,6 +16,7 @@ import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 import { lockCommands } from './lockCommands';
 import { duplicateLayer, unisolateLayers } from './layerActions';
+import { quickSaveLayerState, statesLocked } from './layerStates';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -758,6 +759,49 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => !treeLocked(ctx),
       whyDisabled: () => treeLocked(ctx),
       watch: [ctx.cloud.project],
+    },
+    {
+      id: 'layer.states',
+      title: 'Katman durumları…',
+      category: 'Katman',
+      icon: 'layerStates',
+      aliases: ['LAYERSTATE', 'LAS', 'KATMANDURUMU', 'KATMANDURUMLARI'],
+      description: 'Katmanların görünürlüğünü, istenirse kilitlerini ve stillerini adlı durum olarak projeye kaydeder; kayıtlı durumu uygular, günceller, yeniden adlandırır ya da siler.',
+      run: () => void import('../ui/layers/LayerStatesDialog').then((m) => m.openLayerStates(ctx)),
+    },
+    {
+      id: 'layer.stateSave',
+      title: 'Yeni katman durumu kaydet',
+      short: 'Durum kaydet',
+      category: 'Katman',
+      icon: 'layerStateSave',
+      aliases: ['DURUMKAYDET'],
+      description: 'Katmanların şimdiki görünürlüğünü ve stillerini “Durum n” adıyla projeye kaydeder; adı Katman durumları penceresinden değiştirilir.',
+      run: () => void quickSaveLayerState(ctx),
+      isEnabled: () => !statesLocked(ctx),
+      whyDisabled: () => statesLocked(ctx),
+      watch: [ctx.cloud.project],
+    },
+    {
+      id: 'layer.purge',
+      title: 'Kullanılmayanları temizle…',
+      category: 'Katman',
+      icon: 'layerPurge',
+      aliases: ['PU', 'KULLANILMAYANLAR'],
+      description: 'Nesnesi olmayan katmanları, boş kalan grupları, yerleştirilmemiş blokları ve projenin kitaplığında kullanılmayan sembol ve varlıkları listeler; işaretlenenleri siler.',
+      run: () => void import('../ui/layers/PurgeDialog').then((m) => m.openPurge(ctx)),
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
+    },
+    {
+      id: 'layer.list',
+      title: 'Katman listesi…',
+      category: 'Katman',
+      icon: 'layerList',
+      aliases: ['LAYLIST', 'KATMANLISTESI'],
+      description: 'Katmanları ve grupları ağacın sırasıyla durumları, görünüşleri ve nesne sayılarıyla listeler; panoya kopyalar ya da CSV olarak kaydeder.',
+      run: () => void import('../ui/layers/LayerListDialog').then((m) => m.openLayerList(ctx)),
     },
 
     // Araç akışı

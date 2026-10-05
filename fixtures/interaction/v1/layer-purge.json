@@ -1,0 +1,21 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "layer-purge",
+  "title": "Kullanılmayanları temizle ve Katman listesi: pencerede boş katmanlar, boş kalan Arşiv grubu, yerleştirilmemiş Direk bloğu, projenin kullanılmayan sembolleri ve resmi işaretli, kilitli boş katman işaretlenemez; Lejant'ın işareti kaldırılınca stilindeki Yol çizgisi de kalır; Temizle katmanları, grubu ve bloğu tek adımda siler, geri alınır; Katman listesi penceresi ağacın satırlarını gösterir",
+  "source": "docs/adr/0177 §5, §6",
+  "covers": ["HYB-20"],
+  "document": "layer-admin.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "steps": [
+    {"run": "layer.purge", "expect": {"dialog": "Kullanılmayanları temizle"}},
+    {"shot": "temizle-pencere", "note": "Kullanılmayanları temizle: türlere göre işaretli satırlar, kilitli katman soluk"},
+    {"dialog": "Kullanılmayanları temizle", "check": {"Kilitli": true}, "note": "Kilitli boş katman işaretlenemez"},
+    {"dialog": "Kullanılmayanları temizle", "check": {"Lejant": false}, "press": "Temizle", "note": "Lejant kalınca stilindeki Yol çizgisi de kalır", "expect": {"dialog": null, "canUndo": true, "layers": ["Kadastro", "Kadastro / Parsel", "Yol", "Bina", "Lejant", "Kilitli"], "logged": ["Kullanılmayanlar temizlendi: 3 katman, 1 grup, 1 blok, 1 sembol, 1 varlık.", "İşaretlenen 1 öğe, kalanlar kullandığı için silinmedi."]}},
+    {"key": "Ctrl+Z", "note": "Katmanlar, grup ve blok tek adımda döner", "expect": {"canUndo": false, "layers": ["Kadastro", "Kadastro / Parsel", "Kadastro / Eski parsel", "Arşiv", "Arşiv / 2019", "Arşiv / 2020", "Yol", "Bina", "Lejant", "Kilitli"]}},
+    {"run": "layer.list", "expect": {"dialog": "Katman listesi"}},
+    {"shot": "liste-pencere", "note": "Katman listesi: ağacın satırları, durumları, görünüşleri ve nesne sayıları"},
+    {"dialog": "Katman listesi", "press": "Kapat", "expect": {"dialog": null}}
+  ]
+}

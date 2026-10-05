@@ -382,6 +382,12 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0177 §3: Kopyasını oluştur and Katmanları birleştir (layer_merge.rs).
     "layer.duplicate",
     "layer.merge",
+    // docs/adr/0177 §4–§6: Katman durumları (layer_states.rs), Kullanılmayanları temizle
+    // (layer_purge.rs) and Katman listesi (layer_list.rs).
+    "layer.states",
+    "layer.stateSave",
+    "layer.purge",
+    "layer.list",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

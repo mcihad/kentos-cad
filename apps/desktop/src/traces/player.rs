@@ -292,6 +292,7 @@ pub struct Observation {
     /// The layers and groups hidden or locked of their own, by their paths (docs/adr/0177 §1).
     pub hidden_layers: Vec<String>,
     pub locked_layers: Vec<String>,
+    pub layers: Vec<String>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -884,6 +885,7 @@ impl<'a> Player<'a> {
                 .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| !n.visible)),
             locked_layers: doc
                 .map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |n| n.locked)),
+            layers: doc.map_or_else(Vec::new, |d| layer_paths(d.model.layers(), |_| true)),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
         }

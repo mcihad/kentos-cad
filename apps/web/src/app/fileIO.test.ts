@@ -6,6 +6,7 @@ import { unpackSnapshot } from '../io/columns';
 import { formatsBuilt, kcadInProcess, v1IdentitiesInProcess } from '../io/testFormats';
 import type { CadDocument } from '../model/document';
 import { newProjectContent } from '../model/newProject';
+import { captureLayerState } from '../model/layerStates';
 import { toSnapshot, toSnapshotV2 } from '../model/snapshot';
 import { snapshotSampleDocument } from '../model/snapshotSample';
 import { fakeCloud, memoryFile, pick, setup } from './fileTesting';
@@ -28,6 +29,23 @@ const fresh = () => newProjectContent({ name: 'Ada 200', srid: 5254, plotScale: 
 const v1Text = (doc: CadDocument) => JSON.stringify(toSnapshot(doc));
 
 describe.skipIf(!formatsBuilt)('local drawing files', () => {
+  it("saves the project's layer states and a layer's own snapping, and opens them again (docs/adr/0177 §4, 0163 §4)", async () => {
+    const { doc, files } = setup();
+    const text = new TextDecoder().decode(fixture('interaction/v1/layer-admin.kcad'));
+    expect(await files.load(text, memoryFile('Katmanlar.kcad', { data: text }))).toBe(true);
+    const state = captureLayerState(doc.layers.tree, 'durum-1', 'Tüm katmanlar', { locks: true, styles: true });
+    doc.settings.layerStates.set([state]);
+    // A layer's own snapping goes and comes with the tree (docs/adr/0163 §4, KCAD schema 10).
+    doc.layers.setSnap('yol', { kinds: ['endpoint', 'midpoint'] });
+    const file = memoryFile('Katmanlar 2.kcad');
+    files.picker = pick(file);
+    expect(await files.saveAs()).toBe(true);
+    doc.settings.layerStates.set([]);
+    expect(await files.load(file.bytes, memoryFile('Katmanlar 2.kcad', { data: file.bytes }))).toBe(true);
+    expect(doc.settings.layerStates.value).toEqual([state]);
+    expect(doc.layers.get('yol')?.snap).toEqual({ kinds: ['endpoint', 'midpoint'] });
+  });
+
   it('saves KCAD v2, clears dirty only once the file is written, and saves there again without asking', async () => {
     const { doc, files, messages } = setup();
     doc.add({ kind: 'point', layerId: 'x', p: { x: 1, y: 2 }, attrs: {} });

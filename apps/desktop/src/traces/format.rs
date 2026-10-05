@@ -175,6 +175,8 @@ pub struct Expect {
     /// (“Yapılar / Bina”), in tree order (docs/adr/0177 §1).
     pub(super) hidden_layers: Option<Vec<String>>,
     pub(super) locked_layers: Option<Vec<String>>,
+    /// Every layer and group by its path, in tree order (docs/adr/0177 §5).
+    pub(super) layers: Option<Vec<String>>,
     /// The colour and line weight new objects take now (the ribbon's
     /// Renk and Kalınlık); `null` the layer's, and absent differ.
     #[serde(default, deserialize_with = "present")]

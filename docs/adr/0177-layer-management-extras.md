@@ -151,7 +151,38 @@ QGIS'in harita temaları, AutoCAD'in katman durumları: katmanların görünürl
 5. Kullanılmayanları temizle (§5): kural iki platformda ortak durumlarla; pencere; ortak iz.
 6. Katman listesi (§6): kural ortak durumlarla; dışa aktarma iki platformda.
 
-Her adım iki platformda, ortak fixture'larla, kendi commit'inde ilerler.
+Adım 1–4a kendi commit'lerinde ilerledi; sahibin 5 Ekim kararıyla (“her maddeyi tek parçada bitir”) 4b, 4c, 5 ve 6 tek parçada
+bitti. **Tamam (5 Ekim, 4b–6):**
+
+- Kurallar iki platformda, ortak durumlarla ve bağımsız Python başvurularıyla (`fixtures/layers/v1`): katman durumları
+  `states.json` (`layer_state_cases.py`; web `model/layerStates.ts`, masaüstü `kentos_domain::layer_states`), Kullanılmayanları
+  temizle `purge.json` (`layer_purge_cases.py`; web `model/layerPurge.ts`, masaüstü `kentos_domain::layer_purge`), katman listesi
+  `list.json` (`layer_list_cases.py`; web `app/layerList.ts`, masaüstü `layer_list.rs`).
+- Temizliğin kuralı, §5'i şöyle kesinleştirir: silinebilecekler katmanlar (etkin olan ve kilitli olanlar, gruplarının kilidiyle,
+  dışında), kilitsiz gruplar, blok tanımları ve projenin kitaplığının sembolleri ve varlıklarıdır; kalan bir şeyin kullandığı kalır:
+  katmanı çizimin ya da kalan bir bloğun nesnesi, grubu altındaki kalan bir düğüm, bloğu çizimin ya da kalan bir bloğun yerleştirmesi,
+  sembolü bir nesne, kalan bir katmanın stili (`ref`) ya da herhangi bir kitaplığın şablonu (`symbol`, üyelerinki de), varlığı kalan
+  bir sembol (herhangi bir kitaplığın) ya da kalan bir katmanın stili (`asset`) kullanır. Bulunanlar, kalanların hiçbirinin
+  kullanmadığı en büyük kümedir (hepsinden başlanır, kalanın kullandığı tur tur geri verilir); boş katmanını kaybeden sembol ve
+  sembolünü kaybeden resim de böylece bulunur. Silmek aynı kuralı yalnız işaretlenenlere uygular: işareti kaldırılan bir katman
+  stilindeki sembolü, bir blok katmanını tutar ve söylenir. Kilitli boş katman listede görünür ama işaretlenemez (silinemez; kilidi
+  açılınca silinir). Bloklar tur tur (iç içe yerleştirilen sonra), gruplar en derinden silinir; katmanlar, gruplar ve bloklar tek geri
+  alma adımında (“Kullanılmayanları temizle”), kitaplığın öğeleri geri alma adımı olmadan (ADR 0092).
+- Katman durumları: web `app/layerStates.ts` ve `ui/layers/LayerStatesDialog.ts`, masaüstü `layer_states.rs`. Pencere: kayıtlı
+  durumlar (şimdiki hâle uyan işaretli, neyi tuttuğu yanında), seçilen durumun Uygula, Güncelle ve Sil'i; Ad, Kilitler ve Stiller
+  (varsayılan stiller açık, kilitler kapalı; görünürlük her durumda), Yeni durum kaydet ve Yeniden adlandır; pencere açık kalır. Katmanlar
+  panelinin başlığında Katman durumları ▾ (durumlar işaretleriyle, tıklanınca uygulanır; Yeni durum kaydet “Durum n” olarak hemen
+  kaydeder; Katman durumları…). Kayıt, güncelleme, ad ve silme projenin ayarını değiştirir (geri alma adımı değil; `project.edit`'i
+  olmayan bulut projesinde kapalı); uygulamak görünürlüğü ve kilidi ağacın değişikliği olarak, stilleri tek adımda (“Katman durumu:
+  <ad>”) yazar. Komutlar `layer.states`, `layer.stateSave`.
+- Kullanılmayanları temizle (`layer.purge`): web `app/layerPurge.ts` ve `ui/layers/PurgeDialog.ts`, masaüstü `layer_purge.rs`; Katmanlar
+  panelinin ⋯ menüsünde, Katmanlar ▾'inde ve Yönet › Temizlik'te.
+- Katman listesi (`layer.list`): pencere satırları gösterir; Panoya kopyala (sekmeyle) ve CSV olarak kaydet… (UTF-8 BOM, noktalı virgül,
+  CR LF; ondalık virgül). Katmanlar panelinin ⋯ menüsünde ve Katmanlar ▾'inde.
+- İkonlar `layerStates`, `layerStateSave`, `layerPurge`, `layerList`. Ortak izler `layer-states.json` (dosyayla kaydedip açma dahil) ve
+  `layer-purge.json` (Katman listesi penceresiyle), sahne `layer-admin.kcad`; izlerin yeni beklentisi `layers` (bütün düğümlerin
+  yolları). Bulunan kusur: web'in kaydı başın alanlarını süzerken (`io/kcad.ts` `projectHead`) katman durumlarını ve katmanın kendi
+  kenetini (ADR 0163 §4, şema 10) düşürüyordu; ikisi eklendi, `fileIO.test.ts` kaydedip açarak sınar.
 
 ## Doğrulama
 

@@ -198,14 +198,15 @@ export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dr
       },
       where,
     );
-  const layer: Pick = (v, where) => p.fields(v, { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w) }, where);
+  const layer: Pick = (v, where) =>
+    p.fields(v, { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w), snap: same }, where);
   const out = p.fields(
     head,
     {
       format: same,
       version: same,
       name: same,
-      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same }, w),
+      settings: (x, w) => p.fields(x, { srid: same, lengthDecimals: same, areaDecimals: same, areaUnit: same, angleUnit: same, plotScale: same, workspace: same, drawingFont: same, drawingUnit: same, secondSrid: same, customCrs: same, secondCustomCrs: same, datumTransforms: same, survey: same, layerStates: same }, w),
       origin: vec,
       homeView: (x, w) => p.fields(x, { minX: same, minY: same, maxX: same, maxY: same }, w),
       layers: p.list(layer),

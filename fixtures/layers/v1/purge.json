@@ -1,0 +1,979 @@
+{
+ "format": "kentos.layer-purge-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/layer_purge_cases.py from docs/adr/0177 §5, not from either platform's code. `document.objects` are the drawing's objects (their layer, library symbol, placed block), each block's `objects` its definition's; `found` is what the window lists, each kind in its order (layers and groups in the tree's, blocks in the definitions', library items in the project library's), a locked layer with `locked`; `removed` what removing `checked` takes in the order it goes (definitions in rounds, groups deepest first); `kept` how many checked ones stay.",
+ "cases": [
+  {
+   "name": "Çizim: boş ve kilitli katmanlar, boş kalan gruplar, iç içe bloklar, projenin sembolleri ve varlıkları",
+   "document": {
+    "tree": [
+     {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "eski",
+        "name": "Eski parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "bina",
+        "name": "Bina",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "arsiv",
+      "name": "Arşiv",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "y2019",
+        "name": "2019",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "y2020",
+        "name": "2020",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "bos-grup",
+        "name": "Boş grup",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "altyapi",
+      "name": "Altyapı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bitki",
+      "name": "Bitki",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "lejant",
+      "name": "Lejant",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "rules",
+        "rules": [
+         {
+          "id": "r1",
+          "label": "Yol",
+          "symbols": {
+           "line": {
+            "ref": "p-yol"
+           }
+          }
+         }
+        ]
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "isaret",
+      "name": "İşaret",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "renderer": {
+        "type": "single",
+        "symbols": {
+         "marker": {
+          "type": "marker",
+          "layers": [
+           {
+            "id": "m1",
+            "type": "svg",
+            "asset": "p-isaret",
+            "size": 3
+           }
+          ]
+         }
+        }
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli-grup",
+      "name": "Kilitli grup",
+      "type": "group",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "active": "parsel",
+    "objects": [
+     {
+      "layer": "parsel"
+     },
+     {
+      "layer": "yol",
+      "block": "0190b3a1-0000-7000-8000-000000000001"
+     },
+     {
+      "layer": "cizim",
+      "symbol": "p-agac"
+     },
+     {
+      "layer": "isaret"
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000001",
+      "name": "Ağaç",
+      "objects": [
+       {
+        "layer": "bitki",
+        "symbol": "p-yaprak"
+       }
+      ]
+     },
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000002",
+      "name": "Eski kapı",
+      "objects": [
+       {
+        "layer": "kapi"
+       },
+       {
+        "layer": "kapi",
+        "block": "0190b3a1-0000-7000-8000-000000000003"
+       }
+      ]
+     },
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000003",
+      "name": "Menteşe",
+      "objects": [
+       {
+        "layer": "kapi"
+       }
+      ]
+     },
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000004",
+      "name": "Direk",
+      "objects": [
+       {
+        "layer": "yol"
+       }
+      ]
+     }
+    ],
+    "library": [
+     {
+      "id": "p-agac",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Ağaç simgesi",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "p-agac-resmi",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-yaprak",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Yaprak",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "p-yaprak-resmi",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-yol",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Yol çizgisi",
+      "symbol": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l1",
+         "type": "simpleLine",
+         "color": "#4F8EF7",
+         "width": 0.5
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-ok",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Ok",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "p-ok-resmi",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-uye",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Üye çizgisi",
+      "symbol": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "l1",
+         "type": "simpleLine",
+         "color": "#8C9AAA",
+         "width": 0.18
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-bos",
+      "kind": "symbol",
+      "source": "project",
+      "name": "Kullanılmayan simge",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "p-resim",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "id": "p-agac-resmi",
+      "kind": "asset",
+      "source": "project",
+      "name": "ağaç.svg"
+     },
+     {
+      "id": "p-yaprak-resmi",
+      "kind": "asset",
+      "source": "project",
+      "name": "yaprak.svg"
+     },
+     {
+      "id": "p-ok-resmi",
+      "kind": "asset",
+      "source": "project",
+      "name": "ok.svg"
+     },
+     {
+      "id": "p-resim",
+      "kind": "asset",
+      "source": "project",
+      "name": "resim.png"
+     },
+     {
+      "id": "p-isaret",
+      "kind": "asset",
+      "source": "project",
+      "name": "işaret.svg"
+     },
+     {
+      "id": "p-logo",
+      "kind": "asset",
+      "source": "project",
+      "name": "logo.svg"
+     },
+     {
+      "id": "p-yalniz",
+      "kind": "asset",
+      "source": "project",
+      "name": "yalnız.svg"
+     },
+     {
+      "id": "u-logo",
+      "kind": "symbol",
+      "source": "user",
+      "name": "Logo",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "p-logo",
+         "size": 4
+        }
+       ]
+      }
+     },
+     {
+      "id": "u-sablon",
+      "kind": "template",
+      "source": "user",
+      "name": "Yol şablonu",
+      "template": {
+       "tool": "polyline",
+       "layer": {
+        "path": [
+         "Yol"
+        ]
+       },
+       "symbol": "p-ok",
+       "members": [
+        {
+         "offset": 2,
+         "symbol": "p-uye"
+        }
+       ]
+      }
+     },
+     {
+      "id": "s-sistem",
+      "kind": "symbol",
+      "source": "system",
+      "name": "Sistem simgesi",
+      "symbol": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "m1",
+         "type": "svg",
+         "asset": "s-resim",
+         "size": 4
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "found": {
+    "layers": [
+     {
+      "id": "eski",
+      "path": "Kadastro / Eski parsel",
+      "locked": false
+     },
+     {
+      "id": "bina",
+      "path": "Kadastro / Bina",
+      "locked": true
+     },
+     {
+      "id": "y2019",
+      "path": "Arşiv / 2019",
+      "locked": false
+     },
+     {
+      "id": "y2020",
+      "path": "Arşiv / 2020",
+      "locked": false
+     },
+     {
+      "id": "kapi",
+      "path": "Kapı",
+      "locked": false
+     },
+     {
+      "id": "lejant",
+      "path": "Lejant",
+      "locked": false
+     },
+     {
+      "id": "ic",
+      "path": "Kilitli grup / İç",
+      "locked": true
+     }
+    ],
+    "groups": [
+     {
+      "id": "arsiv",
+      "path": "Arşiv"
+     },
+     {
+      "id": "bos-grup",
+      "path": "Arşiv / Boş grup"
+     },
+     {
+      "id": "altyapi",
+      "path": "Altyapı"
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000002",
+      "name": "Eski kapı"
+     },
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000003",
+      "name": "Menteşe"
+     },
+     {
+      "id": "0190b3a1-0000-7000-8000-000000000004",
+      "name": "Direk"
+     }
+    ],
+    "symbols": [
+     {
+      "id": "p-yol",
+      "name": "Yol çizgisi"
+     },
+     {
+      "id": "p-bos",
+      "name": "Kullanılmayan simge"
+     }
+    ],
+    "assets": [
+     {
+      "id": "p-resim",
+      "name": "resim.png"
+     },
+     {
+      "id": "p-yalniz",
+      "name": "yalnız.svg"
+     }
+    ]
+   },
+   "applies": [
+    {
+     "name": "Bulunanların hepsi işaretli: hepsi gider; bloklar iç içe sırayla, gruplar en derinden",
+     "checked": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "arsiv",
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000003",
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "bos-grup",
+       "arsiv",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000004",
+       "0190b3a1-0000-7000-8000-000000000003"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "kept": 0
+    },
+    {
+     "name": "Lejant işaretsiz: kaldığı için stilindeki Yol çizgisi de kalır",
+     "checked": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi"
+      ],
+      "groups": [
+       "arsiv",
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000003",
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi"
+      ],
+      "groups": [
+       "bos-grup",
+       "arsiv",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000004",
+       "0190b3a1-0000-7000-8000-000000000003"
+      ],
+      "symbols": [
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "kept": 1
+    },
+    {
+     "name": "Eski kapı işaretsiz: Kapı katmanı ve Menteşe onun için kalır",
+     "checked": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "arsiv",
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000003",
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "lejant"
+      ],
+      "groups": [
+       "bos-grup",
+       "arsiv",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "kept": 2
+    },
+    {
+     "name": "Arşiv / 2019 işaretsiz: Arşiv grubu da kalır, 2020 ve Boş grup gider",
+     "checked": {
+      "layers": [
+       "eski",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "arsiv",
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000003",
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "eski",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000004",
+       "0190b3a1-0000-7000-8000-000000000003"
+      ],
+      "symbols": [
+       "p-yol",
+       "p-bos"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "kept": 1
+    },
+    {
+     "name": "Kullanılmayan simge işaretsiz: çizdiği resim.png de kalır",
+     "checked": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "arsiv",
+       "bos-grup",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000003",
+       "0190b3a1-0000-7000-8000-000000000004"
+      ],
+      "symbols": [
+       "p-yol"
+      ],
+      "assets": [
+       "p-resim",
+       "p-yalniz"
+      ]
+     },
+     "removed": {
+      "layers": [
+       "eski",
+       "y2019",
+       "y2020",
+       "kapi",
+       "lejant"
+      ],
+      "groups": [
+       "bos-grup",
+       "arsiv",
+       "altyapi"
+      ],
+      "blocks": [
+       "0190b3a1-0000-7000-8000-000000000002",
+       "0190b3a1-0000-7000-8000-000000000004",
+       "0190b3a1-0000-7000-8000-000000000003"
+      ],
+      "symbols": [
+       "p-yol"
+      ],
+      "assets": [
+       "p-yalniz"
+      ]
+     },
+     "kept": 1
+    },
+    {
+     "name": "Yalnız resim.png işaretli, simgesi işaretsiz: hiçbir şey gitmez",
+     "checked": {
+      "assets": [
+       "p-resim"
+      ]
+     },
+     "removed": {
+      "layers": [],
+      "groups": [],
+      "blocks": [],
+      "symbols": [],
+      "assets": []
+     },
+     "kept": 1
+    },
+    {
+     "name": "Kilitli katman ya da etkin katman işaretlense de gitmez",
+     "checked": {
+      "layers": [
+       "bina",
+       "parsel",
+       "ic"
+      ]
+     },
+     "removed": {
+      "layers": [],
+      "groups": [],
+      "blocks": [],
+      "symbols": [],
+      "assets": []
+     },
+     "kept": 3
+    }
+   ]
+  },
+  {
+   "name": "Yeni çizim: tek ve etkin katman kalır, temizlenecek bir şey yok",
+   "document": {
+    "tree": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "active": "0",
+    "objects": [],
+    "blocks": [],
+    "library": []
+   },
+   "found": {
+    "layers": [],
+    "groups": [],
+    "blocks": [],
+    "symbols": [],
+    "assets": []
+   },
+   "applies": []
+  }
+ ]
+}

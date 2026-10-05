@@ -1,0 +1,1227 @@
+{
+ "format": "kentos.layer-state-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/layer_state_cases.py from docs/adr/0177 §4, not from either platform's code. `changes` lists what applying `state` to `tree` changes, in the state's order: visibility and lock pairs [node, value], styles [layer, style]; `missing` counts the state's nodes the tree lacks.",
+ "captures": [
+  {
+   "name": "Yalnız görünürlük: her düğüm ağacın sırasıyla, kendi görünürlüğüyle",
+   "locks": false,
+   "styles": false,
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "id": "durum",
+   "stateName": "Durum",
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true
+     },
+     {
+      "node": "parsel",
+      "visible": true
+     },
+     {
+      "node": "bina",
+      "visible": true
+     },
+     {
+      "node": "yol",
+      "visible": false
+     },
+     {
+      "node": "cizim",
+      "visible": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "Kilitlerle: düğümün kendi kilidi de",
+   "locks": true,
+   "styles": false,
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "id": "durum",
+   "stateName": "Durum",
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "locked": true
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "locked": false
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "locked": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "Stillerle: katmanın stili de, grubun yok",
+   "locks": false,
+   "styles": true,
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "id": "durum",
+   "stateName": "Durum",
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "dashed",
+       "lineWeight": 0.18,
+       "fill": "#8C9AAA33"
+      }
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "Kilit ve stil birlikte",
+   "locks": true,
+   "styles": true,
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "id": "durum",
+   "stateName": "Durum",
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "locked": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "dashed",
+       "lineWeight": 0.18,
+       "fill": "#8C9AAA33"
+      }
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "applies": [
+  {
+   "name": "Kaydedildiği ağaçta hiçbir şey değişmez; ağaç durumdadır",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "locked": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "dashed",
+       "lineWeight": 0.18,
+       "fill": "#8C9AAA33"
+      }
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   },
+   "changes": {
+    "visible": [],
+    "locked": [],
+    "styles": [],
+    "missing": 0
+   },
+   "matches": true
+  },
+  {
+   "name": "Gizlenen, gösterilen, kilidi açılan ve stili değişen düğümler durumun sırasıyla geri gelir",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": false,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#4F8EF7",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "locked": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "dashed",
+       "lineWeight": 0.18,
+       "fill": "#8C9AAA33"
+      }
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   },
+   "changes": {
+    "visible": [
+     [
+      "parsel",
+      true
+     ],
+     [
+      "yol",
+      false
+     ]
+    ],
+    "locked": [
+     [
+      "bina",
+      true
+     ]
+    ],
+    "styles": [
+     [
+      "parsel",
+      {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     ]
+    ],
+    "missing": 0
+   },
+   "matches": false
+  },
+  {
+   "name": "Silinmiş düğüm atlanıp sayılır; durumun bilmediği yeni katman olduğu gibi kalır",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "yeni",
+     "name": "Yeni",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "durum",
+    "name": "Durum",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "locked": false
+     },
+     {
+      "node": "parsel",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "node": "bina",
+      "visible": true,
+      "locked": true,
+      "style": {
+       "color": "#8C9AAA",
+       "lineType": "dashed",
+       "lineWeight": 0.18,
+       "fill": "#8C9AAA33"
+      }
+     },
+     {
+      "node": "yol",
+      "visible": false,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     },
+     {
+      "node": "cizim",
+      "visible": true,
+      "locked": false,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   },
+   "changes": {
+    "visible": [
+     [
+      "cizim",
+      true
+     ]
+    ],
+    "locked": [],
+    "styles": [],
+    "missing": 1
+   },
+   "matches": false
+  },
+  {
+   "name": "Kilitsiz ve stilsiz kaydedilen durum kilide ve stile dokunmaz",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#4F8EF7",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "gorunum",
+    "name": "Görünüm",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true
+     },
+     {
+      "node": "parsel",
+      "visible": true
+     },
+     {
+      "node": "bina",
+      "visible": true
+     },
+     {
+      "node": "yol",
+      "visible": false
+     },
+     {
+      "node": "cizim",
+      "visible": true
+     }
+    ]
+   },
+   "changes": {
+    "visible": [],
+    "locked": [],
+    "styles": [],
+    "missing": 0
+   },
+   "matches": true
+  },
+  {
+   "name": "Düğümlerinin hiçbiri ağaçta olmayan durum hiçbir şey değiştirmez, ağaç onda sayılmaz",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "hayalet",
+    "name": "Hayalet",
+    "nodes": [
+     {
+      "node": "silinmis",
+      "visible": true
+     }
+    ]
+   },
+   "changes": {
+    "visible": [],
+    "locked": [],
+    "styles": [],
+    "missing": 1
+   },
+   "matches": false
+  },
+  {
+   "name": "Grubun düğümündeki stil uygulanmaz",
+   "tree": [
+    {
+     "id": "kadastro",
+     "name": "Kadastro",
+     "type": "group",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": [
+      {
+       "id": "parsel",
+       "name": "Parsel",
+       "type": "layer",
+       "visible": true,
+       "locked": false,
+       "expanded": true,
+       "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+       },
+       "children": []
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "type": "layer",
+       "visible": true,
+       "locked": true,
+       "expanded": true,
+       "style": {
+        "color": "#8C9AAA",
+        "lineType": "dashed",
+        "lineWeight": 0.18,
+        "fill": "#8C9AAA33"
+       },
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": "yol",
+     "name": "Yol",
+     "type": "layer",
+     "visible": false,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "cizim",
+     "name": "Çizim",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ],
+   "state": {
+    "id": "grup",
+    "name": "Grup",
+    "nodes": [
+     {
+      "node": "kadastro",
+      "visible": true,
+      "style": {
+       "color": "#000000",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ]
+   },
+   "changes": {
+    "visible": [],
+    "locked": [],
+    "styles": [],
+    "missing": 0
+   },
+   "matches": true
+  }
+ ]
+}

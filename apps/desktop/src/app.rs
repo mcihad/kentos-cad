@@ -161,6 +161,12 @@ pub enum Dialog {
     FindReplace,
     /// Katmanları birleştir (layer_merge.rs, docs/adr/0177 §3); the window is `App::layer_merge`.
     LayerMerge,
+    /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
+    LayerStates,
+    /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
+    LayerPurge,
+    /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
+    LayerList,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -295,6 +301,10 @@ pub enum Message {
     AttributeValues(crate::attribute_values::Event),
     FindReplace(crate::find_replace::Event),
     LayerMerge(crate::layer_merge::Event),
+    /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
+    LayerStates(crate::layer_states::Event),
+    LayerPurge(crate::layer_purge::Event),
+    LayerList(crate::layer_list::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
@@ -592,6 +602,12 @@ pub struct App {
     pub(crate) isolated_layers: Vec<String>,
     /// Katmanları birleştir's window (layer_merge.rs, docs/adr/0177 §3).
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
+    /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
+    pub(crate) layer_states_window: Option<crate::layer_states::Window>,
+    /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
+    pub(crate) layer_purge: Option<crate::layer_purge::Window>,
+    /// Katman listesi's window (layer_list.rs, docs/adr/0177 §6).
+    pub(crate) layer_list: Option<crate::layer_list::Window>,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
     pub(crate) overlap_last: kentos_interaction::Overlap,
     /// The command the tracking points belong to, and the last rest whose wait began.
@@ -812,6 +828,9 @@ impl App {
             template_names: std::collections::HashMap::new(),
             isolated_layers: Vec::new(),
             layer_merge: None,
+            layer_states_window: None,
+            layer_purge: None,
+            layer_list: None,
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
             tracking_waited: 0,
@@ -1178,6 +1197,9 @@ impl App {
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
+            Message::LayerStates(event) => return self.layer_states_event(event),
+            Message::LayerPurge(event) => return self.layer_purge_event(event),
+            Message::LayerList(event) => return self.layer_list_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
@@ -1706,6 +1728,13 @@ impl App {
             // Katmanlar's menu names its layer (layering.rs).
             "layer.duplicate" => self.duplicate_layer(None),
             "layer.merge" => self.open_layer_merge(None),
+            // Katman durumları, Kullanılmayanları temizle and Katman listesi (docs/adr/0177 §4–§6).
+            "layer.states" => self.open_layer_states(),
+            "layer.stateSave" => {
+                self.quick_save_layer_state();
+            }
+            "layer.purge" => self.open_layer_purge(),
+            "layer.list" => self.open_layer_list(),
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {

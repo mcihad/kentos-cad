@@ -15,6 +15,8 @@ import { objectsOfNode, zoomItem } from './layerZoom';
 import { colorSwatch, layerSwatch } from './swatch';
 import { treeLocked } from './treeRights';
 import { fixed } from '../../core/displayNumber';
+import { applyLayerState, partsOf, partsText, quickSaveLayerState, stateMatches, statesLocked } from '../../app/layerStates';
+import { tooltip } from '../widgets/tooltip';
 
 /**
  * A row on screen: the cells that edits and layer state change, and what
@@ -72,6 +74,8 @@ export class LayersPanel extends Panel {
     actions.append(
       commandButton(ctx, 'layer.new', this.d, { className: 'ibtn', size: 16 }),
       commandButton(ctx, 'layer.newGroup', this.d, { className: 'ibtn', size: 16 }),
+      this.menuButton('layerStates', 'Katman durumları', 'Kayıtlı durumlar (işaretli olan şimdiki hâl), yeni durum kaydetme ve Katman durumları penceresi.', () => this.statesMenu()),
+      this.menuButton('more', 'Katman işlemleri', 'Katmanları birleştir, Kullanılmayanları temizle ve Katman listesi.', () => this.moreMenu()),
     );
 
     const filter = h('input', { class: 'field field--search', type: 'search', placeholder: 'Katman ara', 'aria-label': 'Katman ara', spellcheck: 'false' });
@@ -129,6 +133,43 @@ export class LayersPanel extends Panel {
     this.d.add(ctx.selection.ids.subscribe(() => this.followSelection()));
     this.rebuild();
     this.followSelection();
+  }
+
+  /** A header button that opens `items` under it (docs/adr/0177 §7). */
+  private menuButton(glyph: string, title: string, description: string, items: () => MenuItem[]): HTMLButtonElement {
+    const btn = h('button', { class: 'ibtn', type: 'button', 'aria-label': title, 'aria-haspopup': 'menu' }, icon(glyph, 16)) as HTMLButtonElement;
+    btn.addEventListener('click', () => PopupMenu.open(items(), btn.getBoundingClientRect(), { placement: 'below', owner: btn }));
+    this.d.add(tooltip(btn, () => ({ title, description }), 'bottom'));
+    return btn;
+  }
+
+  /**
+   * Katman durumları ▾ (docs/adr/0177 §4): the project's states, the one the layers are in now marked, each applied
+   * by a click; Yeni durum kaydet saves the layers at once as “Durum n”; Katman durumları… opens the window.
+   */
+  private statesMenu(): MenuItem[] {
+    const ctx = this.ctx;
+    const states = ctx.doc.settings.layerStates.value;
+    const locked = statesLocked(ctx);
+    return [
+      ...(states.length
+        ? states.map((s): MenuItem => ({ label: s.name, radio: true, checked: stateMatches(ctx, s), hint: partsText(partsOf(s)), run: () => applyLayerState(ctx, s.id) }))
+        : [{ label: 'Kayıtlı durum yok', disabled: true }]),
+      { kind: 'separator' },
+      { label: 'Yeni durum kaydet', icon: 'layerStateSave', disabled: !!locked, run: () => void quickSaveLayerState(ctx) },
+      { label: 'Katman durumları…', icon: 'layerStates', run: () => void ctx.commands.execute('layer.states') },
+    ];
+  }
+
+  /** The panel's ⋯ (docs/adr/0177 §7): the actions on the whole tree. */
+  private moreMenu(): MenuItem[] {
+    const ctx = this.ctx;
+    const locked = !!treeLocked(ctx);
+    return [
+      { label: 'Katmanları birleştir…', icon: 'layerMerge', disabled: locked, run: () => void ctx.commands.execute('layer.merge') },
+      { label: 'Kullanılmayanları temizle…', icon: 'layerPurge', disabled: locked, run: () => void ctx.commands.execute('layer.purge') },
+      { label: 'Katman listesi…', icon: 'layerList', run: () => void ctx.commands.execute('layer.list') },
+    ];
   }
 
   /**
