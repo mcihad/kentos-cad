@@ -308,6 +308,24 @@ cases.append({
     ],
 })
 
+# Etiketleri yazıya çevir (docs/adr/0175 §2): labels as texts, as the core placed them at 1:1000: a parcel's number
+# centred, a block's number from its box's corner with a mask, a street's name along it, turned to read upright.
+LABEL_TEXTS = [
+    {"kind": "text", "p": P(487110.5, 4420030.25), "text": "101", "height": 2.6458333333333335, "rotation": 0, "align": "middleCenter"},
+    {"kind": "text", "p": P(487102.11666666667, 4420045.295833333), "text": "Ada 12", "height": 2.9104166666666667, "rotation": 0, "align": "middleLeft", "mask": True},
+    {"kind": "text", "p": P(487130.0, 4420040.0), "text": "Cumhuriyet Cd.", "height": 2.6458333333333335, "rotation": -26.565051177077994, "align": "middleCenter"},
+]
+
+cases.append({
+    "name": "Etiketleri yazıya çevir: etiketler hizaları, dönüşleri ve zeminleriyle yazı olarak tek adımda yazılır, adı “Etiketleri yazıya çevir”",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "labels", "objects": [O(g) for g in LABEL_TEXTS]}, "result": done([3, 4, 5]),
+         "expect": {"ids": IDS + [3, 4, 5], "entities": {str(3 + i): made(O(g), 3 + i) for i, g in enumerate(LABEL_TEXTS)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Etiketleri yazıya çevir", "expect": {"ids": IDS + [3, 4, 5]}},
+    ],
+})
+
 # Bitişik alan (docs/adr/0162 §3): the region a path closes with its neighbours, as one area: here two parts, the
 # first with a neighbour's island as its hole, the second with an arc edge.
 ADJOINED = {"kind": "polygon",
@@ -879,7 +897,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, ölçünün kuralları (ADR 0147: kot yalnız eğimde, koordinatın ekseni 0 ya da 90, sonra çekirdeğin çizebildiği ölçü; invalid_dimension), yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya çevir. Blok yerleştirmesi (ADR 0144) çizimde tanımlı bir bloğu adlandırır (unknown_block, katmandan sonra, sırayla), ölçeği sıfırdan büyüktür (invalid_scale); aynalama yalnız true yazılır; blok durumlarının kendi kurulumu vardır. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

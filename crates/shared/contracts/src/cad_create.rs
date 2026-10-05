@@ -76,6 +76,9 @@ pub enum CreateOperation {
     /// Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with
     /// the neighbouring areas, as one area (its parts and holes as they are).
     Adjoin,
+    /// Etiketleri yazıya çevir (docs/adr/0175 §2): the layers' labels as
+    /// texts, placed and sized as a sheet at a scale writes them.
+    Labels,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
@@ -141,7 +144,8 @@ pub struct EntitiesCreate {
     /// The drawing tool or Hesap window the objects come from, when its step
     /// has its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan
     /// oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden
-    /// kestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”.
+    /// kestirme, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya
+    /// çevir. Absent: “Ekle”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<CreateOperation>,

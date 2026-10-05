@@ -36,7 +36,8 @@ objects: Array<NewObject>,
  * The drawing tool or Hesap window the objects come from, when its step
  * has its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan
  * oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden
- * kestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”.
+ * kestirme, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya
+ * çevir. Absent: “Ekle”.
  */
 operation?: CreateOperation, 
 /**

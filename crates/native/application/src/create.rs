@@ -125,6 +125,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::VertexPoints) => "Köşelere nokta",
         // Bitişik alan (docs/adr/0162 §3).
         Some(CreateOperation::Adjoin) => "Bitişik alan",
+        // Etiketleri yazıya çevir (docs/adr/0175 §2).
+        Some(CreateOperation::Labels) => "Etiketleri yazıya çevir",
     }
 }
 

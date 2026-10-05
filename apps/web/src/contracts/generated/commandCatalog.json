@@ -30228,6 +30228,11 @@
                 "const": "adjoin",
                 "description": "Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with\nthe neighbouring areas, as one area (its parts and holes as they are).",
                 "type": "string"
+              },
+              {
+                "const": "labels",
+                "description": "Etiketleri yazıya çevir (docs/adr/0175 §2): the layers' labels as\ntexts, placed and sized as a sheet at a scale writes them.",
+                "type": "string"
               }
             ]
           },
@@ -31099,7 +31104,7 @@
                 "type": "null"
               }
             ],
-            "description": "The drawing tool or Hesap window the objects come from, when its step\nhas its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan\noluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden\nkestirme, Toplu alan, Köşelere nokta, Bitişik alan. Absent: “Ekle”."
+            "description": "The drawing tool or Hesap window the objects come from, when its step\nhas its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan\noluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden\nkestirme, Toplu alan, Köşelere nokta, Bitişik alan, Etiketleri yazıya\nçevir. Absent: “Ekle”."
           }
         },
         "required": [
