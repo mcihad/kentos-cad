@@ -174,12 +174,12 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
     return b;
   };
   const list: HTMLElement[] = [];
-  // Şablonla çiz (docs/adr/0176 §3): its layer active, its tool started.
-  if (item.kind === 'template')
+  // Şablonla çiz (docs/adr/0176 §3): its layer active, its tool started; Düzenle in the Şablon düzenleyici (§4).
+  if (item.kind === 'template') {
     list.push(
       btn(
         'Şablonla çiz',
-        'polygon',
+        'templateDraw',
         () => {
           host.close();
           ctx.commands.execute('template.draw', item.id);
@@ -187,6 +187,18 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
         { title: 'Pencere kapanır; şablonun katmanı etkin olur, aracı başlar' },
       ),
     );
+    list.push(
+      btn(
+        editable ? 'Düzenle' : 'Kopyasını düzenle',
+        'edit',
+        () => {
+          host.close();
+          void import('../templates/TemplateEditor').then((m) => m.openTemplateEditor(ctx, { id: item.id }));
+        },
+        { title: editable ? 'Şablon düzenleyicide açar' : 'Kitaplığım’a bir kopya alır ve onu açar' },
+      ),
+    );
+  }
   if (item.kind === 'asset' && item.format === 'svg') list.push(btn(editable ? 'Düzenle' : 'Kopyasını düzenle', 'edit', () => host.edit(item.id), { title: 'SVG çizim düzenleyicisinde açar' }));
   if (item.kind === 'symbol') {
     list.push(btn(editable ? 'Düzenle' : 'Kopyasını düzenle', 'edit', () => host.edit(item.id), { title: editable ? 'Sembol tasarımcısında açar' : 'Kitaplığım\'a bir kopya alır ve onu açar' }));

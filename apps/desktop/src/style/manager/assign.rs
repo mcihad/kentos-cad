@@ -195,6 +195,10 @@ impl App {
                     Some(json!({ "ref": id })),
                 ));
             }
+            PickTarget::Template => {
+                self.styles.manager = None;
+                self.template_symbol_picked(Some(id));
+            }
         }
     }
 }

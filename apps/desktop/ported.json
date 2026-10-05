@@ -230,7 +230,9 @@
     "tool.reshape",
     "sheet.model",
     "template.draw",
-    "template.panel"
+    "template.panel",
+    "template.new",
+    "template.fromSelection"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

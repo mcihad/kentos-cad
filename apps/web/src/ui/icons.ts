@@ -432,11 +432,15 @@ export const ICONS = {
   penTool: '<path d="m10 2.8 4.6 6.6-2.2 5.1H7.6L5.4 9.4z"/><path d="M10 2.8v6.1"/><circle cx="10" cy="10.2" r="1.3"/><path d="M7.6 17.2h4.8"/>',
   legend: '<rect x="3" y="3.5" width="4" height="3" rx=".5"/><rect x="3" y="8.5" width="4" height="3" rx=".5" fill="currentColor" fill-opacity=".3"/><path d="M3 15h4" stroke-dasharray="1.4 1.2"/><path d="M9.5 5h7.5M9.5 10h7.5M9.5 15h5"/>',
   // Nesne şablonları (docs/adr/0176): the panel, a stack of template cards with a parcel on the front one; Şablonla
-  // çiz, a card with its parcel and the pencil that draws with it.
+  // çiz, a card with its parcel and the pencil that draws with it; Yeni şablon, a card and a plus; Seçili nesneden
+  // şablon, a selected object (its grips) going into a card.
   templates:
     '<path d="M6.5 5.2V3.7a1.2 1.2 0 0 1 1.2-1.2h8.6a1.2 1.2 0 0 1 1.2 1.2v8.1a1.2 1.2 0 0 1-1.2 1.2h-1.1"/><rect x="2.5" y="5.5" width="12.5" height="12" rx="1.2" fill="currentColor" fill-opacity=".1"/><path d="m5.3 14.6 1.4-5.1 4.8 1.2-.7 3.9z" fill="currentColor" fill-opacity=".35" stroke-width="1.1"/>',
   templateDraw:
     '<rect x="2.5" y="2.5" width="10" height="10" rx="1.2" fill="currentColor" fill-opacity=".1"/><path d="m4.9 10 1.1-4.2 4 1-.6 3.2z" fill="currentColor" fill-opacity=".35" stroke-width="1.1"/><path d="m11.2 17.6.7-2.8 5-5a1.35 1.35 0 0 1 1.9 1.9l-5 5z"/><path d="m15.6 11.1 1.9 1.9" stroke-width="1.1"/>',
+  templateNew:
+    '<rect x="2.5" y="2.5" width="11" height="11" rx="1.2" fill="currentColor" fill-opacity=".1"/><path d="m5 10.8 1.2-4.4 4.2 1-.6 3.4z" fill="currentColor" fill-opacity=".35" stroke-width="1.1"/><path d="M15.5 12v6M12.5 15h6"/>',
+  templateFromSelection: `<path d="m3 8 1.4-4.7 4.8 1.3-.9 4.3z" fill="currentColor" fill-opacity=".25" stroke-width="1.1" stroke-dasharray="1.6 1.3"/>${grip(3, 8)}${grip(4.4, 3.3)}${grip(9.2, 4.6)}<rect x="9.5" y="9.5" width="8" height="8" rx="1.1" fill="currentColor" fill-opacity=".1"/><path d="m11.4 15.4.9-3.3 3.1.8-.5 2.5z" fill="currentColor" fill-opacity=".35" stroke-width="1"/><path d="M5.5 11.2v2.3a1.5 1.5 0 0 0 1.5 1.5h1.4m-1.5-1.6 1.6 1.6-1.6 1.6" stroke-width="1.2"/>`,
   symbolAssign: '<path d="m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z"/><path d="M14.5 11v6.5M11.25 14.25h6.5"/>',
   symbolClear: '<path d="m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z"/><path d="m12.2 12 4.6 4.6M16.8 12l-4.6 4.6"/>',
   // Symbols' kinds and their layers (Stil yöneticisi, Sembol tasarımcısı): a line with marks along it, a pin;

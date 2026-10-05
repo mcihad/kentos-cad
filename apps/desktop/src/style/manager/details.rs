@@ -356,8 +356,16 @@ pub fn details<'a>(
             "SVG çizim düzenleyicisinde açar",
             Some(ev(Event::Edit(id.clone()))),
         )),
-        // A template opens in Şablon düzenleyici (docs/adr/0176, step 4).
-        ItemKind::Asset | ItemKind::Template => None,
+        // A template opens in Şablon düzenleyici (a system one's copy in Kitaplığım, docs/adr/0176 §4).
+        ItemKind::Template => Some((
+            if editable {
+                "Şablon düzenleyicide açar"
+            } else {
+                "Kitaplığım'a bir kopya alır ve onu açar"
+            },
+            Some(ev(Event::EditTemplate(id.clone()))),
+        )),
+        ItemKind::Asset => None,
     };
     if let Some((note, press)) = editor {
         actions = actions.push(tip(
@@ -370,7 +378,7 @@ pub fn details<'a>(
     if item.kind() == ItemKind::Template {
         actions = actions.push(tip(
             small_button(
-                "polygon",
+                "templateDraw",
                 "Şablonla çiz".into(),
                 project_open.then(|| ev(Event::Draw(id.clone()))),
                 false,

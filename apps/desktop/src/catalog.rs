@@ -365,6 +365,9 @@ pub const PORTED: &[&str] = &[
     "template.draw",
     // Şablonlar: the templates' panel in the dock (templates_panel.rs, docs/adr/0176 §4).
     "template.panel",
+    // Şablon düzenleyici: a new template, or one made from the selected object (template_editor.rs).
+    "template.new",
+    "template.fromSelection",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 303 | 291 | 0 | 12 |
+| Komutlar | 305 | 293 | 0 | 12 |
 | Araçlar | 95 | 93 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 81 | 81 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 335 | 0 | 0 |
-| Pencereler ve paneller | 95 | 95 | 0 | 0 |
+| Pencereler ve paneller | 96 | 96 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -49,7 +49,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 231 | 0 | 58 | 12 | 2 | 303 |
+| Komutlar | 233 | 0 | 58 | 12 | 2 | 305 |
 | Araçlar | 93 | 0 | 0 | 2 | 0 | 95 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 78 | 0 | 2 | 0 | 1 | 81 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 335 | 0 | 0 | 0 | 0 | 335 |
-| Pencereler ve paneller | 77 | 2 | 15 | 0 | 1 | 95 |
+| Pencereler ve paneller | 78 | 2 | 15 | 0 | 1 | 96 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 303; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 305; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -180,7 +180,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 95)
+#### Pencereler ve paneller (17 / 96)
 
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
@@ -202,4 +202,4 @@ Yok.
 
 ## Test başvurusu
 
-109 / 303 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+111 / 305 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

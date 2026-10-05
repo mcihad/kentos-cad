@@ -53,7 +53,7 @@ export class TemplatesPanel extends Panel {
     super({ title: 'Şablonlar', className: 'panel--templates', actions: [] });
     this.ctx = ctx;
     // The buttons sit beside the search, not in the head: the head holds the dock's tabs.
-    const buttons = ['style.manager'].map((id) => commandButton(ctx, id, this.d, { className: 'ibtn', size: 16 }));
+    const buttons = ['template.new', 'template.fromSelection', 'style.manager'].map((id) => commandButton(ctx, id, this.d, { className: 'ibtn', size: 16 }));
     const search = h('input', { class: 'field field--search', type: 'search', placeholder: 'Şablon ara', 'aria-label': 'Şablon ara', spellcheck: 'false' });
     this.tree = new TreeView<Node>(
       {
@@ -182,8 +182,10 @@ export class TemplatesPanel extends Panel {
       ctx.log.success(`“${t.name}” ${to === 'user' ? 'Kitaplığım' : 'Proje'} kitaplığına kopyalandı.`);
     };
     const editable = t.source !== 'system';
+    const edit = () => void import('./TemplateEditor').then((m) => m.openTemplateEditor(ctx, { id: t.id }));
     return [
       { label: 'Şablonla çiz', icon: 'templateDraw', shortcut: 'Enter', run: () => this.draw(t.id) },
+      { label: editable ? 'Düzenle…' : 'Kopyasını düzenle…', icon: 'edit', detail: editable ? undefined : 'Sistem şablonu değişmez; kopyası Kitaplığım’a kaydedilir.', run: edit },
       { label: 'Stil yöneticisinde göster', icon: 'styles', run: () => void import('../style/StyleManager').then((m) => m.openStyleManager(ctx, { select: t.id })) },
       { kind: 'separator' },
       { label: 'Kitaplığıma kopyala', icon: 'copy', hint: 'bu tarayıcıda', run: () => copyTo('user') },

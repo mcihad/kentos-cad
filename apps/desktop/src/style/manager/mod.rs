@@ -113,6 +113,8 @@ pub enum PickTarget {
     Slot(SetAt, GeometryClass),
     /// The selected objects (`style.assign`).
     Selection,
+    /// Şablon düzenleyici's symbol (template_editor.rs, docs/adr/0176 §4).
+    Template,
 }
 
 /// The window in pick mode (`PickOptions`).
@@ -178,6 +180,8 @@ pub enum Event {
     Apply(String),
     /// Şablonla çiz: the window closes and the template draws (docs/adr/0176 §3).
     Draw(String),
+    /// A template's Düzenle: the window closes and Şablon düzenleyici opens (§4).
+    EditTemplate(String),
     /// Düzenle: a symbol opens in Sembol tasarımcısı (a system one's copy in Kitaplığım).
     Edit(String),
     /// Yeni sembol: a new symbol of a kind (fill, line, marker) in the designer.

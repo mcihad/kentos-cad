@@ -33,15 +33,22 @@ impl App {
 
     /// Closes the window: back to Katman stili when it picked for it.
     pub(super) fn close_style_manager(&mut self) {
-        let over_layer_style = self.styles.manager.as_ref().is_some_and(|m| {
-            matches!(
-                m.pick.as_ref().map(|p| &p.target),
-                Some(PickTarget::Slot(..))
-            )
-        });
+        let target = self
+            .styles
+            .manager
+            .as_ref()
+            .and_then(|m| m.pick.as_ref().map(|p| p.target.clone()));
         self.styles.manager = None;
-        self.dialog =
-            (over_layer_style && self.styles.layer_style.is_some()).then_some(Dialog::LayerStyle);
+        self.dialog = match target {
+            Some(PickTarget::Slot(..)) if self.styles.layer_style.is_some() => {
+                Some(Dialog::LayerStyle)
+            }
+            // Şablon düzenleyici comes back as it was (template_editor.rs).
+            Some(PickTarget::Template) if self.template_editor.is_some() => {
+                Some(Dialog::TemplateEditor)
+            }
+            _ => None,
+        };
     }
 
     /// Esc, Kapat or the backdrop: a question or a rename open first closes
@@ -484,6 +491,11 @@ impl App {
                 self.commit_fields();
                 self.close_style_manager();
                 return self.draw_template(&id);
+            }
+            Event::EditTemplate(id) => {
+                self.commit_fields();
+                self.close_style_manager();
+                return self.open_template_editor(Some(&id), None);
             }
             Event::Apply(id) => {
                 self.commit_fields();

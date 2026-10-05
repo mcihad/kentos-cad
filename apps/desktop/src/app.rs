@@ -142,6 +142,8 @@ pub enum Dialog {
     RemoveLayer,
     /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
     RemoveTemplate,
+    /// Şablon düzenleyici (template_editor.rs); its form is `App::template_editor`.
+    TemplateEditor,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
     /// Çöp kutusuna taşı.
     CloudRename,
@@ -281,6 +283,8 @@ pub enum Message {
     BlocksPanel(crate::blocks_panel::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
+    /// Şablon düzenleyici (template_editor.rs).
+    TemplateEditor(crate::template_editor::Event),
     /// Blok öznitelikleri's window (block_attributes.rs).
     BlockAttributes(crate::block_attributes::Event),
     /// Blok ekle's Öznitelik değerleri (attribute_values.rs).
@@ -446,6 +450,8 @@ pub struct App {
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
     pub(crate) recent_templates: Vec<String>,
+    /// Şablon düzenleyici while it is open (template_editor.rs).
+    pub(crate) template_editor: Option<crate::template_editor::Editor>,
     /// Blok öznitelikleri's window, while it is open or away for a point (block_attributes.rs).
     pub(crate) block_attributes: Option<crate::block_attributes::Window>,
     /// Blok ekle's Öznitelik değerleri, while it asks (attribute_values.rs).
@@ -714,6 +720,7 @@ impl App {
             blocks_panel: crate::blocks_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             recent_templates: Vec::new(),
+            template_editor: None,
             block_attributes: None,
             attribute_values: None,
             find_replace: None,
@@ -975,6 +982,7 @@ impl App {
             task,
             self.text_field_tasks(),
             self.blocks_tasks(),
+            self.template_editor_tasks(),
             self.attribute_values_tasks(),
             self.find_replace_tasks(),
             self.text_file_tasks(),
@@ -1146,6 +1154,7 @@ impl App {
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
+            Message::TemplateEditor(event) => return self.template_editor_event(event),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::AttributeValues(event) => self.attribute_values_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
@@ -1621,6 +1630,9 @@ impl App {
             "style.manager" => return self.open_style_manager(None, None),
             // Şablonla çiz without a template: the Şablonlar panel, to choose one (templates_panel.rs).
             "template.draw" | "template.panel" => return self.show_templates_panel(),
+            // Şablon düzenleyici, new or from the selection (template_editor.rs, docs/adr/0176 §4).
+            "template.new" => return self.open_template_editor(None, None),
+            "template.fromSelection" => return self.template_from_selection(),
             "style.legend" => self.open_legend(),
             "style.svgEditor" => self.open_svg_editor(crate::style::svgedit::Opening {
                 id: None,
@@ -1790,6 +1802,7 @@ impl App {
             }),
             // Symbols for the selected objects; taking them away when one has its own.
             "style.assign" => doc.is_some() && !self.selection.is_empty(),
+            "template.fromSelection" => doc.is_some() && !self.selection.is_empty(),
             "style.legend" => doc.is_some(),
             "style.clearSymbol" => doc.is_some_and(|d| {
                 self.selection

@@ -64,6 +64,8 @@ pub enum Event {
     Draw(String),
     /// Stil yöneticisinde göster.
     Show(String),
+    /// Düzenle (a system template's copy): Şablon düzenleyici (template_editor.rs).
+    Edit(String),
     Copy(String, Source),
     Remove(String),
 }
@@ -206,6 +208,7 @@ impl App {
             }
             Event::Draw(id) => return self.template_pressed(&id),
             Event::Show(id) => return self.open_style_manager(None, Some(id)),
+            Event::Edit(id) => return self.open_template_editor(Some(&id), None),
             Event::Copy(id, to) => self.copy_template(&id, to),
             Event::Remove(id) => self.ask_remove_template(&id),
         }
@@ -357,18 +360,19 @@ impl App {
         .on_down(msg(Event::Down))
         .fill()
         .height(28.0);
-        let manager = crate::catalog::catalog().get("style.manager");
-        let manage = tip(
-            button(icon(manager.map_or(Icon::Button, |c| c.icon)).size(16.0))
-                .on_press(Message::Run("style.manager"))
-                .padding([4, 5])
-                .style(style::button::ghost),
-            Tip::new(manager.map_or("Stil yöneticisi…", |c| c.title).to_owned()),
-            tooltip::Position::Bottom,
-        );
-        let search = container(row![search, manage].spacing(2).align_y(Center))
-            .padding([6, 8])
-            .width(Fill);
+        // Yeni şablon, Seçili nesneden şablon and Stil yöneticisi beside the search (the web's toolbar).
+        let search = container(
+            row![
+                search,
+                self.templates_button("template.new"),
+                self.templates_button("template.fromSelection"),
+                self.templates_button("style.manager"),
+            ]
+            .spacing(2)
+            .align_y(Center),
+        )
+        .padding([6, 8])
+        .width(Fill);
         let lines = self.template_lines();
         if lines.is_empty() {
             let words = if self.templates_panel.query.trim().is_empty() {
@@ -419,6 +423,21 @@ impl App {
         .reveal(reveal)
         .height(Fill);
         column![search, list].into()
+    }
+
+    /// A button beside the search: the command's icon, its title in the tip.
+    fn templates_button(&self, id: &'static str) -> Element<'_, Message> {
+        let command = crate::catalog::catalog().get(id);
+        let title = command.map_or(id, |c| c.title);
+        let glyph = command.map_or(Icon::Button, |c| c.icon);
+        tip(
+            button(icon(glyph).size(16.0))
+                .on_press_maybe(self.available(id).then_some(Message::Run(id)))
+                .padding([4, 5])
+                .style(style::button::ghost),
+            Tip::new(title.to_owned()),
+            tooltip::Position::Bottom,
+        )
     }
 
     /// One template: the picture, the name over what it draws where.
@@ -504,6 +523,19 @@ impl App {
             .item("Şablonla çiz", msg(Event::Draw(owned.clone())))
             .icon(crate::icons::from_web(Some("templateDraw")))
             .shortcut("Enter")
+            .item(
+                if editable {
+                    "Düzenle…"
+                } else {
+                    "Kopyasını düzenle…"
+                },
+                msg(Event::Edit(owned.clone())),
+            )
+            .icon(crate::icons::from_web(Some("edit")));
+        if !editable {
+            menu = menu.detail("Sistem şablonu değişmez; kopyası Kitaplığım’a kaydedilir.");
+        }
+        menu = menu
             .item("Stil yöneticisinde göster", msg(Event::Show(owned.clone())))
             .icon(crate::icons::from_web(Some("styles")))
             .separator()

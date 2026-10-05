@@ -411,6 +411,23 @@ SCENES.stylemanager = [
     close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
   },
   {
+    // Şablon düzenleyici on Parsel sınırı (docs/adr/0176 §4): the desktop's `template_editor` screens.
+    id: 'template-editor',
+    open: async (ui) => {
+      await ui.eval(ADD_TEMPLATES);
+      await openManager(ui);
+      await ui.clickText('.dialog--styles .tree__row', 'Kitaplığım');
+      await ui.sleep(300);
+      await ui.clickText('.dialog--styles .smgr__kinds .seg__opt', 'Şablon');
+      await ui.sleep(500);
+      await ui.clickText('.dialog--styles .scard', 'Parsel sınırı');
+      await ui.sleep(500);
+      await ui.clickText('.dialog--styles .smgr__actions .btn', 'Düzenle');
+      await ui.sleep(900);
+    },
+    close: async (ui) => (await ui.escapeAll(2), await ui.eval(REMOVE_MINE)),
+  },
+  {
     id: 'kind-drawings',
     open: async (ui) => {
       await openManager(ui);

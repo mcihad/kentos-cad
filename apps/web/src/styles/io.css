@@ -377,3 +377,66 @@
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
 }
+
+/* Şablon düzenleyici (ui/templates/TemplateEditor.ts, docs/adr/0176 §4): the name and category beside the picture of
+   what the template draws, then its tool, layer, look, attributes and own fields in sections. */
+.tpl-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tpl-editor__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.tpl-editor__fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.tpl-editor__picture {
+  flex: none;
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.tpl-editor__section {
+  margin: 6px 0 -4px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+/* The layer's groups and name share the row with Çizimden. */
+.tpl-editor__layer {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
+.tpl-editor__symbol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--ctl-h);
+}
+.tpl-editor__symbol-name {
+  max-width: calc(170px * var(--ui-scale));
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tpl-editor__attrs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.tpl-editor__attr {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 6px;
+  width: 100%;
+}

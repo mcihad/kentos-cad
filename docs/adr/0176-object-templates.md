@@ -133,6 +133,13 @@ da geçer:
      etiketi; noktanın etiketi ilk adı, Kod'u kodu; yazının yüksekliği, hizası, zemini; bloğun adı; başka tür reddedilir; bağımsız
      başvuru `template_from_object_cases.py`, 14 ortak durum) ve formun kuralı (`template_form`, `model/templateForm.ts`: alanlardan
      öğe ve şablon, sorunlar alanların sırasıyla, ve geri; başvuru `template_form_cases.py`, 24 ortak durum).
+   - 4b-2 **Tamam (5 Ekim):** Şablon düzenleyici iki platformda (masaüstü `template_editor.rs`, web `ui/templates/TemplateEditor.ts`): ad,
+     kategori, açıklama ve şablonun resmi; araç ve yöntem; katman (gruplar, ad, Çizimden seçme, açılacağı görünüş); renk, kalınlık,
+     sembol (Stil yöneticisinin seçme kipi, masaüstünde `PickTarget::Template`, pencere geri gelir); öznitelik tablosu, etiket; noktanın,
+     yazının ve bloğun alanları; yeni şablonun yeri (Kitaplığım, Proje). Sorunlar canlı, Kaydet sorun varken kapalı; gövde kayar, düğmeler
+     görünür. Girişler: `template.new` (Yeni şablon…), `template.fromSelection` (Seçili nesneden şablon…), panelin araç çubuğu ve satır
+     menüsünde Düzenle (sistem şablonunda Kopyasını düzenle, kopya Kitaplığım'a), Stil yöneticisinde Düzenle; ikonlar `templateNew`,
+     `templateFromSelection`.
 5. Grup şablonu; ortak iz.
 6. Şablonu uygula; ortak iz.
 

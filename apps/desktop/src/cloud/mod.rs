@@ -932,6 +932,8 @@ impl App {
             // Blok ekle's point is dropped; the tool waits for the next.
             Some(Dialog::AttributeValues) => self.attribute_values_closed(),
             Some(Dialog::FindReplace) => self.find_replace = None,
+            // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
+            Some(Dialog::TemplateEditor) => self.template_editor = None,
             Some(Dialog::PointBatch) => self.points.close_batch(),
             _ => {}
         }

@@ -138,6 +138,7 @@
     "apps/web/src/ui/text/FindReplaceDialog.ts#openFindReplaceDialog": { "desktop": "implemented", "where": "apps/desktop/src/find_replace.rs (ADR 0145 §6)" },
     "apps/web/src/ui/blocks/BlocksPanel.ts#BlocksPanel": { "desktop": "implemented", "where": "apps/desktop/src/blocks_panel.rs (ADR 0144)" },
     "apps/web/src/ui/templates/TemplatesPanel.ts#TemplatesPanel": { "desktop": "implemented", "where": "apps/desktop/src/templates_panel.rs (ADR 0176 §4)" },
+    "apps/web/src/ui/templates/TemplateEditor.ts#openTemplateEditor": { "desktop": "implemented", "where": "apps/desktop/src/template_editor.rs (ADR 0176 §4)" },
     "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": { "desktop": "implemented", "where": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)" },
     "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)" },
     "apps/web/src/ui/bottom/PointTable.ts#PointTable": { "desktop": "implemented", "where": "apps/desktop/src/points/ (ADR 0153)" },

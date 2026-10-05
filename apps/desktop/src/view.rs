@@ -1344,6 +1344,7 @@ impl App {
             }
             Asking::RemoveLayer => self.remove_layer_question(),
             Asking::RemoveTemplate => self.remove_template_question(),
+            Asking::TemplateEditor => self.template_editor_view(),
             Asking::CloudRename => self.rename_view(),
             Asking::CloudTrash => self.trash_view(),
             Asking::Settings => self.settings_dialog(),

@@ -1,5 +1,6 @@
 import type { AppContext } from './context';
-import { lockedTemplateLayerText, templateIssues, templateLayer, type TemplateLayer } from '../model/objectTemplate';
+import { lockedTemplateLayerText, templateFromObject, templateIssues, templateLayer, type TemplateLayer } from '../model/objectTemplate';
+import { formOfTemplate } from '../model/templateForm';
 import type { TemplateRun } from '../tools/templateStamp';
 import { RIBBON_TEXTS } from '../ui/ribbon/ribbonPlan';
 
@@ -60,4 +61,19 @@ function useLayer(ctx: AppContext, layer: TemplateLayer, name: string): boolean 
     ctx.log.warn(e instanceof Error ? e.message : String(e));
     return false;
   }
+}
+
+/**
+ * `template.fromSelection` (Seçili nesneden şablon, docs/adr/0176 §4): the first selected object's layer, look,
+ * attributes and label in a new template, opened in the Şablon düzenleyici to be named and saved; a kind no template
+ * draws is said.
+ */
+export function templateFromSelection(ctx: AppContext): void {
+  const first = [...ctx.selection.ids.value][0];
+  const e = first === undefined ? undefined : ctx.doc.get(first);
+  if (!e) return void ctx.log.warn('Önce çizimde bir nesne seçin; şablon onun katmanını, görünüşünü ve özniteliklerini alır.');
+  const made = templateFromObject(e, ctx.doc.layers, (id) => ctx.doc.block(id)?.name);
+  if ('refused' in made) return void ctx.log.warn(made.refused);
+  const form = formOfTemplate({ name: made.name, path: [], template: made.template });
+  void import('../ui/templates/TemplateEditor').then((m) => m.openTemplateEditor(ctx, { form }));
 }

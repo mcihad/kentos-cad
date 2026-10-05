@@ -5,7 +5,7 @@ import { StyleLibrary } from '../style/library';
 import { geometryClassOf } from '../style/geometry';
 import { setProperties, uidsOf } from '../ui/properties/write';
 import type { AppContext } from './context';
-import { drawWithTemplate } from './objectTemplates';
+import { drawWithTemplate, templateFromSelection } from './objectTemplates';
 import { persistedSignals } from './state';
 
 /**
@@ -146,6 +146,27 @@ export function registerStyleCommands(ctx: AppContext): void {
         if (typeof args === 'string') return drawWithTemplate(ctx, args);
         ctx.commands.execute('template.panel');
       },
+    },
+    {
+      id: 'template.new',
+      title: 'Yeni şablon…',
+      category: cat,
+      icon: 'templateNew',
+      aliases: ['YENISABLON', 'SABLONEKLE'],
+      description: 'Yeni bir nesne şablonu tanımlar: adı, aracı, katmanı, görünüşü, öznitelikleri ve etiketi.',
+      run: () => void import('../ui/templates/TemplateEditor').then((m) => m.openTemplateEditor(ctx)),
+    },
+    {
+      id: 'template.fromSelection',
+      title: 'Seçili nesneden şablon…',
+      short: 'Nesneden şablon',
+      category: cat,
+      icon: 'templateFromSelection',
+      aliases: ['NESNEDENSABLON'],
+      description: 'Seçili nesnenin katmanını, görünüşünü, özniteliklerini ve etiketini yeni bir şablona alır; düzenleyicide adlandırılıp kaydedilir.',
+      isEnabled: () => ctx.selection.ids.value.size > 0,
+      watch: [ctx.selection.ids],
+      run: () => templateFromSelection(ctx),
     },
     {
       id: 'template.panel',
