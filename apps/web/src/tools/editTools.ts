@@ -61,7 +61,8 @@ const CHAINED = new Set<Entity['kind']>(['line', 'arc', 'polyline']);
 export class JoinTool extends SelectionActionTool {
   readonly id = 'join';
   protected readonly label = 'Birleştir';
-  private static tolerance = 0.001;
+  /** Uç boşluğu toleransı, metres; Orta hat's Zincir joins with it too (docs/adr/0190). */
+  static tolerance = 0.001;
   private static chain = false;
 
   protected override pickHint(): string {

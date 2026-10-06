@@ -3,6 +3,7 @@
 pub mod adjoin;
 pub mod areas;
 pub mod breaking;
+pub mod centerline;
 pub mod cogo;
 pub mod compare;
 pub mod continuation;

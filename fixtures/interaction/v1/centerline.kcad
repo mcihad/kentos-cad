@@ -1,0 +1,204 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: Orta hat",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 500,
+  "workspace": "cad",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "dere",
+   "name": "Dere",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E8ED0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "yol",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486960,
+     "y": 4419977
+    },
+    {
+     "x": 486980,
+     "y": 4419977
+    },
+    {
+     "x": 486987,
+     "y": 4419984
+    }
+   ],
+   "bulges": [
+    0,
+    0.41421356237309503
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "yol",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486960,
+     "y": 4419971
+    },
+    {
+     "x": 486980,
+     "y": 4419971
+    },
+    {
+     "x": 486993,
+     "y": 4419984
+    }
+   ],
+   "bulges": [
+    0,
+    0.41421356237309503
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 3,
+   "layerId": "dere",
+   "attrs": {},
+   "a": {
+    "x": 486960,
+    "y": 4420004
+   },
+   "b": {
+    "x": 487000,
+    "y": 4420004
+   }
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "dere",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486960,
+     "y": 4420012
+    },
+    {
+     "x": 486980,
+     "y": 4420010
+    },
+    {
+     "x": 487000,
+     "y": 4420008
+    }
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 5,
+   "layerId": "dere",
+   "attrs": {},
+   "a": {
+    "x": 486960,
+    "y": 4420024
+   },
+   "b": {
+    "x": 486980,
+    "y": 4420024
+   }
+  },
+  {
+   "kind": "line",
+   "id": 6,
+   "layerId": "dere",
+   "attrs": {},
+   "a": {
+    "x": 486980,
+    "y": 4420024
+   },
+   "b": {
+    "x": 487000,
+    "y": 4420024
+   }
+  },
+  {
+   "kind": "line",
+   "id": 7,
+   "layerId": "dere",
+   "attrs": {},
+   "a": {
+    "x": 486960,
+    "y": 4420030
+   },
+   "b": {
+    "x": 487000,
+    "y": 4420030
+   }
+  },
+  {
+   "kind": "point",
+   "id": 8,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 487020,
+    "y": 4419994
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

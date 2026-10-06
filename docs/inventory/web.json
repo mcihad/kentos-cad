@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 357,
-      "implemented": 345,
+      "total": 358,
+      "implemented": 346,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 108,
-      "implemented": 106,
+      "total": 109,
+      "implemented": 107,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 125,
-    "commandsOnDesktop": 285,
+    "commandsOnDesktop": 286,
     "desktop": {
       "commands": {
-        "total": 357,
-        "implemented": 285,
+        "total": 358,
+        "implemented": 286,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 108,
-        "implemented": 106,
+        "total": 109,
+        "implemented": 107,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -7034,6 +7034,40 @@
       ]
     },
     {
+      "id": "tool.centerline",
+      "title": "Orta hat",
+      "category": "Çizim",
+      "icon": "centerline",
+      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar (Netcad’in Orta Hat Çiz’i).",
+      "aliases": [
+        "ORTAHAT",
+        "ORTAHATCIZ",
+        "EKSENCIZ",
+        "CENTERLINE",
+        "MIDLINE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Çizgi"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Çizim",
+        "CBS › Düzenle › Çizgi"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/centerline.json"
+      ]
+    },
+    {
       "id": "tool.chamfer",
       "title": "Pah",
       "category": "Düzenle",
@@ -11843,6 +11877,34 @@
       },
       "tests": [
         "fixtures/interaction/v1/path-edit-tools.json"
+      ]
+    },
+    {
+      "id": "centerline",
+      "label": "Orta hat",
+      "icon": "centerline",
+      "group": "draw",
+      "section": "line",
+      "aliases": [
+        "ORTAHAT",
+        "ORTAHATCIZ",
+        "EKSENCIZ",
+        "CENTERLINE",
+        "MIDLINE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar (Netcad’in Orta Hat Çiz’i).",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/centerline.json"
       ]
     },
     {
@@ -23873,7 +23935,8 @@
               "tool.polyline",
               "tool.polygon",
               "tool.adjoin",
-              "tool.parallel"
+              "tool.parallel",
+              "tool.centerline"
             ]
           },
           {
@@ -25219,6 +25282,10 @@
               },
               {
                 "command": "tool.adjoin",
+                "size": "small"
+              },
+              {
+                "command": "tool.centerline",
                 "size": "small"
               }
             ],
@@ -26868,6 +26935,7 @@
               "overflow": [
                 "tool.vertexPoints",
                 "tool.parallel",
+                "tool.centerline",
                 "tool.xline",
                 "tool.ray",
                 "tool.donut",
@@ -29564,6 +29632,10 @@
                 {
                   "command": "tool.adjoin",
                   "size": "small"
+                },
+                {
+                  "command": "tool.centerline",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -30855,6 +30927,7 @@
     "coordinateLabel": "<rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M3.5 16.5 8.5 11.2H18.8\"/><path d=\"M10.2 4.9l1.35 1.7 1.35-1.7M11.55 6.6v2\" stroke-width=\"1.2\"/><path d=\"M14.4 7.9h4\" stroke-width=\"1.5\"/><path d=\"M10.3 12.9l2.5 3M12.8 12.9l-2.5 3\" stroke-width=\"1.2\"/><path d=\"M14.4 14.6h3.4\" stroke-width=\"1.5\"/>",
     "coordinateVertices": "<path d=\"M2.5 7.5h7v7h-7z\" fill=\"currentColor\" fill-opacity=\".14\" stroke-width=\"1.2\"/><rect x=\"1\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m9.5 7.5 2.5-2.5h6.5M9.5 14.5l2.5 2.5h6.5\" stroke-width=\"1.3\"/><path d=\"M13 2.9h4.6M13 14.9h4.6\" stroke-width=\"1.4\"/>",
     "stationLabels": "<path d=\"M2 15c4-1 6-6 16-7\"/><path d=\"M5.3 12.3l1.4 2.6M10 9.2l1.8 2.2M14.6 7.6l.9 2.6\"/><path d=\"M5 3.5h5M7.5 1v5\"/>",
+    "centerline": "<path d=\"M2 4.5c3-1.5 6 1.5 9 0s5-1 7 0M2 15.5c3 1.5 6-1.5 9 0s5 1 7 0\"/><path d=\"M2 10h16\" stroke-dasharray=\"4 1.5 1 1.5\"/>",
     "labelAuto": "<path d=\"M7.5 7.5h5v5h-5z\" fill=\"currentColor\" fill-opacity=\".14\" stroke-width=\"1.2\"/><path d=\"m12.5 7.5 3.5-3.5M7.5 7.5 4 4M7.5 12.5 4 16M12.5 12.5l3.5 3.5\" stroke-width=\"1.3\"/><path d=\"M13.4 4h2.6v2.6M4 6.6V4h2.6M4 13.4V16h2.6M13.4 16H16v-2.6\" stroke-width=\"1.2\"/>",
     "labelNorthEast": "<circle cx=\"5\" cy=\"15\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6.5 13.5 15.5 4.5\"/><path d=\"M10.5 4.5h5v5\"/>",
     "labelNorthWest": "<circle cx=\"15\" cy=\"15\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M13.5 13.5 4.5 4.5\"/><path d=\"M9.5 4.5h-5v5\"/>",

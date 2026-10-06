@@ -1,0 +1,416 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "centerline",
+ "title": "Orta hat: yolu olmayan nesne ve boş yer söylenir, aynı kenar ikinci kez olmaz; yolun iki kenarından eksen kenar kenar ve yayıyla tek adımda, Ctrl+Z önce kenarı bırakır sonra geri alır; derenin yaklaşan kıyılarında 1 m'de bir, Adım 10 m'de (yanlış değer söylenir) yedi köşe; Zincir kapalıyken tek çizgi, açıkken uç uca iki çizgi tek kıyı; bellek başladığı gibi bırakılır",
+ "source": "tools/centerlineTool.ts; kentos_interaction::centerline; docs/adr/0190",
+ "covers": [
+  "CAD-28"
+ ],
+ "document": "centerline.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.centerline",
+   "expect": {
+    "tool": "centerline",
+    "points": 0,
+    "prompt": "Orta hat: birinci kenara tıklayın [Adım (B): 1.000 m / Zincir (Z): açık]"
+   }
+  },
+  {
+   "click": [
+    20,
+    -6
+   ],
+   "note": "Noktanın yolu yok.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    20,
+    -16
+   ],
+   "note": "Boş yer.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Tıklanan yerde nesne yok; çizginin, yayın, dairenin, elipsin, eğrinin ya da alanın üzerine tıklayın."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    -30,
+    -23
+   ],
+   "note": "Yolun sol kenarı.",
+   "expect": {
+    "points": 1,
+    "prompt": "Orta hat: ikinci kenara tıklayın [Adım (B): 1.000 m / Zincir (Z): açık]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    -23
+   ],
+   "note": "Aynı kenar ikinci kez olmaz.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "İkinci kenar birincisiyle aynı olamaz; öbür kenara tıklayın."
+    ],
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -30,
+    -29
+   ],
+   "note": "Sağ kenar: düzler paralel, yaylar eş merkezli; eksen kenar kenar, yayıyla.",
+   "expect": {
+    "points": 2,
+    "prompt": "Orta hat: 3 köşe; Enter ile yazın ya da yeni bir kenar çiftine tıklayın [Adım (B): 1.000 m / Zincir (Z): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Enter",
+   "note": "Eksen etkin katmana tek adımda.",
+   "expect": {
+    "tool": "centerline",
+    "points": 0,
+    "entities": 9,
+    "logged": [
+     "Orta hat: 3 köşeyle kenar kenar yazıldı."
+    ],
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       -40,
+       -26
+      ],
+      [
+       -20,
+       -26
+      ],
+      [
+       -10,
+       -16
+      ]
+     ]
+    },
+    "prompt": "Orta hat: birinci kenara tıklayın [Adım (B): 1.000 m / Zincir (Z): açık]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    4
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Önce kenar bırakılır, çizim geri alınmaz.",
+   "expect": {
+    "points": 0,
+    "entities": 9
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Kenar yokken Ctrl+Z çizimi geri alır: tek adım.",
+   "expect": {
+    "entities": 8
+   }
+  },
+  {
+   "click": [
+    -30,
+    4
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -30,
+    11
+   ],
+   "note": "Kıyılar eşleşmez: 1 m'de bir örneklenir.",
+   "expect": {
+    "points": 2,
+    "prompt": "Orta hat: 43 köşe; Enter ile yazın ya da yeni bir kenar çiftine tıklayın [Adım (B): 1.000 m / Zincir (Z): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Orta hat: örnekleme adımını yazın"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Adım sıfırdan büyük bir uzunluk olmalı; “0” yazıldı."
+    ],
+    "prompt": "Orta hat: örnekleme adımını yazın"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "10"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Orta hat: 7 köşe; Enter ile yazın ya da yeni bir kenar çiftine tıklayın [Adım (B): 10.000 m / Zincir (Z): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Enter",
+   "note": "Yedi köşe: uzun kıyının 10 m'leri, öbürünün köşesi ve uçlar.",
+   "expect": {
+    "points": 0,
+    "entities": 9,
+    "logged": [
+     "Orta hat: 7 köşeyle örneklenerek yazıldı."
+    ],
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       -40.0,
+       8.0
+      ],
+      [
+       -30.049628,
+       7.5024809999999995
+      ],
+      [
+       -20.099256,
+       7.004963
+      ],
+      [
+       -20.0,
+       7.0
+      ],
+      [
+       -10.148884,
+       6.507444
+      ],
+      [
+       -0.198512,
+       6.009926
+      ],
+      [
+       0.0,
+       6.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "Z"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Orta hat: birinci kenara tıklayın [Adım (B): 10.000 m / Zincir (Z)]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    24
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -30,
+    30
+   ],
+   "note": "Zincirsiz: iki paralel çizgi, eksen kenar kenar.",
+   "expect": {
+    "points": 2,
+    "prompt": "Orta hat: 2 köşe; Enter ile yazın ya da yeni bir kenar çiftine tıklayın [Adım (B): 10.000 m / Zincir (Z) / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc önce ikinci kenarı bırakır.",
+   "expect": {
+    "points": 1,
+    "prompt": "Orta hat: ikinci kenara tıklayın [Adım (B): 10.000 m / Zincir (Z)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "points": 0
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "Z"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Orta hat: birinci kenara tıklayın [Adım (B): 10.000 m / Zincir (Z): açık]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    24
+   ],
+   "note": "Zincir: uç uca iki çizgi tek kıyı.",
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -10,
+    24
+   ],
+   "note": "Zincirin öbür çizgisi de aynı kenardır.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "İkinci kenar birincisiyle aynı olamaz; öbür kenara tıklayın."
+    ],
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -30,
+    30
+   ],
+   "expect": {
+    "points": 2,
+    "prompt": "Orta hat: 5 köşe; Enter ile yazın ya da yeni bir kenar çiftine tıklayın [Adım (B): 10.000 m / Zincir (Z): açık / Uygula (Enter)]"
+   }
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "entities": 10,
+    "logged": [
+     "Orta hat: 5 köşeyle örneklenerek yazıldı."
+    ],
+    "newest": {
+     "kind": "polyline",
+     "points": [
+      [
+       -40.0,
+       27.0
+      ],
+      [
+       -30.0,
+       27.0
+      ],
+      [
+       -20.0,
+       27.0
+      ],
+      [
+       -10.0,
+       27.0
+      ],
+      [
+       0.0,
+       27.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "1"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Orta hat: birinci kenara tıklayın [Adım (B): 1.000 m / Zincir (Z): açık]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 10
+   }
+  }
+ ]
+}

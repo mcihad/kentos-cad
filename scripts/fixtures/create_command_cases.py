@@ -1115,6 +1115,21 @@ cases.append({
 })
 
 
+# ── Orta hat (docs/adr/0190 §3) ─────────────────────────────────────────
+
+axis = [O({"kind": "polyline", "pts": [P(487000, 4420003), P(487020, 4420003), P(487030, 4420013)], "bulges": [0, 0.41421356237309503]})]
+cases.append({
+    "name": "Orta hat: eksen yaylı kenarıyla bir çoklu çizgi olarak tek adımda yazılır, adı “Orta hat” (ADR 0190 §3)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "centerline", "objects": axis}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": made(axis[0], 3)}, "uids": {"3": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Orta hat", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Orta hat", "expect": {"ids": IDS + [3]}},
+    ],
+})
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

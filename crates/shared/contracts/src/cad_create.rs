@@ -87,6 +87,8 @@ pub enum CreateOperation {
     /// Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,
     /// cross-sections and points.
     Stations,
+    /// Orta hat (docs/adr/0190): the axis between two sides, a polyline.
+    Centerline,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

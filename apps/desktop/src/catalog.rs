@@ -251,6 +251,8 @@ pub const PORTED: &[&str] = &[
     "tool.coordinateVertices",
     // docs/adr/0189: Km yaz.
     "tool.stationLabels",
+    // docs/adr/0190: Orta hat.
+    "tool.centerline",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

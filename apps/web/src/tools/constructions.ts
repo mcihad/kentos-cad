@@ -71,6 +71,18 @@ export interface Stationing {
 
 /** A route's stations and what is written at them, or why nothing is. */
 export const stationing = op<(e: Entity, rules: StationRules, look: StationLook) => { stationing?: Stationing | null; problem?: string | null }>('stationing');
+
+// Orta hat (docs/adr/0190; crates/shared/geometry-core/src/ops/centerline.rs).
+
+/** The axis between two sides: edge by edge between matched sides (with their arcs' bulges), else sampled. */
+export interface Centerline {
+  readonly method: 'matched' | 'sampled';
+  readonly pts: Vec2[];
+  readonly bulges?: number[] | null;
+}
+
+/** The centreline of two sides sampled every `step` along the longer when they do not match; why none, else. */
+export const centerline = op<(a: Entity, b: Entity, step: number) => { centerline?: Centerline | null; problem?: string | null }>('centerline');
 /** The candidate nearest to p (the first of equally near ones); null for none. */
 export const nearestOf = op<(points: readonly Vec2[], p: Vec2) => Vec2 | null>('nearestOf');
 

@@ -41011,6 +41011,11 @@
                 "const": "stations",
                 "description": "Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,\ncross-sections and points.",
                 "type": "string"
+              },
+              {
+                "const": "centerline",
+                "description": "Orta hat (docs/adr/0190): the axis between two sides, a polyline.",
+                "type": "string"
               }
             ]
           },

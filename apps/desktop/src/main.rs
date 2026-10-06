@@ -83,6 +83,8 @@ mod point_calc;
 #[cfg(test)]
 mod point_calc_scenes;
 #[cfg(test)]
+mod centerline_scenes;
+#[cfg(test)]
 mod stationing_scenes;
 mod points;
 mod preview;

@@ -145,6 +145,7 @@ class CreateOperation(_StrEnum):
     - ``table``: Tablo (docs/adr/0184 §3): a table placed by its tool.
     - ``coordinates``: Koordinat yaz (docs/adr/0185): coordinate labels (texts and their
     - ``stations``: Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,
+    - ``centerline``: Orta hat (docs/adr/0190): the axis between two sides, a polyline.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -169,9 +170,10 @@ class CreateOperation(_StrEnum):
     TABLE = "table"
     COORDINATES = "coordinates"
     STATIONS = "stations"
+    CENTERLINE = "centerline"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

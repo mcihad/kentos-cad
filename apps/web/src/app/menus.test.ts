@@ -38,7 +38,7 @@ describe('tool sections', () => {
     const extra: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'line')!, id: 'yeni', section: undefined };
     const sections = toolSections([...TOOL_CATALOG, extra], 'draw');
     expect(sections.map((s) => s.label)).toEqual(['Çizgi', 'Eğri', 'Şekil', 'Yardımcı', 'Nokta', 'Çizim']);
-    expect(sections[0].tools.map((t) => t.id)).toEqual(['line', 'polyline', 'polygon', 'adjoin', 'parallel']);
+    expect(sections[0].tools.map((t) => t.id)).toEqual(['line', 'polyline', 'polygon', 'adjoin', 'parallel', 'centerline']);
     expect(sections.at(-1)!.tools.map((t) => t.id)).toEqual(['yeni']);
   });
 });

@@ -1,4 +1,5 @@
 import { ReadableTool, TextTool } from './annotateTools';
+import { CenterlineTool } from './centerlineTool';
 import { PlaceTextFileTool } from './textFileTool';
 import { LeaderTool } from './leaderTool';
 import { BlockDefineTool, BlockInsertTool } from './blockTools';
@@ -99,6 +100,22 @@ const defs: Def[] = [
   { id: 'polygon', label: 'Kapalı alan', icon: 'polygon', group: 'draw', section: 'line', shortcut: 'G', aliases: ['KA', 'ALAN', 'POLYGON'], description: 'Kapalı çoklu çizgi (alan) çizer.', steps: ['Köşelere sırayla tıklayın; alan imleç yanında görünür.', 'İlk köşeye tıklayın, sağ tıklayın ya da Enter: alan kapanıp biter.', '“İzle” açıkken sonraki parçalar görünen çizgiler boyunca, kısa yoldan çizilir; köşeler ve yaylar çizgilerin kendileridir, çizgiye yakın tık çizginin üstüne oturur. İlk köşeye tıklayınca son kenar da çizgiler boyunca kapanır.', '“Akış” açıkken imleç son köşeden adım boyu kadar uzaklaştıkça yerinde köşe bırakır (serbest el çizimi); adım boyu “Adım boyu” ile yazılır, ilk değeri 1 m. Kenet ve orto akışın köşelerine uygulanmaz.'], productCommand: polygonCreate.id, create: (c) => new PathTool(c, { id: 'polygon', label: 'Kapalı alan', closed: true }) },
   { id: 'adjoin', label: 'Bitişik alan', icon: 'adjoin', group: 'draw', section: 'line', aliases: ['BITISIKALAN', 'BITISIK', 'KOMSUALAN'], description: 'Komşu alanların arasına yeni alanı yalnız yeni sınırını çizerek ekler: yolun komşu alanlarla kapattığı bölge alan olur, ortak sınır komşularınkidir.', steps: ['İlk noktayı bir komşu alanın içinde ya da sınırında verin, yeni sınırın köşelerine tıklayın, son noktayı yine bir komşunun içine ya da sınırına koyun; bölge imleçle birlikte dolar.', 'Enter ya da sağ tık: bölge etkin katmana tek adımda yazılır; komşuların içinde kalan alanlar delik olur. Kapalı bölge yoksa yol kalır, “Geri” son noktayı siler.', 'Komşular görünümdeki, Çakışma kipinin katmanlarındaki alanlardır; Serbest’te etkin katmanınkiler. Görünümden taşan bölge için görünümü uzaklaştırın.', '“Yay”, “Uzunluk”, “İzle” ve “Akış” Çoklu çizgi’dekiler gibidir.'], productCommand: entitiesCreate.id, create: (c) => new AdjoinTool(c) },
   { id: 'parallel', label: 'Paralel çizgi', icon: 'parallel', group: 'draw', section: 'line', shortcut: 'Y', aliases: ['PARALEL', 'PC', 'ML', 'MLINE', 'DLINE'], description: 'Ekseni çizerken sağında ve solunda verilen mesafelerde paralel hatlar çizer (yol, kaldırım, duvar); istenirse arası tek alan olur.', steps: ['“Sol” ve “Sağ” ile mesafeleri yazın ya da iki noktaya tıklayarak gösterin.', 'Eksenin noktalarına tıklayın; paralel hatlar köşelerde birleşerek canlı çizilir.', 'Sağ tık bitirir, “Kapat” ekseni kapatır. “Eksen” ekseni çizip çizmemeyi, “Alan olarak” koridoru tek alan yapmayı seçer.'], productCommand: entitiesCreate.id, create: (c) => new ParallelLineTool(c) },
+  {
+    id: 'centerline',
+    label: 'Orta hat',
+    icon: 'centerline',
+    group: 'draw',
+    section: 'line',
+    aliases: ['ORTAHAT', 'ORTAHATCIZ', 'EKSENCIZ', 'CENTERLINE', 'MIDLINE'],
+    description: 'İki kenarın (yol kenarları, dere kıyıları) ortasından eksen çizer: eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluklarının payıyla örnekleyerek; Zincir birbirini izleyen çizgileri tek kenar sayar (Netcad’in Orta Hat Çiz’i).',
+    steps: [
+      'Birinci kenara, sonra ikinci kenara tıklayın (çizgi, çoklu çizgi, yay, elips ya da eğri; kapalı yol olmaz): eksen kesikli görünür.',
+      'Adım (B) örnekleme aralığı (eşleşmeyen kenarlarda); Zincir (Z) tıklanan çizginin ucu ucuna bağlı zincirini tek kenar yapar.',
+      'Enter, Uygula ya da sağ tık ekseni etkin katmana çoklu çizgi olarak tek adımda yazar; araç sonraki kenar çiftini bekler. Esc ve Ctrl+Z son kenarı bırakır.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new CenterlineTool(c),
+  },
   { id: 'rectangle', family: 'rectangle', label: 'Dikdörtgen', icon: 'rectangle', group: 'draw', section: 'shape', shortcut: 'R', aliases: ['REC', 'RECTANGLE', 'DIKDORTGEN', 'KUTU'], description: 'İki karşı köşeden dikdörtgen çizer; döndürme açısı, tam boyut, köşe yuvarlama ve pah seçenekleriyle.', steps: ['Bir köşeye tıklayın (önce “Köşe yuvarla” ya da “Pah” ile köşe biçimini seçebilirsiniz).', 'Karşı köşeye tıklayın.', '“Döndür” ile açı, “Boyutlar” ile uzunluk,genişlik yazıp yönü tıklayarak gösterin.'], productCommand: polygonCreate.id, create: (c) => new RectangleTool(c) },
   { id: 'rectangle3', family: 'rectangle', label: 'Döndürülmüş dikdörtgen', icon: 'rectangle3', group: 'draw', section: 'shape', shortcut: 'Alt+R', aliases: ['REC3', 'DDIKDORTGEN', 'UCNOKTADIKDORTGEN'], description: 'Önce bir kenar çizilir, sonra yana çekilerek genişlik verilir; her açıda dikdörtgen.', steps: ['Kenarın ilk noktasına tıklayın.', 'Kenarın ikinci noktasına tıklayın ya da uzunluk yazın (kenet, izleme ve orto çalışır).', 'Fareyi kenardan yana çekip tıklayın ya da genişliği yazın.'], productCommand: polygonCreate.id, create: (c) => new RotatedRectangleTool(c) },
   { id: 'regularPolygon', family: 'rectangle', label: 'Düzgün çokgen', icon: 'regularPolygon', group: 'draw', section: 'shape', shortcut: 'Shift+G', aliases: ['POL', 'POLYGON3', 'COKGEN'], description: 'Kenar sayısı verilen düzgün çokgen: merkezden (çembere içten ya da dıştan) ya da bir kenardan.', steps: ['Kenar sayısını yazın (varsayılan 6) ya da “Kenar sayısı” düğmesine basın.', 'Merkeze tıklayın; fareyle bir köşeyi (ya da “Çember: kenarlara teğet” ile bir kenar ortasını) gösterip tıklayın.', '“Kenardan” ile bir kenarın iki ucuna tıklayarak çizin; yarıçap yazılırsa alt kenar yatay olur.'], productCommand: polygonCreate.id, create: (c) => new RegularPolygonTool(c) },

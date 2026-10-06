@@ -4656,6 +4656,12 @@ SCENES.pointcalc = pointCalcScenes();
 // points; and what it wrote. The desktop's are `tools_screens`' km-yaz-* (apps/desktop/src/stationing_scenes.rs).
 SCENES.stationing = stationingScenes();
 
+// Orta hat (docs/adr/0190) in a CAD project at 1:500, the shared trace's ground: a road's two sides with a quarter-turn
+// bend, a stream's banks closing in and a bank in two lines. The road's sides picked, their axis dashed edge by edge; the
+// stream's axis sampled every 5 m; and what was written. The desktop's are `tools_screens`' orta-hat-*
+// (apps/desktop/src/centerline_scenes.rs).
+SCENES.centerline = centerlineScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -5039,6 +5045,78 @@ function stationingScenes() {
       open: async (ui) => (await sections(ui), await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300), await hover(ui, 12, 12)),
       close,
     },
+  ];
+}
+
+function centerlineScenes() {
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x, y: c.y };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    const bend = Math.tan(Math.PI / 8);
+    add({ kind: 'polyline', pts: [[-40, -23], [-20, -23], [-13, -16]].map(P), bulges: [0, bend], color: '#8C9AAA' });
+    add({ kind: 'polyline', pts: [[-40, -29], [-20, -29], [-7, -16]].map(P), bulges: [0, bend], color: '#8C9AAA' });
+    add({ kind: 'line', a: P([-40, 4]), b: P([0, 4]), color: '#3E8ED0' });
+    add({ kind: 'polyline', pts: [[-40, 12], [-20, 10], [0, 8]].map(P), color: '#3E8ED0' });
+    add({ kind: 'line', a: P([-40, 24]), b: P([-20, 24]), color: '#3E8ED0' });
+    add({ kind: 'line', a: P([-20, 24]), b: P([0, 24]), color: '#3E8ED0' });
+    add({ kind: 'line', a: P([-40, 30]), b: P([0, 30]), color: '#3E8ED0' });
+    window.__oh = { o };
+    k.view.camera.fit({ minX: o.x - 48, minY: o.y - 34, maxX: o.x + 12, maxY: o.y + 34 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__oh.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  const input = async (ui, list) => {
+    for (const t of list) await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(t)})`);
+  };
+  const confirm = async (ui) => (await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300));
+  const shown = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'home', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await startTool(ui, 'centerline');
+    await click(ui, -30, -23);
+    await click(ui, -30, -29);
+    await hover(ui, 6, -6);
+  };
+  const stream = async (ui) => {
+    await shown(ui);
+    await click(ui, -30, 4);
+    await click(ui, -30, 11);
+    await input(ui, ['B', '5']);
+    await hover(ui, 6, -6);
+  };
+  const written = async (ui) => {
+    await shown(ui);
+    await confirm(ui);
+    await click(ui, -30, 4);
+    await click(ui, -30, 11);
+    await input(ui, ['B', '5']);
+    await confirm(ui);
+    await click(ui, -30, 24);
+    await click(ui, -30, 30);
+    await confirm(ui);
+    await hover(ui, 6, -6);
+  };
+  /** The session's options as a new session has them. */
+  const close = async (ui) => {
+    await ui.eval(`(async () => {
+      const { centerlineOptions } = await import('/src/tools/centerlineTool.ts');
+      Object.assign(centerlineOptions, { step: 1, chain: true });
+    })()`);
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'centerline', open: shown, close },
+    { id: 'centerline-stream', open: stream, close },
+    { id: 'centerline-written', open: written, close },
   ];
 }
 

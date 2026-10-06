@@ -258,6 +258,22 @@ impl Walk {
         self.path.closed
     }
 
+    /// The edges it walks, in its order and way; none on a curve
+    /// (fit-point curve, ellipse), whose chords are not its own.
+    pub fn edges(&self) -> Option<&[Edge]> {
+        let curve = matches!(self.shape, Shape::Ellipse { .. } | Shape::Spline { .. });
+        (!curve).then_some(self.path.edges.as_slice())
+    }
+
+    /// The lengths along it at its vertices between its ends; none on a
+    /// curve, which has none.
+    pub fn vertex_lengths(&self) -> Vec<f64> {
+        match self.edges() {
+            Some(_) => self.path.cum.iter().skip(1).copied().collect(),
+            None => Vec::new(),
+        }
+    }
+
     /// The point `s` along it and the unit direction it runs there: at a
     /// vertex the next edge's in the walk; round a closed path its length is
     /// its start again. On a curve the point is on the curve itself (the

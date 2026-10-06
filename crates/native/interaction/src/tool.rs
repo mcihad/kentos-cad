@@ -685,6 +685,10 @@ pub struct Memory {
     pub station_section: f64,
     pub station_point: Option<f64>,
     pub station_ends: bool,
+    /// Orta hat's options (`centerlineOptions`; docs/adr/0190): Adım
+    /// (metres) and Zincir.
+    pub centerline_step: f64,
+    pub centerline_chain: bool,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -888,6 +892,8 @@ impl Default for Memory {
             station_section: 0.0,
             station_point: None,
             station_ends: true,
+            centerline_step: crate::centerline::FIRST_STEP,
+            centerline_chain: true,
         }
     }
 }

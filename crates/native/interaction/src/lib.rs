@@ -107,6 +107,7 @@ pub mod blocks;
 pub mod boundary;
 pub mod breaking;
 pub mod calc;
+pub mod centerline;
 pub mod circle;
 pub mod cleanup;
 pub mod clipboard;

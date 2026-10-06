@@ -101,6 +101,8 @@ export const ICONS = {
   coordinateVertices: `<path d="M2.5 7.5h7v7h-7z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/>${grip(2.5, 7.5)}${grip(9.5, 7.5)}${grip(2.5, 14.5)}${grip(9.5, 14.5)}<path d="m9.5 7.5 2.5-2.5h6.5M9.5 14.5l2.5 2.5h6.5" stroke-width="1.3"/><path d="M13 2.9h4.6M13 14.9h4.6" stroke-width="1.4"/>`,
   // Km yaz (docs/adr/0189): option B of its sheet, the owner's to change.
   stationLabels: '<path d="M2 15c4-1 6-6 16-7"/><path d="M5.3 12.3l1.4 2.6M10 9.2l1.8 2.2M14.6 7.6l.9 2.6"/><path d="M5 3.5h5M7.5 1v5"/>',
+  // Orta hat (docs/adr/0190): two banks and the dash-dot axis between them (option D).
+  centerline: '<path d="M2 4.5c3-1.5 6 1.5 9 0s5-1 7 0M2 15.5c3 1.5 6-1.5 9 0s5 1 7 0"/><path d="M2 10h16" stroke-dasharray="4 1.5 1 1.5"/>',
   // Koordinat yaz's Yön (docs/adr/0185 §4): Otomatik, out of an object every way; the four corners, an arrow from the place.
   labelAuto:
     '<path d="M7.5 7.5h5v5h-5z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/><path d="m12.5 7.5 3.5-3.5M7.5 7.5 4 4M7.5 12.5 4 16M12.5 12.5l3.5 3.5" stroke-width="1.3"/><path d="M13.4 4h2.6v2.6M4 6.6V4h2.6M4 13.4V16h2.6M13.4 16H16v-2.6" stroke-width="1.2"/>',
