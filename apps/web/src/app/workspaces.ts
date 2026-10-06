@@ -74,6 +74,13 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
         'tool.donut',
         'tool.parallel',
         'tool.dimension',
+        // The rest of the dimension family and CAD's annotation (docs/adr/0146, 0147, 0182): CAD's interface only.
+        'tool.dimContinue',
+        'tool.dimBaseline',
+        'tool.quickDimension',
+        'tool.mtext',
+        'tool.leader',
+        'tool.placeTextFile',
         'tool.revcloud',
         'tool.hatch',
         'transform/array',

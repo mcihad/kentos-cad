@@ -46,9 +46,8 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
         for tab in tabs {
             let (levels, overflow) = fitted(&app, tab, 1100.0);
             assert!(!overflow, "{mode} {tab}: does not fit 1100 px ({levels:?})");
-            // Wide windows show every panel as designed: a 4K screen's width (CBS's Düzenle, the whole draw
-            // and modify menus, is some 3100 px).
-            let (wide, _) = fitted(&app, tab, 3840.0);
+            // Wide windows show every panel as designed.
+            let (wide, _) = fitted(&app, tab, 3000.0);
             assert!(wide.iter().all(|&l| l == 0), "{mode} {tab}: {wide:?}");
         }
     }

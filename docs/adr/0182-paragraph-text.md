@@ -66,10 +66,11 @@ blokları, ölçü krokisindeki notlar birkaç satırdır; bir sözcüğün kal�
 
 ### 4. Araç ve yerinde düzenleme
 
-- **Çok satırlı yazı** (`tool.mtext`; CAD şeridinde Açıklama › Yazı, CBS'de Düzenle › Açıklama, Çizim menüsünün Açıklama'sı; takma adlar MTEXT, MT,
-  COKSATIRLIYAZI, PARAGRAF): iki köşe kutunun genişliğini (Yazı'nın Açı'sı boyunca) ve sol üst köşesini verir (hiza sol üst);
-  aynı noktaya iki tık kutusuz yazıdır. Yükseklik (Y) ve Açı (A) Yazı ile ortak, Satır aralığı (S) 0,25 ile 4 arası, Zemin (Z)
-  Yazı'nınki. Etkin katman kilitliyse ilk köşede söylenir.
+- **Çok satırlı yazı** (`tool.mtext`; CAD şeridinde Açıklama › Yazı ve Çizim menüsünün Açıklama'sı; CBS'nin arayüzünde yok, CAD'in
+  aracıdır: sahibin 6 Ekim sözü “CAD sadece CAD arayüzünde”, ADR 0165'in gizleme listesi; takma adlar MTEXT, MT, COKSATIRLIYAZI,
+  PARAGRAF): iki köşe kutunun genişliğini (Yazı'nın Açı'sı boyunca) ve sol üst köşesini verir (hiza sol üst); aynı noktaya iki tık
+  kutusuz yazıdır. Yükseklik (Y) ve Açı (A) Yazı ile ortak, Satır aralığı (S) 0,25 ile 4 arası, Zemin (Z) Yazı'nınki. Etkin katman
+  kilitliyse ilk köşede söylenir.
 - Düzenleyici kutunun yanında açılır, yazının üstüne düşmez: yer varsa kutunun üstünde, yoksa yazının altında. Enter yeni satır,
   Ctrl+Enter ya da Tamam yazar, Esc ya da Vazgeç bırakır, çizime basmak yazar. Üstündeki çubukta Kalın, Eğik, Altı çizili, Üst simge,
   Alt simge seçili harflere uygulanır (seçim yoksa imlecin sözcüğüne; sözcük de yoksa söylenir), Renk ▾ (Yazının rengi ve

@@ -138,7 +138,9 @@ describe('project types (docs/adr/0165)', () => {
     expect(panelCommands(home.panels.find((p) => p.label === 'Harita')!)).toEqual(['tool.parcel', 'tool.boundary', 'tool.areaUnion', 'tool.measure', 'tool.area']);
     const ribbon = new Set(ribbonOf(gis));
     for (const id of ['tool.hatch', 'tool.dimension', 'tool.rectangle', 'tool.xline', 'tool.fillet', 'tool.array']) expect(ribbon.has(id), id).toBe(false);
-    for (const id of ['tool.line', 'tool.polyline', 'tool.polygon', 'tool.parcel', 'processing.toolbox', 'crs.set']) expect(ribbon.has(id), id).toBe(true);
+    // CAD's annotation stays in CAD's interface: Çok satırlı yazı, Kılavuz, Metin dosyası yerleştir and the dimension family.
+    for (const id of ['tool.mtext', 'tool.leader', 'tool.placeTextFile', 'tool.quickDimension', 'tool.dimContinue', 'tool.dimBaseline']) expect(ribbon.has(id), id).toBe(false);
+    for (const id of ['tool.line', 'tool.polyline', 'tool.polygon', 'tool.parcel', 'processing.toolbox', 'crs.set', 'tool.text', 'tool.labelsToText']) expect(ribbon.has(id), id).toBe(true);
     // A type's own panel is left out where no type filters (the inventory's places).
     expect(tabsIn(SHOW_ALL).find((t) => t.id === 'home')!.panels.some((p) => p.label === 'Harita')).toBe(false);
   });

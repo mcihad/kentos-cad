@@ -101,7 +101,7 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 110,
+    "commandsWithoutTests": 108,
     "commandsOnDesktop": 255,
     "desktop": {
       "commands": {
@@ -6645,18 +6645,21 @@
       ],
       "ribbon": [
         "CAD › Giriş › Açıklama",
-        "CAD › Açıklama › Ölçü",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Ölçü"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "tool.dimContinue",
@@ -6676,18 +6679,21 @@
       ],
       "ribbon": [
         "CAD › Giriş › Açıklama",
-        "CAD › Açıklama › Ölçü",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Ölçü"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "tool.dimension",
@@ -7286,6 +7292,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/labels-to-text.json"
       ]
@@ -7474,11 +7481,12 @@
       ],
       "ribbon": [
         "CAD › Giriş › Açıklama",
-        "CAD › Açıklama › Kılavuz",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Kılavuz"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
@@ -7486,6 +7494,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/leader.json"
       ]
     },
@@ -7784,11 +7793,12 @@
         "Çizim › Açıklama"
       ],
       "ribbon": [
-        "CAD › Açıklama › Yazı",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Yazı"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
@@ -7796,6 +7806,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/paragraph-text.json"
       ]
     },
@@ -8105,11 +8116,12 @@
       ],
       "ribbon": [
         "CAD › Ekle › Metin",
-        "CAD › Açıklama › Yazı",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Yazı"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
@@ -8117,6 +8129,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/text-file.json"
       ]
     },
@@ -8342,11 +8355,12 @@
       ],
       "ribbon": [
         "CAD › Giriş › Açıklama",
-        "CAD › Açıklama › Ölçü",
-        "CBS › Düzenle › Açıklama"
+        "CAD › Açıklama › Ölçü"
       ],
       "quickAccess": false,
-      "hiddenIn": [],
+      "hiddenIn": [
+        "gis"
+      ],
       "uiSources": [],
       "status": "implemented",
       "platforms": {
@@ -8354,6 +8368,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/quick-dimension.json"
       ]
     },
@@ -9226,6 +9241,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/text-options.json"
@@ -11154,7 +11170,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "dimContinue",
@@ -11178,7 +11196,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/src/app/workspaces.test.ts"
+      ]
     },
     {
       "id": "dimension",
@@ -11665,6 +11685,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/labels-linked.json",
         "fixtures/interaction/v1/labels-to-text.json"
       ]
@@ -11818,6 +11839,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/leader.json"
       ]
     },
@@ -12055,6 +12077,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/paragraph-text.json"
       ]
     },
@@ -12297,6 +12320,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/text-file.json"
       ]
     },
@@ -12494,6 +12518,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/quick-dimension.json"
       ]
     },
@@ -13162,6 +13187,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/template-tools.json",
         "fixtures/interaction/v1/text-options.json"
@@ -13837,6 +13863,12 @@
           "tool.donut",
           "tool.parallel",
           "tool.dimension",
+          "tool.dimContinue",
+          "tool.dimBaseline",
+          "tool.quickDimension",
+          "tool.mtext",
+          "tool.leader",
+          "tool.placeTextFile",
           "tool.revcloud",
           "tool.hatch",
           "transform/array",
@@ -22856,40 +22888,7 @@
                 "size": "large"
               },
               {
-                "command": "tool.mtext",
-                "size": "small"
-              },
-              {
-                "command": "tool.leader",
-                "size": "large"
-              },
-              {
-                "command": "tool.placeTextFile",
-                "size": "small"
-              },
-              {
                 "command": "tool.labelsToText",
-                "size": "small"
-              },
-              {
-                "split": [
-                  {
-                    "command": "tool.dimContinue",
-                    "title": "Zincir ölçü",
-                    "label": "Zincir ölçü"
-                  },
-                  {
-                    "command": "tool.dimBaseline",
-                    "title": "Baz ölçü",
-                    "label": "Baz ölçü"
-                  },
-                  {
-                    "command": "tool.quickDimension",
-                    "title": "Hızlı ölçü",
-                    "label": "Hızlı ölçü"
-                  }
-                ],
-                "key": "dimension",
                 "size": "small"
               }
             ],
@@ -27073,40 +27072,7 @@
                   "size": "large"
                 },
                 {
-                  "command": "tool.mtext",
-                  "size": "small"
-                },
-                {
-                  "command": "tool.leader",
-                  "size": "large"
-                },
-                {
-                  "command": "tool.placeTextFile",
-                  "size": "small"
-                },
-                {
                   "command": "tool.labelsToText",
-                  "size": "small"
-                },
-                {
-                  "split": [
-                    {
-                      "command": "tool.dimContinue",
-                      "title": "Zincir ölçü",
-                      "label": "Zincir ölçü"
-                    },
-                    {
-                      "command": "tool.dimBaseline",
-                      "title": "Baz ölçü",
-                      "label": "Baz ölçü"
-                    },
-                    {
-                      "command": "tool.quickDimension",
-                      "title": "Hızlı ölçü",
-                      "label": "Hızlı ölçü"
-                    }
-                  ],
-                  "key": "dimension",
                   "size": "small"
                 }
               ],

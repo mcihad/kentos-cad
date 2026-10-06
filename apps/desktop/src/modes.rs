@@ -269,6 +269,18 @@ mod tests {
             })
             .collect();
         assert!(!ids.contains(&"tool.ellipse"), "{ids:?}");
+        // CAD's annotation stays in CAD's interface (docs/adr/0146, 0147, 0182); Yazı stays.
+        for id in [
+            "tool.mtext",
+            "tool.leader",
+            "tool.placeTextFile",
+            "tool.quickDimension",
+            "tool.dimContinue",
+            "tool.dimBaseline",
+        ] {
+            assert!(!ids.contains(&id), "{id}: {ids:?}");
+        }
+        assert!(ids.contains(&"tool.text"), "{ids:?}");
         let home = app.ribbon_tabs().find(|t| t.id == "home").expect("Giriş");
         assert!(home.panels.iter().any(|p| p.label == "Harita"));
         // A tab the other type lacks gives way to Giriş.

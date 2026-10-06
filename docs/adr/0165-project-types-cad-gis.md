@@ -115,6 +115,10 @@ Başlangıç görünümü:
    - Giriş'in panellerindeki “Tüm araçlar” açıcısı aynı türün sekmesine gider (CAD: Değiştir, Açıklama, Ekle; CBS: Düzenle, Harita).
    - Masaüstünün Python konsolu Komut satırına git'in yanındadır: CAD'de Yönet › Komut, CBS'de Analiz › Komut.
    - Hiçbir komut kaybolmaz: bir türün menülerinde gösterdiği her komut o türün şeridindedir (`workspaces.test.ts`), kataloğun her aracı bir türün şeridindedir (duman testi); iki türün her sekmesi 1100 px'e sığar ve 3000 px'te tam boyutundadır (masaüstünde `ribbon_tests`, web'de `e2e:layout`). Web'de katlanmış panelin ▾'si adın son sözcüğüyle birlikte kırılır (“Çizim yardımcıları ▾” iki satır).
+   - CAD'in açıklama araçları CBS'nin arayüzünde yoktur (sahibin 6 Ekim sözü: “CAD sadece CAD arayüzünde”): Ölçülendirme ve ailesi
+     (Zincir, Baz ve Hızlı ölçü), Tarama, Kılavuz, Çok satırlı yazı, Metin dosyası yerleştir, Revizyon bulutu (`app/workspaces.ts`'in
+     gizleme listesi; envanterden masaüstüne). CBS'de Yazı ve Etiketleri yazıya çevir kalır. Gizli komut yazılarak çalışır, CBS
+     projesindeki ölçü, kılavuz ve çok satırlı yazı çizilir ve düzenlenir: tür yalnız arayüzü seçer.
 
 ## Bu ADR'de olmayanlar
 
