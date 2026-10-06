@@ -51,6 +51,11 @@ export class Formatter {
     this.changed = units.changed ?? new Signal(0);
   }
 
+  /** The project's length decimals (a km is written with them, docs/adr/0188 §2). */
+  get lengthDecimals(): number {
+    return this.prefs.lengthDecimals.value;
+  }
+
   /**
    * The unit lengths are typed and read in: metres, or a local project's
    * drawing unit (docs/adr/0165 §2). Geometry stays in metres; only what

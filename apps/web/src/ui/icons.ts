@@ -304,6 +304,12 @@ export const ICONS = {
   calcAlong: `<path d="M3 13h14M3 8.5v2.5M11 8.5v2.5M3 9.7h8"/><circle cx="11" cy="13" r="1.6"/>${grip(3, 13)}${grip(17, 13)}`,
   calcPolar: `<path d="M5 15h12" stroke-dasharray="2 1.5"/><path d="M5 15 11.2 7.1M9 15a4 4 0 0 0-1.54-3.15"/><circle cx="12" cy="6" r="1.5"/>${grip(5, 15)}${grip(17, 15)}`,
   calcMid: `<path d="M3 13h14M6.5 11.3v3.4M13.5 11.3v3.4"/><circle cx="10" cy="13" r="1.6"/>${grip(3, 13)}${grip(17, 13)}`,
+  // Nokta hesaplayıcı ekleri (docs/adr/0188): option A of each set, the owner's to change.
+  calcObject: `<path d="M3 15C6 9 11 7 17 7"/><path d="M8.88 8.75 10.83 12.47" stroke-dasharray="2 1.5"/><circle cx="11.53" cy="13.79" r="1.5"/>${grip(3, 15)}`,
+  calcKm: '<path d="M3 15h14M3 15v2.5M7.67 15v1.8M12.33 15v1.8M17 15v2.5"/><path d="M12.33 15V8.4" stroke-dasharray="2 1.5"/><circle cx="12.33" cy="6.8" r="1.6"/>',
+  calcName: '<circle cx="5.5" cy="14.5" r="1.7"/><path d="M11.6 3.2 10.4 11.2M15.4 3.2l-1.2 8M9.2 5.8h7.6M8.8 8.6h7.6"/>',
+  calcSlope: `<path d="M3 15 17 7"/><path d="M3 15h12.6"/><path d="M17 15V7" stroke-dasharray="2 1.5"/><circle cx="17" cy="15" r="1.5"/>${grip(3, 15)}`,
+  calcBisector: `<path d="M17 16H3l5-13"/><path d="M3 16 12.56 9.43" stroke-dasharray="2 1.5"/><circle cx="13.88" cy="8.53" r="1.5"/>${grip(3, 16)}${grip(17, 16)}${grip(8, 3)}`,
   tracking: '<path d="M2.5 13.5h15M13.5 2.5v15" stroke-dasharray="2 1.7"/><path d="M4.5 11v5M2 13.5h5M11 3.5h5M13.5 1v5"/><circle cx="13.5" cy="13.5" r="1.4" fill="currentColor"/>',
 
   // App chrome

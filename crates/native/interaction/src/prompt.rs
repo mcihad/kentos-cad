@@ -237,6 +237,23 @@ pub fn upper_tr(text: &str) -> String {
         .collect()
 }
 
+/// A text in Turkish upper case, its letters without their Turkish marks
+/// (`eğim` → `EGIM`): a typed name matched with an ASCII one.
+pub fn fold_tr(text: &str) -> String {
+    upper_tr(text)
+        .chars()
+        .map(|c| match c {
+            'Ç' => 'C',
+            'Ş' => 'S',
+            'Ğ' => 'G',
+            'Ö' => 'O',
+            'Ü' => 'U',
+            'İ' => 'I',
+            c => c,
+        })
+        .collect()
+}
+
 /// A key without its Turkish mark (`Ç` → `C`), after upper-casing.
 fn fold(key: &str) -> String {
     let upper = upper_tr(key);

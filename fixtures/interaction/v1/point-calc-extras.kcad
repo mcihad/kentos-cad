@@ -1,0 +1,159 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Etkileşim izi: nokta hesaplayıcı ekleri",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 500,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8C9AAA",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#3E9BF0",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "yol",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 486960,
+     "y": 4419990
+    },
+    {
+     "x": 486980,
+     "y": 4419990
+    },
+    {
+     "x": 487000,
+     "y": 4419990
+    }
+   ],
+   "bulges": [
+    0,
+    0.41421356237309503
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 2,
+   "layerId": "cizim",
+   "attrs": {},
+   "a": {
+    "x": 486960,
+    "y": 4420010
+   },
+   "b": {
+    "x": 486980,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "nokta",
+   "attrs": {},
+   "label": "101",
+   "p": {
+    "x": 487020,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "nokta",
+   "attrs": {},
+   "p": {
+    "x": 487040,
+    "y": 4420010
+   }
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "nokta",
+   "attrs": {},
+   "p": {
+    "x": 487010,
+    "y": 4419970
+   }
+  },
+  {
+   "kind": "point",
+   "id": 6,
+   "layerId": "nokta",
+   "attrs": {},
+   "p": {
+    "x": 487035,
+    "y": 4419970
+   }
+  },
+  {
+   "kind": "point",
+   "id": 7,
+   "layerId": "nokta",
+   "attrs": {},
+   "p": {
+    "x": 487017,
+    "y": 4419994
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

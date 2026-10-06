@@ -4644,6 +4644,13 @@ SCENES.hatches = hatchScenes();
 // (apps/desktop/src/selection_scenes.rs).
 SCENES.selecting = selectingScenes();
 
+// Nokta hesaplayıcı ekleri (docs/adr/0188) in a CBS project at 1:500, the shared trace's ground: a route with a straight
+// and a quarter-turn arc, a line, the point named 101 and an angle's corner and arms. Çizgi runs and the calculator over
+// it: Obje üzerinde nokta with the cursor beside the arc, Km ve sapma from 1+000, Mesafe ve eğim, Açıortay, and the
+// command line's chip with its eleven constructions. The desktop's are `tools_screens`' hesap-*
+// (apps/desktop/src/point_calc_scenes.rs).
+SCENES.pointcalc = pointCalcScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -4975,6 +4982,67 @@ function hatchScenes() {
     },
     { id: 'hatch-props', open: props, close: propsClose },
     { id: 'hatch-props-pattern-menu', open: async (ui) => (await props(ui), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Desen"]')), close: propsClose },
+  ];
+}
+
+function pointCalcScenes() {
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x, y: c.y + 4 };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    add({ kind: 'polyline', pts: [[-40, -10], [-20, -10], [0, -10]].map(P), bulges: [0, Math.tan(Math.PI / 8)], color: '#E5484D' });
+    add({ kind: 'line', a: P([-40, 10]), b: P([-20, 10]) });
+    add({ kind: 'point', p: P([20, 10]), label: '101' });
+    for (const q of [[40, 10], [10, -30], [35, -30], [17, -6]]) add({ kind: 'point', p: P(q) });
+    window.__calc = { o };
+    k.view.camera.fit({ minX: o.x - 46, minY: o.y - 34, maxX: o.x + 46, maxY: o.y + 26 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__calc.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  /** The drawing in a CBS project, Çizgi started at its first point. */
+  const ground = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'home', type: 'gis' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await startTool(ui, 'line');
+    await click(ui, 44, 22);
+  };
+  const calc = (ui, kind) =>
+    ui.eval(`(async () => { const { startPointCalc } = await import('/src/tools/pointCalc.ts'); startPointCalc(window.kentos, ${JSON.stringify(kind)}); })()`);
+  const close = async (ui) => {
+    await ui.escapeAll(4);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'pointcalc-object', open: async (ui) => (await ground(ui), await calc(ui, 'object'), await click(ui, -38, -10), await hover(ui, -6, -18)), close },
+    {
+      id: 'pointcalc-km',
+      open: async (ui) => {
+        await ground(ui);
+        await calc(ui, 'km');
+        await click(ui, -30, -10);
+        await ui.eval(`window.kentos.tools.active.input('B'); window.kentos.tools.active.input('1+000')`);
+        await hover(ui, -14, -18);
+      },
+      close,
+    },
+    { id: 'pointcalc-slope', open: async (ui) => (await ground(ui), await calc(ui, 'slope'), await click(ui, 20, 10), await click(ui, 40, 10), await hover(ui, 29, 4)), close },
+    {
+      id: 'pointcalc-bisector',
+      open: async (ui) => (await ground(ui), await calc(ui, 'bisector'), await click(ui, 10, -30), await click(ui, 35, -30), await click(ui, 17, -6), await hover(ui, 21, -14)),
+      close,
+    },
+    {
+      id: 'pointcalc-menu',
+      open: async (ui) => (await ground(ui), await ui.clickSel('.cmdline__chip.cmdbar__calc'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+      close,
+    },
   ];
 }
 

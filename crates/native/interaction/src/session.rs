@@ -1068,35 +1068,19 @@ impl Session {
     /// round them dropped; hidden layers count too: a name is an identity.
     /// Why no point was taken is said.
     fn named_point(&mut self, name: &str, cx: &mut Context<'_>) {
-        let found: Vec<Vec2> = cx
-            .doc
-            .entities()
-            .filter_map(|e| match e {
-                kentos_contracts::Entity::Point(q)
-                    if q.base.label.as_deref().map(crate::js_trim) == Some(name) =>
-                {
-                    Some(Vec2::new(q.p.x, q.p.y))
-                }
-                _ => None,
-            })
-            .collect();
-        let line = match found.as_slice() {
-            [] => format!("#{name}: bu adda nokta yok."),
-            [p] => {
+        let line = match named_point_at(cx.doc, name) {
+            Err(line) => line,
+            Ok(p) => {
                 // A tool that takes computed points (the web's `acceptPoint` is there).
                 let taken = match &mut self.tool {
-                    Some(tool) => tool.accepts_points() && tool.accept_point(*p, cx),
-                    None => self.select.accept_point(*p, cx),
+                    Some(tool) => tool.accepts_points() && tool.accept_point(p, cx),
+                    None => self.select.accept_point(p, cx),
                 };
                 if taken {
                     return;
                 }
                 format!("#{name}: bu adımda nokta istenmiyor.")
             }
-            more => format!(
-                "#{name}: bu adda {} nokta var; koordinatı yazın.",
-                more.len()
-            ),
         };
         cx.say(Level::Warn, line);
     }
@@ -1179,5 +1163,32 @@ impl Session {
             Some(tool) => Some(tool.preview(format)),
             None => self.select.preview(format),
         }
+    }
+}
+
+/// The place of the one point named `name` (docs/adr/0152 §4; the web's
+/// `namedPoint`), or why none is taken, in `#ad`'s words. The name is
+/// matched with the points' labels, the spaces round them dropped; hidden
+/// layers count too: a name is an identity. Nokta adından takes it too
+/// (docs/adr/0188 §3).
+pub(crate) fn named_point_at(doc: &kentos_domain::Document, name: &str) -> Result<Vec2, String> {
+    let found: Vec<Vec2> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_contracts::Entity::Point(q)
+                if q.base.label.as_deref().map(crate::js_trim) == Some(name) =>
+            {
+                Some(Vec2::new(q.p.x, q.p.y))
+            }
+            _ => None,
+        })
+        .collect();
+    match found.as_slice() {
+        [] => Err(format!("#{name}: bu adda nokta yok.")),
+        [p] => Ok(*p),
+        more => Err(format!(
+            "#{name}: bu adda {} nokta var; koordinatı yazın.",
+            more.len()
+        )),
     }
 }

@@ -4,7 +4,7 @@ import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { formatChord, isAltGrText, isTextInput } from '../../core/keymap';
 import { looksLikeCoordinate } from '../../tools/coordinateInput';
-import { CALC_KINDS, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
+import { calcByAlias, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
 import { methodByAlias } from '../../tools/methods';
 import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
@@ -295,8 +295,8 @@ export class CommandLine extends Component {
       // <45: the next point's direction locked (docs/adr/0166 §6).
       if (typedLock(this.ctx, text)) return;
       if (tool.input(text)) return;
-      // Point calculator by its alias (YAN, KKES, DKES, HAT, AM, ORTA) while a point is expected.
-      const calc = CALC_KINDS.find((k) => k.alias === text.toLocaleUpperCase('tr-TR'));
+      // Point calculator by its alias (YAN, KKES, DKES, HAT, AM, ORTA, OBJE, KM, NAD, EGIM, AO) while a point is expected.
+      const calc = calcByAlias(text);
       if (calc && canCalcPoint(this.ctx)) return startPointCalc(this.ctx, calc.kind);
       log.warn(`“${text}” anlaşılamadı. Koordinatı ${this.ctx.format.pairLabel} ya da ${this.ctx.format.relativeLabel} biçiminde yazın.`);
       return;

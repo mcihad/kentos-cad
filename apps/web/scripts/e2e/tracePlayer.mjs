@@ -131,6 +131,8 @@ const LAYOUTS = {
     '}': { code: 'BracketRight', vk: 221, shift: true },
     '|': { code: 'Backslash', vk: 220, shift: true },
     '=': { code: 'Equal', vk: 187 },
+    // Mesafe ve eğim's slope (docs/adr/0188 §4): 25,8%.
+    '%': { code: 'Digit5', vk: 53, shift: true },
   },
   // Turkish Q: + is Shift+4, - sits right of *, / is Shift+7, @ is AltGr+Q, # AltGr+3. Windows
   // reports AltGr as Ctrl+Alt, so that is what the page receives.
@@ -150,6 +152,7 @@ const LAYOUTS = {
     '}': { code: 'Digit0', vk: 48, altGr: true },
     '|': { code: 'Equal', vk: 187, altGr: true },
     '=': { code: 'Digit0', vk: 48, shift: true },
+    '%': { code: 'Digit5', vk: 53, shift: true },
     ı: { code: 'KeyI', vk: 73 },
     i: { code: 'Quote', vk: 222 },
     ş: { code: 'Semicolon', vk: 186 },

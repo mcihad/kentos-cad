@@ -1,0 +1,1437 @@
+{
+ "format": "kentos.point-calc-cases",
+ "version": 1,
+ "source": "scripts/fixtures/point_calc_cases.py (docs/adr/0188)",
+ "stations": [
+  {
+   "name": "a line from its start",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": false,
+   "s": 4,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     4.0,
+     0.0
+    ],
+    "length": 10.0
+   }
+  },
+  {
+   "name": "a line, an offset to the right of its way",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": false,
+   "s": 4,
+   "offset": 2,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     4.0,
+     -2.0
+    ],
+    "length": 10.0
+   }
+  },
+  {
+   "name": "a line from its end: the right is the other side",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": true,
+   "s": 4,
+   "offset": 2,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     6.0,
+     2.0
+    ],
+    "length": 10.0
+   }
+  },
+  {
+   "name": "a corner takes the next edge's square",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 10,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     11.0,
+     0.0
+    ],
+    "length": 20.0
+   }
+  },
+  {
+   "name": "on the second edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 12,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     11.0,
+     2.0
+    ],
+    "length": 20.0
+   }
+  },
+  {
+   "name": "the middle of a bulged half turn",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     1,
+     0
+    ]
+   },
+   "fromEnd": false,
+   "s": 7.853981633974483,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     5.0,
+     -6.0
+    ],
+    "length": 25.707963267948966
+   }
+  },
+  {
+   "name": "past the bulge on the straight",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     1,
+     0
+    ]
+   },
+   "fromEnd": false,
+   "s": 18.707963267948966,
+   "offset": -2,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     13.0,
+     2.0
+    ],
+    "length": 25.707963267948966
+   }
+  },
+  {
+   "name": "a closed polygon's last edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 35,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     -1.0,
+     5.0
+    ],
+    "length": 40.0
+   }
+  },
+  {
+   "name": "a closed polygon's length is its start, the first edge's square",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 40,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     0.0,
+     -1.0
+    ],
+    "length": 40.0
+   }
+  },
+  {
+   "name": "a circle a quarter round, outward",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "circle",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 5
+   },
+   "fromEnd": false,
+   "s": 7.853981633974483,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     3.6739403974420594e-16,
+     6.0
+    ],
+    "length": 31.41592653589793
+   }
+  },
+  {
+   "name": "an arc's middle from its end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "arc",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "r": 10,
+    "a0": 0,
+    "a1": 1.5707963267948966
+   },
+   "fromEnd": true,
+   "s": 7.853981633974483,
+   "offset": 0.5,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     6.7175144212722016,
+     6.7175144212722016
+    ],
+    "length": 15.707963267948966
+   }
+  },
+  {
+   "name": "map coordinates, a bulge turning clockwise",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 486990.125,
+      "y": 4419990.25
+     },
+     {
+      "x": 487012.5,
+      "y": 4419995.75
+     },
+     {
+      "x": 487030.0,
+      "y": 4420011.0
+     }
+    ],
+    "bulges": [
+     0,
+     -0.3
+    ]
+   },
+   "fromEnd": false,
+   "s": 30.5,
+   "offset": -1.25,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     487014.7000377022,
+     4420003.169189088
+    ],
+    "length": 47.62199097071823
+   }
+  },
+  {
+   "name": "an elliptical arc, outward of its way",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "major": {
+     "x": 10,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 3.141592653589793
+   },
+   "fromEnd": false,
+   "s": 7,
+   "offset": 2,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     5.608899245242863,
+     6.235919172764804
+    ],
+    "length": 24.22112055136919
+   }
+  },
+  {
+   "name": "an elliptical arc from its end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "major": {
+     "x": 10,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 3.141592653589793
+   },
+   "fromEnd": true,
+   "s": 3.5,
+   "offset": -1,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     -8.79374482142964,
+     3.6665781382776617
+    ],
+    "length": 24.22112055136919
+   }
+  },
+  {
+   "name": "a full ellipse, round past its length's half",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 5,
+     "y": 5
+    },
+    "major": {
+     "x": 0,
+     "y": 8
+    },
+    "ratio": 0.75,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   "fromEnd": false,
+   "s": 30,
+   "offset": 1.5,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     11.959075372573025,
+     1.4403312019366503
+    ],
+    "length": 44.20698432141901
+   }
+  },
+  {
+   "name": "a turned ellipse at map coordinates from its end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 487000.25,
+     "y": 4420000.75
+    },
+    "major": {
+     "x": 10.392304845413264,
+     "y": 6.0
+    },
+    "ratio": 0.4,
+    "t0": 0.3,
+    "t1": 2.5
+   },
+   "fromEnd": true,
+   "s": 6.5,
+   "offset": 3,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     486996.808870799,
+     4420000.6403022045
+    ],
+    "length": 22.156098486910466
+   }
+  },
+  {
+   "name": "a fit-point curve",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "spline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 5
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 8
+     }
+    ],
+    "closed": false
+   },
+   "fromEnd": false,
+   "s": 17,
+   "offset": 2.5,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     13.442582850620216,
+     0.446229045810261
+    ],
+    "length": 35.71177472834705
+   }
+  },
+  {
+   "name": "a closed fit-point curve",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "spline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 15
+     },
+     {
+      "x": 0,
+      "y": 15
+     }
+    ],
+    "closed": true
+   },
+   "fromEnd": false,
+   "s": 33,
+   "offset": -2,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     19.623503037264886,
+     11.184213779016524
+    ],
+    "length": 73.51703487281165
+   }
+  },
+  {
+   "name": "a fit-point curve at map coordinates from its end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "spline",
+    "pts": [
+     {
+      "x": 487100.5,
+      "y": 4420050.25
+     },
+     {
+      "x": 487112.0,
+      "y": 4420058.5
+     },
+     {
+      "x": 487125.75,
+      "y": 4420052.0
+     },
+     {
+      "x": 487131.0,
+      "y": 4420040.5
+     }
+    ],
+    "closed": false
+   },
+   "fromEnd": true,
+   "s": 12.25,
+   "offset": 4,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": [
+     487129.0788562763,
+     4420054.294188
+    ],
+    "length": 42.685745339331525
+   }
+  },
+  {
+   "name": "past an ellipse's end: none",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "major": {
+     "x": 10,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 3.141592653589793
+   },
+   "fromEnd": false,
+   "s": 40,
+   "offset": 0,
+   "tolerance": 0.0001,
+   "expect": {
+    "point": null,
+    "length": 24.22112055136919
+   }
+  },
+  {
+   "name": "before the start: none",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": false,
+   "s": -0.5,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": null,
+    "length": 10.0
+   }
+  },
+  {
+   "name": "past the end: none",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 20.5,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": null,
+    "length": 20.0
+   }
+  },
+  {
+   "name": "no path: a point",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "point",
+    "p": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   "fromEnd": false,
+   "s": 0,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": null,
+    "length": 0.0
+   }
+  },
+  {
+   "name": "an area with a hole walks its outer ring",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 4,
+        "y": 4
+       },
+       {
+        "x": 6,
+        "y": 4
+       },
+       {
+        "x": 6,
+        "y": 6
+       },
+       {
+        "x": 4,
+        "y": 6
+       }
+      ]
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 25,
+   "offset": 1,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": [
+     5.0,
+     11.0
+    ],
+    "length": 40.0
+   }
+  },
+  {
+   "name": "a multi-part area has no route",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 4
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 14,
+        "y": 0
+       },
+       {
+        "x": 14,
+        "y": 4
+       }
+      ]
+     }
+    ]
+   },
+   "fromEnd": false,
+   "s": 1,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": null,
+    "length": 0.0
+   }
+  },
+  {
+   "name": "a text has no route",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "text",
+    "p": {
+     "x": 0,
+     "y": 0
+    },
+    "text": "A",
+    "height": 2.5
+   },
+   "fromEnd": false,
+   "s": 0,
+   "offset": 0,
+   "tolerance": 1e-07,
+   "expect": {
+    "point": null,
+    "length": 0.0
+   }
+  }
+ ],
+ "readings": [
+  {
+   "name": "left of a line is a negative offset",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": false,
+   "at": [
+    3,
+    2
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 3.0,
+    "offset": -2.0,
+    "length": 10.0
+   }
+  },
+  {
+   "name": "the same point from the line's end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "fromEnd": true,
+   "at": [
+    3,
+    2
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 7.0,
+    "offset": 2.0,
+    "length": 10.0
+   }
+  },
+  {
+   "name": "under a bulged half turn",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     }
+    ],
+    "bulges": [
+     1,
+     0
+    ]
+   },
+   "fromEnd": false,
+   "at": [
+    5,
+    -7
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 7.853981633974483,
+    "offset": 2.0,
+    "length": 25.707963267948966
+   }
+  },
+  {
+   "name": "beside a polygon's first edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "at": [
+    5,
+    -1
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 5.0,
+    "offset": 1.0,
+    "length": 40.0
+   }
+  },
+  {
+   "name": "map coordinates",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 486990.125,
+      "y": 4419990.25
+     },
+     {
+      "x": 487012.5,
+      "y": 4419995.75
+     },
+     {
+      "x": 487030.0,
+      "y": 4420011.0
+     }
+    ],
+    "bulges": [
+     0,
+     -0.3
+    ]
+   },
+   "fromEnd": false,
+   "at": [
+    487020.0,
+    4420000.0
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 31.190226015212154,
+    "offset": 4.893766768421724,
+    "length": 47.62199097071823
+   }
+  },
+  {
+   "name": "outside a corner: the distance to it, on the outer side",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     }
+    ]
+   },
+   "fromEnd": false,
+   "at": [
+    12,
+    -2
+   ],
+   "tolerance": 1e-07,
+   "expect": {
+    "s": 10.0,
+    "offset": 2.8284271247461903,
+    "length": 20.0
+   }
+  },
+  {
+   "name": "inside an elliptical arc",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "ellipse",
+    "c": {
+     "x": 0,
+     "y": 0
+    },
+    "major": {
+     "x": 10,
+     "y": 0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 3.141592653589793
+   },
+   "fromEnd": false,
+   "at": [
+    3,
+    2
+   ],
+   "tolerance": 0.0001,
+   "expect": {
+    "s": 8.589757026689862,
+    "offset": -2.729927445733961,
+    "length": 24.22112055136919
+   }
+  },
+  {
+   "name": "beside a fit-point curve from its end",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "spline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 5
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 30,
+      "y": 8
+     }
+    ],
+    "closed": false
+   },
+   "fromEnd": true,
+   "at": [
+    12,
+    1
+   ],
+   "tolerance": 0.0001,
+   "expect": {
+    "s": 20.27747230860681,
+    "offset": -2.9282656110270384,
+    "length": 35.71177472834705
+   }
+  }
+ ],
+ "km": [
+  {
+   "text": "0+000",
+   "value": 0.0
+  },
+  {
+   "text": "1+250.5",
+   "value": 1250.5
+  },
+  {
+   "text": "12+005.25",
+   "value": 12005.25
+  },
+  {
+   "text": "250.5",
+   "value": 250.5
+  },
+  {
+   "text": "-3",
+   "value": -3.0
+  },
+  {
+   "text": "1+1000",
+   "value": null
+  },
+  {
+   "text": "1+",
+   "value": null
+  },
+  {
+   "text": "+250",
+   "value": null
+  },
+  {
+   "text": "abc",
+   "value": null
+  },
+  {
+   "text": " 3+125.125 ",
+   "value": 3125.125
+  },
+  {
+   "text": "1+250,5",
+   "value": null
+  },
+  {
+   "text": "1.5+250",
+   "value": null
+  },
+  {
+   "text": "١+٢٥٠",
+   "value": null
+  }
+ ],
+ "kmText": [
+  {
+   "value": 1250.5,
+   "decimals": 3,
+   "text": "1+250.500"
+  },
+  {
+   "value": 12.3454,
+   "decimals": 3,
+   "text": "0+012.345"
+  },
+  {
+   "value": 999.9996,
+   "decimals": 3,
+   "text": "1+000.000"
+  },
+  {
+   "value": 0,
+   "decimals": 2,
+   "text": "0+000.00"
+  },
+  {
+   "value": 5000,
+   "decimals": 0,
+   "text": "5+000"
+  },
+  {
+   "value": 12005.25,
+   "decimals": 2,
+   "text": "12+005.25"
+  },
+  {
+   "value": 12.0005,
+   "decimals": 3,
+   "text": "0+012.001"
+  },
+  {
+   "value": -12.5,
+   "decimals": 3,
+   "text": "-0+012.500"
+  },
+  {
+   "value": -0.0004,
+   "decimals": 3,
+   "text": "0+000.000"
+  }
+ ],
+ "slopes": [
+  {
+   "s": 100,
+   "percent": 0,
+   "expect": {
+    "horizontal": 100.0,
+    "rise": 0.0
+   }
+  },
+  {
+   "s": 100,
+   "percent": 10,
+   "expect": {
+    "horizontal": 99.50371902099891,
+    "rise": 9.950371902099892
+   }
+  },
+  {
+   "s": 50,
+   "percent": -5,
+   "expect": {
+    "horizontal": 49.93761694389223,
+    "rise": -2.496880847194612
+   }
+  },
+  {
+   "s": 10,
+   "percent": 100,
+   "expect": {
+    "horizontal": 7.0710678118654755,
+    "rise": 7.0710678118654755
+   }
+  }
+ ],
+ "bisectors": [
+  {
+   "name": "a right angle",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    10,
+    0
+   ],
+   "b": [
+    0,
+    10
+   ],
+   "d": 5,
+   "expect": [
+    3.5355339059327378,
+    3.5355339059327378
+   ]
+  },
+  {
+   "name": "a straight angle: square to the first arm, left",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    10,
+    0
+   ],
+   "b": [
+    -10,
+    0
+   ],
+   "d": 5,
+   "expect": [
+    0.0,
+    5.0
+   ]
+  },
+  {
+   "name": "arms the same way",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    10,
+    0
+   ],
+   "b": [
+    20,
+    0
+   ],
+   "d": 5,
+   "expect": [
+    5.0,
+    0.0
+   ]
+  },
+  {
+   "name": "an obtuse angle at map coordinates",
+   "k": [
+    487000.5,
+    4420000.25
+   ],
+   "a": [
+    487010.5,
+    4420001.25
+   ],
+   "b": [
+    486995.5,
+    4420008.25
+   ],
+   "d": 7.5,
+   "expect": [
+    487003.8044814413,
+    4420006.982785635
+   ]
+  },
+  {
+   "name": "a corner on an arm: none",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    0,
+    0
+   ],
+   "b": [
+    0,
+    10
+   ],
+   "d": 5,
+   "expect": null
+  }
+ ],
+ "bisectorClicks": [
+  {
+   "name": "onto a right angle's bisector",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    10,
+    0
+   ],
+   "b": [
+    0,
+    10
+   ],
+   "at": [
+    5,
+    1
+   ],
+   "expect": [
+    3.0,
+    3.0
+   ]
+  },
+  {
+   "name": "behind the corner: the corner",
+   "k": [
+    0,
+    0
+   ],
+   "a": [
+    10,
+    0
+   ],
+   "b": [
+    0,
+    10
+   ],
+   "at": [
+    -5,
+    -5
+   ],
+   "expect": [
+    0.0,
+    0.0
+   ]
+  }
+ ]
+}

@@ -80,6 +80,8 @@ mod paragraph_editor;
 #[cfg(test)]
 mod perf;
 mod point_calc;
+#[cfg(test)]
+mod point_calc_scenes;
 mod points;
 mod preview;
 mod processing;

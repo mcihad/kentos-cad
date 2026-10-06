@@ -23,6 +23,23 @@ export const midpoint = op<(a: Vec2, b: Vec2) => Vec2>('midpoint');
 export const alongRatio = op<(a: Vec2, b: Vec2, num: number, den: number) => Vec2 | null>('alongRatio');
 /** Açı-mesafe with the angle in the project's unit (`deg`, else grads), clockwise from S→R. */
 export const calcPolar = op<(s: Vec2, r: Vec2, angle: number, unit: string, distance: number) => Vec2 | null>('calcPolar');
+
+// Nokta hesaplayıcı ekleri (docs/adr/0188; crates/shared/geometry-core/src/tools/point_calc.rs).
+
+/** A path's point `s` along it from its start (its end: `fromEnd`) and `offset` square to it, the right positive; none outside 0…length. */
+export const pathStation = op<(e: Entity, fromEnd: boolean, s: number, offset: number) => { point?: Vec2 | null; length: number }>('pointCalcStation');
+/** Where `p` stands against a path: the distance of its nearest point from the start and how far it is from it (right positive). */
+export const pathReading = op<(e: Entity, fromEnd: boolean, p: Vec2) => { s: number; offset: number; length: number } | null>('pointCalcReading');
+/** A km typed: `k+mmm.mmm` or metres; null when it is neither. */
+export const kmValue = op<(text: string) => number | null>('kmValue');
+/** Metres written as km (`k+mmm.ddd`) by the display rule. */
+export const kmText = op<(value: number, decimals: number) => string>('kmText');
+/** Mesafe ve eğim: a slope distance at a percent slope as its horizontal and its rise. */
+export const slopeHorizontal = op<(s: number, percent: number) => { horizontal: number; rise: number }>('slopeHorizontal');
+/** Açıortay: the point `d` from K along the bisector of A–K–B; null when K is on an arm's point. */
+export const bisectorPoint = op<(k: Vec2, a: Vec2, b: Vec2, d: number) => Vec2 | null>('bisectorPoint');
+/** The bisector's point nearest `p`, never behind K. */
+export const bisectorNearest = op<(k: Vec2, a: Vec2, b: Vec2, p: Vec2) => Vec2 | null>('bisectorNearest');
 /** The candidate nearest to p (the first of equally near ones); null for none. */
 export const nearestOf = op<(points: readonly Vec2[], p: Vec2) => Vec2 | null>('nearestOf');
 

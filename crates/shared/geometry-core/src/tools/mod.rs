@@ -13,5 +13,6 @@ pub mod hatch;
 pub mod locks;
 pub mod navigation;
 pub mod object_tracking;
+pub mod point_calc;
 pub mod point_input;
 pub mod point_text;

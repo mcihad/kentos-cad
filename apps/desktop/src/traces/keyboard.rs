@@ -140,6 +140,8 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         (Layout::Us, '}') => Some(shifted("]", Code::BracketRight)),
         (Layout::Us, '|') => Some(shifted("\\", Code::Backslash)),
         (Layout::Us, '=') => Some(plain("=", Code::Equal)),
+        // Mesafe ve eğim's slope (docs/adr/0188 §4): 25,8%.
+        (Layout::Us, '%') => Some(shifted("5", Code::Digit5)),
         // Turkish Q: + is Shift+4, − sits right of *, @ is AltGr+Q (Ctrl+Alt on Windows).
         (Layout::TurkishQ, '.') => Some(plain(".", Code::Slash)),
         (Layout::TurkishQ, ',') => Some(plain(",", Code::Backslash)),
@@ -172,6 +174,7 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
             ..plain("-", Code::Equal)
         }),
         (Layout::TurkishQ, '=') => Some(shifted("0", Code::Digit0)),
+        (Layout::TurkishQ, '%') => Some(shifted("5", Code::Digit5)),
         _ => None,
     };
     if let Some(stroke) = symbol {

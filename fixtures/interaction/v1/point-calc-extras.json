@@ -1,0 +1,748 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "point-calc-extras",
+ "title": "Nokta hesaplayıcı ekleri, çalışan Çizgi'nin içinde: Obje üzerinde nokta (yakın uçtan, uzunluğun dışı reddedilir, yazılan uzunluk ucu bulur, nesnede tıklama), Km ve sapma (Başlangıç (B), aralığın dışı reddedilir, Esc ve Ctrl+Z), Nokta adından (bulunamayan ad; adlar sayı, oynatıcılar komut satırına büyük harfi Shift'siz yazar), Mesafe ve eğim (Türkçe yazılan takma ad, #ad referansı, % ile eğim), Açıortay (Ctrl+Z, yazılan uzaklık, açıortayın yanına tıklama); takma adlar küçük harfle de; bellek başladığı gibi bırakılır (Başlangıç 0+000'a döner)",
+ "source": "tools/pointCalc.ts, tools/pointCalcRoute.ts; kentos_interaction::point_calc; docs/adr/0188",
+ "covers": [
+  "CAD-26"
+ ],
+ "document": "point-calc-extras.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": true,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.line",
+   "expect": {
+    "tool": "line",
+    "points": 0,
+    "prompt": "Çizgi: ilk noktayı belirtin"
+   }
+  },
+  {
+   "click": [
+    50,
+    30
+   ],
+   "expect": {
+    "points": 1,
+    "entities": 7
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "obje"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 0,
+    "prompt": "Obje üzerinde nokta: nesneye tıklayın (çizgi, yay, daire, elips, eğri ya da alan; yakın uç başlangıçtır)"
+   }
+  },
+  {
+   "click": [
+    50,
+    20
+   ],
+   "note": "Boş yere tıklama söylenir, adım kalır.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Tıklanan yerde nesne yok; çizginin, yayın, dairenin, elipsin, eğrinin ya da alanın üzerine tıklayın."
+    ],
+    "points": 0,
+    "prompt": "Obje üzerinde nokta: nesneye tıklayın (çizgi, yay, daire, elips, eğri ya da alan; yakın uç başlangıçtır)"
+   }
+  },
+  {
+   "click": [
+    20,
+    10
+   ],
+   "note": "Noktanın yolu yok.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    -22,
+    10
+   ],
+   "note": "Çizginin bitişine yakın tıklandı: başlangıç o uç, yol batıya yürünür.",
+   "expect": {
+    "points": 1,
+    "prompt": "Obje üzerinde nokta: başlangıçtan uzaklığı yazın: uzaklık ya da uzaklık,sapma (sapma sağa artı); ya da nesnede tıklayın"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "abc"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "“abc” anlaşılamadı. Başlangıçtan uzaklığı yazın, sapmayla da: uzaklık,sapma (ör. 12.5,2)."
+    ],
+    "points": 1,
+    "entities": 7
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "25"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Uzaklık 0 ile yolun uzunluğu 20.000 m arasında olmalı."
+    ],
+    "points": 1,
+    "entities": 7
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "5,2"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 2,
+    "entities": 8,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Bitir (Enter)]",
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       50,
+       30
+      ],
+      [
+       -25,
+       12
+      ]
+     ]
+    },
+    "logged": [
+     "Hesaplanan nokta: Y 486975.000  X 4420012.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "km"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "options": [
+     "B"
+    ],
+    "prompt": "Km ve sapma: güzergâha tıklayın (km’si ilk köşesinde başlar) [Başlangıç (B): 0+000.000]"
+   }
+  },
+  {
+   "click": [
+    -30,
+    -10
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Km ve sapma: km’yi yazın: km ya da km,sapma (sapma sağa artı); ya da güzergâhta tıklayın [Başlangıç (B): 0+000.000]"
+   }
+  },
+  {
+   "key": "B",
+   "expect": {
+    "prompt": "Km ve sapma: güzergâhın başındaki km’yi yazın (şimdi 0+000.000)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "1+"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "“1+” anlaşılamadı. Güzergâhın başındaki km’yi yazın: k+mmm.mmm ya da metre (ör. 0+000)."
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "1+000"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 1,
+    "prompt": "Km ve sapma: km’yi yazın: km ya da km,sapma (sapma sağa artı); ya da güzergâhta tıklayın [Başlangıç (B): 1+000.000]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0+010,-3"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Km 1+000.000 ile 1+042.214 arasında olmalı."
+    ],
+    "points": 1
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "1+010,-3"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 3,
+    "entities": 9,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       -25,
+       12
+      ],
+      [
+       -30,
+       -7
+      ]
+     ]
+    },
+    "logged": [
+     "Hesaplanan nokta: Y 486970.000  X 4419993.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "KM"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km ve sapma: güzergâha tıklayın (km’si ilk köşesinde başlar) [Başlangıç (B): 1+000.000]"
+   }
+  },
+  {
+   "click": [
+    -38,
+    -10
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "key": "B",
+   "expect": {
+    "prompt": "Km ve sapma: güzergâhın başındaki km’yi yazın (şimdi 1+000.000)"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Başlangıç sorulurken Esc değere döner.",
+   "expect": {
+    "points": 1,
+    "prompt": "Km ve sapma: km’yi yazın: km ya da km,sapma (sapma sağa artı); ya da güzergâhta tıklayın [Başlangıç (B): 1+000.000]"
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Ctrl+Z seçilen nesneyi bırakır; çizim geri alınmaz.",
+   "expect": {
+    "points": 0,
+    "entities": 9,
+    "prompt": "Km ve sapma: güzergâha tıklayın (km’si ilk köşesinde başlar) [Başlangıç (B): 1+000.000]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "line",
+    "points": 3,
+    "entities": 9,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "NAD"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "prompt": "Nokta adından: noktanın adını yazın (P12 ya da #P12)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "999"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "#999: bu adda nokta yok."
+    ],
+    "prompt": "Nokta adından: noktanın adını yazın (P12 ya da #P12)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "101"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 4,
+    "entities": 10,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       -30,
+       -7
+      ],
+      [
+       20,
+       10
+      ]
+     ]
+    },
+    "logged": [
+     "Hesaplanan nokta: Y 487020.000  X 4420010.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "eğim"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "prompt": "Mesafe ve eğim: başlangıç noktası (A) gösterin"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "#101"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 1,
+    "prompt": "Mesafe ve eğim: doğrultu noktası (B) gösterin"
+   }
+  },
+  {
+   "click": [
+    40,
+    10
+   ],
+   "expect": {
+    "points": 2,
+    "prompt": "Mesafe ve eğim: eğik mesafeyi ve yüzde eğimi yazın: mesafe,eğim"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "12.5,75%"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 5,
+    "entities": 11,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       20,
+       10
+      ],
+      [
+       30,
+       10
+      ]
+     ]
+    },
+    "logged": [
+     "Yatay uzaklık 10.000 m, yükseklik farkı 7.500 m.",
+     "Hesaplanan nokta: Y 487030.000  X 4420010.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "AO"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "prompt": "Açıortay: açının köşesi (K) gösterin"
+   }
+  },
+  {
+   "click": [
+    10,
+    -30
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Açıortay: birinci kolun noktası (A) gösterin"
+   }
+  },
+  {
+   "click": [
+    35,
+    -30
+   ],
+   "expect": {
+    "points": 2
+   }
+  },
+  {
+   "click": [
+    17,
+    -6
+   ],
+   "expect": {
+    "points": 3,
+    "prompt": "Açıortay: köşeden uzaklığı yazın; ya da açıortayda tıklayın"
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "expect": {
+    "points": 2,
+    "entities": 11,
+    "prompt": "Açıortay: ikinci kolun noktası (B) gösterin"
+   }
+  },
+  {
+   "click": [
+    17,
+    -6
+   ],
+   "expect": {
+    "points": 3
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "10"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 6,
+    "entities": 12,
+    "prompt": "Çizgi: sonraki noktayı belirtin [Geri (G) / Kapat (K) / Bitir (Enter)]",
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       30,
+       10
+      ],
+      [
+       18,
+       -24
+      ]
+     ]
+    },
+    "logged": [
+     "Hesaplanan nokta: Y 487018.000  X 4419976.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "AO"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    10,
+    -30
+   ]
+  },
+  {
+   "click": [
+    35,
+    -30
+   ]
+  },
+  {
+   "click": [
+    17,
+    -6
+   ],
+   "expect": {
+    "points": 3
+   }
+  },
+  {
+   "click": [
+    25.4,
+    -17.2
+   ],
+   "note": "Tıklamadan türeyen nokta: pikselin yuvarlaması ondalıkları değiştirebilir, ileti karşılaştırılmaz.",
+   "expect": {
+    "tool": "line",
+    "points": 7,
+    "entities": 13,
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       18,
+       -24
+      ],
+      [
+       26,
+       -18
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "OBJE"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Obje üzerinde nokta: nesneye tıklayın (çizgi, yay, daire, elips, eğri ya da alan; yakın uç başlangıçtır)"
+   }
+  },
+  {
+   "click": [
+    -38,
+    10
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Obje üzerinde nokta: başlangıçtan uzaklığı yazın: uzaklık ya da uzaklık,sapma (sapma sağa artı); ya da nesnede tıklayın"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "20.0004"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "tool": "line",
+    "points": 8,
+    "entities": 14,
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       26,
+       -18
+      ],
+      [
+       -20,
+       10
+      ]
+     ]
+    },
+    "logged": [
+     "Hesaplanan nokta: Y 486980.000  X 4420010.000"
+    ]
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "OBJE"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -39,
+    -10
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "click": [
+    -10,
+    -15
+   ],
+   "note": "Yayın merkezinin altında: yayın en alt noktası.",
+   "expect": {
+    "tool": "line",
+    "points": 9,
+    "entities": 15,
+    "newest": {
+     "kind": "line",
+     "points": [
+      [
+       -20,
+       10
+      ],
+      [
+       -10,
+       -14.142135623730951
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "KM"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km ve sapma: güzergâha tıklayın (km’si ilk köşesinde başlar) [Başlangıç (B): 1+000.000]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Km ve sapma: güzergâhın başındaki km’yi yazın (şimdi 1+000.000)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0+000"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "points": 0,
+    "prompt": "Km ve sapma: güzergâha tıklayın (km’si ilk köşesinde başlar) [Başlangıç (B): 0+000.000]"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "line",
+    "points": 9,
+    "entities": 15
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 15
+   }
+  }
+ ]
+}

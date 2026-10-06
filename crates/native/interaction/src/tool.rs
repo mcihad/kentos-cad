@@ -670,6 +670,9 @@ pub struct Memory {
     pub coordinate_decimals: Option<u8>,
     pub coordinate_height_mm: f64,
     pub coordinate_schedule: bool,
+    /// Nokta hesapla's Km ve sapma: the route's first km, metres
+    /// (`PointCalcTool.kmStart`; docs/adr/0188 §2).
+    pub calc_km_start: f64,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -864,6 +867,7 @@ impl Default for Memory {
             coordinate_decimals: None,
             coordinate_height_mm: crate::coordinate_labels::FIRST_HEIGHT_MM,
             coordinate_schedule: false,
+            calc_km_start: 0.0,
         }
     }
 }

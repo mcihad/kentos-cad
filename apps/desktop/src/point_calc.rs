@@ -1,10 +1,11 @@
-//! Nokta hesapla on the desktop (docs/adr/0083): the web's `calcMenu.ts`,
+//! Nokta hesapla on the desktop (docs/adr/0083, 0188): the web's `calcMenu.ts`,
 //! the command line's alias and chip (`CommandLine.ts`) and the strip's
 //! button (`CommandBar.ts`). While a command waits for a point, one of
-//! kentos_interaction's six constructions runs over it
+//! kentos_interaction's eleven constructions runs over it
 //! (`kentos_interaction::point_calc`). It starts from:
 //!
-//! - its alias typed on the command line (YAN, KKES, DKES, HAT, AM, ORTA);
+//! - its alias typed on the command line (YAN, KKES, DKES, HAT, AM, ORTA,
+//!   OBJE, KM, NAD, EGIM, AO; without Turkish marks too);
 //! - Nokta hesapla ▸ in the drawing's command menu (the right button held);
 //! - the command line's Nokta hesabı chip while the strip over the drawing
 //!   is off, or the strip's button while it is on.

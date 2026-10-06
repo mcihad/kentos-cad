@@ -576,7 +576,10 @@ impl<Message> Menu<Message> {
         let body = typography::body();
         let caption = typography::caption();
         if self.has_details() {
-            // The detail column, fixed so its lines are known before drawing.
+            // The detail column, fixed so its lines are known before drawing. A
+            // shortcut is measured as drawn (aliases are capitals, wider than
+            // the average letter) with the row's two gaps round the space
+            // that pushes it right.
             let shortcut = self
                 .items
                 .iter()
@@ -584,7 +587,7 @@ impl<Message> Menu<Message> {
                     Item::Command(command) => command.shortcut.as_deref(),
                     _ => None,
                 })
-                .map(|shortcut| typography::text_width(shortcut, caption) + 8.0)
+                .map(|shortcut| typography::measured_width(shortcut, caption, false) + 16.0)
                 .fold(0.0, f32::max);
             return DETAIL_ICON_SLOT
                 + 8.0
