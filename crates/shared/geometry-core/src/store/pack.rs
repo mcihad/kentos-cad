@@ -18,7 +18,7 @@
 //! | 6 ellipse | c.x, c.y, major.x, major.y, ratio, t0, t1 |
 //! | 7 xline, 8 ray | p.x, p.y, dir.x, dir.y |
 //! | 9 spline | points, closed |
-//! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask |
+//! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask, boxWidth, lineSpacing, runs |
 //! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
@@ -55,6 +55,7 @@ use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
 use crate::ops::transform::transform_shape;
 use crate::text::TextAlign;
+use crate::text::paragraph::{Run, Script};
 use crate::vec2::Vec2;
 
 /// A path's points, bulges and holes.
@@ -305,6 +306,31 @@ impl Reader<'_> {
                         None => None,
                     };
                 let w = self.num()?;
+                let mask = self.flag()?.then_some(true);
+                // docs/adr/0182: the box width and line spacing (NaN none), then the runs: a
+                // count, each its start, end, flags (`RUN_*`) and colour (a string, −1 none).
+                let (box_width, line_spacing) = (self.num()?, self.num()?);
+                let count = self.int()?.unwrap_or(0);
+                let mut runs = Vec::with_capacity(count.min(1024));
+                for _ in 0..count {
+                    let (start, end) = (self.num()? as u32, self.num()? as u32);
+                    let bits = self.num()? as u32;
+                    runs.push(Run {
+                        start,
+                        end,
+                        bold: bits & RUN_BOLD != 0,
+                        italic: bits & RUN_ITALIC != 0,
+                        underline: bits & RUN_UNDERLINE != 0,
+                        script: if bits & RUN_SUPER != 0 {
+                            Some(Script::Super)
+                        } else if bits & RUN_SUB != 0 {
+                            Some(Script::Sub)
+                        } else {
+                            None
+                        },
+                        color: self.string()?,
+                    });
+                }
                 Shape::Text {
                     p,
                     text,
@@ -312,7 +338,10 @@ impl Reader<'_> {
                     rotation,
                     align,
                     width_factor: (!w.is_nan()).then_some(w),
-                    mask: self.flag()?.then_some(true),
+                    mask,
+                    box_width: (!box_width.is_nan()).then_some(box_width),
+                    line_spacing: (!line_spacing.is_nan()).then_some(line_spacing),
+                    runs: (!runs.is_empty()).then_some(runs),
                 }
             }
             11 => {
@@ -389,6 +418,24 @@ pub struct Packer {
     pub nums: Vec<f64>,
     pub strings: Vec<String>,
     index: HashMap<String, u32>,
+}
+
+/// A multi-line text's run's flags in a pack (docs/adr/0182), as `apps/web/src/wasm/pack.ts` writes them.
+const RUN_BOLD: u32 = 1;
+const RUN_ITALIC: u32 = 2;
+const RUN_UNDERLINE: u32 = 4;
+const RUN_SUPER: u32 = 8;
+const RUN_SUB: u32 = 16;
+
+fn run_bits(r: &Run) -> u32 {
+    u32::from(r.bold) * RUN_BOLD
+        + u32::from(r.italic) * RUN_ITALIC
+        + u32::from(r.underline) * RUN_UNDERLINE
+        + match r.script {
+            Some(Script::Super) => RUN_SUPER,
+            Some(Script::Sub) => RUN_SUB,
+            None => 0,
+        }
 }
 
 fn flag(b: bool) -> f64 {
@@ -535,11 +582,15 @@ impl Packer {
                 align,
                 width_factor,
                 mask,
+                box_width,
+                line_spacing,
+                runs,
             } => {
                 let t = self.string(text);
                 let a = align.map_or(-1.0, |a| {
                     TextAlign::ALL.iter().position(|x| *x == a).unwrap_or(0) as f64
                 });
+                let runs = runs.as_deref().unwrap_or_default();
                 self.put(&[
                     10.0,
                     p.x,
@@ -550,7 +601,19 @@ impl Packer {
                     a,
                     width_factor.unwrap_or(f64::NAN),
                     flag(*mask == Some(true)),
+                    box_width.unwrap_or(f64::NAN),
+                    line_spacing.unwrap_or(f64::NAN),
+                    runs.len() as f64,
                 ]);
+                for r in runs {
+                    let color = r.color.as_deref().map_or(-1.0, |c| self.string(c));
+                    self.put(&[
+                        f64::from(r.start),
+                        f64::from(r.end),
+                        f64::from(run_bits(r)),
+                        color,
+                    ]);
+                }
             }
             Shape::Dimension {
                 a,
@@ -790,7 +853,7 @@ mod tests {
             5.0,
             6.0,
             -1.0,
-            // A text: no alignment, width factor or mask (docs/adr/0145).
+            // A text: no alignment, width factor or mask (docs/adr/0145); no box, spacing or runs (docs/adr/0182).
             2.0,
             0.0,
             0.0,
@@ -801,6 +864,9 @@ mod tests {
             45.0,
             1.0,
             -1.0,
+            f64::NAN,
+            0.0,
+            f64::NAN,
             f64::NAN,
             0.0,
             // A linear dimension with an angle and no centre, mask or elevations (docs/adr/0147).

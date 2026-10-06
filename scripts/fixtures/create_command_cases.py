@@ -71,6 +71,11 @@ def made(obj, slot, layer_id="yapi"):
             out.pop("mask", None)
         if out.get("widthFactor") == 1:
             out.pop("widthFactor")
+        # A multi-line text's (docs/adr/0182 §1): no box, a spacing of 1, no runs.
+        if out.get("lineSpacing") == 1:
+            out.pop("lineSpacing")
+        if out.get("runs") == []:
+            out.pop("runs")
     # So is a leader's mask (docs/adr/0146 §1); a filled arrow and no note are the fields' absence too.
     if out["kind"] == "leader" and out.get("mask") is not True:
         out.pop("mask", None)
@@ -787,6 +792,68 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "widthFactor": 101})]},
          "result": failed("invalid_width_factor", width_factor_message(101), "objects[0].geometry.widthFactor"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "widthFactor": 0.8})]}, "nonFinite": {"objects[0].geometry.widthFactor": "Infinity"},
+         "result": not_finite(1), "expect": NOTHING},
+    ],
+})
+
+
+# ── Çok satırlı yazı (docs/adr/0182 §6) ────────────────────────────────
+
+
+def box_message(w):
+    return f"Çok satırlı yazının kutu genişliği sıfırdan büyük olmalı; {w} verildi. Genişliği metre olarak, pozitif verin ya da alanı kaldırın (satırlar yalnız satır sonlarında biter)."
+
+
+def spacing_message(s):
+    return f"Çok satırlı yazının satır aralığı 0.25 ile 4 arasında olmalı; {s} verildi. Aralığı bu sınırlarda verin ya da alanı kaldırın (1)."
+
+
+def run_messages(n, start=None, end=None, letters=None):
+    return {
+        "range": f"{n}. biçim dilimi {start}–{end}: başı sonundan önce olmalı, sonu yazının harf sayısını ({letters}) aşmamalı. Dilimi yazının harfleri içinde verin.",
+        "format": f"{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz. Dilime bir biçim verin ya da dilimi çıkarın.",
+        "color": f"{n}. biçim diliminin rengi boş. Bir renk verin ya da rengi kaldırın.",
+        "order": f"{n}. biçim dilimi öncekiyle örtüşüyor ya da ondan önce başlıyor; dilimler sıralı ve ayrı olmalı. Dilimleri sırayla, örtüşmeden verin.",
+        "join": f"{n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir. İki dilimi birleştirin.",
+    }
+
+
+PARAGRAPH = {**TEXT, "text": "Parsel 101\nAlan 450 m2", "align": "topLeft"}
+paragraphs = [
+    O({**PARAGRAPH, "boxWidth": 20, "lineSpacing": 1.5, "runs": [{"start": 0, "end": 6, "bold": True}, {"start": 21, "end": 22, "script": "super"}]}),
+    O({**PARAGRAPH, "text": "Ada 7\nçok satır", "lineSpacing": 1, "runs": []}),
+    O({**PARAGRAPH, "text": "Renkli", "runs": [{"start": 0, "end": 3, "italic": True, "underline": True, "color": "#E5484D"}, {"start": 3, "end": 6, "color": "ink"}]}),
+]
+cases.append({
+    "name": "çok satırlı yazı kutusu, satır aralığı ve biçim dilimleriyle yazılır; 1 aralık ve boş dilim listesi alan değildir (ADR 0182 §1, §6)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": paragraphs}, "result": done([3, 4, 5]),
+         "expect": {"entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(paragraphs)}, "revision": "changed"}},
+    ],
+})
+TWO = {**TEXT, "text": "ab\ncd"}
+cases.append({
+    "name": "çok satırlı yazının kutusu, aralığı ve dilimleri sınırlarında: invalid_paragraph, yolu alanın; sonlu olmayan önce not_finite (ADR 0182 §6)",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(TEXT), O({**TWO, "boxWidth": 0})]},
+         "result": failed("invalid_paragraph", box_message(0), "objects[1].geometry.boxWidth"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "lineSpacing": 5})]},
+         "result": failed("invalid_paragraph", spacing_message(5), "objects[0].geometry.lineSpacing"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "lineSpacing": 0.2})]},
+         "result": failed("invalid_paragraph", spacing_message(0.2), "objects[0].geometry.lineSpacing"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 2, "end": 6, "bold": True}]})]},
+         "result": failed("invalid_paragraph", run_messages(1, 2, 6, 5)["range"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 3, "end": 3, "bold": True}]})]},
+         "result": failed("invalid_paragraph", run_messages(1, 3, 3, 5)["range"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 0, "end": 2}]})]},
+         "result": failed("invalid_paragraph", run_messages(1)["format"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 0, "end": 2, "color": ""}]})]},
+         "result": failed("invalid_paragraph", run_messages(1)["color"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 0, "end": 3, "bold": True}, {"start": 2, "end": 4, "italic": True}]})]},
+         "result": failed("invalid_paragraph", run_messages(2)["order"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "runs": [{"start": 0, "end": 2, "bold": True}, {"start": 2, "end": 4, "bold": True}]})]},
+         "result": failed("invalid_paragraph", run_messages(2)["join"], "objects[0].geometry.runs"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TWO, "boxWidth": 20})]}, "nonFinite": {"objects[0].geometry.boxWidth": "Infinity"},
          "result": not_finite(1), "expect": NOTHING},
     ],
 })

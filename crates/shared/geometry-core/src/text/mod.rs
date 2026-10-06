@@ -5,10 +5,11 @@
 
 pub mod edit;
 pub mod natural;
+pub mod paragraph;
 #[rustfmt::skip]
 mod metrics;
 
-use metrics::{ADVANCES, FIRST, FONTS, LAST};
+use metrics::{ADVANCES, BOLD, FIRST, FONTS, LAST};
 
 /// A drawing typeface, as an index into the tables (0 is Barlow, the default).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -33,7 +34,17 @@ impl Font {
 
 /// The advance of `c` in thousandths of an em.
 fn advance(font: Font, c: char) -> u32 {
-    let table = &ADVANCES[font.0 as usize];
+    advance_in(&ADVANCES, font, c)
+}
+
+/// The advance of `c` in thousandths of an em, bold (a multi-line text's
+/// bold letters, docs/adr/0182) or not.
+pub(crate) fn advance_of(font: Font, c: char, bold: bool) -> u32 {
+    advance_in(if bold { &BOLD } else { &ADVANCES }, font, c)
+}
+
+fn advance_in(tables: &[[u16; 352]; 7], font: Font, c: char) -> u32 {
+    let table = &tables[font.0 as usize];
     let code = c as u32;
     if (FIRST..=LAST).contains(&code) {
         let w = table[(code - FIRST) as usize] as u32;

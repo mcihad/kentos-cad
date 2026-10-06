@@ -64,7 +64,10 @@ use crate::layer::LineType;
 ///    and elevation).
 /// 29: linked texts (docs/adr/0175 §4): `.kcad` document schema 18 and the typed columns' layout,
 ///    a text's `labelOf` (as its text) and `labelScale` behind a fourth option flag.
-pub const FORMATS_VERSION: u32 = 29;
+/// 30: multi-line texts (docs/adr/0182): `.kcad` document schema 20 and the typed columns' layout,
+///    a text's box width, line spacing and runs behind its fifth to seventh option flags; MTEXT read
+///    as one text with its line breaks, box, spacing and letter formats, written back as MTEXT.
+pub const FORMATS_VERSION: u32 = 30;
 
 // ── Every import ────────────────────────────────────────────────────────
 

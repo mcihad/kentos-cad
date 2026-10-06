@@ -338,6 +338,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
     );
     let s = Slot(text);
@@ -452,6 +453,7 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
             mask: false,
             label_of: label_of.map(|u| kentos_contracts::EntityId(*u.as_bytes())),
             label_scale: label_of.map(|_| 1000.0),
+            paragraph: Default::default(),
         })
     };
     let linked = add(&mut app, text(Some(parcel), "12"));
@@ -634,6 +636,7 @@ fn what_the_commands_refuse_is_said_and_not_written() {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
     );
     event(
@@ -1542,6 +1545,7 @@ fn two_texts(app: &mut App) -> (u32, u32) {
         mask: false,
         label_of: None,
         label_scale: None,
+        paragraph: Default::default(),
     };
     let a = add(
         app,
@@ -1583,16 +1587,15 @@ fn text_of(app: &App, slot: u32) -> TextEntity {
 /// A text's box as it is drawn (the drawing's Barlow), to a micrometre.
 fn text_box(_app: &App, t: &TextEntity) -> Vec<[i64; 2]> {
     let font = kentos_geometry_core::text::Font::from_id("barlow");
-    let place = kentos_geometry_core::entity::TextPlace {
-        p: kentos_geometry_core::vec2::Vec2::new(t.p.x, t.p.y),
-        text: &t.text,
-        height: t.height,
-        rotation: t.rotation,
-        align: t
-            .align
+    let place = kentos_geometry_core::entity::TextPlace::line(
+        kentos_geometry_core::vec2::Vec2::new(t.p.x, t.p.y),
+        &t.text,
+        t.height,
+        t.rotation,
+        t.align
             .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
-        width_factor: t.width_factor,
-    };
+        t.width_factor,
+    );
     place
         .outline(font)
         .iter()

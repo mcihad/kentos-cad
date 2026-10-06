@@ -7,6 +7,7 @@ import type { LeaderArrow } from "./LeaderArrow";
 import type { PointPart } from "./PointPart";
 import type { RingGeometry } from "./RingGeometry";
 import type { TextAlign } from "./TextAlign";
+import type { TextRun } from "./TextRun";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -65,7 +66,19 @@ widthFactor?: number,
 /**
  * Its box filled with the drawing area's colour before it is drawn.
  */
-mask?: boolean, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, 
+mask?: boolean, 
+/**
+ * A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
+ */
+boxWidth?: number, 
+/**
+ * Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
+ */
+lineSpacing?: number, 
+/**
+ * Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
+ */
+runs?: Array<TextRun>, } | { "kind": "dimension", a: Vec2, b: Vec2, offset: number, height: number, text?: string, style?: DimensionStyle, angle?: number, c?: Vec2, 
 /**
  * The value over the drawing's background (docs/adr/0147).
  */

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7), leaders (docs/adr/0146 §8) and
-multi-part lines and points (docs/adr/0174 §5).
+"""Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7), leaders (docs/adr/0146 §8),
+multi-part lines and points (docs/adr/0174 §5) and multi-line texts (docs/adr/0182 §5).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -86,6 +86,17 @@ library and no KentOS code:
   definitions) a thousand or a hundred times its metres, and the checks
   above are made against the input so scaled; angles, turns, ratios and an
   insert's own scale stay;
+- a multi-line text (docs/adr/0182 §5; one with a line break, a box, a line
+  spacing or letter formats) is an MTEXT, in model space or its block: its
+  alignment its attachment (71; a baseline's the top of its side, the point
+  the box's top), as high as it (40), its box's width (41, 0 without one),
+  left to right (72), its line spacing (44, at least: 73 1) only when it has
+  one, its direction (11, within 1e-12) with the exact turn in KentOS's data
+  only when the direction does not give it back, over the drawing's
+  background exactly when masked (90 3); its words in MTEXT's notation read
+  back by the notation's rules are its own, its runs the input's (a raised
+  or lowered run whose letters a stack cannot hold on the line), its width
+  factor a width switch before the first letter;
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -276,8 +287,136 @@ def written_kinds(e: dict) -> list[str]:
         return ["LWPOLYLINE"] * (1 + len(e.get("holes") or []))
     if kind == "leader":
         return ["LEADER", "MTEXT"] if note_of(e) else ["LEADER"]
+    if is_paragraph(e):
+        return ["MTEXT"]
     # The fixture's blocks hold only these kinds.
     return [{"line": "LINE", "circle": "CIRCLE", "point": "POINT", "insert": "INSERT"}[kind]]
+
+
+def is_paragraph(e: dict) -> bool:
+    """A text written as an MTEXT (docs/adr/0182 §5): it has a line break, a box, a line spacing or letter formats."""
+    return e["kind"] == "text" and ("\n" in e["text"] or any(k in e for k in ("boxWidth", "lineSpacing", "runs")))
+
+
+# MTEXT's attachment points (71) by KentOS's alignment; a baseline alignment goes out as the top's of its side.
+ATTACH = {"topLeft": 1, "topCenter": 2, "topRight": 3, "middleLeft": 4, "middleCenter": 5, "middleRight": 6, "bottomLeft": 7, "bottomCenter": 8, "bottomRight": 9}
+BASELINE_TOP = {None: 1, "baselineCenter": 2, "baselineRight": 3}
+FORMAT_KEYS = ("bold", "italic", "underline", "script", "color")
+UNSTACKABLE = set("^/#;\\{}%")
+
+
+def read_mtext(s: str) -> tuple[str, list[dict], float | None]:
+    """MTEXT content read by its notation's rules: its letters (\\P a line break; a backslash or brace escaped; %%% a
+    per cent sign), the runs its groups and switches make (a font switch's b1 and i1, \\L and \\l, \\c a true colour
+    with blue in the high byte, \\C7 the theme's ink; a stack over nothing raised, under nothing lowered) and a width
+    switch before its first letter."""
+    s = caret_decode(s)
+    plain = {k: None for k in FORMAT_KEYS} | {"bold": False, "italic": False, "underline": False}
+    cur, stack, letters, factor, i = dict(plain), [], [], None, 0
+    while i < len(s):
+        c = s[i]
+        if c == "\\":
+            k = s[i + 1]
+            if k == "P" or k in "\\{}":
+                letters.append(("\n" if k == "P" else k, dict(cur)))
+                i += 2
+                continue
+            if k in "Ll":
+                cur["underline"] = k == "L"
+                i += 2
+                continue
+            end = s.index(";", i)
+            body, i = s[i + 2 : end], end + 1
+            if k == "W":
+                ensure(not letters and not stack and factor is None, "a width switch only before the first letter")
+                factor = float(body)
+            elif k == "f":
+                for part in body.split("|")[1:]:
+                    if part[:1] in ("b", "i"):
+                        cur["bold" if part[0] == "b" else "italic"] = part[1:2] == "1"
+            elif k == "c":
+                v = int(body)
+                cur["color"] = "#%02X%02X%02X" % (v & 0xFF, (v >> 8) & 0xFF, v >> 16)
+            elif k == "C":
+                ensure(body == "7", f"\\C{body}: KentOS writes an ACI index only for the theme's ink")
+                cur["color"] = "ink"
+            elif k == "S":
+                ensure("^" in body, f"a stack KentOS writes is a tolerance's: {body!r}")
+                upper, lower = body.split("^", 1)
+                raised = lower.strip() == ""
+                words = upper if raised else lower.strip()
+                letters.extend((x, dict(cur) | {"script": "super" if raised else "sub"}) for x in words)
+            else:
+                raise Bad(f"\\{k} is no switch KentOS writes")
+            continue
+        if c == "{":
+            stack.append(dict(cur))
+        elif c == "}":
+            cur = stack.pop()
+        elif s.startswith("%%%", i):
+            letters.append(("%", dict(cur)))
+            i += 3
+            continue
+        else:
+            letters.append((c, dict(cur)))
+        i += 1
+    runs: list[dict] = []
+    for n, (_, f) in enumerate(letters):
+        if not (f["bold"] or f["italic"] or f["underline"] or f["script"] or f["color"]):
+            continue
+        if runs and runs[-1]["end"] == n and all(runs[-1].get(k) == (f[k] or None) for k in FORMAT_KEYS):
+            runs[-1]["end"] = n + 1
+        else:
+            runs.append({"start": n, "end": n + 1, **{k: f[k] for k in FORMAT_KEYS if f[k]}})
+    return "".join(x for x, _ in letters), runs, factor
+
+
+def expected_runs(e: dict) -> list[dict]:
+    """The input's runs as they come back: a raised or lowered run whose letters a stack cannot hold is on the line."""
+    out = []
+    for r in e.get("runs") or []:
+        words = e["text"][r["start"] : r["end"]]
+        if r.get("script") and (UNSTACKABLE & set(words) or any(control(x) for x in words)):
+            r = {k: v for k, v in r.items() if k != "script"}
+            if not any(k in r for k in FORMAT_KEYS):
+                continue
+        out.append(r)
+    return out
+
+
+def check_paragraph(o: list[tuple[int, str]], e: dict, where: str) -> None:
+    """A multi-line text's MTEXT (docs/adr/0182 §5)."""
+    r = math.radians(e["rotation"])
+    h = e["height"]
+    if e.get("align") in ATTACH:
+        ensure(group(o, 71) == str(ATTACH[e["align"]]), f"{where}: attached as aligned")
+        ensure(point(o, 10) == xy(e["p"]), f"{where}: at its point")
+    else:
+        ensure(group(o, 71) == str(BASELINE_TOP[e.get("align")]), f"{where}: a baseline's as the top of its side")
+        if e.get("align") is None:
+            # The box's top is a height over the first baseline.
+            top = (e["p"]["x"] - math.sin(r) * h, e["p"]["y"] + math.cos(r) * h)
+            got = point(o, 10)
+            ensure(abs(got[0] - top[0]) <= 1e-9 and abs(got[1] - top[1]) <= 1e-9, f"{where}: at its box's top left {top}, not {got}")
+    ensure(float(group(o, 40)) == h, f"{where}: its height")
+    ensure(float(group(o, 41)) == float(e.get("boxWidth") or 0.0), f"{where}: its box's width (0 without one)")
+    ensure(group(o, 72) == "1", f"{where}: left to right")
+    if "lineSpacing" in e:
+        ensure(group(o, 73) == "1" and float(group(o, 44)) == e["lineSpacing"], f"{where}: its line spacing")
+    else:
+        ensure(group(o, 44) is None, f"{where}: no line spacing of its own")
+    d = point(o, 11)
+    ensure(abs(d[0] - math.cos(r)) <= 1e-12 and abs(d[1] - math.sin(r)) <= 1e-12, f"{where}: its direction")
+    turn = math.degrees(math.atan2(d[1], d[0])) % 360.0
+    ensure(("noteturn" in kentos(o)) == (turn != e["rotation"]), f"{where}: its exact turn in KentOS's data only when the direction does not give it")
+    ensure((group(o, 90) == "3") == bool(e.get("mask")), f"{where}: over the drawing's background exactly when masked")
+    ensure("mask" not in kentos(o), f"{where}: the mask is the MTEXT's own")
+    content = "".join(v for c, v in o if c == 3) + (group(o, 1) or "")
+    text, runs, factor = read_mtext(content)
+    want = "".join(" " if control(x) and x != "\n" else x for x in e["text"])
+    ensure(text == want, f"{where}: its words {want!r}, not {text!r}")
+    ensure(runs == expected_runs(e), f"{where}: its runs {expected_runs(e)}, not {runs}")
+    ensure(factor == e.get("widthFactor"), f"{where}: its width factor")
 
 
 def note_of(e: dict) -> str | None:
@@ -715,6 +854,8 @@ def check(name: str) -> list[str]:
                 check_leader(o, objects[k + 1] if note_of(e) else None, e, where)
                 if note_of(e):
                     check_look(objects[k + 1], e, layers, f"{where} › MTEXT")
+            if is_paragraph(e):
+                check_paragraph(o, e, where)
             if e["kind"] == "polygon":
                 own = group(o, 5)
                 for h in objects[k + 1 : k + len(written_kinds(e))]:
@@ -751,7 +892,7 @@ def check(name: str) -> list[str]:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
 
     # The drawing's texts (docs/adr/0145 §7), in the input's order.
-    texts = [e for e in spec["entities"] if e["kind"] == "text"]
+    texts = [e for e in spec["entities"] if e["kind"] == "text" and not is_paragraph(e)]
     written = [e for e in drawn if e[0] == (0, "TEXT")]
     ensure(len(written) == len(texts), f"{len(texts)} TEXTs")
     for n, (e, o) in enumerate(zip(texts, written)):
@@ -765,6 +906,17 @@ def check(name: str) -> list[str]:
     if texts:
         aligned = sum(1 for e in texts if e.get("align"))
         said.append(f"{len(texts)} yazı ({aligned} hizalı, {sum(1 for e in texts if e.get('mask'))} zeminli)")
+
+    # The drawing's multi-line texts (docs/adr/0182 §5), in the input's order: MTEXTs that react to nothing.
+    paragraphs = [e for e in spec["entities"] if is_paragraph(e)]
+    written = [e for e in drawn if e[0] == (0, "MTEXT") and (102, "{ACAD_REACTORS") not in e]
+    ensure(len(written) == len(paragraphs), f"{len(paragraphs)} MTEXTs")
+    for n, (e, o) in enumerate(zip(paragraphs, written)):
+        where = f"çok satırlı yazı {n + 1}"
+        ensure(group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: in model space, on its layer")
+        check_paragraph(o, e, where)
+    if paragraphs:
+        said.append(f"{len(paragraphs)} çok satırlı yazı ({sum(len(e.get('runs') or []) for e in paragraphs)} biçim dilimi)")
 
     # The drawing's leaders (docs/adr/0146 §8), in the input's order, each with its MTEXT after it.
     leaders = [e for e in spec["entities"] if e["kind"] == "leader"]

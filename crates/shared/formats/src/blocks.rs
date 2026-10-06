@@ -19,6 +19,7 @@ use kentos_geometry_core::entity::{
     Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::text::paragraph::{Run, Script};
 
 /// A drawing's blocks, flattened once, ready to place inserts.
 pub struct Placing(Blocks);
@@ -95,6 +96,9 @@ impl Placing {
                     align,
                     width_factor,
                     mask,
+                    box_width,
+                    line_spacing,
+                    runs,
                 } = piece.shape
                 else {
                     return None;
@@ -121,6 +125,11 @@ impl Placing {
                         mask: mask == Some(true),
                         label_of: None,
                         label_scale: None,
+                        paragraph: kentos_contracts::Paragraph {
+                            box_width,
+                            line_spacing,
+                            runs: contract_runs(runs.as_deref()),
+                        },
                     },
                 ))
             })
@@ -147,6 +156,45 @@ pub(crate) fn core_align(a: kentos_contracts::TextAlign) -> Option<kentos_geomet
 /// The core's alignment as the contract names it.
 fn contract_align(a: kentos_geometry_core::text::TextAlign) -> Option<kentos_contracts::TextAlign> {
     kentos_contracts::TextAlign::from_name(a.name())
+}
+
+/// A multi-line text's runs as the core takes them (docs/adr/0182); none for none.
+pub(crate) fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
+    (!runs.is_empty()).then(|| {
+        runs.iter()
+            .map(|r| Run {
+                start: r.start,
+                end: r.end,
+                bold: r.bold,
+                italic: r.italic,
+                underline: r.underline,
+                script: r.script.map(|s| match s {
+                    kentos_contracts::TextScript::Super => Script::Super,
+                    kentos_contracts::TextScript::Sub => Script::Sub,
+                }),
+                color: r.color.clone(),
+            })
+            .collect()
+    })
+}
+
+/// The core's runs as the contract writes them.
+pub(crate) fn contract_runs(runs: Option<&[Run]>) -> Vec<kentos_contracts::TextRun> {
+    runs.unwrap_or_default()
+        .iter()
+        .map(|r| kentos_contracts::TextRun {
+            start: r.start,
+            end: r.end,
+            bold: r.bold,
+            italic: r.italic,
+            underline: r.underline,
+            script: r.script.map(|s| match s {
+                Script::Super => kentos_contracts::TextScript::Super,
+                Script::Sub => kentos_contracts::TextScript::Sub,
+            }),
+            color: r.color.clone(),
+        })
+        .collect()
 }
 
 fn core(p: Vec2) -> CoreVec2 {
@@ -311,6 +359,9 @@ fn shape(e: &Entity) -> Shape {
             align: t.align.and_then(core_align),
             width_factor: t.width_factor,
             mask: t.mask.then_some(true),
+            box_width: t.paragraph.box_width,
+            line_spacing: t.paragraph.line_spacing,
+            runs: core_runs(&t.paragraph.runs),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: core(d.a),
@@ -494,6 +545,9 @@ fn entity(s: &Shape) -> Option<Entity> {
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
         } => Entity::Text(TextEntity {
             base,
             p: back(*p),
@@ -505,6 +559,11 @@ fn entity(s: &Shape) -> Option<Entity> {
             mask: *mask == Some(true),
             label_of: None,
             label_scale: None,
+            paragraph: kentos_contracts::Paragraph {
+                box_width: *box_width,
+                line_spacing: *line_spacing,
+                runs: contract_runs(runs.as_deref()),
+            },
         }),
         Shape::Dimension {
             a,

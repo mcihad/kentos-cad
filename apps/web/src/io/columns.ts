@@ -1,5 +1,6 @@
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
+import type { TextRun } from '../contracts/generated/TextRun';
 import { KcadError, OBJECT_FIELDS, exactJson, projectHead, type Dropped } from './kcad';
 
 /**
@@ -65,6 +66,16 @@ const WEIGHT = 8;
  * travel in the head, not here (docs/adr/0144).
  */
 const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14] as const;
+/** A multi-line text's run's flags (docs/adr/0182; `columns.rs`'s `RUN_*`): its format, and whether its colour follows. */
+const RUN_BOLD = 1;
+const RUN_ITALIC = 2;
+const RUN_UNDERLINE = 4;
+const RUN_SCRIPT = 8 | 16;
+const RUN_SUPER = 8;
+const RUN_SUB = 16;
+const RUN_COLOR = 32;
+const runFlags = (r: TextRun): number =>
+  (r.bold ? RUN_BOLD : 0) | (r.italic ? RUN_ITALIC : 0) | (r.underline ? RUN_UNDERLINE : 0) | (r.script === 'super' ? RUN_SUPER : r.script === 'sub' ? RUN_SUB : 0) | (r.color !== undefined ? RUN_COLOR : 0);
 /** A hole's flags: its bulges, its elevations (docs/adr/0142). */
 const HOLE_BULGES = 1;
 const HOLE_ELEVATIONS = 2;
@@ -405,6 +416,20 @@ class Packer {
           this.text(e.labelOf ?? '', 'labelOf');
           this.float(e.labelScale ?? Number.NaN, 'labelScale');
         }
+        // A multi-line text's box, line spacing and runs (docs/adr/0182): each run its range, its flags
+        // (`runFlags`) and, with RUN_COLOR, its colour; the codec checks them.
+        if (e.boxWidth !== undefined) (flags |= OPT[4]), this.float(e.boxWidth, 'boxWidth');
+        if (e.lineSpacing !== undefined) (flags |= OPT[5]), this.float(e.lineSpacing, 'lineSpacing');
+        if (e.runs !== undefined && e.runs.length > 0) {
+          flags |= OPT[6];
+          this.int(e.runs.length);
+          for (const r of e.runs) {
+            this.int(r.start);
+            this.int(r.end);
+            this.int(runFlags(r));
+            if (r.color !== undefined) this.text(r.color, 'runs');
+          }
+        }
         break;
       case 'dimension': {
         this.point(e.a, 'a', kind);
@@ -718,6 +743,20 @@ export class ColumnsReader {
           e.labelOf = this.readText();
           e.labelScale = this.num();
         }
+        if (has(4)) e.boxWidth = this.num();
+        if (has(5)) e.lineSpacing = this.num();
+        if (has(6))
+          e.runs = Array.from({ length: this.readInt() }, () => {
+            const r: TextRun = { start: this.readInt(), end: this.readInt() };
+            const bits = this.readInt();
+            if (bits & RUN_BOLD) r.bold = true;
+            if (bits & RUN_ITALIC) r.italic = true;
+            if (bits & RUN_UNDERLINE) r.underline = true;
+            if ((bits & RUN_SCRIPT) === RUN_SUPER) r.script = 'super';
+            else if ((bits & RUN_SCRIPT) === RUN_SUB) r.script = 'sub';
+            if (bits & RUN_COLOR) r.color = this.readText();
+            return r;
+          });
         break;
       case 'dimension':
         e.a = this.pt();

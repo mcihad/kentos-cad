@@ -534,6 +534,27 @@ async function act(step) {
     pointer = step.drag[1];
     return;
   }
+  // The paragraph editor (docs/adr/0182 §4): its text typed, letters chosen and formatted, then kept or dropped.
+  if (step.paragraph) {
+    const p = step.paragraph;
+    await b.eval(`(async () => {
+      const ed = document.querySelector('.paragraph-editor');
+      if (!ed || ed.hidden) throw new Error('çok satırlı yazı düzenleyicisi açık değil');
+      const area = ed.querySelector('textarea');
+      const unit = (t, l) => { let u = 0; for (let n = 0; n < l && u < t.length; n++) u += t.codePointAt(u) > 0xffff ? 2 : 1; return u; };
+      const press = (sel) => { const el = ed.querySelector(sel); if (!el) throw new Error('düğme yok: ' + sel); el.click(); };
+      const text = ${JSON.stringify(p.text ?? null)};
+      if (text !== null) { area.value = text; area.dispatchEvent(new Event('input')); }
+      for (const [start, end, toggle] of ${JSON.stringify(p.formats ?? [])}) {
+        area.setSelectionRange(unit(area.value, start), unit(area.value, end));
+        if (typeof toggle === 'string') press('[data-format="' + toggle + '"]');
+        else { press('[data-menu="color"]'); press('[data-color="' + (toggle.color ?? '') + '"]'); }
+      }
+      const close = ${JSON.stringify(p.close ?? null)};
+      if (close) press(close === 'keep' ? '[data-close="keep"]' : '[data-close="drop"]');
+    })()`);
+    return sleep(60);
+  }
   if (step.doubleClick) {
     await click(step.doubleClick, 'left', 1);
     await click(step.doubleClick, 'left', 2);
@@ -631,6 +652,10 @@ const observe = (mark) =>
       // A linked text's object by its slot (0: no object has its id) and its scale (docs/adr/0175 §4).
       labelOf: e.kind === 'text' && e.labelOf !== undefined ? (k.doc.slotOf(e.labelOf) ?? 0) : null,
       labelScale: e.kind === 'text' ? (e.labelScale ?? null) : null,
+      // A multi-line text's box width, line spacing and runs (docs/adr/0182).
+      boxWidth: e.kind === 'text' ? (e.boxWidth ?? null) : null,
+      lineSpacing: e.kind === 'text' ? (e.lineSpacing ?? null) : null,
+      runs: e.kind === 'text' ? (e.runs ?? []) : null,
       // Its own symbol, colour and line weight, and its layer's name (docs/adr/0176 §3).
       symbol: e.symbol ?? null,
       color: e.color ?? null,
@@ -728,8 +753,12 @@ function compareShape(name, have, want, t) {
   // An area's hole count (docs/adr/0173 §5), exact.
   // A linked text's object, by its slot, and its scale (docs/adr/0175 §4), exact.
   // An object template's symbol, colour, weight and layer (docs/adr/0176 §3), exact.
-  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'symbol', 'color', 'lineWeight', 'layer'])
+  for (const key of ['align', 'widthFactor', 'mask', 'rotation', 'arrow', 'label', 'z', 'holes', 'labelOf', 'labelScale', 'lineSpacing', 'symbol', 'color', 'lineWeight', 'layer'])
     if (want[key] !== undefined && have[key] !== want[key]) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
+  // A multi-line text's box (from clicks: within the click tolerance; null none) and runs, exact (docs/adr/0182).
+  if (want.boxWidth !== undefined && !(want.boxWidth === null ? have.boxWidth === null : have.boxWidth !== null && Math.abs(have.boxWidth - want.boxWidth) <= t.clickTolerance))
+    bad.push(`${name}.boxWidth: ${JSON.stringify(have.boxWidth)}, beklenen ${JSON.stringify(want.boxWidth)} (±${t.clickTolerance} m)`);
+  if (want.runs !== undefined && !same(have.runs, want.runs)) bad.push(`${name}.runs: ${JSON.stringify(have.runs)}, beklenen ${JSON.stringify(want.runs)}`);
   // Its attributes, all of them, exact.
   const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   if (want.attrs !== undefined && sorted(have.attrs) !== sorted(want.attrs)) bad.push(`${name}.attrs: ${JSON.stringify(have.attrs)}, beklenen ${JSON.stringify(want.attrs)}`);

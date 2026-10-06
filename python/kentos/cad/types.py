@@ -613,6 +613,16 @@ TextAlignName = Literal["baselineCenter", "baselineRight", "bottomLeft", "bottom
 """The names of :class:`TextAlign`, for a plain string."""
 
 
+class TextScript(_StrEnum):
+    """A run raised over the line (superscript) or lowered under it (subscript)."""
+    SUPER = "super"
+    SUB = "sub"
+
+
+TextScriptName = Literal["super", "sub"]
+"""The names of :class:`TextScript`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -5839,18 +5849,26 @@ class TextEntity(Entity):
         height: Metres.
         rotation: Degrees, counter-clockwise from east.
         align: Where `p` is on the text; absent: the left of the baseline (docs/adr/0145).
+        box_width: Metres, finite and over 0: the lines wrap word by word to this width.
+            Absent: they end only at line breaks.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_of: The object whose label this text writes (Etiketleri yazıya çevir's
             “Nesneye bağlı”, docs/adr/0175 §4): its persistent id. The text
             follows the object as its label at `label_scale`; absent: a text of
             its own. Given with `label_scale` or not at all.
         label_scale: The scale's denominator (1:N) the linked label is written at; finite, over 0.
+        line_spacing: The distance between the lines' baselines in 5/3 of the height (DXF's
+            group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.
         line_weight: Its own line weight, paper millimetres as the layer's
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139).
         mask: The text's box is filled with the drawing area's colour before the
             text is drawn (Netcad's “fon”): what lies under it does not show.
+        runs: The letters' formats: ranges of the text's Unicode scalar values (not
+            UTF-16 units), in order, not overlapping, each with a format; a run
+            with no format is not written, and touching runs of one format are one.
+            Absent: none.
         symbol: Library symbol overriding the layer's style.
         width_factor: The letters' width times this, the height kept (Netcad's “sıkışma”,
             DXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.
@@ -5864,12 +5882,15 @@ class TextEntity(Entity):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    box_width: float | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_of: str | None | Unset = UNSET
     label_scale: float | None | Unset = UNSET
+    line_spacing: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    runs: list[TextRun] | Unset = UNSET
     symbol: str | None | Unset = UNSET
     width_factor: float | None | Unset = UNSET
 
@@ -5884,6 +5905,8 @@ class TextEntity(Entity):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.box_width is not UNSET:
+            out["boxWidth"] = None if self.box_width is None else float(self.box_width)
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -5892,10 +5915,14 @@ class TextEntity(Entity):
             out["labelOf"] = self.label_of
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
+        if self.line_spacing is not UNSET:
+            out["lineSpacing"] = None if self.line_spacing is None else float(self.line_spacing)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.runs is not UNSET:
+            out["runs"] = [e0.to_json() for e0 in self.runs]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.width_factor is not UNSET:
@@ -5913,14 +5940,62 @@ class TextEntity(Entity):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_of=data.get("labelOf", UNSET),
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
+            line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             mask=data.get("mask", UNSET),
+            runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TextRun(_Model):
+    """A range of a text's letters and their format (docs/adr/0182 §1).
+    Attributes:
+        start: Its first letter and the one past its last, counting Unicode scalar values.
+        color: Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.
+        script: Raised or lowered, at 0.6 of the height; absent: on the line.
+    """
+    start: int
+    end: int
+    bold: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    italic: bool | Unset = UNSET
+    script: TextScript | TextScriptName | None | Unset = UNSET
+    underline: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        out["end"] = self.end
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.italic is not UNSET:
+            out["italic"] = self.italic
+        if self.script is not UNSET:
+            out["script"] = None if self.script is None else _enum_out(self.script)
+        if self.underline is not UNSET:
+            out["underline"] = self.underline
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextRun:
+        return cls(
+            start=data["start"],
+            end=data["end"],
+            bold=data.get("bold", UNSET),
+            color=data.get("color", UNSET),
+            italic=data.get("italic", UNSET),
+            script=UNSET if "script" not in data else None if data["script"] is None else _enum_in(TextScript, data["script"]),
+            underline=data.get("underline", UNSET),
         )
 
 
@@ -6683,7 +6758,10 @@ class TextEntityGeometry(EntityGeometry):
     """Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.
     Attributes:
         align: Where `p` is on the text; absent: the left of its baseline (docs/adr/0145).
+        box_width: A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
+        line_spacing: Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
         mask: Its box filled with the drawing area's colour before it is drawn.
+        runs: Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
         width_factor: The letters' width times this, the height kept; absent: 1. Over 0, at most 100.
     """
     TAG_VALUE: ClassVar[str] = "text"
@@ -6692,7 +6770,10 @@ class TextEntityGeometry(EntityGeometry):
     height: float
     rotation: float
     align: TextAlign | TextAlignName | None | Unset = UNSET
+    box_width: float | None | Unset = UNSET
+    line_spacing: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    runs: list[TextRun] | Unset = UNSET
     width_factor: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -6703,8 +6784,14 @@ class TextEntityGeometry(EntityGeometry):
         out["rotation"] = float(self.rotation)
         if self.align is not UNSET:
             out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.box_width is not UNSET:
+            out["boxWidth"] = None if self.box_width is None else float(self.box_width)
+        if self.line_spacing is not UNSET:
+            out["lineSpacing"] = None if self.line_spacing is None else float(self.line_spacing)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.runs is not UNSET:
+            out["runs"] = [e0.to_json() for e0 in self.runs]
         if self.width_factor is not UNSET:
             out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
         return out
@@ -6717,7 +6804,10 @@ class TextEntityGeometry(EntityGeometry):
             height=float(data["height"]),
             rotation=float(data["rotation"]),
             align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
+            box_width=UNSET if "boxWidth" not in data else None if data["boxWidth"] is None else float(data["boxWidth"]),
+            line_spacing=UNSET if "lineSpacing" not in data else None if data["lineSpacing"] is None else float(data["lineSpacing"]),
             mask=data.get("mask", UNSET),
+            runs=[TextRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
             width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
         )
 
@@ -7444,6 +7534,9 @@ __all__ = [
     "TextAlignName",
     "TextEntity",
     "TextEntityGeometry",
+    "TextRun",
+    "TextScript",
+    "TextScriptName",
     "TmCrsSystem",
     "TmDefinition",
     "Transform",

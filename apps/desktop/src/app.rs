@@ -291,6 +291,8 @@ pub enum Message {
     DropLock(bool),
     /// The text field over the drawing (text_field.rs).
     TextField(crate::text_field::Event),
+    /// The paragraph editor over the drawing (paragraph_editor.rs, docs/adr/0182 §4).
+    Paragraph(crate::paragraph_editor::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
     /// Blok oluştur's window (blocks.rs).
@@ -469,6 +471,9 @@ pub struct App {
     /// next task: the keyboard, its text chosen, the keyboard back.
     pub(crate) text_field: Option<crate::text_field::Open>,
     pub(crate) text_field_focus: bool,
+    /// The paragraph editor over the drawing (paragraph_editor.rs) and whether it wants the keyboard.
+    pub(crate) paragraph: Option<crate::paragraph_editor::Open>,
+    pub(crate) paragraph_focus: bool,
     /// The block windows (blocks.rs, docs/adr/0144).
     pub(crate) blocks: crate::blocks::Blocks,
     /// The Bloklar panel (blocks_panel.rs).
@@ -770,6 +775,8 @@ impl App {
             snap_once: None,
             text_field: None,
             text_field_focus: false,
+            paragraph: None,
+            paragraph_focus: false,
             blocks: crate::blocks::Blocks::default(),
             blocks_panel: crate::blocks_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
@@ -1049,6 +1056,7 @@ impl App {
         let task = Task::batch([
             task,
             self.text_field_tasks(),
+            self.paragraph_tasks(),
             self.blocks_tasks(),
             self.template_editor_tasks(),
             self.attribute_values_tasks(),
@@ -1123,6 +1131,7 @@ impl App {
                 self.ribbon_peek = false;
             }
             self.close_text_field(true);
+            self.close_paragraph(true);
             self.layers_keyboard = false;
             self.blocks_panel.keyboard = false;
             self.templates_panel.keyboard = false;
@@ -1222,6 +1231,7 @@ impl App {
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::DropLock(length) => self.drop_lock(length),
             Message::TextField(event) => self.text_field_event(event),
+            Message::Paragraph(event) => self.paragraph_event(event),
             Message::Properties(event) => self.properties_event(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),

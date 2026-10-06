@@ -110,6 +110,9 @@ pub enum Field {
     Elevations(Vec<Slot>),
     /// Texts' width factor: out of its range the command says why (docs/adr/0145).
     TextWidth(Vec<Slot>),
+    /// Texts' box width (emptied or “Kutusuz”: none) and line spacing (docs/adr/0182 §4).
+    TextBox(Vec<Slot>),
+    TextSpacing(Vec<Slot>),
     /// An insert's place (Y, X), scale (above zero) and turn (degrees typed).
     InsertX(Slot),
     InsertY(Slot),
@@ -511,6 +514,27 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 Vec::new()
             };
         }
+        // A box: emptied, none; a number, the command refuses one not over 0 (docs/adr/0182 §4).
+        Field::TextBox(slots) => {
+            let t = kentos_interaction::js_trim(text);
+            if t.is_empty() || t == "Kutusuz" {
+                return properties::set_text_box(model, slots, None);
+            }
+            let n = web_number(t);
+            return if n.is_finite() {
+                properties::set_text_box(model, slots, Some(n))
+            } else {
+                Vec::new()
+            };
+        }
+        Field::TextSpacing(slots) => {
+            let n = web_number(text);
+            return if n.is_finite() {
+                properties::set_text_spacing(model, slots, n)
+            } else {
+                Vec::new()
+            };
+        }
         Field::LeaderNote(slots) => {
             let note = kentos_interaction::js_trim(text);
             let to = (!note.is_empty()).then(|| note.to_owned());
@@ -598,6 +622,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         Field::Elevation(..)
         | Field::Elevations(_)
         | Field::TextWidth(_)
+        | Field::TextBox(_)
+        | Field::TextSpacing(_)
         | Field::LeaderNote(_)
         | Field::LeaderHeight(_)
         | Field::LeaderTurn(_)

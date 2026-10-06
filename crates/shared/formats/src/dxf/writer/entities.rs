@@ -44,6 +44,7 @@ use super::layers::Layers;
 use super::{Handles, Justified, Out};
 
 mod leader;
+mod paragraph;
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
 use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
@@ -455,6 +456,10 @@ impl Writer<'_> {
                 self.grow(x.p);
                 self.end(Self::base_meta(&x.base));
                 true
+            }
+            // A multi-line text is an MTEXT (docs/adr/0182 §5); a text of one line a TEXT.
+            Entity::Text(t) if t.text.contains('\n') || !t.paragraph.is_plain() => {
+                self.paragraph(t, Self::base_meta(&t.base))
             }
             Entity::Text(t) => {
                 let mut meta = Self::base_meta(&t.base);

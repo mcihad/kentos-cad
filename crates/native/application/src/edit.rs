@@ -709,6 +709,28 @@ pub(crate) fn check_geometry(
             at(".widthFactor"),
         )));
     }
+    // A multi-line text's box, spacing and letter formats (docs/adr/0182 §6).
+    if let EntityGeometry::Text {
+        text,
+        box_width,
+        line_spacing,
+        runs,
+        ..
+    } = g
+    {
+        let paragraph = kentos_contracts::Paragraph {
+            box_width: *box_width,
+            line_spacing: *line_spacing,
+            runs: runs.clone(),
+        };
+        if let Some((field, words)) = paragraph.problem(text) {
+            return Err(Stop::Failed(error(
+                codes::INVALID_PARAGRAPH,
+                words,
+                at(&format!(".{field}")),
+            )));
+        }
+    }
     Ok(())
 }
 
@@ -877,12 +899,16 @@ fn finite(g: &EntityGeometry) -> bool {
             height,
             rotation,
             width_factor,
+            box_width,
+            line_spacing,
             ..
         } => {
             pt(p)
                 && height.is_finite()
                 && rotation.is_finite()
                 && width_factor.is_none_or(f64::is_finite)
+                && box_width.is_none_or(f64::is_finite)
+                && line_spacing.is_none_or(f64::is_finite)
         }
         EntityGeometry::Dimension {
             a,

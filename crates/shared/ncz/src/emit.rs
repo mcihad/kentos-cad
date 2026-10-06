@@ -450,6 +450,7 @@ impl Emitter {
                         mask: false,
                         label_of: None,
                         label_scale: None,
+                        paragraph: Default::default(),
                     }),
                 );
             }
@@ -664,6 +665,7 @@ impl Emitter {
                                 mask: false,
                                 label_of: None,
                                 label_scale: None,
+                                paragraph: Default::default(),
                             }),
                         );
                     }

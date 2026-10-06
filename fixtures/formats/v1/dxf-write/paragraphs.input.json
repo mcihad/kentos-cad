@@ -1,0 +1,183 @@
+{
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452345.125,
+        "y": 4412345.5
+      },
+      "text": "Parsel 101\nAlan: 450 m2 (tapuda)\nKayıt: H2O hattı",
+      "height": 2.5,
+      "rotation": 0,
+      "align": "topLeft",
+      "boxWidth": 40.0,
+      "lineSpacing": 1.25,
+      "mask": true,
+      "runs": [
+        {
+          "start": 0,
+          "end": 6,
+          "bold": true
+        },
+        {
+          "start": 7,
+          "end": 10,
+          "italic": true,
+          "underline": true,
+          "color": "#E5484D"
+        },
+        {
+          "start": 22,
+          "end": 23,
+          "script": "super"
+        },
+        {
+          "start": 24,
+          "end": 32,
+          "color": "ink"
+        },
+        {
+          "start": 41,
+          "end": 42,
+          "script": "sub"
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452405.125,
+        "y": 4412345.5
+      },
+      "text": "Ortalı not\nikinci satır",
+      "height": 2.0,
+      "rotation": 30,
+      "align": "middleCenter",
+      "widthFactor": 0.8
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452465.125,
+        "y": 4412345.5
+      },
+      "text": "Alt\nsağa\ndayalı",
+      "height": 1.5,
+      "rotation": 0,
+      "align": "bottomRight",
+      "lineSpacing": 0.5
+    },
+    {
+      "kind": "text",
+      "id": 4,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452345.125,
+        "y": 4412305.5
+      },
+      "text": "Taban hizalı\nçok satırlı",
+      "height": 2.0,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 5,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452405.125,
+        "y": 4412305.5
+      },
+      "text": "Oran 1/2 ve 100%% kalın {not}",
+      "height": 2.0,
+      "rotation": 0,
+      "align": "topLeft",
+      "runs": [
+        {
+          "start": 5,
+          "end": 8,
+          "script": "super"
+        },
+        {
+          "start": 18,
+          "end": 23,
+          "bold": true,
+          "italic": true
+        }
+      ]
+    },
+    {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "yazi",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+      "p": {
+        "x": 452465.125,
+        "y": 4412305.5
+      },
+      "scale": 2.0,
+      "rotation": 0.25
+    }
+  ],
+  "layers": [
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "path": [],
+      "color": "#7FB2E5",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {},
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001",
+      "name": "Not kutusu",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "text",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "p": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text": "Blokta\nnot",
+          "height": 1.0,
+          "rotation": 0,
+          "align": "topLeft",
+          "boxWidth": 10.0,
+          "runs": [
+            {
+              "start": 0,
+              "end": 6,
+              "underline": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

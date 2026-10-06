@@ -135,9 +135,10 @@ const same: Pick = (v) => v;
 const COMMON = ['kind', 'id', 'uid', 'layerId', 'color', 'attrs', 'label', 'symbol', 'lineWeight'];
 export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEntries(
   Object.entries({
-    point: ['p', 'z'],
+    // A multi-point object's and a multi-part polyline's other parts (docs/adr/0174).
+    point: ['p', 'z', 'parts'],
     line: ['a', 'b', 'za', 'zb'],
-    polyline: ['pts', 'bulges', 'zs'],
+    polyline: ['pts', 'bulges', 'zs', 'parts'],
     polygon: ['pts', 'bulges', 'holes', 'zs', 'parts'],
     circle: ['c', 'r'],
     arc: ['c', 'r', 'a0', 'a1'],
@@ -145,7 +146,8 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
     spline: ['pts', 'closed'],
     xline: ['p', 'dir'],
     ray: ['p', 'dir'],
-    text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
+    // A linked text's object and scale (docs/adr/0175 §4); a multi-line text's box, spacing and formats (docs/adr/0182).
+    text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'labelOf', 'labelScale', 'boxWidth', 'lineSpacing', 'runs'],
     dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb'],
     hatch: ['ring', 'holes', 'pattern'],
     insert: ['block', 'p', 'scale', 'rotation', 'mirror'],

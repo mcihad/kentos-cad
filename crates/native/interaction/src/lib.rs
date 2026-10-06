@@ -193,6 +193,7 @@ pub mod split;
 pub mod station_offset;
 pub mod stretch;
 pub mod templates;
+pub mod paragraph;
 pub mod text;
 pub mod text_file;
 pub mod topology;
@@ -228,6 +229,6 @@ pub use tool::{Area, Label, TextGhost};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
-    MarkerShape, Memory, Name, OptionChoice, Overlap, Pointer, Preview, Stroke, Tag, TextField,
+    MarkerShape, Memory, Name, OptionChoice, Overlap, ParagraphField, Pointer, Preview, Stroke, Tag, TextField,
     Tone, Tool, View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
 };

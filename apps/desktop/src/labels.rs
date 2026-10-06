@@ -29,8 +29,10 @@ use iced::{
 use kentos_contracts::{DrawingFont, Entity, LabelInk, LabelStyle};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::label_text::fill_template;
+use kentos_geometry_core::text::paragraph::{Run, Script, advance};
 use kentos_interaction::spatial::default_label;
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
+use kentos_native_application::geometry::core_runs;
 use kentos_render_wgpu::Camera;
 use kentos_render_wgpu::color::{Palette, Rgba8};
 
@@ -73,9 +75,10 @@ pub fn layer<'a>(
     palette: &Palette,
     format: &Format,
     hidden: Option<Slot>,
+    preview: Option<Preview>,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, true,
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, true,
     )
 }
 
@@ -92,10 +95,21 @@ pub fn lens_layer<'a>(
     palette: &Palette,
     format: &Format,
     hidden: Option<Slot>,
+    preview: Option<Preview>,
 ) -> Element<'a, Message> {
     build(
-        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, false,
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, preview, false,
     )
+}
+
+/// A multi-line text being written or edited (paragraph_editor.rs,
+/// docs/adr/0182 §4), drawn as it will be: its label records
+/// (`paragraph_records`: its mask's box, then its lines), words and runs.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Preview {
+    pub text: String,
+    pub runs: Vec<Run>,
+    pub records: Vec<f64>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -109,6 +123,7 @@ fn build<'a>(
     palette: &Palette,
     format: &Format,
     hidden: Option<Slot>,
+    preview: Option<Preview>,
     map_marks: bool,
 ) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
@@ -134,12 +149,23 @@ fn build<'a>(
         // A text or a dimension's value being edited in place (the web's `setEditing`).
         if let Some(hidden) = hidden {
             spots.retain(|spot| match spot {
-                LabelSpot::Text { slot, .. } | LabelSpot::Dimension { slot, .. } => *slot != hidden,
+                LabelSpot::Text { slot, .. }
+                | LabelSpot::Dimension { slot, .. }
+                | LabelSpot::Line { slot, .. }
+                | LabelSpot::ParagraphMask { slot, .. } => *slot != hidden,
                 _ => true,
             });
         }
         spots
     });
+    // The text being written changes the picture as it is typed.
+    if let Some(p) = &preview {
+        p.text.hash(&mut key);
+        format!("{:?}", p.runs).hash(&mut key);
+        for r in &p.records {
+            r.to_bits().hash(&mut key);
+        }
+    }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
     (canvas as u8, font as u8).hash(&mut key);
     // The number formats decide a dimension's text.
@@ -155,6 +181,7 @@ fn build<'a>(
         fence: None,
         current: Cell::new(None),
         map_marks,
+        preview: preview.map(Rc::new),
     })
     .width(Fill)
     .height(Fill)
@@ -232,6 +259,8 @@ struct Labels<'a> {
     current: Cell<Option<Slot>>,
     /// Grid north and the scale bar, or the axes, over the text (not in Büyüteç's window).
     map_marks: bool,
+    /// A multi-line text being written or edited, over the rest (docs/adr/0182 §4).
+    preview: Option<Rc<Preview>>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -294,6 +323,7 @@ pub fn paint_in_map(
         fence: Some(fence),
         current: Cell::new(None),
         map_marks: false,
+        preview: None,
     }
     .paint(frame);
 }
@@ -318,6 +348,8 @@ pub struct MapLabel {
     pub color: Color,
     pub halo: Color,
     pub mask: Option<Vec<[f64; 2]>>,
+    /// A multi-line text's underlined run's bar, on the ground, in its colour (docs/adr/0182 §3).
+    pub underline: Option<Vec<[f64; 2]>>,
 }
 
 /// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
@@ -348,6 +380,7 @@ pub fn texts_in_map(
         fence: Some(fence),
         current: Cell::new(None),
         map_marks: false,
+        preview: None,
     }
     .paint(&mut list);
     list.labels
@@ -358,6 +391,8 @@ trait Ink {
     /// The picture's size (a frame's own; a fenced map's is the camera's).
     fn size(&self) -> Size;
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
+    /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
+    fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
     /// Grid north and the scale bar, or a CAD project's coordinate axes.
     fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes);
 }
@@ -369,6 +404,17 @@ impl Ink for Frame {
 
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, _of: Option<Slot>) {
         draw(self, piece, halo);
+    }
+
+    fn fill_quad(&mut self, quad: [Point; 4], color: Color, _of: Option<Slot>) {
+        let path = Path::new(|b| {
+            b.move_to(quad[0]);
+            for p in &quad[1..] {
+                b.line_to(*p);
+            }
+            b.close();
+        });
+        self.fill(&path, color);
     }
 
     fn marks(&mut self, camera: &Camera, colors: &Colors, axes: kentos_interaction::Axes) {
@@ -447,6 +493,53 @@ impl Ink for Collect<'_> {
             color: piece.color,
             halo,
             mask,
+            underline: (piece.underline > 0.0).then(|| {
+                // From the baseline's start 0.12 of the height down, 0.06 thick, the bar's length along.
+                let (w, h) = (f64::from(piece.underline) * px, f64::from(piece.size) * px);
+                let (s, c) = rotation.to_radians().sin_cos();
+                [
+                    [0.0, -0.12 * h],
+                    [w, -0.12 * h],
+                    [w, -0.18 * h],
+                    [0.0, -0.18 * h],
+                ]
+                .iter()
+                .map(|[u, t]| [at.x + u * c - t * s, at.y + u * s + t * c])
+                .collect()
+            }),
+        });
+    }
+
+    fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>) {
+        use kentos_sheet::pdf::TextAnchor;
+        let layer = of
+            .and_then(|slot| self.doc.get(slot))
+            .map(|e| e.base().layer_id.clone())
+            .unwrap_or_default();
+        let ground: Vec<[f64; 2]> = quad
+            .iter()
+            .map(|p| {
+                let w = self.camera.screen_to_world(f64::from(p.x), f64::from(p.y));
+                [w.x, w.y]
+            })
+            .collect();
+        let at = self
+            .camera
+            .screen_to_world(f64::from(quad[0].x), f64::from(quad[0].y));
+        // A mask without words: the PDF fills it in the paper's colour, under the layer's texts.
+        self.labels.push(MapLabel {
+            layer,
+            text: String::new(),
+            at,
+            anchor: TextAnchor::LeftBaseline,
+            rotation: 0.0,
+            size: 0.0,
+            weight: 400,
+            italic: false,
+            color,
+            halo: color,
+            mask: Some(ground),
+            underline: None,
         });
     }
 
@@ -499,7 +592,8 @@ enum Anchor {
 /// clockwise on screen, `size` pixels high, its letters `width_factor`
 /// wide; `mask` pixels long, the box filled with the drawing area's colour
 /// under it first (a text object's, docs/adr/0145; a dimension value's,
-/// docs/adr/0147), 0 for none.
+/// docs/adr/0147), 0 for none; `underline` pixels long, a bar under it (a
+/// multi-line text's run, docs/adr/0182 §3), 0 for none.
 struct Piece<'t> {
     text: &'t str,
     at: Point,
@@ -510,6 +604,7 @@ struct Piece<'t> {
     color: Color,
     width_factor: f32,
     mask: f32,
+    underline: f32,
 }
 
 impl Labels<'_> {
@@ -542,6 +637,94 @@ impl Labels<'_> {
         frame.piece(piece, halo, self.current.get());
     }
 
+    /// One line of a multi-line text (docs/adr/0182 §3): its letters
+    /// `start..end` run by run from where its baseline starts, each run where
+    /// the shared layout's advances put it (bold from the bold table, raised
+    /// and lowered at 0.6), upright at 400 (600 bold, italic when italic),
+    /// raised 0.4 and lowered 0.15 of the height, in the run's colour, its
+    /// underline 0.12 of the height under the baseline.
+    #[allow(clippy::too_many_arguments)]
+    fn line(
+        &self,
+        frame: &mut impl Ink,
+        text: &str,
+        runs: &[Run],
+        (start, end): (usize, usize),
+        at: Vec2,
+        rotation: f64,
+        height: f64,
+        width_factor: f64,
+    ) {
+        let letters: Vec<char> = text.chars().collect();
+        let (start, end) = (start.min(letters.len()), end.min(letters.len()));
+        let face = kentos_native_application::geometry::drawing_font(Some(self.font));
+        let r = rotation.to_radians();
+        let (c, s) = (r.cos(), r.sin());
+        let size = height * self.camera.scale;
+        // Metres along the baseline: thousandths of an em, the height, the width factor.
+        let em = height * width_factor / 1000.0;
+        let look = |i: usize| -> Option<&Run> {
+            runs.iter()
+                .find(|r| (r.start as usize) <= i && i < r.end as usize)
+        };
+        let mut x = 0.0;
+        let mut i = start;
+        while i < end {
+            let f = look(i);
+            let mut j = i + 1;
+            while j < end && look(j) == f {
+                j += 1;
+            }
+            let bold = f.is_some_and(|r| r.bold);
+            let script = f.and_then(|r| r.script);
+            let width: f64 = letters[i..j]
+                .iter()
+                .map(|ch| advance(face, *ch, bold, script.is_some()))
+                .sum::<f64>()
+                * em;
+            let lift = match script {
+                Some(Script::Super) => 0.4 * height,
+                Some(Script::Sub) => -0.15 * height,
+                None => 0.0,
+            };
+            let words: String = letters[i..j].iter().collect();
+            let place = Vec2::new(at.x + c * x - s * lift, at.y + s * x + c * lift);
+            let scaled = if script.is_some() { size * 0.6 } else { size };
+            let color = f
+                .and_then(|r| r.color.as_deref())
+                .and_then(|name| self.colors.palette.resolve(name))
+                .map_or(self.colors.label, color);
+            if !words.trim().is_empty() || f.is_some_and(|r| r.underline) {
+                self.draw(
+                    frame,
+                    &Piece {
+                        text: &words,
+                        at: self.screen(place),
+                        angle: (-r) as f32,
+                        size: scaled as f32,
+                        font: drawing_fonts::font(
+                            self.font,
+                            if bold { 600 } else { 400 },
+                            f.is_some_and(|r| r.italic),
+                        ),
+                        anchor: Anchor::LeftBaseline,
+                        color,
+                        width_factor: width_factor as f32,
+                        mask: 0.0,
+                        underline: if f.is_some_and(|r| r.underline) {
+                            (width * self.camera.scale / width_factor) as f32
+                        } else {
+                            0.0
+                        },
+                    },
+                    self.colors.halo,
+                );
+            }
+            x += width;
+            i = j;
+        }
+    }
+
     fn paint(&self, frame: &mut impl Ink) {
         // A map frame's labels keep apart on the camera's own picture.
         let size = match self.fence {
@@ -559,7 +742,9 @@ impl Labels<'_> {
                 | LabelSpot::Beside { slot, .. }
                 | LabelSpot::Along { slot, .. }
                 | LabelSpot::PieceText { slot, .. }
-                | LabelSpot::PieceDimension { slot, .. } => *slot,
+                | LabelSpot::PieceDimension { slot, .. }
+                | LabelSpot::Line { slot, .. }
+                | LabelSpot::ParagraphMask { slot, .. } => *slot,
             };
             self.current.set(Some(slot));
             // A label whose place is taken is not drawn: known before its
@@ -609,6 +794,7 @@ impl Labels<'_> {
                             color,
                             width_factor: 1.0,
                             mask: value_mask(*mask, &text, font, size),
+                            underline: 0.0,
                         },
                         self.colors.halo,
                     );
@@ -634,6 +820,7 @@ impl Labels<'_> {
                         color: self.colors.label,
                         width_factor: *width_factor as f32,
                         mask: (mask * self.camera.scale) as f32,
+                        underline: 0.0,
                     },
                     self.colors.halo,
                 ),
@@ -659,6 +846,7 @@ impl Labels<'_> {
                             color: self.colors.label,
                             width_factor: 1.0,
                             mask: (mask * self.camera.scale) as f32,
+                            underline: 0.0,
                         },
                         self.colors.halo,
                     );
@@ -698,6 +886,7 @@ impl Labels<'_> {
                             color: self.colors.label,
                             width_factor: *width_factor as f32,
                             mask: (mask * self.camera.scale) as f32,
+                            underline: 0.0,
                         },
                         self.colors.halo,
                     );
@@ -739,8 +928,71 @@ impl Labels<'_> {
                             color,
                             width_factor: 1.0,
                             mask: value_mask(*mask, &text, font, size),
+                            underline: 0.0,
                         },
                         self.colors.halo,
+                    );
+                }
+                // A multi-line text's mask, then its lines (docs/adr/0182 §3).
+                (
+                    LabelSpot::ParagraphMask {
+                        at,
+                        rotation,
+                        width,
+                        height,
+                        ..
+                    },
+                    _,
+                ) => {
+                    let r = rotation.to_radians();
+                    let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
+                    let corner = |x: f64, y: f64| {
+                        self.screen(Vec2::new(
+                            at.x + u.x * x + v.x * y,
+                            at.y + u.y * x + v.y * y,
+                        ))
+                    };
+                    let quad = [
+                        corner(0.0, 0.0),
+                        corner(*width, 0.0),
+                        corner(*width, *height),
+                        corner(0.0, *height),
+                    ];
+                    if self.fence.as_ref().is_none_or(|f| f.holds(quad[0])) {
+                        frame.fill_quad(quad, self.colors.halo, Some(slot));
+                    }
+                }
+                (
+                    LabelSpot::Line {
+                        at,
+                        rotation,
+                        height,
+                        width_factor,
+                        start,
+                        end,
+                        piece,
+                        ..
+                    },
+                    entity,
+                ) => {
+                    let own;
+                    let (text, runs): (&str, &[Run]) = match (piece, entity) {
+                        (Some(p), _) => (&p.0, &p.1),
+                        (None, Entity::Text(t)) => {
+                            own = core_runs(&t.paragraph.runs).unwrap_or_default();
+                            (&t.text, &own)
+                        }
+                        _ => continue,
+                    };
+                    self.line(
+                        frame,
+                        text,
+                        runs,
+                        (*start, *end),
+                        *at,
+                        *rotation,
+                        *height,
+                        *width_factor,
                     );
                 }
                 (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
@@ -753,6 +1005,46 @@ impl Labels<'_> {
                         continue;
                     };
                     self.label(frame, &mut room, spot, &style, label);
+                }
+            }
+        }
+        // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
+        if let Some(p) = &self.preview {
+            for r in p
+                .records
+                .chunks_exact(kentos_geometry_core::store::labels::LABEL_STRIDE)
+            {
+                let at = Vec2::new(r[2], r[3]);
+                if r[1] == kentos_geometry_core::store::labels::LABEL_PARAGRAPH_MASK {
+                    let rad = r[4].to_radians();
+                    let (u, v) = (
+                        Vec2::new(rad.cos(), rad.sin()),
+                        Vec2::new(-rad.sin(), rad.cos()),
+                    );
+                    let corner = |x: f64, y: f64| {
+                        self.screen(Vec2::new(
+                            at.x + u.x * x + v.x * y,
+                            at.y + u.y * x + v.y * y,
+                        ))
+                    };
+                    let quad = [
+                        corner(0.0, 0.0),
+                        corner(r[5], 0.0),
+                        corner(r[5], r[6]),
+                        corner(0.0, r[6]),
+                    ];
+                    frame.fill_quad(quad, self.colors.halo, None);
+                } else {
+                    self.line(
+                        frame,
+                        &p.text,
+                        &p.runs,
+                        (r[7] as usize, r[8] as usize),
+                        at,
+                        r[4],
+                        r[5],
+                        r[6],
+                    );
                 }
             }
         }
@@ -783,7 +1075,9 @@ impl Labels<'_> {
             LabelSpot::Dimension { .. }
             | LabelSpot::Text { .. }
             | LabelSpot::PieceText { .. }
-            | LabelSpot::PieceDimension { .. } => None,
+            | LabelSpot::PieceDimension { .. }
+            | LabelSpot::Line { .. }
+            | LabelSpot::ParagraphMask { .. } => None,
         }
     }
 
@@ -821,6 +1115,7 @@ impl Labels<'_> {
             color,
             width_factor: 1.0,
             mask: 0.0,
+            underline: 0.0,
         };
         let halo = self.colors.halo;
         let Some(s) = self.anchor(spot) else {
@@ -864,7 +1159,9 @@ impl Labels<'_> {
             LabelSpot::Dimension { .. }
             | LabelSpot::Text { .. }
             | LabelSpot::PieceText { .. }
-            | LabelSpot::PieceDimension { .. } => {}
+            | LabelSpot::PieceDimension { .. }
+            | LabelSpot::Line { .. }
+            | LabelSpot::ParagraphMask { .. } => {}
         }
     }
 }
@@ -981,6 +1278,7 @@ pub(crate) fn ghost(
         color,
         width_factor: 1.0,
         mask: if mask { width } else { 0.0 },
+        underline: 0.0,
     };
     draw(frame, &piece, halo);
 }
@@ -993,6 +1291,29 @@ fn value_mask(mask: bool, text: &str, font: Font, size: f32) -> f32 {
     } else {
         0.0
     }
+}
+
+/// A piece's underline (docs/adr/0182 §3): from where its baseline starts at
+/// `from`, 0.12 of its size under it, 0.06 thick, over a halo.
+fn underline(frame: &mut Frame, piece: &Piece<'_>, from: Point, halo: Color) {
+    if piece.underline <= 0.0 {
+        return;
+    }
+    let (top, thick) = (piece.size * 0.12, (piece.size * 0.06).max(1.0));
+    frame.fill(
+        &Path::rectangle(
+            Point::new(from.x - HALO, from.y + top - HALO),
+            Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
+        ),
+        halo,
+    );
+    frame.fill(
+        &Path::rectangle(
+            Point::new(from.x, from.y + top),
+            Size::new(piece.underline, thick),
+        ),
+        piece.color,
+    );
 }
 
 fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
@@ -1034,6 +1355,7 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
             ));
         }
         frame.fill_text(text(top_left, piece.color));
+        underline(frame, piece, Point::new(piece.at.x + dx, piece.at.y), halo);
         return;
     }
     frame.with_save(|frame| {
@@ -1078,6 +1400,7 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         for glyph in glyphs.iter() {
             frame.fill(glyph, piece.color);
         }
+        underline(frame, piece, Point::new(dx, 0.0), halo);
     });
 }
 
@@ -1194,7 +1517,9 @@ pub fn slot_of(spot: &LabelSpot) -> Slot {
         | LabelSpot::Beside { slot, .. }
         | LabelSpot::Along { slot, .. }
         | LabelSpot::PieceText { slot, .. }
-        | LabelSpot::PieceDimension { slot, .. } => *slot,
+        | LabelSpot::PieceDimension { slot, .. }
+        | LabelSpot::Line { slot, .. }
+        | LabelSpot::ParagraphMask { slot, .. } => *slot,
     }
 }
 
@@ -1627,6 +1952,7 @@ fn perf() {
         fence: None,
         current: Cell::new(None),
         map_marks: true,
+        preview: None,
     };
     let started = Instant::now();
     for _ in 0..frames {

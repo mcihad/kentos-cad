@@ -126,6 +126,8 @@ pub enum Kind {
         xdir: Option<P3>,
         rotation: Option<f64>,
         text: String,
+        /// Its box's width (41; docs/adr/0182 §5); 0 none.
+        width: f64,
         spacing: f64,
         /// Its background fill (90; docs/adr/0145 §7): 1 in its colour, 2 in
         /// the drawing's, 16 a frame alone; 0 none.
@@ -504,6 +506,7 @@ pub fn parse(
                 xdir: g.point(11)?,
                 rotation: g.num(50)?,
                 text,
+                width: g.num_or(41, 0.0)?,
                 spacing: g.num_or(44, 1.0)?,
                 fill: g.int(90),
                 style: g.string(7),

@@ -323,7 +323,8 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 attrs: attrs.clone(),
             }
         }
-        // Its point moves; its alignment, width factor and mask stay (docs/adr/0145).
+        // Its point moves; its alignment, width factor and mask stay (docs/adr/0145); a multi-line
+        // text's box scales with its height, its spacing and formats stay (docs/adr/0182).
         Shape::Text {
             p,
             text,
@@ -332,6 +333,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
         } => Shape::Text {
             p: apply(m, *p),
             text: text.clone(),
@@ -340,6 +344,9 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             align: *align,
             width_factor: *width_factor,
             mask: *mask,
+            box_width: box_width.map(|w| w * s),
+            line_spacing: *line_spacing,
+            runs: runs.clone(),
         },
         // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
         Shape::Leader {

@@ -581,12 +581,17 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             height,
             rotation,
             width_factor,
+            box_width,
+            line_spacing,
             ..
         } => match rest {
             "height" => Some(height),
             "rotation" => Some(rotation),
             // The width factor the case gives (docs/adr/0145).
             "widthFactor" => width_factor.as_mut(),
+            // A multi-line text's box and spacing the case gives (docs/adr/0182).
+            "boxWidth" => box_width.as_mut(),
+            "lineSpacing" => line_spacing.as_mut(),
             _ => coordinate(p, "p", rest),
         },
         // A slope's elevations and an arc length's or jogged radius's centre too (docs/adr/0147).

@@ -536,6 +536,9 @@ impl Tool for Text {
                 align: m.text_align,
                 width_factor: (m.text_width_factor != 1.0).then_some(m.text_width_factor),
                 mask: m.text_mask,
+                box_width: None,
+                line_spacing: None,
+                runs: Vec::new(),
             };
             if let Some(out) = points::write_objects(vec![geometry], None, cx)
                 && let Some(&id) = out.ids.first()

@@ -284,6 +284,175 @@ pub struct TextEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub label_scale: Option<f64>,
+    /// A multi-line text's box, line spacing and letter formats (docs/adr/0182).
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub paragraph: Paragraph,
+}
+
+/// A multi-line text's own fields (docs/adr/0182 §1): the width its lines
+/// wrap to, their spacing and its letters' formats. All absent, the text is
+/// as it always was: its lines end only at its line breaks (`\n`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct Paragraph {
+    /// Metres, finite and over 0: the lines wrap word by word to this width.
+    /// Absent: they end only at line breaks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub box_width: Option<f64>,
+    /// The distance between the lines' baselines in 5/3 of the height (DXF's
+    /// group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.25, max = 4.0)))]
+    pub line_spacing: Option<f64>,
+    /// The letters' formats: ranges of the text's Unicode scalar values (not
+    /// UTF-16 units), in order, not overlapping, each with a format; a run
+    /// with no format is not written, and touching runs of one format are one.
+    /// Absent: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextRun>>", optional))]
+    pub runs: Vec<TextRun>,
+}
+
+impl Paragraph {
+    /// No box, no spacing, no formats: a text as it always was.
+    pub fn is_plain(&self) -> bool {
+        self.box_width.is_none() && self.line_spacing.is_none() && self.runs.is_empty()
+    }
+
+    /// What is wrong with these fields for `text` (docs/adr/0182 §1): the
+    /// field (`boxWidth`, `lineSpacing`, `runs`) and the refusal's words. A
+    /// box width not finite or not over 0, a line spacing out of its bounds,
+    /// a run out of the text, not after the one before it, with no format, an
+    /// empty colour, or touching one of the same format (the two are one run).
+    /// None when they may be written.
+    pub fn problem(&self, text: &str) -> Option<(&'static str, String)> {
+        if let Some(w) = self.box_width
+            && !(w.is_finite() && w > 0.0)
+        {
+            return Some((
+                "boxWidth",
+                format!(
+                    "Çok satırlı yazının kutu genişliği sıfırdan büyük olmalı; {w} verildi. Genişliği metre olarak, pozitif verin ya da alanı kaldırın (satırlar yalnız satır sonlarında biter)."
+                ),
+            ));
+        }
+        if let Some(s) = self.line_spacing
+            && !(MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&s)
+        {
+            return Some((
+                "lineSpacing",
+                format!(
+                    "Çok satırlı yazının satır aralığı {MIN_LINE_SPACING} ile {MAX_LINE_SPACING} arasında olmalı; {s} verildi. Aralığı bu sınırlarda verin ya da alanı kaldırın (1)."
+                ),
+            ));
+        }
+        self.runs_problem(text).map(|words| ("runs", words))
+    }
+
+    /// What is wrong with the runs for `text`, as `problem` says it.
+    pub fn runs_problem(&self, text: &str) -> Option<String> {
+        let letters = text.chars().count() as u64;
+        let mut before: Option<&TextRun> = None;
+        for (i, r) in self.runs.iter().enumerate() {
+            let n = i + 1;
+            if r.start >= r.end || u64::from(r.end) > letters {
+                return Some(format!(
+                    "{n}. biçim dilimi {}–{}: başı sonundan önce olmalı, sonu yazının harf sayısını ({letters}) aşmamalı. Dilimi yazının harfleri içinde verin.",
+                    r.start, r.end
+                ));
+            }
+            if !r.has_format() {
+                return Some(format!(
+                    "{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz. Dilime bir biçim verin ya da dilimi çıkarın."
+                ));
+            }
+            if r.color.as_deref().is_some_and(str::is_empty) {
+                return Some(format!(
+                    "{n}. biçim diliminin rengi boş. Bir renk verin ya da rengi kaldırın."
+                ));
+            }
+            if let Some(b) = before {
+                if r.start < b.end {
+                    return Some(format!(
+                        "{n}. biçim dilimi öncekiyle örtüşüyor ya da ondan önce başlıyor; dilimler sıralı ve ayrı olmalı. Dilimleri sırayla, örtüşmeden verin."
+                    ));
+                }
+                if r.start == b.end && r.same_format(b) {
+                    return Some(format!(
+                        "{n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir. İki dilimi birleştirin."
+                    ));
+                }
+            }
+            before = Some(r);
+        }
+        None
+    }
+}
+
+impl TextRun {
+    /// Whether it has any format at all.
+    pub fn has_format(&self) -> bool {
+        self.bold || self.italic || self.underline || self.script.is_some() || self.color.is_some()
+    }
+
+    /// Whether two runs' letters look the same.
+    pub fn same_format(&self, other: &TextRun) -> bool {
+        self.bold == other.bold
+            && self.italic == other.italic
+            && self.underline == other.underline
+            && self.script == other.script
+            && self.color == other.color
+    }
+}
+
+/// The least and the most a multi-line text's line spacing may be (AutoCAD's own bounds).
+pub const MIN_LINE_SPACING: f64 = 0.25;
+pub const MAX_LINE_SPACING: f64 = 4.0;
+
+/// A range of a text's letters and their format (docs/adr/0182 §1).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TextRun {
+    /// Its first letter and the one past its last, counting Unicode scalar values.
+    pub start: u32,
+    pub end: u32,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub bold: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub italic: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub underline: bool,
+    /// Raised or lowered, at 0.6 of the height; absent: on the line.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub script: Option<TextScript>,
+    /// Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+}
+
+/// A run raised over the line (superscript) or lowered under it (subscript).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TextScript {
+    Super,
+    Sub,
 }
 
 /// Whether `n` may be a linked text's scale (docs/adr/0175 §4): finite, over 0.

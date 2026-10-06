@@ -689,7 +689,11 @@ impl App {
                     self.canvas(),
                     &crate::viewport::palette(self.canvas()),
                     &format,
-                    self.text_field.as_ref().and_then(|f| f.editing),
+                    self.text_field
+                        .as_ref()
+                        .and_then(|f| f.editing)
+                        .or(self.paragraph.as_ref().and_then(|p| p.editing)),
+                    self.paragraph_preview(),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -704,6 +708,8 @@ impl App {
                 // button's menus over it all (drawing_menus.rs).
                 // The text field over the drawing (text_field.rs).
                 let typing = self.text_field_view();
+                // The paragraph editor over the drawing (paragraph_editor.rs, docs/adr/0182 §4).
+                let writing = self.paragraph_view();
                 ContextMenu::controlled(
                     stack![area, labels, over]
                         // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).
@@ -711,6 +717,7 @@ impl App {
                         // The rollover card beside the pointer (hover_card.rs).
                         .extend(self.hover_card_view())
                         .extend(typing)
+                        .extend(writing)
                         .extend(self.command_bar()),
                     self.drawing_menu.map(|open| open.at),
                     move |_| self.drawing_menu_items(),
@@ -779,7 +786,11 @@ impl App {
             self.canvas(),
             &crate::viewport::palette(self.canvas()),
             &format,
-            self.text_field.as_ref().and_then(|f| f.editing),
+            self.text_field
+                .as_ref()
+                .and_then(|f| f.editing)
+                .or(self.paragraph.as_ref().and_then(|p| p.editing)),
+            self.paragraph_preview(),
         );
         stack![
             self.viewport.lens(camera, self.canvas()),

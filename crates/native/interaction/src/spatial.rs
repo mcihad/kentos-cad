@@ -38,8 +38,9 @@ use kentos_geometry_core::geom::dimension::dimension_measure;
 use kentos_geometry_core::ops::holes::HoleAt;
 use kentos_geometry_core::store::labels::{
     DIMENSION_PREFIXES, DIMENSION_UNITS, LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER,
-    LABEL_DIMENSION, LABEL_LEADER, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_TEXT,
-    LABEL_STRIDE, LABEL_TEXT, LabelRule, Placement,
+    LABEL_DIMENSION, LABEL_LEADER, LABEL_LINE, LABEL_PARAGRAPH_MASK, LABEL_PIECE_DIMENSION,
+    LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE, LABEL_TEXT, LabelRule,
+    Placement,
 };
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
@@ -417,6 +418,45 @@ impl Spatial {
                         width_factor: r[7],
                         mask: r[8],
                     }
+                } else if what == LABEL_LINE {
+                    LabelSpot::Line {
+                        slot,
+                        at,
+                        rotation: r[4],
+                        height: r[5],
+                        width_factor: r[6],
+                        start: r[7] as usize,
+                        end: r[8] as usize,
+                        piece: None,
+                    }
+                } else if what == LABEL_PIECE_LINE {
+                    let Shape::Text {
+                        text,
+                        width_factor,
+                        runs,
+                        ..
+                    } = self.piece(r[0], r[6])?.shape
+                    else {
+                        return None;
+                    };
+                    LabelSpot::Line {
+                        slot,
+                        at,
+                        rotation: r[4],
+                        height: r[5],
+                        width_factor: width_factor.unwrap_or(1.0),
+                        start: r[7] as usize,
+                        end: r[8] as usize,
+                        piece: Some(std::rc::Rc::new((text, runs.unwrap_or_default()))),
+                    }
+                } else if what == LABEL_PARAGRAPH_MASK {
+                    LabelSpot::ParagraphMask {
+                        slot,
+                        at,
+                        rotation: r[4],
+                        width: r[5],
+                        height: r[6],
+                    }
                 } else if what == LABEL_PIECE_DIMENSION {
                     let Shape::Dimension {
                         text, style, angle, ..
@@ -519,6 +559,30 @@ pub enum LabelSpot {
         attribute: Option<String>,
         width_factor: f64,
         mask: f64,
+    },
+    /// One line of a multi-line text (docs/adr/0182 §3): its letters
+    /// `start..end` (Unicode scalar values) from where its baseline starts,
+    /// turned by `rotation`, `height` high, its letters `width_factor` wide;
+    /// its words and runs its object's, or a block's piece's (`piece`).
+    Line {
+        slot: Slot,
+        at: Vec2,
+        rotation: f64,
+        height: f64,
+        width_factor: f64,
+        start: usize,
+        end: usize,
+        piece: Option<std::rc::Rc<(String, Vec<kentos_geometry_core::text::paragraph::Run>)>>,
+    },
+    /// A multi-line text's mask (docs/adr/0182 §3): the box from `at` (its
+    /// corner under the first letter's left) `width` along its baseline and
+    /// `height` up, turned by `rotation`, filled with the area's colour.
+    ParagraphMask {
+        slot: Slot,
+        at: Vec2,
+        rotation: f64,
+        width: f64,
+        height: f64,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.

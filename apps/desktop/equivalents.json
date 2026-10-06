@@ -210,6 +210,7 @@
     "apps/web/src/ui/shell/CursorInput.ts#CursorInput": { "desktop": "implemented", "where": "apps/desktop/src/preview.rs, input.rs (değer alanı)" },
     "apps/web/src/ui/shell/HoverCard.ts#HoverCard": { "desktop": "implemented", "where": "apps/desktop/src/hover_card.rs (ADR 0068, 0082)" },
     "apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor": { "desktop": "implemented", "where": "apps/desktop/src/text_field.rs (ADR 0060)" },
+    "apps/web/src/ui/shell/ParagraphEditor.ts#ParagraphEditor": { "desktop": "implemented", "where": "apps/desktop/src/paragraph_editor.rs (ADR 0182)" },
     "apps/web/src/ui/start/StartScreen.ts#openStartScreen": { "desktop": "implemented", "where": "apps/desktop/src/start.rs (ADR 0050)" },
     "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs, cloud/file_follow.rs (ADR 0058, 0080, 0113, 0114, 0119)", "reason": "Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },

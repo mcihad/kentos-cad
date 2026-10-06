@@ -38,7 +38,7 @@
 //! | ellipse | | c, major, ratio, t0, t1 | |
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
-//! | text | align if any (its place in `TextAlign::ALL`) | p, height, rotation, width factor if any | text |
+//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any | text, label's object if linked, each run's colour if it has one |
 //! | dimension | style if any | a, b, offset, height, angle if any, c if any, za if any, zb if any | text if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
@@ -48,7 +48,9 @@
 //! line weight (docs/adr/0139); a
 //! kind's optional fields from bit 8 up, in the order the table names them
 //! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
-//! parts; text: align, width factor, mask (no value; docs/adr/0145);
+//! parts; text: align, width factor, mask (no value; docs/adr/0145), link
+//! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
+//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour);
 //! dimension: text, style, angle, c, mask (no value), za, zb (docs/adr/0147);
 //! hatch: holes; insert: mirror; leader: text, arrow, mask (no value;
 //! docs/adr/0146)). A
@@ -79,8 +81,9 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
-    HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity,
-    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2,
+    HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity,
+    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextRun, TextScript,
+    Vec2,
 };
 
 use crate::error::{Code, KcadError};
@@ -110,6 +113,38 @@ const SYMBOL: u32 = 4;
 const WEIGHT: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
 const OPT: [u32; 7] = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14];
+
+/// A multi-line text's run's flags in the columns (docs/adr/0182): its
+/// format, and whether its colour follows.
+const RUN_BOLD: u32 = 1;
+const RUN_ITALIC: u32 = 2;
+const RUN_UNDERLINE: u32 = 4;
+const RUN_SCRIPT: u32 = 8 | 16;
+const RUN_SUPER: u32 = 8;
+const RUN_SUB: u32 = 16;
+const RUN_COLOR: u32 = 32;
+
+fn run_flags(r: &TextRun) -> u32 {
+    let mut bits = 0;
+    if r.bold {
+        bits |= RUN_BOLD;
+    }
+    if r.italic {
+        bits |= RUN_ITALIC;
+    }
+    if r.underline {
+        bits |= RUN_UNDERLINE;
+    }
+    bits |= match r.script {
+        Some(TextScript::Super) => RUN_SUPER,
+        Some(TextScript::Sub) => RUN_SUB,
+        None => 0,
+    };
+    if r.color.is_some() {
+        bits |= RUN_COLOR;
+    }
+    bits
+}
 const HOLE_BULGES: u32 = 1;
 const HOLE_ELEVATIONS: u32 = 2;
 const PART_BULGES: u32 = 1;
@@ -441,6 +476,7 @@ impl Packer {
                 mask,
                 label_of,
                 label_scale,
+                paragraph,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*height, *rotation]);
@@ -462,6 +498,28 @@ impl Packer {
                     flags |= OPT[3];
                     self.text(&label_of.map(|u| u.to_text()).unwrap_or_default());
                     self.float(label_scale.unwrap_or(f64::NAN));
+                }
+                // A multi-line text's box, line spacing and runs (docs/adr/0182): each run its
+                // range, its flags (`run_flags`) and, with RUN_COLOR, its colour.
+                if let Some(w) = paragraph.box_width {
+                    flags |= OPT[4];
+                    self.float(w);
+                }
+                if let Some(s) = paragraph.line_spacing {
+                    flags |= OPT[5];
+                    self.float(s);
+                }
+                if !paragraph.runs.is_empty() {
+                    flags |= OPT[6];
+                    self.int(count(paragraph.runs.len()));
+                    for r in &paragraph.runs {
+                        self.int(r.start);
+                        self.int(r.end);
+                        self.int(run_flags(r));
+                        if let Some(c) = &r.color {
+                            self.text(c);
+                        }
+                    }
                 }
             }
             Entity::Dimension(DimensionEntity {
@@ -861,7 +919,7 @@ fn allowed(kind: u8) -> u32 {
         2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         // A text's alignment, width factor and mask, then schema 18's link (docs/adr/0175 §4); a leader's three.
-        10 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        10 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
         14 => OPT[0] | OPT[1] | OPT[2],
         // A dimension: text, style, angle, c, then schema 9's mask, za, zb (docs/adr/0147).
         11 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
@@ -1030,6 +1088,36 @@ fn geometry(
             } else {
                 (None, None)
             };
+            let box_width = if has(4) { Some(c.float()?) } else { None };
+            let line_spacing = if has(5) { Some(c.float()?) } else { None };
+            let runs = if has(6) {
+                let n = c.usize()?;
+                let mut runs = Vec::with_capacity(n.min(1024));
+                for _ in 0..n {
+                    let (start, end, bits) = (c.int()?, c.int()?, c.int()?);
+                    let color = if bits & RUN_COLOR != 0 {
+                        Some(c.text(|| place("runs"))?)
+                    } else {
+                        None
+                    };
+                    runs.push(TextRun {
+                        start,
+                        end,
+                        bold: bits & RUN_BOLD != 0,
+                        italic: bits & RUN_ITALIC != 0,
+                        underline: bits & RUN_UNDERLINE != 0,
+                        script: match bits & RUN_SCRIPT {
+                            RUN_SUPER => Some(TextScript::Super),
+                            RUN_SUB => Some(TextScript::Sub),
+                            _ => None,
+                        },
+                        color,
+                    });
+                }
+                runs
+            } else {
+                Vec::new()
+            };
             Entity::Text(TextEntity {
                 base,
                 p,
@@ -1041,6 +1129,11 @@ fn geometry(
                 mask: has(2),
                 label_of,
                 label_scale,
+                paragraph: Paragraph {
+                    box_width,
+                    line_spacing,
+                    runs,
+                },
             })
         }
         11 => {

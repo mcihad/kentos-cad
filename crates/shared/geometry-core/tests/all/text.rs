@@ -96,3 +96,76 @@ fn hizayı_değiştir_keeps_the_text_where_it_is() {
         }
     }
 }
+
+/// Two JSON values alike, numbers compared as float64, exactly.
+fn alike(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
+        (Value::Array(x), Value::Array(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| alike(p, q))
+        }
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| alike(v, w)))
+        }
+        _ => a == b,
+    }
+}
+
+fn paragraph_file() -> Value {
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/text/v1/paragraph.json");
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    let file: Value = serde_json::from_str(&text).expect("JSON");
+    assert_eq!(file["format"], "kentos.text-cases");
+    assert_eq!(file["version"], 1);
+    file
+}
+
+/// A multi-line text's lines, box and point (docs/adr/0182 §2): bit for bit
+/// as the independent reference lays them out.
+#[test]
+fn a_multi_line_text_breaks_and_stands_as_the_rules_say() {
+    let file = paragraph_file();
+    let cases = file["layout"].as_array().expect("layout");
+    assert!(cases.len() >= 15);
+    for c in cases {
+        let got = call("textLayout", json!([c["text"]]));
+        assert!(
+            alike(&got, &c["want"]),
+            "{}: {got} ≠ {}",
+            c["name"],
+            c["want"]
+        );
+    }
+}
+
+/// The editor's runs (docs/adr/0182 §4): a format toggled over letters, and
+/// the runs following an edit of the text.
+#[test]
+fn the_editor_s_runs_follow_the_rules() {
+    let file = paragraph_file();
+    for c in file["toggle"].as_array().expect("toggle") {
+        let got = call(
+            "textRunsToggle",
+            json!([c["runs"], c["len"], c["start"], c["end"], c["toggle"]]),
+        );
+        assert!(
+            alike(&got, &c["want"]),
+            "{}: {got} ≠ {}",
+            c["name"],
+            c["want"]
+        );
+    }
+    for c in file["retext"].as_array().expect("retext") {
+        let got = call(
+            "textRunsRetext",
+            json!([c["runs"], c["before"], c["after"]]),
+        );
+        assert!(
+            alike(&got, &c["want"]),
+            "{}: {got} ≠ {}",
+            c["name"],
+            c["want"]
+        );
+    }
+}

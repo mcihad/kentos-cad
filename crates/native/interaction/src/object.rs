@@ -119,17 +119,9 @@ impl ObjectAction {
         let changes: Vec<EntityEdit> = texts
             .iter()
             .filter_map(|(slot, t)| {
-                let place = TextPlace {
-                    p: Vec2::new(t.p.x, t.p.y),
-                    text: &t.text,
-                    height: t.height,
-                    rotation: t.rotation,
-                    align: t
-                        .align
-                        .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
-                    width_factor: t.width_factor,
-                };
-                let (p, rotation) = place.readable(font)?;
+                // A multi-line text turns about its box's middle too (docs/adr/0182).
+                let s = shape(&Entity::Text(t.clone()));
+                let (p, rotation) = TextPlace::of(&s)?.readable(font)?;
                 let turned = TextEntity {
                     p: kentos_contracts::Vec2 { x: p.x, y: p.y },
                     rotation,

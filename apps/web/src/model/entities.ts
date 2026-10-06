@@ -213,6 +213,69 @@ export interface TextEntity extends EntityBase {
   labelOf?: string;
   /** The scale's denominator (1:N) the linked label is written at; finite, over 0. */
   labelScale?: number;
+  /** Metres, over 0: the lines wrap word by word to this width (docs/adr/0182 §1); absent: they end only at line breaks. */
+  boxWidth?: number;
+  /** The baselines' distance in 5/3 of the height (DXF's group 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`. */
+  lineSpacing?: number;
+  /**
+   * Its letters' formats (docs/adr/0182 §1): ranges of the text's Unicode scalar values (not UTF-16 units), in order,
+   * apart, each with a format, touching runs of one format joined; absent: none.
+   */
+  runs?: TextRun[];
+}
+
+/** A range of a text's letters and their format (docs/adr/0182 §1); a flag that is off is the field's absence. */
+export interface TextRun {
+  start: number;
+  end: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  /** Raised or lowered, at 0.6 of the height. */
+  script?: 'super' | 'sub';
+  /** Its own colour, as an object's (`#E5484D` or a theme name); absent: the text's. */
+  color?: string;
+}
+
+/** The least and the most a multi-line text's line spacing may be (AutoCAD's own; the contracts' `MIN_LINE_SPACING`). */
+export const MIN_LINE_SPACING = 0.25;
+export const MAX_LINE_SPACING = 4;
+
+/** Whether a text is laid out in lines (docs/adr/0182): it has a line break, a box, a line spacing or letter formats. */
+export const isParagraph = (t: Pick<TextEntity, 'text' | 'boxWidth' | 'lineSpacing' | 'runs'>): boolean =>
+  t.boxWidth !== undefined || t.lineSpacing !== undefined || (t.runs?.length ?? 0) > 0 || t.text.includes('\n');
+
+const hasFormat = (r: TextRun): boolean => r.bold === true || r.italic === true || r.underline === true || r.script !== undefined || r.color !== undefined;
+const sameFormat = (a: TextRun, b: TextRun): boolean =>
+  (a.bold ?? false) === (b.bold ?? false) && (a.italic ?? false) === (b.italic ?? false) && (a.underline ?? false) === (b.underline ?? false) && a.script === b.script && a.color === b.color;
+
+/**
+ * What is wrong with a multi-line text's fields for its `text` (docs/adr/0182 §1, the contracts' `Paragraph::problem`,
+ * word for word): the field and the refusal's words; null when they may be written.
+ */
+export function paragraphProblem(text: string, p: Pick<TextEntity, 'boxWidth' | 'lineSpacing' | 'runs'>): ['boxWidth' | 'lineSpacing' | 'runs', string] | null {
+  const w = p.boxWidth;
+  if (w !== undefined && !(Number.isFinite(w) && w > 0))
+    return ['boxWidth', `Çok satırlı yazının kutu genişliği sıfırdan büyük olmalı; ${w} verildi. Genişliği metre olarak, pozitif verin ya da alanı kaldırın (satırlar yalnız satır sonlarında biter).`];
+  const s = p.lineSpacing;
+  if (s !== undefined && !(s >= MIN_LINE_SPACING && s <= MAX_LINE_SPACING))
+    return ['lineSpacing', `Çok satırlı yazının satır aralığı ${MIN_LINE_SPACING} ile ${MAX_LINE_SPACING} arasında olmalı; ${s} verildi. Aralığı bu sınırlarda verin ya da alanı kaldırın (1).`];
+  const letters = [...text].length;
+  let before: TextRun | null = null;
+  for (const [i, r] of (p.runs ?? []).entries()) {
+    const n = i + 1;
+    if (r.start >= r.end || r.end > letters)
+      return ['runs', `${n}. biçim dilimi ${r.start}–${r.end}: başı sonundan önce olmalı, sonu yazının harf sayısını (${letters}) aşmamalı. Dilimi yazının harfleri içinde verin.`];
+    if (!hasFormat(r)) return ['runs', `${n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz. Dilime bir biçim verin ya da dilimi çıkarın.`];
+    if (r.color === '') return ['runs', `${n}. biçim diliminin rengi boş. Bir renk verin ya da rengi kaldırın.`];
+    if (before) {
+      if (r.start < before.end)
+        return ['runs', `${n}. biçim dilimi öncekiyle örtüşüyor ya da ondan önce başlıyor; dilimler sıralı ve ayrı olmalı. Dilimleri sırayla, örtüşmeden verin.`];
+      if (r.start === before.end && sameFormat(r, before)) return ['runs', `${n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir. İki dilimi birleştirin.`];
+    }
+    before = r;
+  }
+  return null;
 }
 
 /**

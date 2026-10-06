@@ -32,8 +32,8 @@ use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -693,7 +693,9 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 19 when the project has layer
+/// The oldest schema that holds the drawing: 20 when a text of it or of a
+/// block definition has a box, a line spacing or letter formats
+/// (docs/adr/0182 §1), 19 when the project has layer
 /// states (docs/adr/0177 §4), 18 when a text of it writes an
 /// object's label (`labelOf`, `labelScale`), 17 when a polyline or a point,
 /// of it or of a block definition, has parts, 16 when its survey settings
@@ -718,6 +720,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             _ => false,
         })
     };
+    let paragraphs = |list: &[Entity]| {
+        list.iter()
+            .any(|e| matches!(e, Entity::Text(t) if !t.paragraph.is_plain()))
+    };
+    if paragraphs(&doc.entities) || doc.blocks.iter().any(|b| paragraphs(&b.entities)) {
+        return SCHEMA_WITH_PARAGRAPHS;
+    }
     if !doc.settings.layer_states.is_empty() {
         return SCHEMA_WITH_LAYER_STATES;
     }

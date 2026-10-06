@@ -75,14 +75,14 @@ pub fn start(
     let Some(a) = align else {
         return p;
     };
-    let o = TextPlace {
-        p: CoreVec2::new(p.x, p.y),
-        text: words,
+    let o = TextPlace::line(
+        CoreVec2::new(p.x, p.y),
+        words,
         height,
         rotation,
-        align: crate::blocks::core_align(a),
+        crate::blocks::core_align(a),
         width_factor,
-    }
+    )
     .origin(Font::from_id("arimo"));
     Vec2 { x: o.x, y: o.y }
 }

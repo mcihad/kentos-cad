@@ -61,10 +61,10 @@ use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
     continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, parallel,
-    polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle, select_containing,
-    select_fence, set_elevation, spline, split, station_offset, text, text_file, topology,
-    vertex_points,
+    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
+    parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
+    select_containing, select_fence, set_elevation, spline, split, station_offset, text, text_file,
+    topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -120,6 +120,7 @@ pub const TOOLS: &[&str] = &[
     point::SPOT_ID,
     divide::ID,
     text::ID,
+    paragraph::ID,
     text_file::ID,
     leader::ID,
     dimension::ID,
@@ -309,6 +310,7 @@ impl Session {
             point::SPOT_ID => Box::new(Point::spot()),
             divide::ID => Box::new(crate::divide::Divide::new()),
             text::ID => Box::new(crate::text::Text::new()),
+            paragraph::ID => Box::new(crate::paragraph::ParagraphText::new()),
             text_file::ID => Box::new(crate::text_file::PlaceTextFile::new()),
             leader::ID => Box::new(crate::leader::Leader::new()),
             dimension::ID => Box::new(crate::dimension::Dimension::new()),
@@ -979,6 +981,18 @@ impl Session {
     pub fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.text_typed(text, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// The paragraph editor's answer for the running tool (Çok satırlı yazı, docs/adr/0182 §4).
+    pub fn paragraph_typed(
+        &mut self,
+        typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        cx: &mut Context<'_>,
+    ) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.paragraph_typed(typed, cx);
         }
         self.settle(cx);
     }

@@ -1,22 +1,21 @@
 //! Leaders and their notes (docs/adr/0146 §8). A LEADER becomes a leader;
 //! the MTEXT its 340 names, before or after it in the file, becomes its note
-//! instead of a text: the note's first line gives the leader its words,
-//! height, turn and mask, and its other lines stay texts (said). Whichever
-//! of the two comes first waits for the other here. A leader already in the
-//! drawing takes the first line when its MTEXT comes, and that text, the
-//! last thing written, is taken out again. A note already in the drawing
-//! gives its first line's place to the leader. Either way nothing else
-//! moves, so the places other objects are known by stay true. The note's
-//! other lines go under it, as they hang under the first in the MTEXT. A
-//! MULTILEADER is its first leader line, its MTEXT content its note in the
-//! same way.
+//! instead of a text: the note's first line with words gives the leader its
+//! words, height, turn and mask, and its other lines stay a multi-line text
+//! (said; docs/adr/0182 §5). Whichever of the two comes first waits for the
+//! other here. A leader already in the drawing takes the first line when its
+//! MTEXT comes, and that text, the last thing written, gives way to the
+//! other lines (or is taken out). A note already in the drawing gives its
+//! place to the leader, the other lines written after. Either way nothing
+//! else moves, so the places other objects are known by stay true. The
+//! note's other lines go under it, as they hang under the first in the
+//! MTEXT. A MULTILEADER is its first leader line, its MTEXT content its note
+//! in the same way.
 
 use std::collections::HashMap;
 
-use std::ops::Range;
-
 use kentos_contracts::{
-    Entity, EntityBase, LeaderArrow, LeaderEntity, TextAlign, TextEntity, Vec2,
+    Entity, EntityBase, LeaderArrow, LeaderEntity, Paragraph, TextAlign, TextEntity, TextRun, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::leader::layout;
@@ -59,11 +58,10 @@ struct Waiting {
     line: u32,
 }
 
-/// An MTEXT written: where its first line's text is, and how many it gave.
+/// An MTEXT written: where its text is.
 #[derive(Clone, Copy)]
 struct Note {
     index: usize,
-    lines: usize,
 }
 
 /// What KentOS's data says exactly of a leader's note.
@@ -77,6 +75,54 @@ struct Exact {
 fn same_turn(a: f64, b: f64) -> bool {
     let d = (a - b).rem_euclid(360.0);
     d < 1e-9 || 360.0 - d < 1e-9
+}
+
+/// An MTEXT's text as a leader's note: its first line with words, a
+/// one-line text of its words alone, and the lines after it, a multi-line
+/// text of their own (none when they have no words).
+fn split_note(t: &TextEntity) -> (TextEntity, Option<TextEntity>) {
+    let letters: Vec<char> = t.text.chars().collect();
+    let line_end = |from: usize| {
+        letters[from..]
+            .iter()
+            .position(|&c| c == '\n')
+            .map_or(letters.len(), |k| from + k)
+    };
+    let (mut a, mut b) = (0, line_end(0));
+    while b < letters.len() && letters[a..b].iter().all(|c| c.is_whitespace()) {
+        a = b + 1;
+        b = line_end(a);
+    }
+    let first = TextEntity {
+        text: letters[a..b].iter().collect(),
+        paragraph: Paragraph::default(),
+        ..t.clone()
+    };
+    let from = b + 1;
+    let rest =
+        (from < letters.len() && letters[from..].iter().any(|c| !c.is_whitespace())).then(|| {
+            let shift = from as u32;
+            let runs = t
+                .paragraph
+                .runs
+                .iter()
+                .filter(|r| r.end > shift)
+                .map(|r| TextRun {
+                    start: r.start.max(shift) - shift,
+                    end: r.end - shift,
+                    ..r.clone()
+                })
+                .collect();
+            TextEntity {
+                text: letters[from..].iter().collect(),
+                paragraph: Paragraph {
+                    runs,
+                    ..t.paragraph.clone()
+                },
+                ..t.clone()
+            }
+        });
+    (first, rest)
 }
 
 /// The leader takes its note from the first line of its MTEXT: the words
@@ -160,31 +206,36 @@ impl Emitter<'_> {
         }
     }
 
-    /// The other lines of a leader's MTEXT (`lines`, texts) under its note:
-    /// each as far from the note along the note's up as it was from the
-    /// first line (`first`), aligned and turned as the note is.
-    fn under_note(&mut self, l: &LeaderEntity, first: &TextEntity, lines: Range<usize>) {
+    /// The other lines of a leader's MTEXT (`rest`, a multi-line text) under
+    /// its note: its first line's top one line pitch under the note's,
+    /// aligned at the left, centre or right as the note is, turned as it.
+    fn under_note(l: &LeaderEntity, mut rest: TextEntity) -> TextEntity {
         let pts: Vec<CoreVec2> = l.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
         let arrow = l.arrow.map(LeaderArrow::name);
         let Some(laid) = layout(&pts, l.height, l.rotation, arrow, true) else {
-            return;
+            return rest;
         };
         let (Some(at), Some(align)) = (laid.note_point, laid.note_align) else {
-            return;
+            return rest;
         };
-        let align = TextAlign::from_name(align.name());
-        let (s, c) = sin_cos_deg(first.rotation);
-        for i in lines {
-            if let Some(Entity::Text(t)) = self.out.entities.get_mut(i) {
-                let k = (t.p.x - first.p.x) * -s + (t.p.y - first.p.y) * c;
-                t.p = Vec2 {
-                    x: at.x - s * k,
-                    y: at.y + c * k,
-                };
-                t.align = align;
-                t.rotation = l.rotation;
-            }
-        }
+        let h = rest.height;
+        let pitch = h * 5.0 / 3.0 * rest.paragraph.line_spacing.unwrap_or(1.0);
+        // From the note's point down to its baseline, one pitch on, and up to that line's top.
+        let k = h - pitch - align.up() * h;
+        let (s, c) = sin_cos_deg(l.rotation);
+        rest.p = Vec2 {
+            x: at.x - s * k,
+            y: at.y + c * k,
+        };
+        rest.align = Some(if align.along() == 0.0 {
+            TextAlign::TopLeft
+        } else if align.along() == 1.0 {
+            TextAlign::TopRight
+        } else {
+            TextAlign::TopCenter
+        });
+        rest.rotation = l.rotation;
+        rest
     }
 
     /// The text at `index` gives its place to `leader`.
@@ -280,19 +331,19 @@ impl Emitter<'_> {
             return self.push(Entity::Leader(leader));
         };
         if let Some(note) = self.pending.notes.remove(&h)
-            && let Some(Entity::Text(first)) = self.out.entities.get(note.index)
+            && let Some(Entity::Text(text)) = self.out.entities.get(note.index)
         {
-            // Its MTEXT came first: the leader takes the first line's place.
-            let first = first.clone();
+            // Its MTEXT came first: the leader takes its place, the other lines come after.
+            let (first, rest) = split_note(text);
             give_note(&mut leader, &first, *hook, &exact);
-            let rest = note.index + 1..note.index + note.lines;
-            self.under_note(&leader, &first, rest);
+            let rest = rest.map(|r| Self::under_note(&leader, r));
             let mut leader = Entity::Leader(leader);
             if let Some(meta) = meta {
                 apply_meta(meta, &mut leader);
             }
             self.take_place(note.index, leader);
-            if note.lines > 1 {
+            if let Some(rest) = rest {
+                self.push(Entity::Text(rest));
                 self.note(LEADER, MORE_LINES, e.line);
             }
             return;
@@ -313,13 +364,13 @@ impl Emitter<'_> {
         }
     }
 
-    /// An MTEXT (handle `h`) just written as texts from `start`: a leader
+    /// An MTEXT (handle `h`) just written as a text at `start`: a leader
     /// waiting for it takes its first line; otherwise a LEADER may still claim it.
     pub(super) fn mtext_written(&mut self, h: u64, start: usize) {
         let end = self.out.entities.len();
         if let Some(w) = self.pending.leaders.remove(&h) {
             // An empty MTEXT gave nothing: the leader stays without a note.
-            let Some(Entity::Text(first)) = self
+            let Some(Entity::Text(text)) = self
                 .out
                 .entities
                 .get(start)
@@ -328,27 +379,26 @@ impl Emitter<'_> {
             else {
                 return;
             };
+            let (first, rest) = split_note(&text);
             let Some(Entity::Leader(l)) = self.out.entities.get_mut(w.index) else {
                 return;
             };
             give_note(l, &first, w.hook, &w.exact);
             let l = l.clone();
-            let text = self.out.entities.remove(start);
-            self.tally(&text, false);
-            self.under_note(&l, &first, start..end - 1);
-            if end - start > 1 {
-                self.note(LEADER, MORE_LINES, w.line);
+            match rest {
+                Some(rest) => {
+                    self.out.entities[start] = Entity::Text(Self::under_note(&l, rest));
+                    self.note(LEADER, MORE_LINES, w.line);
+                }
+                None => {
+                    let text = self.out.entities.remove(start);
+                    self.tally(&text, false);
+                }
             }
             return;
         }
         if end > start {
-            self.pending.notes.insert(
-                h,
-                Note {
-                    index: start,
-                    lines: end - start,
-                },
-            );
+            self.pending.notes.insert(h, Note { index: start });
         }
     }
 
@@ -438,6 +488,7 @@ impl Emitter<'_> {
                 m.text_dir,
                 None,
                 text,
+                0.0,
                 m.spacing,
                 fill,
                 "",
@@ -445,13 +496,19 @@ impl Emitter<'_> {
                 e,
             );
             let end = self.out.entities.len();
-            if let Some(Entity::Text(first)) =
-                self.out.entities.get(start).filter(|_| end > start).cloned()
+            if let Some(Entity::Text(text)) = self
+                .out
+                .entities
+                .get(start)
+                .filter(|_| end > start)
+                .cloned()
             {
+                let (first, rest) = split_note(&text);
                 give_note(&mut leader, &first, false, &Exact::default());
-                self.under_note(&leader, &first, start + 1..end);
+                let rest = rest.map(|r| Self::under_note(&leader, r));
                 self.take_place(start, Entity::Leader(leader));
-                if end - start > 1 {
+                if let Some(rest) = rest {
+                    self.push(Entity::Text(rest));
                     self.note(MLEADER, MORE_LINES, e.line);
                 }
                 return;

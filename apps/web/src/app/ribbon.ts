@@ -218,7 +218,7 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Açıklama',
     // AutoCAD's Annotate tab, a panel a kind; a tool the draw menu's Açıklama block gains later shows in a panel of its own.
     sources: [
-      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace'] },
+      { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.mtext', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace'] },
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension'] },
       { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
       { pick: 'Tarama', icon: 'hatch', commands: ['tool.hatch'] },

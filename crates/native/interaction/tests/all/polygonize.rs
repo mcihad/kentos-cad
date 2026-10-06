@@ -68,6 +68,7 @@ fn text(b: &mut Bench, at: [f64; 2], value: &str) -> Slot {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
     )
 }

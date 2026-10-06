@@ -71,6 +71,7 @@ mod modes;
 mod navigation;
 mod navigation_cards;
 mod opening;
+mod paragraph_editor;
 #[cfg(test)]
 mod perf;
 mod point_calc;

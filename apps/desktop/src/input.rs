@@ -146,6 +146,8 @@ impl App {
             match change {
                 // Yazı's field opens over the drawing (text_field.rs).
                 ViewChange::Text(field) => self.open_text_field(field),
+                // Çok satırlı yazı's editor opens over the drawing (paragraph_editor.rs).
+                ViewChange::Paragraph(field) => self.open_paragraph(field),
                 // Blok oluştur's base point: the window that names the block (blocks.rs).
                 ViewChange::DefineBlock(base) => self.open_block_define(base),
                 // Blok ekle's point: the block's attribute values are asked (attribute_values.rs).
@@ -314,6 +316,7 @@ impl App {
                 | viewport::Event::Panned { .. }
         ) {
             self.close_text_field(true);
+            self.close_paragraph(true);
             // The status bar's scale field closes as a blurred field would (screen_scale.rs).
             self.scale_field = None;
         }
@@ -607,6 +610,10 @@ impl App {
                 }
                 _ => {}
             }
+            return Task::none();
+        }
+        // 1. The paragraph editor has its own keys (Esc, Ctrl+Enter); nothing reaches the app.
+        if self.paragraph.is_some() {
             return Task::none();
         }
         // 1. The text field over the drawing takes the keys: Esc drops what

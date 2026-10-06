@@ -180,8 +180,22 @@ pub(crate) fn vector_content(
                 paths: mine
                     .iter()
                     .filter_map(|t| t.mask.as_deref().map(mask_of))
+                    .chain(mine.iter().filter_map(|t| {
+                        t.underline.as_deref().map(|bar| MapPath {
+                            points: bar.to_vec(),
+                            closed: true,
+                            holes: Vec::new(),
+                            stroke: None,
+                            fill: Some(hex_of(t.color)),
+                        })
+                    }))
                     .collect(),
-                texts: mine.iter().map(|t| text_of(t, font)).collect(),
+                // A multi-line text's mask has no words (docs/adr/0182 §3).
+                texts: mine
+                    .iter()
+                    .filter(|t| !t.text.is_empty())
+                    .map(|t| text_of(t, font))
+                    .collect(),
             })
         })
         .collect();

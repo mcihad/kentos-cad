@@ -34,6 +34,8 @@ describe("Öznitelikler's text rows", () => {
     expect(rows.map((r) => [r.label, r.value])).toEqual([
       ['Hiza', 'Orta'],
       ['Genişlik çarpanı', '0.8'],
+      ['Kutu genişliği', 'Kutusuz'],
+      ['Satır aralığı', '1'],
       ['Zemin', 'Açık'],
     ]);
     const menu = items(row(rows, 'Hiza'));
@@ -45,7 +47,8 @@ describe("Öznitelikler's text rows", () => {
   it('a selection that differs says Çeşitli', () => {
     const { h, a, b } = scene();
     const rows = textRows(h.ctx, [a, b], false);
-    expect(rows.map((r) => r.value)).toEqual(['Çeşitli', 'Çeşitli', 'Çeşitli']);
+    // Neither has a box nor a spacing of its own: the two agree (docs/adr/0182 §4).
+    expect(rows.map((r) => r.value)).toEqual(['Çeşitli', 'Çeşitli', 'Kutusuz', '1', 'Çeşitli']);
     expect(items(row(rows, 'Hiza')).some((i) => i.checked)).toBe(false);
   });
 

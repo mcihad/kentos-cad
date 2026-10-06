@@ -3,7 +3,7 @@ import { DisposableStore, listen } from '../core/disposable';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { changedDefinitions } from '../model/blocks';
-import type { Entity, TextAlign } from '../model/entities';
+import type { Entity, TextAlign, TextRun } from '../model/entities';
 import { dimensionLabel, type DimensionLayout } from '../model/geom/dimension';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
@@ -19,7 +19,7 @@ import type { BackendKind, RenderBackend } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
-import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
+import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible, paragraphRecords } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
 import { NavigationCards } from './navigationCards';
@@ -53,6 +53,29 @@ export interface TextInputRequest {
   /** Enter in the empty field (Kılavuz: the arrow without a note, docs/adr/0146 §7); none: as Esc. */
   empty?(): void;
   cancel(): void;
+}
+
+/**
+ * Where the paragraph editor opens (Çok satırlı yazı, docs/adr/0182 §4) and how its text will look: its point (the
+ * box's top left; the text's alignment the top's left), height in metres, turn in degrees, box width (none: the lines
+ * end at their breaks), line spacing (none: 1) and mask; what Tamam and Vazgeç answer.
+ */
+export interface ParagraphInputRequest {
+  at: Vec2;
+  height: number;
+  rotation: number;
+  boxWidth?: number;
+  lineSpacing?: number;
+  mask?: boolean;
+  commit(text: string, runs: TextRun[]): void;
+  cancel(): void;
+}
+
+/** A multi-line text being written or edited, drawn as it will be: its label records (`textLines`), words and runs. */
+export interface ParagraphPreview {
+  records: readonly number[];
+  text: string;
+  runs: readonly TextRun[];
 }
 
 /** Holding the right button this long opens the command menu instead of confirming. */
@@ -108,6 +131,8 @@ interface ViewportEvents {
   editText: { id: number };
   /** A tool asks the UI for new text typed in place (see requestTextInput). */
   textInput: TextInputRequest;
+  /** Çok satırlı yazı asks for the paragraph editor at its box (see requestParagraphInput). */
+  paragraphInput: ParagraphInputRequest;
 }
 
 /**
@@ -182,6 +207,8 @@ export class ViewportController {
   private moveKeys = { shift: false, ctrl: false, alt: false };
   /** Entity whose text is being edited inline (hidden from the overlay). */
   private editingId: number | null = null;
+  /** The multi-line text the paragraph editor writes (docs/adr/0182 §4), over the labels. */
+  private paragraphPreview: ParagraphPreview | null = null;
   private snap: SnapHit | null = null;
   private panFrom: Vec2 | null = null;
   /** Whether the pan being dragged has kept the view it left (Önceki görünüm). */
@@ -559,6 +586,17 @@ export class ViewportController {
   /** Opens a text field at a point so typing goes into the drawing, not to shortcuts. */
   requestTextInput(req: TextInputRequest): void {
     this.events.emit('textInput', req);
+  }
+
+  /** Opens the paragraph editor at a multi-line text's box (Çok satırlı yazı, docs/adr/0182 §4). */
+  requestParagraphInput(req: ParagraphInputRequest): void {
+    this.events.emit('paragraphInput', req);
+  }
+
+  /** The multi-line text the paragraph editor writes, drawn over the rest as it will be; null: none. */
+  setParagraphPreview(preview: ParagraphPreview | null): void {
+    this.paragraphPreview = preview;
+    this.requestOverlay();
   }
 
   /** Hide an entity's overlay text while an inline editor covers it. */
@@ -1456,6 +1494,7 @@ export class ViewportController {
     g.clip();
     g.translate(x, y);
     drawLabels(g, this.ctx.doc, lens, pal, this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l) => this.dimensionText(l), (b) => this.picker.blockPieces(b));
+    if (this.paragraphPreview) paragraphRecords(g, pal, lens, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs);
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), lens, pal, this.ctx.tools.active.activeGrip?.() ?? null);
     drawMarkedVertices(g, this.ctx.selection.vertices.value, lens, pal);
@@ -1481,6 +1520,7 @@ export class ViewportController {
     const pal = this.palette;
     const l0 = import.meta.env.DEV ? performance.now() : 0;
     this.drawCachedLabels(g);
+    if (this.paragraphPreview) paragraphRecords(g, pal, cam, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs);
     const l1 = import.meta.env.DEV ? performance.now() : 0;
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);

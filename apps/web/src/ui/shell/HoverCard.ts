@@ -133,7 +133,8 @@ export function cardRows(e: Entity, format: Formatter): [string, string][] {
   const space = spaceLength(e);
   if (space) rows.push([space.label, format.length(space.value)]);
   if (e.kind === 'circle' || e.kind === 'arc') rows.push(['Yarıçap', format.length(e.r)]);
-  if (e.kind === 'text') rows.push(['Metin', e.text]);
+  // A multi-line text's breaks as ⏎ (docs/adr/0182): the card's rows are one line each.
+  if (e.kind === 'text') rows.push(['Metin', e.text.replaceAll('\n', ' ⏎ ')]);
   if (e.kind === 'point') {
     // A multi-point object's points, and their elevation when they share one (docs/adr/0174).
     if (e.parts?.length) rows.push(['Nokta', String(e.parts.length + 1)]);

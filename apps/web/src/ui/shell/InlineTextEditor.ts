@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
-import { textAlignShares, type Entity } from '../../model/entities';
+import { isParagraph, textAlignShares, type Entity } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import { layoutDimension, type DimensionLayout } from '../../model/geom/dimension';
 import { leaderLayout } from '../../model/geom/leader';
@@ -58,6 +58,8 @@ export class InlineTextEditor extends Component {
   private openEdit(id: number): void {
     const e = this.ctx.doc.get(id);
     if (!e || (e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'leader')) return;
+    // A multi-line text is the paragraph editor's (docs/adr/0182 §4).
+    if (e.kind === 'text' && isParagraph(e)) return;
     this.close(true);
     const place = placementOf(e, this.ctx.view);
     if (!place) return;

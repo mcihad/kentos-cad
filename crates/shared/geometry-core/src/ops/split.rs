@@ -305,6 +305,9 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 align,
                 width_factor,
                 mask,
+                box_width,
+                line_spacing,
+                runs,
             },
             Shape::Text {
                 p: q,
@@ -314,6 +317,9 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 align: a,
                 width_factor: w,
                 mask: m,
+                box_width: bw,
+                line_spacing: ls,
+                runs: rs,
             },
         ) => {
             same_pt(*p, *q)
@@ -326,6 +332,12 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                     (x, y) => x.is_none() && y.is_none(),
                 }
                 && mask == m
+                && match (box_width, bw) {
+                    (Some(x), Some(y)) => same(*x, *y),
+                    (x, y) => x.is_none() && y.is_none(),
+                }
+                && line_spacing == ls
+                && runs == rs
         }
         _ => a == b,
     }

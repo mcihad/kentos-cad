@@ -191,8 +191,16 @@ pub const SCHEMA_WITH_LINKED_TEXTS: u32 = 18;
 /// a drawing that has them rather than drop them on its next save.
 pub const SCHEMA_WITH_LAYER_STATES: u32 = 19;
 
+/// Document schema 20 (docs/specs/kcad-v2.md §6.1): schema 19 and the
+/// multi-line text's box width, line spacing and letter formats, a text's
+/// `boxWidth`, `lineSpacing` and `runs` (docs/adr/0182 §1), in the drawing
+/// and in block definitions. A writer writes it only when a text has one:
+/// any other drawing stays 19 or older, byte for byte; a reader of those
+/// refuses a drawing that has them rather than lose its texts' formats.
+pub const SCHEMA_WITH_PARAGRAPHS: u32 = 20;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 18] = [
+pub const SCHEMAS: [u32; 19] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -211,6 +219,7 @@ pub const SCHEMAS: [u32; 18] = [
     SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINKED_TEXTS,
     SCHEMA_WITH_LAYER_STATES,
+    SCHEMA_WITH_PARAGRAPHS,
 ];
 
 /// The file a drawing is saved as.

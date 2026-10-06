@@ -202,6 +202,7 @@ mod tests {
             ctrl: None,
             overview: None,
             magnifier: None,
+            paragraph: None,
             expect: None,
             note: None,
         });

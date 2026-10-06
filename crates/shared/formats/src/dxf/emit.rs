@@ -12,8 +12,9 @@ use kentos_contracts::blocks::{nesting, turn_of};
 use kentos_contracts::{
     ArcEntity, AttributeDefinition, BlockDefinition, BlockId, Bounds, CircleEntity,
     ConstructionEntity, EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern,
-    HatchPatternType, InsertEntity, LineEntity, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity,
-    PointEntity, RingGeometry, SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
+    HatchPatternType, InsertEntity, LineEntity, MAX_LINE_SPACING, MAX_LINE_WEIGHT,
+    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
 use super::aci;
@@ -22,7 +23,7 @@ use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
 use super::hatch::{Edge, Hatch, Path};
 use super::justify;
 use super::leaders::DimStyle;
-use super::strings::{has_formatting, mtext_lines, text_codes};
+use super::strings::{mtext_content, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
     Similarity, Tf, arc_points, arc_steps, bulge_path_points, bulge_path_zs, dist, ellipse_from,
@@ -337,6 +338,13 @@ fn apply_meta(meta: &Meta, e: &mut Entity) {
         && let Entity::Text(t) = e
     {
         t.mask = true;
+    }
+    // A multi-line text's exact turn, while its MTEXT's direction still gives it (docs/adr/0182 §5).
+    if let (Some(turn), Entity::Text(t)) = (meta.note_turn, e) {
+        let d = (turn - t.rotation).rem_euclid(360.0);
+        if d < 1e-9 || 360.0 - d < 1e-9 {
+            t.rotation = turn;
+        }
     }
 }
 
@@ -1005,6 +1013,7 @@ impl<'l> Emitter<'l> {
                 xdir,
                 rotation,
                 text,
+                width,
                 spacing,
                 fill,
                 style,
@@ -1019,6 +1028,7 @@ impl<'l> Emitter<'l> {
                     *xdir,
                     *rotation,
                     text,
+                    *width,
                     *spacing,
                     *fill,
                     style,
@@ -1628,7 +1638,7 @@ impl<'l> Emitter<'l> {
             style,
         };
         match self.text_frame(ctx, &t, &words, e) {
-            Ok(frame) => self.push_text(&frame, words, false, b),
+            Ok(frame) => self.push_text(&frame, words, false, Paragraph::default(), b),
             Err(why) => self.skip(&e.name, why, e.line),
         }
     }
@@ -1825,12 +1835,23 @@ impl<'l> Emitter<'l> {
     }
 
     /// A text where `f` stands it; `mask`: over a mask of its own (an
-    /// MTEXT's background fill; KentOS's data gives a TEXT's).
-    fn push_text(&mut self, f: &Frame, text: String, mask: bool, b: EntityBase) {
+    /// MTEXT's background fill; KentOS's data gives a TEXT's); `paragraph`:
+    /// a multi-line text's box width (the file's, along its baseline),
+    /// spacing and formats (docs/adr/0182 §5).
+    fn push_text(
+        &mut self,
+        f: &Frame,
+        text: String,
+        mask: bool,
+        paragraph: Paragraph,
+        b: EntityBase,
+    ) {
         let Some((p, rotation, height, widen)) = mapped_text(f.m, f.anchor, f.rotation, f.height)
         else {
             return;
         };
+        // The box widens as the baseline does: its height's scale times the widening (1 unturned, unscaled).
+        let along = height / f.height * widen;
         self.push(Entity::Text(TextEntity {
             base: b,
             p,
@@ -1842,6 +1863,10 @@ impl<'l> Emitter<'l> {
             mask,
             label_of: None,
             label_scale: None,
+            paragraph: Paragraph {
+                box_width: paragraph.box_width.map(|w| w * along),
+                ..paragraph
+            },
         }));
     }
 
@@ -1856,14 +1881,15 @@ impl<'l> Emitter<'l> {
         xdir: Option<P3>,
         rotation: Option<f64>,
         text: &str,
+        width: f64,
         spacing: f64,
         fill: i64,
         style: &str,
         b: EntityBase,
         e: &Parsed,
     ) {
-        let lines = mtext_lines(&caret_decode(text));
-        if lines.iter().all(|l| l.trim().is_empty()) {
+        let content = mtext_content(&caret_decode(text));
+        if content.text.trim().is_empty() {
             return self.skip("Çok satırlı yazı (MTEXT)", "boş yazı", e.line);
         }
         let height = if height > 0.0 {
@@ -1898,52 +1924,34 @@ impl<'l> Emitter<'l> {
             }
             _ => v(1.0, 0.0),
         };
-        let up = v(-dir.y, dir.x);
         let angle = deg(atan2(dir.y, dir.x));
-        let gap = height * 5.0 / 3.0 * if spacing > 0.0 { spacing } else { 1.0 };
-        // Its attachment point is each line's alignment (docs/adr/0145 §7):
-        // the lines hang a gap apart, the first one's point on the insertion
-        // point (top), the middle of them all (middle) or the last one's (bottom).
-        let align = justify::attachment(attach);
-        let last = (lines.len() - 1) as f64 * gap;
-        let first = match (attach.clamp(1, 9) - 1) / 3 {
-            0 => 0.0,
-            1 => last / 2.0,
-            _ => last,
+        // One multi-line text (docs/adr/0182 §5): its attachment point is its
+        // box's (the first line's top, the box's middle or bottom; left,
+        // centre or right), its width the box's, 44 its line spacing.
+        let frame = Frame {
+            m: ctx.tf,
+            anchor: v(p[0], p[1]),
+            rotation: angle,
+            height,
+            align: Some(justify::attachment(attach)),
+            width_factor: content.width_factor.unwrap_or(1.0),
+        };
+        let paragraph = Paragraph {
+            box_width: (width.is_finite() && width > 0.0).then_some(width),
+            line_spacing: (spacing.is_finite() && spacing > 0.0 && spacing != 1.0)
+                .then(|| spacing.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
+            runs: content.runs,
         };
         // A background fill (90: 1 its colour, 2 the drawing's) is a mask; 16 is a frame alone.
         let mask = fill & 3 != 0;
-        let mut kept = 0;
-        for (i, line) in lines.iter().enumerate() {
-            if line.trim().is_empty() {
-                continue;
-            }
-            let over = first - i as f64 * gap;
-            let frame = Frame {
-                m: ctx.tf,
-                anchor: v(p[0] + up.x * over, p[1] + up.y * over),
-                rotation: angle,
-                height,
-                align: Some(align),
-                width_factor: 1.0,
-            };
-            self.push_text(&frame, line.clone(), mask, b.clone());
-            kept += 1;
-        }
-        if kept > 1 {
+        self.push_text(&frame, content.text, mask, paragraph, b);
+        if !content.dropped.is_empty() {
             self.note(
                 "Çok satırlı yazı (MTEXT)",
-                if has_formatting(text) {
-                    "satırlarına bölündü; biçimlendirme kaldırıldı"
-                } else {
-                    "satırlarına bölündü"
-                },
-                e.line,
-            );
-        } else if has_formatting(text) {
-            self.note(
-                "Çok satırlı yazı (MTEXT)",
-                "biçimlendirme (yazı tipi, renk, boyut) kaldırıldı",
+                &format!(
+                    "biçimlendirmesinden kaldırılan: {}",
+                    content.dropped.join(", ")
+                ),
                 e.line,
             );
         }

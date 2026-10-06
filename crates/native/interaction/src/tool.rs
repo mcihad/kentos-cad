@@ -88,6 +88,10 @@ pub enum ViewChange {
     /// web's `view.requestTextInput`); the host gives back what was typed
     /// with [`Tool::text_typed`].
     Text(TextField),
+    /// The paragraph editor at a multi-line text's box (Çok satırlı yazı,
+    /// docs/adr/0182 §4); the host gives back what was written with
+    /// [`Tool::paragraph_typed`].
+    Paragraph(ParagraphField),
     /// The point a window asked for (Çizimden, [`crate::pick::PickPoint`],
     /// docs/adr/0070), or none when the user left without one.
     Picked(Option<Vec2>),
@@ -124,6 +128,20 @@ pub struct TextField {
     /// Enter in the empty field answers with an empty text (Kılavuz: the
     /// arrow without a note, docs/adr/0146 §7); otherwise it is as Esc.
     pub empty: bool,
+}
+
+/// Where the paragraph editor opens and how its text will look (docs/adr/0182
+/// §4): its point (the box's top left; the text's alignment the top's left),
+/// height in metres, turn in degrees, box width (none: the lines end at their
+/// breaks), line spacing (none: 1) and mask.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParagraphField {
+    pub at: Vec2,
+    pub height: f64,
+    pub rotation: f64,
+    pub box_width: Option<f64>,
+    pub line_spacing: Option<f64>,
+    pub mask: bool,
 }
 
 /// One value an option offers in its menu (Yazı's Hiza, docs/adr/0145 §6;
@@ -494,6 +512,8 @@ pub struct Memory {
     pub text_width_factor: f64,
     pub text_mask: bool,
     pub text_increment: bool,
+    /// Çok satırlı yazı's line spacing (`ParagraphTextTool.lineSpacing`, docs/adr/0182 §4): 1 none.
+    pub paragraph_spacing: f64,
     /// Kılavuz's arrowhead (none: the filled arrow) and Zemin
     /// (`LeaderTool.arrow`, `.mask`; docs/adr/0146 §7); its height is Yazı's.
     pub leader_arrow: Option<kentos_contracts::LeaderArrow>,
@@ -722,6 +742,7 @@ impl Default for Memory {
             text_width_factor: 1.0,
             text_mask: false,
             text_increment: false,
+            paragraph_spacing: 1.0,
             leader_arrow: None,
             leader_mask: false,
             hatch_preset: 0,
@@ -1137,6 +1158,15 @@ pub trait Tool {
     /// The answer of a text field it asked for ([`ViewChange::Text`]): the
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
+    /// The answer of the paragraph editor it asked for
+    /// ([`ViewChange::Paragraph`]): the text and its letter formats (Tamam),
+    /// or none (Vazgeç).
+    fn paragraph_typed(
+        &mut self,
+        _typed: Option<(&str, &[kentos_contracts::TextRun])>,
+        _cx: &mut Context<'_>,
+    ) {
+    }
     /// The file it asked for ([`ViewChange::OpenTextFile`]): its name and
     /// bytes, or none (the picker cancelled).
     fn file_given(&mut self, _file: Option<(&str, &[u8])>, _cx: &mut Context<'_>) {}

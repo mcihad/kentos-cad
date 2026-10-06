@@ -5,6 +5,7 @@ import type { TextEntity } from '../../model/entities';
 import { textReplace, type FindHow } from '../../model/textEdit';
 import { geometryOf } from '../../product/entitiesEdit';
 import { uidOf, writeEdit } from '../../tools/editCommand';
+import { textRunsRetext } from '../../model/paragraph';
 
 /**
  * Bul ve değiştir's matches (docs/adr/0145 §6): the texts in scope whose words the core's rule changes
@@ -59,7 +60,9 @@ export function replaceMatches(ctx: AppContext, matches: readonly Match[]): numb
     if (m.blocked) continue;
     const t = ctx.doc.get(m.id);
     if (t?.kind !== 'text') continue;
-    changes.push({ kind: 'update', uid: uidOf(ctx, t), geometry: { ...geometryOf(t as unknown as EditGeometry), text: m.new } as unknown as EditGeometry });
+    // A multi-line text's letter formats follow its letters (docs/adr/0182 §4).
+    const runs = t.runs?.length ? textRunsRetext(t.runs, t.text, m.new) : undefined;
+    changes.push({ kind: 'update', uid: uidOf(ctx, t), geometry: { ...geometryOf(t as unknown as EditGeometry), text: m.new, ...(t.runs?.length && { runs }) } as unknown as EditGeometry });
   }
   if (!changes.length) return 0;
   return writeEdit(ctx, 'replaceText', changes) ? changes.length : null;

@@ -26,6 +26,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çokgendir (ADR 0032); elips, eğri, yardımcı çizgi, ışın, paralel çizgi, dik in ve dik çık, halka,
   revizyon bulutu, kot noktası ve böl (ADR 0057); yazı ve çizimin üstündeki yazı kutusu (ADR 0060);
   ölçülendirme: hizalı, doğrusal, açı, yarıçap ve çap (ADR 0061), koordinat, yay uzunluğu, kırıklı yarıçap, semt ve eğim, Açı'nın yaydan ve daireden yolları, döndürülmüş doğrusal, ölçü değerinin zemini, Hızlı ölçü; DXF'in koordinat ölçüsü, ARC_DIMENSION'ı ve LARGE_RADIAL_DIMENSION'ı gelir ve gider, semt ve eğim hizalı ölçü olarak KentOS verisiyle (ADR 0147); tarama: kapalı nesneyle ya da çizgilerle, adalarıyla (ADR 0062); köşe kotu: çizginin, çoklu çizginin ve alanın köşe kotları, Kot ver, Öznitelikler'in kot ve 3B uzunluk satırları (ADR 0142); çok parçalı alan: parçalar ve delikleri, Parçaları birleştir, Parçalara ayır, alan işlemlerinde Tek nesne (ADR 0143); blok: Blok oluştur, Blok ekle, Bloklar paneli, Blok öznitelikleri penceresi, Öznitelikler'de yerleştirme ve blok öznitelikleri, Patlat; DXF'in blokları tanım ve yerleştirme olarak gelir ve gider, öznitelikleri ATTDEF ve ATTRIB olarak, “Blokları patlat” seçeneğiyle (ADR 0144); yazı ekleri: yazının ve öznitelik tanımının on iki noktalı hizası ve genişlik çarpanı, yazının zemini, Yazı'nın Hiza, Genişlik, Zemin ve Artır seçenekleri, Okunur yap, Bul ve değiştir, Metin dosyası yerleştir; DXF'in 72/73'ü, 41'i, MTEXT'in yerleşim noktası ve zemini, NCZ'nin çapaları tahminsiz (ADR 0145); kılavuz: ok, kırık çizgi, kol ve not tek nesne, Kılavuz aracı (Ok, Yükseklik, Zemin), Öznitelikler'in Kılavuz bölümü, notun yerinde düzenlenmesi; DXF'in LEADER'ı bağlı MTEXT notuyla ve MULTILEADER gelir, kılavuz LEADER ve MTEXT olarak gider (ADR 0146);
+  çok satırlı yazı: kutu genişliği ve sözcük sarma, satır aralığı, kalın, eğik, altı çizili, üst ve alt simge, renkli harfler, Çok
+  satırlı yazı aracı (iki köşe, Satır aralığı), düzenleyici (çizimde canlı önizleme, Renk ▾, Simge ▾), çift tıkla düzenleme,
+  Öznitelikler'in Kutu genişliği ve Satır aralığı; DXF'in MTEXT'i biçimleriyle tek yazı olarak gelir ve gider (ADR 0182, `.kcad` şema 20);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -226,8 +229,10 @@ python3 scripts/fonts/drawing_fonts.py --check   # masaüstünün çizim yazı t
 python3 scripts/fonts/ui_fonts.py --check   # KentOS UI'ın Noto Sans ve Roboto'sunu web'in WOFF2'lerinden denetle; --advance genişlik tahminlerini ölçer
 KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON yazıcısının örnek çıktısını yeniden yaz; farkı okuyun
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
-python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165)
+python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz, çok satırlı yazı (MTEXT) ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165, 0182)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
+python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının satırlarını, sarmasını, kutusunu ve düzenleyicinin dilimlerini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/text/v1/paragraph.json (ADR 0182)
+cargo test -p kentos-desktop paragraph_editor::tests::screens -- --ignored --nocapture   # çok satırlı yazının resimleri, .run/shots/paragraf-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs paragraph); ADR 0182)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
@@ -915,7 +920,15 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   (kartların yeri, eşleme; web `viewport/navigation.ts`), bağımsız başvuru `navigation_cases.py` (ortak `fixtures/navigation/v1`, resim
   piksel piksel); büyüteç çizim hatlarında ikinci kamera (web `FrameState.lens`, masaüstü `Renderer::prepare_lens`/`draw_lens`, aynı
   ilkel türüyle); kartlar web `viewport/navigationCards.ts`, masaüstü `navigation_cards.rs`; yerleşimde `overview`, `magnifier`,
-  `magnifierZoom`; ortak iz `overview.json`. Sıradaki TODOS.md §16.0'ın bir sonraki maddesi.
+  `magnifierZoom`; ortak iz `overview.json`. §16.0 bitti; §16.1 (CAD) başladı: `CAD-18` kroki yazımı **[M]** (gösterim kurallarını
+  sahip tarif edecek) beklerken `CAD-20` çok satırlı yazı ([ADR 0182](docs/adr/0182-paragraph-text.md)) tek parçada bitti (6 Ekim):
+  sözleşmenin `Paragraph`'ı (`boxWidth`, `lineSpacing`, `runs`; `.kcad` şema 20, `FORMATS_VERSION` 30), çekirdek `text::paragraph`
+  (satırlar, sarma, kalın tablo, düzenleyicinin dilimleri, `corner_box`; bağımsız başvuru `paragraph_cases.py`, ortak
+  `fixtures/text/v1/paragraph.json`), deponun `LABEL_LINE`, `LABEL_PARAGRAPH_MASK`, `LABEL_PIECE_LINE` kayıtları; araç web
+  `tools/paragraphTool.ts`, masaüstü `kentos_interaction::paragraph`; düzenleyici web `ui/shell/ParagraphEditor.ts`, masaüstü
+  `paragraph_editor.rs`; DXF MTEXT biçimleriyle iki yönde (`dxf/strings.rs`'in `mtext_content`'i, `writer/entities/paragraph.rs`;
+  `mtext.dxf`, `dxf-write/paragraphs`); `invalid_paragraph`; ortak iz `paragraph-text.json` (oynatıcılarda `paragraph` eylemi).
+  Sıradaki `CAD-21` yazı ve ölçü stilleri.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

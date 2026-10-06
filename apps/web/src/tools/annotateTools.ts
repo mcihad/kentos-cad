@@ -61,6 +61,15 @@ export class TextTool extends PointInputTool {
     TextTool.heightMm = mm;
   }
 
+  /** Açı and Zemin, shared with Çok satırlı yazı (docs/adr/0182 §4). */
+  static setAngle(degrees: number): void {
+    TextTool.angle = degrees;
+  }
+
+  static setMask(on: boolean): void {
+    TextTool.mask = on;
+  }
+
   /** Yazı's options as they are now: Metin dosyası yerleştir writes its lines with them (docs/adr/0145 §6). */
   static options(): { heightMm: number; angle: number; align: TextAlign | null; widthFactor: number; mask: boolean } {
     const S = TextTool;

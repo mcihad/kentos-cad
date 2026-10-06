@@ -1,6 +1,7 @@
 import type { DrawingFont } from '../../contracts/generated/DrawingFont';
 import { pieceText, type BlockPiece } from '../../model/blocks';
 import type { CadDocument } from '../../model/document';
+import type { TextRun } from '../../model/entities';
 import { dimensionMeasure, type DimensionLayout } from '../../model/geom/dimension';
 import { fillTemplate } from '../../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../../render/color';
@@ -115,6 +116,37 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     ];
     masks.push({ layer, path: { parts: [{ points: corners.flatMap(([u, t]) => [x + u * c - t * s, y + u * s + t * c]), closed: true }], fill: { color: pal.paper, opacity: 1, rule: 'nonzero' } } });
   };
+  /** A box turned `deg` from (x, y), its corners `[along, up]` ground metres in its frame, filled with `color`. */
+  const fill = (layer: string, x: number, y: number, deg: number, corners: readonly (readonly [number, number])[], color: string) => {
+    const a = (deg * Math.PI) / 180;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    masks.push({ layer, path: { parts: [{ points: corners.flatMap(([u, v]) => [x + u * c - v * s, y + u * s + v * c]), closed: true }], fill: { color, opacity: 1, rule: 'nonzero' } } });
+  };
+  /** One line of a multi-line text (docs/adr/0182 §3), run by run as the overlay draws it (`paragraphLine`). */
+  const line = (layer: string, words: string, runs: readonly TextRun[] | undefined, [start, end]: readonly [number, number], x: number, y: number, deg: number, h: number, factor: number) => {
+    const letters = Array.from(words);
+    const a = (deg * Math.PI) / 180;
+    const [c, s] = [Math.cos(a), Math.sin(a)];
+    const runAt = (k: number) => runs?.find((r) => r.start <= k && k < r.end);
+    const last = Math.min(end, letters.length);
+    let along = 0;
+    for (let k = start; k < last; ) {
+      const run = runAt(k);
+      let j = k + 1;
+      while (j < last && runAt(j) === run) j++;
+      const part = letters.slice(k, j).join('');
+      const size = run?.script ? h * 0.6 : h;
+      const lift = run?.script === 'super' ? h * 0.4 : run?.script === 'sub' ? -h * 0.15 : 0;
+      const weight = run?.bold ? 600 : 400;
+      const italic = run?.italic === true;
+      const w = (o.measure(css(weight, size * pxPerM, italic), part) / pxPerM) * factor;
+      const color = run?.color ? resolveColor(run.color, pal) : pal.label;
+      if (part.trim()) text(layer, { text: part, x: x + c * along - s * lift, y: y + s * along + c * lift, size: mm(size), rotation: deg, align: 'left', baseline: 'alphabetic', font: { family: o.font, weight, italic }, color, widthFactor: factor });
+      if (run?.underline) fill(layer, x, y, deg, [[along, lift - 0.12 * size], [along + w, lift - 0.12 * size], [along + w, lift - 0.18 * size], [along, lift - 0.18 * size]], color);
+      along += w;
+      k = j;
+    }
+  };
   for (let i = 0; i < spots.length; i += LABEL_STRIDE) {
     const e = doc.get(spots[i]);
     if (!e) continue;
@@ -122,6 +154,21 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     const what = spots[i + 1];
     const x = spots[i + 2];
     const y = spots[i + 3];
+    // A multi-line text: its mask, then its lines (docs/adr/0182 §3); a block's own too.
+    if (what === LABEL.paragraphMask) {
+      const [w, h] = [spots[i + 5], spots[i + 6]];
+      fill(layer, x, y, spots[i + 4], [[0, 0], [w, 0], [w, h], [0, h]], pal.paper);
+      continue;
+    }
+    if (what === LABEL.line && e.kind === 'text') {
+      line(layer, e.text, e.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], spots[i + 6]);
+      continue;
+    }
+    if (what === LABEL.pieceLine && e.kind === 'insert') {
+      const piece = o.pieces(e.block)?.[spots[i + 6]];
+      if (piece?.kind === 'text') line(layer, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1);
+      continue;
+    }
     if (what === LABEL.dimension && e.kind === 'dimension') {
       const color = e.color ?? doc.layers.get(e.layerId)?.style.color;
       const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };

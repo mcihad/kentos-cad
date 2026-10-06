@@ -713,6 +713,7 @@ impl Viewport {
             // ekle's values (attribute_values.rs) or a text file's dialog
             // (text_file.rs); the camera stays.
             ViewChange::Text(_)
+            | ViewChange::Paragraph(_)
             | ViewChange::Picked(_)
             | ViewChange::PickedObjects(_)
             | ViewChange::DefineBlock(_)

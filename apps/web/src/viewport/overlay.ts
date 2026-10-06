@@ -1,6 +1,7 @@
 import type { CrosshairSize } from '../app/state';
 import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
+import type { TextRun } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
 import { fillTemplate } from '../model/ops/labelText';
@@ -125,6 +126,79 @@ function dimensionValue(g: CanvasRenderingContext2D, pal: CanvasPalette, px: num
 }
 
 /**
+ * One line of a multi-line text (docs/adr/0182 §3), run by run from where its baseline starts (`at`): upright at 400
+ * (600 bold, italic when italic), raised 0.4 and lowered 0.15 of its height at 0.6 of it, in the run's colour (the
+ * label's without one), underlined 0.12 of its height under its baseline; its letters `widthFactor` wide.
+ */
+export function paragraphLine(
+  g: CanvasRenderingContext2D,
+  pal: CanvasPalette,
+  cam: { worldToScreen(p: Vec2): Vec2; scale: number },
+  text: string,
+  runs: readonly TextRun[] | undefined,
+  [start, end]: readonly [number, number],
+  at: Vec2,
+  rotation: number,
+  height: number,
+  widthFactor: number,
+): void {
+  const letters = Array.from(text);
+  const px = height * cam.scale;
+  if (px < 1) return;
+  const s = cam.worldToScreen(at);
+  const runAt = (i: number) => runs?.find((r) => r.start <= i && i < r.end);
+  g.save();
+  g.translate(s.x, s.y);
+  g.rotate((-rotation * Math.PI) / 180);
+  if (widthFactor !== 1) g.scale(widthFactor, 1);
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  let x = 0;
+  for (let i = start; i < Math.min(end, letters.length); ) {
+    const run = runAt(i);
+    let j = i + 1;
+    while (j < Math.min(end, letters.length) && runAt(j) === run) j++;
+    const words = letters.slice(i, j).join('');
+    const size = run?.script ? px * 0.6 : px;
+    const lift = run?.script === 'super' ? px * 0.4 : run?.script === 'sub' ? -px * 0.15 : 0;
+    g.font = `${run?.italic ? 'italic ' : ''}${run?.bold ? 600 : 400} ${size.toFixed(1)}px ${pal.drawingFont}`;
+    const color = run?.color ? resolveColor(run.color, pal) : pal.label;
+    const w = g.measureText(words).width;
+    if (words.trim()) haloText(g, words, x, -lift, color, pal.labelHalo);
+    if (run?.underline) {
+      const [top, thick] = [size * 0.12 - lift, Math.max(1, size * 0.06)];
+      g.fillStyle = pal.labelHalo;
+      g.fillRect(x - 1.5, top - 1.5, w + 3, thick + 3);
+      g.fillStyle = color;
+      g.fillRect(x, top, w, thick);
+    }
+    x += w;
+    i = j;
+  }
+  g.restore();
+}
+
+/** A multi-line text's mask (docs/adr/0182 §3): the box from `at` `w` along its turn and `h` up, metres, in the paper's colour. */
+export function paragraphMask(g: CanvasRenderingContext2D, pal: CanvasPalette, cam: { worldToScreen(p: Vec2): Vec2; scale: number }, at: Vec2, rotation: number, w: number, h: number): void {
+  const s = cam.worldToScreen(at);
+  g.save();
+  g.translate(s.x, s.y);
+  g.rotate((-rotation * Math.PI) / 180);
+  g.fillStyle = pal.paper;
+  g.fillRect(0, -h * cam.scale, w * cam.scale, h * cam.scale);
+  g.restore();
+}
+
+/** A multi-line text's records as the core gives them (`textLines`, the store's labels): its mask, then its lines. */
+export function paragraphRecords(g: CanvasRenderingContext2D, pal: CanvasPalette, cam: { worldToScreen(p: Vec2): Vec2; scale: number }, records: ArrayLike<number>, text: string, runs: readonly TextRun[] | undefined): void {
+  for (let i = 0; i + LABEL_STRIDE <= records.length; i += LABEL_STRIDE) {
+    const at = { x: records[i + 2], y: records[i + 3] };
+    if (records[i + 1] === LABEL.paragraphMask) paragraphMask(g, pal, cam, at, records[i + 4], records[i + 5], records[i + 6]);
+    else paragraphLine(g, pal, cam, text, runs, [records[i + 7], records[i + 8]], at, records[i + 4], records[i + 5], records[i + 6]);
+  }
+}
+
+/**
  * Entity labels and text. Which ones a frame draws and where comes from the
  * geometry store (`labels`: visible layer, box in view, text size on
  * screen, the LabelStyle's scale range and smallest feature; see
@@ -172,6 +246,20 @@ export function drawLabels(
     // x, y where the text's baseline starts (its point moved by its alignment); its width factor and mask (docs/adr/0145).
     if (what === LABEL.text && e.kind === 'text') {
       baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, spots[i + 5], spots[i + 6] * cam.scale, e.text);
+      continue;
+    }
+    // A multi-line text: its mask, then its lines (docs/adr/0182 §3); a block's own too.
+    if (what === LABEL.paragraphMask) {
+      paragraphMask(g, pal, cam, { x, y }, spots[i + 4], spots[i + 5], spots[i + 6]);
+      continue;
+    }
+    if (what === LABEL.line && e.kind === 'text') {
+      paragraphLine(g, pal, cam, e.text, e.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], spots[i + 6]);
+      continue;
+    }
+    if (what === LABEL.pieceLine && e.kind === 'insert') {
+      const piece = pieces(e.block)?.[spots[i + 6]];
+      if (piece?.kind === 'text') paragraphLine(g, pal, cam, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1);
       continue;
     }
     // A leader's note, as a text (docs/adr/0146 §5).

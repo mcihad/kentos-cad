@@ -188,6 +188,8 @@ pub const PORTED: &[&str] = &[
     // Yazı and the text field over the drawing, which also edits a text's or a
     // dimension's value on a double click (docs/adr/0060).
     "tool.text",
+    // Çok satırlı yazı (docs/adr/0182 §4).
+    "tool.mtext",
     // Ölçülendirme: aligned, linear, angular, radius and diameter dimensions
     // through cad.entities.create (docs/adr/0061); ordinate and arc length, its
     // methods by their own names too (docs/adr/0147 §7).

@@ -133,6 +133,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 align: None,
                 width_factor: None,
                 mask: None,
+                box_width: None,
+                line_spacing: None,
+                runs: None,
             }));
             Cut::Pieces(pieces)
         }
@@ -199,6 +202,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     align: l.note_align,
                     width_factor: None,
                     mask: *mask,
+                    box_width: None,
+                    line_spacing: None,
+                    runs: None,
                 }));
             }
             Cut::Pieces(pieces)

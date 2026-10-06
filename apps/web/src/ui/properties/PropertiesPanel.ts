@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { watchAll } from '../../core/signal';
 import { attributeRows, turnOf } from '../../model/blocks';
 import { DIMENSION_STYLE_LABEL, layoutDimension } from '../../model/geom/dimension';
-import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, type DimensionEntity, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
+import { ENTITY_KIND_LABEL, HATCH_PATTERN_LABEL, drawsLines, entityArea, entityLength, isParagraph, type DimensionEntity, type Entity, type HatchPatternType, type LeaderEntity, type TextEntity } from '../../model/entities';
 import { angleDeg, bearingGrad, dist } from '../../model/geometry';
 import { sweep } from '../../model/geom/arc';
 import { isFullEllipse, majorLength } from '../../model/geom/ellipse';
@@ -391,8 +391,11 @@ export class PropertiesPanel extends Panel {
       }
       case 'text':
         geo.push(
-          // Trimmed, as the in-place editor stores it; an empty text is not taken.
-          { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && setGeometry(this.ctx, e, { text: v.trim() }) } },
+          // Trimmed, as the in-place editor stores it; an empty text is not taken. A multi-line text's lines and
+          // letter formats are its editor's (a double click, docs/adr/0182 §4): here they only show, ⏎ its breaks.
+          isParagraph(e)
+            ? { label: 'Metin', value: e.text.replaceAll('\n', ' ⏎ ') }
+            : { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && setGeometry(this.ctx, e, { text: v.trim() }) } },
           {
             ...num('Yükseklik', e.height, 'm'),
             editor: locked

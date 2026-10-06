@@ -1,0 +1,135 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Çok satırlı yazılar",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yazi",
+      "name": "Yazılar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg-dim",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400030.0
+      },
+      "text": "Parsel 101\nAlan: 450 m2\nTapu kaydına göre",
+      "height": 2.5,
+      "rotation": 0.0,
+      "align": "topLeft",
+      "boxWidth": 40.0,
+      "lineSpacing": 1.25,
+      "runs": [
+        {
+          "start": 0,
+          "end": 10,
+          "bold": true
+        },
+        {
+          "start": 22,
+          "end": 23,
+          "script": "super"
+        },
+        {
+          "start": 24,
+          "end": 29,
+          "italic": true,
+          "underline": true,
+          "color": "#E5484D"
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 500060.0,
+        "y": 4400030.0
+      },
+      "text": "Not:\nH2O ve CO2",
+      "height": 2.0,
+      "rotation": 15.0,
+      "mask": true,
+      "runs": [
+        {
+          "start": 6,
+          "end": 7,
+          "script": "sub"
+        },
+        {
+          "start": 14,
+          "end": 15,
+          "script": "sub",
+          "color": "accent"
+        }
+      ]
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400000.0
+      },
+      "text": "Yalnız kutusu olan uzun bir açıklama yazısı",
+      "height": 1.5,
+      "rotation": 0.0,
+      "boxWidth": 12.5
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1901",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1902",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1903"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

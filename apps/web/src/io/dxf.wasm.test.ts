@@ -246,8 +246,11 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(texts[1]).toEqual(['ORTA', { x: 30, y: 0 }, 'baselineCenter', null, false]);
     expect(texts[13]).toEqual(['GENIS', { x: 100, y: 10 }, null, 0.8, false]);
     expect(texts[18]).toEqual(['ZEMINLI', { x: 160, y: 10 }, null, null, true]);
-    expect(texts[21]).toEqual(['MERKEZ', { x: 30, y: 50 }, 'middleCenter', null, true]);
-    expect(texts[26]).toEqual(['OLCEK', { x: 200, y: 20 }, null, 1.5, false]);
+    // An MTEXT is one multi-line text at its attachment point (docs/adr/0182 §5).
+    expect(texts[19]).toEqual(['UST SOL\nIKINCI', { x: 0, y: 50 }, 'topLeft', null, false]);
+    expect(texts[20]).toEqual(['MERKEZ', { x: 30, y: 50 }, 'middleCenter', null, true]);
+    expect(texts[21]).toEqual(['A\nB\nC', { x: 60, y: 50 }, 'bottomRight', null, false]);
+    expect(texts[23]).toEqual(['OLCEK', { x: 200, y: 20 }, null, 1.5, false]);
     const etiket = r.blocks?.find((b) => b.name === 'ETIKET');
     expect(etiket?.attributes?.map((a) => [a.tag, a.p, a.align, a.widthFactor])).toEqual([['NO', { x: 1.5, y: 0 }, 'middleCenter', 0.9]]);
   });

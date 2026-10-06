@@ -155,14 +155,14 @@ pub fn note_place(s: &Shape) -> Option<TextPlace<'_>> {
         return None;
     };
     let l = layout_of(s)?;
-    Some(TextPlace {
-        p: l.note_point?,
+    Some(TextPlace::line(
+        l.note_point?,
         text,
-        height: *height,
-        rotation: *rotation,
-        align: l.note_align,
-        width_factor: None,
-    })
+        *height,
+        *rotation,
+        l.note_align,
+        None,
+    ))
 }
 
 /// The line it draws: through its vertices and, with a note, on to the landing's end.

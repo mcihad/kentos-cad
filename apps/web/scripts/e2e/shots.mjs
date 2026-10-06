@@ -4613,6 +4613,94 @@ function textToolScenes() {
   ];
 }
 
+// Çok satırlı yazı (docs/adr/0182): the texts as the drawing shows them (a boxed one with every format over its mask,
+// a turned centred one, a bottom-right one with tight lines); the tool's box between its corners; the editor with a
+// paragraph typed and formatted, the drawing showing it as it will be, and its Renk menu; Öznitelikler's rows; an
+// AutoCAD MTEXT read in (fixtures/formats/v1/mtext.dxf). The desktop's are `paragraph_editor::tests::screens`.
+SCENES.paragraph = paragraphScenes();
+function paragraphScenes() {
+  const DRAWN = FIT(`
+    const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });
+    const h = 0.16 * u;
+    add({ kind: 'polygon', pts: [P(-2.6, -1.3), P(-0.2, -1.3), P(-0.2, 0.2), P(-2.6, 0.2)] });
+    add({ kind: 'line', a: P(-2.8, -0.4), b: P(2.8, -0.4) });
+    const text = 'Parsel 101 — imar planına göre konut alanı\\nAlan: 450 m2 (tapuda)\\nH2O hattı altı çizili, kırmızı not';
+    const runs = [
+      { start: 0, end: 10, bold: true },
+      { start: 11, end: 42, italic: true },
+      { start: 54, end: 55, script: 'super' },
+      { start: 66, end: 67, script: 'sub' },
+      { start: 69, end: 86, underline: true },
+      { start: 88, end: 95, color: '#E5484D' },
+    ];
+    const ta = add({ kind: 'text', p: P(-2.5, 1.2), text, height: h, rotation: 0, align: 'topLeft', boxWidth: 2.4 * u, lineSpacing: 1.2, runs, mask: true });
+    const tb = add({ kind: 'text', p: P(1.4, 0.7), text: 'Ortalı ve dönük\\nçok satırlı not', height: h, rotation: 15, align: 'middleCenter', runs: [{ start: 0, end: 6, bold: true, color: '#4F8EF7' }] });
+    const td = add({ kind: 'text', p: P(2.6, -1.4), text: 'Alt\\nsağa\\ndayalı', height: h * 0.8, rotation: 0, align: 'bottomRight', lineSpacing: 0.8 });
+    window.__paragraphs = { a: ta.id, b: tb.id, d: td.id };`);
+  const ground = async (ui, fields = {}) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad', ...fields });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ui.eval(UNDO_ALL));
+  /** The tool's first corner set, the pointer at the opposite one. */
+  const box = async (ui) => {
+    await ground(ui);
+    await startTool(ui, 'mtext');
+    await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AU(0.2, 1.4)))))));
+    await hoverU(ui, 2.6, 0.9);
+  };
+  /** The editor over the box, a paragraph typed and formatted (as the traces do it). */
+  const editor = async (ui) => {
+    await box(ui);
+    await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AU(2.6, 0.9)))))));
+    await ui.sleep(300);
+    await ui.eval(`(() => {
+      const ed = document.querySelector('.paragraph-editor');
+      const area = ed.querySelector('textarea');
+      area.value = 'Yeni not\\nKot farkı 2.5 m, eğim %3\\nAda 7 parsel 12';
+      area.dispatchEvent(new Event('input'));
+      const pick = (s, e, sel) => { area.setSelectionRange(s, e); ed.querySelector(sel).click(); };
+      pick(0, 8, '[data-format="bold"]');
+      pick(9, 18, '[data-format="italic"]');
+      pick(34, 49, '[data-format="underline"]');
+      area.setSelectionRange(31, 33);
+    })()`);
+    await ui.sleep(400);
+  };
+  return [
+    { id: 'paragraph-drawn', open: ground, close },
+    { id: 'paragraph-drawn-selected', open: async (ui) => (await ground(ui), await ui.eval(`(() => { const k = window.kentos; const o = window.__paragraphs; k.selection.set([o.a, o.b]); })()`), await ui.move(2, 2), await ui.sleep(400)), close },
+    { id: 'paragraph-tool-box', open: box, close },
+    { id: 'paragraph-editor', open: editor, close },
+    { id: 'paragraph-editor-color', open: async (ui) => (await editor(ui), await ui.clickSel('.paragraph-editor [data-menu="color"]'), await ui.sleep(300)), close },
+    { id: 'paragraph-editor-symbol', open: async (ui) => (await editor(ui), await ui.clickSel('.paragraph-editor [data-menu="symbol"]'), await ui.sleep(300)), close },
+    {
+      id: 'paragraph-props',
+      open: async (ui) => (await ground(ui, { layersFraction: 0.15 }), await ui.eval(`(() => { const k = window.kentos; k.selection.set([window.__paragraphs.a]); })()`), await ui.move(2, 2), await ui.sleep(500)),
+      close,
+    },
+    {
+      id: 'paragraph-dxf',
+      open: async (ui) => {
+        const bytes = readFileSync(new URL('../../../../fixtures/formats/v1/mtext.dxf', import.meta.url)).toString('base64');
+        await ui.eval(`import('/src/ui/io/DrawingImportDialog.ts').then((m) => m.openDxfImport(window.kentos, { name: 'mtext.dxf', bytes: Uint8Array.from(atob('${bytes}'), (c) => c.charCodeAt(0)) }, { description: 'DXF', accept: { 'application/dxf': ['.dxf'] } }))`);
+        await ui.waitFor(DXF_READ, 15000);
+        await ui.clickText('.dialog--io .btn--primary', 'İçe aktar');
+        await ui.waitFor(`!document.querySelector('.dialog--io')`, 8000);
+        await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: -4, minY: -30, maxX: 100, maxY: 8 }, 24); k.view.requestRender(); })()`);
+        await ui.move(2, 2);
+        await ui.sleep(600);
+      },
+      close,
+    },
+  ];
+}
+
 /** The n-th rule's condition (0 is the first), typed and left. */
 const setRuleFilter = (n, text) =>
   `(() => { const i = document.querySelectorAll('.dialog--lstyle .rule input[aria-label="Koşul"]')[${n}]; i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;

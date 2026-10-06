@@ -248,6 +248,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
             ..
         } => Shape::Text {
             p,
@@ -257,6 +260,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             align: *align,
             width_factor: *width_factor,
             mask: *mask,
+            box_width: *box_width,
+            line_spacing: *line_spacing,
+            runs: runs.clone(),
         },
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {

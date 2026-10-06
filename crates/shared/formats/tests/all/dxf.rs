@@ -181,32 +181,31 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
     let Entity::Text(t) = &e[12] else {
         panic!("{:?}", e[12])
     };
-    // An MTEXT's lines hang from its attachment point, each aligned by it (docs/adr/0145 §7).
+    // An MTEXT is one multi-line text, its attachment point its box's (docs/adr/0182 §5).
     assert_eq!(
         (t.text.as_str(), t.p, t.align),
-        ("Birinci satır", v(10.0, 20.0), Some(TextAlign::TopLeft))
+        (
+            "Birinci satır\nIkinci satır",
+            v(10.0, 20.0),
+            Some(TextAlign::TopLeft)
+        )
     );
-    let Entity::Text(t) = &e[13] else {
+    let Entity::Polygon(p) = &e[13] else {
         panic!("{:?}", e[13])
-    };
-    assert_eq!((t.text.as_str(), t.align), ("Ikinci satır", Some(TextAlign::TopLeft)));
-    assert!(near(t.p, v(10.0, 20.0 - 2.0 * 5.0 / 3.0)), "{:?}", t.p);
-    let Entity::Polygon(p) = &e[14] else {
-        panic!("{:?}", e[14])
     };
     assert_eq!(
         p.pts,
         vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0), v(0.0, 1.0)]
     );
-    let Entity::Xline(x) = &e[15] else {
-        panic!("{:?}", e[15])
+    let Entity::Xline(x) = &e[14] else {
+        panic!("{:?}", e[14])
     };
     assert_eq!((x.p, x.dir), (v(5.0, 5.0), v(0.0, 1.0)));
-    let Entity::Ray(x) = &e[16] else {
-        panic!("{:?}", e[16])
+    let Entity::Ray(x) = &e[15] else {
+        panic!("{:?}", e[15])
     };
     assert!(near(x.dir, v(0.6, 0.8)));
-    assert_eq!(e.len(), 17);
+    assert_eq!(e.len(), 16);
 
     assert!(skipped(&r, "IMAGE").is_some_and(|s| s.contains("raster")));
     assert!(skipped(&r, "Kâğıt uzayı nesnesi").is_some());
@@ -228,7 +227,7 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
             count(&r, "polygon"),
             count(&r, "polyline")
         ),
-        (3, 2, 3)
+        (2, 2, 3)
     );
     let b = r.bounds.expect("extent");
     assert!(b.max_x >= 452020.0 && b.min_x <= 0.0);
@@ -1408,20 +1407,59 @@ fn texts_take_their_alignment_width_factor_and_mask() {
     assert!(noted(&r, "Sığdırılmış yazı (72 = 5)").is_some());
     assert_eq!(at(17), ("TEK NOKTA", v(160.0, 0.0), h, 0.0, Some(MiddleCenter), None, false));
     assert_eq!(at(18), ("ZEMINLI", v(160.0, 10.0), h, 0.0, None, None, true));
-    // MTEXT: the top's left, on two lines.
-    assert_eq!(at(19), ("UST SOL", v(0.0, 50.0), h, 0.0, Some(TopLeft), None, false));
-    let (words, p, _, _, align, _, _) = at(20);
-    assert_eq!((words, align), ("IKINCI", Some(TopLeft)));
-    assert!(near(p, v(0.0, 50.0 - 2.0 * 5.0 / 3.0)), "{p:?}");
-    assert_eq!(at(21), ("MERKEZ", v(30.0, 50.0), h, 0.0, Some(MiddleCenter), None, true));
-    // The bottom's right, on three lines 3 × 5/3 = 5 apart: the last on the insertion point.
-    for (i, (words, y)) in [("A", 60.0), ("B", 55.0), ("C", 50.0)].into_iter().enumerate() {
-        assert_eq!(at(22 + i), (words, v(60.0, y), 3.0, 0.0, Some(BottomRight), None, false));
-    }
-    assert_eq!(at(25), ("ALT SOL", v(0.0, 70.0), h, 0.0, Some(BottomLeft), None, false));
+    // An MTEXT is one multi-line text at its attachment point, its box's (docs/adr/0182 §5): the top's left.
+    assert_eq!(
+        at(19),
+        (
+            "UST SOL\nIKINCI",
+            v(0.0, 50.0),
+            h,
+            0.0,
+            Some(TopLeft),
+            None,
+            false
+        )
+    );
+    assert_eq!(
+        at(20),
+        (
+            "MERKEZ",
+            v(30.0, 50.0),
+            h,
+            0.0,
+            Some(MiddleCenter),
+            None,
+            true
+        )
+    );
+    // The bottom's right, three lines: the last line's bottom on the insertion point.
+    assert_eq!(
+        at(21),
+        (
+            "A\nB\nC",
+            v(60.0, 50.0),
+            3.0,
+            0.0,
+            Some(BottomRight),
+            None,
+            false
+        )
+    );
+    assert_eq!(
+        at(22),
+        (
+            "ALT SOL",
+            v(0.0, 70.0),
+            h,
+            0.0,
+            Some(BottomLeft),
+            None,
+            false
+        )
+    );
     // ETIKET's insert holds its value; its definition's attribute is justified as a TEXT.
-    let Entity::Insert(etiket) = &e[26] else {
-        panic!("{:?}", e[26])
+    let Entity::Insert(etiket) = &e[23] else {
+        panic!("{:?}", e[23])
     };
     assert_eq!(etiket.base.attrs.get("NO").map(String::as_str), Some("7"));
     let definition = r.blocks.iter().find(|b| b.name == "ETIKET").expect("ETIKET");
@@ -1433,10 +1471,24 @@ fn texts_take_their_alignment_width_factor_and_mask() {
         ("NO", v(1.5, 0.0), 0.5, Some(MiddleCenter), Some(0.9))
     );
     // YAZILI at an X scale of 3 opens: 0.5 × 3 wide at the same height.
-    assert_eq!(at(27), ("OLCEK", v(200.0, 20.0), 1.0, 0.0, None, Some(1.5), false));
-    assert!(matches!(&e[28], Entity::Insert(_)));
-    assert_eq!(at(29), ("SERBEST", v(225.0, 5.0), 1.0, 0.0, Some(TopRight), None, false));
-    assert_eq!(e.len(), 30);
+    assert_eq!(
+        at(24),
+        ("OLCEK", v(200.0, 20.0), 1.0, 0.0, None, Some(1.5), false)
+    );
+    assert!(matches!(&e[25], Entity::Insert(_)));
+    assert_eq!(
+        at(26),
+        (
+            "SERBEST",
+            v(225.0, 5.0),
+            1.0,
+            0.0,
+            Some(TopRight),
+            None,
+            false
+        )
+    );
+    assert_eq!(e.len(), 27);
     // Nothing is placed by a guess of its width any more.
     assert!(r.report.notes.iter().all(|n| !n.reason.contains("tahmin")), "{:?}", r.report.notes);
 }
@@ -1481,14 +1533,17 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     let Entity::Text(dn) = &e[2] else {
         panic!("{:?}", e[2])
     };
+    // The other lines are one text (docs/adr/0182 §5): its first line's top one pitch under the note's,
+    // at the note's side.
     assert_eq!(
         (dn.text.as_str(), dn.height, dn.mask, dn.align, dn.rotation),
-        ("DN 150", 2.0, true, Some(TextAlign::MiddleRight), turn)
+        ("DN 150", 2.0, true, Some(TextAlign::TopRight), turn)
     );
     let (s, c) = (sin(turn * PI / 180.0), cos(turn * PI / 180.0));
     let note = v(36.0 - 5.0 * c, -6.0 - 5.0 * s);
-    let gap = 2.0 * 5.0 / 3.0;
-    assert!(near(dn.p, v(note.x + s * gap, note.y - c * gap)), "{:?}", dn.p);
+    // From the note's middle down to its baseline, one pitch on, up to that line's top.
+    let k = 2.0 - 2.0 * 5.0 / 3.0 - 0.5 * 2.0;
+    assert!(near(dn.p, v(note.x - s * k, note.y + c * k)), "{:?}", dn.p);
     // C: neither an annotation nor an arrowhead; no 40: Harita's arrow, 1.8 × 2.
     assert_eq!(
         leader(&e[3]),
@@ -1522,12 +1577,16 @@ fn leaders_come_with_their_notes_arrowheads_and_heights() {
     let Entity::Text(parsel) = &e[9] else {
         panic!("{:?}", e[9])
     };
-    // Under its note (106 + 2.5 × 2, 6), one line pitch down, aligned as the note.
+    // Under its note (106 + 2.5 × 2, 6), one line pitch down, at the note's side: its top there.
     assert_eq!(
         (parsel.text.as_str(), parsel.height, parsel.align),
-        ("Parsel 5", 2.0, Some(TextAlign::MiddleLeft))
+        ("Parsel 5", 2.0, Some(TextAlign::TopLeft))
     );
-    assert!(near(parsel.p, v(111.0, 6.0 - 2.0 * 5.0 / 3.0)), "{:?}", parsel.p);
+    assert!(
+        near(parsel.p, v(111.0, 6.0 + 2.0 - 2.0 * 5.0 / 3.0 - 1.0)),
+        "{:?}",
+        parsel.p
+    );
     // I: its block content is not taken; its height is the context's arrow, 1.5.
     assert_eq!(
         leader(&e[10]),
@@ -1645,4 +1704,115 @@ fn another_program_s_new_dimensions_come_in_as_kentos_s_own() {
     assert!(r.report.notes.iter().any(|n| n.what == "Ölçü (DIMENSION)"
         && n.reason.starts_with("koordinat ölçüsünün başlangıcı (0, 0) değil")
         && n.count == 1));
+}
+
+/// Multi-line texts of docs/adr/0182 §5 (fixtures/formats/v1/mtext.dxf,
+/// written by hand as AutoCAD writes them): each MTEXT one text, its line
+/// breaks, box (41) and spacing (44); a font switch's bold, an ACI colour
+/// switch, a stack over nothing raised, an underline with a true colour
+/// (blue in the high byte); heights, fractions, two faces, over and strike
+/// lines, slants, letter spacing and a paragraph's alignment dropped and
+/// named; TEXT's codes, a hard space and escapes; a width switch first the
+/// width factor; a turn in radians; one of nothing but codes skipped.
+#[test]
+fn an_mtext_is_one_text_with_its_lines_and_formats() {
+    use kentos_contracts::{TextRun, TextScript};
+    let r = read("mtext.dxf");
+    let e = &r.entities;
+    assert_eq!(e.len(), 5);
+    let text = |i: usize| match &e[i] {
+        Entity::Text(t) => t.clone(),
+        other => panic!("{other:?}"),
+    };
+    let run = |start: u32, end: u32| TextRun {
+        start,
+        end,
+        ..TextRun::default()
+    };
+    let red = Some("#FF0000".to_owned());
+    let t = text(0);
+    assert_eq!(
+        (
+            t.text.as_str(),
+            t.p,
+            t.height,
+            t.align,
+            t.paragraph.box_width,
+            t.paragraph.line_spacing
+        ),
+        (
+            "Parsel 12\nAlan: 450 m2\naltı çizili",
+            v(0.0, 0.0),
+            2.5,
+            Some(TextAlign::TopLeft),
+            Some(30.0),
+            Some(1.5)
+        )
+    );
+    assert_eq!(
+        t.paragraph.runs,
+        vec![
+            TextRun {
+                bold: true,
+                ..run(0, 9)
+            },
+            TextRun {
+                color: red.clone(),
+                ..run(10, 21)
+            },
+            TextRun {
+                script: Some(TextScript::Super),
+                color: red.clone(),
+                ..run(21, 22)
+            },
+            TextRun {
+                color: red,
+                ..run(22, 23)
+            },
+            TextRun {
+                underline: true,
+                color: Some("#0000FF".into()),
+                ..run(23, 34)
+            },
+        ]
+    );
+    let t = text(1);
+    assert_eq!(
+        (t.text.as_str(), t.align, t.paragraph.runs.len()),
+        (
+            "Büyük Tımes Üst çizik eğik aralık ortalı 11/2",
+            Some(TextAlign::MiddleCenter),
+            0
+        )
+    );
+    assert_eq!(
+        noted(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
+        Some(
+            "biçimlendirmesinden kaldırılan: yükseklik, kesir, yazı tipi, üst ve üstü çizili çizgi, harf aralığı, eğiklik açısı, paragraf biçimi"
+        )
+    );
+    let t = text(2);
+    assert_eq!(
+        (t.text.as_str(), t.align),
+        ("45° ±0.05 Ø20 {sabit} a\\b", Some(TextAlign::BottomLeft))
+    );
+    let t = text(3);
+    assert_eq!(
+        (t.text.as_str(), t.width_factor),
+        ("Dar yazı\nikinci", Some(0.8))
+    );
+    let t = text(4);
+    assert_eq!(
+        (
+            t.text.as_str(),
+            t.paragraph.box_width,
+            t.paragraph.line_spacing
+        ),
+        ("Dönük kutulu not", Some(15.0), Some(2.0))
+    );
+    assert!((t.rotation - 90.0).abs() < 1e-9, "{}", t.rotation);
+    assert_eq!(
+        skipped(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
+        Some("boş yazı")
+    );
 }

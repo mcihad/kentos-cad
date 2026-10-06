@@ -803,7 +803,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         Entity::Text(t) => {
             geo.extend([
-                Row::text("Metin", t.text.clone()).editor(edit(Editor::Text(Field::Text(slot)))),
+                // A multi-line text's lines and formats are its editor's (a double click,
+                // docs/adr/0182 §4): here they only show, ⏎ its breaks.
+                if crate::paragraph_editor::is_paragraph(t) {
+                    Row::text("Metin", t.text.replace('\n', " ⏎ "))
+                } else {
+                    Row::text("Metin", t.text.clone()).editor(edit(Editor::Text(Field::Text(slot))))
+                },
                 metres("Yükseklik", t.height).editor(number(Field::TextHeight(slot))),
                 Row::figure("Açı", fixed(t.rotation, 2))
                     .unit("°")
@@ -950,7 +956,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
 }
 
 /// A value that reads as a number: `12`, `-3,5` (the web's `/^-?\d+([.,]\d+)?$/`).
-/// A text's Hiza, Genişlik çarpanı and Zemin rows (docs/adr/0145 §6), for one
+/// A text's Hiza, Genişlik çarpanı, Kutu genişliği, Satır aralığı (docs/adr/0182
+/// §4) and Zemin rows (docs/adr/0145 §6), for one
 /// text or the texts of a selection: their common value, or “Çeşitli”. A new
 /// alignment keeps each text where it is; the texts are written in one step
 /// “Değiştir”. On a locked layer they only show. The web's `textRows`.
@@ -1009,9 +1016,26 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
         Some(value) => Row::figure("Genişlik çarpanı", value),
         None => Row::text("Genişlik çarpanı", MIXED),
     };
+    // A multi-line text's box (none: “Kutusuz”) and line spacing (docs/adr/0182 §4).
+    let box_row = match common(&|t| match t.paragraph.box_width {
+        Some(w) => crate::crs::js_number(fixed_number(w, 3)),
+        None => "Kutusuz".to_owned(),
+    }) {
+        Some(value) if value == "Kutusuz" => Row::text("Kutu genişliği", value),
+        Some(value) => Row::figure("Kutu genişliği", value),
+        None => Row::text("Kutu genişliği", MIXED),
+    };
+    let spacing_row = match common(&|t| {
+        crate::crs::js_number(fixed_number(t.paragraph.line_spacing.unwrap_or(1.0), 4))
+    }) {
+        Some(value) => Row::figure("Satır aralığı", value),
+        None => Row::text("Satır aralığı", MIXED),
+    };
     vec![
         Row::text("Hiza", align_text).editor(edit(aligns)),
         factor_row.editor(edit(Editor::Number(Field::TextWidth(slots.to_vec())))),
+        box_row.editor(edit(Editor::Number(Field::TextBox(slots.to_vec())))),
+        spacing_row.editor(edit(Editor::Number(Field::TextSpacing(slots.to_vec())))),
         Row::text("Zemin", mask_text).editor(edit(masks)),
     ]
 }
@@ -1304,4 +1328,11 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         });
     }
     sections
+}
+
+/// `+n.toFixed(places)`: a number rounded as the web shows it.
+fn fixed_number(n: f64, places: usize) -> f64 {
+    kentos_interaction::fixed(n, places)
+        .parse::<f64>()
+        .unwrap_or(n)
 }

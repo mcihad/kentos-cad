@@ -8,7 +8,7 @@ import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
-import { MAX_WIDTH_FACTOR, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
+import { MAX_WIDTH_FACTOR, paragraphProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -98,7 +98,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   spline: ['pts', 'closed'],
   xline: ['p', 'dir'],
   ray: ['p', 'dir'],
-  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask'],
+  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs'],
   dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb'],
   hatch: ['ring', 'holes', 'pattern'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
@@ -130,6 +130,10 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   if (g.kind === 'text') {
     if (out.mask !== true) delete out.mask;
     if (out.widthFactor === 1) delete out.widthFactor;
+    // A multi-line text's (docs/adr/0182 §1): no box, a spacing of 1, no runs; a null is no value.
+    if (out.boxWidth === null) delete out.boxWidth;
+    if (out.lineSpacing === null || out.lineSpacing === 1) delete out.lineSpacing;
+    if (Array.isArray(out.runs) && !out.runs.length) delete out.runs;
   }
   // So are a leader's (docs/adr/0146 §1): no mask, a filled arrow, no note; a null is no value, as serde reads it.
   if (g.kind === 'leader') {
@@ -307,6 +311,11 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
         at('.widthFactor'),
       ),
     );
+  // A multi-line text's box, spacing and letter formats (docs/adr/0182 §6).
+  if (g.kind === 'text') {
+    const problem = paragraphProblem(g.text, g);
+    if (problem) return failed(error('invalid_paragraph', problem[1], at(`.${problem[0]}`)));
+  }
   return null;
 }
 

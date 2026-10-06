@@ -7,7 +7,8 @@ import { setGeometries, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
 
 /**
- * A text's Hiza, Genişlik çarpanı and Zemin rows in Öznitelikler (docs/adr/0145 §6), for one text or the texts of a
+ * A text's Hiza, Genişlik çarpanı, Kutu genişliği, Satır aralığı (docs/adr/0182 §4) and Zemin rows in Öznitelikler
+ * (docs/adr/0145 §6), for one text or the texts of a
  * selection: their common value, or “Çeşitli”. A new alignment keeps each text where it is (its point moves to that
  * alignment's point of its box, the core's `textRealign`); a new width factor keeps each text's point; the texts are
  * written in one step “Değiştir”, those that already have the value left out. On a locked layer the rows only show.
@@ -16,6 +17,8 @@ import { fixed } from '../../core/displayNumber';
  */
 
 const MIXED = 'Çeşitli';
+/** A text without a box: its lines end only at their breaks (docs/adr/0182). */
+const BOXLESS = 'Kutusuz';
 
 /** “sol üst” → “Sol üst”. */
 const capital = (s: string) => s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1);
@@ -37,6 +40,8 @@ export function textRows(ctx: AppContext, texts: readonly TextEntity[], locked: 
   const align = common(texts, (t) => t.align ?? null);
   const factor = common(texts, (t) => t.widthFactor ?? 1);
   const mask = common(texts, (t) => t.mask === true);
+  const box = common(texts, (t) => t.boxWidth ?? null);
+  const spacing = common(texts, (t) => t.lineSpacing ?? 1);
   const font = ctx.doc.settings.drawingFont.value;
   const alignText = align === MIXED ? MIXED : capital(textAlignName(align));
   const maskText = (on: boolean) => (on ? 'Açık' : 'Kapalı');
@@ -77,6 +82,45 @@ export function textRows(ctx: AppContext, texts: readonly TextEntity[], locked: 
               setGeometries(
                 ctx,
                 texts.filter((t) => (t.widthFactor ?? 1) !== x).map((t) => ({ e: t, patch: { widthFactor: x } })),
+              );
+            },
+          },
+    },
+    {
+      // A multi-line text's box (docs/adr/0182 §4): emptied, no box; out of its range the command says why.
+      label: 'Kutu genişliği',
+      value: box === MIXED ? MIXED : box === null ? BOXLESS : String(+fixed(box, 3)),
+      numeric: box !== MIXED && box !== null,
+      editor: locked
+        ? undefined
+        : {
+            type: 'number',
+            commit: (v: string) => {
+              const s = v.trim();
+              const x = s === '' || s === BOXLESS ? null : parseFloat(s.replace(',', '.'));
+              if (x !== null && !Number.isFinite(x)) return;
+              setGeometries(
+                ctx,
+                texts.filter((t) => (t.boxWidth ?? null) !== x).map((t) => ({ e: t, patch: { boxWidth: x ?? undefined } })),
+              );
+            },
+          },
+    },
+    {
+      // The lines' spacing (docs/adr/0182 §4): 1 is no field; out of 0.25 … 4 the command says why.
+      label: 'Satır aralığı',
+      value: spacing === MIXED ? MIXED : String(+fixed(spacing, 4)),
+      numeric: spacing !== MIXED,
+      editor: locked
+        ? undefined
+        : {
+            type: 'number',
+            commit: (v: string) => {
+              const x = parseFloat(v.replace(',', '.'));
+              if (!Number.isFinite(x)) return;
+              setGeometries(
+                ctx,
+                texts.filter((t) => (t.lineSpacing ?? 1) !== x).map((t) => ({ e: t, patch: { lineSpacing: x === 1 ? undefined : x } })),
               );
             },
           },

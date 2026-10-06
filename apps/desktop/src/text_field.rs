@@ -116,6 +116,14 @@ impl App {
             return;
         }
         self.last_click = None;
+        // A multi-line text opens in the paragraph editor (paragraph_editor.rs, docs/adr/0182 §4).
+        if let Entity::Text(t) = entity
+            && crate::paragraph_editor::is_paragraph(t)
+        {
+            let t = t.clone();
+            self.edit_paragraph(slot, &t);
+            return;
+        }
         let format = kentos_interaction::Format::of(doc.settings());
         let open = match entity {
             Entity::Text(t) => Open {

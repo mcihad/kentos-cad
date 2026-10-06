@@ -62,6 +62,7 @@ fn text(align: Option<TextAlign>, width_factor: Option<f64>, mask: bool) -> Enti
         mask,
         label_of: None,
         label_scale: None,
+        paragraph: Default::default(),
     })
 }
 

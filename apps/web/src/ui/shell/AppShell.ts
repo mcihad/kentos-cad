@@ -13,6 +13,7 @@ import { CommandBar } from './CommandBar';
 import { CursorInput } from './CursorInput';
 import { HoverCard } from './HoverCard';
 import { InlineTextEditor } from './InlineTextEditor';
+import { ParagraphEditor } from './ParagraphEditor';
 import { bindViewportMenus } from './viewportMenus';
 import { splitter } from '../widgets/Splitter';
 
@@ -72,6 +73,7 @@ export class AppShell extends Component {
     );
 
     this.own(new InlineTextEditor(ctx, this.viewportHost));
+    this.own(new ParagraphEditor(ctx, this.viewportHost));
     this.own(new CommandBar(ctx, this.viewportHost));
     this.own(new HoverCard(ctx, this.viewportHost));
     this.bottom.commandLine.direct = this.own(new CursorInput(ctx, this.viewportHost));

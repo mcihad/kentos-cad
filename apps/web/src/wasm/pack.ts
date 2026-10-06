@@ -12,6 +12,27 @@
 const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
+/** A multi-line text's run's flags (docs/adr/0182; the store's `RUN_*`). */
+const RUN_BOLD = 1;
+const RUN_ITALIC = 2;
+const RUN_UNDERLINE = 4;
+const RUN_SUPER = 8;
+const RUN_SUB = 16;
+
+/** A run as the packer reads it (the model's TextRun). */
+interface RunFields {
+  start: number;
+  end: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  script?: 'super' | 'sub';
+  color?: string;
+}
+
+const runBits = (r: RunFields): number =>
+  (r.bold ? RUN_BOLD : 0) | (r.italic ? RUN_ITALIC : 0) | (r.underline ? RUN_UNDERLINE : 0) | (r.script === 'super' ? RUN_SUPER : r.script === 'sub' ? RUN_SUB : 0);
+
 /** Kinds by their number (`KIND` the other way). */
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch'] as const;
 /**
@@ -163,15 +184,23 @@ export function packEntities(list: Iterable<object>): Packed {
         points(e.pts);
         out.push(e.closed ? 1 : 0);
         break;
-      // docs/adr/0145: the alignment's place in TEXT_ALIGNS (−1 none), the width factor (NaN none), the mask a flag.
-      case 10:
+      // docs/adr/0145: the alignment's place in TEXT_ALIGNS (−1 none), the width factor (NaN none), the mask a flag;
+      // docs/adr/0182: the box width and line spacing (NaN none), then the runs: a count, each its start, end, flags
+      // (RUN_*) and colour (a string, −1 none).
+      case 10: {
         pt(e.p);
         num(e.height);
         num(e.rotation);
         out.push(str(e.text), typeof e.align === 'string' ? TEXT_ALIGNS.indexOf(e.align as (typeof TEXT_ALIGNS)[number]) : -1);
         num(e.widthFactor);
         out.push(e.mask === true ? 1 : 0);
+        num(e.boxWidth);
+        num(e.lineSpacing);
+        const runs = Array.isArray(e.runs) ? (e.runs as RunFields[]) : [];
+        out.push(runs.length);
+        for (const r of runs) out.push(r.start, r.end, runBits(r), str(r.color));
         break;
+      }
       // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
       case 11:
         pt(e.a);
@@ -374,6 +403,24 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const widthFactor = num();
         if (!Number.isNaN(widthFactor)) g.widthFactor = widthFactor;
         if (flag()) g.mask = true;
+        const boxWidth = num();
+        if (!Number.isNaN(boxWidth)) g.boxWidth = boxWidth;
+        const lineSpacing = num();
+        if (!Number.isNaN(lineSpacing)) g.lineSpacing = lineSpacing;
+        const count = num();
+        if (count > 0)
+          g.runs = Array.from({ length: count }, () => {
+            const r: RunFields = { start: num(), end: num() };
+            const bits = num();
+            if (bits & RUN_BOLD) r.bold = true;
+            if (bits & RUN_ITALIC) r.italic = true;
+            if (bits & RUN_UNDERLINE) r.underline = true;
+            if (bits & RUN_SUPER) r.script = 'super';
+            else if (bits & RUN_SUB) r.script = 'sub';
+            const color = str();
+            if (color !== undefined) r.color = color;
+            return r;
+          });
         break;
       }
       case 'dimension': {

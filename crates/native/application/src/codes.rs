@@ -122,6 +122,8 @@ pub const DUPLICATE_TAG: &str = "duplicate_tag";
 pub const INVALID_HEIGHT: &str = "invalid_height";
 /// A text's width factor not over 0 or over 100 (docs/adr/0145).
 pub const INVALID_WIDTH_FACTOR: &str = "invalid_width_factor";
+/// A multi-line text's box width, line spacing or letter formats out of their rules (docs/adr/0182 §6).
+pub const INVALID_PARAGRAPH: &str = "invalid_paragraph";
 /// A dimension the core cannot draw, or a field its kind does not take
 /// (a slope's elevations elsewhere, an ordinate's axis but 0 or 90; docs/adr/0147 §6).
 pub const INVALID_DIMENSION: &str = "invalid_dimension";

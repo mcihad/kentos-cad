@@ -2715,6 +2715,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -2760,6 +2768,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -2781,6 +2799,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -2813,6 +2838,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
@@ -7276,6 +7357,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -7321,6 +7410,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -7342,6 +7441,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -7374,6 +7480,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
@@ -14500,6 +14662,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -14545,6 +14715,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -14566,6 +14746,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -14598,6 +14785,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -16316,6 +16559,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -16361,6 +16612,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -16382,6 +16643,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -16414,6 +16682,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -18093,6 +18417,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -18138,6 +18470,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -18159,6 +18501,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -18191,6 +18540,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -20005,6 +20410,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -20050,6 +20463,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -20071,6 +20494,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -20103,6 +20533,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -21767,6 +22253,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -21812,6 +22306,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -21833,6 +22337,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -21865,6 +22376,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -23539,6 +24106,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -23584,6 +24159,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -23605,6 +24190,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -23637,6 +24229,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -25547,6 +26195,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -25592,6 +26248,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -25613,6 +26279,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -25645,6 +26318,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -26590,6 +27319,14 @@
                     ],
                     "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
                   },
+                  "boxWidth": {
+                    "description": "A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
@@ -26597,6 +27334,16 @@
                   "kind": {
                     "const": "text",
                     "type": "string"
+                  },
+                  "lineSpacing": {
+                    "description": "Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.",
+                    "format": "double",
+                    "maximum": 4.0,
+                    "minimum": 0.25,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   },
                   "mask": {
                     "description": "Its box filled with the drawing area's colour before it is drawn.",
@@ -26608,6 +27355,13 @@
                   "rotation": {
                     "format": "double",
                     "type": "number"
+                  },
+                  "runs": {
+                    "description": "Its letters' formats (`TextRun`), in order, not overlapping; absent: none.",
+                    "items": {
+                      "$ref": "#/$defs/TextRun"
+                    },
+                    "type": "array"
                   },
                   "text": {
                     "type": "string"
@@ -26963,6 +27717,62 @@
               "topLeft",
               "topCenter",
               "topRight"
+            ],
+            "type": "string"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
             ],
             "type": "string"
           },
@@ -28504,6 +29314,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -28549,6 +29367,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -28570,6 +29398,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -28602,6 +29437,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -30398,6 +31289,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -30443,6 +31342,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -30464,6 +31373,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -30496,6 +31412,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -31176,6 +32148,14 @@
                     ],
                     "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
                   },
+                  "boxWidth": {
+                    "description": "A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
@@ -31183,6 +32163,16 @@
                   "kind": {
                     "const": "text",
                     "type": "string"
+                  },
+                  "lineSpacing": {
+                    "description": "Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.",
+                    "format": "double",
+                    "maximum": 4.0,
+                    "minimum": 0.25,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   },
                   "mask": {
                     "description": "Its box filled with the drawing area's colour before it is drawn.",
@@ -31194,6 +32184,13 @@
                   "rotation": {
                     "format": "double",
                     "type": "number"
+                  },
+                  "runs": {
+                    "description": "Its letters' formats (`TextRun`), in order, not overlapping; absent: none.",
+                    "items": {
+                      "$ref": "#/$defs/TextRun"
+                    },
+                    "type": "array"
                   },
                   "text": {
                     "type": "string"
@@ -31619,6 +32616,62 @@
               "topLeft",
               "topCenter",
               "topRight"
+            ],
+            "type": "string"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
             ],
             "type": "string"
           },
@@ -33165,6 +34218,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -33210,6 +34271,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -33231,6 +34302,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -33263,6 +34341,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -35069,6 +36203,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -35114,6 +36256,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -35135,6 +36287,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -35167,6 +36326,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -36960,6 +38175,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -37005,6 +38228,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -37026,6 +38259,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -37058,6 +38298,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -39015,6 +40311,14 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "boxWidth": {
+                "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "color": {
                 "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
                 "type": [
@@ -39060,6 +40364,16 @@
               "layerId": {
                 "type": "string"
               },
+              "lineSpacing": {
+                "description": "The distance between the lines' baselines in 5/3 of the height (DXF's\ngroup 44); absent: 1. From `MIN_LINE_SPACING` to `MAX_LINE_SPACING`.",
+                "format": "double",
+                "maximum": 4.0,
+                "minimum": 0.25,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "lineWeight": {
                 "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
                 "format": "double",
@@ -39081,6 +40395,13 @@
                 "description": "Degrees, counter-clockwise from east.",
                 "format": "double",
                 "type": "number"
+              },
+              "runs": {
+                "description": "The letters' formats: ranges of the text's Unicode scalar values (not\nUTF-16 units), in order, not overlapping, each with a format; a run\nwith no format is not written, and touching runs of one format are one.\nAbsent: none.",
+                "items": {
+                  "$ref": "#/$defs/TextRun"
+                },
+                "type": "array"
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -39113,6 +40434,62 @@
               "rotation"
             ],
             "type": "object"
+          },
+          "TextRun": {
+            "description": "A range of a text's letters and their format (docs/adr/0182 §1).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Its own colour, as an object's (`#E5484D`, or a theme name); absent: the text's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "end": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "script": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/TextScript"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Raised or lowered, at 0.6 of the height; absent: on the line."
+              },
+              "start": {
+                "description": "Its first letter and the one past its last, counting Unicode scalar values.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "underline": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "TextScript": {
+            "description": "A run raised over the line (superscript) or lowered under it (subscript).",
+            "enum": [
+              "super",
+              "sub"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",

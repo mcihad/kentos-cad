@@ -34,6 +34,7 @@ fn scene() -> Bench {
                 mask: false,
                 label_of: None,
                 label_scale: None,
+                paragraph: Default::default(),
             }))
             .expect("a slot");
     }

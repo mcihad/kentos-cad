@@ -17,7 +17,7 @@ export function labelRule(st: LabelStyle): { placement: LabelStyle['placement'];
 }
 
 /** A label record's second number. */
-export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9 } as const;
+export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, along: 5, pieceText: 6, pieceDimension: 7, leader: 8, pieceLeader: 9, line: 10, paragraphMask: 11, pieceLine: 12 } as const;
 /**
  * Numbers per label record: `id, what, x, y, a, b, c, d, e`. A text's x, y are where its baseline starts (its
  * point moved by its alignment), b its width factor, c its mask's width (0 none); a block's text piece's d and e
@@ -25,6 +25,12 @@ export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, a
  * piece's e too (docs/adr/0147).
  */
 export const LABEL_STRIDE = 9;
+/*
+ * A multi-line text's records (docs/adr/0182 §3): its mask's box (`paragraphMask`: x, y the box's corner under its
+ * first letter's left, a the turn, b the box's width along the baseline, c its height up), then a record a line
+ * (`line`: x, y where its baseline starts, a the turn, b the height, c the width factor, d and e the line's letters
+ * start..end, Unicode scalar values; a block's piece's `pieceLine`: c the piece's place, its width factor the piece's).
+ */
 /** A dimension record's unit code (the core's `DIMENSION_UNITS`). */
 export const DIMENSION_UNIT = ['length', 'angle', 'percent', 'coordinate'] as const;
 /** A dimension record's prefix code (the core's `DIMENSION_PREFIXES`). */

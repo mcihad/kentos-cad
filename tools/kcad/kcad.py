@@ -91,6 +91,11 @@ SCHEMA_WITH_LINE_PARTS = 17
 SCHEMA_WITH_LINKED_TEXTS = 18
 # Schema 19: schema 18 and the project's named layer states, the settings' `layerStates` (docs/adr/0177 §4).
 SCHEMA_WITH_LAYER_STATES = 19
+# Schema 20: schema 19 and a multi-line text's `boxWidth`, `lineSpacing` and `runs` (docs/adr/0182 §1).
+SCHEMA_WITH_PARAGRAPHS = 20
+# A multi-line text's line spacing's bounds (AutoCAD's own).
+MIN_LINE_SPACING = 0.25
+MAX_LINE_SPACING = 4.0
 REGISTRY_DATUMS = ("TUREF", "ED50", "WGS84")
 # The kinds a layer may keep to; `endpoint` brings the quadrants with it, so `quadrant` is none of them.
 LAYER_SNAP_KINDS = ("endpoint", "midpoint", "center", "node", "intersection", "perpendicular", "tangent", "nearest", "centroid", "extension", "parallel", "grid")
@@ -103,7 +108,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -438,6 +443,7 @@ class _Schema:
         self.parts = False
         self.line_parts = False
         self.linked_texts = False
+        self.paragraphs = False
         self.blocks = False
         self.texts = False
         # While a block definition's objects are read: how many so far (they have no persistent ids).
@@ -593,6 +599,7 @@ class _Schema:
         self.parts = version >= SCHEMA_WITH_PARTS
         self.line_parts = version >= SCHEMA_WITH_LINE_PARTS
         self.linked_texts = version >= SCHEMA_WITH_LINKED_TEXTS
+        self.paragraphs = version >= SCHEMA_WITH_PARAGRAPHS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -952,6 +959,10 @@ class _Schema:
             if kind == "text" and ("labelOf" in fields) != ("labelScale" in fields):
                 self.path.append("labelOf" if "labelOf" in fields else "labelScale")
                 self.fail("bad_value", "bağlı yazının nesnesi ve ölçeği birlikte verilir")
+            if kind == "text" and "runs" in fields:
+                self.path.append("runs")
+                self.runs_rules(fields["text"], fields["runs"])
+                self.path.pop()
             # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
             if kind == "insert" and self.inside is None and fields["block"] not in self.index:
                 self.path.append("block")
@@ -1023,6 +1034,61 @@ class _Schema:
         if self.bool(v) is not True:
             self.fail("bad_value", "zemin false yazılmaz; zeminsiz yazıda alan yoktur")
         return True
+
+    def box_width(self, v):
+        x = self.float(v)
+        if not x > 0.0:
+            self.fail("bad_value", f"çok satırlı yazının kutu genişliği {x:g}; sıfırdan büyük olmalı")
+        return x
+
+    def line_spacing(self, v):
+        x = self.float(v)
+        if not MIN_LINE_SPACING <= x <= MAX_LINE_SPACING:
+            self.fail("bad_value", f"çok satırlı yazının satır aralığı {x:g}; {MIN_LINE_SPACING:g} ile {MAX_LINE_SPACING:g} arasında olmalı")
+        return x
+
+    def true_flag(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "false yazılmaz; biçimsiz dilimde alan yoktur")
+        return True
+
+    def runs(self, v):
+        """A multi-line text's letter formats (§6.6, docs/adr/0182): a list that is not empty, each run its range and format."""
+        if type(v) is list and not v:
+            self.fail("bad_value", "biçim dilimi listesi boş; dilimsiz yazıda alan yazılmaz")
+        run = self.fields(
+            {
+                "start": (self.uint(32), True),
+                "end": (self.uint(32), True),
+                "bold": (self.true_flag, False),
+                "italic": (self.true_flag, False),
+                "underline": (self.true_flag, False),
+                "script": (self.enum(("super", "sub")), False),
+                "color": (self.text, False),
+            }
+        )
+        return self.array(run)(v)
+
+    def runs_rules(self, text, runs):
+        """The runs inside the text's letters (Unicode scalar values), in order, apart, each with a format, touching runs
+        of one format joined (docs/adr/0182 §1)."""
+        letters = len(text)
+        keys = ("bold", "italic", "underline", "script", "color")
+        before = None
+        for i, r in enumerate(runs):
+            n = i + 1
+            if r["start"] >= r["end"] or r["end"] > letters:
+                self.fail("bad_value", f"{n}. biçim dilimi {r['start']}–{r['end']}; yazının {letters} harfi içinde, başı sonundan önce olmalı")
+            if not any(k in r for k in keys):
+                self.fail("bad_value", f"{n}. biçim diliminin biçimi yok; biçimsiz dilim yazılmaz")
+            if r.get("color") == "":
+                self.fail("bad_value", f"{n}. biçim diliminin rengi boş")
+            if before is not None:
+                if r["start"] < before["end"]:
+                    self.fail("bad_value", f"{n}. biçim dilimi öncekiyle örtüşüyor; dilimler sıralı ve ayrı olmalı")
+                if r["start"] == before["end"] and all(r.get(k) == before.get(k) for k in keys):
+                    self.fail("bad_value", f"{n}. biçim dilimi aynı biçimdeki öncekine bitişik; ikisi tek dilimdir")
+            before = r
 
     def label_scale(self, v):
         x = self.float(v)
@@ -1240,6 +1306,8 @@ ENTITY_KINDS = {
         **(text_extras(s, mask=True) if s.texts else {}),
         # Schema 18 (docs/adr/0175 §4): the object whose label it writes and the scale, only where objects have ids.
         **({"labelOf": (s.id16, False), "labelScale": (s.label_scale, False)} if s.linked_texts and s.inside is None else {}),
+        # Schema 20 (docs/adr/0182 §1): a multi-line text's box, line spacing and letter formats.
+        **({"boxWidth": (s.box_width, False), "lineSpacing": (s.line_spacing, False), "runs": (s.runs, False)} if s.paragraphs else {}),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {

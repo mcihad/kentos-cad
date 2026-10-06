@@ -15,7 +15,47 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, PointPart as CorePoint, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::text::paragraph::{Run, Script};
 use kentos_geometry_core::text::{Font, TextAlign};
+
+/// A multi-line text's runs as the core takes them (docs/adr/0182); none for none.
+pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
+    (!runs.is_empty()).then(|| {
+        runs.iter()
+            .map(|r| Run {
+                start: r.start,
+                end: r.end,
+                bold: r.bold,
+                italic: r.italic,
+                underline: r.underline,
+                script: r.script.map(|s| match s {
+                    kentos_contracts::TextScript::Super => Script::Super,
+                    kentos_contracts::TextScript::Sub => Script::Sub,
+                }),
+                color: r.color.clone(),
+            })
+            .collect()
+    })
+}
+
+/// The core's runs as the contract writes them.
+pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
+    runs.unwrap_or_default()
+        .into_iter()
+        .map(|r| kentos_contracts::TextRun {
+            start: r.start,
+            end: r.end,
+            bold: r.bold,
+            italic: r.italic,
+            underline: r.underline,
+            script: r.script.map(|s| match s {
+                Script::Super => kentos_contracts::TextScript::Super,
+                Script::Sub => kentos_contracts::TextScript::Sub,
+            }),
+            color: r.color,
+        })
+        .collect()
+}
 
 fn v(p: &Point) -> Vec2 {
     Vec2::new(p.x, p.y)
@@ -170,6 +210,9 @@ pub fn shape(entity: &Entity) -> Shape {
             align: t.align.and_then(|a| TextAlign::from_name(a.name())),
             width_factor: t.width_factor,
             mask: t.mask.then_some(true),
+            box_width: t.paragraph.box_width,
+            line_spacing: t.paragraph.line_spacing,
+            runs: core_runs(&t.paragraph.runs),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -414,6 +457,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 align,
                 width_factor,
                 mask,
+                box_width,
+                line_spacing,
+                runs,
             },
         ) => {
             e.p = p(at);
@@ -423,6 +469,11 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.align = align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name()));
             e.width_factor = width_factor;
             e.mask = mask == Some(true);
+            e.paragraph = kentos_contracts::Paragraph {
+                box_width,
+                line_spacing,
+                runs: contract_runs(runs),
+            };
         }
         (
             Entity::Dimension(e),
@@ -608,6 +659,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
         } => Entity::Text(TextEntity {
             base,
             p,
@@ -620,6 +674,12 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             // A geometry is no link: a text written or moved by a command follows no object (docs/adr/0175 §4).
             label_of: None,
             label_scale: None,
+            // A spacing of 1 is no spacing (docs/adr/0182): one spelling.
+            paragraph: kentos_contracts::Paragraph {
+                box_width,
+                line_spacing: line_spacing.filter(|s| *s != 1.0),
+                runs,
+            },
         }),
         EntityGeometry::Dimension {
             a,
@@ -768,6 +828,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
         } => EntityGeometry::Text {
             p: p(at),
             text,
@@ -776,6 +839,9 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             align: align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
             width_factor,
             mask: mask == Some(true),
+            box_width,
+            line_spacing,
+            runs: contract_runs(runs),
         },
         Shape::Dimension {
             a,

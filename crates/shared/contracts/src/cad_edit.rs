@@ -267,6 +267,23 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         mask: bool,
+        /// A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.
+        #[serde(default, rename = "boxWidth", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        box_width: Option<f64>,
+        /// Its line spacing, times 5/3 of the height; absent: 1. From 0.25 to 4.
+        #[serde(
+            default,
+            rename = "lineSpacing",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(range(min = 0.25, max = 4.0)))]
+        line_spacing: Option<f64>,
+        /// Its letters' formats (`TextRun`), in order, not overlapping; absent: none.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextRun>>", optional))]
+        runs: Vec<crate::TextRun>,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces

@@ -565,14 +565,18 @@ fn common<M: Map + ?Sized>(
         Shape::Text {
             p,
             text,
-            height,
+            height: h0,
             rotation,
             align,
             width_factor,
             mask,
+            box_width,
+            line_spacing,
+            runs,
         } => {
-            let (height, rotation, width) =
-                text_rule(&m.jac(*p)?, *height, *rotation, *width_factor);
+            let (height, rotation, width) = text_rule(&m.jac(*p)?, *h0, *rotation, *width_factor);
+            // A multi-line text's box takes its letters' change of width (docs/adr/0182).
+            let along = height * width / (h0 * width_factor.unwrap_or(1.0));
             kept(Shape::Text {
                 p: m.at(*p)?,
                 text: text.clone(),
@@ -581,6 +585,9 @@ fn common<M: Map + ?Sized>(
                 align: *align,
                 width_factor: Some(width),
                 mask: *mask,
+                box_width: box_width.map(|w| w * along),
+                line_spacing: *line_spacing,
+                runs: runs.clone(),
             })
         }
         Shape::Leader {

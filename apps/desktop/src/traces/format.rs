@@ -129,6 +129,9 @@ pub struct Step {
     pub(super) overview: Option<[f64; 2]>,
     /// Büyüteç's zoom button, by its words (`8×`).
     pub(super) magnifier: Option<String>,
+    /// The paragraph editor (docs/adr/0182 §4): its text typed, letters
+    /// chosen and formatted, then kept or dropped.
+    pub(super) paragraph: Option<ParagraphStep>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -257,6 +260,20 @@ pub struct TrackLineExpect {
     pub(super) angle: f64,
 }
 
+/// What a `paragraph` step does in the open paragraph editor (docs/adr/0182 §4).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ParagraphStep {
+    /// The whole text, typed over what is there.
+    pub(super) text: Option<String>,
+    /// Letters `start..end` chosen, then a format's button pressed: `bold`,
+    /// `italic`, `underline`, `super`, `sub`, or `{ "color": … }` (null: the text's).
+    #[serde(default)]
+    pub(super) formats: Vec<(u32, u32, serde_json::Value)>,
+    /// `keep` (Tamam) or `drop` (Vazgeç).
+    pub(super) close: Option<String>,
+}
+
 /// An object's expected shape: the newest one, or one of `objects` by its `id`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -311,6 +328,14 @@ pub struct Newest {
     pub(super) label_of: Option<Option<u32>>,
     #[serde(rename = "labelScale")]
     pub(super) label_scale: Option<f64>,
+    /// A multi-line text's box width (from clicks: within the click
+    /// tolerance), `null` none; its line spacing, `null` none, and runs,
+    /// exact (docs/adr/0182).
+    #[serde(rename = "boxWidth", default, deserialize_with = "present")]
+    pub(super) box_width: Option<Option<f64>>,
+    #[serde(rename = "lineSpacing", default, deserialize_with = "present")]
+    pub(super) line_spacing: Option<Option<f64>>,
+    pub(super) runs: Option<Vec<kentos_contracts::TextRun>>,
     /// Its own symbol, colour and line weight, `null` none; its layer's
     /// name (docs/adr/0176 §3). Exact; absent, not compared.
     #[serde(default, deserialize_with = "present")]

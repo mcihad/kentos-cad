@@ -273,6 +273,7 @@ fn objects() -> Vec<Entity> {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -285,6 +286,7 @@ fn objects() -> Vec<Entity> {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
@@ -937,6 +939,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             mask: false,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -987,11 +990,12 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         panic!()
     };
     assert_eq!(l.base.layer_id, "0");
-    // One line of text; a circle without a radius is left out and said.
+    // A text of two lines is an MTEXT and comes back so (docs/adr/0182 §5); a circle without a radius is
+    // left out and said.
     let Entity::Text(t) = &r.entities[4] else {
         panic!()
     };
-    assert_eq!(t.text, "iki satır");
+    assert_eq!(t.text, "iki\nsatır");
     assert_eq!(r.entities.len(), 5);
     assert!(report.skipped.iter().any(|s| s.what == "Daire"));
 }
@@ -2394,4 +2398,86 @@ fn multi_part_lines_and_points_go_out_part_by_part() {
     );
     assert!(points.iter().all(|p| p.parts.is_none()));
     assert_eq!(points[1].base.label.as_deref(), Some("N-1"));
+}
+
+/// The multi-line texts' fixture (`fixtures/formats/v1/dxf-write/paragraphs.input.json`,
+/// docs/adr/0182 §5) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
+/// the baseline alignment moved to the top and the raised letters a stack
+/// cannot hold are said.
+#[test]
+fn the_paragraphs_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("paragraphs");
+    let notes: Vec<(&str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.count))
+        .collect();
+    assert_eq!(
+        notes,
+        [("Çok satırlı yazı", 1), ("Çok satırlı yazı", 1)],
+        "{:?}",
+        report.notes
+    );
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// Multi-line texts go out as MTEXT and come back as they were (docs/adr/0182
+/// §5): their lines, box, spacing, width factor, mask, turn and letter
+/// formats exactly; a baseline alignment as the top's, where the text stood;
+/// raised letters a stack cannot hold on the line; a block's own.
+#[test]
+fn paragraphs_read_back_as_they_were() {
+    let input = fixture_input("paragraphs");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let texts = |entities: &[Entity]| -> Vec<TextEntity> {
+        entities
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Text(t) => {
+                    let mut t = t.clone();
+                    t.base.id = 0;
+                    t.base.layer_id.clear();
+                    Some(t)
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let (got, want) = (texts(&r.entities), texts(&input.entities));
+    assert_eq!(got.len(), 5);
+    for i in [0, 1, 2] {
+        assert_eq!(got[i], want[i], "text {}", i + 1);
+    }
+    // The baseline's left went out as the top's left: the same text where it stood.
+    assert_eq!(
+        (got[3].text.as_str(), got[3].align),
+        (
+            want[3].text.as_str(),
+            Some(kentos_contracts::TextAlign::TopLeft)
+        )
+    );
+    assert!(
+        (got[3].p.y - (want[3].p.y + want[3].height)).abs() < 1e-9,
+        "{:?}",
+        got[3].p
+    );
+    // “1/2” cannot be stacked: it reads back on the line, the other run kept.
+    assert_eq!(got[4].text, want[4].text);
+    assert_eq!(got[4].paragraph.runs, want[4].paragraph.runs[1..]);
+    let [note] = r.blocks.as_slice() else {
+        panic!("{:?}", r.blocks)
+    };
+    let [Entity::Text(inside)] = note.entities.as_slice() else {
+        panic!("{:?}", note.entities)
+    };
+    let Entity::Text(given) = &input.blocks[0].entities[0] else {
+        panic!()
+    };
+    assert_eq!(
+        (&inside.text, &inside.paragraph, inside.align),
+        (&given.text, &given.paragraph, given.align)
+    );
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
 }

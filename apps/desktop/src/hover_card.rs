@@ -177,7 +177,8 @@ pub(crate) fn card(
     match e {
         Entity::Circle(c) => rows.push(("Yarıçap", format.length(c.r), true)),
         Entity::Arc(a) => rows.push(("Yarıçap", format.length(a.r), true)),
-        Entity::Text(t) => rows.push(("Metin", t.text.clone(), false)),
+        // A multi-line text's breaks as ⏎ (docs/adr/0182): the card's rows are one line each.
+        Entity::Text(t) => rows.push(("Metin", t.text.replace('\n', " ⏎ "), false)),
         // A multi-point object's points, and their elevation when they share one (docs/adr/0174).
         Entity::Point(p) => {
             let parts = p.parts.as_deref().unwrap_or(&[]);

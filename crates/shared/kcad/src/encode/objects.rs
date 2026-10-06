@@ -11,8 +11,8 @@ use std::collections::{BTreeMap, HashSet};
 
 use kentos_contracts::{
     AreaPart, BlockId, DimensionStyle, DocumentSnapshotV2, Entity, EntityId, HatchPattern,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, Vec2, label_scale_ok,
-    width_factor_ok,
+    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PointPart, RingGeometry, TextRun, TextScript, Vec2,
+    label_scale_ok, width_factor_ok,
 };
 
 use super::Encoder;
@@ -47,6 +47,8 @@ pub(super) enum Val<'d> {
     PointParts(&'d [PointPart]),
     Loops(&'d [Vec<Vec2>]),
     Pattern(&'d HatchPattern),
+    /// A multi-line text's letter formats (§6.6, docs/adr/0182).
+    Runs(&'d [TextRun]),
 }
 
 impl<'d> Encoder<'d> {
@@ -229,6 +231,30 @@ impl<'d> Encoder<'d> {
                 }
                 if e.mask {
                     f.push(("mask", Val::Bool(true)));
+                }
+                // A multi-line text's box, line spacing and letter formats (docs/adr/0182 §1). A width or
+                // spacing that is not finite meets the float's own refusal (`non_finite`), with its place.
+                let para = &e.paragraph;
+                if let Some((field, words)) = para.problem(&e.text) {
+                    let finite = match field {
+                        "boxWidth" => para.box_width.is_none_or(f64::is_finite),
+                        "lineSpacing" => para.line_spacing.is_none_or(f64::is_finite),
+                        _ => true,
+                    };
+                    if finite {
+                        self.path.push(Seg::Name(kind));
+                        self.path.push(Seg::Name(field));
+                        return Err(self.fail(Code::BadValue, &words));
+                    }
+                }
+                if let Some(w) = para.box_width {
+                    f.push(("boxWidth", Val::Float(w)));
+                }
+                if let Some(s) = para.line_spacing {
+                    f.push(("lineSpacing", Val::Float(s)));
+                }
+                if !para.runs.is_empty() {
+                    f.push(("runs", Val::Runs(&para.runs)));
                 }
                 // The object whose label it writes (docs/adr/0175 §4): both fields or neither, and only the
                 // drawing's texts (a block definition's objects have no persistent ids to name).
@@ -540,6 +566,52 @@ impl<'d> Encoder<'d> {
                 self.open(loops.len(), false)?;
                 for (i, list) in loops.iter().enumerate() {
                     self.at(Seg::Index(i), |e| e.points(list))?;
+                }
+                self.close();
+                Ok(())
+            }
+            Val::Runs(runs) => {
+                self.open(runs.len(), false)?;
+                for (i, r) in runs.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        let count = 2
+                            + usize::from(r.bold)
+                            + usize::from(r.italic)
+                            + usize::from(r.underline)
+                            + usize::from(r.script.is_some())
+                            + usize::from(r.color.is_some());
+                        e.open(count, true)?;
+                        // end (3), bold (4), color (5), start (5), italic (6), script (6), underline (9).
+                        e.key("end");
+                        e.w.uint(u64::from(r.end));
+                        if r.bold {
+                            e.key("bold");
+                            e.w.bool(true);
+                        }
+                        if let Some(c) = &r.color {
+                            e.key("color");
+                            e.at(Seg::Name("color"), |e| e.text(c))?;
+                        }
+                        e.key("start");
+                        e.w.uint(u64::from(r.start));
+                        if r.italic {
+                            e.key("italic");
+                            e.w.bool(true);
+                        }
+                        if let Some(s) = r.script {
+                            e.key("script");
+                            e.w.text(match s {
+                                TextScript::Super => "super",
+                                TextScript::Sub => "sub",
+                            });
+                        }
+                        if r.underline {
+                            e.key("underline");
+                            e.w.bool(true);
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
                 }
                 self.close();
                 Ok(())

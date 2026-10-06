@@ -17,8 +17,9 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
     DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
     HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity,
-    MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, PathEntity, PointEntity, PointPart, RingGeometry,
-    SplineEntity, TextAlign, TextEntity, Vec2, label_scale_ok, width_factor_ok,
+    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity,
+    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextRun, TextScript,
+    Vec2, label_scale_ok, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -29,8 +30,8 @@ use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
-    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_SURVEY,
-    SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
+    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -113,6 +114,8 @@ pub(super) struct Features {
     /// Schema 18: a text's link to the object whose label it writes
     /// (`labelOf`, `labelScale`, docs/adr/0175 §4).
     pub(super) linked_texts: bool,
+    /// Schema 20: a multi-line text's `boxWidth`, `lineSpacing` and `runs` (docs/adr/0182).
+    pub(super) paragraphs: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -138,6 +141,7 @@ impl Features {
             layer_states: schema >= SCHEMA_WITH_LAYER_STATES,
             line_parts: schema >= SCHEMA_WITH_LINE_PARTS,
             linked_texts: schema >= SCHEMA_WITH_LINKED_TEXTS,
+            paragraphs: schema >= SCHEMA_WITH_PARAGRAPHS,
             uids: true,
         }
     }
@@ -181,6 +185,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
                     || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
+                    || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
             }
             Kind::Dimension => {
                 matches!(
@@ -258,6 +263,9 @@ struct Fields {
     label_of: Option<EntityId>,
     label_scale: Option<f64>,
     link_at: usize,
+    /// A multi-line text's fields (docs/adr/0182), and where its runs start (for a refusal).
+    paragraph: Paragraph,
+    runs_at: usize,
 }
 
 /// The objects and their persistent ids, each id once (§6.8); each insert
@@ -496,6 +504,44 @@ pub(super) fn object(
                 f.mirror = Some(true);
             }
             "align" => f.align = Some(text_align(r)?),
+            "boxWidth" => {
+                let at = r.position();
+                let w = r.float()?;
+                if w <= 0.0 {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("çok satırlı yazının kutu genişliği {w}; sıfırdan büyük olmalı"),
+                    ));
+                }
+                f.paragraph.box_width = Some(w);
+            }
+            "lineSpacing" => {
+                let at = r.position();
+                let s = r.float()?;
+                if !(MIN_LINE_SPACING..=MAX_LINE_SPACING).contains(&s) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "çok satırlı yazının satır aralığı {s}; {MIN_LINE_SPACING} ile {MAX_LINE_SPACING} arasında olmalı"
+                        ),
+                    ));
+                }
+                f.paragraph.line_spacing = Some(s);
+            }
+            "runs" => {
+                f.runs_at = r.position();
+                f.paragraph.runs = list(r, |r, _| text_run(r))?;
+                // The writer leaves an empty list out: one spelling (§6.6).
+                if f.paragraph.runs.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        f.runs_at,
+                        "biçim dilimi listesi boş; dilimsiz yazıda alan yazılmaz",
+                    ));
+                }
+            }
             "arrow" => f.arrow = Some(leader_arrow(r)?),
             "widthFactor" => f.width_factor = Some(width_factor(r)?),
             "labelOf" => {
@@ -640,10 +686,15 @@ fn build(
                     "bağlı yazının nesnesi ve ölçeği birlikte verilir",
                 ));
             }
+            let text = required(r, f.text.take(), "text")?;
+            // The runs inside the text, in order, apart and one per format (docs/adr/0182 §1).
+            if let Some(words) = f.paragraph.runs_problem(&text) {
+                return Err(r.fail_at(Code::BadValue, f.runs_at, &words));
+            }
             Entity::Text(TextEntity {
                 base,
                 p: required(r, f.p, "p")?,
-                text: required(r, f.text.take(), "text")?,
+                text,
                 height: required(r, f.height, "height")?,
                 rotation: required(r, f.rotation, "rotation")?,
                 align: f.align,
@@ -651,6 +702,7 @@ fn build(
                 mask: f.mask.unwrap_or(false),
                 label_of: f.label_of,
                 label_scale: f.label_scale,
+                paragraph: std::mem::take(&mut f.paragraph),
             })
         }
         Kind::Dimension => {
@@ -903,6 +955,45 @@ fn pattern(r: &mut Reader<'_>) -> Result<HatchPattern, KcadError> {
         angle: required(r, angle, "angle")?,
         spacing: required(r, spacing, "spacing")?,
     })
+}
+
+/// A multi-line text's run (§6.6, docs/adr/0182): its range and format;
+/// a false flag is not written (its absence is false).
+fn text_run(r: &mut Reader<'_>) -> Result<TextRun, KcadError> {
+    let (mut start, mut end) = (None, None);
+    let mut run = TextRun::default();
+    map(r, |r, key| {
+        let flag = |r: &mut Reader<'_>, name: &str| -> Result<bool, KcadError> {
+            let at = r.position();
+            if !r.bool()? {
+                return Err(r.fail_at(
+                    Code::BadValue,
+                    at,
+                    &format!("{name} false yazılmaz; biçimsiz dilimde alan yoktur"),
+                ));
+            }
+            Ok(true)
+        };
+        match key {
+            "start" => start = Some(r.uint(u64::from(u32::MAX))? as u32),
+            "end" => end = Some(r.uint(u64::from(u32::MAX))? as u32),
+            "bold" => run.bold = flag(r, "bold")?,
+            "italic" => run.italic = flag(r, "italic")?,
+            "underline" => run.underline = flag(r, "underline")?,
+            "script" => {
+                run.script = Some(named(
+                    r,
+                    &[("super", TextScript::Super), ("sub", TextScript::Sub)],
+                )?)
+            }
+            "color" => run.color = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    run.start = required(r, start, "start")?;
+    run.end = required(r, end, "end")?;
+    Ok(run)
 }
 
 /// A text's alignment by its name (§6.6); an unknown name is `bad_value`.

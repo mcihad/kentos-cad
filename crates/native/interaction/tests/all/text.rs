@@ -138,6 +138,7 @@ fn a_texts_extras_stay_when_its_words_change() {
             mask: true,
             label_of: None,
             label_scale: None,
+            paragraph: Default::default(),
         })
     };
     let slot = b.doc.add(aligned("Ada 101", 0.8)).expect("a slot");

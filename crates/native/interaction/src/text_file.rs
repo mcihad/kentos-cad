@@ -200,6 +200,9 @@ impl PlaceTextFile {
                     align: m.text_align,
                     width_factor: (m.text_width_factor != 1.0).then_some(m.text_width_factor),
                     mask: m.text_mask,
+                    box_width: None,
+                    line_spacing: None,
+                    runs: Vec::new(),
                 }
             })
             .collect();
@@ -271,15 +274,7 @@ impl Tool for PlaceTextFile {
                         if text.is_empty() {
                             return 0.0;
                         }
-                        TextPlace {
-                            p: Vec2::new(0.0, 0.0),
-                            text,
-                            height: 1.0,
-                            rotation: 0.0,
-                            align: None,
-                            width_factor: None,
-                        }
-                        .width(font)
+                        TextPlace::line(Vec2::new(0.0, 0.0), text, 1.0, 0.0, None, None).width(font)
                     })
                     .collect();
                 self.file = Some(Loaded {

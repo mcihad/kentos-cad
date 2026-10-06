@@ -442,6 +442,13 @@ def point_part(pp):
     return cmap(fields(pp, {"p": (point, True), "z": (f64, False)}, "point part"))
 
 
+def text_run(r):
+    """A multi-line text's run (schema 20, docs/adr/0182): its range, a flag only when true, its script and colour."""
+    flag = (lambda b: boolean(b) if b is True else None, False)
+    table = {"start": (uint, True), "end": (uint, True), "bold": flag, "italic": flag, "underline": flag, "script": (enum(("super", "sub")), False), "color": (text, False)}
+    return cmap(fields(r, table, "run"))
+
+
 def path_fields(holes):
     table = {"pts": (points, True), "bulges": (floats, False), "zs": (elevations, False)}
     if holes:
@@ -479,6 +486,10 @@ KINDS = {
         # Schema 18 (docs/adr/0175 §4): the object whose label it writes, its persistent id, and the scale's denominator.
         "labelOf": (lambda u: blob(uid_bytes(u)), False),
         "labelScale": (f64, False),
+        # Schema 20 (docs/adr/0182 §1): a multi-line text's box, line spacing and letter formats.
+        "boxWidth": (f64, False),
+        "lineSpacing": (f64, False),
+        "runs": (lambda rs: array([text_run(r) for r in rs]), False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -586,7 +597,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
+    """The oldest schema that holds the drawing: 20 with a multi-line text's box, line spacing or letter formats, in the
+    drawing or a block definition (docs/adr/0182 §1), 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
     object's label (docs/adr/0175 §4), 17
     with a multi-part polyline or a multi-point object, in the drawing or
     a block definition (docs/adr/0174), 16 with the survey settings' ground height or reduction to the grid
@@ -605,6 +617,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def line_parts(es):
         return any(e["kind"] in ("polyline", "point") and "parts" in e for e in es)
 
+    def paragraphs(es):
+        return any(e["kind"] == "text" and any(k in e for k in ("boxWidth", "lineSpacing", "runs")) for e in es)
+
+    if paragraphs(entities) or any(paragraphs(b["entities"]) for b in blocks or []):
+        return 20
     if settings and settings.get("layerStates"):
         return 19
     # A block definition's texts have no link (their objects have no persistent ids).
@@ -832,7 +849,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-20.kcad"] = container(root(cmap(parts), version=b"\x14"))
+    files["schema-version-21.kcad"] = container(root(cmap(parts), version=b"\x15"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -953,6 +970,26 @@ def broken(minimal_content, minimal_file):
     files["text-width-factor-too-wide.kcad"] = in_schema(7, text_of(widthFactor=f64(100.5)))
     files["text-width-factor-nan.kcad"] = in_schema(7, text_of(widthFactor=b"\xfb\x7f\xf8\x00\x00\x00\x00\x00\x00"))
     files["text-mask-false.kcad"] = in_schema(7, text_of(mask=boolean(False)))
+    # A multi-line text's box, line spacing and runs are schema 20's (docs/adr/0182 §1): in schema 19 unknown fields;
+    # a box over 0, a spacing from 0.25 to 4, runs in the text's letters (Unicode scalar values), in order, apart, each
+    # with a format (a flag written only when true, a colour not empty), touching runs of one format one; the list is
+    # not empty.
+    def run_of(start, end, **extra):
+        return cmap({"start": uint(start), "end": uint(end), **extra})
+
+    files["paragraph-in-schema-19.kcad"] = in_schema(19, text_of(boxWidth=f64(20.0)))
+    files["paragraph-box-zero.kcad"] = in_schema(20, text_of(boxWidth=f64(0.0)))
+    files["paragraph-spacing-too-wide.kcad"] = in_schema(20, text_of(lineSpacing=f64(4.5)))
+    files["paragraph-runs-empty.kcad"] = in_schema(20, text_of(runs=array([])))
+    files["paragraph-run-past-text.kcad"] = in_schema(20, text_of(runs=array([run_of(2, 5, bold=boolean(True))])))
+    files["paragraph-run-backwards.kcad"] = in_schema(20, text_of(runs=array([run_of(3, 1, bold=boolean(True))])))
+    files["paragraph-run-overlap.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 3, bold=boolean(True)), run_of(2, 4, italic=boolean(True))])))
+    files["paragraph-run-touching-same.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(True)), run_of(2, 4, bold=boolean(True))])))
+    files["paragraph-run-formatless.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2)])))
+    files["paragraph-run-bold-false.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, bold=boolean(False))])))
+    files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
+    files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
+    files["paragraph-run-unknown-field.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, size=f64(2.0))])))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
     # A leader is schema 8's (docs/adr/0146): in schema 7 an unknown kind; two vertices or more, a positive height,
     # a note that is not empty, an arrowhead by one of its names (the filled arrow has none), `mask` only when true.
@@ -1164,6 +1201,7 @@ def build():
     out["multi-part-lines.kcad"] = container(document(load("multi-part-lines.json")))
     out["linked-texts.kcad"] = container(document(load("linked-texts.json")))
     out["layer-states.kcad"] = container(document(load("layer-states.json")))
+    out["paragraphs.kcad"] = container(document(load("paragraphs.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

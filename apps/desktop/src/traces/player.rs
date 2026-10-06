@@ -12,6 +12,7 @@ use iced::time::Instant;
 use iced::{Point, Rectangle, Task, event, mouse, window};
 
 use kentos_contracts::{DocumentSnapshotV1, Entity};
+use kentos_geometry_core::text::paragraph::Toggle;
 use kentos_render_wgpu::Vec2;
 
 use crate::app::{App, Message, Picker};
@@ -80,6 +81,10 @@ pub struct Seen {
     /// none for a text of its own and other kinds.
     pub label_of: Option<u32>,
     pub label_scale: Option<f64>,
+    /// A multi-line text's box width, line spacing and runs (docs/adr/0182); none for other kinds.
+    pub box_width: Option<f64>,
+    pub line_spacing: Option<f64>,
+    pub runs: Vec<kentos_contracts::TextRun>,
     /// Its own symbol, colour and line weight, and its layer's name (docs/adr/0176 §3).
     pub symbol: Option<String>,
     pub color: Option<String>,
@@ -238,6 +243,18 @@ impl Seen {
             label_scale: match e {
                 Entity::Text(t) => t.label_scale,
                 _ => None,
+            },
+            box_width: match e {
+                Entity::Text(t) => t.paragraph.box_width,
+                _ => None,
+            },
+            line_spacing: match e {
+                Entity::Text(t) => t.paragraph.line_spacing,
+                _ => None,
+            },
+            runs: match e {
+                Entity::Text(t) => t.paragraph.runs.clone(),
+                _ => Vec::new(),
             },
             symbol: e.base().symbol.clone(),
             color: e.base().color.clone(),
@@ -594,6 +611,52 @@ impl<'a> Player<'a> {
         if let Some(at) = step.double_click {
             self.click(at, mouse::Button::Left)?;
             return self.click(at, mouse::Button::Left);
+        }
+        // The paragraph editor (docs/adr/0182 §4): typed over, letters formatted, kept or dropped.
+        if let Some(p) = &step.paragraph {
+            use crate::paragraph_editor::Event as P;
+            use iced::widget::text_editor::{Action, Edit};
+            if self.app.paragraph.is_none() {
+                return Err("çok satırlı yazı düzenleyicisi açık değil".to_owned());
+            }
+            if let Some(text) = &p.text {
+                let _ = self
+                    .app
+                    .update(Message::Paragraph(P::Edit(Action::SelectAll)));
+                let _ = self
+                    .app
+                    .update(Message::Paragraph(P::Edit(Action::Edit(Edit::Paste(
+                        std::sync::Arc::new(text.clone()),
+                    )))));
+            }
+            for (start, end, toggle) in &p.formats {
+                let toggle = match toggle {
+                    serde_json::Value::String(s) => match s.as_str() {
+                        "bold" => Toggle::Bold,
+                        "italic" => Toggle::Italic,
+                        "underline" => Toggle::Underline,
+                        "super" => Toggle::Super,
+                        "sub" => Toggle::Sub,
+                        other => return Err(format!("bilinmeyen biçim {other}")),
+                    },
+                    other => Toggle::Color(other["color"].as_str().map(str::to_owned)),
+                };
+                let _ = self.app.update(Message::Paragraph(P::Select(
+                    *start as usize,
+                    *end as usize,
+                )));
+                let _ = self.app.update(Message::Paragraph(P::Format(toggle)));
+            }
+            match p.close.as_deref() {
+                Some("keep") => {
+                    let _ = self.app.update(Message::Paragraph(P::Keep));
+                }
+                Some("drop") => {
+                    let _ = self.app.update(Message::Paragraph(P::Drop));
+                }
+                _ => {}
+            }
+            return Ok(());
         }
         if let Some(at) = step.right_click {
             return self.click(at, mouse::Button::Right);

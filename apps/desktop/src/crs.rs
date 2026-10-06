@@ -832,7 +832,7 @@ pub fn definition_details(d: &CrsDefinition) -> Vec<(&'static str, String)> {
 }
 
 /// A number as JavaScript writes it (`${27}` → “27”, `${0.9996}` → “0.9996”).
-fn js_number(v: f64) -> String {
+pub(crate) fn js_number(v: f64) -> String {
     if v.fract() == 0.0 && v.abs() < 1e15 {
         format!("{}", v as i64)
     } else {

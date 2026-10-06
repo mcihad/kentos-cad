@@ -452,6 +452,33 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.label_scale
         ));
     }
+    // A multi-line text's box (from clicks: within the click tolerance), spacing and runs (docs/adr/0182).
+    if let Some(width) = want.box_width {
+        let near = match (width, seen.box_width) {
+            (None, None) => true,
+            (Some(w), Some(have)) => (have - w).abs() <= trace.click_tolerance,
+            _ => false,
+        };
+        if !near {
+            bad.push(format!(
+                "{name}.boxWidth: {:?}, beklenen {width:?} (±{} m)",
+                seen.box_width, trace.click_tolerance
+            ));
+        }
+    }
+    if let Some(spacing) = want.line_spacing
+        && seen.line_spacing != spacing
+    {
+        bad.push(format!(
+            "{name}.lineSpacing: {:?}, beklenen {spacing:?}",
+            seen.line_spacing
+        ));
+    }
+    if let Some(runs) = &want.runs
+        && seen.runs != *runs
+    {
+        bad.push(format!("{name}.runs: {:?}, beklenen {runs:?}", seen.runs));
+    }
     // A leader's arrowhead (docs/adr/0146), exact.
     if let Some(arrow) = &want.arrow
         && seen.arrow != *arrow

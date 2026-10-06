@@ -14,8 +14,8 @@ use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
     ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
     EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
-    LeaderEntity, LineEntity, PathEntity, PointEntity, PointPart, RingGeometry, SplineEntity,
-    TextAlign, TextEntity, Vec2,
+    LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry,
+    SplineEntity, TextAlign, TextEntity, TextRun, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -99,6 +99,9 @@ struct Fields {
     align: Option<TextAlign>,
     width_factor: Option<f64>,
     mask: Option<bool>,
+    box_width: Option<f64>,
+    line_spacing: Option<f64>,
+    runs: Option<Vec<TextRun>>,
     arrow: Option<LeaderArrow>,
     offset: Option<f64>,
     style: Option<DimensionStyle>,
@@ -276,6 +279,11 @@ impl Fields {
                 // The written file keeps no link: a DXF text is a text (docs/adr/0175 §4).
                 label_of: None,
                 label_scale: None,
+                paragraph: Paragraph {
+                    box_width: self.box_width,
+                    line_spacing: self.line_spacing,
+                    runs: self.runs.unwrap_or_default(),
+                },
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,
@@ -387,6 +395,9 @@ impl<'de> Deserialize<'de> for Wire {
                         "align" => f.align = map.next_value()?,
                         "widthFactor" => f.width_factor = map.next_value()?,
                         "mask" => f.mask = map.next_value()?,
+                        "boxWidth" => f.box_width = map.next_value()?,
+                        "lineSpacing" => f.line_spacing = map.next_value()?,
+                        "runs" => f.runs = map.next_value()?,
                         "arrow" => f.arrow = map.next_value()?,
                         "offset" => f.offset = Some(map.next_value()?),
                         "style" => f.style = map.next_value()?,

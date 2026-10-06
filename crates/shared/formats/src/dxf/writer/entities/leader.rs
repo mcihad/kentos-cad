@@ -26,7 +26,7 @@ const ARROW: &str = "açık ve nokta ok KentOS verisi olarak yazıldı; başka p
 
 /// The turn (degrees) a reader takes from the direction written for
 /// `rotation` (an MTEXT's 11, a LEADER's 211): its angle, from 0 up to 360.
-fn turn_read_back(rotation: f64) -> f64 {
+pub(super) fn turn_read_back(rotation: f64) -> f64 {
     let (s, c) = sin_cos_deg(rotation);
     let l = hypot(c, s);
     let rot = deg(atan2(s / l, c / l));

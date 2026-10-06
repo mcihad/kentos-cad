@@ -116,6 +116,7 @@
     "tool.spot",
     "tool.divide",
     "tool.text",
+    "tool.mtext",
     "tool.dimension",
     "tool.hatch",
     "tool.blockDefine",

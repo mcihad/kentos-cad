@@ -51,6 +51,7 @@ fn text(label_of: Option<EntityId>, label_scale: Option<f64>) -> Entity {
         mask: false,
         label_of,
         label_scale,
+        paragraph: Default::default(),
     })
 }
 

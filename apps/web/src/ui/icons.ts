@@ -68,6 +68,17 @@ export const ICONS = {
   adjoin: `<path d="M2.5 4.5h7v11h-7z"/><path d="M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5z" fill="currentColor" fill-opacity=".16" stroke="none"/><path d="M9.5 6.5 14 3.5l3.5 5-1.5 7H9.5"/>${grip(9.5, 6.5)}${grip(9.5, 15.5)}`,
   spline: `<path d="M3 15c2.6-8.5 5.8-8.5 7 0 1.2 8.2 4.5 4 7-9"/>${grip(3, 15)}${grip(17, 6)}`,
   text: '<path d="M4.5 5V3.8h11V5M10 3.8v12.4M7.5 16.2h5"/>',
+  // Çok satırlı yazı (docs/adr/0182 §4): a small T at the box's corner, the paragraph's lines wrapped in the box.
+  mtext: '<path d="M2.8 3.2h5.4M5.5 3.2v5.3"/><path d="M10.5 4.2h6.7M10.5 7.4h6.7M2.8 11h14.4M2.8 14.2h14.4M2.8 17.4h9" stroke-width="1.2"/>',
+  // The paragraph editor's formats (docs/adr/0182 §4): bold, italic and underlined letters, raised and lowered twos,
+  // the colour bar under an A, and a sign (Ω) to put at the cursor.
+  textBold: '<path d="M6 3.5h4.6a3 3 0 0 1 0 6H6zM6 9.5h5.4a3.5 3.5 0 0 1 0 7H6z" stroke-width="2"/>',
+  textItalic: '<path d="M8.5 3.5h7M4.5 16.5h7M12.2 3.5 7.8 16.5"/>',
+  textUnderline: '<path d="M6 3.2v6a4 4 0 0 0 8 0v-6"/><path d="M4.5 17.3h11"/>',
+  textSuperscript: '<path d="m2.8 8.2 7 8.6M9.8 8.2l-7 8.6"/><path d="M12.4 4.6a1.6 1.6 0 1 1 2.9 1l-2.9 3.3h3.5" stroke-width="1.1"/>',
+  textSubscript: '<path d="m2.8 3.4 7 8.6M9.8 3.4l-7 8.6"/><path d="M12.4 12.2a1.6 1.6 0 1 1 2.9 1l-2.9 3.3h3.5" stroke-width="1.1"/>',
+  textColor: '<path d="M5.5 13 10 3l4.5 10M7.3 9.2h5.4"/><rect x="3" y="15" width="14" height="2.6" rx=".6" fill="currentColor" stroke="none"/>',
+  textSymbol: '<path d="M3.8 16.5h3.9v-1.7a6 6 0 1 1 4.6 0v1.7h3.9"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
   textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
   // Etiketleri yazıya çevir (docs/adr/0175): a label's tag becoming a text.

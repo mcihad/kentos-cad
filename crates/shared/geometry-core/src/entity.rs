@@ -165,6 +165,11 @@ pub enum Shape {
         width_factor: Option<f64>,
         /// `Some(true)`: its box is filled with the drawing area's colour first; never `Some(false)`.
         mask: Option<bool>,
+        /// A multi-line text's box width, metres, line spacing and letter
+        /// formats (docs/adr/0182, `text::paragraph`); none: as a text always was.
+        box_width: Option<f64>,
+        line_spacing: Option<f64>,
+        runs: Option<Vec<crate::text::paragraph::Run>>,
     },
     Dimension {
         a: Vec2,
@@ -230,7 +235,7 @@ crate::json_tagged!(Shape, "kind",
     Xline => "xline" { p, dir },
     Ray => "ray" { p, dir },
     Spline => "spline" { pts, closed },
-    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb },
     Hatch => "hatch" { ring, holes, pattern },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
@@ -743,15 +748,7 @@ pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
 /// Rotated box of a text at the left of its baseline: its letters' advances in the drawing's
 /// typeface (`text`), one line tall and a little over for descenders and accents.
 pub fn text_box(p: Vec2, text: &str, height: f64, rotation: f64, font: Font) -> Vec<Vec2> {
-    TextPlace {
-        p,
-        text,
-        height,
-        rotation,
-        align: None,
-        width_factor: None,
-    }
-    .outline(font)
+    TextPlace::line(p, text, height, rotation, None, None).outline(font)
 }
 
 /// Where and how large a text is (a text object, a block's text piece, a
@@ -767,6 +764,11 @@ pub struct TextPlace<'a> {
     pub rotation: f64,
     pub align: Option<TextAlign>,
     pub width_factor: Option<f64>,
+    /// A multi-line text's box width, line spacing and letter formats
+    /// (docs/adr/0182); none, none and none for a text of one line.
+    pub box_width: Option<f64>,
+    pub line_spacing: Option<f64>,
+    pub runs: &'a [crate::text::paragraph::Run],
 }
 
 impl<'a> TextPlace<'a> {
@@ -780,6 +782,9 @@ impl<'a> TextPlace<'a> {
                 rotation,
                 align,
                 width_factor,
+                box_width,
+                line_spacing,
+                runs,
                 ..
             } => Some(TextPlace {
                 p: *p,
@@ -788,15 +793,93 @@ impl<'a> TextPlace<'a> {
                 rotation: *rotation,
                 align: *align,
                 width_factor: *width_factor,
+                box_width: *box_width,
+                line_spacing: *line_spacing,
+                runs: runs.as_deref().unwrap_or_default(),
             }),
             _ => None,
         }
     }
 
+    /// A text of one line at `p`: no box, spacing or formats.
+    pub fn line(
+        p: Vec2,
+        text: &'a str,
+        height: f64,
+        rotation: f64,
+        align: Option<TextAlign>,
+        width_factor: Option<f64>,
+    ) -> TextPlace<'a> {
+        TextPlace {
+            p,
+            text,
+            height,
+            rotation,
+            align,
+            width_factor,
+            box_width: None,
+            line_spacing: None,
+            runs: &[],
+        }
+    }
+
+    /// Whether it is laid out in lines (docs/adr/0182): it has a line break,
+    /// a box, a line spacing or letter formats.
+    pub fn is_paragraph(&self) -> bool {
+        self.box_width.is_some()
+            || self.line_spacing.is_some()
+            || !self.runs.is_empty()
+            || self.text.contains('\n')
+    }
+
+    /// Its lines and box (docs/adr/0182 §2).
+    pub fn layout(&self, font: Font) -> crate::text::paragraph::Layout {
+        crate::text::paragraph::lay_out(&crate::text::paragraph::Paragraph {
+            text: self.text,
+            runs: self.runs,
+            height: self.height,
+            width_factor: self.width_factor.unwrap_or(1.0),
+            box_width: self.box_width,
+            line_spacing: self.line_spacing.unwrap_or(1.0),
+            along: self.align.map_or(0.0, TextAlign::along),
+            font,
+        })
+    }
+
+    /// Its box's width, how far its last baseline is under its first (0 for
+    /// one line), its line count and its baselines' distance.
+    fn extent(&self, font: Font) -> (f64, f64, usize, f64) {
+        if !self.is_paragraph() {
+            let w = width_em(self.text, font) * self.height * self.width_factor.unwrap_or(1.0);
+            return (w, 0.0, 1, 0.0);
+        }
+        let laid = self.layout(font);
+        let n = laid.lines.len();
+        (
+            laid.width,
+            n.saturating_sub(1) as f64 * laid.pitch,
+            n,
+            laid.pitch,
+        )
+    }
+
+    /// Where `p` stands from its origin for `align`: along its box and up
+    /// from its first baseline (`text::paragraph::rise`).
+    fn shares(&self, align: Option<TextAlign>, font: Font) -> (f64, f64) {
+        let Some(a) = align else {
+            return (0.0, 0.0);
+        };
+        let (w, _, n, pitch) = self.extent(font);
+        (
+            a.along() * w,
+            crate::text::paragraph::rise(a.up(), self.height, n, pitch),
+        )
+    }
+
     /// Its width, metres: its letters' advances in `font` at its height,
-    /// times its width factor.
+    /// times its width factor; a multi-line text's box.
     pub fn width(&self, font: Font) -> f64 {
-        width_em(self.text, font) * self.height * self.width_factor.unwrap_or(1.0)
+        self.extent(font).0
     }
 
     /// Its direction along the baseline and up from it.
@@ -810,12 +893,11 @@ impl<'a> TextPlace<'a> {
     /// `p` less its alignment's share of its width along the baseline and
     /// of its height up from it.
     pub fn origin(&self, font: Font) -> Vec2 {
-        let Some(a) = self.align else {
+        if self.align.is_none() {
             return self.p;
-        };
+        }
         let (u, v) = self.axes();
-        let along = a.along() * self.width(font);
-        let up = a.up() * self.height;
+        let (along, up) = self.shares(self.align, font);
         Vec2::new(
             self.p.x - u.x * along - v.x * up,
             self.p.y - u.y * along - v.y * up,
@@ -836,7 +918,8 @@ impl<'a> TextPlace<'a> {
     /// the baseline, 1.15 over it).
     pub fn outline(&self, font: Font) -> Vec<Vec2> {
         let h = self.height * 1.15;
-        self.frame(font, (0.0, -h * 0.2), (self.width(font), h))
+        let (w, below, _, _) = self.extent(font);
+        self.frame(font, (0.0, -h * 0.2 - below), (w, h))
     }
 
     /// Okunur yap (docs/adr/0145 §3): a text that reads upside down (turned
@@ -844,7 +927,28 @@ impl<'a> TextPlace<'a> {
     /// turned half round about the middle of its box, so the box stays where
     /// it was; its new point and turn. None for a text that reads.
     pub fn readable(&self, font: Font) -> Option<(Vec2, f64)> {
-        self.readable_at(self.width(font))
+        if !self.is_paragraph() {
+            return self.readable_at(self.width(font));
+        }
+        // A multi-line text turns about its box's middle too (docs/adr/0182): its point moves w·(1 − 2a)
+        // along and 0.92·h − below − 2·rise up its old first baseline.
+        let r = ((self.rotation % 360.0) + 360.0) % 360.0;
+        if !(r > 90.0 && r <= 270.0) {
+            return None;
+        }
+        let (w, below, _, _) = self.extent(font);
+        let (along, rise) = self.shares(self.align, font);
+        let t = (r * PI) / 180.0;
+        let (u, v) = (Vec2::new(cos(t), sin(t)), Vec2::new(-sin(t), cos(t)));
+        let along = w - 2.0 * along;
+        let up = self.height * 0.92 - below - 2.0 * rise;
+        Some((
+            Vec2::new(
+                self.p.x + u.x * along + v.x * up,
+                self.p.y + u.y * along + v.y * up,
+            ),
+            (r + 180.0) % 360.0,
+        ))
     }
 
     /// `readable` with its width given (the shared cases give it,
@@ -874,7 +978,16 @@ impl<'a> TextPlace<'a> {
     /// Hizayı değiştir (docs/adr/0145 §6, Öznitelikler's Hiza): the point of
     /// its box `to` is, so it stays where it is with that alignment.
     pub fn realigned(&self, to: Option<TextAlign>, font: Font) -> Vec2 {
-        self.realigned_at(to, self.width(font))
+        if !self.is_paragraph() {
+            return self.realigned_at(to, self.width(font));
+        }
+        // A multi-line text by its box and lines (docs/adr/0182).
+        let ((a, b), (a2, b2)) = (self.shares(self.align, font), self.shares(to, font));
+        let (u, v) = self.axes();
+        Vec2::new(
+            self.p.x + u.x * (a2 - a) + v.x * (b2 - b),
+            self.p.y + u.y * (a2 - a) + v.y * (b2 - b),
+        )
     }
 
     /// `realigned` with its width given (fixtures/text/v1/realign.json): its
@@ -896,7 +1009,8 @@ impl<'a> TextPlace<'a> {
     /// of its height around it.
     pub fn mask(&self, font: Font) -> Vec<Vec2> {
         let (h, m) = (self.height * 1.15, self.height * 0.1);
-        self.frame(font, (-m, -h * 0.2 - m), (self.width(font) + m, h + m))
+        let (w, below, _, _) = self.extent(font);
+        self.frame(font, (-m, -h * 0.2 - m - below), (w + m, h + m))
     }
 }
 
@@ -1198,6 +1312,36 @@ pub(crate) static OPS: &[Op] = &[
     op!("textReadable", |t: Json| text_readable_json(&t)),
     // Hizayı değiştir: a text's point with the alignment `to` (null: the left of the baseline), where it stays.
     op!("textRealign", |t: Json, to: Option<TextAlign>| text_realign_json(&t, to)),
+    // A multi-line text's label records as the store gives them (docs/adr/0182 §3), for a text to come
+    // (its mask's box with `mask`, then its lines): what the tools' previews draw.
+    op!("textLines", |t: Json| text_lines_json(&t)),
+    // A format toggled over the letters start..end of a text of `len` letters (the editor's buttons).
+    op!(
+        "textRunsToggle",
+        |runs: Vec<crate::text::paragraph::Run>,
+         len: usize,
+         start: usize,
+         end: usize,
+         toggle: crate::text::paragraph::Toggle| crate::text::paragraph::toggle(
+            &runs, len, start, end, &toggle
+        )
+    ),
+    // The runs after the editor's text `before` became `after`.
+    op!("textRunsRetext", |runs: Vec<
+        crate::text::paragraph::Run,
+    >,
+                           before: String,
+                           after: String| {
+        crate::text::paragraph::retext(&runs, &before, &after)
+    }),
+    // A text's lines and box (docs/adr/0182 §2): the shared cases' layout (fixtures/text/v1/paragraph.json).
+    op!("textLayout", |t: Json| text_layout_json(&t)),
+    // Çok satırlı yazı's box from two corners for a text turned `rotation` degrees (docs/adr/0182 §4):
+    // its top left corner and its width along the turn (null: no box).
+    op!("textCornerBox", |a: Vec2, b: Vec2, rotation: f64| {
+        let (corner, width) = crate::text::paragraph::corner_box(a, b, rotation);
+        CornerBox { corner, width }
+    }),
     op!("isClosedOutline", |e: Entity| is_closed_outline(&e.shape)),
     op!("entityBounds", |e: Entity| entity_bounds(&e.shape)),
     op!("entityAnchor", |e: Entity| entity_anchor(&e.shape)),
@@ -1224,6 +1368,7 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         _ => Font::DEFAULT,
     };
     let text: Option<String> = json::read_field(v, "text")?;
+    let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1231,6 +1376,9 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         rotation: json::read_field(v, "rotation")?,
         align: json::read_field(v, "align")?,
         width_factor: json::read_field(v, "widthFactor")?,
+        box_width: json::read_field(v, "boxWidth")?,
+        line_spacing: json::read_field(v, "lineSpacing")?,
+        runs: runs.as_deref().unwrap_or_default(),
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     let turned = match width {
@@ -1247,6 +1395,7 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         _ => Font::DEFAULT,
     };
     let text: Option<String> = json::read_field(v, "text")?;
+    let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: text.as_deref().unwrap_or(""),
@@ -1254,11 +1403,90 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         rotation: json::read_field(v, "rotation")?,
         align: json::read_field(v, "align")?,
         width_factor: json::read_field(v, "widthFactor")?,
+        box_width: json::read_field(v, "boxWidth")?,
+        line_spacing: json::read_field(v, "lineSpacing")?,
+        runs: runs.as_deref().unwrap_or_default(),
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     Ok(match width {
         Some(w) => place.realigned_at(to, w),
         None => place.realigned(to, font),
+    })
+}
+
+/// A text place from JSON as `textBox` reads it, and the typeface it names.
+fn text_place_json(v: &Json) -> Result<(String, Vec<crate::text::paragraph::Run>, Font), String> {
+    let font = match v.get("font") {
+        Json::Str(id) => Font::from_id(id),
+        _ => Font::DEFAULT,
+    };
+    let text: String = json::read_field(v, "text")?;
+    let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
+    Ok((text, runs.unwrap_or_default(), font))
+}
+
+/// `textLines` takes a text as `textBox` does, and `mask` when it has one.
+fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
+    let (text, runs, font) = text_place_json(v)?;
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: &text,
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+        box_width: json::read_field(v, "boxWidth")?,
+        line_spacing: json::read_field(v, "lineSpacing")?,
+        runs: &runs,
+    };
+    let mask: Option<bool> = json::read_field(v, "mask")?;
+    let mut out = Vec::new();
+    crate::store::labels::paragraph_records(&place, font, mask == Some(true), 0.0, None, &mut out);
+    Ok(out)
+}
+
+/// Çok satırlı yazı's box (`textCornerBox`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CornerBox {
+    pub corner: Vec2,
+    pub width: Option<f64>,
+}
+
+crate::json_struct!(out CornerBox { corner, width });
+
+/// A text's lines and box as the shared cases write them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LaidOut {
+    pub lines: Vec<crate::text::paragraph::Line>,
+    pub width: f64,
+    pub pitch: f64,
+    /// Where `p` stands from the origin: along the box and up from the first baseline.
+    pub shares: [f64; 2],
+}
+
+crate::json_struct!(out LaidOut { lines, width, pitch, shares });
+
+/// `textLayout` takes a text as `textBox` does.
+fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
+    let (text, runs, font) = text_place_json(v)?;
+    let place = TextPlace {
+        p: json::read_field(v, "p")?,
+        text: &text,
+        height: json::read_field(v, "height")?,
+        rotation: json::read_field(v, "rotation")?,
+        align: json::read_field(v, "align")?,
+        width_factor: json::read_field(v, "widthFactor")?,
+        box_width: json::read_field(v, "boxWidth")?,
+        line_spacing: json::read_field(v, "lineSpacing")?,
+        runs: &runs,
+    };
+    let laid = place.layout(font);
+    let (along, up) = place.shares(place.align, font);
+    Ok(LaidOut {
+        lines: laid.lines,
+        width: laid.width,
+        pitch: laid.pitch,
+        shares: [along, up],
     })
 }
 
@@ -1271,6 +1499,7 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         _ => Font::DEFAULT,
     };
     let text: String = json::read_field(v, "text")?;
+    let runs: Option<Vec<crate::text::paragraph::Run>> = json::read_field(v, "runs")?;
     let place = TextPlace {
         p: json::read_field(v, "p")?,
         text: &text,
@@ -1278,6 +1507,9 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         rotation: json::read_field(v, "rotation")?,
         align: json::read_field(v, "align")?,
         width_factor: json::read_field(v, "widthFactor")?,
+        box_width: json::read_field(v, "boxWidth")?,
+        line_spacing: json::read_field(v, "lineSpacing")?,
+        runs: runs.as_deref().unwrap_or_default(),
     };
     Ok(place.outline(font))
 }

@@ -122,6 +122,20 @@ pub const LABEL_PIECE_DIMENSION: f64 = 7.0;
 pub const LABEL_LEADER: f64 = 8.0;
 /// A leader's note among a block's pieces, as `LABEL_PIECE_TEXT`.
 pub const LABEL_PIECE_LEADER: f64 = 9.0;
+/// One line of a multi-line text (docs/adr/0182 §3): x, y where its
+/// baseline starts, a the text's rotation, b its height, c its width factor
+/// (1 without one), d and e the line's letters `start..end` (Unicode scalar
+/// values of the text). Its letters' formats are the text's `runs`.
+pub const LABEL_LINE: f64 = 10.0;
+/// A multi-line text's mask (docs/adr/0182 §3), before its lines, its own
+/// or a block's piece's: x, y the box's corner under its first letter's
+/// left, a the rotation, b the box's width along the baseline and c its
+/// height up from the corner, metres, a tenth of the height around the lines.
+pub const LABEL_PARAGRAPH_MASK: f64 = 11.0;
+/// One line of a multi-line text among a block's pieces, as `LABEL_LINE`
+/// but c the piece's place (its width factor the piece's own: an insert
+/// scales evenly) and b its height as placed.
+pub const LABEL_PIECE_LINE: f64 = 12.0;
 
 /// Numbers per label record.
 pub const LABEL_STRIDE: usize = 9;
@@ -251,10 +265,23 @@ impl Store {
                             text,
                             height,
                             rotation,
+                            mask,
                             ..
                         } => {
                             let px = height * scale;
                             if px < 5.0 || px > 240.0 || text.is_empty() {
+                                continue;
+                            }
+                            // A multi-line piece, line by line (docs/adr/0182 §3).
+                            if let Some(t) = TextPlace::of(s).filter(TextPlace::is_paragraph) {
+                                let piece = Some(i as f64);
+                                self.paragraph_labels(
+                                    it.id,
+                                    &t,
+                                    *mask == Some(true),
+                                    piece,
+                                    &mut out,
+                                );
                                 continue;
                             }
                             let (o, factor, mask) = self.text_label(s);
@@ -341,10 +368,18 @@ impl Store {
                     continue;
                 }
                 Shape::Text {
-                    height, rotation, ..
+                    height,
+                    rotation,
+                    mask,
+                    ..
                 } => {
                     let px = height * scale;
                     if px < 5.0 || px > 240.0 {
+                        continue;
+                    }
+                    // A multi-line text, line by line (docs/adr/0182 §3).
+                    if let Some(t) = TextPlace::of(&it.shape).filter(TextPlace::is_paragraph) {
+                        self.paragraph_labels(it.id, &t, *mask == Some(true), None, &mut out);
                         continue;
                     }
                     let (o, factor, mask) = self.text_label(&it.shape);
@@ -472,6 +507,18 @@ impl Store {
         ))
     }
 
+    /// A multi-line text's records (docs/adr/0182 §3), in the drawing's typeface.
+    fn paragraph_labels(
+        &self,
+        id: f64,
+        t: &TextPlace<'_>,
+        masked: bool,
+        piece: Option<f64>,
+        out: &mut Vec<f64>,
+    ) {
+        paragraph_records(t, self.font, masked, id, piece, out);
+    }
+
     /// A text's label (docs/adr/0145): where its baseline starts, its width
     /// factor (1 without one) and its mask's width (0 without a mask), in the
     /// drawing's typeface.
@@ -515,6 +562,60 @@ impl Store {
             }
         }
         out
+    }
+}
+
+/// A multi-line text's label records (docs/adr/0182 §3) in `font`: its mask's
+/// box when it has one (`LABEL_PARAGRAPH_MASK`), then each line's where its
+/// baseline starts (`LABEL_LINE`, or `LABEL_PIECE_LINE` for a block's piece
+/// at `piece`). The store's labels and the tools' previews (`textLines`).
+pub fn paragraph_records(
+    t: &TextPlace<'_>,
+    font: crate::text::Font,
+    masked: bool,
+    id: f64,
+    piece: Option<f64>,
+    out: &mut Vec<f64>,
+) {
+    let laid = t.layout(font);
+    let o = t.origin(font);
+    let r = (t.rotation * crate::jsmath::PI) / 180.0;
+    let (u, v) = (
+        crate::vec2::Vec2::new(crate::jsmath::cos(r), crate::jsmath::sin(r)),
+        crate::vec2::Vec2::new(-crate::jsmath::sin(r), crate::jsmath::cos(r)),
+    );
+    if masked {
+        let (h, m) = (t.height * 1.15, t.height * 0.1);
+        let below = laid.lines.len().saturating_sub(1) as f64 * laid.pitch;
+        let (x0, y0) = (-m, -h * 0.2 - m - below);
+        out.extend([
+            id,
+            LABEL_PARAGRAPH_MASK,
+            o.x + u.x * x0 + v.x * y0,
+            o.y + u.y * x0 + v.y * y0,
+            t.rotation,
+            laid.width + 2.0 * m,
+            h * 1.2 + 2.0 * m + below,
+            0.0,
+            0.0,
+        ]);
+    }
+    let (kind, c) = match piece {
+        Some(place) => (LABEL_PIECE_LINE, place),
+        None => (LABEL_LINE, t.width_factor.unwrap_or(1.0)),
+    };
+    for line in &laid.lines {
+        out.extend([
+            id,
+            kind,
+            o.x + u.x * line.x - v.x * line.y,
+            o.y + u.y * line.x - v.y * line.y,
+            t.rotation,
+            t.height,
+            c,
+            line.start as f64,
+            line.end as f64,
+        ]);
     }
 }
 

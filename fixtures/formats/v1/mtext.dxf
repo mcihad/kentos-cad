@@ -1,0 +1,178 @@
+999
+Multi-line texts of docs/adr/0182 §5; crates/shared/formats/tests/all/dxf.rs works each out from this file.
+999
+Written by hand as AutoCAD writes them: FORMATLI (a font switch with b1, \C1, a stack over nothing, \L with \c in blue),
+999
+DUSEN (heights, fractions, two faces, over and strike lines, slant, letter spacing, a paragraph's alignment),
+999
+KODLAR (%%d %%p %%c, a hard space, escaped braces), DAR (\W0.8 first), DONUK (50 in radians, no 11, 41 15 and 44 2),
+999
+BOS (nothing but codes and a line break).
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1027
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.5
+ 41
+30.0
+ 73
+1
+ 44
+1.5
+ 71
+1
+ 72
+1
+  1
+{\fArial|b1|i0|c162|p34;Parsel 12}\P\C1;Alan: 450 m\S2^ ;\P{\L\c16711680;altı çizili}
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+40.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+ 71
+5
+ 72
+1
+  1
+\H2.5x;Büyük\H1x; \fTimes New Roman|b0|i0;Tımes\fArial|b0|i0; \OÜst\o \Kçizik\k \Q15;eğik\Q0; \T1.2;aralık\T1; \pxqc;ortalı \A1;1\S1/2;
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+80.0
+ 20
+0.0
+ 30
+0.0
+ 40
+2.0
+ 71
+7
+ 72
+1
+  1
+45%%d\~%%p0.05 %%c20 \{sabit\} a\\b
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+0.0
+ 20
+-20.0
+ 30
+0.0
+ 40
+2.0
+ 71
+1
+ 72
+1
+  1
+\W0.8;Dar yazı\Pikinci
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+40.0
+ 20
+-20.0
+ 30
+0.0
+ 40
+1.5
+ 41
+15.0
+ 50
+1.5707963267948966
+ 73
+1
+ 44
+2.0
+ 71
+1
+ 72
+1
+  1
+Dönük kutulu not
+  0
+MTEXT
+100
+AcDbEntity
+  8
+YAZI
+100
+AcDbMText
+ 10
+80.0
+ 20
+-20.0
+ 30
+0.0
+ 40
+2.0
+ 71
+1
+ 72
+1
+  1
+{\fArial|b1;}\P\~
+  0
+ENDSEC
+  0
+EOF

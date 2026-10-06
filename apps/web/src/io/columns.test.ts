@@ -68,6 +68,18 @@ function elevated(): PageEntity[] {
   ] as PageEntity[];
 }
 
+/** `list` packs with nothing dropped and reads back as it was, its slots renumbered from 1. */
+function readsBack(list: PageEntity[]): void {
+  const { drawing, dropped } = packDrawing(head, list);
+  expect(dropped).toEqual({});
+  const want: DocumentSnapshotV2 = {
+    ...head,
+    entities: list.map(({ uid: _u, ...e }, i) => ({ ...e, id: i + 1 }) as DocumentSnapshotV2['entities'][number]),
+    uids: list.map((e) => e.uid!),
+  };
+  expect(difference(unpackSnapshot(drawing), want)).toBeNull();
+}
+
 describe('the page packs a drawing into typed columns', () => {
   it('reads back every kind and every optional field, −0 kept, slots renumbered', () => {
     const list = everyKind();
@@ -156,9 +168,30 @@ describe('the page packs a drawing into typed columns', () => {
     // A part's unknown field is dropped and counted, its own fields are not.
     const noted = { ...area, parts: [{ ...parts[0], note: 'bilinmeyen' }] } as unknown as PageEntity;
     expect(packDrawing(head, [noted]).dropped).toEqual({ 'polygon.parts.note': 1 });
-    // A polyline has no parts: counted, never written.
-    const path = { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1)], parts: [] } as unknown as PageEntity;
-    expect(packDrawing(head, [path]).dropped).toEqual({ 'polyline.parts': 1 });
+    // A polyline's other parts are its own (docs/adr/0174): written, not counted.
+    const path = { ...base(), kind: 'polyline', pts: [P(0, 0), P(1, 1)], parts: [{ pts: [P(2, 2), P(3, 2)] }] } as unknown as PageEntity;
+    readsBack([path]);
+  });
+
+  it('carries a linked text and a multi-line text: its box, spacing and runs, colours and scripts', () => {
+    const linked = { ...base(), kind: 'text', p: P(1, 2), text: '101', height: 2, rotation: 0, labelOf: '0b5e7c1a-0000-4000-8000-000000000001', labelScale: 500 };
+    const paragraph = {
+      ...base(),
+      kind: 'text',
+      p: P(3, 4),
+      text: 'Alan: 450 m2\nKalın satır',
+      height: 2.5,
+      rotation: 15,
+      align: 'topLeft',
+      boxWidth: 40,
+      lineSpacing: 1.5,
+      runs: [
+        { start: 11, end: 12, script: 'super' },
+        { start: 13, end: 18, bold: true, italic: true, underline: true, color: '#E5484D' },
+        { start: 19, end: 24, script: 'sub', color: 'accent' },
+      ],
+    };
+    readsBack([linked, paragraph] as unknown as PageEntity[]);
   });
 
   it('orders text as UTF-8 bytes do, beyond U+FFFF too', () => {

@@ -16,7 +16,6 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::text::Font;
-use kentos_geometry_core::vec2::Vec2;
 use kentos_native_application::geometry::{drawing_font, edit_geometry, shape};
 use kentos_native_application::{ExecutionContext, edit, set};
 
@@ -120,10 +119,19 @@ pub fn replace_texts(doc: &mut Document, words: &[(Slot, String)]) -> Vec<String
             let Some(Entity::Text(t)) = doc.get(*slot) else {
                 return None;
             };
-            let renamed = Entity::Text(TextEntity {
+            // A multi-line text's letter formats follow its letters (docs/adr/0182 §4).
+            let mut renamed = TextEntity {
                 text: text.clone(),
                 ..t.clone()
-            });
+            };
+            if !t.paragraph.runs.is_empty() {
+                let runs = kentos_native_application::geometry::core_runs(&t.paragraph.runs)
+                    .unwrap_or_default();
+                renamed.paragraph.runs = kentos_native_application::geometry::contract_runs(Some(
+                    kentos_geometry_core::text::paragraph::retext(&runs, &t.text, text),
+                ));
+            }
+            let renamed = Entity::Text(renamed);
             Some(EntityEdit::Update {
                 uid: doc.uid(*slot)?.to_string(),
                 geometry: edit_geometry(shape(&renamed))?,
@@ -165,21 +173,16 @@ fn change_texts(
 /// its box (the core's `TextPlace::realigned`). The web's `textRows` Hiza.
 pub fn realign_texts(doc: &mut Document, slots: &[Slot], to: Option<TextAlign>) -> Vec<String> {
     change_texts(doc, slots, |t, font| {
-        (t.align != to).then(|| {
-            let place = TextPlace {
-                p: Vec2::new(t.p.x, t.p.y),
-                text: &t.text,
-                height: t.height,
-                rotation: t.rotation,
-                align: t.align.and_then(core_align),
-                width_factor: t.width_factor,
-            };
-            let p = place.realigned(to.and_then(core_align), font);
-            TextEntity {
-                p: kentos_contracts::Vec2 { x: p.x, y: p.y },
-                align: to,
-                ..t.clone()
-            }
+        if t.align == to {
+            return None;
+        }
+        // A multi-line text by its box and lines (docs/adr/0182).
+        let s = shape(&Entity::Text(t.clone()));
+        let p = TextPlace::of(&s)?.realigned(to.and_then(core_align), font);
+        Some(TextEntity {
+            p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+            align: to,
+            ..t.clone()
         })
     })
 }
@@ -191,6 +194,31 @@ pub fn set_text_width(doc: &mut Document, slots: &[Slot], factor: f64) -> Vec<St
         (t.width_factor.unwrap_or(1.0) != factor).then(|| TextEntity {
             width_factor: Some(factor),
             ..t.clone()
+        })
+    })
+}
+
+/// The texts in `slots` with the box width `width` (none: no box; docs/adr/0182
+/// §4); the command refuses one not over 0 and says why.
+pub fn set_text_box(doc: &mut Document, slots: &[Slot], width: Option<f64>) -> Vec<String> {
+    change_texts(doc, slots, |t, _| {
+        (t.paragraph.box_width != width).then(|| {
+            let mut t = t.clone();
+            t.paragraph.box_width = width;
+            t
+        })
+    })
+}
+
+/// The texts in `slots` with the line spacing `spacing` (1: none; docs/adr/0182
+/// §4); the command refuses one out of 0.25 … 4 and says why.
+pub fn set_text_spacing(doc: &mut Document, slots: &[Slot], spacing: f64) -> Vec<String> {
+    let to = (spacing != 1.0).then_some(spacing);
+    change_texts(doc, slots, |t, _| {
+        (t.paragraph.line_spacing != to).then(|| {
+            let mut t = t.clone();
+            t.paragraph.line_spacing = to;
+            t
         })
     })
 }

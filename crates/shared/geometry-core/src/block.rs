@@ -64,6 +64,9 @@ impl Attribute {
             align: self.align,
             width_factor: self.width_factor,
             mask: None,
+            box_width: None,
+            line_spacing: None,
+            runs: None,
         }
     }
 }

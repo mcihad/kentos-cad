@@ -1034,6 +1034,29 @@ fn other_parts(p: &PathEntity, tol: f64) -> Vec<Vec<Vec<Vec2>>> {
         .collect()
 }
 
+/// A multi-line text's runs as the core takes them (docs/adr/0182); none for none.
+fn text_runs(
+    runs: &[kentos_contracts::TextRun],
+) -> Option<Vec<kentos_geometry_core::text::paragraph::Run>> {
+    use kentos_geometry_core::text::paragraph::{Run, Script};
+    (!runs.is_empty()).then(|| {
+        runs.iter()
+            .map(|r| Run {
+                start: r.start,
+                end: r.end,
+                bold: r.bold,
+                italic: r.italic,
+                underline: r.underline,
+                script: r.script.map(|s| match s {
+                    kentos_contracts::TextScript::Super => Script::Super,
+                    kentos_contracts::TextScript::Sub => Script::Sub,
+                }),
+                color: r.color.clone(),
+            })
+            .collect()
+    })
+}
+
 /// An object's geometry as the geometry core takes it (its own `Shape`).
 fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -1125,6 +1148,9 @@ fn shape(entity: &Entity) -> Shape {
                 .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
             width_factor: t.width_factor,
             mask: t.mask.then_some(true),
+            box_width: t.paragraph.box_width,
+            line_spacing: t.paragraph.line_spacing,
+            runs: text_runs(&t.paragraph.runs),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
