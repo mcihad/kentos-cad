@@ -1,0 +1,1049 @@
+{
+ "format": "kentos.edge-shift-cases",
+ "version": 1,
+ "source": "scripts/fixtures/edge_shift_cases.py (docs/adr/0191)",
+ "shifts": [
+  {
+   "name": "a square's bottom edge out by 2",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 2,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      -2.0
+     ],
+     [
+      10.0,
+      -2.0
+     ],
+     [
+      10.0,
+      10.0
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "area": 120.0
+   }
+  },
+  {
+   "name": "a clockwise square: out is still out",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 0,
+      "y": 10
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 10,
+      "y": 0
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 2,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      12.0
+     ],
+     [
+      10.0,
+      12.0
+     ],
+     [
+      10.0,
+      0.0
+     ]
+    ],
+    "area": 120.0
+   }
+  },
+  {
+   "name": "a trapeze's top edge in by 4: the slanted sides shorten",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 15,
+      "y": 10
+     },
+     {
+      "x": 5,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "distance": -4,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      20.0,
+      0.0
+     ],
+     [
+      17.0,
+      6.0
+     ],
+     [
+      3.0,
+      6.0
+     ]
+    ],
+    "area": 102.0
+   }
+  },
+  {
+   "name": "a hole's edge: out of the area is into the hole",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 20
+     },
+     {
+      "x": 0,
+      "y": 20
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 5,
+        "y": 5
+       },
+       {
+        "x": 15,
+        "y": 5
+       },
+       {
+        "x": 15,
+        "y": 15
+       },
+       {
+        "x": 5,
+        "y": 15
+       }
+      ]
+     }
+    ]
+   },
+   "ring": 1,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      20.0,
+      0.0
+     ],
+     [
+      20.0,
+      20.0
+     ],
+     [
+      0.0,
+      20.0
+     ]
+    ],
+    "holes": [
+     [
+      [
+       5.0,
+       6.0
+      ],
+      [
+       15.0,
+       6.0
+      ],
+      [
+       15.0,
+       15.0
+      ],
+      [
+       5.0,
+       15.0
+      ]
+     ]
+    ],
+    "area": 310.0
+   }
+  },
+  {
+   "name": "an open polyline's middle edge to its right",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 3,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      13.0,
+      0.0
+     ],
+     [
+      13.0,
+      10.0
+     ],
+     [
+      20.0,
+      10.0
+     ]
+    ]
+   }
+  },
+  {
+   "name": "an open polyline's first edge: its free end moves square",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": -2,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      2.0
+     ],
+     [
+      10.0,
+      2.0
+     ],
+     [
+      10.0,
+      10.0
+     ],
+     [
+      20.0,
+      10.0
+     ]
+    ]
+   }
+  },
+  {
+   "name": "map coordinates",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420020.5
+     },
+     {
+      "x": 487000.25,
+      "y": 4420020.5
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 0.75,
+   "expect": {
+    "pts": [
+     [
+      487000.25,
+      4420000.5
+     ],
+     [
+      487031.0,
+      4420000.5
+     ],
+     [
+      487031.0,
+      4420020.5
+     ],
+     [
+      487000.25,
+      4420020.5
+     ]
+    ],
+    "area": 615.0
+   }
+  },
+  {
+   "name": "a slanted edge of irrational length out by 1",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 12,
+      "y": 0
+     },
+     {
+      "x": 14,
+      "y": 4
+     },
+     {
+      "x": 0,
+      "y": 4
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 1,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      13.118033988749895,
+      0.0
+     ],
+     [
+      15.118033988749895,
+      4.0
+     ],
+     [
+      0.0,
+      4.0
+     ]
+    ],
+    "area": 56.47213595499958
+   }
+  },
+  {
+   "name": "an arc elsewhere on the ring stays",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     0.25,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      -1.0
+     ],
+     [
+      10.0,
+      -1.0
+     ],
+     [
+      10.0,
+      10.0
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0,
+     0,
+     0.25,
+     0
+    ],
+    "area": 118.4365887841123
+   }
+  },
+  {
+   "name": "a curved edge is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 1,
+   "expect": {
+    "problem": "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
+   }
+  },
+  {
+   "name": "a curved neighbour is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "problem": "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
+   }
+  },
+  {
+   "name": "a neighbour parallel to the edge is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "problem": "Komşu kenar kaydırılan kenara paralel; köşe bulunamıyor."
+   }
+  },
+  {
+   "name": "an edge passing its neighbour is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 15,
+      "y": 10
+     },
+     {
+      "x": 5,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "distance": -12,
+   "expect": {
+    "problem": "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın."
+   }
+  },
+  {
+   "name": "no such edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 9,
+   "distance": 1,
+   "expect": {
+    "problem": "Bu nesnede böyle bir kenar yok."
+   }
+  },
+  {
+   "name": "no such ring",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 1,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "problem": "Bu nesnede böyle bir kenar yok."
+   }
+  },
+  {
+   "name": "a multi-part area is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 20,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 0
+       },
+       {
+        "x": 30,
+        "y": 10
+       },
+       {
+        "x": 20,
+        "y": 10
+       }
+      ]
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "problem": "Çok parçalı nesnenin kenarı kaydırılmaz; önce Parçalara ayır."
+   }
+  },
+  {
+   "name": "a line is not an area's or a polyline's edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 10,
+     "y": 0
+    }
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "problem": "Paralel kaydır alanın ya da çoklu çizginin düz kenarında çalışır; böyle bir kenara tıklayın."
+   }
+  }
+ ],
+ "targets": [
+  {
+   "name": "a square grown to 120 m²: its edge out by 2",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "target": 120,
+   "expect": {
+    "distance": 2.0
+   }
+  },
+  {
+   "name": "a trapeze to 180 m² by its top edge: a quadratic",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 15,
+      "y": 10
+     },
+     {
+      "x": 5,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "target": 180,
+   "expect": {
+    "distance": 3.6754446796632414
+   }
+  },
+  {
+   "name": "a trapeze to a size no shift of its top edge reaches",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 15,
+      "y": 10
+     },
+     {
+      "x": 5,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "target": 100000,
+   "expect": {
+    "problem": "Bu alana kenarı kaydırarak ulaşılamıyor."
+   }
+  },
+  {
+   "name": "a target reached only past a neighbour is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 2
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "target": 30,
+   "expect": {
+    "problem": "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın."
+   }
+  },
+  {
+   "name": "a slanted edge to 70 m²",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 12,
+      "y": 0
+     },
+     {
+      "x": 14,
+      "y": 4
+     },
+     {
+      "x": 0,
+      "y": 4
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "target": 70,
+   "expect": {
+    "distance": 4.024922359499621
+   }
+  },
+  {
+   "name": "an area with an arc elsewhere to 125 m²",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     0.25,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "target": 125,
+   "expect": {
+    "distance": 1.6563411215887702
+   }
+  },
+  {
+   "name": "a polyline has no area",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "target": 50,
+   "expect": {
+    "problem": "Hedef alan yalnız alanlarda yazılır."
+   }
+  }
+ ]
+}

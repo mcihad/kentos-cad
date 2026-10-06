@@ -1071,6 +1071,32 @@
       ]
     },
     {
+      "name": "Paralel kaydır: kenar yerinde kayar, her köşe kendi kotunu korur (taşınan köşeler de); tek adım, adı Paralel kaydır (ADR 0191)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "za": 10, "zb": 20},
+          {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "edgeShift", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487013, "y": 4420060}, {"x": 487013, "y": 4420070}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "attrs": {}, "kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487013, "y": 4420060}, {"x": 487013, "y": 4420070}], "zs": [1, 2, null]}}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Paralel kaydır", "expect": {"entities": {"2": {"kind": "polyline", "id": 2, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487000, "y": 4420060}, {"x": 487010, "y": 4420060}, {"x": 487010, "y": 4420070}], "zs": [1, 2, null]}}, "canUndo": false}}
+      ]
+    },
+    {
       "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",
       "setup": {
         "format": "kentos.document",

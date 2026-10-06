@@ -148,6 +148,10 @@ pub enum EditOperation {
     Table,
     /// Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
     TableUpdate,
+    /// Paralel kaydır (docs/adr/0191): an area's or a polyline's straight
+    /// edge moved parallel to itself, its neighbours lengthened or shortened;
+    /// the object updated in place, each vertex keeping its elevation.
+    EdgeShift,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and

@@ -4662,6 +4662,12 @@ SCENES.stationing = stationingScenes();
 // (apps/desktop/src/centerline_scenes.rs).
 SCENES.centerline = centerlineScenes();
 
+// Paralel kaydır (docs/adr/0191) in a CAD project at 1:500, the shared trace's ground: a square parcel, a trapeze and a
+// road's polyline. The trapeze's top edge following the cursor, its distance and the area's new size beside it; Alan's
+// question on the square; and what was written. The desktop's are `tools_screens`' paralel-kaydir-*
+// (apps/desktop/src/edge_shift_scenes.rs).
+SCENES.edgeshift = edgeShiftScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -5045,6 +5051,65 @@ function stationingScenes() {
       open: async (ui) => (await sections(ui), await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300), await hover(ui, 12, 12)),
       close,
     },
+  ];
+}
+
+function edgeShiftScenes() {
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x, y: c.y };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    add({ kind: 'polygon', pts: [[-30, -10], [-10, -10], [-10, 10], [-30, 10]].map(P), color: '#3E63DD' });
+    add({ kind: 'polygon', pts: [[0, -10], [20, -10], [15, 0], [5, 0]].map(P), color: '#3E63DD' });
+    add({ kind: 'polyline', pts: [[0, 10], [10, 10], [10, 20], [20, 20]].map(P), color: '#8C9AAA' });
+    window.__ek = { o };
+    k.view.camera.fit({ minX: o.x - 36, minY: o.y - 16, maxX: o.x + 26, maxY: o.y + 26 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__ek.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  const input = async (ui, list) => {
+    for (const t of list) await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(t)})`);
+  };
+  const opened = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'home', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+    await startTool(ui, 'edgeShift');
+  };
+  const shown = async (ui) => {
+    await opened(ui);
+    await click(ui, 10, 0);
+    await hover(ui, 10, 3);
+  };
+  const area = async (ui) => {
+    await opened(ui);
+    await click(ui, -20, -10);
+    await input(ui, ['A']);
+    await hover(ui, -20, -12);
+  };
+  const written = async (ui) => {
+    await shown(ui);
+    await input(ui, ['A', '180']);
+    await click(ui, -20, -10);
+    await input(ui, ['2']);
+    await click(ui, 10, 15);
+    await click(ui, 13, 15);
+    await hover(ui, 24, -6);
+  };
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'edgeshift', open: shown, close },
+    { id: 'edgeshift-area', open: area, close },
+    { id: 'edgeshift-written', open: written, close },
   ];
 }
 

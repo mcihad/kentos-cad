@@ -201,6 +201,8 @@ pub const TOOLS: &[&str] = &[
     crate::station_labels::ID,
     // docs/adr/0190: Orta hat.
     crate::centerline::ID,
+    // docs/adr/0191: Paralel kaydır.
+    crate::edge_shift::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -387,6 +389,7 @@ impl Session {
             }
             crate::station_labels::ID => Box::new(crate::station_labels::StationLabels::new()),
             crate::centerline::ID => Box::new(crate::centerline::Centerline::new()),
+            crate::edge_shift::ID => Box::new(crate::edge_shift::EdgeShift::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

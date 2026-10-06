@@ -154,6 +154,19 @@ export class Formatter {
     return typed / this.perMetre;
   }
 
+  /** An area typed in the project's area unit (m², dönüm, ha; a local project's mm² or cm²), in square metres. */
+  areaToSquareMetres(typed: number): number {
+    if (this.unit !== 'm') return typed / (this.perMetre * this.perMetre);
+    switch (this.prefs.areaUnit.value) {
+      case 'donum':
+        return typed * 1000;
+      case 'ha':
+        return typed * 10_000;
+      default:
+        return typed;
+    }
+  }
+
   /** A length or coordinate in metres, in the unit (a field's starting value). */
   fromMetres(m: number): number {
     return m * this.perMetre;

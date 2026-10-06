@@ -123,6 +123,7 @@ pub mod quick_dimension;
 pub mod divide;
 pub mod donut;
 mod edge;
+pub mod edge_shift;
 pub mod elevation;
 pub mod ellipse;
 pub mod erase;

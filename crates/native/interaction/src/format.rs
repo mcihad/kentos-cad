@@ -154,6 +154,20 @@ impl Format {
         typed / self.unit.per_metre()
     }
 
+    /// An area typed in the project's area unit (m², dönüm, ha; a local
+    /// project's mm² or cm²), in square metres (the web's `areaToSquareMetres`).
+    pub fn area_to_square_metres(&self, typed: f64) -> f64 {
+        if self.unit != DrawingUnit::M {
+            let k = self.unit.per_metre();
+            return typed / (k * k);
+        }
+        match self.area_unit {
+            AreaUnit::Donum => typed * 1000.0,
+            AreaUnit::Ha => typed * 10_000.0,
+            AreaUnit::M2 => typed,
+        }
+    }
+
     /// A length or coordinate in metres, in the unit (a field's starting value).
     pub fn from_metres(&self, metres: f64) -> f64 {
         metres * self.unit.per_metre()

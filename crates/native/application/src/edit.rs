@@ -181,6 +181,7 @@ pub fn label(operation: EditOperation) -> &'static str {
         // Tabloyu düzenle and Tabloyu güncelle (docs/adr/0184 §6).
         EditOperation::Table => "Tablo",
         EditOperation::TableUpdate => "Tabloyu güncelle",
+        EditOperation::EdgeShift => "Paralel kaydır",
     }
 }
 
@@ -383,6 +384,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             | EditOperation::Stretch
             | EditOperation::Properties
             | EditOperation::Offset
+            | EditOperation::EdgeShift
     );
     let mut lost = 0;
     // Deliği doldur's area takes its hole's elevations, if it has any: its

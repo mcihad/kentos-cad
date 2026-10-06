@@ -57,6 +57,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   enkesit ve sapmalı nokta (`Km` özniteliğiyle), tek adımda; CAD projesinde Açıklama › Km (ADR 0189);
   orta hat: iki kenarın (yol kenarları, dere kıyıları) ekseni, eşleşen kenarlarda kenar kenar ve yaylarıyla kesin, öbürlerinde uzunluk
   payıyla Adım'da bir örneklenerek; Zincir uç uca çizgileri tek kenar sayar; tek adımda çoklu çizgi, Çizim ▾'da (ADR 0190);
+  paralel kaydır: alanın ya da çoklu çizginin düz kenarı kendine paralel kayar, komşuları uzar ya da kısalır; yazılan uzaklıkla, imleçle
+  ya da Alan (A) ile hedef alana (alan projenin biriminde, uzaklık ikinci dereceden denklemin sıfıra yakın kökü); köşeler kotlarını
+  korur, tek adımda, Değiştir ▾'da Ötele'nin yanında (ADR 0191);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -275,6 +278,8 @@ python3 scripts/fixtures/stationing_cases.py --check   # Km yaz'ın istasyonlar�
 KENTOS_SHOTS_ONLY=km-yaz,km-yaz-enkesit,km-yaz-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Km yaz'ın resimleri, .run/shots/arac-km-yaz-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs stationing); ADR 0189)
 python3 scripts/fixtures/centerline_cases.py --check   # Orta hat'ın eksenini (eşleşen düz ve yaylı kenarlar, ters çizilmiş kenar, örnekleme, harita koordinatları, retler) mpmath ile 50 basamaklı bağımsız başvurudan denetle; durumlar fixtures/centerline/v1/cases.json (ADR 0190)
 KENTOS_SHOTS_ONLY=orta-hat,orta-hat-dere,orta-hat-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Orta hat'ın resimleri, .run/shots/arac-orta-hat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs centerline); ADR 0190)
+python3 scripts/fixtures/edge_shift_cases.py --check   # Paralel kaydır'ın kenarlarını (dışarı ve içeri, saat yönü, delik, çoklu çizginin serbest ucu, harita koordinatları, irrasyonel boy, halkadaki yay, retler) ve hedef alanın uzaklığını kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle; durumlar fixtures/edge-shift/v1/cases.json (ADR 0191)
+KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Paralel kaydır'ın resimleri, .run/shots/arac-paralel-kaydir-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs edgeshift); ADR 0191)
 python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
@@ -1017,7 +1022,11 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   bitene kadar durmadan sırayla (`CAD-24` [M] sahibin tarifini bekler). `CAD-28` Orta hat ([ADR 0190](docs/adr/0190-centerline.md)) tek
   parçada bitti (6 Ekim; ikon seçenek sayfasının D'si): çekirdek `ops::centerline` (güzergâhın `Walk::edges`, `vertex_lengths`; bağımsız
   başvuru `centerline_cases.py`, ortak `fixtures/centerline/v1`), `CreateOperation::Centerline`, masaüstü `kentos_interaction::centerline`,
-  web `tools/centerlineTool.ts`; ortak iz `centerline.json`. Sıradaki `CAD-29` paralel kaydır.
+  web `tools/centerlineTool.ts`; ortak iz `centerline.json`. `CAD-29` Paralel kaydır ([ADR 0191](docs/adr/0191-parallel-shift.md)) tek
+  parçada bitti (7 Ekim; ikon seçenek sayfasının B'si): çekirdek `ops::edge_shift` (`shifted`, `for_area`, `pick`; bağımsız başvuru
+  `edge_shift_cases.py`, ortak `fixtures/edge-shift/v1`), `EditOperation::EdgeShift` (köşeler kotlarını yerlerinden alır), alan biriminden
+  m²'ye `Format::area_to_square_metres`, `Formatter.areaToSquareMetres`; masaüstü `kentos_interaction::edge_shift`, web
+  `tools/edgeShiftTool.ts`; ortak iz `edge-shift.json`. Sıradaki `CAD-30` resim nesnesi.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

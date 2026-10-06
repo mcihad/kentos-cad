@@ -83,6 +83,24 @@ export interface Centerline {
 
 /** The centreline of two sides sampled every `step` along the longer when they do not match; why none, else. */
 export const centerline = op<(a: Entity, b: Entity, step: number) => { centerline?: Centerline | null; problem?: string | null }>('centerline');
+
+// Paralel kaydır (docs/adr/0191; crates/shared/geometry-core/src/ops/edge_shift.rs).
+
+/** An edge picked: its ring (0 the path or the outer ring, 1… the holes), its index, its ends and its normal (outward, or right). */
+export interface EdgeShiftPicked {
+  readonly ring: number;
+  readonly edge: number;
+  readonly a: Vec2;
+  readonly b: Vec2;
+  readonly normal: Vec2;
+}
+
+/** The edge of the object nearest `p`, or why it cannot be shifted. */
+export const edgeShiftPick = op<(e: Entity, p: Vec2) => { picked?: EdgeShiftPicked | null; problem?: string | null }>('edgeShiftPick');
+/** The object with its edge moved `d` along its normal (its other fields kept) and an area's size, or why not. */
+export const edgeShift = op<(e: Entity, ring: number, edge: number, d: number) => { entity?: Entity | null; area?: number | null; problem?: string | null }>('edgeShift');
+/** The distance for an area to reach `target` m², or why none. */
+export const edgeShiftForArea = op<(e: Entity, ring: number, edge: number, target: number) => { distance?: number | null; problem?: string | null }>('edgeShiftForArea');
 /** The candidate nearest to p (the first of equally near ones); null for none. */
 export const nearestOf = op<(points: readonly Vec2[], p: Vec2) => Vec2 | null>('nearestOf');
 

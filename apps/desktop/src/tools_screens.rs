@@ -163,6 +163,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::point_calc_scenes::scenes());
     all.extend(crate::stationing_scenes::scenes());
     all.extend(crate::centerline_scenes::scenes());
+    all.extend(crate::edge_shift_scenes::scenes());
     all
 }
 

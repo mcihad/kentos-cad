@@ -1,5 +1,6 @@
 import { ReadableTool, TextTool } from './annotateTools';
 import { CenterlineTool } from './centerlineTool';
+import { EdgeShiftTool } from './edgeShiftTool';
 import { PlaceTextFileTool } from './textFileTool';
 import { LeaderTool } from './leaderTool';
 import { BlockDefineTool, BlockInsertTool } from './blockTools';
@@ -265,6 +266,23 @@ const defs: Def[] = [
   { id: 'align', label: 'Hizala', icon: 'align', group: 'transform', section: 'move', aliases: ['AL', 'ALIGN', 'HIZALA'], description: 'Seçimi iki nokta çiftiyle yerine oturtur: birinci kaynak birinci hedefe taşınır, ikinci çift yönü (isterseniz ölçeği) verir.', steps: ['Nesneleri seçip sağ tıklayın.', 'Birinci kaynak noktasına, sonra birinci hedef noktasına tıklayın (yalnız taşımak için burada sağ tıklayın).', 'İkinci kaynak ve ikinci hedef noktalarına tıklayın; “Ölçekle” açıkken boy da hedefe uyar.'], productCommand: entitiesTransform.id, create: (c) => new AlignTool(c) },
   // Düzenle
   { id: 'offset', primary: true, label: 'Ötele', icon: 'offset', group: 'modify', section: 'edge', shortcut: 'Shift+O', aliases: ['O', 'OFFSET', 'OTELE'], description: 'Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır; iki yana ya da kaynağı silerek.', steps: ['Ötelenecek nesneye tıklayın.', 'Kopyanın gideceği tarafa tıklayın.', 'Mesafe için sayı yazın; “Noktadan geç” açıkken kopya tıkladığınız noktadan geçer. “İki yana” iki yanda birden kopya çıkarır, “Kaynağı sil” özgün nesneyi aynı adımda siler.'], productCommand: entitiesEdit.id, create: (c) => new OffsetTool(c) },
+  {
+    id: 'edgeShift',
+    rare: true,
+    label: 'Paralel kaydır',
+    icon: 'edgeShift',
+    group: 'modify',
+    section: 'edge',
+    aliases: ['PARALELKAYDIR', 'KENARKAYDIR', 'ALANDUZELT', 'EDGESHIFT'],
+    description: 'Bir alanın ya da çoklu çizginin düz kenarını kendine paralel kaydırır, komşu kenarlar uzar ya da kısalır; uzaklık yazılarak, imleçle ya da alanın hedef değerine göre (Netcad’in Paralel Kaydır’ı ve Alan Düzeltme (Paralel)’i).',
+    steps: [
+      'Kaydırılacak kenara tıklayın (kilitsiz alan ya da çoklu çizgi; yay kenar olmaz): kenar imleçle kayar, yanında uzaklık ve alanın yeni değeri.',
+      'Uzaklığı yazın (alanda dışarı, çoklu çizgide sağa artı) ya da yerine tıklayın; alanda Alan (A) hedef alanı sorar, uzaklık ondan bulunur.',
+      'Tek adımda yazılır, araç sonraki kenarı bekler. Esc ve Ctrl+Z kenarı bırakır; kenar yokken Esc çıkar.',
+    ],
+    productCommand: entitiesEdit.id,
+    create: (c) => new EdgeShiftTool(c),
+  },
   { id: 'trim', primary: true, methods: [{ label: 'Tıklayarak' }, { label: 'Çit', option: 'C', icon: 'trimFence', description: 'Çizilen çitin kestiği her parçayı budar' }], label: 'Buda', icon: 'trim', group: 'modify', section: 'edge', shortcut: 'Shift+T', aliases: ['TR', 'TRIM', 'BUDA'], description: 'Tıklanan parçayı, onu kesen en yakın iki kenar arasında siler.', steps: ['Silinecek parçanın üzerine tıklayın; kırmızı gösterilen kısım gider.', 'Görünen diğer tüm kenarlar kesici sayılır.', '“Çit” ile çitin noktalarına tıklayın: çitin kestiği her parça budanır. Sağ tık uygular.'], productCommand: entitiesEdit.id, create: (c) => new TrimTool(c) },
   { id: 'extend', methods: [{ label: 'Tıklayarak' }, { label: 'Çit', option: 'C', icon: 'extendFence', description: 'Çizilen çitin kestiği her nesnenin ucunu uzatır' }], label: 'Uzat', icon: 'extend', group: 'modify', section: 'edge', shortcut: 'Shift+E', aliases: ['EX', 'EXTEND', 'UZAT'], description: 'Çizgi ya da yay ucunu ilk rastladığı kenara kadar uzatır.', steps: ['Uzatılacak ucun yakınına tıklayın.', 'Nesne ilk rastladığı kenara kadar uzar.', '“Çit” ile çitin noktalarına tıklayın: çitin kestiği her nesnenin çite yakın ucu uzar. Sağ tık uygular.'], productCommand: entitiesEdit.id, create: (c) => new ExtendTool(c) },
   { id: 'lengthen', rare: true, label: 'Uzat-kısalt', icon: 'lengthen', group: 'modify', section: 'edge', shortcut: 'Shift+U', aliases: ['LEN', 'LENGTHEN', 'UZATKISALT'], description: 'Çizgi, yay ya da açık çoklu çizginin boyunu bir ucundan değiştirir: fareyle, farkla, yüzdeyle ya da toplam uzunlukla.', steps: ['Değişecek ucun yakınına tıklayın.', 'Yeni ucu fareyle gösterin (uzatmada son parça doğrultusunda ya da çemberinde devam eder) ya da toplam uzunluğu yazın.', '“Fark”, “Yüzde”, “Toplam” kiplerinde tıklanan her uç hemen değişir.'], productCommand: entitiesEdit.id, create: (c) => new LengthenTool(c) },

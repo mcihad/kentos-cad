@@ -1152,6 +1152,21 @@ cases.append({
     ],
 })
 
+# Paralel kaydır (docs/adr/0191): the tool computes the geometry (the core's `ops::edge_shift`); the object is updated in
+# place and each vertex keeps its own elevation, the two moved ones too (by place, as a grip's): the corner moved along
+# the first edge's line keeps 2, where its place on that line's grade would give 2.3.
+SHIFTED = {"kind": "polyline", "pts": [P(487000, 4420060), P(487013, 4420060), P(487013, 4420070)]}
+cases.append({
+    "name": "Paralel kaydır: kenar yerinde kayar, her köşe kendi kotunu korur (taşınan köşeler de); tek adım, adı Paralel kaydır (ADR 0191)",
+    "setup": Z_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "edgeShift", "changes": [{"kind": "update", "uid": uid(2), "geometry": SHIFTED}]},
+         "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": z_updated(2, SHIFTED, zs=[1, 2, None])}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Paralel kaydır", "expect": {"entities": {"2": ZE(2)}, "canUndo": False}},
+    ],
+})
+
 ELEVATIONS_MESSAGE = "Kotların sayısı köşelerin sayısıyla aynı olmalı; {} köşeye {} kot verildi. Her köşeye bir kot verin; kotsuz köşeye null."
 cases.append({
     "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",

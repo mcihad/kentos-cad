@@ -92,6 +92,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   // Tabloyu düzenle and Tabloyu güncelle (docs/adr/0184 §6).
   table: 'Tablo',
   tableUpdate: 'Tabloyu güncelle',
+  // Paralel kaydır (docs/adr/0191).
+  edgeShift: 'Paralel kaydır',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -515,7 +517,7 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
   // The object keeps its own vertices, moved (a grip, Esnet, a typed coordinate), or Ötele's copy has one
   // for each of its source's: a vertex takes the elevation of the one in its place. Any other edit cuts or
   // reshapes, and its vertices take theirs by where they lie.
-  const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties';
+  const byPlace = offset || input.operation === 'grip' || input.operation === 'stretch' || input.operation === 'properties' || input.operation === 'edgeShift';
   let lost = 0;
   // Deliği doldur's area takes its hole's elevations, if it has any: its area keeps its own (docs/adr/0173 §5).
   const keeps = input.operation === 'holeFill';

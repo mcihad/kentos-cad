@@ -152,6 +152,7 @@
     "tool.coordinateVertices",
     "tool.stationLabels",
     "tool.centerline",
+    "tool.edgeShift",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

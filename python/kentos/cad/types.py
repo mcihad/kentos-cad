@@ -319,6 +319,7 @@ class EditOperation(_StrEnum):
     - ``dimensionStyle``: Ölçü stilleri's Kaydet, as `TextStyle` for dimensions.
     - ``table``: Tabloyu düzenle's Kaydet (docs/adr/0184 §4): a table's cells, rows,
     - ``tableUpdate``: Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
+    - ``edgeShift``: Paralel kaydır (docs/adr/0191): an area's or a polyline's straight
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -362,9 +363,10 @@ class EditOperation(_StrEnum):
     DIMENSION_STYLE = "dimensionStyle"
     TABLE = "table"
     TABLE_UPDATE = "tableUpdate"
+    EDGE_SHIFT = "edgeShift"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 

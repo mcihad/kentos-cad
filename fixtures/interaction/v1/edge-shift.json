@@ -1,0 +1,399 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "edge-shift",
+ "title": "Paralel kaydır: çizgi, kilitli parsel ve yay kenar söylenir; karenin kenarı 2 m dışarı yazılır (komşular uzar), Ctrl+Z önce kenarı bırakır sonra geri alır; yamuğun üst kenarı Alan ile 180 m²'ye (yanlış ve ulaşılamayan alan söylenir); yolun orta kenarı imleçle 3 m sağa; komşusunu aşan uzaklık söylenir",
+ "source": "tools/edgeShiftTool.ts; kentos_interaction::edge_shift; docs/adr/0191",
+ "covers": [
+  "CAD-29"
+ ],
+ "document": "edge-shift.kcad",
+ "view": {
+  "center": [
+   487000,
+   4420000
+  ],
+  "metresPerPixel": 0.125
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.125,
+ "steps": [
+  {
+   "run": "tool.edgeShift",
+   "expect": {
+    "tool": "edgeShift",
+    "points": 0,
+    "prompt": "Paralel kaydır: kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)"
+   }
+  },
+  {
+   "click": [
+    35,
+    10
+   ],
+   "note": "Çizgi alan ya da çoklu çizgi değil.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Tıklanan yerde kaydırılacak kenar yok; kilitsiz bir alanın ya da çoklu çizginin kenarına tıklayın."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    -25,
+    20
+   ],
+   "note": "Kilitli katmandaki parsel.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Tıklanan yerde kaydırılacak kenar yok; kilitsiz bir alanın ya da çoklu çizginin kenarına tıklayın."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    42.5,
+    -5
+   ],
+   "note": "Yay kenar kaydırılmaz.",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
+    ],
+    "points": 0
+   }
+  },
+  {
+   "click": [
+    -20,
+    -10
+   ],
+   "note": "Karenin güney kenarı.",
+   "expect": {
+    "points": 1,
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "2"
+  },
+  {
+   "key": "Enter",
+   "note": "2 m dışarı: komşular uzar, alan 440 m².",
+   "expect": {
+    "points": 0,
+    "logged": [
+     "Paralel kaydır: kenar 2.000 m kaydırıldı, alan 440.00 m²."
+    ],
+    "prompt": "Paralel kaydır: kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)",
+    "objects": [
+     {
+      "id": 1,
+      "kind": "polygon",
+      "points": [
+       [
+        -30,
+        -12
+       ],
+       [
+        -10,
+        -12
+       ],
+       [
+        -10,
+        10
+       ],
+       [
+        -30,
+        10
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "click": [
+    10,
+    0
+   ],
+   "note": "Yamuğun üst kenarı.",
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Önce kenar bırakılır.",
+   "expect": {
+    "points": 0,
+    "objects": [
+     {
+      "id": 1,
+      "kind": "polygon",
+      "points": [
+       [
+        -30,
+        -12
+       ],
+       [
+        -10,
+        -12
+       ],
+       [
+        -10,
+        10
+       ],
+       [
+        -30,
+        10
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "Ctrl+Z",
+   "note": "Kenar yokken Ctrl+Z kaydırmayı geri alır.",
+   "expect": {
+    "objects": [
+     {
+      "id": 1,
+      "kind": "polygon",
+      "points": [
+       [
+        -30,
+        -10
+       ],
+       [
+        -10,
+        -10
+       ],
+       [
+        -10,
+        10
+       ],
+       [
+        -30,
+        10
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "click": [
+    10,
+    0
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "prompt": "Paralel kaydır: hedef alanı yazın (m²)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Hedef alan sıfırdan büyük bir sayı olmalı; “0” yazıldı."
+    ],
+    "prompt": "Paralel kaydır: hedef alanı yazın (m²)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "1000"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Bu alana kenarı kaydırarak ulaşılamıyor."
+    ],
+    "prompt": "Paralel kaydır: hedef alanı yazın (m²)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "180"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "logged": [
+     "Paralel kaydır: kenar 3.675 m kaydırıldı, alan 180.00 m²."
+    ],
+    "points": 0,
+    "prompt": "Paralel kaydır: kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)",
+    "objects": [
+     {
+      "id": 2,
+      "kind": "polygon",
+      "points": [
+       [
+        0,
+        -10
+       ],
+       [
+        20,
+        -10
+       ],
+       [
+        13.16227766016838,
+        3.675444679663241
+       ],
+       [
+        6.83772233983162,
+        3.675444679663241
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "click": [
+    10,
+    15
+   ],
+   "expect": {
+    "points": 1,
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı)"
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Hedef alan yalnız alanlarda yazılır."
+    ],
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (sağa artı)"
+   }
+  },
+  {
+   "click": [
+    13,
+    15
+   ],
+   "note": "İmlecin yeri: kenar 3 m doğuya, komşular kısalır ve uzar.",
+   "expect": {
+    "points": 0,
+    "log": "success",
+    "objects": [
+     {
+      "id": 3,
+      "kind": "polyline",
+      "points": [
+       [
+        0,
+        10
+       ],
+       [
+        13,
+        10
+       ],
+       [
+        13,
+        20
+       ],
+       [
+        20,
+        20
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "click": [
+    -30,
+    0
+   ],
+   "expect": {
+    "points": 1
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "-25"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "log": "warn",
+    "logged": [
+     "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın."
+    ],
+    "points": 1
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc kenarı bırakır.",
+   "expect": {
+    "points": 0,
+    "prompt": "Paralel kaydır: kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)"
+   }
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 6
+   }
+  }
+ ]
+}
