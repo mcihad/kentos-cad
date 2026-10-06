@@ -61,14 +61,14 @@ impl Keeper {
         }
     }
 
-    fn number(&self, key: &str) -> f64 {
+    pub(crate) fn number(&self, key: &str) -> f64 {
         self.kept
             .get(key)
             .and_then(Value::as_f64)
             .unwrap_or_default()
     }
 
-    fn flag(&self, key: &str) -> bool {
+    pub(crate) fn flag(&self, key: &str) -> bool {
         self.kept
             .get(key)
             .and_then(Value::as_bool)
@@ -89,7 +89,7 @@ impl Keeper {
     }
 
     /// Keeps `value`; a change is written `SAVE_MS` after the last one.
-    fn keep(&mut self, key: &str, value: Value, now: Instant) {
+    pub(crate) fn keep(&mut self, key: &str, value: Value, now: Instant) {
         if self.kept.get(key) != Some(&value) {
             self.kept.insert(key.to_owned(), value);
             self.due = Some(now + Duration::from_millis(plan::SAVE_MS));

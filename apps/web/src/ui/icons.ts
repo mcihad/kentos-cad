@@ -277,6 +277,9 @@ export const ICONS = {
   zoomIn: '<circle cx="8.5" cy="8.5" r="5.2"/><path d="m12.4 12.4 4.6 4.6M6.3 8.5h4.4M8.5 6.3v4.4"/>',
   zoomOut: '<circle cx="8.5" cy="8.5" r="5.2"/><path d="m12.4 12.4 4.6 4.6M6.3 8.5h4.4"/>',
   zoomExtents: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><rect x="7" y="7" width="6" height="6"/>',
+  // Genel bakış and Büyüteç (docs/adr/0181): the whole drawing with the view's frame on it; a loupe with a reticle.
+  overview: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><rect x="9.5" y="6" width="5.5" height="4.5"/><path d="m5 14 3-4 2.5 2.5"/>',
+  magnifier: '<circle cx="8.5" cy="8.5" r="5.5"/><path d="M8.5 4.6v2.2M8.5 10.2v2.2M4.6 8.5h2.2M10.2 8.5h2.2M12.6 12.6l4.6 4.6"/>',
   zoomWindow: '<rect x="2.5" y="2.5" width="10" height="8" stroke-dasharray="2 1.6"/><circle cx="12" cy="12" r="3.2"/><path d="m14.4 14.4 3 3"/>',
   zoomSelection: '<path d="M10 2.5v3M10 14.5v3M2.5 10h3M14.5 10h3"/><circle cx="10" cy="10" r="4.5"/><circle cx="10" cy="10" r="1" fill="currentColor"/>',
   viewPrevious: '<path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/><path d="M11.5 6.5 8 10l3.5 3.5"/>',

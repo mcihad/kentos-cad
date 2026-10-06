@@ -20,6 +20,7 @@ mod leader;
 mod line_parts;
 mod locks;
 mod measure;
+mod navigation;
 mod numeric;
 mod point_editor;
 mod point_text;

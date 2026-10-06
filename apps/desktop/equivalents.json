@@ -97,6 +97,9 @@
       "desktop": "implemented",
       "where": "apps/desktop/src/processing/panel.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
+    "layout.magnifier": { "desktop": "implemented", "where": "apps/desktop/src/navigation_cards.rs, layout.rs (Büyüteç açık mı; yerlesim.json, ADR 0181)" },
+    "layout.magnifierZoom": { "desktop": "implemented", "where": "apps/desktop/src/navigation_cards.rs, layout.rs (Büyüteç'in büyütmesi; yerlesim.json, ADR 0181)" },
+    "layout.overview": { "desktop": "implemented", "where": "apps/desktop/src/navigation_cards.rs, layout.rs (Genel bakış açık mı; yerlesim.json, ADR 0181)" },
     "layout.ribbonCollapsed": {
       "desktop": "implemented",
       "where": "apps/desktop/src/view.rs, layout.rs (yerlesim.json, ADR 0115)"

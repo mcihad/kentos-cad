@@ -831,6 +831,16 @@ export class CoreStore {
     return typed(() => this.raw.extentOutliers());
   }
 
+  /** Genel bakış (docs/adr/0181 §3): the extent of what the visible layers hold, `minX, minY, maxX, maxY`; empty for nothing. */
+  overviewExtent(): Float64Array {
+    return typed(() => this.raw.overviewExtent());
+  }
+
+  /** The overview's picture: RGBA rows of ⌊width·dpr + 0.5⌋ pixels; `colorsJson` is `{ layerId: '#RRGGBB' }`; empty for nothing. */
+  overviewPicture(width: number, height: number, dpr: number, colorsJson: string): Uint8Array {
+    return typed(() => this.raw.overviewPicture(width, height, dpr, colorsJson));
+  }
+
   /** Packed edges: `0, ax, ay, bx, by` (segment) or `1, cx, cy, r, a0, sweep` (arc). */
   edgesIn(minX: number, minY: number, maxX: number, maxY: number, except?: number): Float64Array {
     return typed(() => this.raw.edgesIn(minX, minY, maxX, maxY, except !== undefined, except ?? 0));

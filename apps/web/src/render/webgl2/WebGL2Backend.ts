@@ -184,43 +184,42 @@ export class WebGL2Backend implements RenderBackend {
     const drawBase = !frame.keepBase || key !== this.baseKey;
     gl.viewport(0, 0, w, h);
 
-    const sx = (2 * view.scale) / view.width;
-    const sy = (2 * view.scale) / view.height;
-    const pxPerUnit = view.scale * this.dpr;
-    const offset = [view.center.x, view.center.y] as const;
+    /** A camera's uniforms: `px` the target's size in device pixels; `cull` the magnifier's view (docs/adr/0181). */
+    const camera = (v: typeof view, px: readonly [number, number], cull?: readonly [number, number, number, number]) => ({
+      sx: (2 * v.scale) / v.width,
+      sy: (2 * v.scale) / v.height,
+      pxPerUnit: v.scale * this.dpr,
+      offset: [v.center.x, v.center.y] as const,
+      styled: { cam: [v.center.x, v.center.y] as const, pxPerM: v.scale * this.dpr, dpr: this.dpr, viewPx: px, scaleDenominator: frame.scaleDenominator },
+      cull,
+    });
+    const main = camera(view, [this.canvas.width, this.canvas.height]);
 
-    const setCommon = (p: Program) => {
+    const setCommon = (p: Program, c: ReturnType<typeof camera>) => {
       gl.useProgram(p.program);
-      gl.uniform2f(p.uniforms.u_offset, offset[0], offset[1]);
-      gl.uniform2f(p.uniforms.u_scale, sx, sy);
+      gl.uniform2f(p.uniforms.u_offset, c.offset[0], c.offset[1]);
+      gl.uniform2f(p.uniforms.u_scale, c.sx, c.sy);
     };
 
-    const styledFrame = {
-      cam: offset,
-      pxPerM: pxPerUnit,
-      dpr: this.dpr,
-      viewPx: [this.canvas.width, this.canvas.height] as const,
-      scaleDenominator: frame.scaleDenominator,
-    };
     // Visibility and atlas images for the whole frame first, then the draw calls.
     const drawn = [...(drawBase ? [...frame.underlays, ...frame.order] : []), ...frame.overlays].flatMap((id) => this.layers.get(id)?.styled ?? []);
-    this.styled.prepare(drawn.length ? [drawn] : [], styledFrame);
-    const pass = (ids: readonly string[]) => {
+    this.styled.prepare(drawn.length ? [drawn] : [], main.styled);
+    const pass = (ids: readonly string[], c = main) => {
       const layers = ids.map((id) => this.layers.get(id)).filter((l): l is GpuLayer => !!l);
       // Each layer draws its styled symbols whole (symbol levels), under the plain lines and points.
       for (const l of layers) {
         if (l.fills.length) {
-          setCommon(this.fill);
+          setCommon(this.fill, c);
           for (const f of l.fills) {
             gl.uniform4fv(this.fill.uniforms.u_color, f.color);
             gl.bindVertexArray(f.vao);
             gl.drawArrays(gl.TRIANGLES, 0, f.count);
           }
         }
-        this.styled.draw(l.styled, styledFrame);
+        this.styled.draw(l.styled, c.styled, c.cull);
       }
-      setCommon(this.line);
-      gl.uniform1f(this.line.uniforms.u_pxPerUnit, pxPerUnit);
+      setCommon(this.line, c);
+      gl.uniform1f(this.line.uniforms.u_pxPerUnit, c.pxPerUnit);
       for (const l of layers)
         for (const ln of l.lines) {
           gl.uniform4fv(this.line.uniforms.u_color, ln.color);
@@ -229,7 +228,7 @@ export class WebGL2Backend implements RenderBackend {
           gl.bindVertexArray(ln.vao);
           gl.drawArrays(gl.LINES, 0, ln.count);
         }
-      setCommon(this.point);
+      setCommon(this.point, c);
       gl.uniform1f(this.point.uniforms.u_dpr, this.dpr);
       for (const l of layers)
         for (const p of l.points) {
@@ -258,6 +257,27 @@ export class WebGL2Backend implements RenderBackend {
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, draw.fbo);
     pass(frame.overlays);
+    // Büyüteç (docs/adr/0181 §5): its rectangle cleared and the layers drawn again through its camera, only what
+    // reaches its view; the main camera's choices of what shows.
+    const lens = frame.lens;
+    if (lens) {
+      const [x, y, lw, lh] = lens.rect.map((n) => Math.round(n * this.dpr));
+      const v = lens.view;
+      const hw = v.width / 2 / v.scale;
+      const hh = v.height / 2 / v.scale;
+      const c = camera(v, [lw, lh], [v.center.x - hw, v.center.y - hh, v.center.x + hw, v.center.y + hh]);
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(x, h - y - lh, lw, lh);
+      gl.viewport(x, h - y - lh, lw, lh);
+      const [r, g, b] = frame.clearColor;
+      gl.clearColor(r, g, b, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      pass(frame.underlays, c);
+      pass(frame.order, c);
+      pass(frame.overlays, c);
+      gl.disable(gl.SCISSOR_TEST);
+      gl.viewport(0, 0, w, h);
+    }
     gl.bindVertexArray(null);
     this.copy(draw.fbo, this.out!.fbo, w, h);
     this.drawTexture(this.out!.tex!, null);

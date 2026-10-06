@@ -40,6 +40,9 @@ DEFAULTS = {
     'ribbonCollapsed': False,
     'ribbonQuickAccess': [],
     'ribbonSplits': {},
+    'overview': False,
+    'magnifier': False,
+    'magnifierZoom': 4,
 }
 DOCK = {'min': 240, 'max': 560, 'maxShare': 0.5, 'reset': 312}
 LAYERS = {'min': 0.15, 'max': 0.85, 'reset': 0.5}
@@ -59,6 +62,9 @@ FIELDS = {
     'ribbonCollapsed': {'kind': 'boolean'},
     'ribbonQuickAccess': {'kind': 'texts'},
     'ribbonSplits': {'kind': 'textMap'},
+    'overview': {'kind': 'boolean'},
+    'magnifier': {'kind': 'boolean'},
+    'magnifierZoom': {'kind': 'number', 'min': 2, 'max': 16},
 }
 QUICK_FIXED = ['file.save', 'edit.undo', 'edit.redo']
 
@@ -152,6 +158,7 @@ FULL = {
     'bottomTab': 'messages', 'dockTab': 'processing', 'processingTab': 'history', 'processingFolded': ['points'],
     'ribbonTab': 'draw', 'ribbonCollapsed': True, 'ribbonQuickAccess': ['view.zoomExtents', 'tool.line'],
     'ribbonSplits': {'circle': 'tool.circle|3N', 'rectangle': 'tool.regularPolygon|'},
+    'overview': True, 'magnifier': True, 'magnifierZoom': 8,
 }
 compact = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':'))
 READS = [
@@ -182,6 +189,9 @@ READS = [
     ('the toolbox of the classic shell is no longer kept: its fields are dropped (docs/adr/0155)', compact({
         'theme': 'light', 'toolboxVisible': False, 'toolboxDocked': True, 'toolboxX': 240, 'toolboxY': 80, 'toolboxColumns': 2,
         'toolboxFolded': ['draw'], 'ribbonToolbox': True, 'ribbonTab': 'draw',
+    })),
+    ('Genel bakış and Büyüteç are kept; a zoom out of its range is brought within it (docs/adr/0181)', compact({
+        'overview': True, 'magnifier': True, 'magnifierZoom': 64,
     })),
     ('a fraction and sizes that are not whole are kept as they are', compact({'layersFraction': 0.333, 'dockWidth': 313.5, 'bottomHeight': 200.25})),
 ]

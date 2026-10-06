@@ -35,6 +35,10 @@ export interface UiLayoutData {
   ribbonQuickAccess: string[];
   /** The entry last chosen on each split button (Daire ▾: 3 nokta), by button key. */
   ribbonSplits: Record<string, string>;
+  /** Genel bakış and Büyüteç over the drawing (docs/adr/0181), and the magnifier's zoom (2, 4, 8 or 16). */
+  overview: boolean;
+  magnifier: boolean;
+  magnifierZoom: number;
 }
 
 /** Where the web keeps the layout. */
@@ -55,6 +59,9 @@ export const LAYOUT_DEFAULTS: UiLayoutData = {
   ribbonCollapsed: false,
   ribbonQuickAccess: [],
   ribbonSplits: {},
+  overview: false,
+  magnifier: false,
+  magnifierZoom: 4,
 };
 
 /** The right dock's width (CSS px): dragged between `min` and the lesser of `max` and `maxShare` of the window's width. */
@@ -91,6 +98,9 @@ export const LAYOUT_FIELDS: { readonly [K in keyof UiLayoutData]: FieldRule } = 
   ribbonCollapsed: { kind: 'boolean' },
   ribbonQuickAccess: { kind: 'texts' },
   ribbonSplits: { kind: 'textMap' },
+  overview: { kind: 'boolean' },
+  magnifier: { kind: 'boolean' },
+  magnifierZoom: { kind: 'number', min: 2, max: 16 },
 };
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);

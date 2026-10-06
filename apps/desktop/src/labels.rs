@@ -74,6 +74,43 @@ pub fn layer<'a>(
     format: &Format,
     hidden: Option<Slot>,
 ) -> Element<'a, Message> {
+    build(
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, true,
+    )
+}
+
+/// The same through Büyüteç's camera (docs/adr/0181 §5): the drawing's
+/// text without the area's grid north, scale bar or axes.
+#[allow(clippy::too_many_arguments)]
+pub fn lens_layer<'a>(
+    doc: &'a Document,
+    drawing: u64,
+    spatial: &Spatial,
+    kept: &Spots,
+    camera: &Camera,
+    canvas: Canvas,
+    palette: &Palette,
+    format: &Format,
+    hidden: Option<Slot>,
+) -> Element<'a, Message> {
+    build(
+        doc, drawing, spatial, kept, camera, canvas, palette, format, hidden, false,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build<'a>(
+    doc: &'a Document,
+    drawing: u64,
+    spatial: &Spatial,
+    kept: &Spots,
+    camera: &Camera,
+    canvas: Canvas,
+    palette: &Palette,
+    format: &Format,
+    hidden: Option<Slot>,
+    map_marks: bool,
+) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
     (
         camera.center.x.to_bits(),
@@ -117,6 +154,7 @@ pub fn layer<'a>(
         key: key.finish(),
         fence: None,
         current: Cell::new(None),
+        map_marks,
     })
     .width(Fill)
     .height(Fill)
@@ -192,6 +230,8 @@ struct Labels<'a> {
     fence: Option<Fence>,
     /// The object whose label is being drawn (a sheet PDF puts it in its layer).
     current: Cell<Option<Slot>>,
+    /// Grid north and the scale bar, or the axes, over the text (not in Büyüteç's window).
+    map_marks: bool,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -253,6 +293,7 @@ pub fn paint_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
+        map_marks: false,
     }
     .paint(frame);
 }
@@ -306,6 +347,7 @@ pub fn texts_in_map(
         key: 0,
         fence: Some(fence),
         current: Cell::new(None),
+        map_marks: false,
     }
     .paint(&mut list);
     list.labels
@@ -716,7 +758,7 @@ impl Labels<'_> {
         }
         // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
         // as the web's overlay (map_marks.rs); a sheet's map has its own.
-        if self.fence.is_none() {
+        if self.fence.is_none() && self.map_marks {
             frame.marks(&self.camera, &self.colors, self.format.axes);
         }
     }
@@ -1584,6 +1626,7 @@ fn perf() {
         key: 0,
         fence: None,
         current: Cell::new(None),
+        map_marks: true,
     };
     let started = Instant::now();
     for _ in 0..frames {

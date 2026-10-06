@@ -138,6 +138,8 @@ export const MAIN_MENU: TopMenu[] = [
       sec('Paneller'),
       'view.rightPanel',
       'view.bottomPanel',
+      'view.overview',
+      'view.magnifier',
       'view.coords',
       'data.search',
       'data.unmark',

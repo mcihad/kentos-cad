@@ -200,6 +200,8 @@ mod tests {
             sort: None,
             row: None,
             ctrl: None,
+            overview: None,
+            magnifier: None,
             expect: None,
             note: None,
         });

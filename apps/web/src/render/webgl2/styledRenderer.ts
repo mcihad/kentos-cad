@@ -84,6 +84,8 @@ export class StyledRenderer {
   private atlas: AtlasSource | null = null;
   private texture: WebGLTexture | null = null;
   private frameNo = 0;
+  /** The frame the programs' frame uniforms were last set for: another (the magnifier's camera) sets them again. */
+  private framed: StyledFrame | null = null;
   private current: Program | null = null;
   private premul: boolean | null = null;
 
@@ -184,6 +186,7 @@ void main() { outColor = u_color; }`;
    */
   prepare(layers: readonly (readonly GpuStyled[])[], f: StyledFrame): void {
     this.frameNo++;
+    this.framed = f;
     this.current = null;
     this.premul = null;
     const hw = f.viewPx[0] / 2 / f.pxPerM;
@@ -253,10 +256,18 @@ void main() { outColor = u_color; }`;
     else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
-  /** Draws a layer's prepared batches. Other programs may run between layers: state is re-set per layer. */
-  draw(list: readonly GpuStyled[], f: StyledFrame): void {
+  /**
+   * Draws a layer's prepared batches. Other programs may run between layers: state is re-set per layer. With `cull`
+   * (origin-relative minX, minY, maxX, maxY) only the batches reaching it: the magnifier's view (docs/adr/0181), drawn
+   * with its own frame `f` and the choices `prepare` made for the main one.
+   */
+  draw(list: readonly GpuStyled[], f: StyledFrame, cull?: readonly [number, number, number, number]): void {
     if (!list.length) return;
     const gl = this.gl;
+    if (f !== this.framed) {
+      this.frameNo++;
+      this.framed = f;
+    }
     this.current = null;
     this.premul = null;
     if (this.texture) {
@@ -264,7 +275,7 @@ void main() { outColor = u_color; }`;
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
     }
     for (const s of list) {
-      if (!s.visible) continue;
+      if (!s.visible || (cull && !batchInView(s.batch, cull, f.pxPerM, f.dpr))) continue;
       const b = s.batch;
       gl.bindVertexArray(s.vao);
       if (b.kind === 'stroke') {

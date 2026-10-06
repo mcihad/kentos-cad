@@ -34,6 +34,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kayıtlı ölçüler: çizgi ve yayın Kayıtlı semt, Kayıtlı uzunluk, Kayıtlı yarıçap ve Kayıtlı yay uzunluğu öznitelikleri (metin, yazıldığı
   gibi), Çizgi'ye kutupsal yazılan uzunluk ve CBS'de grad iken semt kaydedilir; Kayıtlı ölçüleri denetle (toleranslar, Uyuyor, Farklı,
   Okunamadı; pano ve CSV) ve Kayıtlı ölçüleri çizimden yaz, tek adımda (ADR 0180);
+  Genel bakış ve Büyüteç: çizim alanının üstünde kartlar; Genel bakış bütün çizimin çekirdekte çizilen resmi ve görünüm çerçevesi
+  (basmak taşır, sürüklemek kaydırır, tekerlek, çift tık tümü), Büyüteç imlecin altını 2–16 kat çizim hattının ikinci kamerasıyla
+  gösterir, imleç yaklaşınca öbür yana geçer (ADR 0181);
   sayısallaştırma kilitleri: değer kartında sayı ve Tab ile uzunluk, `<açı` ile doğrultu (CBS'de semt), Sapma, Nesneye paralel ve dik (kenar ya da yay seçilerek), Kalıcı, Esc önce kilitleri kaldırır; Dik açı ve kapalı alanlarda Dik kapat (D); Referans noktası ve Yapım kipi; çizimde kesikli kılavuzlar, seçilen kenar ve “R”, sağ tıkta Kilit ▸ (ADR 0166);
   ikinci koordinat sistemi: projenin ayarı (`.kcad` şema 12), durum çubuğunda, Koordinat oku'da, Mesafe ölç ve Alan hesapla'da ikinci sistemin değerleri doğruluklarıyla (EPSG'nin yolları, “resmî dönüşüm değil”), coğrafide DMS ya da DD; Koordinat dönüştür (tek nokta, Çizimden, liste, panoya ve CSV; `crs.transform`) (ADR 0167);
   saha verisi: Leica GSI, Sokkia SDR, Topcon GTS-7, Nikon RAW, Trimble JobXML ve CSV/TXT karne (alet dosyası içerikten tanınır, metin karnede sütun eşleme), Karne editörü (gözlemler, Kullan, nokta adı;
@@ -249,6 +252,7 @@ python3 scripts/fixtures/rubber_cases.py --check   # Kauçuk levha'nın ince pla
 python3 scripts/fixtures/edgematch_cases.py --check   # Kenar eşleme'nin bağlarını (aday, puan, bire bir eşleme, kavşak, eşsiz uç) ve yöntemlerini (Ucu taşı, Parça ekle, Köşeleri ayarla; üç buluşma yeri, kotlar) mpmath ile 50 basamaklı bağımsız başvurudan denetle (ADR 0159)
 python3 scripts/fixtures/topology_edit_cases.py --check   # Topolojik düzenlemenin kurallarını (ortak köşe ve kenar, taşıma, köşe ekleme, kabarıklık, köşe silme, kilitli ve geçersiz komşu, düzenlemenin öncesinden ve sonrasından değişiklikler) kesin kesirlerle denetle (ADR 0160)
 python3 scripts/fixtures/cogo_cases.py --check   # Kayıtlı ölçülerin kurallarını (çizginin ve yayın semti ve uzunlukları, denetimin farkları cc ve metrede, semtin dönüşü, okunamayan kayıt, kutupsal yazılanın kaydı: virgül, artı, yerel projenin mm ve cm'si) mpmath ve kesirle bağımsız başvurudan denetle; durumlar fixtures/cogo/v1/cases.json (ADR 0180)
+python3 scripts/fixtures/navigation_cases.py --check   # Genel bakış ve Büyüteç'in kurallarını (kartların yeri ve büyütecin yan değiştirmesi, kapsamın resme sığdırılması, görünüm çerçevesi, basılan yer) ve Genel bakışın resmini (piksel kuralları: Bresenham, çift-tek dolgu, noktalar; düz geometride kesin, eğrilerde piksel kenarından uzak) bağımsız başvurudan denetle; durumlar fixtures/navigation/v1/cases.json (ADR 0181)
 python3 scripts/fixtures/adjoin_cases.py --check   # Çakışma denetiminin kırpmasını ve Bitişik alan'ın bölgesini (komşular, delik, çok parça, sarkan uç, yaylı komşu) kesin kesirlerle bağımsız başvurudan denetle (ADR 0162)
 python3 scripts/fixtures/lock_cases.py --check   # Sayısallaştırma kilitlerinin kurallarını (kilitli nokta, Orto ve kutupsal izlemeyle, açı ve sapma doğrultuları, Dik kapat, `<açı` kilit metni) kesin kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle (ADR 0166)
 python3 scripts/fixtures/snap_cases.py --check   # Kenet eklerinin kurallarını (ağırlık merkezi, karelaj, uzantı, paralel, öncelikler, katmanın türleri, çizilmekte olan yol) kesin kesirlerle bağımsız başvurudan denetle (ADR 0163)
@@ -906,7 +910,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   öznitelikleri ([ADR 0180](docs/adr/0180-recorded-measurements.md)) tek parçada bitti (6 Ekim): çekirdek `ops::cogo` (işlemler
   `cogoMeasure`, `cogoCheck`, `cogoRecord`; bağımsız başvuru `cogo_cases.py`, ortak `fixtures/cogo/v1`), Çizgi aracının kaydı (web
   `drawTools.ts`'in `typedText`'i, masaüstü `line.rs`'in `typed`'ı), web `app/cogo.ts` ve `ui/cogo/CogoCheckDialog.ts`, masaüstü
-  `cogo.rs`; ortak iz `cogo.json`. Sıradaki `HYB-25` gezinme ekleri (genel bakış paneli, büyüteç).
+  `cogo.rs`; ortak iz `cogo.json`. `HYB-25` gezinme ekleri ([ADR 0181](docs/adr/0181-overview-and-magnifier.md)) tek parçada bitti
+  (6 Ekim): çekirdek `store::overview` (Genel bakışın kapsamı ve resmi, web'e `overviewExtent`, `overviewPicture`) ve `tools::navigation`
+  (kartların yeri, eşleme; web `viewport/navigation.ts`), bağımsız başvuru `navigation_cases.py` (ortak `fixtures/navigation/v1`, resim
+  piksel piksel); büyüteç çizim hatlarında ikinci kamera (web `FrameState.lens`, masaüstü `Renderer::prepare_lens`/`draw_lens`, aynı
+  ilkel türüyle); kartlar web `viewport/navigationCards.ts`, masaüstü `navigation_cards.rs`; yerleşimde `overview`, `magnifier`,
+  `magnifierZoom`; ortak iz `overview.json`. Sıradaki TODOS.md §16.0'ın bir sonraki maddesi.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

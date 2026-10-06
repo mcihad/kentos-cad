@@ -148,6 +148,8 @@ pub struct Status {
     pub failure: Option<SampleFailure>,
     /// The styled atlas left images for another frame (docs/adr/0090): the area asks for one.
     pub images_pending: bool,
+    /// The window's device pixels per logical pixel, as the last frame was drawn.
+    pub scale_factor: f32,
 }
 
 /// What the drawing area draws the styled layers with (docs/adr/0090): the
@@ -751,6 +753,39 @@ impl Viewport {
         }
     }
 
+    /// The window's device pixels per logical pixel as the area was last
+    /// drawn (1 before the first frame).
+    pub fn scale_factor(&self) -> f64 {
+        let s = self
+            .status
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .scale_factor;
+        if s > 0.0 { f64::from(s) } else { 1.0 }
+    }
+
+    /// Büyüteç's window (docs/adr/0181 §5): this area's scene through
+    /// `camera`, drawn by the same renderer from the same GPU parts and
+    /// styled layers, on the drawing's ground.
+    pub fn lens<'a>(&self, camera: Camera, canvas: impl Into<Canvas>) -> Element<'a, Message> {
+        let Some(origin) = self.scene.borrow().as_ref().map(|c| c.origin) else {
+            return container("").into();
+        };
+        let settings = RenderSettings {
+            samples: 1,
+            ..RenderSettings::new(palette(canvas.into()).background)
+        };
+        shader(Lens {
+            main: self.id,
+            origin,
+            camera,
+            settings,
+        })
+        .width(Fill)
+        .height(Fill)
+        .into()
+    }
+
     /// The world point at a position of the area, through the float64 camera.
     pub fn world(&self, at: Point) -> Vec2 {
         self.camera
@@ -947,6 +982,7 @@ impl shader::Program<Message> for Program {
             status: self.status.clone(),
             styled: self.styled.clone(),
             images: self.images.clone(),
+            lens: false,
         }
     }
 
@@ -1091,15 +1127,20 @@ pub fn gesture(
         }
         mouse::Event::WheelScrolled { delta } => {
             let at = cursor.position_in(bounds)?;
-            let steps = match delta {
-                mouse::ScrollDelta::Lines { y, .. } => f64::from(*y) * WHEEL_LINE,
-                mouse::ScrollDelta::Pixels { y, .. } => f64::from(*y) * WHEEL_PIXEL,
-            };
+            let steps = wheel_steps(delta);
             let factor = steps.exp();
             (steps != 0.0 && factor.is_finite())
                 .then_some((Some(Event::Zoomed { factor, at }), true))
         }
         _ => None,
+    }
+}
+
+/// A wheel's turn as zoom steps: the zoom is their exponential (Genel bakış zooms by them too).
+pub(crate) fn wheel_steps(delta: &mouse::ScrollDelta) -> f64 {
+    match delta {
+        mouse::ScrollDelta::Lines { y, .. } => f64::from(*y) * WHEEL_LINE,
+        mouse::ScrollDelta::Pixels { y, .. } => f64::from(*y) * WHEEL_PIXEL,
     }
 }
 
@@ -1113,6 +1154,10 @@ pub struct Frame {
     status: Arc<Mutex<Status>>,
     styled: StyledScene,
     images: Option<Arc<crate::style::images::Images>>,
+    /// Büyüteç's window (docs/adr/0181 §5): the area `id`'s scene through
+    /// `camera`. One primitive type for both, since Iced keeps a renderer
+    /// per primitive type and the window draws with the area's.
+    lens: bool,
 }
 
 impl fmt::Debug for Frame {
@@ -1137,6 +1182,24 @@ impl shader::Primitive for Frame {
         viewport: &shader::Viewport,
     ) {
         let scale = viewport.scale_factor();
+        // Büyüteç's window: the area's scene through its camera, after the area's own frame.
+        if self.lens {
+            if let Ok(renderer) = &mut pipeline.0 {
+                renderer.prepare_lens(
+                    device,
+                    queue,
+                    self.id,
+                    &kentos_render_wgpu::LensInput {
+                        camera: &self.camera,
+                        origin: self.origin,
+                        size_px: [bounds.width * scale, bounds.height * scale],
+                        scale_factor: f64::from(scale),
+                        settings: &self.settings,
+                    },
+                );
+            }
+            return;
+        }
         let status = match &mut pipeline.0 {
             Ok(renderer) => {
                 let parts = self.parts.each_ref().map(|p| &**p);
@@ -1181,6 +1244,7 @@ impl shader::Primitive for Frame {
                     supported: renderer.sample_counts().to_vec(),
                     failure: renderer.sample_failure(self.id).cloned(),
                     images_pending,
+                    scale_factor: scale,
                 }
             }
             Err(error) => Status {
@@ -1195,6 +1259,11 @@ impl shader::Primitive for Frame {
     /// its own targets (MSAA, HiDPI off) it asks for `render` instead.
     fn draw(&self, pipeline: &Pipeline, render_pass: &mut wgpu::RenderPass<'_>) -> bool {
         match &pipeline.0 {
+            // The magnifier's window is always drawn in Iced's pass: its viewport is the window.
+            Ok(renderer) if self.lens => {
+                renderer.draw_lens(render_pass, self.id);
+                true
+            }
             Ok(renderer) if renderer.owns_targets(self.id) => false,
             Ok(renderer) => {
                 renderer.draw(render_pass, self.id);
@@ -1224,6 +1293,34 @@ impl shader::Primitive for Frame {
                 ],
                 self.id,
             );
+        }
+    }
+}
+
+/// Büyüteç's window (docs/adr/0181 §5): the drawing area `main`'s scene
+/// through a second camera.
+struct Lens {
+    main: ViewId,
+    origin: Vec2,
+    camera: Camera,
+    settings: RenderSettings,
+}
+
+impl shader::Program<Message> for Lens {
+    type State = ();
+    type Primitive = Frame;
+
+    fn draw(&self, _state: &(), _cursor: mouse::Cursor, _bounds: Rectangle) -> Frame {
+        Frame {
+            id: self.main,
+            parts: std::array::from_fn(|_| Arc::default()),
+            origin: self.origin,
+            camera: self.camera,
+            settings: self.settings,
+            status: Arc::default(),
+            styled: StyledScene::default(),
+            images: None,
+            lens: true,
         }
     }
 }

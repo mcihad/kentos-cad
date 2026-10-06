@@ -396,6 +396,9 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0180: Kayıtlı ölçüleri denetle and Kayıtlı ölçüleri çizimden yaz (cogo.rs).
     "cogo.check",
     "cogo.update",
+    // docs/adr/0181: Genel bakış and Büyüteç (navigation_cards.rs).
+    "view.overview",
+    "view.magnifier",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

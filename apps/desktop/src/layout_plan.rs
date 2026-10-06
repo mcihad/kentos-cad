@@ -36,6 +36,9 @@ pub(crate) fn defaults() -> Map<String, Value> {
         "ribbonCollapsed": false,
         "ribbonQuickAccess": [],
         "ribbonSplits": {},
+        "overview": false,
+        "magnifier": false,
+        "magnifierZoom": 4,
     }) else {
         unreachable!("an object")
     };
@@ -96,7 +99,7 @@ pub(crate) enum Rule {
 }
 
 /// Every field's rule, in the web's order.
-pub(crate) const FIELDS: [(&str, Rule); 14] = [
+pub(crate) const FIELDS: [(&str, Rule); 17] = [
     ("theme", Rule::Enum(&["dark", "light"])),
     ("rightVisible", Rule::Boolean),
     (
@@ -135,6 +138,16 @@ pub(crate) const FIELDS: [(&str, Rule); 14] = [
     ("ribbonCollapsed", Rule::Boolean),
     ("ribbonQuickAccess", Rule::Texts),
     ("ribbonSplits", Rule::TextMap),
+    // Genel bakış and Büyüteç over the drawing, and the magnifier's zoom (docs/adr/0181).
+    ("overview", Rule::Boolean),
+    ("magnifier", Rule::Boolean),
+    (
+        "magnifierZoom",
+        Rule::Number {
+            min: Some(2.0),
+            max: Some(16.0),
+        },
+    ),
 ];
 
 /// A stored value read by its field's rule; `None` when it cannot be taken.

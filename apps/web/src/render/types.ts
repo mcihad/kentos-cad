@@ -194,6 +194,17 @@ export interface ViewState {
   dpr: number;
 }
 
+/**
+ * Büyüteç (docs/adr/0181 §5): the frame's layers once more through a second camera, over a rectangle of the canvas.
+ * What shows is the main camera's choice (visibility, atlas images); only what lies in the lens's view is drawn.
+ */
+export interface LensFrame {
+  /** Where, CSS px from the canvas's top left: x, y, width, height. */
+  rect: readonly [number, number, number, number];
+  /** Its camera: the centre relative to the document origin, CSS px per metre; its width and height are the rectangle's. */
+  view: ViewState;
+}
+
 export interface FrameState {
   view: ViewState;
   /** Screen scale 1:N at 96 dpi (rule scale ranges). */
@@ -211,6 +222,8 @@ export interface FrameState {
    * uploaded or removed, a different view, order or background).
    */
   keepBase?: boolean;
+  /** The magnifier's picture over the frame, drawn last (docs/adr/0181); none without it. */
+  lens?: LensFrame | null;
 }
 
 export type BackendKind = 'webgl2' | 'webgpu';

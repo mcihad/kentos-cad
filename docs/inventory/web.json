@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 324,
-      "implemented": 312,
+      "total": 326,
+      "implemented": 314,
       "partial": 0,
       "pending": 12
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 81,
-      "implemented": 81,
+      "total": 84,
+      "implemented": 84,
       "partial": 0,
       "pending": 0
     },
@@ -102,11 +102,11 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 110,
-    "commandsOnDesktop": 252,
+    "commandsOnDesktop": 254,
     "desktop": {
       "commands": {
-        "total": 324,
-        "implemented": 252,
+        "total": 326,
+        "implemented": 254,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -145,8 +145,8 @@
         "n/a": 0
       },
       "settings": {
-        "total": 81,
-        "implemented": 78,
+        "total": 84,
+        "implemented": 81,
         "partial": 0,
         "pending": 0,
         "none": 2,
@@ -9839,6 +9839,37 @@
       "tests": []
     },
     {
+      "id": "view.magnifier",
+      "title": "Büyüteç",
+      "category": "Görünüm",
+      "icon": "magnifier",
+      "description": "İmlecin altını 2, 4, 8 ya da 16 kat büyük gösteren pencere; görünüm değişmez. İmleç pencereye yaklaşınca pencere öbür yana geçer.",
+      "aliases": [
+        "BUYUTEC",
+        "MAGNIFIER"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Görünüm › Paneller"
+      ],
+      "ribbon": [
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/overview.json"
+      ]
+    },
+    {
       "id": "view.next",
       "title": "Sonraki görünüm",
       "category": "Görünüm",
@@ -9872,6 +9903,39 @@
       ]
     },
     {
+      "id": "view.overview",
+      "title": "Genel bakış",
+      "category": "Görünüm",
+      "icon": "overview",
+      "description": "Çizim alanının sol üst köşesinde bütün çizimin küçük resmi ve görünümün çerçevesi. Resme basmak görünümü oraya taşır, sürüklemek kaydırır, tekerlek yakınlaştırır, çift tık tümünü gösterir.",
+      "aliases": [
+        "GENELBAKIS",
+        "KUSBAKISI",
+        "DSVIEWER",
+        "OVERVIEW"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Görünüm › Paneller"
+      ],
+      "ribbon": [
+        "CAD › Görünüm › Paneller",
+        "CBS › Görünüm › Paneller"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/overview.json"
+      ]
+    },
+    {
       "id": "view.previous",
       "title": "Önceki görünüm",
       "category": "Görünüm",
@@ -9901,7 +9965,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/netcadNames.test.ts"
+        "apps/web/src/app/netcadNames.test.ts",
+        "fixtures/interaction/v1/overview.json"
       ]
     },
     {
@@ -13873,6 +13938,48 @@
         "desktop": "implemented"
       },
       "desktopWhere": "apps/desktop/src/layout.rs (0,15–0,85; yerlesim.json, ADR 0115)"
+    },
+    {
+      "id": "layout.magnifier",
+      "key": "magnifier",
+      "scope": "layout",
+      "persistence": "localStorage kentos.ui.v1",
+      "type": "boolean",
+      "default": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/navigation_cards.rs, layout.rs (Büyüteç açık mı; yerlesim.json, ADR 0181)"
+    },
+    {
+      "id": "layout.magnifierZoom",
+      "key": "magnifierZoom",
+      "scope": "layout",
+      "persistence": "localStorage kentos.ui.v1",
+      "type": "number",
+      "default": 4,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/navigation_cards.rs, layout.rs (Büyüteç'in büyütmesi; yerlesim.json, ADR 0181)"
+    },
+    {
+      "id": "layout.overview",
+      "key": "overview",
+      "scope": "layout",
+      "persistence": "localStorage kentos.ui.v1",
+      "type": "boolean",
+      "default": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/navigation_cards.rs, layout.rs (Genel bakış açık mı; yerlesim.json, ADR 0181)"
     },
     {
       "id": "layout.processingFolded",
@@ -20994,6 +21101,8 @@
             "items": [
               "view.rightPanel",
               "view.bottomPanel",
+              "view.overview",
+              "view.magnifier",
               "view.coords",
               "data.search",
               "data.unmark",
@@ -23229,6 +23338,14 @@
                 "size": "small"
               },
               {
+                "command": "view.overview",
+                "size": "small"
+              },
+              {
+                "command": "view.magnifier",
+                "size": "small"
+              },
+              {
                 "command": "view.coords",
                 "size": "small"
               },
@@ -25105,6 +25222,14 @@
                 },
                 {
                   "command": "view.bottomPanel",
+                  "size": "small"
+                },
+                {
+                  "command": "view.overview",
+                  "size": "small"
+                },
+                {
+                  "command": "view.magnifier",
                   "size": "small"
                 },
                 {
@@ -27422,6 +27547,14 @@
                   "size": "small"
                 },
                 {
+                  "command": "view.overview",
+                  "size": "small"
+                },
+                {
+                  "command": "view.magnifier",
+                  "size": "small"
+                },
+                {
                   "command": "view.coords",
                   "size": "small"
                 },
@@ -28001,6 +28134,8 @@
     "zoomIn": "<circle cx=\"8.5\" cy=\"8.5\" r=\"5.2\"/><path d=\"m12.4 12.4 4.6 4.6M6.3 8.5h4.4M8.5 6.3v4.4\"/>",
     "zoomOut": "<circle cx=\"8.5\" cy=\"8.5\" r=\"5.2\"/><path d=\"m12.4 12.4 4.6 4.6M6.3 8.5h4.4\"/>",
     "zoomExtents": "<path d=\"M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4\"/><rect x=\"7\" y=\"7\" width=\"6\" height=\"6\"/>",
+    "overview": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><rect x=\"9.5\" y=\"6\" width=\"5.5\" height=\"4.5\"/><path d=\"m5 14 3-4 2.5 2.5\"/>",
+    "magnifier": "<circle cx=\"8.5\" cy=\"8.5\" r=\"5.5\"/><path d=\"M8.5 4.6v2.2M8.5 10.2v2.2M4.6 8.5h2.2M10.2 8.5h2.2M12.6 12.6l4.6 4.6\"/>",
     "zoomWindow": "<rect x=\"2.5\" y=\"2.5\" width=\"10\" height=\"8\" stroke-dasharray=\"2 1.6\"/><circle cx=\"12\" cy=\"12\" r=\"3.2\"/><path d=\"m14.4 14.4 3 3\"/>",
     "zoomSelection": "<path d=\"M10 2.5v3M10 14.5v3M2.5 10h3M14.5 10h3\"/><circle cx=\"10\" cy=\"10\" r=\"4.5\"/><circle cx=\"10\" cy=\"10\" r=\"1\" fill=\"currentColor\"/>",
     "viewPrevious": "<path d=\"M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4\"/><path d=\"M11.5 6.5 8 10l3.5 3.5\"/>",

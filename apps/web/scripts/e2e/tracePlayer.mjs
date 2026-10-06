@@ -284,6 +284,10 @@ async function setUp(t) {
     // browser, its points off the drawing (the desktop gives every play an app of its own).
     k.ui.bottomExpanded.set(false);
     k.ui.bottomTab.set('history');
+    // Genel bakış and Büyüteç start closed, the magnifier at 4× (docs/adr/0181).
+    k.ui.overview.set(false);
+    k.ui.magnifier.set(false);
+    k.ui.magnifierZoom.set(4);
     // Veride ara's choices and the place it marked start over too (docs/adr/0178).
     (await import('/src/ui/bottom/SearchPanel.ts')).resetSearchPanel();
     k.selection.mark.set(null);
@@ -550,6 +554,30 @@ async function act(step) {
     return sleep(40);
   }
   if (step.saveAndReopen) return saveAndReopen();
+  // Genel bakış (docs/adr/0181): a press on its picture where it shows this point of the drawing.
+  if (step.overview) {
+    const p = { x: origin.x + step.overview[0], y: origin.y + step.overview[1] };
+    const at = await b.eval(`window.kentos.view.overviewClient(${JSON.stringify(p)})`);
+    if (!at) throw new Error('Genel bakış açık değil ya da çizimde gösterecek nesne yok');
+    await mouse('mouseMoved', at.x, at.y);
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1 });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1 });
+    return sleep(60);
+  }
+  // Büyüteç's zoom buttons by their words (docs/adr/0181 §2).
+  if (step.magnifier) {
+    const at = await b.eval(`(() => {
+      const el = [...document.querySelectorAll('.nav-card--lens .nav-card__zoom')].find((el) => el.textContent.trim() === ${JSON.stringify(step.magnifier)});
+      if (!el || el.closest('[hidden]')) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    })()`);
+    if (!at) throw new Error(`Büyüteç'te “${step.magnifier}” düğmesi yok`);
+    await mouse('mouseMoved', at.x, at.y);
+    await mouse('mousePressed', at.x, at.y, { button: 'left', clickCount: 1 });
+    await mouse('mouseReleased', at.x, at.y, { button: 'left', clickCount: 1 });
+    return sleep(60);
+  }
   if (!step.expect) throw new Error(`unknown step ${JSON.stringify(step)}`);
 }
 
@@ -668,6 +696,9 @@ const observe = (mark) =>
       lockedLayers: k.doc.layers.all().filter((n) => n.locked).map((n) => k.doc.layers.path(n.id)),
       // Every layer and group by its path, in tree order (docs/adr/0177 §5).
       layers: k.doc.layers.all().map((n) => k.doc.layers.path(n.id)),
+      // Genel bakış's extent and Büyüteç's zoom, side and centre (docs/adr/0181).
+      overview: k.view.navigationState.overview,
+      magnifier: k.view.navigationState.magnifier,
     };
   })()`);
 
@@ -759,6 +790,21 @@ function compare(expect, got, t) {
       const c = have && [have[0] - origin.x, have[1] - origin.y];
       const ok = c === null || want === null ? c === want : Math.hypot(c[0] - want[0], c[1] - want[1]) <= t.clickTolerance;
       if (!ok) bad.push(`mark: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
+    } else if (key === 'overview') {
+      // What Genel bakış shows, east and north from the view's centre of the set-up (docs/adr/0181).
+      const e = have && have.extent.map((v, i) => v - (i % 2 ? origin.y : origin.x));
+      const ok = e === null || want === null ? e === want : want.extent.every((v, i) => Math.abs(v - e[i]) <= 1e-6);
+      if (!ok) bad.push(`overview: ${JSON.stringify(e && { extent: e })}, beklenen ${JSON.stringify(want)}`);
+    } else if (key === 'magnifier') {
+      // Büyüteç's zoom and side exactly, its centre from the pointer within the click tolerance.
+      const c = have?.center && [have.center[0] - origin.x, have.center[1] - origin.y];
+      const ok =
+        have === null || want === null
+          ? have === want
+          : have.zoom === want.zoom &&
+            (want.side === undefined || have.side === want.side) &&
+            (want.center === undefined || (c && Math.hypot(c[0] - want.center[0], c[1] - want.center[1]) <= t.clickTolerance));
+      if (!ok) bad.push(`magnifier: ${JSON.stringify(have && { ...have, center: c })}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (key === 'trackPoints') {

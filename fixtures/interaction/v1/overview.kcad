@@ -1,0 +1,579 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Etkileşim izi: Genel bakış ve Büyüteç",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 487000,
+    "y": 4420000
+  },
+  "layers": [
+    {
+      "id": "nokta",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#F2B632",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#4D96FF",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#5FBF77",
+        "lineType": "continuous",
+        "lineWeight": 0.35
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#E5484D",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "id": 1,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486922,
+          "y": 4420006
+        },
+        {
+          "x": 486950,
+          "y": 4420006
+        },
+        {
+          "x": 486950,
+          "y": 4420048
+        },
+        {
+          "x": 486922,
+          "y": 4420048
+        }
+      ],
+      "label": "101",
+      "attrs": {}
+    },
+    {
+      "id": 2,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486952,
+          "y": 4420006
+        },
+        {
+          "x": 486980,
+          "y": 4420006
+        },
+        {
+          "x": 486980,
+          "y": 4420048
+        },
+        {
+          "x": 486952,
+          "y": 4420048
+        }
+      ],
+      "label": "102",
+      "attrs": {}
+    },
+    {
+      "id": 3,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486982,
+          "y": 4420006
+        },
+        {
+          "x": 487010,
+          "y": 4420006
+        },
+        {
+          "x": 487010,
+          "y": 4420048
+        },
+        {
+          "x": 486982,
+          "y": 4420048
+        }
+      ],
+      "label": "103",
+      "attrs": {}
+    },
+    {
+      "id": 4,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487012,
+          "y": 4420006
+        },
+        {
+          "x": 487040,
+          "y": 4420006
+        },
+        {
+          "x": 487040,
+          "y": 4420048
+        },
+        {
+          "x": 487012,
+          "y": 4420048
+        }
+      ],
+      "label": "104",
+      "attrs": {}
+    },
+    {
+      "id": 5,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487042,
+          "y": 4420006
+        },
+        {
+          "x": 487070,
+          "y": 4420006
+        },
+        {
+          "x": 487070,
+          "y": 4420048
+        },
+        {
+          "x": 487042,
+          "y": 4420048
+        }
+      ],
+      "label": "105",
+      "attrs": {}
+    },
+    {
+      "id": 6,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486922,
+          "y": 4419952
+        },
+        {
+          "x": 486958,
+          "y": 4419952
+        },
+        {
+          "x": 486958,
+          "y": 4419994
+        },
+        {
+          "x": 486922,
+          "y": 4419994
+        }
+      ],
+      "label": "201",
+      "attrs": {}
+    },
+    {
+      "id": 7,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486962,
+          "y": 4419952
+        },
+        {
+          "x": 486998,
+          "y": 4419952
+        },
+        {
+          "x": 486998,
+          "y": 4419994
+        },
+        {
+          "x": 486962,
+          "y": 4419994
+        }
+      ],
+      "label": "202",
+      "attrs": {}
+    },
+    {
+      "id": 8,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487002,
+          "y": 4419952
+        },
+        {
+          "x": 487038,
+          "y": 4419952
+        },
+        {
+          "x": 487038,
+          "y": 4419994
+        },
+        {
+          "x": 487002,
+          "y": 4419994
+        }
+      ],
+      "label": "203",
+      "attrs": {}
+    },
+    {
+      "id": 9,
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 487042,
+          "y": 4419952
+        },
+        {
+          "x": 487078,
+          "y": 4419952
+        },
+        {
+          "x": 487078,
+          "y": 4419994
+        },
+        {
+          "x": 487042,
+          "y": 4419994
+        }
+      ],
+      "label": "204",
+      "attrs": {}
+    },
+    {
+      "id": 10,
+      "kind": "polyline",
+      "layerId": "yol",
+      "pts": [
+        {
+          "x": 486920,
+          "y": 4420000
+        },
+        {
+          "x": 486980,
+          "y": 4420001
+        },
+        {
+          "x": 487030,
+          "y": 4419999
+        },
+        {
+          "x": 487080,
+          "y": 4420000
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 11,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 486930,
+          "y": 4420014
+        },
+        {
+          "x": 486942,
+          "y": 4420014
+        },
+        {
+          "x": 486942,
+          "y": 4420024
+        },
+        {
+          "x": 486930,
+          "y": 4420024
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 12,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 486960,
+          "y": 4420016
+        },
+        {
+          "x": 486972,
+          "y": 4420016
+        },
+        {
+          "x": 486972,
+          "y": 4420026
+        },
+        {
+          "x": 486960,
+          "y": 4420026
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 13,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 486990,
+          "y": 4420014
+        },
+        {
+          "x": 487002,
+          "y": 4420014
+        },
+        {
+          "x": 487002,
+          "y": 4420024
+        },
+        {
+          "x": 486990,
+          "y": 4420024
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 14,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487020,
+          "y": 4420018
+        },
+        {
+          "x": 487032,
+          "y": 4420018
+        },
+        {
+          "x": 487032,
+          "y": 4420028
+        },
+        {
+          "x": 487020,
+          "y": 4420028
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 15,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487050,
+          "y": 4420015
+        },
+        {
+          "x": 487062,
+          "y": 4420015
+        },
+        {
+          "x": 487062,
+          "y": 4420025
+        },
+        {
+          "x": 487050,
+          "y": 4420025
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 16,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 486930,
+          "y": 4419960
+        },
+        {
+          "x": 486942,
+          "y": 4419960
+        },
+        {
+          "x": 486942,
+          "y": 4419970
+        },
+        {
+          "x": 486930,
+          "y": 4419970
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 17,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 486970,
+          "y": 4419962
+        },
+        {
+          "x": 486982,
+          "y": 4419962
+        },
+        {
+          "x": 486982,
+          "y": 4419972
+        },
+        {
+          "x": 486970,
+          "y": 4419972
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 18,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487010,
+          "y": 4419960
+        },
+        {
+          "x": 487022,
+          "y": 4419960
+        },
+        {
+          "x": 487022,
+          "y": 4419970
+        },
+        {
+          "x": 487010,
+          "y": 4419970
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 19,
+      "kind": "polygon",
+      "layerId": "bina",
+      "pts": [
+        {
+          "x": 487050,
+          "y": 4419964
+        },
+        {
+          "x": 487062,
+          "y": 4419964
+        },
+        {
+          "x": 487062,
+          "y": 4419974
+        },
+        {
+          "x": 487050,
+          "y": 4419974
+        }
+      ],
+      "attrs": {}
+    },
+    {
+      "id": 20,
+      "kind": "point",
+      "layerId": "nokta",
+      "p": {
+        "x": 486920,
+        "y": 4420050
+      },
+      "attrs": {}
+    },
+    {
+      "id": 21,
+      "kind": "point",
+      "layerId": "nokta",
+      "p": {
+        "x": 487080,
+        "y": 4419950
+      },
+      "attrs": {}
+    },
+    {
+      "id": 22,
+      "kind": "point",
+      "layerId": "nokta",
+      "p": {
+        "x": 487000,
+        "y": 4420003
+      },
+      "attrs": {}
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

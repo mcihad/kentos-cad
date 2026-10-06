@@ -79,6 +79,11 @@ export class WebGPUBackend implements RenderBackend {
   private dpr = 1;
   private frameBuffer!: GPUBuffer;
   private frameBind!: GPUBindGroup;
+  /** Büyüteç (docs/adr/0181 §5): its camera's frame uniform, and its ground drawn as a solid quad in its view. */
+  private lensBuffer!: GPUBuffer;
+  private lensBind!: GPUBindGroup;
+  private lensQuad!: GPUBuffer;
+  private lensGround!: { style: GPUBuffer; bind: GPUBindGroup };
   private styleLayout!: GPUBindGroupLayout;
   private pipelineLayout!: GPUPipelineLayout;
   private module!: GPUShaderModule;
@@ -140,10 +145,14 @@ export class WebGPUBackend implements RenderBackend {
     this.pipelineLayout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
     this.frameBuffer = device.createBuffer({ size: FRAME_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
     this.frameBind = device.createBindGroup({ layout: frameLayout, entries: [{ binding: 0, resource: { buffer: this.frameBuffer } }] });
-    this.styled = new WebGPUStyledRenderer(device, this.format, this.frameBuffer);
+    this.lensBuffer = device.createBuffer({ size: FRAME_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
+    this.lensBind = device.createBindGroup({ layout: frameLayout, entries: [{ binding: 0, resource: { buffer: this.lensBuffer } }] });
+    this.lensQuad = device.createBuffer({ size: 48, usage: BUFFER.VERTEX | BUFFER.COPY_DST });
+    this.styled = new WebGPUStyledRenderer(device, this.format, this.frameBuffer, this.lensBuffer);
     this.copyModule = device.createShaderModule({ code: COPY_WGSL });
     // An explicit layout: one bind group of the kept base serves the copy pipeline of every count.
     this.copyLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } }] });
+    this.lensGround = this.styleBind([0, 0, 0, 1], null);
   }
 
   /** The pipelines for `count` samples (TODOS.md AA-01: pipelines are keyed by sample count). */
@@ -320,6 +329,28 @@ export class WebGPUBackend implements RenderBackend {
       new Float32Array([cx, cy, (2 * view.scale) / view.width, (2 * view.scale) / view.height, view.scale * this.dpr, this.dpr, w, h, view.center.x - cx, view.center.y - cy]),
     );
     const [r, g, b] = frame.clearColor;
+    // Büyüteç (docs/adr/0181 §5): its camera in its own frame uniform, its ground a quad a little larger than its view.
+    const lens = frame.lens;
+    let lensRect: [number, number, number, number] | null = null;
+    let lensCull: readonly [number, number, number, number] = [0, 0, 0, 0];
+    if (lens) {
+      const v = lens.view;
+      const x = Math.min(Math.max(Math.round(lens.rect[0] * this.dpr), 0), w);
+      const y = Math.min(Math.max(Math.round(lens.rect[1] * this.dpr), 0), h);
+      lensRect = [x, y, Math.min(Math.round(lens.rect[2] * this.dpr), w - x), Math.min(Math.round(lens.rect[3] * this.dpr), h - y)];
+      const [lx, ly] = [Math.fround(v.center.x), Math.fround(v.center.y)];
+      device.queue.writeBuffer(
+        this.lensBuffer,
+        0,
+        new Float32Array([lx, ly, (2 * v.scale) / v.width, (2 * v.scale) / v.height, v.scale * this.dpr, this.dpr, lensRect[2], lensRect[3], v.center.x - lx, v.center.y - ly]),
+      );
+      const hw = v.width / 2 / v.scale;
+      const hh = v.height / 2 / v.scale;
+      lensCull = [v.center.x - hw, v.center.y - hh, v.center.x + hw, v.center.y + hh];
+      const [x0, y0, x1, y1] = [v.center.x - 1.1 * hw, v.center.y - 1.1 * hh, v.center.x + 1.1 * hw, v.center.y + 1.1 * hh];
+      device.queue.writeBuffer(this.lensQuad, 0, new Float32Array([x0, y0, x1, y0, x1, y1, x0, y0, x1, y1, x0, y1]));
+      device.queue.writeBuffer(this.lensGround.style, 0, new Float32Array([r, g, b, 1]));
+    }
     const encoder = device.createCommandEncoder();
     // The base pass resolves into the kept texture; the frame pass copies it and draws the overlays into the canvas.
     const begin = (target: GPUTexture) =>
@@ -336,7 +367,10 @@ export class WebGPUBackend implements RenderBackend {
       { cam: [view.center.x, view.center.y], pxPerM: view.scale * this.dpr, dpr: this.dpr, viewPx: [w, h], scaleDenominator: frame.scaleDenominator },
     );
     let pass!: GPURenderPassEncoder;
-    const drawPass = (ids: readonly string[]) => {
+    /** `inLens`: through the magnifier's camera, only what reaches its view (docs/adr/0181). */
+    const drawPass = (ids: readonly string[], inLens = false) => {
+      const frameBind = inLens ? this.lensBind : this.frameBind;
+      const cull = inLens && lens ? { view: lensCull, pxPerM: lens.view.scale * this.dpr, dpr: this.dpr } : undefined;
       const layers = ids.map((id) => this.layers.get(id)).filter((l): l is GpuLayer => !!l);
       // Same order as WebGL2: per layer its plain fills then its styled symbols; then plain lines and points.
       for (const l of layers) {
@@ -349,7 +383,7 @@ export class WebGPUBackend implements RenderBackend {
           }
         }
         // The styled pipelines bind their own group 0 (the frame with the atlas); the plain ones need theirs back.
-        if (this.styled.draw(pass, l.styled, this.samples)) pass.setBindGroup(0, this.frameBind);
+        if (this.styled.draw(pass, l.styled, this.samples, cull)) pass.setBindGroup(0, frameBind);
       }
       pass.setPipeline(pipes.line);
       for (const l of layers)
@@ -381,6 +415,19 @@ export class WebGPUBackend implements RenderBackend {
     pass.draw(3);
     pass.setBindGroup(0, this.frameBind);
     drawPass(frame.overlays);
+    if (lensRect && lensRect[2] > 0 && lensRect[3] > 0) {
+      const [x, y, lw, lh] = lensRect;
+      pass.setViewport(x, y, lw, lh, 0, 1);
+      pass.setScissorRect(x, y, lw, lh);
+      pass.setBindGroup(0, this.lensBind);
+      pass.setPipeline(pipes.fill);
+      pass.setBindGroup(1, this.lensGround.bind);
+      pass.setVertexBuffer(0, this.lensQuad);
+      pass.draw(6);
+      drawPass(frame.underlays, true);
+      drawPass(frame.order, true);
+      drawPass(frame.overlays, true);
+    }
     pass.end();
     device.queue.submit([encoder.finish()]);
   }
@@ -390,6 +437,9 @@ export class WebGPUBackend implements RenderBackend {
     this.msaa?.destroy();
     this.base?.destroy();
     this.frameBuffer?.destroy();
+    this.lensBuffer?.destroy();
+    this.lensQuad?.destroy();
+    this.lensGround?.style.destroy();
     this.styled?.dispose();
     this.device?.destroy();
   }

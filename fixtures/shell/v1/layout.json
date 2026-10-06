@@ -17,7 +17,10 @@
   "ribbonTab": "home",
   "ribbonCollapsed": false,
   "ribbonQuickAccess": [],
-  "ribbonSplits": {}
+  "ribbonSplits": {},
+  "overview": false,
+  "magnifier": false,
+  "magnifierZoom": 4
  },
  "fields": {
   "theme": {
@@ -87,6 +90,17 @@
   },
   "ribbonSplits": {
    "kind": "textMap"
+  },
+  "overview": {
+   "kind": "boolean"
+  },
+  "magnifier": {
+   "kind": "boolean"
+  },
+  "magnifierZoom": {
+   "kind": "number",
+   "min": 2,
+   "max": 16
   }
  },
  "limits": {
@@ -125,7 +139,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -145,7 +162,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -165,7 +185,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -185,7 +208,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -205,7 +231,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -225,12 +254,15 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
    "title": "every field kept, none a default",
-   "stored": "{\"theme\":\"light\",\"rightVisible\":false,\"dockWidth\":400,\"layersFraction\":0.35,\"bottomExpanded\":true,\"bottomHeight\":260,\"bottomTab\":\"messages\",\"dockTab\":\"processing\",\"processingTab\":\"history\",\"processingFolded\":[\"points\"],\"ribbonTab\":\"draw\",\"ribbonCollapsed\":true,\"ribbonQuickAccess\":[\"view.zoomExtents\",\"tool.line\"],\"ribbonSplits\":{\"circle\":\"tool.circle|3N\",\"rectangle\":\"tool.regularPolygon|\"}}",
+   "stored": "{\"theme\":\"light\",\"rightVisible\":false,\"dockWidth\":400,\"layersFraction\":0.35,\"bottomExpanded\":true,\"bottomHeight\":260,\"bottomTab\":\"messages\",\"dockTab\":\"processing\",\"processingTab\":\"history\",\"processingFolded\":[\"points\"],\"ribbonTab\":\"draw\",\"ribbonCollapsed\":true,\"ribbonQuickAccess\":[\"view.zoomExtents\",\"tool.line\"],\"ribbonSplits\":{\"circle\":\"tool.circle|3N\",\"rectangle\":\"tool.regularPolygon|\"},\"overview\":true,\"magnifier\":true,\"magnifierZoom\":8}",
    "layout": {
     "theme": "light",
     "rightVisible": false,
@@ -253,7 +285,10 @@
     "ribbonSplits": {
      "circle": "tool.circle|3N",
      "rectangle": "tool.regularPolygon|"
-    }
+    },
+    "overview": true,
+    "magnifier": true,
+    "magnifierZoom": 8
    }
   },
   {
@@ -273,7 +308,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -293,7 +331,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -313,7 +354,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -333,7 +377,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -360,7 +407,10 @@
     ],
     "ribbonSplits": {
      "circle": "tool.circle|2N"
-    }
+    },
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -380,7 +430,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -400,7 +453,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -420,7 +476,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -440,7 +499,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   },
   {
@@ -460,7 +522,33 @@
     "ribbonTab": "draw",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
+   }
+  },
+  {
+   "title": "Genel bakış and Büyüteç are kept; a zoom out of its range is brought within it (docs/adr/0181)",
+   "stored": "{\"overview\":true,\"magnifier\":true,\"magnifierZoom\":64}",
+   "layout": {
+    "theme": "dark",
+    "rightVisible": true,
+    "dockWidth": 312,
+    "layersFraction": 0.5,
+    "bottomExpanded": false,
+    "bottomHeight": 190,
+    "bottomTab": "history",
+    "dockTab": "layers",
+    "processingTab": "tools",
+    "processingFolded": [],
+    "ribbonTab": "home",
+    "ribbonCollapsed": false,
+    "ribbonQuickAccess": [],
+    "ribbonSplits": {},
+    "overview": true,
+    "magnifier": true,
+    "magnifierZoom": 16
    }
   },
   {
@@ -480,7 +568,10 @@
     "ribbonTab": "home",
     "ribbonCollapsed": false,
     "ribbonQuickAccess": [],
-    "ribbonSplits": {}
+    "ribbonSplits": {},
+    "overview": false,
+    "magnifier": false,
+    "magnifierZoom": 4
    }
   }
  ],

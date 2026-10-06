@@ -493,23 +493,7 @@ impl StyledGpu {
         view.under = scene.under;
         view.order = scene.order.clone();
         let px_per_m = frame.scale * frame.dpr;
-        // The camera centre in two float32 parts (docs/adr/0157 §2): the
-        // shader takes it from each batch's tile without losing its digits.
-        let hi = [frame.center[0] as f32, frame.center[1] as f32];
-        let uniform = StyledFrameUniform {
-            offset: hi,
-            offset_lo: [
-                (frame.center[0] - f64::from(hi[0])) as f32,
-                (frame.center[1] - f64::from(hi[1])) as f32,
-            ],
-            scale: [
-                (2.0 * frame.scale / f64::from(frame.size_px[0].max(1.0)) * frame.dpr) as f32,
-                (2.0 * frame.scale / f64::from(frame.size_px[1].max(1.0)) * frame.dpr) as f32,
-            ],
-            px_per_m: px_per_m as f32,
-            dpr: frame.dpr as f32,
-            viewport: frame.size_px,
-        };
+        let uniform = frame_uniform(frame);
         queue.write_buffer(&view.frame, 0, bytemuck::bytes_of(&uniform));
         view.uniform = uniform;
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
@@ -586,21 +570,86 @@ impl StyledGpu {
         self.atlas.pending
     }
 
+    /// Büyüteç (docs/adr/0181 §5): after [`StyledGpu::prepare`] of the same
+    /// frame, the view's layers seen through a second camera, `frame`: its
+    /// frame uniform in a buffer of its own, and the box it sees. What shows is
+    /// the view's own choice (visibility, atlas images); single-sampled, into
+    /// the host's pass.
+    pub fn prepare_lens(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: &mut ViewStyled,
+        frame: &StyledFrame,
+    ) {
+        self.ensure(device, 1);
+        let uniform = frame_uniform(frame);
+        let (buffer, _) = view
+            .lens
+            .get_or_insert_with(|| frame_binding(device, self, "kentos.styled.lens"));
+        queue.write_buffer(buffer, 0, bytemuck::bytes_of(&uniform));
+        let px_per_m = frame.scale * frame.dpr;
+        let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
+        let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
+        view.lens_view = Some((
+            [
+                frame.center[0] - hw,
+                frame.center[1] - hh,
+                frame.center[0] + hw,
+                frame.center[1] + hh,
+            ],
+            px_per_m,
+            frame.dpr,
+        ));
+    }
+
     /// Draws a view's visible batches, layer by layer in their order.
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32) {
+        self.draw_through(pass, view, samples, &view.frame_bind, None);
+    }
+
+    /// The same through the lens [`StyledGpu::prepare_lens`] set: only the
+    /// batches that reach its box.
+    pub fn draw_lens(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled) {
+        if let (Some((_, bind)), Some(seen)) = (&view.lens, view.lens_view) {
+            self.draw_through(pass, view, 1, bind, Some(seen));
+        }
+    }
+
+    fn draw_through(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        view: &ViewStyled,
+        samples: u32,
+        frame_bind: &wgpu::BindGroup,
+        seen: Option<([f64; 4], f64, f64)>,
+    ) {
         let Some(pipes) = self.pipelines.get(&samples) else {
             return;
         };
         if view.layers.is_empty() {
             return;
         }
-        pass.set_bind_group(0, &view.frame_bind, &[]);
+        pass.set_bind_group(0, frame_bind, &[]);
         let mut current: Option<Pipe> = None;
-        let mut batch = |layer: &GpuLayer, b: &GpuBatch| {
+        let mut batch = |layer: &GpuLayer, i: usize| {
             let Some(vertex) = &layer.vertex else {
                 return;
             };
+            let Some(b) = layer.batches.get(i) else {
+                return;
+            };
             if !b.visible || b.count == 0 {
+                return;
+            }
+            if let Some((box_, px_per_m, dpr)) = seen
+                && !layer
+                    .source
+                    .layer
+                    .batches
+                    .get(i)
+                    .is_some_and(|s| s.in_view(box_, px_per_m, dpr))
+            {
                 return;
             }
             if current != Some(b.pipe) {
@@ -618,22 +667,73 @@ impl StyledGpu {
         match &view.order {
             Some(order) => {
                 for &(l, b) in order.iter() {
-                    if let Some(layer) = view.layers.get(l as usize)
-                        && let Some(b) = layer.batches.get(b as usize)
-                    {
-                        batch(layer, b);
+                    if let Some(layer) = view.layers.get(l as usize) {
+                        batch(layer, b as usize);
                     }
                 }
             }
             None => {
                 for layer in &view.layers {
-                    for b in &layer.batches {
-                        batch(layer, b);
+                    for i in 0..layer.batches.len() {
+                        batch(layer, i);
                     }
                 }
             }
         }
     }
+}
+
+/// A frame's uniform: the camera centre in two float32 parts (docs/adr/0157
+/// §2), so the shader takes it from each batch's tile without losing digits.
+fn frame_uniform(frame: &StyledFrame) -> StyledFrameUniform {
+    let hi = [frame.center[0] as f32, frame.center[1] as f32];
+    StyledFrameUniform {
+        offset: hi,
+        offset_lo: [
+            (frame.center[0] - f64::from(hi[0])) as f32,
+            (frame.center[1] - f64::from(hi[1])) as f32,
+        ],
+        scale: [
+            (2.0 * frame.scale / f64::from(frame.size_px[0].max(1.0)) * frame.dpr) as f32,
+            (2.0 * frame.scale / f64::from(frame.size_px[1].max(1.0)) * frame.dpr) as f32,
+        ],
+        px_per_m: (frame.scale * frame.dpr) as f32,
+        dpr: frame.dpr as f32,
+        viewport: frame.size_px,
+    }
+}
+
+/// A frame uniform's buffer and its bind group, the atlas beside it.
+fn frame_binding(
+    device: &wgpu::Device,
+    gpu: &StyledGpu,
+    label: &'static str,
+) -> (wgpu::Buffer, wgpu::BindGroup) {
+    let frame = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some(label),
+        size: std::mem::size_of::<StyledFrameUniform>() as u64,
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some(label),
+        layout: &gpu.frame_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: frame.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::TextureView(&gpu.atlas_view),
+            },
+            wgpu::BindGroupEntry {
+                binding: 2,
+                resource: wgpu::BindingResource::Sampler(&gpu.sampler),
+            },
+        ],
+    });
+    (frame, bind)
 }
 
 fn srgb_to_linear(c: f32) -> f32 {
@@ -681,34 +781,15 @@ pub struct ViewStyled {
     pub under: usize,
     /// The scene's draw order, when it has one (`StyledScene::order`).
     order: Option<Arc<Vec<(u32, u32)>>>,
+    /// Büyüteç's frame uniform and what it sees: its box, device pixels per
+    /// metre and pixel ratio (docs/adr/0181 §5).
+    lens: Option<(wgpu::Buffer, wgpu::BindGroup)>,
+    lens_view: Option<([f64; 4], f64, f64)>,
 }
 
 impl ViewStyled {
     pub fn new(device: &wgpu::Device, gpu: &StyledGpu) -> ViewStyled {
-        let frame = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("kentos.styled.frame"),
-            size: std::mem::size_of::<StyledFrameUniform>() as u64,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let frame_bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("kentos.styled.frame"),
-            layout: &gpu.frame_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: frame.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&gpu.atlas_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: wgpu::BindingResource::Sampler(&gpu.sampler),
-                },
-            ],
-        });
+        let (frame, frame_bind) = frame_binding(device, gpu, "kentos.styled.frame");
         ViewStyled {
             frame,
             frame_bind,
@@ -716,6 +797,8 @@ impl ViewStyled {
             layers: Vec::new(),
             under: 0,
             order: None,
+            lens: None,
+            lens_view: None,
         }
     }
 

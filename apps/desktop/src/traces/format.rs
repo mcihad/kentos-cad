@@ -124,6 +124,11 @@ pub struct Step {
     /// Its n-th result row, pressed (1 first); `shift` and `ctrl` held.
     pub(super) row: Option<usize>,
     pub(super) ctrl: Option<bool>,
+    /// Genel bakış's picture pressed where it shows this point of the
+    /// drawing, east and north of `view.center` (docs/adr/0181).
+    pub(super) overview: Option<[f64; 2]>,
+    /// Büyüteç's zoom button, by its words (`8×`).
+    pub(super) magnifier: Option<String>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -204,6 +209,28 @@ pub struct Expect {
     pub(super) current_color: Option<Option<String>>,
     #[serde(default, deserialize_with = "present")]
     pub(super) current_weight: Option<Option<f64>>,
+    /// Genel bakış's extent, east and north of `view.center`; `null` when it
+    /// is closed, and absent differ (docs/adr/0181).
+    #[serde(default, deserialize_with = "present")]
+    pub(super) overview: Option<Option<OverviewExpect>>,
+    /// Büyüteç's zoom and side, exact, and its centre within `clickTolerance`;
+    /// `null` when it is closed.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) magnifier: Option<Option<MagnifierExpect>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OverviewExpect {
+    pub(super) extent: [f64; 4],
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MagnifierExpect {
+    pub(super) zoom: u32,
+    pub(super) side: Option<String>,
+    pub(super) center: Option<[f64; 2]>,
 }
 
 /// Arama as a step sees it: the count line and every row.

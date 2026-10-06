@@ -4,6 +4,8 @@
 //! objects come back packed (`PackedObjects`). `apps/web/src/viewport/picking.ts`
 //! holds one per view; the clipboard has its own.
 
+use std::collections::HashMap;
+
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{self, FromJson, Json};
 use kentos_geometry_core::entity::{Entity, Shape};
@@ -12,6 +14,7 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::labels::LabelWanted;
+use kentos_geometry_core::store::overview::OverviewRequest;
 use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
 use kentos_geometry_core::store::snap::{Extension, SnapExtras};
 use kentos_geometry_core::text::Font;
@@ -23,6 +26,16 @@ fn read_entity(text: &str) -> Result<Entity, JsError> {
     Json::parse(text)
         .and_then(|v| Entity::from_json(&v))
         .map_err(|e| JsError::new(&format!("Geometri deposu nesneyi okuyamadı: {e}")))
+}
+
+/// `#RRGGBB` as its three bytes.
+fn hex_color(text: &str) -> Option<[u8; 3]> {
+    let hex = text.strip_prefix('#')?;
+    if hex.len() != 6 {
+        return None;
+    }
+    let v = u32::from_str_radix(hex, 16).ok()?;
+    Some([(v >> 16) as u8, (v >> 8) as u8, v as u8])
 }
 
 fn rect(min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> Bounds {
@@ -558,6 +571,50 @@ impl GeometryStore {
     #[wasm_bindgen(js_name = extentOutliers)]
     pub fn extent_outliers(&self) -> Vec<f64> {
         self.inner.extent_outliers()
+    }
+
+    /// Genel bakış (docs/adr/0181 §3): the extent of what the visible layers
+    /// hold, `minX, minY, maxX, maxY`; empty when they hold nothing.
+    #[wasm_bindgen(js_name = overviewExtent)]
+    pub fn overview_extent(&self) -> Vec<f64> {
+        self.inner
+            .overview_extent()
+            .map_or_else(Vec::new, |b| vec![b.min_x, b.min_y, b.max_x, b.max_y])
+    }
+
+    /// The overview's picture at `width` × `height` CSS px and `dpr`: RGBA
+    /// with straight alpha, rows top down, ⌊width·dpr + 0.5⌋ pixels wide;
+    /// `colors` is `{ "<layer id>": "#RRGGBB" }` (a layer without one is not
+    /// drawn). Empty for a drawing with nothing to show.
+    #[wasm_bindgen(js_name = overviewPicture)]
+    pub fn overview_picture(
+        &self,
+        width: f64,
+        height: f64,
+        dpr: f64,
+        colors: &str,
+    ) -> Result<Vec<u8>, JsError> {
+        let read = Json::parse(colors)
+            .map_err(|e| JsError::new(&format!("Katman renkleri okunamadı: {e}")))?;
+        let mut table = HashMap::new();
+        if let Json::Obj(entries) = read {
+            for (id, value) in entries {
+                if let Json::Str(hex) = value
+                    && let Some(c) = hex_color(&hex)
+                {
+                    table.insert(id, c);
+                }
+            }
+        }
+        Ok(self
+            .inner
+            .overview_picture(&OverviewRequest {
+                width,
+                height,
+                dpr,
+                colors: &table,
+            })
+            .map_or_else(Vec::new, |p| p.pixels))
     }
 
     /// What the overlay draws in the view at `scale` px/m (eight numbers per

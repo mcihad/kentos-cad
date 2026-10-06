@@ -494,6 +494,19 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     },
     toggle('view.rightPanel', 'Katman ve öznitelik paneli', ui.rightVisible, { category: V, icon: 'panelRight', short: 'Katman paneli' }),
     toggle('view.bottomPanel', 'Komut geçmişi paneli', ui.bottomExpanded, { category: V, icon: 'panelBottom', short: 'Komut geçmişi' }),
+    // Genel bakış and Büyüteç over the drawing (docs/adr/0181).
+    toggle('view.overview', 'Genel bakış', ui.overview, {
+      category: V,
+      icon: 'overview',
+      description: 'Çizim alanının sol üst köşesinde bütün çizimin küçük resmi ve görünümün çerçevesi. Resme basmak görünümü oraya taşır, sürüklemek kaydırır, tekerlek yakınlaştırır, çift tık tümünü gösterir.',
+      aliases: ['GENELBAKIS', 'KUSBAKISI', 'DSVIEWER', 'OVERVIEW'],
+    }),
+    toggle('view.magnifier', 'Büyüteç', ui.magnifier, {
+      category: V,
+      icon: 'magnifier',
+      description: 'İmlecin altını 2, 4, 8 ya da 16 kat büyük gösteren pencere; görünüm değişmez. İmleç pencereye yaklaşınca pencere öbür yana geçer.',
+      aliases: ['BUYUTEC', 'MAGNIFIER'],
+    }),
     {
       id: 'view.theme.dark',
       title: 'Koyu',

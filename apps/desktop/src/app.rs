@@ -315,6 +315,8 @@ pub enum Message {
     DataCompare(crate::data_compare::Event),
     /// Kayıtlı ölçüleri denetle's window (cogo.rs).
     Cogo(crate::cogo::Event),
+    /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
+    Navigation(crate::navigation_cards::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
@@ -624,6 +626,10 @@ pub struct App {
     pub(crate) data_compare: Option<crate::data_compare::Window>,
     /// Kayıtlı ölçüleri denetle's window (cogo.rs, docs/adr/0180).
     pub(crate) cogo: Option<crate::cogo::Window>,
+    /// Genel bakış and Büyüteç's session state (navigation_cards.rs, docs/adr/0181).
+    pub(crate) navigation: crate::navigation_cards::Navigation,
+    /// The label spots the magnifier's window drew last (view.rs `lens_view`).
+    pub(crate) lens_spots: crate::labels::Spots,
     /// Cihaza gönder's last format, kept for the session (exchange/field_send.rs).
     pub(crate) field_send_format: usize,
     /// The mode the Çakışma cell's click turns on again: the last that avoided overlap.
@@ -852,6 +858,8 @@ impl App {
             layer_list: None,
             data_compare: None,
             cogo: None,
+            navigation: Default::default(),
+            lens_spots: Default::default(),
             field_send_format: 0,
             overlap_last: kentos_interaction::Overlap::Layer,
             tracking_tool: "",
@@ -993,6 +1001,8 @@ impl App {
             self.log_subscription(Instant::now()),
             // The kept layout, written after its last change; the window's size.
             self.layout_subscription(),
+            // Genel bakış's picture, drawn again a moment after a change (navigation_cards.rs).
+            self.navigation_subscription(),
             window::resize_events().map(|(_, size)| Message::WindowResized(size)),
             // A large import writes a slice of its objects each frame (exchange/drawing_import.rs).
             if self.importing.is_some() {
@@ -1053,6 +1063,7 @@ impl App {
             self.follow_sheet_library(Instant::now()),
         ]);
         self.follow_layout(Instant::now());
+        self.follow_navigation(Instant::now());
         self.cloud_after(Instant::now());
         task
     }
@@ -1225,6 +1236,7 @@ impl App {
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
             Message::Cogo(event) => return self.cogo_event(event),
+            Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
@@ -1770,6 +1782,9 @@ impl App {
             "cogo.update" => {
                 self.cogo_update();
             }
+            // Genel bakış and Büyüteç over the drawing (docs/adr/0181).
+            "view.overview" => self.toggle_overview(),
+            "view.magnifier" => self.toggle_magnifier(),
             // Yalıtımı kaldır (docs/adr/0177 §1): what Katmanı yalıt hid, shown again.
             "layer.unisolate" => match &mut self.document {
                 Some(doc) => {
@@ -1860,6 +1875,8 @@ impl App {
                 self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::Python
             }
             "view.rightPanel" => self.right_panel_shown(),
+            "view.overview" => self.overview_shown(),
+            "view.magnifier" => self.magnifier_shown(),
             "view.fullscreen" => self.fullscreen,
             id if id.starts_with("workspace.") => {
                 crate::catalog::mode_command(self.work_mode()) == id

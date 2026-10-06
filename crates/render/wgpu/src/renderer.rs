@@ -117,6 +117,21 @@ pub struct FrameInput<'a> {
     pub overlays: usize,
 }
 
+/// Büyüteç (docs/adr/0181 §5): a view's scene seen through a second camera,
+/// drawn into the host's pass where the host's viewport is (the magnifier's
+/// window), single-sampled.
+#[derive(Clone, Copy, Debug)]
+pub struct LensInput<'a> {
+    pub camera: &'a Camera,
+    /// The origin the view's parts are offsets from.
+    pub origin: Vec2,
+    /// The window in device pixels.
+    pub size_px: [f32; 2],
+    /// Device pixels per logical pixel.
+    pub scale_factor: f64,
+    pub settings: &'a RenderSettings,
+}
+
 /// The pipelines of one sample count.
 struct Pipelines {
     background: wgpu::RenderPipeline,
@@ -555,6 +570,79 @@ impl Renderer {
         }
     }
 
+    /// Büyüteç (docs/adr/0181 §5): after [`Renderer::prepare`] and
+    /// [`Renderer::prepare_styled`] of `view` in the same frame, its second
+    /// camera: a frame uniform of its own for the plain parts and for the
+    /// styled layers, and the box it sees. What shows is the view's own
+    /// choice. False when the view has not been prepared.
+    pub fn prepare_lens(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        view: ViewId,
+        lens: &LensInput<'_>,
+    ) -> bool {
+        let frame_layout = &self.frame_layout;
+        let Some(state) = self.views.get_mut(&view) else {
+            return false;
+        };
+        let uniform = lens.camera.frame_uniform(
+            lens.origin,
+            lens.size_px,
+            lens.scale_factor,
+            lens.settings,
+            self.srgb_target,
+        );
+        let (buffer, _) = state
+            .lens
+            .get_or_insert_with(|| frame_binding(device, frame_layout, "kentos.cad2d.lens"));
+        queue.write_buffer(buffer, 0, bytemuck::bytes_of(&uniform));
+        if let (Some(gpu), Some(styled)) = (self.styled.as_mut(), state.styled.as_mut()) {
+            gpu.prepare_lens(
+                device,
+                queue,
+                styled,
+                &StyledFrame {
+                    center: [
+                        lens.camera.center.x - lens.origin.x,
+                        lens.camera.center.y - lens.origin.y,
+                    ],
+                    scale: lens.camera.scale,
+                    dpr: lens.scale_factor,
+                    size_px: lens.size_px,
+                    scale_denominator: state.drawn.screen_scale,
+                },
+            );
+        }
+        true
+    }
+
+    /// Draws `view` through its lens into a pass whose viewport and scissor
+    /// are the magnifier's window: the ground, every part and the styled
+    /// layers that reach it.
+    pub fn draw_lens(&self, pass: &mut wgpu::RenderPass<'_>, view: ViewId) {
+        let (Some(state), Some(pipes)) = (self.views.get(&view), self.pipelines.get(&1)) else {
+            return;
+        };
+        let Some((_, bind)) = &state.lens else {
+            return;
+        };
+        pass.set_bind_group(0, bind, &[]);
+        pass.set_pipeline(&pipes.background);
+        pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
+        let all = state.parts.len();
+        match (&self.styled, &state.styled) {
+            (Some(gpu), Some(styled)) if !styled.layers.is_empty() => {
+                let under = styled.under.min(all);
+                state.draw_parts(pass, pipes, 0..under);
+                gpu.draw_lens(pass, styled);
+                pass.set_bind_group(0, bind, &[]);
+                state.draw_parts(pass, pipes, under..all);
+            }
+            _ => state.draw_parts(pass, pipes, 0..all),
+        }
+    }
+
     /// End of a frame: views left undrawn long enough are released with their buffers and targets.
     pub fn trim(&mut self) {
         self.views.retain(|_, view| {
@@ -699,6 +787,8 @@ struct View {
     overlays: usize,
     /// The host frame's uniform the overlays are drawn with, once needed.
     overlay: Option<(wgpu::Buffer, wgpu::BindGroup)>,
+    /// Büyüteç's frame uniform (docs/adr/0181 §5), once it is open.
+    lens: Option<(wgpu::Buffer, wgpu::BindGroup)>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -761,6 +851,7 @@ impl View {
             want_styled: None,
             overlays: 0,
             overlay: None,
+            lens: None,
         }
     }
 

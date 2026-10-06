@@ -251,7 +251,9 @@
     "layer.list",
     "data.compare",
     "cogo.check",
-    "cogo.update"
+    "cogo.update",
+    "view.overview",
+    "view.magnifier"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

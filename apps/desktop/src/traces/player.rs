@@ -291,6 +291,10 @@ pub struct Observation {
     pub search: Option<(String, Vec<String>)>,
     /// The place the data search marked, absolute.
     pub mark: Option<[f64; 2]>,
+    /// Genel bakış's extent, absolute, while it shows (docs/adr/0181).
+    pub overview: Option<Option<[f64; 4]>>,
+    /// Büyüteç's zoom, side and centre (absolute) while it shows.
+    pub magnifier: Option<(u32, &'static str, Option<[f64; 2]>)>,
     /// The digitizing locks' words (docs/adr/0166 §6).
     pub locks: Vec<String>,
     /// The active layer's groups and name (docs/adr/0176 §3).
@@ -498,6 +502,31 @@ impl<'a> Player<'a> {
         // The bottom panel's Arama tab, answered by its controls (docs/adr/0178).
         if let Some(title) = &step.panel {
             return self.answer_panel(title, step);
+        }
+        // Genel bakış's picture pressed where it shows the point (docs/adr/0181).
+        if let Some([e, n]) = step.overview {
+            let world = Vec2::new(self.origin.x + e, self.origin.y + n);
+            let at = self
+                .app
+                .overview_point(world)
+                .ok_or("Genel bakış açık değil ya da çizimde gösterecek nesne yok")?;
+            self.apply(Message::Navigation(crate::navigation_cards::Event::Press(
+                at,
+            )))?;
+            return self.apply(Message::Navigation(crate::navigation_cards::Event::Release));
+        }
+        // Büyüteç's zoom buttons by their words.
+        if let Some(words) = &step.magnifier {
+            if !self.app.magnifier_shown() {
+                return Err("Büyüteç açık değil".to_owned());
+            }
+            let zoom = kentos_geometry_core::tools::navigation::ZOOMS
+                .into_iter()
+                .find(|z| format!("{z}×") == *words)
+                .ok_or(format!("Büyüteç'te “{words}” düğmesi yok"))?;
+            return self.apply(Message::Navigation(crate::navigation_cards::Event::Zoom(
+                zoom,
+            )));
         }
         if let Some(key) = &step.key {
             // Yazı's field over the drawing: Enter keeps what is typed (its text box's submit).
@@ -950,6 +979,8 @@ impl<'a> Player<'a> {
             panel: app.bottom_tab_title().map(str::to_owned),
             search: app.data_seen(),
             mark: app.data_mark().map(|p| [p.x, p.y]),
+            overview: app.overview_extent(),
+            magnifier: app.magnifier_state(),
             active_layer: doc.map_or_else(Vec::new, |d| {
                 let layers = d.model.layers();
                 let mut names = Vec::new();

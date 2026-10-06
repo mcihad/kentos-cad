@@ -48,7 +48,7 @@ pub mod targets;
 
 pub use camera::Camera;
 pub use color::{Palette, Rgba8};
-pub use renderer::{FrameInput, RenderError, Renderer, SampleFailure, ViewId};
+pub use renderer::{FrameInput, LensInput, RenderError, Renderer, SampleFailure, ViewId};
 pub use scene::{Drawing, LayerRanges, ScenePart};
 pub use settings::RenderSettings;
 pub use stats::FrameStats;

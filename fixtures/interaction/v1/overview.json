@@ -1,0 +1,24 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "overview",
+  "title": "Genel bakış ve Büyüteç: büyüteç açılır, imlecin yerini gösterir, büyütmesi 8× olur; Genel bakış bütün çizimin kapsamını gösterir, resmine basmak görünümü oraya taşır, Önceki görünüm geri getirir; ikisi de kapanır",
+  "source": "docs/adr/0181",
+  "covers": ["HYB-25"],
+  "document": "overview.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.5,
+  "steps": [
+    {"run": "view.magnifier", "note": "Büyüteç sağ üstte, 4×", "expect": {"magnifier": {"zoom": 4, "side": "right"}, "overview": null}},
+    {"move": [5, 5], "expect": {"magnifier": {"zoom": 4, "side": "right", "center": [5, 5]}}},
+    {"magnifier": "8×", "expect": {"magnifier": {"zoom": 8, "side": "right", "center": [5, 5]}}},
+    {"move": [-12, 6], "expect": {"magnifier": {"zoom": 8, "center": [-12, 6]}}},
+    {"shot": "buyutec", "note": "Büyüteç 8×: parselin köşesi imlecin altında"},
+    {"run": "view.overview", "note": "Genel bakış bütün çizimi gösterir", "expect": {"overview": {"extent": [-80, -50, 80, 50]}}},
+    {"shot": "genel-bakis", "note": "Genel bakış sol üstte, görünüm çerçevesi ortada; büyüteç sağda"},
+    {"overview": [40, -30], "note": "Resme basmak görünümü oraya taşır, ölçek aynı", "expect": {"viewCenter": [40, -30], "metresPerPixel": 0.125}},
+    {"run": "view.previous", "note": "Basılan yer bir görünüm adımıdır", "expect": {"viewCenter": [0, 0]}},
+    {"run": "view.magnifier", "expect": {"magnifier": null}},
+    {"run": "view.overview", "expect": {"overview": null}}
+  ]
+}

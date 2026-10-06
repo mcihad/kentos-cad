@@ -594,4 +594,17 @@ export class PickIndex {
     this.sync();
     return Array.from(this.store.extentOutliers());
   }
+
+  /** Genel bakış (docs/adr/0181 §3): the extent of what the visible layers hold; null for nothing. */
+  overviewExtent(): Bounds | null {
+    this.sync();
+    const e = this.store.overviewExtent();
+    return e.length === 4 ? { minX: e[0], minY: e[1], maxX: e[2], maxY: e[3] } : null;
+  }
+
+  /** The overview's picture (RGBA, ⌊width·dpr + 0.5⌋ × ⌊height·dpr + 0.5⌋), each layer in `colors` (`#RRGGBB` by id); empty for nothing. */
+  overviewPicture(width: number, height: number, dpr: number, colors: Record<string, string>): Uint8Array {
+    this.sync();
+    return this.store.overviewPicture(width, height, dpr, JSON.stringify(colors));
+  }
 }

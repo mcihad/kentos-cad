@@ -22,6 +22,7 @@ pub mod draw;
 #[cfg(test)]
 mod inserts;
 pub mod labels;
+pub mod overview;
 mod pack;
 pub mod pick;
 pub mod processing;

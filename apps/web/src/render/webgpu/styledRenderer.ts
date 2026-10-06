@@ -47,13 +47,15 @@ export class WebGPUStyledRenderer {
   private readonly styleLayout: GPUBindGroupLayout;
   /** Group 0 of the styled pipelines: the frame uniform with the atlas beside it (contract version 3). */
   private readonly frameBind: GPUBindGroup;
+  /** The same with the magnifier's frame uniform (docs/adr/0181 §5). */
+  private readonly lensBind: GPUBindGroup;
   private readonly texture: GPUTexture;
   /** Pipelines by sample count (the backend's multisampled passes need their own). */
   private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
 
-  /** `frame`: the backend's frame uniform, which the styled pipelines read beside their atlas. */
-  constructor(device: GPUDevice, format: GPUTextureFormat, frame: GPUBuffer) {
+  /** `frame`: the backend's frame uniform, which the styled pipelines read beside their atlas; `lens`: the magnifier's. */
+  constructor(device: GPUDevice, format: GPUTextureFormat, frame: GPUBuffer, lens: GPUBuffer) {
     this.device = device;
     this.format = format;
     this.module = device.createShaderModule({ code: STYLED_WGSL });
@@ -68,14 +70,17 @@ export class WebGPUStyledRenderer {
     });
     this.texture = device.createTexture({ size: [2048, 2048], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING | TEXTURE.RENDER_ATTACHMENT });
     const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
-    this.frameBind = device.createBindGroup({
-      layout: frameLayout,
-      entries: [
-        { binding: 0, resource: { buffer: frame } },
-        { binding: 1, resource: this.texture.createView() },
-        { binding: 2, resource: sampler },
-      ],
-    });
+    const bindFor = (buffer: GPUBuffer) =>
+      device.createBindGroup({
+        layout: frameLayout,
+        entries: [
+          { binding: 0, resource: { buffer } },
+          { binding: 1, resource: this.texture.createView() },
+          { binding: 2, resource: sampler },
+        ],
+      });
+    this.frameBind = bindFor(frame);
+    this.lensBind = bindFor(lens);
     this.layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
   }
 
@@ -271,17 +276,18 @@ export class WebGPUStyledRenderer {
   }
 
   /**
-   * Draws a layer's visible batches into a pass of `samples` per pixel.
+   * Draws a layer's visible batches into a pass of `samples` per pixel; with `lens`, through the magnifier's frame
+   * uniform, only those reaching its view (docs/adr/0181).
    * True when it set its own group 0 (the frame with the atlas): the
    * plain pipelines drawn after it need theirs set again.
    */
-  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer, samples: number): boolean {
+  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer, samples: number, lens?: { view: readonly [number, number, number, number]; pxPerM: number; dpr: number }): boolean {
     if (!layer.list.some((s) => s.visible)) return false;
     const pipes = this.pipelinesFor(samples);
-    pass.setBindGroup(0, this.frameBind);
+    pass.setBindGroup(0, lens ? this.lensBind : this.frameBind);
     let current: GPURenderPipeline | null = null;
     for (const s of layer.list) {
-      if (!s.visible) continue;
+      if (!s.visible || (lens && !batchInView(s.batch, lens.view, lens.pxPerM, lens.dpr))) continue;
       const b = s.batch;
       const pipe = b.kind === 'stroke' ? pipes.stroke : b.kind === 'marker' ? pipes.marker : pipes[b.paint.kind];
       if (pipe !== current) {

@@ -706,6 +706,8 @@ impl App {
                 let typing = self.text_field_view();
                 ContextMenu::controlled(
                     stack![area, labels, over]
+                        // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).
+                        .extend(self.navigation_view())
                         // The rollover card beside the pointer (hover_card.rs).
                         .extend(self.hover_card_view())
                         .extend(typing)
@@ -728,6 +730,64 @@ impl App {
             .center(Fill)
             .into(),
         }
+    }
+
+    /// Büyüteç's window (docs/adr/0181 §5): the drawing area's scene through
+    /// the lens's camera, the drawing's text and marks through it, and a small
+    /// cross where the pointer is.
+    pub(crate) fn lens_view<'a>(
+        &'a self,
+        doc: &'a Document,
+        camera: kentos_render_wgpu::Camera,
+    ) -> Element<'a, Message> {
+        let format = Format::of(doc.settings());
+        let grips = if self.selection.len() <= kentos_interaction::select::GRIP_LIMIT {
+            self.spatial.grips(self.selection.ids())
+        } else {
+            Vec::new()
+        };
+        let marks = Marks {
+            camera,
+            snap: self.snap,
+            select: None,
+            grips,
+            hot: self.session.active_grip(),
+            marked: self.vertex_marks(),
+            found: self.data_mark_label(),
+            tracking: None,
+            crosshair: None,
+            locks: None,
+            colors: mark_colors(self.canvas()),
+        };
+        let over = preview::layer(
+            &camera,
+            marks,
+            self.session.preview(&format),
+            None,
+            None,
+            doc.model
+                .settings()
+                .drawing_font
+                .unwrap_or(DrawingFont::Barlow),
+        );
+        let labels = crate::labels::lens_layer(
+            &doc.model,
+            doc.session,
+            &self.spatial,
+            &self.lens_spots,
+            &camera,
+            self.canvas(),
+            &crate::viewport::palette(self.canvas()),
+            &format,
+            self.text_field.as_ref().and_then(|f| f.editing),
+        );
+        stack![
+            self.viewport.lens(camera, self.canvas()),
+            labels,
+            over,
+            crate::navigation_cards::lens_cross(mark_colors(self.canvas()).fg.scale_alpha(0.85))
+        ]
+        .into()
     }
 
     fn panel_body(&self, panel: Panel) -> Element<'_, Message> {

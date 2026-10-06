@@ -22,6 +22,7 @@ import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawMarkedVertices, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSearchMark, drawSnap, drawUcsIcon, GRIP_HIT_PX, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { ViewNavigation } from './viewHistory';
+import { NavigationCards } from './navigationCards';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
 import { extensionAlong, extensionAt, PickIndex, type Extension, type SnapHit, type SnapKind } from './picking';
@@ -133,6 +134,8 @@ export class ViewportController {
   private switching: BackendKind | null = null;
   private overlay!: HTMLCanvasElement;
   private g!: CanvasRenderingContext2D;
+  /** Genel bakış and Büyüteç over the drawing (docs/adr/0181). */
+  private nav: NavigationCards | null = null;
   private host!: HTMLElement;
   /** The drawing's pixel ratio: the screen's, or one pixel per CSS pixel with HiDPI off (`graphics.hiDpi`). */
   private dpr = 1;
@@ -211,6 +214,16 @@ export class ViewportController {
     this.overlay.setAttribute('aria-label', 'Çizim alanı');
     host.append(this.overlay);
     this.g = this.overlay.getContext('2d')!;
+    this.nav = new NavigationCards(host, {
+      ctx: this.ctx,
+      camera: this.camera,
+      navigation: this.navigation,
+      picker: this.picker,
+      palette: () => this.palette,
+      dpr: () => this.dpr,
+      requestRender: () => this.requestLens(),
+      zoomExtents: () => this.zoomExtents(),
+    });
 
     // A browser without WebGPU cannot use it: the preference stays, the settings say why WebGL2 draws.
     if (!webgpuSupported())
@@ -253,6 +266,7 @@ export class ViewportController {
 
   dispose(): void {
     this.d.dispose();
+    this.nav?.dispose();
     this.backend?.dispose();
   }
 
@@ -372,6 +386,27 @@ export class ViewportController {
 
   requestOverlay(): void {
     this.schedule();
+  }
+
+  /** Only the magnifier's picture changed (it looks elsewhere, zooms or moves): the kept layers are drawn on with it. */
+  private requestLens(): void {
+    this.glQueued = true;
+    this.schedule();
+  }
+
+  /** Genel bakış and Büyüteç as the traces read them: the overview's extent, the magnifier's zoom, side and centre (docs/adr/0181). */
+  get navigationState(): { overview: { extent: [number, number, number, number] } | null; magnifier: { zoom: number; side: string; center: [number, number] | null } | null } {
+    const e = this.nav?.overviewExtent ?? null;
+    const lens = this.nav?.lensState ?? null;
+    return {
+      overview: this.nav?.overviewShown ? { extent: e ? [e.minX, e.minY, e.maxX, e.maxY] : [0, 0, 0, 0] } : null,
+      magnifier: lens && { zoom: lens.zoom, side: lens.side, center: lens.center && [lens.center.x, lens.center.y] },
+    };
+  }
+
+  /** A drawing point in client pixels over the overview's picture (the traces press there); null when it shows nothing. */
+  overviewClient(p: Vec2): Vec2 | null {
+    return this.nav?.overviewClient(p) ?? null;
   }
 
   /** The object snap the marker shows now, if any (the interaction traces read it; docs/adr/0029). */
@@ -686,7 +721,13 @@ export class ViewportController {
       }),
     );
     // The scene's marks follow the project's type (docs/adr/0165 §5).
-    d.add(doc.settings.workspace.subscribe(() => this.requestOverlay()));
+    // The project's type moves the magnifier's right place (a CBS project's grid north is above it, docs/adr/0181 §4).
+    d.add(
+      doc.settings.workspace.subscribe(() => {
+        this.nav?.layout();
+        this.requestOverlay();
+      }),
+    );
     d.add(
       this.ctx.styles.library.version.subscribe(() => {
         this.allDirty = true;
@@ -1056,6 +1097,8 @@ export class ViewportController {
         const s1 = import.meta.env.DEV ? performance.now() : 0;
         const p = this.pointer(e);
         this.cursorWorld.set(p.world);
+        // The magnifier looks where the pointer is, its own place, not the snap's (docs/adr/0181 §2).
+        if (this.nav?.pointer(this.screenCursor, this.camera.screenToWorld(this.screenCursor))) this.requestLens();
         const m0 = import.meta.env.DEV ? performance.now() : 0;
         if (!this.panFrom) this.ctx.tools.active.pointerMove?.(p);
         const m1 = import.meta.env.DEV ? performance.now() : 0;
@@ -1130,6 +1173,7 @@ export class ViewportController {
     this.overlay.height = Math.round(h * screen);
     this.backend?.resize(w, h, dpr);
     this.camera.setSize(w, h);
+    this.nav?.layout(w, h);
     // Resizing a canvas clears it. Waiting for the next animation frame would
     // let the browser paint the empty (black) buffer in between — visible as
     // flashing while a panel splitter is dragged. ResizeObserver callbacks run
@@ -1199,6 +1243,7 @@ export class ViewportController {
       t2 = performance.now();
     }
     this.drawOverlay();
+    this.nav?.drawOverview();
     const t3 = performance.now();
     this.stats = { build: t1 - t0, render: t2 - t1, overlay: t3 - t2 };
     if (import.meta.env.DEV && this.probe) this.probe.frames.push({ at: t0, ...this.stats, ...this.probe.overlay });
@@ -1220,6 +1265,8 @@ export class ViewportController {
     const ids = this.allDirty ? [...new Set([...doc.layers.leaves().map((l) => l.id), ...this.dirtyLayers])] : [...this.dirtyLayers];
     this.allDirty = false;
     this.dirtyLayers.clear();
+    // What the drawing shows changed: Genel bakış draws its picture again a moment later (docs/adr/0181 §1).
+    if (ids.length) this.nav?.invalidate();
     const plotScale = this.symbolScale();
     this.builtSymbolScale = plotScale;
     const style = {
@@ -1310,6 +1357,9 @@ export class ViewportController {
       .filter((l) => doc.layers.isVisible(l.id))
       .map((l) => l.id)
       .reverse();
+    this.nav?.order(order.join());
+    // The magnifier keeps looking under the pointer when the view moves beneath it (a wheel zoom).
+    if (this.screenCursor) this.nav?.pointer(null, cam.screenToWorld(this.screenCursor));
     this.backend!.render({
       view,
       // 1:N on a 96 dpi screen (as in the status bar); rule scale ranges use it.
@@ -1319,6 +1369,7 @@ export class ViewportController {
       underlays: showGrid ? ['__grid'] : [],
       overlays: ['__hover', '__sel'],
       keepBase: !this.baseDirty,
+      lens: this.nav?.lens(origin) ?? null,
     });
     this.baseDirty = false;
   }
@@ -1378,9 +1429,56 @@ export class ViewportController {
   private drawOverlay(): void {
     const g = this.g;
     const cam = this.camera;
-    const pal = this.palette;
     g.setTransform(this.overlayDpr, 0, 0, this.overlayDpr, 0, 0);
     g.clearRect(0, 0, cam.width, cam.height);
+    // Büyüteç (docs/adr/0181 §5): its rectangle is the lens's own; the rest of the overlay stays out of it.
+    const lens = this.nav?.lensCamera() ?? null;
+    g.save();
+    if (lens) {
+      const [x, y, w, h] = lens.rect;
+      g.beginPath();
+      g.rect(0, 0, cam.width, cam.height);
+      g.rect(x, y, w, h);
+      g.clip('evenodd');
+    }
+    this.drawMainOverlay(g);
+    g.restore();
+    if (lens) this.drawLensOverlay(g, lens.rect, lens.camera);
+  }
+
+  /** The drawing's text and marks in the magnifier, through its camera: no picture kept, its rectangle is small. */
+  private drawLensOverlay(g: CanvasRenderingContext2D, rect: readonly [number, number, number, number], lens: Camera): void {
+    const pal = this.palette;
+    const [x, y, w, h] = rect;
+    g.save();
+    g.beginPath();
+    g.rect(x, y, w, h);
+    g.clip();
+    g.translate(x, y);
+    drawLabels(g, this.ctx.doc, lens, pal, this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l) => this.dimensionText(l), (b) => this.picker.blockPieces(b));
+    const selected = this.ctx.selection.ids.value;
+    if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), lens, pal, this.ctx.tools.active.activeGrip?.() ?? null);
+    drawMarkedVertices(g, this.ctx.selection.vertices.value, lens, pal);
+    this.ctx.tools.active.draw?.(g, lens);
+    if (this.snap) drawSnap(g, this.snap, lens, pal);
+    // The pointer's place: a small cross in the middle, arms of 9 px kept 3 px clear of it (the desktop's too).
+    const [cx, cy] = [Math.round(w / 2) + 0.5, Math.round(h / 2) + 0.5];
+    g.strokeStyle = pal.fg;
+    g.globalAlpha = 0.85;
+    g.lineWidth = 1;
+    g.beginPath();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      g.moveTo(cx + 3 * dx, cy + 3 * dy);
+      g.lineTo(cx + 12 * dx, cy + 12 * dy);
+    }
+    g.stroke();
+    g.restore();
+  }
+
+  /** The overlay of the drawing area through its own camera: text, grips, the tool's draft, snaps, marks, the cross-hair. */
+  private drawMainOverlay(g: CanvasRenderingContext2D): void {
+    const cam = this.camera;
+    const pal = this.palette;
     const l0 = import.meta.env.DEV ? performance.now() : 0;
     this.drawCachedLabels(g);
     const l1 = import.meta.env.DEV ? performance.now() : 0;

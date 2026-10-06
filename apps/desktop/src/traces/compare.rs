@@ -237,6 +237,50 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?} (±{} m)", trace.click_tolerance),
         );
     }
+    // Genel bakış's extent, east and north of the set-up's centre (docs/adr/0181).
+    if let Some(want) = &expect.overview {
+        let c = trace.view.center;
+        let have = got
+            .overview
+            .map(|e| e.map(|[x0, y0, x1, y1]| [x0 - c[0], y0 - c[1], x1 - c[0], y1 - c[1]]));
+        let same = match (have, want) {
+            (None, None) => true,
+            (Some(Some(h)), Some(w)) => h.iter().zip(w.extent).all(|(a, b)| (a - b).abs() <= 1e-6),
+            _ => false,
+        };
+        check(
+            "overview",
+            same,
+            format!("{have:?}"),
+            format!("{:?}", want.as_ref().map(|w| w.extent)),
+        );
+    }
+    // Büyüteç's zoom and side exactly, its centre within the click tolerance.
+    if let Some(want) = &expect.magnifier {
+        let c = trace.view.center;
+        let have = got
+            .magnifier
+            .map(|(zoom, side, at)| (zoom, side, at.map(|p| [p[0] - c[0], p[1] - c[1]])));
+        let same = match (have, want) {
+            (None, None) => true,
+            (Some((zoom, side, at)), Some(w)) => {
+                zoom == w.zoom
+                    && w.side.as_deref().is_none_or(|s| s == side)
+                    && w.center.is_none_or(|wc| {
+                        at.is_some_and(|h| {
+                            (h[0] - wc[0]).hypot(h[1] - wc[1]) <= trace.click_tolerance
+                        })
+                    })
+            }
+            _ => false,
+        };
+        check(
+            "magnifier",
+            same,
+            format!("{have:?}"),
+            format!("{want:?} (±{} m)", trace.click_tolerance),
+        );
+    }
     // The active layer and the current colour and weight (docs/adr/0176 §3), exact.
     if let Some(want) = &expect.active_layer {
         check(

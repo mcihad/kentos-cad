@@ -327,6 +327,120 @@
 .hover-card[hidden] {
   display: none;
 }
+
+/*
+ * Genel bakış and Büyüteç over the drawing (docs/adr/0181): a title row over a picture, where navigation.ts puts
+ * them. The overview's picture is its own canvas; the magnifier's is the drawing backend's, seen through the card's
+ * window, which lets the pointer through. Their sizes are the rule's (the content 240 × 160 and 220 × 220 px inside
+ * a 1 px frame): the backend's lens fills exactly the window.
+ */
+.nav-card {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  box-shadow: var(--shadow-float);
+  background: var(--c-panel);
+}
+.nav-card[hidden] {
+  display: none;
+}
+.nav-card--lens {
+  background: transparent;
+}
+.nav-card__head {
+  flex: none;
+  box-sizing: border-box;
+  height: var(--nav-head, 24px);
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 3px 0 8px;
+  background: var(--c-panel-head);
+  border-bottom: 1px solid var(--c-line);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  user-select: none;
+}
+.nav-card__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.nav-card__zooms {
+  display: flex;
+  gap: 1px;
+}
+.nav-card__zoom,
+.nav-card__close {
+  height: calc(var(--nav-head, 24px) - 6px);
+  min-width: calc(var(--nav-head, 24px) - 6px);
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-text-2);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.nav-card__zoom:hover,
+.nav-card__close:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.nav-card__zoom[aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.nav-card__zoom:focus-visible,
+.nav-card__close:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: -2px;
+}
+.nav-card__close {
+  margin-left: 2px;
+  font-size: var(--fs-sm);
+}
+.nav-card__picture {
+  display: block;
+  flex: none;
+  width: 240px;
+  height: 160px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.nav-card__window {
+  flex: 1;
+  pointer-events: none;
+}
+.nav-card__empty {
+  position: absolute;
+  inset: var(--nav-head, 24px) 0 0 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-align: center;
+  pointer-events: none;
+}
+.nav-card__empty[hidden] {
+  display: none;
+}
+.nav-card__window {
+  position: relative;
+}
+.nav-card__hint {
+  inset: 0;
+  background: var(--canvas-bg);
+}
 .cursor-input {
   padding: 4px;
   border-color: var(--c-accent-line);
