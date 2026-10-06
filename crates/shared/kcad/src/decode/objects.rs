@@ -15,11 +15,13 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CircleEntity, ConstructionEntity,
-    DimensionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
-    HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity,
-    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity,
-    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextRun, TextScript,
-    Vec2, label_scale_ok, width_factor_ok,
+    DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace,
+    DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity,
+    HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
+    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
+    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PointEntity, PointPart,
+    RingGeometry, SplineEntity, TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
+    label_scale_ok, oblique_holds, width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -31,7 +33,8 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -116,6 +119,9 @@ pub(super) struct Features {
     pub(super) linked_texts: bool,
     /// Schema 20: a multi-line text's `boxWidth`, `lineSpacing` and `runs` (docs/adr/0182).
     pub(super) paragraphs: bool,
+    /// Schema 21: the settings' text and dimension styles, a text's face and a
+    /// dimension's look (docs/adr/0183).
+    pub(super) styles: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -142,6 +148,7 @@ impl Features {
             line_parts: schema >= SCHEMA_WITH_LINE_PARTS,
             linked_texts: schema >= SCHEMA_WITH_LINKED_TEXTS,
             paragraphs: schema >= SCHEMA_WITH_PARAGRAPHS,
+            styles: schema >= SCHEMA_WITH_STYLES,
             uids: true,
         }
     }
@@ -186,12 +193,30 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
                     || (has.linked_texts && has.uids && matches!(key, "labelOf" | "labelScale"))
                     || (has.paragraphs && matches!(key, "boxWidth" | "lineSpacing" | "runs"))
+                    || (has.styles
+                        && matches!(key, "textStyle" | "font" | "bold" | "italic" | "oblique"))
             }
             Kind::Dimension => {
                 matches!(
                     key,
                     "a" | "b" | "c" | "text" | "angle" | "style" | "height" | "offset"
                 ) || (has.dimensions && matches!(key, "mask" | "za" | "zb"))
+                    || (has.styles
+                        && matches!(
+                            key,
+                            "dimStyle"
+                                | "arrow"
+                                | "arrowSize"
+                                | "extOffset"
+                                | "extBeyond"
+                                | "textGap"
+                                | "textPlace"
+                                | "decimals"
+                                | "unit"
+                                | "prefix"
+                                | "suffix"
+                                | "font"
+                        ))
             }
             Kind::Hatch => matches!(key, "ring" | "holes" | "pattern"),
             Kind::Insert => matches!(key, "block" | "p" | "scale" | "rotation" | "mirror"),
@@ -265,6 +290,10 @@ struct Fields {
     link_at: usize,
     /// A multi-line text's fields (docs/adr/0182), and where its runs start (for a refusal).
     paragraph: Paragraph,
+    /// A text's face and a dimension's look (docs/adr/0183), and where the face's first field is.
+    face: TextFace,
+    face_at: usize,
+    look: DimensionLook,
     runs_at: usize,
 }
 
@@ -542,7 +571,133 @@ pub(super) fn object(
                     ));
                 }
             }
+            "arrow" if kind == Kind::Dimension => {
+                let names: Vec<(&str, DimensionArrow)> =
+                    DimensionArrow::ALL.iter().map(|a| (a.name(), *a)).collect();
+                f.look.arrow = Some(super::named(r, &names)?)
+            }
             "arrow" => f.arrow = Some(leader_arrow(r)?),
+            "textStyle" | "dimStyle" => {
+                let at = r.position();
+                let id = text(r)?;
+                if id.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "stil kimliği boş"));
+                }
+                if kind == Kind::Text {
+                    f.face_at = at;
+                    f.face.text_style = Some(id);
+                } else {
+                    f.look.dim_style = Some(id);
+                }
+            }
+            "font" => {
+                if kind == Kind::Text && f.face_at == 0 {
+                    f.face_at = r.position();
+                }
+                let names: Vec<(&str, DrawingFont)> =
+                    DrawingFont::ALL.iter().map(|d| (d.id(), *d)).collect();
+                let font = Some(super::named(r, &names)?);
+                if kind == Kind::Text {
+                    f.face.font = font;
+                } else {
+                    f.look.font = font;
+                }
+            }
+            "bold" | "italic" => {
+                let at = r.position();
+                if f.face_at == 0 {
+                    f.face_at = at;
+                }
+                if !r.bool()? {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!("{key} false yazılmaz; alan yoksa yazı öyle değildir"),
+                    ));
+                }
+                if key == "bold" {
+                    f.face.bold = true;
+                } else {
+                    f.face.italic = true;
+                }
+            }
+            "oblique" => {
+                let at = r.position();
+                if f.face_at == 0 {
+                    f.face_at = at;
+                }
+                let o = r.float()?;
+                if !oblique_holds(o) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "yazının eğikliği {o}; −{MAX_OBLIQUE} ile {MAX_OBLIQUE} arasında ve sıfırdan farklı olmalı"
+                        ),
+                    ));
+                }
+                f.face.oblique = Some(o);
+            }
+            "arrowSize" | "extOffset" | "extBeyond" | "textGap" => {
+                let at = r.position();
+                let x = r.float()?;
+                let positive = key == "arrowSize";
+                if !(x <= MAX_DIMENSION_RATIO && if positive { x > 0.0 } else { x >= 0.0 }) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "ölçünün {key} değeri {x}; {} ve en çok {MAX_DIMENSION_RATIO} olmalı",
+                            if positive {
+                                "sıfırdan büyük"
+                            } else {
+                                "0 ya da büyük"
+                            }
+                        ),
+                    ));
+                }
+                let slot = match key {
+                    "arrowSize" => &mut f.look.arrow_size,
+                    "extOffset" => &mut f.look.ext_offset,
+                    "extBeyond" => &mut f.look.ext_beyond,
+                    _ => &mut f.look.text_gap,
+                };
+                *slot = Some(x);
+            }
+            "textPlace" => {
+                f.look.text_place =
+                    Some(super::named(r, &[("centre", DimensionTextPlace::Centre)])?)
+            }
+            "decimals" => f.look.decimals = Some(r.uint(u64::from(MAX_DIMENSION_DECIMALS))? as u32),
+            "unit" => {
+                f.look.unit = Some(super::named(
+                    r,
+                    &[
+                        ("mm", DrawingUnit::Mm),
+                        ("cm", DrawingUnit::Cm),
+                        ("m", DrawingUnit::M),
+                    ],
+                )?)
+            }
+            "prefix" | "suffix" => {
+                let at = r.position();
+                let s = text(r)?;
+                let n = s.chars().count();
+                if n == 0 || n > MAX_AFFIX || s.chars().any(char::is_control) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        &format!(
+                            "ölçünün {key} değeri yazılamaz: boş olmamalı, en çok {MAX_AFFIX} harf, satır sonu ya da denetim karakteri yok"
+                        ),
+                    ));
+                }
+                if key == "prefix" {
+                    f.look.prefix = Some(s);
+                } else {
+                    f.look.suffix = Some(s);
+                }
+            }
             "widthFactor" => f.width_factor = Some(width_factor(r)?),
             "labelOf" => {
                 if f.label_scale.is_none() {
@@ -691,6 +846,10 @@ fn build(
             if let Some(words) = f.paragraph.runs_problem(&text) {
                 return Err(r.fail_at(Code::BadValue, f.runs_at, &words));
             }
+            // Bold, italic and a slant need a typeface (docs/adr/0183 §2).
+            if let Some((_, words)) = f.face.problem() {
+                return Err(r.fail_at(Code::BadValue, f.face_at, &words));
+            }
             Entity::Text(TextEntity {
                 base,
                 p: required(r, f.p, "p")?,
@@ -703,6 +862,7 @@ fn build(
                 label_of: f.label_of,
                 label_scale: f.label_scale,
                 paragraph: std::mem::take(&mut f.paragraph),
+                face: std::mem::take(&mut f.face),
             })
         }
         Kind::Dimension => {
@@ -758,6 +918,7 @@ fn build(
                 mask: f.mask.unwrap_or(false),
                 za,
                 zb,
+                look: std::mem::take(&mut f.look),
             })
         }
         Kind::Hatch => Entity::Hatch(HatchEntity {

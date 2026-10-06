@@ -14,7 +14,8 @@ use std::time::{Duration, Instant};
 
 use kentos_contracts::blocks::import_names;
 use kentos_contracts::{
-    BlockDefinition, BlockId, Entity, LayerNode, LayerNodeType, LayerStyle, Vec2,
+    BlockDefinition, BlockId, DimensionStyleDef, Entity, LayerNode, LayerNodeType, LayerStyle,
+    ProjectSettings, TextStyleDef, Vec2, dimension_styles_problem, text_styles_problem,
 };
 use kentos_domain::{Document, Group, NewLayer, Slot, Uuid};
 
@@ -52,6 +53,116 @@ pub struct Applied {
     /// as the file says, as it went in (docs/adr/0144 §5).
     pub blocks: usize,
     pub renamed: Vec<(String, String)>,
+    /// The text and dimension styles added to the project (docs/adr/0183 §7).
+    pub styles: (usize, usize),
+}
+
+/// The text and dimension styles a reader brought (docs/adr/0183 §7): their
+/// ids the reader's (`dxf-text-1` …), the objects naming them so.
+#[derive(Clone, Debug, Default)]
+pub struct Styles {
+    pub text: Vec<TextStyleDef>,
+    pub dimension: Vec<DimensionStyleDef>,
+}
+
+/// The styles ready to go in (docs/adr/0183 §7; the web's `importedStyles`):
+/// each the project's style of the same name (case aside) when it has one,
+/// the file's values staying the objects' own; else a new style under a new
+/// id. One the project may not keep (a name of Standart's, values out of
+/// the rules) is none: its objects keep their look without a style.
+#[derive(Debug, Default)]
+struct ImportedStyles {
+    /// The reader's id → the project's (none: no style).
+    ids: HashMap<String, Option<String>>,
+    text: Vec<TextStyleDef>,
+    dimension: Vec<DimensionStyleDef>,
+}
+
+/// Two style names the same, case aside (the tables' rule).
+fn same_name(a: &str, b: &str) -> bool {
+    a.trim().to_lowercase() == b.trim().to_lowercase()
+}
+
+impl ImportedStyles {
+    fn new(settings: &ProjectSettings, styles: Styles) -> Self {
+        let mut out = Self::default();
+        for mut s in styles.text {
+            let read = s.id.clone();
+            let id = match settings
+                .text_styles
+                .iter()
+                .find(|p| same_name(&p.name, &s.name))
+            {
+                Some(p) => Some(p.id.clone()),
+                None => {
+                    s.id = Uuid::now_v7().to_string();
+                    let table: Vec<TextStyleDef> = settings
+                        .text_styles
+                        .iter()
+                        .chain(&out.text)
+                        .chain(std::iter::once(&s))
+                        .cloned()
+                        .collect();
+                    text_styles_problem(&table).is_none().then(|| {
+                        let id = s.id.clone();
+                        out.text.push(s);
+                        id
+                    })
+                }
+            };
+            out.ids.insert(read, id);
+        }
+        for mut s in styles.dimension {
+            let read = s.id.clone();
+            let id = match settings
+                .dimension_styles
+                .iter()
+                .find(|p| same_name(&p.name, &s.name))
+            {
+                Some(p) => Some(p.id.clone()),
+                None => {
+                    s.id = Uuid::now_v7().to_string();
+                    let table: Vec<DimensionStyleDef> = settings
+                        .dimension_styles
+                        .iter()
+                        .chain(&out.dimension)
+                        .chain(std::iter::once(&s))
+                        .cloned()
+                        .collect();
+                    dimension_styles_problem(&table).is_none().then(|| {
+                        let id = s.id.clone();
+                        out.dimension.push(s);
+                        id
+                    })
+                }
+            };
+            out.ids.insert(read, id);
+        }
+        out
+    }
+
+    /// An object naming the project's style, or none.
+    fn restyle(&self, e: &mut Entity) {
+        let to = |id: Option<String>| id.and_then(|id| self.ids.get(&id).cloned().flatten());
+        match e {
+            Entity::Text(t) => t.face.text_style = to(t.face.text_style.take()),
+            Entity::Dimension(d) => d.look.dim_style = to(d.look.dim_style.take()),
+            _ => {}
+        }
+    }
+
+    /// The new styles into the project's tables: a setting, not an undo step
+    /// (docs/adr/0183 §1); undoing the import leaves them, unused.
+    fn add(&mut self, doc: &mut Document) -> (usize, usize) {
+        let added = (self.text.len(), self.dimension.len());
+        if added != (0, 0) {
+            let mut settings = doc.settings().clone();
+            settings.text_styles.append(&mut self.text);
+            settings.dimension_styles.append(&mut self.dimension);
+            doc.set_settings(settings);
+        }
+        added
+    }
 }
 
 /// The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
@@ -67,10 +178,11 @@ pub struct ImportedBlocks {
 }
 
 impl ImportedBlocks {
-    pub fn new(
+    fn new(
         doc: &Document,
         blocks: Vec<BlockDefinition>,
         targets: &HashMap<String, String>,
+        styles: &ImportedStyles,
     ) -> Self {
         let names = import_names(
             doc.blocks().iter().map(|b| b.name.as_str()),
@@ -91,6 +203,7 @@ impl ImportedBlocks {
                 b.id = ids[&b.id];
                 for e in &mut b.entities {
                     point_at(e, &ids);
+                    styles.restyle(e);
                     let base = e.base_mut();
                     base.layer_id = targets.get(&base.layer_id).cloned().unwrap_or_default();
                 }
@@ -312,10 +425,12 @@ fn retarget(
     mut e: Entity,
     targets: &HashMap<String, String>,
     ids: &HashMap<BlockId, BlockId>,
+    styles: &ImportedStyles,
 ) -> Option<Entity> {
     let layer = targets.get(&e.base().layer_id)?.clone();
     e.base_mut().layer_id = layer;
     point_at(&mut e, ids);
+    styles.restyle(&mut e);
     Some(e)
 }
 
@@ -327,12 +442,25 @@ pub fn apply_import(
     blocks: Vec<BlockDefinition>,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
+    apply_styled_import(doc, entities, blocks, Styles::default(), plan)
+}
+
+/// As [`apply_import`], with the file's text and dimension styles (docs/adr/0183
+/// §7): once the objects are in, the new ones join the project's tables.
+pub fn apply_styled_import(
+    doc: &mut Document,
+    entities: Vec<Entity>,
+    blocks: Vec<BlockDefinition>,
+    styles: Styles,
+    plan: &ImportPlan,
+) -> Result<Applied, String> {
     let mut prepared = prepare(doc, plan)?;
-    let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets);
+    let mut styles = ImportedStyles::new(doc.settings(), styles);
+    let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
     let count = imported.defs.len();
     let chosen: Vec<Entity> = entities
         .into_iter()
-        .filter_map(|e| retarget(e, &prepared.targets, &imported.ids))
+        .filter_map(|e| retarget(e, &prepared.targets, &imported.ids, &styles))
         .collect();
     let known: HashSet<BlockId> = imported.ids.values().copied().collect();
     if let Some(error) = stray_insert(&chosen, &known, 0) {
@@ -345,11 +473,13 @@ pub fn apply_import(
         doc.add_many(chosen, &plan.label)
             .map_err(|e| format!("{e}. Hiçbir nesne eklenmedi."))
     })?;
+    let styles = styles.add(doc);
     Ok(Applied {
         slots,
         created,
         blocks: count,
         renamed: imported.renamed,
+        styles,
     })
 }
 
@@ -370,6 +500,10 @@ pub struct Progressive {
     /// The block definitions taken in, and the names changed on the way.
     pub blocks: usize,
     pub renamed: Vec<(String, String)>,
+    /// The file's styles, the new ones added to the project once every object is in.
+    styles: ImportedStyles,
+    /// The text and dimension styles added (docs/adr/0183 §7).
+    pub added_styles: (usize, usize),
     entities: std::vec::IntoIter<Entity>,
     label: String,
     total: usize,
@@ -384,10 +518,12 @@ impl Progressive {
     pub fn start(
         doc: &mut Document,
         blocks: Vec<BlockDefinition>,
+        styles: Styles,
         plan: &ImportPlan,
     ) -> Result<Self, String> {
         let mut prepared = prepare(doc, plan)?;
-        let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets);
+        let styles = ImportedStyles::new(doc.settings(), styles);
+        let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
         let count = imported.defs.len();
         let group = doc.begin_group(&plan.label);
         let made = doc.transact(&plan.label, |doc| {
@@ -409,6 +545,8 @@ impl Progressive {
             ids: imported.ids,
             blocks: count,
             renamed: imported.renamed,
+            styles,
+            added_styles: (0, 0),
             total: 0,
             entities: Vec::new().into_iter(),
             label: plan.label.clone(),
@@ -448,7 +586,7 @@ impl Progressive {
             let mut batch = Vec::with_capacity(BATCH);
             for e in self.entities.by_ref().take(BATCH) {
                 self.seen += 1;
-                if let Some(e) = retarget(e, &self.targets, &self.ids) {
+                if let Some(e) = retarget(e, &self.targets, &self.ids, &self.styles) {
                     batch.push(e);
                 }
             }
@@ -470,6 +608,7 @@ impl Progressive {
                 if let Some(group) = self.group.take() {
                     doc.end_group(group);
                 }
+                self.added_styles = self.styles.add(doc);
                 return Ok(true);
             }
             if Instant::now() >= until {
@@ -924,8 +1063,13 @@ mod tests {
             layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
             group: None,
         };
-        let mut work = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
-            .expect("started");
+        let mut work = Progressive::start(
+            &mut doc,
+            vec![block(1, "No", None)],
+            Styles::default(),
+            &plan,
+        )
+        .expect("started");
         assert_eq!(work.blocks, 1);
         let id = doc.blocks()[0].id;
         work.feed(vec![insert("0", 1); 3]);
@@ -935,8 +1079,13 @@ mod tests {
         assert_eq!(doc.undo().as_deref(), Some("DXF: büyük.dxf"));
         assert!(doc.blocks().is_empty());
 
-        let mut stopped = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
-            .expect("started");
+        let mut stopped = Progressive::start(
+            &mut doc,
+            vec![block(1, "No", None)],
+            Styles::default(),
+            &plan,
+        )
+        .expect("started");
         stopped.feed(vec![insert("0", 1)]);
         stopped.stop(&mut doc);
         assert!(doc.blocks().is_empty());
@@ -969,8 +1118,13 @@ mod tests {
         assert_eq!(doc.len(), 0);
         assert!(!doc.can_undo());
 
-        let mut work = Progressive::start(&mut doc, vec![block(1, "No", None)], &plan)
-            .expect("started");
+        let mut work = Progressive::start(
+            &mut doc,
+            vec![block(1, "No", None)],
+            Styles::default(),
+            &plan,
+        )
+        .expect("started");
         work.feed(vec![insert("0", 1), insert("0", 7)]);
         let stopped = work.step(&mut doc, std::time::Duration::from_secs(1));
         assert!(
@@ -1038,5 +1192,118 @@ mod tests {
         };
         bad.parts.as_mut().expect("parts")[0].pts[1] = v(f64::INFINITY, 0.0);
         assert_eq!(unusable(&[Entity::Polygon(bad)]), Some((1, "polygon")));
+    }
+
+    fn text_in(layer: &str, style: &str) -> Entity {
+        Entity::Text(kentos_contracts::TextEntity {
+            base: base(layer),
+            p: Vec2 { x: 0.0, y: 0.0 },
+            text: "Ada 101".into(),
+            height: 2.0,
+            rotation: 0.0,
+            align: None,
+            width_factor: None,
+            mask: false,
+            label_of: None,
+            label_scale: None,
+            paragraph: Default::default(),
+            face: kentos_contracts::TextFace {
+                text_style: Some(style.into()),
+                font: Some(kentos_contracts::DrawingFont::Arimo),
+                bold: true,
+                ..Default::default()
+            },
+        })
+    }
+
+    fn text_style(id: &str, name: &str) -> TextStyleDef {
+        TextStyleDef {
+            id: id.into(),
+            name: name.into(),
+            font: kentos_contracts::DrawingFont::Arimo,
+            bold: true,
+            italic: false,
+            oblique: None,
+            height: Some(3.0),
+            width_factor: None,
+            font_file: Some("arialbd.ttf".into()),
+        }
+    }
+
+    /// A file's styles (docs/adr/0183 §7): one of a name the project has
+    /// (case aside) is the project's, the file's values staying the objects'
+    /// own; a new one joins the project under a new id once the objects are
+    /// in; one the project may not keep (Standart's name) is none, its objects
+    /// keeping their look. A definition's objects follow them too. Undo takes
+    /// the objects, not the styles (a setting).
+    #[test]
+    fn a_files_styles_join_the_project_or_name_its_own() {
+        let mut doc = doc();
+        let mut settings = doc.settings().clone();
+        settings.text_styles = vec![text_style("0192f1a0-0000-7000-8000-000000000001", "Ada no")];
+        doc.set_settings(settings);
+        let plan = ImportPlan {
+            label: "DXF: stiller.dxf".into(),
+            layers: vec![("0".into(), LayerTarget::Existing("a".into()))],
+            group: None,
+        };
+        let mut def = block(1, "Pafta", None);
+        def.entities.push(text_in("", "dxf-text-2"));
+        let styles = Styles {
+            text: vec![
+                text_style("dxf-text-1", "ADA NO"),
+                text_style("dxf-text-2", "Yol adı"),
+                text_style("dxf-text-3", "Standart"),
+            ],
+            dimension: Vec::new(),
+        };
+        let applied = apply_styled_import(
+            &mut doc,
+            vec![
+                text_in("0", "dxf-text-1"),
+                text_in("0", "dxf-text-2"),
+                text_in("0", "dxf-text-3"),
+            ],
+            vec![def],
+            styles,
+            &plan,
+        )
+        .expect("applied");
+        assert_eq!(applied.styles, (1, 0));
+        let table = &doc.settings().text_styles;
+        assert_eq!(
+            table.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(),
+            ["Ada no", "Yol adı"]
+        );
+        let new = table[1].id.clone();
+        assert!(Uuid::parse_str(&new).is_ok(), "{new}");
+        let named: Vec<Option<String>> = doc
+            .entities()
+            .map(|e| match e {
+                Entity::Text(t) => t.face.text_style.clone(),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            named,
+            [
+                Some("0192f1a0-0000-7000-8000-000000000001".to_owned()),
+                Some(new.clone()),
+                None
+            ]
+        );
+        // Each keeps the file's look: the face without the style is still the text's.
+        assert!(
+            doc.entities()
+                .all(|e| matches!(e, Entity::Text(t) if t.face.bold))
+        );
+        let inside = doc.blocks()[0].entities.iter().find_map(|e| match e {
+            Entity::Text(t) => t.face.text_style.clone(),
+            _ => None,
+        });
+        assert_eq!(inside, Some(new));
+        assert_eq!(doc.undo().as_deref(), Some("DXF: stiller.dxf"));
+        assert_eq!(doc.len(), 0);
+        assert_eq!(doc.settings().text_styles.len(), 2);
     }
 }

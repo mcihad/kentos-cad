@@ -12,10 +12,11 @@ use std::fmt;
 
 use kentos_contracts::{
     ArcEntity, AreaPart, AttributeDefinition, BlockDefinition, BlockId, CircleEntity,
-    ConstructionEntity, DimensionEntity, DimensionStyle, DxfWriteInput, DxfWriteLayer,
-    EllipseEntity, Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow,
-    LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry,
-    SplineEntity, TextAlign, TextEntity, TextRun, Vec2,
+    ConstructionEntity, DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle,
+    DimensionTextPlace, DrawingFont, DrawingUnit, DxfWriteInput, DxfWriteLayer, EllipseEntity,
+    Entity, EntityBase, HatchEntity, HatchPattern, InsertEntity, LeaderArrow, LeaderEntity,
+    LineEntity, Paragraph, PathEntity, PointEntity, PointPart, RingGeometry, SplineEntity,
+    TextAlign, TextEntity, TextFace, TextRun, Vec2,
 };
 use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
 use serde::de::{self, Deserialize, Deserializer, IgnoredAny, MapAccess, SeqAccess, Visitor};
@@ -102,7 +103,24 @@ struct Fields {
     box_width: Option<f64>,
     line_spacing: Option<f64>,
     runs: Option<Vec<TextRun>>,
-    arrow: Option<LeaderArrow>,
+    /// A leader's or a dimension's arrowhead by its name (the kind says which).
+    arrow: Option<String>,
+    /// A text's face and a dimension's look (docs/adr/0183).
+    text_style: Option<String>,
+    dim_style: Option<String>,
+    font: Option<DrawingFont>,
+    bold: Option<bool>,
+    italic: Option<bool>,
+    oblique: Option<f64>,
+    arrow_size: Option<f64>,
+    ext_offset: Option<f64>,
+    ext_beyond: Option<f64>,
+    text_gap: Option<f64>,
+    text_place: Option<DimensionTextPlace>,
+    decimals: Option<u32>,
+    unit: Option<DrawingUnit>,
+    prefix: Option<String>,
+    suffix: Option<String>,
     offset: Option<f64>,
     style: Option<DimensionStyle>,
     angle: Option<f64>,
@@ -284,6 +302,13 @@ impl Fields {
                     line_spacing: self.line_spacing,
                     runs: self.runs.unwrap_or_default(),
                 },
+                face: TextFace {
+                    text_style: self.text_style,
+                    font: self.font,
+                    bold: self.bold.unwrap_or(false),
+                    italic: self.italic.unwrap_or(false),
+                    oblique: self.oblique,
+                },
             }),
             "dimension" => Entity::Dimension(DimensionEntity {
                 base,
@@ -298,6 +323,25 @@ impl Fields {
                 mask: self.mask.unwrap_or(false),
                 za: self.za,
                 zb: self.zb,
+                look: DimensionLook {
+                    dim_style: self.dim_style,
+                    arrow: match self.arrow.as_deref() {
+                        Some(name) => Some(DimensionArrow::from_name(name).ok_or_else(|| {
+                            E::unknown_variant(name, &["closed", "open", "dot", "none"])
+                        })?),
+                        None => None,
+                    },
+                    arrow_size: self.arrow_size,
+                    ext_offset: self.ext_offset,
+                    ext_beyond: self.ext_beyond,
+                    text_gap: self.text_gap,
+                    text_place: self.text_place,
+                    decimals: self.decimals,
+                    unit: self.unit,
+                    prefix: self.prefix,
+                    suffix: self.suffix,
+                    font: self.font,
+                },
             }),
             "hatch" => Entity::Hatch(HatchEntity {
                 base,
@@ -319,7 +363,15 @@ impl Fields {
                 text: self.text,
                 height: need(self.height, "height")?,
                 rotation: need(self.rotation, "rotation")?,
-                arrow: self.arrow,
+                arrow: match self.arrow.as_deref() {
+                    Some(name) => Some(
+                        LeaderArrow::ALL
+                            .into_iter()
+                            .find(|a| a.name() == name)
+                            .ok_or_else(|| E::unknown_variant(name, &["open", "dot", "none"]))?,
+                    ),
+                    None => None,
+                },
                 mask: self.mask.unwrap_or(false),
             }),
             other => {
@@ -399,6 +451,21 @@ impl<'de> Deserialize<'de> for Wire {
                         "lineSpacing" => f.line_spacing = map.next_value()?,
                         "runs" => f.runs = map.next_value()?,
                         "arrow" => f.arrow = map.next_value()?,
+                        "textStyle" => f.text_style = map.next_value()?,
+                        "dimStyle" => f.dim_style = map.next_value()?,
+                        "font" => f.font = map.next_value()?,
+                        "bold" => f.bold = map.next_value()?,
+                        "italic" => f.italic = map.next_value()?,
+                        "oblique" => f.oblique = map.next_value()?,
+                        "arrowSize" => f.arrow_size = map.next_value()?,
+                        "extOffset" => f.ext_offset = map.next_value()?,
+                        "extBeyond" => f.ext_beyond = map.next_value()?,
+                        "textGap" => f.text_gap = map.next_value()?,
+                        "textPlace" => f.text_place = map.next_value()?,
+                        "decimals" => f.decimals = map.next_value()?,
+                        "unit" => f.unit = map.next_value()?,
+                        "prefix" => f.prefix = map.next_value()?,
+                        "suffix" => f.suffix = map.next_value()?,
                         "offset" => f.offset = Some(map.next_value()?),
                         "style" => f.style = map.next_value()?,
                         "angle" => f.angle = map.next_value()?,
@@ -479,6 +546,10 @@ struct Input {
     blocks: Definitions,
     #[serde(default)]
     unit: Option<kentos_contracts::DrawingUnit>,
+    #[serde(default)]
+    text_styles: Vec<kentos_contracts::TextStyleDef>,
+    #[serde(default)]
+    dimension_styles: Vec<kentos_contracts::DimensionStyleDef>,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -499,6 +570,8 @@ impl<'de> Deserialize<'de> for WriteInput {
             dimension_values: i.dimension_values,
             blocks: i.blocks.0,
             unit: i.unit,
+            text_styles: i.text_styles,
+            dimension_styles: i.dimension_styles,
         }))
     }
 }

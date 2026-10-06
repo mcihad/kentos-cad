@@ -934,6 +934,14 @@ impl App {
             Some(Dialog::FindReplace) => self.find_replace = None,
             Some(Dialog::LayerMerge) => self.layer_merge = None,
             Some(Dialog::LayerStates) => self.layer_states_window = None,
+            // Sil's question first, then the window.
+            Some(Dialog::AnnotationStyles)
+                if self.annotation_styles.as_ref().is_some_and(|w| w.asking()) =>
+            {
+                let _ = self.annotation_styles_event(crate::annotation_styles::Event::RemoveDropped);
+                self.dialog = Some(Dialog::AnnotationStyles);
+            }
+            Some(Dialog::AnnotationStyles) => self.annotation_styles = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::LayerList) => self.layer_list = None,
             Some(Dialog::DataCompare) => self.data_compare = None,

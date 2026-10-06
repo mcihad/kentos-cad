@@ -343,12 +343,42 @@ impl Format {
     /// coordinate without its unit, an angle in the project's angle unit or a
     /// percentage.
     pub fn dimension(&self, prefix: &str, unit: &str, value: f64) -> String {
-        match unit {
-            "angle" => format!("{prefix}{}", self.angle(value)),
-            "percent" => format!("{prefix}{}", self.percent(value)),
-            "coordinate" => format!("{prefix}{}", self.coord(value)),
-            _ => format!("{prefix}{}", self.length_bare(value)),
-        }
+        self.dimension_in(
+            prefix,
+            unit,
+            value,
+            &kentos_contracts::DimensionLook::default(),
+        )
+    }
+
+    /// A dimension's value as written in its look (docs/adr/0183 §3): the
+    /// look's prefix, the kind's prefix, the number, the look's suffix; a
+    /// length or a coordinate in the look's unit and decimals (else the
+    /// project's) without the unit, a slope's percentage with the look's
+    /// decimals (else 2), an angle in the project's angle unit. The web's
+    /// `dimensionValue`; both pass the `dimensionValue` cases of
+    /// fixtures/text/v1/styles.json.
+    pub fn dimension_in(
+        &self,
+        prefix: &str,
+        unit: &str,
+        value: f64,
+        look: &kentos_contracts::DimensionLook,
+    ) -> String {
+        let number = match unit {
+            "angle" => self.angle(value),
+            "percent" => fixed(value, look.decimals.map_or(2, |d| d as usize)),
+            _ => {
+                let per_metre = look.unit.unwrap_or(self.unit).per_metre();
+                let decimals = look.decimals.map_or(self.length_decimals, |d| d as usize);
+                fixed(value * per_metre, decimals)
+            }
+        };
+        format!(
+            "{}{prefix}{number}{}",
+            look.prefix.as_deref().unwrap_or_default(),
+            look.suffix.as_deref().unwrap_or_default()
+        )
     }
 
     /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5), a CAD
@@ -453,6 +483,8 @@ mod tests {
             datum_transforms: Vec::new(),
             layer_states: Vec::new(),
             survey: None,
+            dimension_styles: Vec::new(),
+            text_styles: Vec::new(),
         };
         let cad = Format::of(&settings);
         assert_eq!(cad.point(Vec2::new(120.0, 45.5)), "X 120.000  Y 45.500");
@@ -522,6 +554,8 @@ mod tests {
             datum_transforms: Vec::new(),
             layer_states: Vec::new(),
             survey: None,
+            dimension_styles: Vec::new(),
+            text_styles: Vec::new(),
         };
         let f = Format::of(&settings);
         assert_eq!(f.coord(0.1), "100.000");

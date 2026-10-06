@@ -29,7 +29,7 @@ pub const LTYPE_BYBLOCK: u64 = 0x24;
 pub const LTYPE_BYLAYER: u64 = 0x25;
 pub const LTYPE_CONTINUOUS: u64 = 0x26;
 pub const LAYER_ZERO: u64 = 0x27;
-const STYLE: u64 = 0x29;
+pub const STYLE: u64 = 0x29;
 const APPID_ACAD: u64 = 0x2A;
 const DIMSTYLE: u64 = 0x2B;
 pub const APPID_KENTOS: u64 = 0x2D;
@@ -228,25 +228,8 @@ pub fn builtin_ltypes(out: &mut Out) {
     }
 }
 
-/// STYLE (Standard, Arial: it has every Turkish letter), VIEW and UCS (empty).
-pub fn style_view_ucs(out: &mut Out) {
-    table(out, "STYLE", STYLE_TABLE, 1);
-    record(out, "STYLE", STYLE, STYLE_TABLE, "AcDbTextStyleTableRecord");
-    fixed(
-        out,
-        &[
-            (2, "Standard"),
-            (70, "0"),
-            (40, "0.0"),
-            (41, "1.0"),
-            (50, "0.0"),
-            (71, "0"),
-            (42, "2.5"),
-            (3, "arial.ttf"),
-            (4, ""),
-        ],
-    );
-    out.str(0, "ENDTAB");
+/// VIEW and UCS (empty); the STYLE table is the project's styles' (styles.rs).
+pub fn view_ucs(out: &mut Out) {
     table(out, "VIEW", VIEW_TABLE, 0);
     out.str(0, "ENDTAB");
     table(out, "UCS", UCS_TABLE, 0);
@@ -266,89 +249,123 @@ pub fn appid_table(out: &mut Out) {
     out.str(0, "ENDTAB");
 }
 
-/// DIMSTYLE: the Standard style; each dimension overrides its sizes
-/// (`entities.rs`). Values are written as KentOS shows them: a point for the
+/// DIMSTYLE's head: the table with `count` records.
+pub fn dimstyle_head(out: &mut Out, count: usize) {
+    table(out, "DIMSTYLE", DIMSTYLE_TABLE, count);
+    out.str(100, "AcDbDimStyleTable");
+}
+
+/// Standard's variables. Values are written as KentOS shows them: a point for the
 /// decimal separator (DIMDSEP 46), trailing zeros kept (DIMZIN, DIMAZIN 0).
 /// DIMRND is left out: AutoCAD takes 0 for "no rounding", ezdxf rounds a
 /// redrawn value to a whole number.
-pub fn dimstyle_table(out: &mut Out) {
-    table(out, "DIMSTYLE", DIMSTYLE_TABLE, 1);
-    out.str(100, "AcDbDimStyleTable");
+const STANDARD_VARS: &[(i32, &str)] = &[
+    (70, "0"),
+    (40, "1.0"),
+    (41, "2.5"),
+    (42, "0.625"),
+    (43, "3.75"),
+    (44, "1.25"),
+    (46, "0.0"),
+    (47, "0.0"),
+    (48, "0.0"),
+    (49, "2.5"),
+    (140, "2.5"),
+    (141, "2.5"),
+    (142, "0.0"),
+    (143, "0.03937007874"),
+    (144, "1.0"),
+    (145, "0.0"),
+    (146, "1.0"),
+    (147, "0.625"),
+    (148, "0.0"),
+    (69, "0"),
+    (70, "0"),
+    (71, "0"),
+    (72, "0"),
+    (73, "0"),
+    (74, "0"),
+    (75, "0"),
+    (76, "0"),
+    (77, "1"),
+    (78, "0"),
+    (79, "0"),
+    (170, "0"),
+    (171, "3"),
+    (172, "1"),
+    (173, "0"),
+    (174, "0"),
+    (175, "0"),
+    (176, "0"),
+    (177, "0"),
+    (178, "0"),
+    (179, "2"),
+    (271, "2"),
+    (272, "2"),
+    (273, "2"),
+    (274, "3"),
+    (275, "0"),
+    (276, "0"),
+    (277, "2"),
+    (278, "46"),
+    (279, "0"),
+    (280, "0"),
+    (281, "0"),
+    (282, "0"),
+    (283, "0"),
+    (284, "8"),
+    (285, "0"),
+    (286, "0"),
+    (288, "0"),
+    (289, "3"),
+    (290, "0"),
+    (371, "-2"),
+    (372, "-2"),
+];
+
+/// The Standard record (Standart): Standard's variables, each dimension
+/// overriding its sizes (`entities.rs`); the bytes it had before styles.
+pub fn dimstyle_standard(out: &mut Out) {
+    dimstyle_record(out, DIMSTYLE, "Standard", &[], None);
+}
+
+/// A DIMSTYLE record named `name`: Standard's variables, `vars` over them,
+/// and its KENTOS data (`look`, docs/adr/0183 §7) when it is a project's style.
+pub fn dimstyle_record(
+    out: &mut Out,
+    handle: u64,
+    name: &str,
+    vars: &[(i32, String)],
+    kentos: Option<&str>,
+) {
     record(
         out,
         "DIMSTYLE",
-        DIMSTYLE,
+        handle,
         DIMSTYLE_TABLE,
         "AcDbDimStyleTableRecord",
     );
-    fixed(
-        out,
-        &[
-            (2, "Standard"),
-            (70, "0"),
-            (40, "1.0"),
-            (41, "2.5"),
-            (42, "0.625"),
-            (43, "3.75"),
-            (44, "1.25"),
-            (46, "0.0"),
-            (47, "0.0"),
-            (48, "0.0"),
-            (49, "2.5"),
-            (140, "2.5"),
-            (141, "2.5"),
-            (142, "0.0"),
-            (143, "0.03937007874"),
-            (144, "1.0"),
-            (145, "0.0"),
-            (146, "1.0"),
-            (147, "0.625"),
-            (148, "0.0"),
-            (69, "0"),
-            (70, "0"),
-            (71, "0"),
-            (72, "0"),
-            (73, "0"),
-            (74, "0"),
-            (75, "0"),
-            (76, "0"),
-            (77, "1"),
-            (78, "0"),
-            (79, "0"),
-            (170, "0"),
-            (171, "3"),
-            (172, "1"),
-            (173, "0"),
-            (174, "0"),
-            (175, "0"),
-            (176, "0"),
-            (177, "0"),
-            (178, "0"),
-            (179, "2"),
-            (271, "2"),
-            (272, "2"),
-            (273, "2"),
-            (274, "3"),
-            (275, "0"),
-            (276, "0"),
-            (277, "2"),
-            (278, "46"),
-            (279, "0"),
-            (280, "0"),
-            (281, "0"),
-            (282, "0"),
-            (283, "0"),
-            (284, "8"),
-            (285, "0"),
-            (286, "0"),
-            (288, "0"),
-            (289, "3"),
-            (290, "0"),
-            (371, "-2"),
-            (372, "-2"),
-        ],
-    );
-    out.str(0, "ENDTAB");
+    out.str(2, name);
+    for (i, (code, v)) in STANDARD_VARS.iter().enumerate() {
+        match vars.iter().find(|(c, _)| c == code) {
+            Some((_, own)) => out.str(*code, own),
+            None => out.str(*code, v),
+        }
+        // Variables Standard leaves out (DIMPOST) follow the flags, where AutoCAD writes them.
+        if i == 0 {
+            for (code, v) in vars {
+                if !STANDARD_VARS.iter().any(|(c, _)| c == code) {
+                    out.str(*code, v);
+                }
+            }
+        }
+    }
+    if let Some(kentos) = kentos {
+        out.xdata(&super::super::xdata::groups(&super::super::xdata::Meta {
+            look: Some(kentos.to_owned()),
+            ..Default::default()
+        }));
+    }
 }
 
 /// BLOCK_RECORD: model space and paper space, each pointing to its

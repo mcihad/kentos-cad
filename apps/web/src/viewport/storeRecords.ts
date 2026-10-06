@@ -27,9 +27,11 @@ export const LABEL = { dimension: 0, text: 1, center: 2, corner: 3, beside: 4, a
 export const LABEL_STRIDE = 9;
 /*
  * A multi-line text's records (docs/adr/0182 §3): its mask's box (`paragraphMask`: x, y the box's corner under its
- * first letter's left, a the turn, b the box's width along the baseline, c its height up), then a record a line
- * (`line`: x, y where its baseline starts, a the turn, b the height, c the width factor, d and e the line's letters
- * start..end, Unicode scalar values; a block's piece's `pieceLine`: c the piece's place, its width factor the piece's).
+ * first letter's left, a the turn, b the box's width along the baseline, c its height up, d a block's piece's place),
+ * then a record a line (`line`: x, y where its baseline starts, a the turn, b the height, c the width factor, d and e
+ * the line's letters start..end, Unicode scalar values; a block's piece's `pieceLine`: c the piece's place, its width
+ * factor the piece's). A leaning text's (docs/adr/0183 §2) lines start further back the lower they are and its mask's
+ * corner moves with the slant: the box leans as a whole, each line and the mask from their own baselines.
  */
 /** A dimension record's unit code (the core's `DIMENSION_UNITS`). */
 export const DIMENSION_UNIT = ['length', 'angle', 'percent', 'coordinate'] as const;

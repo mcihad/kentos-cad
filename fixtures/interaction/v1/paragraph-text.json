@@ -2,7 +2,7 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "paragraph-text",
-  "title": "Çok satırlı yazı (ADR 0182 §4): Satır aralığı (S) sınırları içinde; iki köşe kutunun genişliğini ve sol üst köşesini verir; düzenleyicide yazılan satırlar, seçilen harflere kalın, üst simge ve renk; Tamam tek adımda yazar; aynı noktaya iki tık kutusuz yazı verir; Vazgeç bırakır; var olan çok satırlı yazıya çift tık aynı düzenleyiciyi açar, eğik eklenir",
+  "title": "Çok satırlı yazı (ADR 0182 §4): Satır aralığı (R) sınırları içinde; iki köşe kutunun genişliğini ve sol üst köşesini verir; düzenleyicide yazılan satırlar, seçilen harflere kalın, üst simge ve renk; Tamam tek adımda yazar; aynı noktaya iki tık kutusuz yazı verir; Vazgeç bırakır; var olan çok satırlı yazıya çift tık aynı düzenleyiciyi açar, eğik eklenir",
   "source": "Web'in ParagraphTextTool'u (tools/paragraphTool.ts) ve ParagraphEditor'ü (ui/shell/ParagraphEditor.ts), masaüstünün kentos_interaction::paragraph'ı ve paragraph_editor.rs'i; cad.entities.create, ADR 0182",
   "covers": [
     "UX-01",
@@ -37,16 +37,16 @@
         "options": [
           "Y",
           "A",
-          "S",
+          "R",
           "Z"
         ],
-        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (S): 1 / Zemin (Z): kapalı]",
+        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (R): 1 / Zemin (Z): kapalı]",
         "entities": 0
       }
     },
     {
-      "key": "S",
-      "note": "Satır aralığı: çizimde S.",
+      "key": "R",
+      "note": "Satır aralığı: çizimde R (S, CAD projesinde Stil'dir; docs/adr/0183 §4).",
       "expect": {
         "options": [],
         "prompt": "Çok satırlı yazı: satır aralığını yazın (1: yüksekliğin 5/3'ü; 0.25 ile 4 arası)"
@@ -75,7 +75,7 @@
     {
       "key": "Enter",
       "expect": {
-        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (S): 1.5 / Zemin (Z): kapalı]"
+        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (R): 1.5 / Zemin (Z): kapalı]"
       }
     },
     {
@@ -163,7 +163,7 @@
         "logged": [
           "Çok satırlı yazı eklendi: “Parsel 101 …”"
         ],
-        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (S): 1.5 / Zemin (Z): kapalı]"
+        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (R): 1.5 / Zemin (Z): kapalı]"
       }
     },
     {
@@ -224,11 +224,11 @@
       "note": "Vazgeç: yazılmaz, araç yeni kutuyu bekler.",
       "expect": {
         "entities": 2,
-        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (S): 1.5 / Zemin (Z): kapalı]"
+        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (R): 1.5 / Zemin (Z): kapalı]"
       }
     },
     {
-      "key": "S"
+      "key": "R"
     },
     {
       "focus": "commandLine"
@@ -240,7 +240,7 @@
       "key": "Enter",
       "note": "Satır aralığı varsayılana döner: aynı tarayıcıdaki sonraki koşu baştan başlar.",
       "expect": {
-        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (S): 1 / Zemin (Z): kapalı]"
+        "prompt": "Çok satırlı yazı: yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): 2.5 mm / Açı (A): 0° / Satır aralığı (R): 1 / Zemin (Z): kapalı]"
       }
     },
     {

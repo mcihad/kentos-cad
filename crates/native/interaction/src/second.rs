@@ -233,6 +233,8 @@ mod tests {
             datum_transforms: Vec::new(),
             layer_states: Vec::new(),
             survey: None,
+            dimension_styles: Vec::new(),
+            text_styles: Vec::new(),
         }
     }
 

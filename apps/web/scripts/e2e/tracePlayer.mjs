@@ -635,8 +635,8 @@ const observe = (mark) =>
       widthFactor: e.kind === 'text' ? (e.widthFactor ?? 1) : null,
       mask: e.kind === 'text' || e.kind === 'leader' || e.kind === 'dimension' ? e.mask === true : null,
       rotation: e.kind === 'text' || e.kind === 'leader' ? e.rotation : null,
-      // A text's height on the ground (docs/adr/0175: from a label's size at a scale).
-      height: e.kind === 'text' ? e.height : null,
+      // A text's height on the ground (docs/adr/0175: from a label's size at a scale), a dimension's value's (docs/adr/0183).
+      height: e.kind === 'text' || e.kind === 'dimension' ? e.height : null,
       // A leader's arrowhead (null: the filled arrow; docs/adr/0146).
       arrow: e.kind === 'leader' ? (e.arrow ?? null) : null,
       // A dimension's direction in degrees: a linear one's measured, an ordinate's axis (docs/adr/0147).
@@ -661,6 +661,14 @@ const observe = (mark) =>
       color: e.color ?? null,
       lineWeight: e.lineWeight ?? null,
       layer: k.doc.layers.get(e.layerId)?.name ?? '',
+      // A text's style and face, a dimension's style and look, as the contract writes them (docs/adr/0183).
+      face: e.kind === 'text' ? Object.fromEntries(['textStyle', 'font', 'bold', 'italic', 'oblique'].filter((key) => e[key] !== undefined && e[key] !== false).map((key) => [key, e[key]])) : null,
+      look:
+        e.kind === 'dimension'
+          ? Object.fromEntries(
+              ['dimStyle', 'arrow', 'arrowSize', 'extOffset', 'extBeyond', 'textGap', 'textPlace', 'decimals', 'unit', 'prefix', 'suffix', 'font'].filter((key) => e[key] !== undefined).map((key) => [key, e[key]]),
+            )
+          : null,
     });
     return {
       tool: k.tools.activeId.value,
@@ -759,10 +767,14 @@ function compareShape(name, have, want, t) {
   if (want.boxWidth !== undefined && !(want.boxWidth === null ? have.boxWidth === null : have.boxWidth !== null && Math.abs(have.boxWidth - want.boxWidth) <= t.clickTolerance))
     bad.push(`${name}.boxWidth: ${JSON.stringify(have.boxWidth)}, beklenen ${JSON.stringify(want.boxWidth)} (±${t.clickTolerance} m)`);
   if (want.runs !== undefined && !same(have.runs, want.runs)) bad.push(`${name}.runs: ${JSON.stringify(have.runs)}, beklenen ${JSON.stringify(want.runs)}`);
+  // A text's style and face, a dimension's style and look (docs/adr/0183), exact, its members in any order.
+  const members = (o) => o && JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  for (const key of ['face', 'look'])
+    if (want[key] !== undefined && members(have[key]) !== members(want[key])) bad.push(`${name}.${key}: ${JSON.stringify(have[key])}, beklenen ${JSON.stringify(want[key])}`);
   // Its attributes, all of them, exact.
   const sorted = (o) => JSON.stringify(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   if (want.attrs !== undefined && sorted(have.attrs) !== sorted(want.attrs)) bad.push(`${name}.attrs: ${JSON.stringify(have.attrs)}, beklenen ${JSON.stringify(want.attrs)}`);
-  // A text's height (docs/adr/0175: a label's size at a scale), within 1e-9.
+  // A text's height (docs/adr/0175: a label's size at a scale), a dimension's value's (docs/adr/0183), within 1e-9.
   if (want.height !== undefined && (have.height === null || Math.abs(have.height - want.height) > 1e-9))
     bad.push(`${name}.height: ${JSON.stringify(have.height)}, beklenen ${want.height}`);
   // A dimension's direction (docs/adr/0147), within 1e-9: a typed angle in grads comes back through radians.

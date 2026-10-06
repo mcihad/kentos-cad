@@ -18,13 +18,14 @@
 use kentos_contracts::{CreateOperation, EntityGeometry};
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::drawing_font;
+use kentos_native_application::geometry::{core_face, drawing_font};
 
 use crate::Vec2;
 use crate::format::{Format, fixed, js_number};
 use crate::log::Level;
 use crate::points::{self, Taken};
 use crate::prompt::Prompt;
+use crate::styles;
 use crate::text::align_name;
 use crate::tool::{Context, Flow, Memory, Pointer, Preview, Stroke, Tone, Tool, ViewChange};
 
@@ -143,6 +144,8 @@ pub struct PlaceTextFile {
     done: bool,
     /// What the session remembered, as of the last call.
     seen: Option<Memory>,
+    /// Yazı's text style as of the last call: a CAD project's (docs/adr/0183 §4).
+    styles: styles::Seen,
     /// The project's plot scale, as of the last call: paper millimetres to metres.
     scale: f64,
 }
@@ -159,6 +162,7 @@ impl PlaceTextFile {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some(*cx.memory);
+        self.styles = styles::Seen::text(cx);
         self.scale = cx.doc.settings().plot_scale;
     }
 
@@ -182,6 +186,7 @@ impl PlaceTextFile {
         }
         let m = *cx.memory;
         let height = paper(m.text_height_mm, cx);
+        let face = styles::text_face(cx);
         let r = m.text_angle.to_radians();
         // Down the texts' own up: each line 1.5 heights under the one before.
         let down = Vec2::new(r.sin(), -r.cos());
@@ -203,6 +208,8 @@ impl PlaceTextFile {
                     box_width: None,
                     line_spacing: None,
                     runs: Vec::new(),
+                    // Yazı's style (docs/adr/0183 §4).
+                    face: face.clone(),
                 }
             })
             .collect();
@@ -232,11 +239,17 @@ impl Tool for PlaceTextFile {
         };
         let m = self.seen.unwrap_or_default();
         let texts = file.lines.iter().filter(|l| !l.is_empty()).count();
+        // A CAD project's style first (docs/adr/0183 §4).
+        let style = if self.styles.shown {
+            format!("{}, ", self.styles.chosen)
+        } else {
+            String::new()
+        };
         Prompt::new(LABEL, "ilk satırın başlangıcına tıklayın")
             .note(format!("“{}”: {texts} yazı", file.name))
             .then()
             .note(format!(
-                "Yazı'nın seçenekleriyle: {} mm, {}°, {}",
+                "Yazı'nın seçenekleriyle: {style}{} mm, {}°, {}",
                 js_number(m.text_height_mm),
                 js_number(
                     fixed(m.text_angle, 4)
@@ -266,6 +279,8 @@ impl Tool for PlaceTextFile {
         match lines(name, bytes) {
             Ok(lines) => {
                 let font = drawing_font(cx.doc.settings().drawing_font);
+                // In Yazı's style's typeface and bold (docs/adr/0183 §2).
+                let face = core_face(&styles::text_face(cx));
                 // An empty line has no box: the core measures an empty text
                 // as a replacement mark, so that it can be picked.
                 let widths = lines
@@ -274,7 +289,11 @@ impl Tool for PlaceTextFile {
                         if text.is_empty() {
                             return 0.0;
                         }
-                        TextPlace::line(Vec2::new(0.0, 0.0), text, 1.0, 0.0, None, None).width(font)
+                        let mut t =
+                            TextPlace::line(Vec2::new(0.0, 0.0), text, 1.0, 0.0, None, None);
+                        t.font = face.font;
+                        t.bold = face.is_bold();
+                        t.width(font)
                     })
                     .collect();
                 self.file = Some(Loaded {

@@ -26,8 +26,9 @@
 //! - `MIXED`, then a `LINE` record's paths and a `FILL` record's rings (0
 //!   for none), their points always given: a leader's (docs/adr/0146 §5),
 //!   its line on to its landing's end and an open arrowhead's sides, then
-//!   its filled arrowhead or dot. The host strokes the paths and fills the
-//!   area solid in the object's colour.
+//!   its filled arrowhead or dot; a dimension's layout lines and its filled
+//!   arrowheads or dots (docs/adr/0183 §3). The host strokes the paths and
+//!   fills each ring solid in the object's colour, each an area of its own.
 //!
 //! Points are `n, x0, y0, …`, or `SOURCE` / `REVERSED`: the object's own
 //! points for that path or ring (a line's two ends; a polyline's or
@@ -155,11 +156,23 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         // An insert shows its insertion point until the store expands its block (docs/adr/0144).
         Shape::Point { p, .. } | Shape::Insert { p, .. } => out.extend([MARKER, p.x, p.y]),
         Shape::Text { .. } => out.push(NONE),
+        // Its layout lines; with filled arrowheads or dots, those areas after them, each a ring of
+        // its own (docs/adr/0183 §3).
         Shape::Dimension { .. } => match dimension_geom(s).and_then(|d| layout_dimension(&d)) {
             Some(l) => {
-                out.extend([LINE, l.lines.len() as f64]);
+                let fills = l.fills.unwrap_or_default();
+                out.extend([
+                    if fills.is_empty() { LINE } else { MIXED },
+                    l.lines.len() as f64,
+                ]);
                 for [a, b] in l.lines {
                     path(out, false, &[a, b]);
+                }
+                if !fills.is_empty() {
+                    out.push(fills.len() as f64);
+                    for r in &fills {
+                        ring(out, r, false, oriented.then_some(true));
+                    }
                 }
             }
             None => out.push(NONE),

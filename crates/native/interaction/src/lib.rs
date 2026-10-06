@@ -194,6 +194,8 @@ pub mod station_offset;
 pub mod stretch;
 pub mod templates;
 pub mod paragraph;
+pub mod style_tables;
+pub mod styles;
 pub mod text;
 pub mod text_file;
 pub mod topology;

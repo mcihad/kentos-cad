@@ -1,3 +1,4 @@
+import { lookOfDimension } from '../model/annotationStyles';
 import type { DimensionEntity, Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { layoutDimension, type DimensionGeom } from '../model/geom/dimension';
@@ -5,7 +6,7 @@ import { baselineDimension, continueDimension } from '../model/ops/construct';
 import type { ViewTransform } from '../viewport/Camera';
 import { ringMark } from './constructPreview';
 import { PointInputTool } from './drawTools';
-import { drawTag, strokePath } from './preview';
+import { drawTag, strokeLayout } from './preview';
 import type { ToolPointer } from './Tool';
 
 /**
@@ -41,7 +42,16 @@ export function forgetDimension(): void {
 /** Whether a dimension can be a base: measured along a line. */
 const isBase = (e: Entity | undefined): e is DimensionEntity => e?.kind === 'dimension' && (e.style === undefined || e.style === 'aligned' || e.style === 'linear');
 
-const geomOf = (e: DimensionEntity): DimensionGeom => ({ a: e.a, b: e.b, offset: e.offset, height: e.height, ...(e.style && { style: e.style }), ...(e.angle !== undefined && { angle: e.angle }) });
+/** A base's geometry and its style and look: the next ones are written in them (AutoCAD's DIMCONTINUEMODE 1, docs/adr/0183 §4). */
+const geomOf = (e: DimensionEntity): DimensionGeom => ({
+  a: e.a,
+  b: e.b,
+  offset: e.offset,
+  height: e.height,
+  ...(e.style && { style: e.style }),
+  ...(e.angle !== undefined && { angle: e.angle }),
+  ...lookOfDimension(e),
+});
 
 abstract class DimensionAlongTool extends PointInputTool {
   protected abstract readonly verb: string;
@@ -101,7 +111,7 @@ abstract class DimensionAlongTool extends PointInputTool {
     if (!out) return;
     rememberDimension(this.ctx.doc.uidOf(out.ids[0]), style);
     this.count++;
-    this.ctx.log.success(`${this.verb} eklendi: ${this.ctx.view.dimensionText(l)}`);
+    this.ctx.log.success(`${this.verb} eklendi: ${this.ctx.view.dimensionText(l, lookOfDimension(g))}`);
     this.advance(p);
   }
 
@@ -183,8 +193,8 @@ abstract class DimensionAlongTool extends PointInputTool {
     const d = this.next(this.hover);
     const l = d && layoutDimension(d);
     if (!l) return;
-    for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color: pal.accent });
-    drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l)], pal.accent, pal.labelHalo);
+    strokeLayout(g, view, l, pal.accent);
+    drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l, lookOfDimension(d))], pal.accent, pal.labelHalo);
     this.drawTracking(g, view);
   }
 

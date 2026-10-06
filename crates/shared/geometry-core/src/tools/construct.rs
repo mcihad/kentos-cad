@@ -193,6 +193,7 @@ fn linear_through(
         c: None,
         za: None,
         zb: None,
+        look: base.look.clone(),
     };
     layout_dimension(&d).map(|_| d)
 }
@@ -337,6 +338,7 @@ mod tests {
             c: None,
             za: None,
             zb: None,
+            look: Default::default(),
         }
     }
 

@@ -230,7 +230,7 @@ describe.skipIf(!loader)('DXF WASM module', () => {
   });
 
   // Both platforms write the same bytes (crates/shared/formats/tests/dxf_write.rs; scripts/fixtures/dxf_write_reference.py checks them).
-  it.each(['blocks', 'texts', 'leaders', 'dimensions'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
+  it.each(['blocks', 'texts', 'leaders', 'dimensions', 'styles'])('writes the %s fixture to its committed bytes, as the native writer does', async (name) => {
     const w = await load();
     const out = w.writeDxf(new TextDecoder().decode(fixture(`dxf-write/${name}.input.json`)));
     const bytes = out.takeBytes();
@@ -328,6 +328,65 @@ describe.skipIf(!loader)('DXF WASM module', () => {
     expect(bare(r.entities)).toHaveLength(7);
     expect(bare(r.entities)).toEqual(bare(input.entities));
     expect(r.report.notes).toEqual([]);
+  });
+
+  // docs/adr/0183 §7: the styles go out as STYLE and DIMSTYLE records and come back under the reader's ids, every face
+  // and look through the columns (crates/shared/formats/tests/dxf_write.rs has the same).
+  it('reads its own styles back with every face and look', async () => {
+    const w = await load();
+    const input = JSON.parse(new TextDecoder().decode(fixture('dxf-write/styles.input.json'))) as DxfWriteInput;
+    const r = imported(w.readDxf(fixture('dxf-write/styles.dxf'), JSON.stringify({ maxEntities: 0 }), quiet));
+    expect((r.textStyles ?? []).map((s) => s.name)).toEqual(['Ada no', 'Yol adı', 'Not']);
+    expect((r.dimensionStyles ?? []).map((s) => s.name)).toEqual(['Mimari', 'Kadastro', 'Noktalı', 'Açık', 'Oksuz']);
+    const given = new Map([...(input.textStyles ?? []), ...(input.dimensionStyles ?? [])].map((s) => [s.name, s.id]));
+    const ids = new Map([...(r.textStyles ?? []), ...(r.dimensionStyles ?? [])].map((s) => [s.id, given.get(s.name)]));
+    const ours = (entities: readonly Entity[]) =>
+      entities.flatMap((x) => {
+        if (x.kind !== 'text' && x.kind !== 'dimension') return [];
+        const { id: _id, layerId: _layer, ...rest } = x as Entity & { textStyle?: string; dimStyle?: string };
+        if (rest.textStyle) rest.textStyle = ids.get(rest.textStyle) ?? rest.textStyle;
+        if (rest.dimStyle) rest.dimStyle = ids.get(rest.dimStyle) ?? rest.dimStyle;
+        return [rest];
+      });
+    expect(ours(r.entities)).toEqual(ours(input.entities));
+    expect(r.report.notes).toEqual([]);
+  });
+
+  // docs/adr/0183 §7: another program's styles (crates/shared/formats/tests/all/dxf.rs works the whole file out by hand).
+  it("reads another program's styles as the project's, Standard as Standart", async () => {
+    const w = await load();
+    const r = imported(w.readDxf(fixture('styles.dxf'), JSON.stringify({ maxEntities: 0, scale: 500 }), quiet));
+    expect((r.textStyles ?? []).map((s) => [s.id, s.name, s.font])).toEqual([
+      ['dxf-text-1', 'ADA', 'arimo'],
+      ['dxf-text-2', 'YOL', 'barlow'],
+      ['dxf-text-3', 'NOT', 'courier-prime'],
+      ['dxf-text-4', 'Başlık', 'barlow'],
+    ]);
+    expect((r.textStyles ?? [])[1]).toMatchObject({ height: 2.5, widthFactor: 0.8, oblique: 15, fontFile: 'romans.shx' });
+    const texts = r.entities.filter((e) => e.kind === 'text') as (Entity & { textStyle?: string; font?: string; bold?: boolean; oblique?: number })[];
+    expect(texts.map((t) => [t.textStyle ?? null, t.font ?? null, t.bold ?? false, t.oblique ?? null])).toEqual([
+      [null, null, false, null],
+      ['dxf-text-1', 'arimo', true, null],
+      ['dxf-text-1', 'arimo', true, 10],
+      ['dxf-text-2', 'barlow', false, 15],
+      ['dxf-text-3', 'courier-prime', false, null],
+      ['dxf-text-4', 'barlow', true, null],
+      [null, null, false, null],
+    ]);
+    expect((r.dimensionStyles ?? []).map((s) => [s.name, s.height, s.arrow ?? null])).toEqual([
+      ['KADASTRO', 6, null],
+      ['NOKTA', 5, 'dot'],
+      ['OZEL', 5, 'closed'],
+      ['YOK', 4, 'none'],
+    ]);
+    const dims = r.entities.filter((e) => e.kind === 'dimension') as (Entity & { dimStyle?: string; arrow?: string; decimals?: number })[];
+    expect(dims.map((d) => [d.dimStyle ?? null, d.arrow ?? null, d.decimals ?? null])).toEqual([
+      ['dxf-dim-1', null, 3],
+      ['dxf-dim-2', 'dot', 1],
+      ['dxf-dim-3', 'closed', null],
+      ['dxf-dim-4', 'none', null],
+      [null, 'closed', null],
+    ]);
   });
 
   it('says how far a read is, to its end', async () => {

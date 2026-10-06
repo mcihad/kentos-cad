@@ -139,6 +139,19 @@ pub trait Stages {
     fn back(&mut self, _cx: &mut Context<'_>) -> bool {
         false
     }
+    /// The values an option offers in its menu in the stages (Hızlı ölçü's
+    /// Stil, docs/adr/0183 §4); none by default.
+    fn option_choices(&self, _key: &str) -> Vec<crate::tool::OptionChoice> {
+        Vec::new()
+    }
+    /// One of `option_choices` chosen, as its key and value typed.
+    fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {
+        false
+    }
+    /// Whether the stage asks for words (Hızlı ölçü's style name, docs/adr/0183 §4).
+    fn takes_words(&self) -> bool {
+        false
+    }
     /// Lines and marks drawn with the ghosts, not in place of them (Yol
     /// boyunca dizi: the path and where the copies start).
     fn overlay(&self) -> Preview {
@@ -417,6 +430,26 @@ impl<S: Stages> Tool for Modify<S> {
         let flow = self.stages.point(p, cx);
         self.after(flow, cx);
         true
+    }
+
+    fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
+        if self.picking {
+            return Vec::new();
+        }
+        self.stages.option_choices(key)
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if self.picking {
+            return false;
+        }
+        let taken = self.stages.choose_option(key, typed, cx);
+        self.refresh(cx);
+        taken
+    }
+
+    fn takes_words(&self) -> bool {
+        !self.picking && self.stages.takes_words()
     }
 
     /// Picking with something selected: on to the stages; picking with

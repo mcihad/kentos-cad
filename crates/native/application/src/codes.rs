@@ -124,6 +124,12 @@ pub const INVALID_HEIGHT: &str = "invalid_height";
 pub const INVALID_WIDTH_FACTOR: &str = "invalid_width_factor";
 /// A multi-line text's box width, line spacing or letter formats out of their rules (docs/adr/0182 §6).
 pub const INVALID_PARAGRAPH: &str = "invalid_paragraph";
+/// A text's face or a dimension's look out of its rules: bold, italic or a
+/// slant without a typeface, a slant or a size out of its bounds, too many
+/// decimals, a prefix or suffix that cannot be written (docs/adr/0183 §9).
+pub const INVALID_STYLE: &str = "invalid_style";
+/// A text or dimension style id the project does not have (docs/adr/0183 §9).
+pub const UNKNOWN_STYLE: &str = "unknown_style";
 /// A dimension the core cannot draw, or a field its kind does not take
 /// (a slope's elevations elsewhere, an ordinate's axis but 0 or 90; docs/adr/0147 §6).
 pub const INVALID_DIMENSION: &str = "invalid_dimension";

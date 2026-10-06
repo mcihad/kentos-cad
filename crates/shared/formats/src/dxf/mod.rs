@@ -22,6 +22,7 @@ mod justify;
 mod leaders;
 mod lexer;
 mod strings;
+mod styles;
 mod writer;
 pub mod xdata;
 
@@ -282,11 +283,21 @@ impl<'a> Reader<'a> {
                 "STYLE" => {
                     let h = g(40).and_then(|x| parse_real(x.text())).unwrap_or(0.0);
                     self.lib.style_heights.insert(name().to_uppercase(), h);
+                    // The style itself (docs/adr/0183 §7), and its handle for a DIMSTYLE's DIMTXSTY.
+                    if let Some(handle) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
+                        self.lib.style_handles.insert(handle, name().to_uppercase());
+                    }
+                    self.lib
+                        .text_records
+                        .insert(name().to_uppercase(), styles::style_record(&groups, self.dec));
                 }
-                // A leader's arrow size and arrow block (docs/adr/0146 §8).
+                // A leader's arrow size and arrow block (docs/adr/0146 §8); the style itself (docs/adr/0183 §7).
                 "DIMSTYLE" => {
                     let style = leaders::table_style(&groups);
                     self.lib.dim_styles.insert(name().to_uppercase(), style);
+                    self.lib
+                        .dim_records
+                        .insert(name().to_uppercase(), (name(), styles::dim_record(&groups, self.dec)));
                 }
                 "BLOCK_RECORD" => {
                     if let Some(h) = g(5).and_then(|x| u64::from_str_radix(x.text(), 16).ok()) {
@@ -529,6 +540,7 @@ fn read_once(
     }
     let lib = std::mem::take(&mut rd.lib);
     let mut em = Emitter::new(&lib, out, opts.explode_blocks);
+    em.project_font = opts.drawing_font.unwrap_or(kentos_contracts::DrawingFont::Barlow);
     for (kind, reason, line) in block_skips {
         em.out.report.skip(&kind, &reason, line);
     }
@@ -575,6 +587,8 @@ fn read_once(
     } else {
         em.keep_used(defs)
     };
+    let (text_used, dim_used, project_font) =
+        (std::mem::take(&mut em.text_used), std::mem::take(&mut em.dim_used), em.project_font);
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();
@@ -647,6 +661,62 @@ fn read_once(
             units::bounds(b, scale);
         }
     }
+    // The styles the objects follow (docs/adr/0183 §7): their sizes paper mm at the project's scale.
+    let plot = opts.scale.filter(|s| s.is_finite() && *s > 0.0).unwrap_or(1000.0);
+    let metres = |x: f64| scale.apply(x);
+    let mut text_styles = Vec::new();
+    for (i, key) in text_used.iter().enumerate() {
+        let Some(r) = lib.text_records.get(key) else { continue };
+        let (style, unmapped) =
+            styles::text_style(r, format!("dxf-text-{}", i + 1), project_font, &metres, plot);
+        if let Some(face) = unmapped {
+            out.report.note(
+                "Yazı stili (STYLE)",
+                &format!("“{}” stilinin yazı tipi “{face}” KentOS'ta yok; projenin yazı tipiyle alındı", r.name),
+                0,
+            );
+        }
+        text_styles.push(style);
+    }
+    let mut dimension_styles = Vec::new();
+    for (i, key) in dim_used.iter().enumerate() {
+        let Some((name, vars)) = lib.dim_records.get(key) else { continue };
+        let font = vars
+            .dimtxsty
+            .and_then(|h| lib.style_handles.get(&h))
+            .and_then(|n| lib.text_records.get(n))
+            .filter(|r| !styles::is_standard(&r.name))
+            .and_then(|r| {
+                r.kentos.as_ref().map(|k| k.font).or_else(|| {
+                    styles::family_of(r.family.as_deref().unwrap_or(&r.file))
+                        .or_else(|| styles::family_of(&r.file))
+                })
+            });
+        let (style, said) = styles::dimension_style(
+            vars,
+            format!("dxf-dim-{}", i + 1),
+            name,
+            &lib.block_records,
+            font,
+            &metres,
+            plot,
+        );
+        if let Some(block) = said.arrow {
+            out.report.note(
+                "Ölçü stili (DIMSTYLE)",
+                &format!("“{name}” stilinin ok bloğu “{block}” KentOS'ta yok; dolu ok alındı"),
+                0,
+            );
+        }
+        if let Some(f) = said.lfac {
+            out.report.note(
+                "Ölçü stili (DIMSTYLE)",
+                &format!("“{name}” stilinin ölçü çarpanı (DIMLFAC) {f}; KentOS 1, 100 (cm) ve 1000'i (mm) bilir, değer projenin biriminde yazılır"),
+                0,
+            );
+        }
+        dimension_styles.push(style);
+    }
     let mut result = ImportResult {
         entities: out.entities,
         layers,
@@ -655,6 +725,8 @@ fn read_once(
         declared_crs: None,
         view: None,
         blocks,
+        text_styles,
+        dimension_styles,
     };
     crate::import::summarise(&mut result);
     Ok(Some(result))

@@ -177,6 +177,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, _feedback: &mut dyn Feedback) -> 
                 label_of: None,
                 label_scale: None,
                 paragraph: Default::default(),
+                face: Default::default(),
             })
         })
         .collect();

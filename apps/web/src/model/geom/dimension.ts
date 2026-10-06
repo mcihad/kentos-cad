@@ -1,3 +1,4 @@
+import type { DimensionLook } from '../annotationStyles';
 import { op } from '../../wasm/core';
 import type { Vec2 } from '../geometry';
 import type { Edge } from './intersect';
@@ -27,7 +28,8 @@ import type { Edge } from './intersect';
 /** The last five came with KCAD schema 9 (docs/adr/0147): Koordinat, Yay uzunluğu, Kırıklı yarıçap, Semt, Eğim. */
 export type DimensionStyle = 'aligned' | 'linear' | 'angular' | 'radius' | 'diameter' | 'ordinate' | 'arcLength' | 'jogged' | 'azimuth' | 'slope';
 
-export interface DimensionGeom {
+/** A dimension's geometry and its look (docs/adr/0183 §3: arrowheads, sizes, the value's place), as the core lays it out. */
+export interface DimensionGeom extends DimensionLook {
   /** Measured points (radius, diameter: a is the centre, b on the circle). */
   a: Vec2;
   b: Vec2;
@@ -70,6 +72,8 @@ export interface DimensionLayout {
   pick: Edge[];
   /** Where the grip that moves the dimension line sits. */
   handle: Vec2;
+  /** A look's filled arrowheads and dots (docs/adr/0183 §3), each a ring; none for ticks and open arrows. */
+  fills?: Vec2[][];
 }
 
 export const DIMENSION_STYLE_LABEL: Record<DimensionStyle, string> = {

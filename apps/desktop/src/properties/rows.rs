@@ -761,6 +761,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .editor(number(Field::DimensionOffset(slot))),
                 );
             }
+            // Ölçü stili, a CAD project's (docs/adr/0183 §6).
+            geo.extend(style_rows(
+                doc.model.settings(),
+                false,
+                &[d.look.dim_style.as_ref()],
+                &ids,
+                locked,
+            ));
             geo.extend([
                 metres("Yazı yüksekliği", d.height).editor(number(Field::DimensionHeight(slot))),
                 Row::text("Yazı", d.text.clone().unwrap_or_default())
@@ -802,6 +810,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
         Entity::Text(t) => {
+            // Yazı stili, a CAD project's (docs/adr/0183 §6).
+            geo.extend(style_rows(
+                doc.model.settings(),
+                true,
+                &[t.face.text_style.as_ref()],
+                &ids,
+                locked,
+            ));
             geo.extend([
                 // A multi-line text's lines and formats are its editor's (a double click,
                 // docs/adr/0182 §4): here they only show, ⏎ its breaks.
@@ -953,6 +969,77 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         });
     }
     sections
+}
+
+/// Öznitelikler's Yazı stili or Ölçü stili row (docs/adr/0183 §6), a CAD
+/// project's: the style the objects follow by name (a link to a style the
+/// project no longer has shows Standart), or “Çeşitli”; choosing one applies
+/// it to them in one step “Değiştir”. On a locked layer it only shows. The
+/// web's `ui/properties/styleRows.ts`.
+fn style_rows(
+    settings: &kentos_contracts::ProjectSettings,
+    text: bool,
+    ids: &[Option<&String>],
+    slots: &[Slot],
+    locked: bool,
+) -> Vec<Row> {
+    if !kentos_interaction::styles::shown(settings) || ids.is_empty() {
+        return Vec::new();
+    }
+    let styles: Vec<(String, String)> = if text {
+        settings
+            .text_styles
+            .iter()
+            .map(|s| (s.id.clone(), s.name.clone()))
+            .collect()
+    } else {
+        settings
+            .dimension_styles
+            .iter()
+            .map(|s| (s.id.clone(), s.name.clone()))
+            .collect()
+    };
+    let name_of = |id: Option<&String>| {
+        id.and_then(|id| styles.iter().find(|(i, _)| i == id))
+            .map_or(kentos_contracts::STANDARD_STYLE.to_owned(), |(_, n)| {
+                n.clone()
+            })
+    };
+    let names: Vec<String> = ids.iter().map(|id| name_of(*id)).collect();
+    let value = if names.iter().all(|n| *n == names[0]) {
+        names[0].clone()
+    } else {
+        "Çeşitli".to_owned()
+    };
+    let pick = |label: String, id: Option<String>| Choice::Pick {
+        chosen: value == label,
+        label,
+        swatch: None,
+        icon: None,
+        enabled: true,
+        message: Message::Properties(if text {
+            Event::TextStyle(slots.to_vec(), id)
+        } else {
+            Event::DimensionStyle(slots.to_vec(), id)
+        }),
+    };
+    let items = std::iter::once(pick(kentos_contracts::STANDARD_STYLE.to_owned(), None))
+        .chain(
+            styles
+                .iter()
+                .map(|(id, name)| pick(name.clone(), Some(id.clone()))),
+        )
+        .collect();
+    let editor = Editor::Select {
+        text: value.clone(),
+        swatch: None,
+        icon: None,
+        items,
+    };
+    vec![
+        Row::text(if text { "Yazı stili" } else { "Ölçü stili" }, value)
+            .editor((!locked).then_some(editor)),
+    ]
 }
 
 /// A value that reads as a number: `12`, `-3,5` (the web's `/^-?\d+([.,]\d+)?$/`).
@@ -1266,6 +1353,16 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
                 format!("Yazılar ({})", texts.len()).into()
             },
             rows: [
+                style_rows(
+                    doc.model.settings(),
+                    true,
+                    &texts
+                        .iter()
+                        .map(|t| t.face.text_style.as_ref())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
                 text_rows(&texts, &slots, any_locked),
                 link_rows(&doc.model, &texts, &slots, any_locked),
             ]
@@ -1309,7 +1406,20 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             } else {
                 format!("Ölçüler ({})", dims.len()).into()
             },
-            rows: dimension::rows(&dims, &slots, any_locked, &f),
+            rows: [
+                style_rows(
+                    doc.model.settings(),
+                    false,
+                    &dims
+                        .iter()
+                        .map(|d| d.look.dim_style.as_ref())
+                        .collect::<Vec<_>>(),
+                    &slots,
+                    any_locked,
+                ),
+                dimension::rows(&dims, &slots, any_locked, &f),
+            ]
+            .concat(),
         });
     }
     let mut totals = Vec::new();

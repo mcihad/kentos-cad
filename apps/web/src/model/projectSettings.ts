@@ -1,16 +1,19 @@
 import { Signal, watchAll } from '../core/signal';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
+import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
 import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../contracts/generated/DrawingUnit';
 import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
+import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
+import { sanitizedDimensionStyles, sanitizedTextStyles } from './annotationStyles';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
-export type { CrsDefinition, DatumTransform, DrawingFont, DrawingUnit, SurveySettings, Workspace };
+export type { CrsDefinition, DatumTransform, DimensionStyleDef, DrawingFont, DrawingUnit, SurveySettings, TextStyleDef, Workspace };
 
 /** How many of a drawing unit make a metre (docs/adr/0165 §2). */
 export const UNIT_PER_METRE: Record<DrawingUnit, number> = { mm: 1000, cm: 100, m: 1 };
@@ -61,6 +64,10 @@ export interface ProjectSettingsData {
   survey?: SurveySettings;
   /** The project's named layer states (docs/adr/0177 §4), in the menu's order; absent: none. */
   layerStates?: LayerState[];
+  /** The project's text styles (docs/adr/0183 §2), in the list's order; absent: none (Standart only). */
+  textStyles?: TextStyleDef[];
+  /** The project's dimension styles (docs/adr/0183 §3), in the list's order; absent: none (Standart only). */
+  dimensionStyles?: DimensionStyleDef[];
 }
 
 /**
@@ -173,6 +180,10 @@ export class ProjectSettings {
   readonly survey: Signal<SurveySettings | null>;
   /** The project's named layer states, as a project keeps them (docs/adr/0177 §4; `sanitizeLayerStates`). */
   readonly layerStates: Signal<readonly LayerState[]>;
+  /** The project's text styles, as a project keeps them (docs/adr/0183 §2; `sanitizedTextStyles`). */
+  readonly textStyles: Signal<readonly TextStyleDef[]>;
+  /** The project's dimension styles, as a project keeps them (docs/adr/0183 §3; `sanitizedDimensionStyles`). */
+  readonly dimensionStyles: Signal<readonly DimensionStyleDef[]>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -194,6 +205,8 @@ export class ProjectSettings {
     this.datumTransforms = new Signal<readonly DatumTransform[]>(d.datumTransforms ?? []);
     this.survey = new Signal(sanitizeSurvey(d.survey), sameSurvey);
     this.layerStates = new Signal<readonly LayerState[]>(sanitizeLayerStates(d.layerStates ?? []));
+    this.textStyles = new Signal<readonly TextStyleDef[]>(sanitizedTextStyles(d.textStyles ?? []));
+    this.dimensionStyles = new Signal<readonly DimensionStyleDef[]>(sanitizedDimensionStyles(d.dimensionStyles ?? []));
     watchAll(
       [
         this.crs,
@@ -211,6 +224,8 @@ export class ProjectSettings {
         this.datumTransforms,
         this.survey,
         this.layerStates,
+        this.textStyles,
+        this.dimensionStyles,
       ],
       () => this.changed.update((v) => v + 1),
     );
@@ -239,6 +254,9 @@ export class ProjectSettings {
       ...(this.survey.value ? { survey: { ...this.survey.value } } : {}),
       // Written only when there are (KCAD schema 19).
       ...(this.layerStates.value.length ? { layerStates: structuredClone([...this.layerStates.value]) } : {}),
+      // Written only when there are (KCAD schema 21).
+      ...(this.textStyles.value.length ? { textStyles: structuredClone([...this.textStyles.value]) } : {}),
+      ...(this.dimensionStyles.value.length ? { dimensionStyles: structuredClone([...this.dimensionStyles.value]) } : {}),
     };
   }
 
@@ -284,6 +302,8 @@ export class ProjectSettings {
       datumTransforms: data.datumTransforms ?? [],
       survey: data.survey ?? null,
       layerStates: data.layerStates ?? [],
+      textStyles: data.textStyles ?? [],
+      dimensionStyles: data.dimensionStyles ?? [],
     });
     this.workspace.set(typeOf(data.workspace));
     this.drawingUnit.set(data.drawingUnit ?? 'm');
@@ -320,6 +340,18 @@ export class ProjectSettings {
     if (data.datumTransforms !== undefined) this.datumTransforms.set(data.datumTransforms);
     if (data.survey !== undefined) this.survey.set(sanitizeSurvey(data.survey));
     if (data.layerStates !== undefined) this.layerStates.set(sanitizeLayerStates(data.layerStates));
+    if (data.textStyles !== undefined) this.textStyles.set(sanitizedTextStyles(data.textStyles));
+    if (data.dimensionStyles !== undefined) this.dimensionStyles.set(sanitizedDimensionStyles(data.dimensionStyles));
+  }
+
+  /** The project's text style `id`, or null (Standart, or one it no longer has). */
+  textStyle(id: string | undefined): TextStyleDef | null {
+    return id === undefined ? null : (this.textStyles.value.find((s) => s.id === id) ?? null);
+  }
+
+  /** The project's dimension style `id`, or null (Standart, or one it no longer has). */
+  dimensionStyle(id: string | undefined): DimensionStyleDef | null {
+    return id === undefined ? null : (this.dimensionStyles.value.find((s) => s.id === id) ?? null);
   }
 }
 

@@ -808,7 +808,7 @@ fn nested_blocks_that_draw_nothing_cannot_stall_the_reader() {
     let opts = DxfReadOptions {
         max_entities: 1000,
         explode_blocks: true,
-        unit: None,
+        ..DxfReadOptions::default()
     };
     let r = dxf::read(&bytes, &opts).expect("read");
     assert!(t0.elapsed().as_secs() < 5);
@@ -1814,5 +1814,276 @@ fn an_mtext_is_one_text_with_its_lines_and_formats() {
     assert_eq!(
         skipped(&r, "Çok satırlı yazı (MTEXT)").as_deref(),
         Some("boş yazı")
+    );
+}
+
+/// Another program's text and dimension styles (`styles.dxf`, docs/adr/0183
+/// §7), at 1:500 and the project's typeface Barlow: the styles the objects
+/// follow, numbered as met, their sizes paper mm; Standard is Standart (no
+/// style, no face); a style the file lacks gives nothing. Worked out by hand
+/// from the file and the ADR's rules.
+#[test]
+fn another_programs_styles_come_in_as_the_projects() {
+    use kentos_contracts::{
+        DimensionArrow, DimensionLook, DimensionStyleDef, DimensionTextPlace, DrawingFont,
+        DrawingUnit, TextFace, TextStyleDef,
+    };
+    let r = dxf::read(
+        &fixture("styles.dxf"),
+        &DxfReadOptions {
+            scale: Some(500.0),
+            ..DxfReadOptions::default()
+        },
+    )
+    .expect("reads");
+    let text = |id: &str, name: &str| TextStyleDef {
+        id: id.into(),
+        name: name.into(),
+        font: DrawingFont::Barlow,
+        bold: false,
+        italic: false,
+        oblique: None,
+        height: None,
+        width_factor: None,
+        font_file: None,
+    };
+    assert_eq!(
+        r.text_styles,
+        [
+            TextStyleDef {
+                font: DrawingFont::Arimo,
+                bold: true,
+                font_file: Some("arial.ttf".into()),
+                ..text("dxf-text-1", "ADA")
+            },
+            // romans.shx is no typeface of KentOS's: the project's; 1.25 m at 1:500 is 2.5 mm.
+            TextStyleDef {
+                oblique: Some(15.0),
+                height: Some(2.5),
+                width_factor: Some(0.8),
+                font_file: Some("romans.shx".into()),
+                ..text("dxf-text-2", "YOL")
+            },
+            TextStyleDef {
+                font: DrawingFont::CourierPrime,
+                italic: true,
+                font_file: Some("couri.ttf".into()),
+                ..text("dxf-text-3", "NOT")
+            },
+            TextStyleDef {
+                bold: true,
+                font_file: Some("Barlow-Bold.ttf".into()),
+                ..text("dxf-text-4", "Başlık")
+            },
+        ]
+    );
+    let faces: Vec<(String, TextFace)> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some((t.text.clone(), t.face.clone())),
+            _ => None,
+        })
+        .collect();
+    let face = |style: Option<&str>, font: Option<DrawingFont>| TextFace {
+        text_style: style.map(str::to_owned),
+        font,
+        ..TextFace::default()
+    };
+    assert_eq!(
+        faces,
+        [
+            ("Standart yazı".to_owned(), TextFace::default()),
+            (
+                "Ada 101".to_owned(),
+                TextFace {
+                    bold: true,
+                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arimo))
+                }
+            ),
+            // Its own slant (51) over its style's.
+            (
+                "Ada 102".to_owned(),
+                TextFace {
+                    bold: true,
+                    oblique: Some(10.0),
+                    ..face(Some("dxf-text-1"), Some(DrawingFont::Arimo))
+                }
+            ),
+            (
+                "Atatürk Caddesi".to_owned(),
+                TextFace {
+                    oblique: Some(15.0),
+                    ..face(Some("dxf-text-2"), Some(DrawingFont::Barlow))
+                }
+            ),
+            (
+                "Not\nikinci satır".to_owned(),
+                TextFace {
+                    italic: true,
+                    ..face(Some("dxf-text-3"), Some(DrawingFont::CourierPrime))
+                }
+            ),
+            (
+                "Pafta".to_owned(),
+                TextFace {
+                    bold: true,
+                    ..face(Some("dxf-text-4"), Some(DrawingFont::Barlow))
+                }
+            ),
+            ("Kayıp stil".to_owned(), TextFace::default()),
+        ]
+    );
+    // Sizes in paper mm: DIMSCALE times the drawing units, 2 mm a metre at 1:500.
+    let plain = |id: &str, name: &str, height: f64| DimensionStyleDef {
+        id: id.into(),
+        name: name.into(),
+        height,
+        arrow: None,
+        arrow_size: None,
+        ext_offset: None,
+        ext_beyond: None,
+        text_gap: None,
+        text_place: None,
+        decimals: None,
+        unit: None,
+        prefix: None,
+        suffix: None,
+        font: None,
+    };
+    assert_eq!(
+        r.dimension_styles,
+        [
+            DimensionStyleDef {
+                // Ticks: a 45° tick of √2 × DIMTSZ.
+                arrow_size: Some(2.0 * std::f64::consts::SQRT_2),
+                ext_offset: Some(1.0),
+                ext_beyond: Some(2.0),
+                text_gap: Some(1.6),
+                text_place: Some(DimensionTextPlace::Centre),
+                decimals: Some(3),
+                unit: Some(DrawingUnit::Cm),
+                prefix: Some("L=".into()),
+                font: Some(DrawingFont::Arimo),
+                ..plain("dxf-dim-1", "KADASTRO", 6.0)
+            },
+            DimensionStyleDef {
+                arrow: Some(DimensionArrow::Dot),
+                arrow_size: Some(2.0),
+                decimals: Some(2),
+                ..plain("dxf-dim-2", "NOKTA", 5.0)
+            },
+            DimensionStyleDef {
+                arrow: Some(DimensionArrow::Closed),
+                arrow_size: Some(4.0),
+                ..plain("dxf-dim-3", "OZEL", 5.0)
+            },
+            DimensionStyleDef {
+                arrow: Some(DimensionArrow::None),
+                text_gap: Some(1.0),
+                ..plain("dxf-dim-4", "YOK", 4.0)
+            },
+        ]
+    );
+    let looks: Vec<(f64, DimensionLook)> = r
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Dimension(d) => Some((d.height, d.look.clone())),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(looks.len(), 5);
+    let near = |a: Option<f64>, b: f64| a.is_some_and(|a| (a - b).abs() < 1e-12);
+    // KADASTRO: its sizes times the value's height (DIMTXT × DIMSCALE, 3 m).
+    let (h, k) = &looks[0];
+    assert_eq!(*h, 3.0);
+    assert!(near(k.arrow_size, std::f64::consts::SQRT_2 / 3.0), "{k:?}");
+    assert!(
+        near(k.ext_offset, 0.5 / 3.0)
+            && near(k.ext_beyond, 1.0 / 3.0)
+            && near(k.text_gap, 0.8 / 3.0),
+        "{k:?}"
+    );
+    assert_eq!(
+        DimensionLook {
+            arrow_size: None,
+            ext_offset: None,
+            ext_beyond: None,
+            text_gap: None,
+            ..k.clone()
+        },
+        DimensionLook {
+            dim_style: Some("dxf-dim-1".into()),
+            text_place: Some(DimensionTextPlace::Centre),
+            decimals: Some(3),
+            unit: Some(DrawingUnit::Cm),
+            prefix: Some("L=".into()),
+            font: Some(DrawingFont::Arimo),
+            ..DimensionLook::default()
+        }
+    );
+    // NOKTA with its own DIMDEC 1 (DSTYLE).
+    assert_eq!(
+        looks[1],
+        (
+            2.5,
+            DimensionLook {
+                dim_style: Some("dxf-dim-2".into()),
+                arrow: Some(DimensionArrow::Dot),
+                arrow_size: Some(0.4),
+                decimals: Some(1),
+                ..DimensionLook::default()
+            }
+        )
+    );
+    assert_eq!(
+        looks[2],
+        (
+            2.5,
+            DimensionLook {
+                dim_style: Some("dxf-dim-3".into()),
+                arrow: Some(DimensionArrow::Closed),
+                arrow_size: Some(0.8),
+                ..DimensionLook::default()
+            }
+        )
+    );
+    assert_eq!(
+        looks[3],
+        (
+            2.0,
+            DimensionLook {
+                dim_style: Some("dxf-dim-4".into()),
+                arrow: Some(DimensionArrow::None),
+                text_gap: Some(0.25),
+                ..DimensionLook::default()
+            }
+        )
+    );
+    // Standard is Standart: no style, its record's look the dimension's own (a filled arrow as tall as the value).
+    assert_eq!(
+        looks[4],
+        (
+            2.5,
+            DimensionLook {
+                arrow: Some(DimensionArrow::Closed),
+                ..DimensionLook::default()
+            }
+        )
+    );
+    let notes: Vec<String> = r
+        .report
+        .notes
+        .iter()
+        .filter(|n| n.what.contains("stili"))
+        .map(|n| format!("{}: {}", n.what, n.reason))
+        .collect();
+    assert_eq!(
+        notes,
+        [
+            "Yazı stili (STYLE): “YOL” stilinin yazı tipi “romans.shx” KentOS'ta yok; projenin yazı tipiyle alındı",
+            "Ölçü stili (DIMSTYLE): “OZEL” stilinin ok bloğu “_BoxFilled” KentOS'ta yok; dolu ok alındı",
+        ]
     );
 }

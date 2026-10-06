@@ -331,6 +331,9 @@ pub const PORTED: &[&str] = &[
     "style.layerStyle",
     // Stil yöneticisi, and symbols given to the selected objects or taken away (docs/adr/0092).
     "style.manager",
+    // Yazı stilleri and Ölçü stilleri (docs/adr/0183 §5).
+    "style.textStyles",
+    "style.dimensionStyles",
     "style.assign",
     "style.clearSymbol",
     // Lejant, saved as a PNG on white paper (docs/adr/0093).

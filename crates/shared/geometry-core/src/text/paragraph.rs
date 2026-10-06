@@ -98,6 +98,8 @@ pub struct Paragraph<'a> {
     pub line_spacing: f64,
     pub along: f64,
     pub font: Font,
+    /// Every letter bold: the text's own bold (docs/adr/0183 §2), its runs' on top.
+    pub bold: bool,
 }
 
 /// A letter's advance in thousandths of an em (§2): the bold table's for a
@@ -110,7 +112,7 @@ pub fn advance(font: Font, c: char, bold: bool, script: bool) -> f64 {
 
 /// Each letter's width in thousandths of an em at the text's height (bold from the bold table, raised or
 /// lowered at 0.6).
-fn advances(letters: &[char], runs: &[Run], font: Font) -> Vec<f64> {
+fn advances(letters: &[char], runs: &[Run], font: Font, all_bold: bool) -> Vec<f64> {
     let mut out = Vec::with_capacity(letters.len());
     let mut run = runs.iter().peekable();
     for (i, &c) in letters.iter().enumerate() {
@@ -118,7 +120,7 @@ fn advances(letters: &[char], runs: &[Run], font: Font) -> Vec<f64> {
             run.next();
         }
         let format = run.peek().filter(|r| (r.start as usize) <= i);
-        let bold = format.is_some_and(|r| r.bold);
+        let bold = all_bold || format.is_some_and(|r| r.bold);
         let a = f64::from(advance_of(font, c, bold));
         out.push(if format.is_some_and(|r| r.script.is_some()) {
             a * SCRIPT_SIZE
@@ -132,7 +134,7 @@ fn advances(letters: &[char], runs: &[Run], font: Font) -> Vec<f64> {
 /// The text's lines and box (§2).
 pub fn lay_out(p: &Paragraph<'_>) -> Layout {
     let letters: Vec<char> = p.text.chars().collect();
-    let adv = advances(&letters, p.runs, p.font);
+    let adv = advances(&letters, p.runs, p.font, p.bold);
     let scale = |sum: f64| sum / 1000.0 * p.height * p.width_factor;
     // From +0: an empty line is 0 wide, not −0 (a float sum of nothing is −0).
     let width_of = |from: usize, to: usize| scale(adv[from..to].iter().fold(0.0, |s, a| s + a));
@@ -394,6 +396,7 @@ mod tests {
             line_spacing: 1.0,
             along: 0.0,
             font,
+            bold: false,
         });
         assert_eq!(laid.lines.len(), 1);
         assert_eq!(

@@ -171,6 +171,7 @@ impl App {
                         layout.prefix,
                         layout.unit,
                         layout.value,
+                        &d.look,
                     ),
                     hint: "Enter: kaydet · Esc: vazgeç",
                     editing: Some(slot),

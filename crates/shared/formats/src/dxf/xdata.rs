@@ -24,6 +24,8 @@
 //! 1002 {  1000 arrow    <string>                 1002 }   a LEADER's arrowhead DXF cannot name ("open", "dot"; docs/adr/0146 §8)
 //! 1002 {  1000 note     <string>                 1002 }   a LEADER's note, exactly (when its MTEXT's notation cannot say it)
 //! 1002 {  1000 noteturn 1040 <degrees>           1002 }   a LEADER's note's turn, exactly (its MTEXT's direction rounds it)
+//! 1002 {  1000 face     <json>                   1002 }   a TEXT's or an MTEXT's style and face as KentOS writes them (docs/adr/0183 §7)
+//! 1002 {  1000 look     <json>                   1002 }   a DIMENSION's style and look, its style's id and its value's writing
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
 //!         [1002 { 1000 za 1040 <metres> 1002 }] [1002 { 1000 zb 1040 <metres> 1002 }]
@@ -86,7 +88,16 @@ pub struct Meta {
     pub arrow: Option<String>,
     pub note: Option<String>,
     pub note_turn: Option<f64>,
+    /// A text's style and face, a dimension's style and look, as the
+    /// contract's JSON (docs/adr/0183 §7): what STYLE, DIMSTYLE and DSTYLE
+    /// say only in part (the style's id, open and dot arrowheads, a unit).
+    pub face: Option<String>,
+    pub look: Option<String>,
 }
+
+/// A STYLE record's `face` when KentOS wrote it for a styleless face
+/// (`KENTOS_‹AİLE›`): texts naming it follow no style of the project.
+pub const STYLELESS: &str = "styleless";
 
 /// What a DXF dimension does not say of a KentOS dimension. The reader
 /// takes it only while the DIMENSION's own points agree with it.
@@ -257,6 +268,12 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(t) = meta.note_turn {
         item("noteturn", &mut out, |o| o.push((1040, dxf_real(t))));
+    }
+    if let Some(f) = &meta.face {
+        item("face", &mut out, |o| string(f, o));
+    }
+    if let Some(l) = &meta.look {
+        item("look", &mut out, |o| string(l, o));
     }
     if let Some(d) = &meta.dimension {
         item("dimension", &mut out, |o| {
@@ -468,6 +485,8 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "mask" => m.mask = true,
             "arrow" => m.arrow = text(a).or(m.arrow),
             "note" => m.note = text(a).or(m.note),
+            "face" => m.face = text(a).or(m.face),
+            "look" => m.look = text(a).or(m.look),
             "noteturn" => m.note_turn = real(a).or(m.note_turn),
             "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
@@ -542,6 +561,8 @@ mod tests {
             arrow: Some("dot".into()),
             note: Some("Ø150 \\ {PVC}".into()),
             note_turn: Some(29.999_999_999_999_996),
+            face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
+            look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

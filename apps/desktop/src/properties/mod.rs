@@ -83,6 +83,10 @@ pub enum Event {
     /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
     SelectObject(Slot),
     Unlink(Vec<Slot>),
+    /// Yazı stili ▾ and Ölçü stili ▾ (docs/adr/0183 §6): the style applied
+    /// to the objects; none, Standart.
+    TextStyle(Vec<Slot>, Option<String>),
+    DimensionStyle(Vec<Slot>, Option<String>),
 }
 
 /// The value a cell edits.
@@ -425,6 +429,10 @@ impl App {
             },
             Event::TextAlign(slots, to) => properties::realign_texts(model, &slots, to),
             Event::TextMask(slots, on) => properties::set_text_mask(model, &slots, on),
+            Event::TextStyle(slots, id) => properties::apply_text_style(model, &slots, id.as_deref()),
+            Event::DimensionStyle(slots, id) => {
+                properties::apply_dimension_style(model, &slots, id.as_deref())
+            }
             Event::LeaderArrow(slots, arrow) => properties::change_leaders(model, &slots, |l| {
                 (l.arrow != arrow).then(|| LeaderEntity { arrow, ..l.clone() })
             }),

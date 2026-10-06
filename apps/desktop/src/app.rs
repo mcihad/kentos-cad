@@ -163,6 +163,9 @@ pub enum Dialog {
     LayerMerge,
     /// Katman durumları (layer_states.rs, docs/adr/0177 §4); the window is `App::layer_states_window`.
     LayerStates,
+    /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
+    /// `App::annotation_styles`.
+    AnnotationStyles,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
     LayerPurge,
     /// Katman listesi (layer_list.rs, docs/adr/0177 §6); the window is `App::layer_list`.
@@ -311,6 +314,7 @@ pub enum Message {
     LayerMerge(crate::layer_merge::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
     LayerStates(crate::layer_states::Event),
+    AnnotationStyles(crate::annotation_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
     /// Veri karşılaştır's window (data_compare.rs).
@@ -353,7 +357,7 @@ pub enum Message {
     PromptOption(&'static str),
     /// A value an option offers, chosen from its menu: the option's key and
     /// what typing the value gives (Yazı's Hiza, docs/adr/0145 §6).
-    PromptChoice(&'static str, &'static str),
+    PromptChoice(&'static str, String),
     /// Nokta hesapla: a construction over the running command (docs/adr/0083).
     PointCalc(kentos_interaction::point_calc::CalcKind),
     /// A key press no text box captured (keys.rs); routed by ADR 0018.
@@ -623,6 +627,8 @@ pub struct App {
     pub(crate) layer_merge: Option<crate::layer_merge::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
     pub(crate) layer_states_window: Option<crate::layer_states::Window>,
+    /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
+    pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
     pub(crate) layer_purge: Option<crate::layer_purge::Window>,
     /// Katman listesi's window (layer_list.rs, docs/adr/0177 §6).
@@ -861,6 +867,7 @@ impl App {
             isolated_layers: Vec::new(),
             layer_merge: None,
             layer_states_window: None,
+            annotation_styles: None,
             layer_purge: None,
             layer_list: None,
             data_compare: None,
@@ -1207,7 +1214,7 @@ impl App {
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
-            Message::PromptChoice(key, typed) => return self.prompt_choice(key, typed),
+            Message::PromptChoice(key, typed) => return self.prompt_choice(key, &typed),
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => {
@@ -1242,6 +1249,7 @@ impl App {
             Message::FindReplace(event) => return self.find_replace_event(event),
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
+            Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
             Message::DataCompare(event) => return self.data_compare_event(event),
@@ -1722,6 +1730,11 @@ impl App {
             "style.layerStyle" => self.open_layer_style(None),
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
+            // Yazı ve ölçü stilleri (docs/adr/0183 §5).
+            "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
+            "style.dimensionStyles" => {
+                self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)
+            }
             // Şablonla çiz without a template: the Şablonlar panel, to choose one (templates_panel.rs).
             "template.draw" | "template.panel" | "template.apply" => {
                 return self.show_templates_panel();

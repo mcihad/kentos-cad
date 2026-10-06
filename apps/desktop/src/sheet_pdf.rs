@@ -47,7 +47,8 @@ fn text_of(l: &MapLabel, font: &str) -> MapText {
         size: l.size,
         rotation: l.rotation,
         color: hex_of(l.color),
-        font: font.to_owned(),
+        // A text's own typeface (docs/adr/0183 §2), else the project's.
+        font: l.font.map_or(font, |f| f.id()).to_owned(),
         weight: l.weight,
         italic: l.italic,
         anchor: l.anchor,

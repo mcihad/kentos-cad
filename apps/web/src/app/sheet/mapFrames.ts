@@ -356,7 +356,7 @@ export class MapFrames {
     const spots = labelSpots(this.ctx, prim, cam.visibleBounds(), pxPerM / k);
     g.save();
     g.scale(k, k);
-    drawLabels(g, doc, cam, palette, spots, (l) => this.ctx.view.dimensionText(l), (b) => geometry.blockPieces(b));
+    drawLabels(g, doc, cam, palette, spots, (l, look) => this.ctx.view.dimensionText(l, look), (b) => geometry.blockPieces(b));
     g.restore();
   }
 }

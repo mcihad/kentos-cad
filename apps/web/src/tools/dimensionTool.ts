@@ -11,8 +11,10 @@ import { arcLengthEnds, edgeArms, radialDimension, vertexArms } from './construc
 import { parseLength, parseNumber } from './coordinateInput';
 import { rememberDimension } from './dimChainTools';
 import { PointInputTool } from './drawTools';
-import { drawTag, strokeGeometry, strokePath } from './preview';
-import type { ToolPointer } from './Tool';
+import { drawTag, strokeGeometry, strokeLayout, strokePath } from './preview';
+import type { OptionChoice, ToolPointer } from './Tool';
+import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, stylesShown, takeDimensionStyle } from './styleOption';
+import { lookOfDimension, type DimensionLook } from '../model/annotationStyles';
 
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
 export const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
@@ -132,6 +134,8 @@ export class DimensionTool extends PointInputTool {
   private snap: SnapHit | null = null;
   /** Doğrusal's Açı (A): the next number is the measuring direction. */
   private askingAngle = false;
+  /** Stil (S): a dimension style's name asked for (docs/adr/0183 §4). */
+  private askingStyle = false;
   /** Açı from an arc: its vertex and ends; from a circle: its centre and the point clicked on it (docs/adr/0147 §7). */
   private angleArc: { c: Vec2; a: Vec2; b: Vec2 } | null = null;
   private angleCircle: { c: Vec2; p1: Vec2 } | null = null;
@@ -163,8 +167,13 @@ export class DimensionTool extends PointInputTool {
     return !this.picksEdge && this.asking < 0;
   }
 
+  /** The value's height and the look, the dimension style's in a CAD project (docs/adr/0183 §4); else 2.5 mm and none. */
+  private styled(): { look: DimensionLook; height: number } {
+    return dimensionLookNow(this.ctx, paper(this.ctx, 2.5));
+  }
+
   private height(): number {
-    return paper(this.ctx, 2.5);
+    return this.styled().height;
   }
 
   /** Whether the next point places the dimension line (or arc, or leader). */
@@ -192,6 +201,7 @@ export class DimensionTool extends PointInputTool {
   }
 
   protected promptFor(n: number): string {
+    if (this.askingStyle) return `ölçü stilini menüden seçin ya da adını yazın [Stil (S): ${dimensionStyleName(this.ctx)}]`;
     const modes = this.fresh
       ? MODE_KEYS.filter(([m]) => m !== this.mode)
           .map(([m, k]) => `${DIMENSION_STYLE_LABEL[m]} (${k})`)
@@ -263,15 +273,22 @@ export class DimensionTool extends PointInputTool {
       default:
         step = n === 0 ? 'hizalı ölçünün ilk noktasını belirtin' : n === 1 ? 'ikinci ölçü noktasını belirtin' : 'ölçü çizgisinin yerini gösterin ya da mesafe yazın';
     }
-    // Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7).
-    const zemin = (this.fresh || this.placing) && !this.askingAngle ? `Zemin (Z): ${dimensionZemin.on ? 'açık' : 'kapalı'}` : '';
-    const all = [opts, zemin, modes].filter(Boolean).join(' / ');
+    // Stil and Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7, 0183 §4).
+    const offered = (this.fresh || this.placing) && !this.askingAngle;
+    const stil = offered && stylesShown(this.ctx) ? `Stil (S): ${dimensionStyleName(this.ctx)}` : '';
+    const zemin = offered ? `Zemin (Z): ${dimensionZemin.on ? 'açık' : 'kapalı'}` : '';
+    const all = [opts, stil, zemin, modes].filter(Boolean).join(' / ');
     return all ? `${step} [${all}]` : step;
   }
 
   protected override option(key: string): boolean {
     if (key === 'Z' && !this.askingAngle) {
       dimensionZemin.on = !dimensionZemin.on;
+      return this.changed();
+    }
+    // Stil while Zemin is offered: a CAD project's dimension styles (docs/adr/0183 §4).
+    if (key === 'S' && !this.askingAngle && stylesShown(this.ctx) && (this.fresh || this.placing)) {
+      this.askingStyle = true;
       return this.changed();
     }
     if (this.fresh) {
@@ -438,7 +455,29 @@ export class DimensionTool extends PointInputTool {
     return { a: circle.c, b, c: shown, offset, height: this.height(), style: 'jogged' };
   }
 
+  /** Stil's menu: Standart, the project's dimension styles and their window (docs/adr/0183 §4). */
+  optionChoices(key: string): readonly OptionChoice[] | null {
+    if (key !== 'S' || !stylesShown(this.ctx) || !(this.askingStyle || ((this.fresh || this.placing) && !this.askingAngle))) return null;
+    return dimensionStyleChoices(this.ctx);
+  }
+
+  /** A style's name is words: Space types a space (docs/adr/0183 §4). */
+  takesWords(): boolean {
+    return this.askingStyle;
+  }
+
+  chooseOption(key: string, typed: string): boolean {
+    if (key !== 'S' || !stylesShown(this.ctx) || !(this.askingStyle || ((this.fresh || this.placing) && !this.askingAngle))) return false;
+    if (takeDimensionStyle(this.ctx, typed)) this.askingStyle = false;
+    return this.changed();
+  }
+
   override input(text: string): boolean {
+    // A dimension style's name: one the project has none of is said, and the tool waits for another.
+    if (this.askingStyle) {
+      if (takeDimensionStyle(this.ctx, text)) this.askingStyle = false;
+      return this.changed();
+    }
     // Eğim's elevation asked for: a number, in the project's unit (docs/adr/0165 §2).
     if (this.asking >= 0) {
       const z = parseLength(this.ctx.format, text);
@@ -471,6 +510,11 @@ export class DimensionTool extends PointInputTool {
   }
 
   override confirm(): void {
+    if (this.askingStyle) {
+      this.askingStyle = false;
+      this.changed();
+      return;
+    }
     if (this.edges.length || this.circle || this.arc || this.angleArc || this.angleCircle) return this.reset();
     super.confirm();
   }
@@ -510,6 +554,7 @@ export class DimensionTool extends PointInputTool {
     this.zs = [];
     this.snap = null;
     this.askingAngle = false;
+    this.askingStyle = false;
     this.angleArc = null;
     this.angleCircle = null;
     super.reset();
@@ -521,6 +566,11 @@ export class DimensionTool extends PointInputTool {
    * keyboard alone gives the side), or the arc's radius.
    */
   private geomAt(loc: Vec2, typed?: number): DimensionGeom | null {
+    const g = this.shapeAt(loc, typed);
+    return g && { ...g, ...this.styled().look };
+  }
+
+  private shapeAt(loc: Vec2, typed?: number): DimensionGeom | null {
     const height = this.height();
     switch (this.mode) {
       case 'aligned': {
@@ -593,10 +643,11 @@ export class DimensionTool extends PointInputTool {
     const { style, ...rest } = g;
     // Written by `cad.entities.create` (step “Ekle”); a refusal (a locked layer) is said by it, nothing is added.
     const out = this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }), ...(dimensionZemin.on && { mask: true }) }]);
+    const look = lookOfDimension(g);
     if (out) {
       // Zincir ölçü and Baz ölçü continue from the newest aligned or linear one (docs/adr/0140).
       rememberDimension(this.ctx.doc.uidOf(out.ids[0]), style);
-      this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l)}`);
+      this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l, look)}`);
     }
     this.reset();
   }
@@ -610,13 +661,14 @@ export class DimensionTool extends PointInputTool {
       strokePath(g, view, [this.angleCircle.c, this.angleCircle.p1], { color: pal.snap, width: 2 });
       if (this.hover) strokePath(g, view, [this.angleCircle.c, this.hover], { color: pal.accent });
     }
+    const look = this.styled().look;
     // Kırıklı yarıçap's point on the arc: the dimension as it would be, its jog at the centre shown.
     if (this.mode === 'jogged' && this.circle && this.pts.length === 1 && this.hover) {
       const jog = this.joggedAt(this.pts[0], this.hover, 0);
-      const l = jog && layoutDimension(jog);
+      const l = jog && layoutDimension({ ...jog, ...look });
       if (l) {
-        for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color: pal.accent });
-        drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l)], pal.accent, pal.labelHalo);
+        strokeLayout(g, view, l, pal.accent);
+        drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l, look)], pal.accent, pal.labelHalo);
       }
       return;
     }
@@ -626,7 +678,7 @@ export class DimensionTool extends PointInputTool {
       if (this.pts.length === 1 && this.hover) {
         const part = arcLengthEnds(this.arc, [this.pts[0], this.hover]);
         strokeArcEnds(g, view, part, pal.accent, 3);
-        const l = part && layoutDimension({ ...part, offset: 0, height: this.height(), style: 'arcLength' });
+        const l = part && layoutDimension({ ...part, offset: 0, height: this.height(), style: 'arcLength', ...look });
         if (l) drawTag(g, view.worldToScreen(this.hover), [this.ctx.format.length(l.value)], pal.accent, pal.labelHalo);
       }
       if (!this.placing) return;
@@ -635,8 +687,8 @@ export class DimensionTool extends PointInputTool {
       const d = this.geomAt(this.hover);
       const l = d && layoutDimension(d);
       if (!l) return;
-      for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color: pal.accent });
-      drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l)], pal.accent, pal.labelHalo);
+      strokeLayout(g, view, l, pal.accent);
+      drawTag(g, view.worldToScreen(this.hover), [this.ctx.view.dimensionText(l, look)], pal.accent, pal.labelHalo);
       return;
     }
     // Eğim waiting for an elevation: nothing on the cursor (no next point is asked for).

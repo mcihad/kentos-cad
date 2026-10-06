@@ -275,6 +275,85 @@ fn core_align(a: TextAlign) -> Option<kentos_geometry_core::text::TextAlign> {
 
 /// A command's answer as the host says it: nothing but its warnings when it
 /// completed, else why not.
+/// The texts in `slots` given the project's text style `id` (none:
+/// Standart) in one step “Değiştir” (docs/adr/0183 §6): its face and width
+/// factor, its height when it fixes one (`apply_text_style`); those already
+/// in it left out. What to say: the command's refusal.
+pub fn apply_text_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -> Vec<String> {
+    let settings = doc.settings();
+    let style = id
+        .and_then(|id| settings.text_styles.iter().find(|s| s.id == id))
+        .cloned();
+    let scale = settings.plot_scale;
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let Some(Entity::Text(t)) = doc.get(slot) else {
+                return None;
+            };
+            let same = match &style {
+                Some(s) => t.face.text_style.as_deref() == Some(s.id.as_str()),
+                None => t.face.is_plain(),
+            };
+            if same {
+                return None;
+            }
+            let look = kentos_contracts::apply_text_style(
+                style.as_ref(),
+                &kentos_contracts::TextLook {
+                    face: t.face.clone(),
+                    width_factor: t.width_factor,
+                    height: t.height,
+                },
+                scale,
+            );
+            let mut t = t.clone();
+            t.face = look.face;
+            t.width_factor = look.width_factor;
+            t.height = look.height;
+            Some((slot, Entity::Text(t)))
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// The dimensions in `slots` given the project's dimension style `id`
+/// (none: Standart) in one step “Değiştir”: its look and value height
+/// (`apply_dimension_style`); those already in it left out.
+pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -> Vec<String> {
+    let settings = doc.settings();
+    let style = id
+        .and_then(|id| settings.dimension_styles.iter().find(|s| s.id == id))
+        .cloned();
+    let (look, height) =
+        kentos_contracts::apply_dimension_style(style.as_ref(), settings.plot_scale);
+    let changes: Vec<(Slot, Entity)> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let Some(Entity::Dimension(d)) = doc.get(slot) else {
+                return None;
+            };
+            let same = match &style {
+                Some(s) => d.look.dim_style.as_deref() == Some(s.id.as_str()),
+                None => d.look.is_plain(),
+            };
+            if same {
+                return None;
+            }
+            let mut d = d.clone();
+            d.look = look.clone();
+            d.height = height;
+            Some((slot, Entity::Dimension(d)))
+        })
+        .collect();
+    set_geometries(doc, &changes)
+}
+
+/// What a command's answer says: its refusal, or its warnings.
+pub(crate) fn said_of<T>(result: CommandResult<T>) -> Vec<String> {
+    said(result)
+}
+
 fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {

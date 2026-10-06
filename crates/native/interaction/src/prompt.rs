@@ -113,6 +113,22 @@ impl Prompt {
         self
     }
 
+    /// An option with its value, only when `shown` (a CAD project's Stil,
+    /// docs/adr/0183 §4).
+    pub fn option_if(
+        self,
+        shown: bool,
+        label: &'static str,
+        key: &'static str,
+        value: impl Into<String>,
+    ) -> Self {
+        if shown {
+            self.option_with(label, key, value)
+        } else {
+            self
+        }
+    }
+
     /// A chip that turns something on or off, as Ötele's do: its name alone
     /// while it is off, `İki yana (I): açık` while it is on.
     pub fn toggle(self, label: &'static str, key: &'static str, on: bool) -> Self {

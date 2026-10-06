@@ -210,6 +210,16 @@ impl Objects {
         }
     }
 
+    /// More fields of an object (a text's face, a dimension's look; docs/adr/0183).
+    pub(crate) fn fields(&mut self, id: u32, more: Value) {
+        let e = &mut self.0[id as usize - 1];
+        if let Value::Object(more) = more {
+            for (key, value) in more {
+                e[key] = value;
+            }
+        }
+    }
+
     /// An object's attributes and label.
     pub(crate) fn data(&mut self, id: u32, attrs: &[(&str, &str)], label: Option<&str>) {
         let e = &mut self.0[id as usize - 1];

@@ -120,10 +120,23 @@ impl App {
     pub(crate) fn choice_menu(&self, key: &'static str) -> Option<Menu<Message>> {
         let choices = self.session.option_choices(key);
         (!choices.is_empty()).then(|| {
-            choices.into_iter().fold(Menu::new(), |menu, c| {
-                menu.radio(c.label, c.checked, Message::PromptChoice(key, c.typed))
-                    .icon(crate::icons::from_web(Some(c.icon)))
-            })
+            choices
+                .into_iter()
+                .fold(Menu::new(), |menu, c| match c.command {
+                    // An entry that opens a window (“Yazı stilleri…”, docs/adr/0183 §4), apart.
+                    Some(command) => menu
+                        .separator()
+                        .item(c.label, Message::Run(command))
+                        .icon(crate::icons::from_web(c.icon)),
+                    None => {
+                        let menu =
+                            menu.radio(c.label, c.checked, Message::PromptChoice(key, c.typed));
+                        match c.icon {
+                            Some(name) => menu.icon(crate::icons::from_web(Some(name))),
+                            None => menu,
+                        }
+                    }
+                })
         })
     }
 

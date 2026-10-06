@@ -358,6 +358,7 @@ impl Polygonize {
             placeholder: Some("Öznitelik adı"),
             hint: Some("Enter: kaydet · Esc: vazgeç"),
             empty: false,
+            face: Default::default(),
         }));
     }
 

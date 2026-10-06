@@ -1,6 +1,8 @@
 import { Signal, type ReadonlySignal } from '../core/signal';
 import { UNIT_PER_METRE, type AngleUnit, type AreaUnit, type DrawingUnit, type Workspace } from '../model/projectSettings';
 import { fixed } from '../core/displayNumber';
+import type { DimensionLook } from '../model/annotationStyles';
+import { dimensionValue, type Measured } from '../model/dimensionValue';
 
 /** The unit fields formatting depends on (ProjectSettings satisfies it). */
 export interface UnitSettings {
@@ -201,6 +203,14 @@ export class Formatter {
   /** A slope in percent, two decimals (docs/adr/0147 §2). */
   percent(v: number): string {
     return fixed(v, 2);
+  }
+
+  /**
+   * A dimension's measured value as drawn (docs/adr/0183 §3): its look's prefix and suffix around its kind's prefix and
+   * the number; a length or coordinate in its look's unit and decimals, else the project's, without the unit.
+   */
+  dimension(m: Measured, look: Pick<DimensionLook, 'decimals' | 'unit' | 'prefix' | 'suffix'> = {}): string {
+    return dimensionValue(m, look, { unit: this.unit, lengthDecimals: this.prefs.lengthDecimals.value, angle: (a) => this.angle(a) });
   }
 
   get areaUnitLabel(): string {

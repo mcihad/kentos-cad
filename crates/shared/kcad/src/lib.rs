@@ -199,8 +199,20 @@ pub const SCHEMA_WITH_LAYER_STATES: u32 = 19;
 /// refuses a drawing that has them rather than lose its texts' formats.
 pub const SCHEMA_WITH_PARAGRAPHS: u32 = 20;
 
+/// Document schema 21 (docs/specs/kcad-v2.md §6.1): schema 20 and the named
+/// text and dimension styles, the settings' `textStyles` and
+/// `dimensionStyles`, a text's face (`textStyle`, `font`, `bold`, `italic`,
+/// `oblique`) and a dimension's look (`dimStyle`, `arrow`, `arrowSize`,
+/// `extOffset`, `extBeyond`, `textGap`, `textPlace`, `decimals`, `unit`,
+/// `prefix`, `suffix`, `font`; docs/adr/0183), in the drawing and in block
+/// definitions. A writer writes it only when the project has a style or an
+/// object one of these fields: any other drawing stays 20 or older, byte for
+/// byte; a reader of those refuses a drawing that has them rather than lose
+/// its styles.
+pub const SCHEMA_WITH_STYLES: u32 = 21;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 19] = [
+pub const SCHEMAS: [u32; 20] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -220,6 +232,7 @@ pub const SCHEMAS: [u32; 19] = [
     SCHEMA_WITH_LINKED_TEXTS,
     SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_PARAGRAPHS,
+    SCHEMA_WITH_STYLES,
 ];
 
 /// The file a drawing is saved as.

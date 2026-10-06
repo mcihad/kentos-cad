@@ -7,6 +7,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { TextTool } from './annotateTools';
 import { PointInputTool } from './drawTools';
 import { fixed } from '../core/displayNumber';
+import { stylesShown, textFaceNow, textStyleName } from './styleOption';
 
 /** The text files Metin dosyası yerleştir offers to open. */
 export const TEXT_FILES: FileKind = { description: 'Metin dosyası (UTF-8)', accept: { 'text/plain': ['.txt', '.csv', '.lst'] } };
@@ -40,11 +41,13 @@ export class PlaceTextFileTool extends PointInputTool {
       this.ctx.log.warn(read.error);
       return this.ctx.tools.exit();
     }
-    // Each line's width at a height of 1, for the preview: in the drawing's typeface.
-    const font = this.ctx.doc.settings.drawingFont.value;
+    // Each line's width at a height of 1, for the preview: in Yazı's style's typeface and bold, else the drawing's
+    // (docs/adr/0183 §2).
+    const face = textFaceNow(this.ctx);
+    const font = face.font ?? this.ctx.doc.settings.drawingFont.value;
     const widths = read.lines.map((text) => {
       if (!text) return 0;
-      const b = textBox({ p: { x: 0, y: 0 }, text, height: 1, rotation: 0, font });
+      const b = textBox({ p: { x: 0, y: 0 }, text, height: 1, rotation: 0, font, ...(face.bold && { bold: true }) });
       return Math.hypot(b[1].x - b[0].x, b[1].y - b[0].y);
     });
     this.file = { name: picked.name, lines: read.lines, widths };
@@ -55,7 +58,9 @@ export class PlaceTextFileTool extends PointInputTool {
     if (!this.file) return 'metin dosyasını seçin';
     const o = TextTool.options();
     const texts = this.file.lines.filter(Boolean).length;
-    return `ilk satırın başlangıcına tıklayın [“${this.file.name}”: ${texts} yazı; Yazı'nın seçenekleriyle: ${o.heightMm} mm, ${+fixed(o.angle, 4)}°, ${textAlignName(o.align)}]`;
+    // A CAD project's style first (docs/adr/0183 §4).
+    const style = stylesShown(this.ctx) ? `${textStyleName(this.ctx)}, ` : '';
+    return `ilk satırın başlangıcına tıklayın [“${this.file.name}”: ${texts} yazı; Yazı'nın seçenekleriyle: ${style}${o.heightMm} mm, ${+fixed(o.angle, 4)}°, ${textAlignName(o.align)}]`;
   }
 
   protected onPoint(p: Vec2): void {
@@ -68,10 +73,12 @@ export class PlaceTextFileTool extends PointInputTool {
     // Down the text's own up: each line 1.5 heights under the one before.
     const down = { x: Math.sin(r), y: -Math.cos(r) };
     const geometries: EntityGeometry[] = [];
+    // Yazı's style (docs/adr/0183 §4).
+    const face = textFaceNow(this.ctx);
     this.file.lines.forEach((text, i) => {
       if (!text) return;
       const at = { x: p.x + down.x * SPACING * height * i, y: p.y + down.y * SPACING * height * i };
-      geometries.push({ kind: 'text', p: at, text, height, rotation: o.angle, ...(o.align && { align: o.align }), ...(o.widthFactor !== 1 && { widthFactor: o.widthFactor }), ...(o.mask && { mask: true }) } as EntityGeometry);
+      geometries.push({ kind: 'text', p: at, text, height, rotation: o.angle, ...(o.align && { align: o.align }), ...(o.widthFactor !== 1 && { widthFactor: o.widthFactor }), ...(o.mask && { mask: true }), ...face } as EntityGeometry);
     });
     if (this.writeObjects(geometries, 'textFile')) this.ctx.log.success(`“${this.file.name}”: ${geometries.length} satır yazı olarak yerleştirildi.`);
     this.file = null;

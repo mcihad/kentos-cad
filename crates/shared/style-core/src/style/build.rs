@@ -23,7 +23,7 @@ use kentos_geometry_core::store::draw::{
 use super::batch::{BatchSink, Batches};
 use super::compile::{Env, Geom, Values, compile_symbol, read_number, read_text, read_truth};
 use super::model::{Exprs, Reader, Renderer, Symbol, SymbolRef, SymbolSet, SymbolType, Symbols};
-use super::prim::{PrimUnit, PrimitiveList, Sink, StrokeStyle};
+use super::prim::{FillPaint, PrimUnit, PrimitiveList, Sink, StrokeStyle};
 use super::resolve::{Resolved, Scale, resolve_renderer};
 use crate::expr::rows::{Layout, RowsInput, Table};
 use crate::expr::{Expr, Measured, Needs, Scope, Value};
@@ -164,10 +164,14 @@ pub fn styled_parts(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Vec
     if kind == MIXED {
         let lines = Geom::Line(r.paths());
         let rings = r.rings();
-        return if rings.is_empty() {
-            vec![lines]
-        } else {
-            vec![lines, Geom::Fill(rings)]
+        // A leader's one area; a dimension's arrowheads and dots, each an area of its own (docs/adr/0183 §3).
+        return match rings.len() {
+            0 => vec![lines],
+            1 => vec![lines, Geom::Fill(rings)],
+            _ => vec![
+                lines,
+                Geom::Fills(rings.into_iter().map(|r| vec![r]).collect()),
+            ],
         };
     }
     if kind == MARKERS {
@@ -487,13 +491,14 @@ fn draw_object(
     if mode == MODE_DIMENSION {
         // Dimensions keep their own hairline look: their layout lines. Drawn at every scale
         // (the TypeScript kept the previous object's rule range here).
+        let ink = usize::try_from(color)
+            .ok()
+            .and_then(|c| program.colors.get(c))
+            .cloned()
+            .unwrap_or_default();
         if let Some(Geom::Line(paths)) = parts.first() {
             let hair = StrokeStyle {
-                color: usize::try_from(color)
-                    .ok()
-                    .and_then(|c| program.colors.get(c))
-                    .cloned()
-                    .unwrap_or_default(),
+                color: ink.clone(),
                 opacity: 1.0,
                 width: 0.0,
                 unit: PrimUnit::Px,
@@ -507,6 +512,23 @@ fn draw_object(
             sink.set_scale(Scale::default());
             for (pts, _) in paths {
                 sink.stroke(&hair, pts, false);
+            }
+        }
+        // Filled arrowheads and dots, solid in the dimension's colour (docs/adr/0183 §3).
+        let solid = FillPaint::Solid {
+            color: ink,
+            opacity: 1.0,
+            level: LEVEL_LINE + 500.0,
+        };
+        for part in parts.iter().skip(1) {
+            match part {
+                Geom::Fill(rings) => sink.fill(&solid, rings),
+                Geom::Fills(areas) => {
+                    for rings in areas {
+                        sink.fill(&solid, rings);
+                    }
+                }
+                _ => {}
             }
         }
         return;

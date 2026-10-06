@@ -1,0 +1,419 @@
+{
+  "entities": [
+    {
+      "kind": "text",
+      "id": 1,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452300.0,
+        "y": 4412400.0
+      },
+      "text": "Ada 101",
+      "height": 3.0,
+      "rotation": 0,
+      "widthFactor": 0.9,
+      "textStyle": "0192f1a0-0000-7000-8000-000000000001",
+      "font": "arimo",
+      "bold": true
+    },
+    {
+      "kind": "text",
+      "id": 2,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452300.0,
+        "y": 4412392.0
+      },
+      "text": "Ada 102",
+      "height": 3.0,
+      "rotation": 0,
+      "widthFactor": 0.9,
+      "oblique": 10.0,
+      "textStyle": "0192f1a0-0000-7000-8000-000000000001",
+      "font": "arimo",
+      "bold": true
+    },
+    {
+      "kind": "text",
+      "id": 3,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452330.0,
+        "y": 4412392.0
+      },
+      "text": "Atatürk Caddesi",
+      "height": 2.5,
+      "rotation": 30,
+      "textStyle": "0192f1a0-0000-7000-8000-000000000002",
+      "font": "barlow",
+      "italic": true,
+      "oblique": 15.0
+    },
+    {
+      "kind": "text",
+      "id": 4,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452300.0,
+        "y": 4412384.0
+      },
+      "text": "Not: ölçüler metredir",
+      "height": 2.0,
+      "rotation": 0,
+      "font": "quicksand",
+      "bold": true
+    },
+    {
+      "kind": "text",
+      "id": 5,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452300.0,
+        "y": 4412378.0
+      },
+      "text": "Standart yazı",
+      "height": 2.0,
+      "rotation": 0
+    },
+    {
+      "kind": "text",
+      "id": 6,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+        "x": 452360.0,
+        "y": 4412400.0
+      },
+      "text": "Not\nikinci satır",
+      "height": 2.0,
+      "rotation": 0,
+      "align": "topLeft",
+      "boxWidth": 30.0,
+      "textStyle": "0192f1a0-0000-7000-8000-000000000003",
+      "font": "courier-prime",
+      "bold": true,
+      "italic": true
+    },
+    {
+      "kind": "dimension",
+      "id": 7,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452300.0,
+        "y": 4412300.0
+      },
+      "b": {
+        "x": 452312.5,
+        "y": 4412300.0
+      },
+      "offset": 3.0,
+      "height": 2.0,
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d1",
+      "arrow": "closed",
+      "arrowSize": 1.25,
+      "extBeyond": 0.75,
+      "textGap": 0.4,
+      "decimals": 2,
+      "unit": "cm",
+      "suffix": " cm",
+      "font": "arimo"
+    },
+    {
+      "kind": "dimension",
+      "id": 8,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452300.0,
+        "y": 4412320.0
+      },
+      "b": {
+        "x": 452325.125,
+        "y": 4412320.0
+      },
+      "offset": 4.0,
+      "height": 3.0,
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d2",
+      "arrowSize": 0.8,
+      "textPlace": "centre",
+      "decimals": 3,
+      "prefix": "L="
+    },
+    {
+      "kind": "dimension",
+      "id": 9,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452300.0,
+        "y": 4412340.0
+      },
+      "b": {
+        "x": 452325.1,
+        "y": 4412340.0
+      },
+      "offset": 4.0,
+      "height": 3.0,
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d2",
+      "arrowSize": 0.8,
+      "textPlace": "centre",
+      "decimals": 2,
+      "prefix": "L="
+    },
+    {
+      "kind": "dimension",
+      "id": 10,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452400.0,
+        "y": 4412300.0
+      },
+      "b": {
+        "x": 452406.0,
+        "y": 4412308.0
+      },
+      "offset": 2.0,
+      "height": 2.5,
+      "style": "radius",
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d3",
+      "arrow": "dot",
+      "arrowSize": 0.6
+    },
+    {
+      "kind": "dimension",
+      "id": 11,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452300.0,
+        "y": 4412360.0
+      },
+      "b": {
+        "x": 452310.0,
+        "y": 4412360.0
+      },
+      "offset": 3.0,
+      "height": 2.5,
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d4",
+      "arrow": "open"
+    },
+    {
+      "kind": "dimension",
+      "id": 12,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452330.0,
+        "y": 4412360.0
+      },
+      "b": {
+        "x": 452338.0,
+        "y": 4412360.0
+      },
+      "offset": 3.0,
+      "height": 2.5,
+      "dimStyle": "0192f1a0-0000-7000-8000-0000000000d5",
+      "arrow": "none"
+    },
+    {
+      "kind": "dimension",
+      "id": 13,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 452350.0,
+        "y": 4412360.0
+      },
+      "b": {
+        "x": 452358.0,
+        "y": 4412360.0
+      },
+      "offset": 3.0,
+      "height": 2.5
+    },
+    {
+      "kind": "insert",
+      "id": 14,
+      "layerId": "yazi",
+      "attrs": {},
+      "block": "0192f1a0-0000-7000-8000-0000000000b1",
+      "p": {
+        "x": 452500.0,
+        "y": 4412400.0
+      },
+      "scale": 1,
+      "rotation": 0
+    }
+  ],
+  "layers": [
+    {
+      "id": "yazi",
+      "name": "Yazı",
+      "path": [],
+      "color": "#E8E6E3",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.25
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "path": [],
+      "color": "#E5A50A",
+      "visible": true,
+      "locked": false,
+      "lineType": "continuous",
+      "lineWeight": 0.18
+    }
+  ],
+  "scale": 1000,
+  "lengthDecimals": 3,
+  "grads": true,
+  "dimensionValues": {
+    "7": "1250.00 cm",
+    "8": "L=25.125",
+    "9": "L=25.10",
+    "10": "R 10.000",
+    "11": "10.000",
+    "12": "8.000",
+    "13": "8.000"
+  },
+  "blocks": [
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000b1",
+      "name": "Pafta başlığı",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "entities": [
+        {
+          "kind": "text",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "p": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text": "Pafta",
+          "height": 3.0,
+          "rotation": 0,
+          "widthFactor": 0.9,
+          "textStyle": "0192f1a0-0000-7000-8000-000000000001",
+          "font": "arimo",
+          "bold": true
+        },
+        {
+          "kind": "dimension",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": -5.0
+          },
+          "b": {
+            "x": 20.0,
+            "y": -5.0
+          },
+          "offset": 2.0,
+          "height": 2.0,
+          "text": "2000.00 cm",
+          "dimStyle": "0192f1a0-0000-7000-8000-0000000000d1",
+          "arrow": "closed",
+          "arrowSize": 1.25,
+          "extBeyond": 0.75,
+          "textGap": 0.4,
+          "decimals": 2,
+          "unit": "cm",
+          "suffix": " cm",
+          "font": "arimo"
+        }
+      ]
+    }
+  ],
+  "textStyles": [
+    {
+      "id": "0192f1a0-0000-7000-8000-000000000001",
+      "name": "Ada no",
+      "font": "arimo",
+      "bold": true,
+      "height": 3.0,
+      "widthFactor": 0.9,
+      "fontFile": "arialbd.ttf"
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-000000000002",
+      "name": "Yol adı",
+      "font": "barlow",
+      "italic": true,
+      "oblique": 15.0
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-000000000003",
+      "name": "Not",
+      "font": "courier-prime",
+      "bold": true,
+      "italic": true,
+      "height": 2.0
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-000000000004",
+      "name": "Boş/stil",
+      "font": "overpass"
+    }
+  ],
+  "dimensionStyles": [
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000d1",
+      "name": "Mimari",
+      "height": 2.0,
+      "arrow": "closed",
+      "arrowSize": 2.5,
+      "extOffset": 1.0,
+      "extBeyond": 1.5,
+      "textGap": 0.8,
+      "decimals": 2,
+      "unit": "cm",
+      "suffix": " cm",
+      "font": "arimo"
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000d2",
+      "name": "Kadastro",
+      "height": 3.0,
+      "arrowSize": 2.4,
+      "textPlace": "centre",
+      "decimals": 3,
+      "prefix": "L="
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000d3",
+      "name": "Noktalı",
+      "height": 2.5,
+      "arrow": "dot",
+      "arrowSize": 1.5
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000d4",
+      "name": "Açık",
+      "height": 2.5,
+      "arrow": "open"
+    },
+    {
+      "id": "0192f1a0-0000-7000-8000-0000000000d5",
+      "name": "Oksuz",
+      "height": 2.5,
+      "arrow": "none"
+    }
+  ]
+}

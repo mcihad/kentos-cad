@@ -24,7 +24,11 @@ export interface ParagraphText {
   lineSpacing?: number;
   runs?: readonly TextRun[];
   mask?: boolean;
+  /** The typeface it is measured in: its own, else the project's. */
   font?: string;
+  /** Its face's bold and slant (docs/adr/0183 §2): bold measured in the bold table, the box leaning with its letters. */
+  bold?: boolean;
+  oblique?: number;
 }
 
 /** One line: its letters start..end, its width, where it stands from the box's left and how far under the first. */

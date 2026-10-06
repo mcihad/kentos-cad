@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Independent check of the DXF writer's blocks (docs/adr/0144 §5), texts (docs/adr/0145 §7), leaders (docs/adr/0146 §8),
-multi-part lines and points (docs/adr/0174 §5) and multi-line texts (docs/adr/0182 §5).
+multi-part lines and points (docs/adr/0174 §5), multi-line texts (docs/adr/0182 §5) and text and dimension styles
+(docs/adr/0183 §7).
 
 Reads `fixtures/formats/v1/dxf-write/<name>.input.json` (the writer's input,
 written by hand) and `<name>.dxf` (what the writer made of it, committed) and
@@ -10,7 +11,8 @@ library and no KentOS code:
 - the blocks the objects place, and those nested in them, are BLOCKs with a
   BLOCK_RECORD each, in the order of a depth-first walk from the drawing's
   inserts (a block after the ones it holds); an unused block is not written;
-  each dimension's own anonymous block (*D1, *D2 …) follows them;
+  each dimension's own anonymous block (*D1, *D2 …) comes before the block
+  holding the dimension, the drawing's dimensions' after all of them;
 - a name keeps its letters, a character DXF refuses becomes "_", a name
   DXF's case-blind comparison takes for another's gets " (2)";
 - a BLOCK and everything in it belong to its record (group 330); its base
@@ -97,6 +99,33 @@ library and no KentOS code:
   back by the notation's rules are its own, its runs the input's (a raised
   or lowered run whose letters a stack cannot hold on the line), its width
   factor a width switch before the first letter;
+- text and dimension styles (docs/adr/0183 §7): the STYLE table holds
+  Standard as it always was (Arial, no extended data), then each of the
+  project's text styles under its name (DXF's refused characters "_", a
+  name taken, case aside, " 2", " 3" …, Standard's taken first, the
+  dimension styles sharing the names), its fixed height in drawing units
+  (40; 0 without one), width (41) and slant (50), its typeface's file (3:
+  its own, else Arial's and Courier's as AutoCAD names them, KentOS's
+  others "‹Aile›.ttf"), ACAD's family and flags (34, bold 0x2000000, italic
+  0x1000000) and the style itself in KentOS's data ("face"); then a record
+  "KENTOS_‹AİLE›[_B][_I]" for each typeface a styleless text or a
+  dimension's value has, in the families' order, KentOS's data saying
+  "styleless". A TEXT names its record (7; none for Standard) and its own
+  slant (51) when it has a typeface, an MTEXT names its record, both carry
+  their face in KentOS's data exactly when they have one. The DIMSTYLE
+  table holds Standard (no extended data) and each dimension style: its
+  value's height (140), DIMSCALE 1, ticks as DIMTSZ (half a 45° tick's
+  length) or arrowheads as DIMASZ (0 for none), the extension lines'
+  offset (42) and reach (44), the value's gap (147) and place (77 0:
+  centred), decimals (271), DIMPOST (3) after the flags, DIMLFAC (144, the
+  value's unit in the file's) and the style in KentOS's data ("look"). A
+  DIMENSION names its record (3) and overrides (DSTYLE) every one of these
+  with its own look, carries its look in KentOS's data exactly when it has
+  one; its block draws a filled arrow as a SOLID (tip on the dimension
+  line's end, its base a size inwards, a third of the size wide), a dot as
+  a DONUT (a closed two-vertex polyline, bulges 1, as wide as the dot's
+  radius, a quarter of the size), an open arrow as two lines, and names its
+  value's typeface's record (7);
 - every handle is unique and every owner names a handle of the file.
 
     python3 scripts/fixtures/dxf_write_reference.py --check
@@ -289,8 +318,10 @@ def written_kinds(e: dict) -> list[str]:
         return ["LEADER", "MTEXT"] if note_of(e) else ["LEADER"]
     if is_paragraph(e):
         return ["MTEXT"]
+    if kind == "dimension":
+        return [{"arcLength": "ARC_DIMENSION", "jogged": "LARGE_RADIAL_DIMENSION"}.get(e.get("style"), "DIMENSION")]
     # The fixture's blocks hold only these kinds.
-    return [{"line": "LINE", "circle": "CIRCLE", "point": "POINT", "insert": "INSERT"}[kind]]
+    return [{"line": "LINE", "circle": "CIRCLE", "point": "POINT", "insert": "INSERT", "text": "TEXT"}[kind]]
 
 
 def is_paragraph(e: dict) -> bool:
@@ -756,6 +787,11 @@ def check_dimension(o: list[tuple[int, str]], e: dict, value: str | None, blocks
         ensure(close(got[0], jog[0], 1e-8) and close(got[1], jog[1], 1e-8), f"{where}: the jog's middle (14)")
         ensure(float(group(o[after(o, m):], 40)) == 0.0, f"{where}: 40 0")
         ensure(close(float(over.get(50, "nan")), math.pi / 4, 1e-15), f"{where}: the jog's 45° (DSTYLE 50)")
+    elif style == "radius":
+        # A radius (type 4): its centre (10), the point on the arc (15), the leader past it (40).
+        ensure(flags == 4 + 32, f"{where}: a radius (70 {flags})")
+        ensure(point(o, 10, "AcDbDimension") == a and point(o, 15, "AcDbRadialDimension") == b, f"{where}: its centre and the point on the arc")
+        ensure(float(group(o[after(o, "AcDbRadialDimension") :], 40)) == max(e["offset"], 0.0), f"{where}: its leader (40)")
     else:
         ensure(flags == 1 + 32, f"{where}: an aligned one (70 {flags})")
         ensure(point(o, 13, "AcDbAlignedDimension") == a and point(o, 14, "AcDbAlignedDimension") == b, f"{where}: its two points")
@@ -779,6 +815,242 @@ def check_dimension(o: list[tuple[int, str]], e: dict, value: str | None, blocks
     ensure(value is None or group(mtexts[0], 1) == value, f"{where}: its value {value!r}")
 
 
+# Text and dimension styles (docs/adr/0183 §7).
+FONTS = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"]
+LABELS = {
+    "barlow": "Barlow", "arimo": "Arimo", "overpass": "Overpass", "quicksand": "Quicksand",
+    "architects-daughter": "Architects Daughter", "courier-prime": "Courier Prime", "plex-mono": "IBM Plex Mono",
+}
+STYLE_REFUSED = set('<>/\\":;?*|=,`')
+FACE_KEYS = ("textStyle", "font", "bold", "italic", "oblique")
+LOOK_KEYS = ("dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit",
+             "prefix", "suffix", "font")
+STANDARD_STYLE = [(2, "Standard"), (70, "0"), (40, "0.0"), (41, "1.0"), (50, "0.0"), (71, "0"), (42, "2.5"),
+                  (3, "arial.ttf"), (4, "")]
+
+
+def font_file(font: str, bold: bool, italic: bool) -> str:
+    style = {(False, False): "", (True, False): "bd", (False, True): "i", (True, True): "bi"}[(bold, italic)]
+    if font == "arimo":
+        return f"arial{style}.ttf"
+    if font == "courier-prime":
+        return f"cour{style}.ttf"
+    return LABELS[font].replace(" ", "") + ".ttf"
+
+
+def family(font: str) -> str:
+    return {"arimo": "Arial", "courier-prime": "Courier New"}.get(font, LABELS[font])
+
+
+def table_name(name: str) -> str:
+    n = "".join("_" if (c in STYLE_REFUSED or unicodedata.category(c) == "Cc") else c for c in name.strip())
+    return n or "Stil"
+
+
+def style_names(spec: dict) -> tuple[dict, dict, dict]:
+    """The records' names: the text styles', the dimension styles' (by id), the styleless typefaces' (by family, bold, italic)."""
+    taken = ["STANDARD"]
+
+    def unique(name: str) -> str:
+        base = table_name(name)
+        n, k = base, 2
+        while n.upper() in taken:
+            n = f"{base} {k}"
+            k += 1
+        taken.append(n.upper())
+        return n
+
+    text = {s["id"]: unique(s["name"]) for s in spec.get("textStyles", [])}
+    dims = {s["id"]: unique(s["name"]) for s in spec.get("dimensionStyles", [])}
+    synthetic: dict = {}
+    for e in spec["entities"] + [x for b in spec["blocks"] for x in b["entities"]]:
+        face = None
+        if e["kind"] == "text" and e.get("textStyle") not in text and e.get("font"):
+            face = (e["font"], bool(e.get("bold")), bool(e.get("italic")))
+        elif e["kind"] == "dimension" and e.get("font"):
+            face = (e["font"], False, False)
+        if face and face not in synthetic:
+            synthetic[face] = unique("KENTOS_" + face[0].replace("-", "_").upper() + ("_B" if face[1] else "") + ("_I" if face[2] else ""))
+    return text, dims, synthetic
+
+
+def item_text(values: list[str]) -> str:
+    """One KentOS item's string: a single value, or its pieces in a nested list; carets decoded."""
+    parts = values[1:] if values and values[0] == "{" else values[:1]
+    return caret_decode("".join(parts))
+
+
+def own(e: dict, keys: tuple) -> dict:
+    return {k: e[k] for k in keys if e.get(k) is not None and e.get(k) is not False}
+
+
+def check_style_tables(spec: dict, p: list[tuple[int, str]], names: tuple, paper: float, per_metre: float) -> list[str]:
+    text, dims, synthetic = names
+    length = lambda mm: mm / 1000.0 * paper
+    records = split(section(p, "TABLES"))
+    styles = [r for r in records if r[0] == (0, "STYLE")]
+    given = spec.get("textStyles", [])
+    faces = sorted(synthetic, key=lambda k: (FONTS.index(k[0]), k[1], k[2]))
+    want = ["Standard"] + [text[s["id"]] for s in given] + [synthetic[k] for k in faces]
+    ensure([group(r, 2) for r in styles] == want, f"STYLE records {want}")
+    ensure(styles[0][styles[0].index((2, "Standard")) :] == STANDARD_STYLE, "Standard: as it always was, no extended data")
+
+    def acad(r: list[tuple[int, str]]) -> list[tuple[int, str]]:
+        at = r.index((1001, "ACAD"))
+        return r[at + 1 : at + 3]
+
+    def flags(bold: bool, italic: bool) -> str:
+        return str(34 | (0x2000000 if bold else 0) | (0x1000000 if italic else 0))
+
+    for s, r in zip(given, styles[1:]):
+        w = f"yazı stili {s['name']}"
+        height = length(s["height"]) if s.get("height") else 0.0
+        ensure(close(float(group(r, 40)), height, 1e-12), f"{w}: its fixed height {height} in drawing units (40)")
+        ensure(float(group(r, 41)) == s.get("widthFactor", 1.0) and float(group(r, 50)) == s.get("oblique", 0.0), f"{w}: its width and slant")
+        ensure(group(r, 3) == s.get("fontFile", font_file(s["font"], bool(s.get("bold")), bool(s.get("italic")))), f"{w}: its typeface's file")
+        ensure(acad(r) == [(1000, family(s["font"])), (1071, flags(bool(s.get("bold")), bool(s.get("italic"))))], f"{w}: ACAD's family and flags")
+        ensure(json.loads(item_text(kentos(r)["face"])) == s, f"{w}: the style itself in KentOS's data")
+    for (font, bold, italic), r in zip(faces, styles[1 + len(given) :]):
+        w = f"yazı tipi {synthetic[(font, bold, italic)]}"
+        ensure((float(group(r, 40)), float(group(r, 41)), float(group(r, 50))) == (0.0, 1.0, 0.0), f"{w}: no fixed height, width 1, no slant")
+        ensure(group(r, 3) == font_file(font, bold, italic) and acad(r) == [(1000, family(font)), (1071, flags(bold, italic))], f"{w}: its file, family and flags")
+        ensure(item_text(kentos(r)["face"]) == "styleless", f"{w}: KentOS's mark of no style")
+
+    dimstyles = [r for r in records if r[0] == (0, "DIMSTYLE")]
+    given = spec.get("dimensionStyles", [])
+    want = ["Standard"] + [dims[s["id"]] for s in given]
+    ensure([group(r, 2) for r in dimstyles] == want, f"DIMSTYLE records {want}")
+    ensure((1001, "KENTOS") not in dimstyles[0], "Standard: no KentOS data")
+    for s, r in zip(given, dimstyles[1:]):
+        w = f"ölçü stili {s['name']}"
+        h = length(s["height"])
+        look = {k: (v / s["height"] if k in ("arrowSize", "extOffset", "extBeyond", "textGap") else v) for k, v in s.items() if k in LOOK_KEYS}
+        check_vars({c: v for c, v in r if c not in (1001, 1000, 1002)}, look, h, s.get("decimals", 2), per_metre, w)
+        flags_at = r.index((70, "0"))
+        post = dimpost(look)
+        ensure(post is None or r[flags_at + 1] == (3, post), f"{w}: DIMPOST {post!r} after the flags")
+        ensure(json.loads(item_text(kentos(r)["look"])) == s, f"{w}: the style itself in KentOS's data")
+    return [f"{len(spec.get('textStyles', []))} yazı stili, {len(synthetic)} yazı tipi kaydı, {len(given)} ölçü stili"] if (given or spec.get("textStyles") or synthetic) else []
+
+
+def dimpost(look: dict) -> str | None:
+    if look.get("prefix") is None and look.get("suffix") is None:
+        return None
+    return f"{look.get('prefix', '')}<>{look.get('suffix', '')}"
+
+
+def check_vars(v: dict, look: dict, h: float, decimals: int, per_metre: float, where: str) -> None:
+    """A look's variables (a DIMSTYLE record's groups or a DIMENSION's DSTYLE overrides, code -> value) at height h."""
+    tick = "arrow" not in look
+    size = look.get("arrowSize", 0.6 if tick else 1.0) * h
+    real = lambda code: float(v[code]) if code in v else None
+    ensure(close(real(140), h, 1e-12), f"{where}: its value's height (140)")
+    if tick:
+        ensure(close(real(142), size * math.sqrt(0.5), 1e-12), f"{where}: ticks, half a 45° tick of {size} (DIMTSZ)")
+    else:
+        ensure(real(142) == 0.0, f"{where}: no ticks (DIMTSZ 0)")
+        ensure(close(real(41), 0.0 if look["arrow"] == "none" else size, 1e-12), f"{where}: its arrowheads' size (DIMASZ; 0 for none)")
+    ensure(close(real(42), look.get("extOffset", 0.5) * h, 1e-12), f"{where}: the extension lines' offset (42)")
+    ensure(close(real(44), look.get("extBeyond", 0.5) * h, 1e-12), f"{where}: the extension lines' reach (44)")
+    ensure(close(real(147), look.get("textGap", 0.35) * h, 1e-12), f"{where}: the value's gap (147)")
+    ensure(v.get(77) == ("0" if look.get("textPlace") == "centre" else "1"), f"{where}: the value's place (77)")
+    ensure(v.get(271) == str(min(look.get("decimals", decimals), 8)), f"{where}: its decimals (271)")
+    post = dimpost(look)
+    ensure(v.get(3) == post if post is not None else (v.get(3) is None), f"{where}: DIMPOST {post!r}")
+    factor = {"m": 1.0, "cm": 100.0, "mm": 1000.0}[look["unit"]] / per_metre if look.get("unit") else 1.0
+    if factor != 1.0:
+        ensure(close(real(144), factor, 1e-12), f"{where}: DIMLFAC {factor}")
+    else:
+        ensure(real(144) in (None, 1.0), f"{where}: no DIMLFAC of its own")
+
+
+def check_face(o: list[tuple[int, str]], e: dict, names: tuple, mtext: bool, where: str) -> None:
+    """A TEXT's or an MTEXT's style record (7), own slant (51) and face in KentOS's data."""
+    text, _, synthetic = names
+    if e.get("textStyle") in text:
+        record = text[e["textStyle"]]
+    elif e.get("font"):
+        record = synthetic[(e["font"], bool(e.get("bold")), bool(e.get("italic")))]
+    else:
+        record = "Standard"
+    if mtext or record != "Standard":
+        ensure(group(o, 7) == record, f"{where}: names its style's record {record!r} (7)")
+    else:
+        ensure(group(o, 7) is None, f"{where}: Standard left unsaid")
+    if not mtext:
+        slant = e.get("oblique") if e.get("font") else None
+        ensure((group(o, 51) is None) if slant is None else float(group(o, 51)) == slant, f"{where}: its own slant {slant} (51)")
+    face = own(e, FACE_KEYS)
+    got = kentos(o).get("face")
+    ensure((got is None) if not face else (got is not None and json.loads(item_text(got)) == face), f"{where}: its face {face} in KentOS's data")
+
+
+def arrow_ends(e: dict) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    """A dimension's arrowheads: each tip and the way into the dimension line (aligned and radius dimensions)."""
+    a, b = xy(e["a"]), xy(e["b"])
+    style = e.get("style")
+    if style in (None, "aligned"):
+        length = math.hypot(b[0] - a[0], b[1] - a[1])
+        u = ((b[0] - a[0]) / length, (b[1] - a[1]) / length)
+        n = (-u[1], u[0])
+        off = e["offset"]
+        d1 = (a[0] + n[0] * off, a[1] + n[1] * off)
+        k = off + (n[0] * (a[0] - b[0]) + n[1] * (a[1] - b[1]))
+        d2 = (b[0] + n[0] * k, b[1] + n[1] * k)
+        l = math.hypot(d2[0] - d1[0], d2[1] - d1[1])
+        along = ((d2[0] - d1[0]) / l, (d2[1] - d1[1]) / l)
+        return [(d1, along), (d2, (-along[0], -along[1]))]
+    if style == "radius":
+        r = math.hypot(b[0] - a[0], b[1] - a[1])
+        return [(b, (-(b[0] - a[0]) / r, -(b[1] - a[1]) / r))]
+    raise Bad(f"no arrowhead rule here for a {style} dimension")
+
+
+def check_dim_look(o: list[tuple[int, str]], e: dict, names: tuple, spec: dict, blocks: list, per_metre: float, where: str) -> None:
+    """A DIMENSION's style record (3), its look in DSTYLE and KentOS's data, its block's arrowheads and value's record."""
+    _, dims, synthetic = names
+    look = own(e, LOOK_KEYS)
+    ensure(group(o[after(o, "AcDbDimension") :], 3) == dims.get(e.get("dimStyle"), "Standard"), f"{where}: names its style's record (3)")
+    check_vars(dstyle(o), look, e["height"], spec["lengthDecimals"], per_metre, f"{where} (DSTYLE)")
+    got = kentos(o).get("look")
+    ensure((got is None) if not look else (got is not None and json.loads(item_text(got)) == look), f"{where}: its look {look} in KentOS's data")
+    name = group(o, 2)
+    k = next(i for i, x in enumerate(blocks) if x[0] == (0, "BLOCK") and group(x, 2) == name)
+    end = next(i for i in range(k, len(blocks)) if blocks[i][0] == (0, "ENDBLK"))
+    inside = blocks[k + 1 : end]
+    mtext = next(x for x in inside if x[0] == (0, "MTEXT"))
+    value = synthetic[(e["font"], False, False)] if e.get("font") else "Standard"
+    ensure(group(mtext, 7) == value, f"{where}: its value in its typeface's record {value!r}")
+    solids = [x for x in inside if x[0] == (0, "SOLID")]
+    dots = [x for x in inside if x[0] == (0, "LWPOLYLINE")]
+    arrow = look.get("arrow")
+    size = look.get("arrowSize", 0.6 if arrow is None else 1.0) * e["height"]
+    near = lambda q, r: abs(q[0] - r[0]) <= 1e-9 * max(1.0, abs(r[0])) and abs(q[1] - r[1]) <= 1e-9 * max(1.0, abs(r[1]))
+    ends = arrow_ends(e) if arrow in ("closed", "dot", "open") else []
+    ensure(len(solids) == (len(ends) if arrow == "closed" else 0), f"{where}: a SOLID for each filled arrowhead")
+    ensure(len(dots) == (len(ends) if arrow == "dot" else 0), f"{where}: a donut for each dot")
+    lines = [(point(x, 10), point(x, 11)) for x in inside if x[0] == (0, "LINE")]
+    for tip, into in ends:
+        nrm = (-into[1], into[0])
+        base = (tip[0] + into[0] * size, tip[1] + into[1] * size)
+        left = (base[0] + nrm[0] * size / 6, base[1] + nrm[1] * size / 6)
+        right = (base[0] - nrm[0] * size / 6, base[1] - nrm[1] * size / 6)
+        if arrow == "closed":
+            ok = any(near(point(s, 10), tip) and near(point(s, 11), left) and near(point(s, 12), right) and point(s, 13) == point(s, 12) for s in solids)
+            ensure(ok, f"{where}: a filled arrowhead at {tip}")
+        elif arrow == "dot":
+            r = size / 4
+            def donut(d: list[tuple[int, str]]) -> bool:
+                xs = [float(v) for c, v in d if c == 10]
+                ys = [float(v) for c, v in d if c == 20]
+                return (group(d, 90) == "2" and group(d, 70) == "1" and abs(float(group(d, 43)) - r) <= 1e-9
+                        and [float(v) for c, v in d if c == 42] == [1.0, 1.0]
+                        and near((xs[0] + r / 2, ys[0]), tip) and near((xs[1] - r / 2, ys[1]), tip))
+            ensure(any(donut(d) for d in dots), f"{where}: a dot of radius {r} at {tip}")
+        else:
+            ensure(any(near(p, left) and near(q, tip) for p, q in lines) and any(near(p, tip) and near(q, right) for p, q in lines), f"{where}: an open arrowhead at {tip}")
+
+
 def check(name: str) -> list[str]:
     spec = json.loads((DIR / f"{name}.input.json").read_text(encoding="utf-8"))
     p = pairs((DIR / f"{name}.dxf").read_bytes())
@@ -795,14 +1067,24 @@ def check(name: str) -> list[str]:
     names = dxf_names(order)
     said = [f"birim {unit} ($INSUNITS {code})"] if unit != "m" else []
     widths: dict = {}
+    # The style records' names (docs/adr/0183 §7); a style's paper mm in the file's unit.
+    styled = style_names(spec)
+    said.extend(check_style_tables(spec, p, styled, spec["scale"] * per_metre, per_metre))
 
     # Records and BLOCKs, in the walk's order after model and paper space.
     tables = section(p, "TABLES")
     records = [r for r in split(tables) if r[0] == (0, "BLOCK_RECORD")]
     record_of = {group(r, 2): group(r, 5) for r in records}
-    # Each dimension's own anonymous block (*D1, *D2 …) after the drawing's blocks (docs/adr/0147 §8).
-    dimensioned = sum(1 for e in spec["entities"] + [x for b in spec["blocks"] for x in b["entities"]] if e["kind"] == "dimension")
-    want = ["*Model_Space", "*Paper_Space"] + [names[b["id"]] for b in order] + [f"*D{k + 1}" for k in range(dimensioned)]
+    # Each dimension's own anonymous block (*D1, *D2 …): a block's dimensions' before it (blocks it holds), the
+    # drawing's after the drawing's blocks (docs/adr/0147 §8).
+    want, k = ["*Model_Space", "*Paper_Space"], 0
+    for b in order:
+        for e in b["entities"]:
+            if e["kind"] == "dimension":
+                k += 1
+                want.append(f"*D{k}")
+        want.append(names[b["id"]])
+    want += [f"*D{k + 1 + i}" for i in range(sum(1 for e in spec["entities"] if e["kind"] == "dimension"))]
     ensure([group(r, 2) for r in records] == want, f"block records {want}")
     blocks = split(section(p, "BLOCKS"))
     heads = [e for e in blocks if e[0] == (0, "BLOCK")]
@@ -856,6 +1138,11 @@ def check(name: str) -> list[str]:
                     check_look(objects[k + 1], e, layers, f"{where} › MTEXT")
             if is_paragraph(e):
                 check_paragraph(o, e, where)
+            if e["kind"] == "text":
+                check_face(o, e, styled, is_paragraph(e), where)
+            if e["kind"] == "dimension":
+                check_dimension(o, e, e.get("text"), blocks, where)
+                check_dim_look(o, e, styled, spec, blocks, per_metre, where)
             if e["kind"] == "polygon":
                 own = group(o, 5)
                 for h in objects[k + 1 : k + len(written_kinds(e))]:
@@ -902,6 +1189,7 @@ def check(name: str) -> list[str]:
         ensure((group(o, 50) is None) if e["rotation"] == 0 else float(group(o, 50)) == e["rotation"], f"{where}: its turn")
         check_place(o, (e["p"]["x"], e["p"]["y"]), True, e, "AcDbText", 73, e["text"], widths, where)
         ensure(("mask" in kentos(o)) == bool(e.get("mask")), f"{where}: KentOS's mask item exactly when masked")
+        check_face(o, e, styled, False, where)
     check_widths(widths)
     if texts:
         aligned = sum(1 for e in texts if e.get("align"))
@@ -915,6 +1203,7 @@ def check(name: str) -> list[str]:
         where = f"çok satırlı yazı {n + 1}"
         ensure(group(o, 330) == "17" and group(o, 8) == layers[e["layerId"]], f"{where}: in model space, on its layer")
         check_paragraph(o, e, where)
+        check_face(o, e, styled, True, where)
     if paragraphs:
         said.append(f"{len(paragraphs)} çok satırlı yazı ({sum(len(e.get('runs') or []) for e in paragraphs)} biçim dilimi)")
 
@@ -940,7 +1229,9 @@ def check(name: str) -> list[str]:
     ensure(len(written) == len(dims), f"{len(dims)} dimensions")
     by_name = {group(b, 2): b for b in blocks if b[0] == (0, "BLOCK")}
     for n, (e, o) in enumerate(zip(dims, written)):
-        check_dimension(o, e, spec["dimensionValues"].get(str(e["id"])), blocks, f"ölçü {n + 1} ({e.get('style', 'aligned')})")
+        where = f"ölçü {n + 1} ({e.get('style', 'aligned')})"
+        check_dimension(o, e, spec["dimensionValues"].get(str(e["id"])), blocks, where)
+        check_dim_look(o, e, styled, spec, blocks, per_metre, where)
     if dims:
         said.append(f"{len(dims)} ölçü ({sum(1 for e in dims if e.get('mask'))} zeminli)")
 

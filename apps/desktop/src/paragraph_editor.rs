@@ -31,7 +31,7 @@ use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::store::labels::paragraph_records;
 use kentos_geometry_core::text::paragraph::{Run, Toggle, retext, toggle};
 use kentos_interaction::{ParagraphField, Vec2};
-use kentos_native_application::geometry::{contract_runs, core_runs, drawing_font};
+use kentos_native_application::geometry::{contract_runs, core_face, core_runs, drawing_font};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Tip, tip};
 use kentos_ui::{label, style};
@@ -73,6 +73,8 @@ pub struct Open {
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
     pub mask: bool,
+    /// Its style and face (docs/adr/0183 §2): the letters are measured and drawn in them.
+    pub face: kentos_contracts::TextFace,
     pub content: Content,
     /// The content's text as last seen, and its letters' formats.
     pub text: String,
@@ -277,8 +279,10 @@ fn keys(press: KeyPress) -> Option<Binding<Message>> {
 
 impl Open {
     /// The text as it will be drawn: its label records (`paragraph_records`),
-    /// its words and runs (labels.rs draws them over the drawing).
+    /// its words and runs (labels.rs draws them over the drawing). `font` is
+    /// the project's; a text with a typeface of its own is measured in that.
     pub fn preview(&self, font: kentos_contracts::DrawingFont) -> crate::labels::Preview {
+        let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
@@ -291,6 +295,9 @@ impl Open {
             box_width: self.box_width,
             line_spacing: self.line_spacing,
             runs: &self.runs,
+            font: None,
+            bold: self.face.font.is_some() && self.face.bold,
+            lean: core_face(&self.face).lean(),
         };
         let mut records = Vec::new();
         paragraph_records(
@@ -305,11 +312,13 @@ impl Open {
             text: self.text.clone(),
             runs: self.runs.clone(),
             records,
+            face: self.face.clone(),
         }
     }
 
     /// How many lines the text has and how far apart they are, metres.
     fn lines(&self, font: kentos_contracts::DrawingFont) -> (usize, f64) {
+        let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
@@ -320,6 +329,9 @@ impl Open {
             box_width: self.box_width,
             line_spacing: self.line_spacing,
             runs: &self.runs,
+            font: None,
+            bold: self.face.font.is_some() && self.face.bold,
+            lean: core_face(&self.face).lean(),
         };
         let laid = place.layout(drawing_font(Some(font)));
         (laid.lines.len(), laid.pitch)
@@ -328,6 +340,7 @@ impl Open {
     /// Where the box's top left is on the drawing: the first line's top at
     /// the box's left (the text's origin a height up).
     fn top_left(&self, font: kentos_contracts::DrawingFont) -> Vec2 {
+        let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             p: kentos_geometry_core::vec2::Vec2::new(self.p.x, self.p.y),
             text: &self.text,
@@ -340,6 +353,9 @@ impl Open {
             box_width: self.box_width,
             line_spacing: self.line_spacing,
             runs: &self.runs,
+            font: None,
+            bold: self.face.font.is_some() && self.face.bold,
+            lean: core_face(&self.face).lean(),
         };
         let o = place.origin(drawing_font(Some(font)));
         let r = self.rotation.to_radians();
@@ -355,10 +371,11 @@ impl App {
             align: Some(TextAlign::TopLeft),
             height: field.height,
             rotation: field.rotation,
-            width_factor: None,
+            width_factor: field.width_factor,
             box_width: field.box_width,
             line_spacing: field.line_spacing,
             mask: field.mask,
+            face: field.face,
             content: Content::new(),
             text: String::new(),
             runs: Vec::new(),
@@ -379,6 +396,7 @@ impl App {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             mask: t.mask,
+            face: t.face.clone(),
             content: Content::with_text(&t.text),
             text: t.text.clone(),
             runs: core_runs(&t.paragraph.runs).unwrap_or_default(),
@@ -548,12 +566,19 @@ impl App {
         .spacing(2)
         .align_y(Center);
         let theme = self.theme();
-        let looks = Looks::of(&open.text, &open.runs, face, &theme);
+        // The letters in the text's own typeface, bold and italic (docs/adr/0183 §2), else the project's.
+        let family = open.face.font.unwrap_or(face);
+        let own = open.face.font.is_some();
+        let looks = Looks::of(&open.text, &open.runs, family, &theme);
         let size = typography::scaled(15.0);
         let area = editor(&open.content)
             .id(ID)
             .on_action(|a| Message::Paragraph(Event::Edit(a)))
-            .font(crate::drawing_fonts::font(face, 400, false))
+            .font(crate::drawing_fonts::font(
+                family,
+                if own && open.face.bold { 600 } else { 400 },
+                own && open.face.italic,
+            ))
             .size(size)
             .padding(Padding::from([6, 8]))
             .height(Length::Shrink)

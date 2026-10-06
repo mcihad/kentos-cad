@@ -208,6 +208,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             mask,
             za,
             zb,
+            look,
         } => {
             let st = style.as_deref().unwrap_or("aligned");
             let (mask, za, zb) = (*mask, *za, *zb);
@@ -232,6 +233,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     mask,
                     za,
                     zb,
+                    look: look.clone(),
                 }
             } else if matches!(st, "radius" | "diameter" | "jogged" | "ordinate") {
                 // Along the radius (the jog's from the centre shown): no side to swap. An
@@ -248,6 +250,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     mask,
                     za,
                     zb,
+                    look: look.clone(),
                 }
             } else {
                 // Aligned and linear: a reflection swaps left and right, so the offset changes sign.
@@ -271,6 +274,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                     mask,
                     za,
                     zb,
+                    look: look.clone(),
                 }
             }
         }
@@ -336,6 +340,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             box_width,
             line_spacing,
             runs,
+            face,
         } => Shape::Text {
             p: apply(m, *p),
             text: text.clone(),
@@ -347,6 +352,7 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
             box_width: box_width.map(|w| w * s),
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            face: face.clone(),
         },
         // Its vertices move; its note turns as a text does (docs/adr/0146 §4).
         Shape::Leader {

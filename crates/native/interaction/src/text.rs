@@ -32,6 +32,7 @@ use crate::format::{Format, fixed, js_number};
 use crate::log::Level;
 use crate::points::{self, Taken};
 use crate::prompt::{Prompt, upper_tr};
+use crate::styles;
 use crate::tool::{
     Context, Flow, Marker, MarkerShape, Memory, OptionChoice, Pointer, Preview, Stroke, Tag,
     TextField, Tone, Tool, ViewChange,
@@ -55,6 +56,8 @@ enum Stage {
     Align,
     /// Genişlik: the width factor typed.
     Width,
+    /// Stil: a text style's name typed, or chosen from its menu (docs/adr/0183 §4).
+    Style,
     /// The field is open at `at`.
     Typing,
 }
@@ -216,6 +219,8 @@ pub struct Text {
     box_height: f64,
     /// What the session remembered and the project's units, as of the last call.
     seen: Option<(Memory, Format)>,
+    /// The text styles as of the last call: a CAD project's Stil (docs/adr/0183 §4).
+    styles: styles::Seen,
     /// The last text this run wrote: Artır's next field starts from it.
     last_text: Option<String>,
 }
@@ -249,6 +254,7 @@ impl Text {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some((*cx.memory, cx.format()));
+        self.styles = styles::Seen::text(cx);
     }
 
     /// The point Orto and tracking go from: the angle's first click.
@@ -273,6 +279,7 @@ impl Text {
             "G" => self.stage = Stage::Width,
             "Z" => cx.memory.text_mask = !cx.memory.text_mask,
             "R" => cx.memory.text_increment = !cx.memory.text_increment,
+            "S" if styles::shown(cx.doc.settings()) => self.stage = Stage::Style,
             _ => return false,
         }
         true
@@ -338,9 +345,10 @@ impl Text {
                     placeholder: None,
                     hint: None,
                     empty: false,
+                    face: styles::text_face(cx),
                 }));
             }
-            Stage::Height | Stage::Align | Stage::Width | Stage::Typing => {}
+            Stage::Height | Stage::Align | Stage::Width | Stage::Style | Stage::Typing => {}
         }
     }
 
@@ -398,7 +406,10 @@ impl Tool for Text {
                 LABEL,
                 "yazıyı tıkladığınız yere yazın; Enter ekler, Esc vazgeçer",
             ),
+            Stage::Style => Prompt::new(LABEL, "yazı stilini menüden seçin ya da adını yazın")
+                .option_with("Stil", "S", self.styles.chosen.clone()),
             Stage::Pos => Prompt::new(LABEL, "yazının başlangıcına tıklayın")
+                .option_if(self.styles.shown, "Stil", "S", self.styles.chosen.clone())
                 .option_with(
                     "Yükseklik",
                     "Y",
@@ -446,6 +457,12 @@ impl Tool for Text {
             true
         } else if self.stage == Stage::Align {
             self.take_align(t, cx)
+        } else if self.stage == Stage::Style {
+            // A name the project has none of is said; the tool waits for another.
+            if styles::take_text(t, cx) {
+                self.stage = Stage::Pos;
+            }
+            true
         } else {
             match (self.stage, parse_number(t)) {
                 (Stage::Height, Some(n)) if n > 0.0 => {
@@ -493,6 +510,12 @@ impl Tool for Text {
     /// Hiza's menu: the twelve points, row by row (docs/adr/0145 §6), while
     /// the tool waits for a click or for one.
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        // Stil's menu: Standart, the project's text styles and their window (docs/adr/0183 §4).
+        if key == "S" && self.styles.shown && matches!(self.stage, Stage::Pos | Stage::Style) {
+            return self
+                .styles
+                .choices(styles::TEXT_STYLES_ENTRY, styles::TEXT_STYLES);
+        }
         if key != "H" || !matches!(self.stage, Stage::Pos | Stage::Align) {
             return Vec::new();
         }
@@ -503,15 +526,26 @@ impl Tool for Text {
         ALIGNS
             .iter()
             .map(|&(a, typed, label, icon)| OptionChoice {
-                label,
-                typed,
-                icon,
+                label: label.to_owned(),
+                typed: typed.to_owned(),
+                icon: Some(icon),
                 checked: a == chosen,
+                command: None,
             })
             .collect()
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key == "S"
+            && styles::shown(cx.doc.settings())
+            && matches!(self.stage, Stage::Pos | Stage::Style)
+        {
+            if styles::take_text(typed, cx) {
+                self.stage = Stage::Pos;
+            }
+            self.see(cx);
+            return true;
+        }
         if key != "H" || !matches!(self.stage, Stage::Pos | Stage::Align) {
             return false;
         }
@@ -539,6 +573,7 @@ impl Tool for Text {
                 box_width: None,
                 line_spacing: None,
                 runs: Vec::new(),
+                face: styles::text_face(cx),
             };
             if let Some(out) = points::write_objects(vec![geometry], None, cx)
                 && let Some(&id) = out.ids.first()
@@ -554,6 +589,11 @@ impl Tool for Text {
 
     /// Where the text starts: a confirm leaves; typing, it drops the field
     /// (the web's `confirm`).
+    /// A style's name is words: Space types a space (docs/adr/0183 §4).
+    fn takes_words(&self) -> bool {
+        self.stage == Stage::Style
+    }
+
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
         match self.stage {
             Stage::Pos => Flow::Exit,

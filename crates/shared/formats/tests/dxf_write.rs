@@ -274,6 +274,7 @@ fn objects() -> Vec<Entity> {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
         Entity::Text(TextEntity {
             base: base("yazi"),
@@ -287,6 +288,7 @@ fn objects() -> Vec<Entity> {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
         Entity::Hatch(HatchEntity {
             base: base("yapi"),
@@ -360,6 +362,7 @@ fn dimensions() -> Vec<Entity> {
             mask: false,
             za: None,
             zb: None,
+            look: Default::default(),
         })
     };
     vec![
@@ -458,6 +461,8 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         dimension_values,
         blocks: Vec::new(),
         unit: None,
+        text_styles: Vec::new(),
+        dimension_styles: Vec::new(),
     }
 }
 
@@ -940,6 +945,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
         Entity::Circle(CircleEntity {
             base: base("parsel"),
@@ -956,6 +962,8 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         dimension_values: BTreeMap::new(),
         blocks: Vec::new(),
         unit: None,
+        text_styles: Vec::new(),
+        dimension_styles: Vec::new(),
     });
     let r = read(&text);
     // Long values came in pieces and control characters in caret notation: the attributes are back as they were.
@@ -1011,6 +1019,8 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         dimension_values: BTreeMap::new(),
         blocks: Vec::new(),
         unit: None,
+        text_styles: Vec::new(),
+        dimension_styles: Vec::new(),
     });
     let r = read(&text);
     assert!(r.entities.is_empty() && r.layers.is_empty());
@@ -2479,5 +2489,129 @@ fn paragraphs_read_back_as_they_were() {
         (&inside.text, &inside.paragraph, inside.align),
         (&given.text, &given.paragraph, given.align)
     );
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+}
+
+/// The styles' fixture (`fixtures/formats/v1/dxf-write/styles.input.json`,
+/// docs/adr/0183 §7) goes out as its committed bytes, which
+/// `scripts/fixtures/dxf_write_reference.py` checks without KentOS's code;
+/// the open arrow and the dot without DXF's arrowhead blocks are said once.
+#[test]
+fn the_styles_fixture_is_written_to_its_committed_bytes() {
+    let report = written_as_committed("styles");
+    let notes: Vec<(&str, u32)> = report
+        .notes
+        .iter()
+        .map(|n| (n.what.as_str(), n.count))
+        .collect();
+    assert_eq!(notes, [("Ölçü stili", 2)], "{:?}", report.notes);
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+}
+
+/// The objects' styles go out as STYLE and DIMSTYLE records and come back
+/// as they were (docs/adr/0183 §7): the styles the objects follow, each as
+/// the project had it (its KENTOS data), under the reader's ids in the order
+/// met (the block's first) and not one the objects do not follow; every
+/// text's face and every dimension's look, their own changes too; a
+/// styleless face without a style, Standard as Standart.
+#[test]
+fn styles_read_back_as_they_were() {
+    let input = fixture_input("styles");
+    let (text, _) = write(&input);
+    let r = read(&text);
+    let names = |v: Vec<&str>| v.into_iter().map(str::to_owned).collect::<Vec<_>>();
+    assert_eq!(
+        r.text_styles
+            .iter()
+            .map(|s| s.name.clone())
+            .collect::<Vec<_>>(),
+        names(vec!["Ada no", "Yol adı", "Not"])
+    );
+    assert_eq!(
+        r.dimension_styles
+            .iter()
+            .map(|s| s.name.clone())
+            .collect::<Vec<_>>(),
+        names(vec!["Mimari", "Kadastro", "Noktalı", "Açık", "Oksuz"])
+    );
+    // The reader's id → the project's.
+    let mut ids = BTreeMap::new();
+    for (i, s) in r.text_styles.iter().enumerate() {
+        assert_eq!(s.id, format!("dxf-text-{}", i + 1));
+        let given = input
+            .text_styles
+            .iter()
+            .find(|g| g.name == s.name)
+            .expect("given");
+        assert_eq!(
+            kentos_contracts::TextStyleDef {
+                id: given.id.clone(),
+                ..s.clone()
+            },
+            *given
+        );
+        ids.insert(s.id.clone(), given.id.clone());
+    }
+    for (i, s) in r.dimension_styles.iter().enumerate() {
+        assert_eq!(s.id, format!("dxf-dim-{}", i + 1));
+        let given = input
+            .dimension_styles
+            .iter()
+            .find(|g| g.name == s.name)
+            .expect("given");
+        assert_eq!(
+            kentos_contracts::DimensionStyleDef {
+                id: given.id.clone(),
+                ..s.clone()
+            },
+            *given
+        );
+        ids.insert(s.id.clone(), given.id.clone());
+    }
+    let ours = |entities: &[Entity]| -> Vec<Entity> {
+        entities
+            .iter()
+            .map(|e| {
+                let mut e = e.clone();
+                let base = e.base_mut();
+                base.id = 0;
+                base.layer_id.clear();
+                match &mut e {
+                    Entity::Text(t) => {
+                        t.face.text_style = t
+                            .face
+                            .text_style
+                            .take()
+                            .map(|id| ids.get(&id).cloned().unwrap_or(id));
+                    }
+                    Entity::Dimension(d) => {
+                        d.look.dim_style = d
+                            .look
+                            .dim_style
+                            .take()
+                            .map(|id| ids.get(&id).cloned().unwrap_or(id));
+                    }
+                    _ => {}
+                }
+                e
+            })
+            .collect()
+    };
+    let given: Vec<Entity> = ours(&input.entities)
+        .into_iter()
+        .filter(|e| !matches!(e, Entity::Insert(_)))
+        .collect();
+    let got: Vec<Entity> = ours(&r.entities)
+        .into_iter()
+        .filter(|e| !matches!(e, Entity::Insert(_)))
+        .collect();
+    assert_eq!(got.len(), given.len());
+    for (i, (g, w)) in got.iter().zip(&given).enumerate() {
+        assert_eq!(g, w, "object {}", i + 1);
+    }
+    let [block] = r.blocks.as_slice() else {
+        panic!("{:?}", r.blocks)
+    };
+    assert_eq!(ours(&block.entities), ours(&input.blocks[0].entities));
     assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
 }

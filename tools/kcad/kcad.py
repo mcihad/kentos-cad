@@ -93,6 +93,18 @@ SCHEMA_WITH_LINKED_TEXTS = 18
 SCHEMA_WITH_LAYER_STATES = 19
 # Schema 20: schema 19 and a multi-line text's `boxWidth`, `lineSpacing` and `runs` (docs/adr/0182 §1).
 SCHEMA_WITH_PARAGRAPHS = 20
+# Schema 21: schema 20 and the named text and dimension styles, the settings' `textStyles` and `dimensionStyles`, a text's
+# face (`textStyle`, `font`, `bold`, `italic`, `oblique`) and a dimension's look (`dimStyle`, `arrow`, `arrowSize`,
+# `extOffset`, `extBeyond`, `textGap`, `textPlace`, `decimals`, `unit`, `prefix`, `suffix`, `font`; docs/adr/0183).
+SCHEMA_WITH_STYLES = 21
+DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
+DIMENSION_ARROWS = ("closed", "open", "dot", "none")
+MAX_OBLIQUE = 85.0
+MAX_DIMENSION_RATIO = 100.0
+MAX_DIMENSION_DECIMALS = 8
+MAX_AFFIX = 32
+MAX_STYLE_NAME = 64
+MAX_STYLE_MM = 1000.0
 # A multi-line text's line spacing's bounds (AutoCAD's own).
 MIN_LINE_SPACING = 0.25
 MAX_LINE_SPACING = 4.0
@@ -108,7 +120,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -444,6 +456,7 @@ class _Schema:
         self.line_parts = False
         self.linked_texts = False
         self.paragraphs = False
+        self.styles = False
         self.blocks = False
         self.texts = False
         # While a block definition's objects are read: how many so far (they have no persistent ids).
@@ -600,6 +613,7 @@ class _Schema:
         self.line_parts = version >= SCHEMA_WITH_LINE_PARTS
         self.linked_texts = version >= SCHEMA_WITH_LINKED_TEXTS
         self.paragraphs = version >= SCHEMA_WITH_PARAGRAPHS
+        self.styles = version >= SCHEMA_WITH_STYLES
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -677,6 +691,7 @@ class _Schema:
                 ),
                 **({"survey": (self.survey, False)} if self.survey_fields else {}),
                 **({"layerStates": (self.layer_states_, False)} if self.layer_states else {}),
+                **({"textStyles": (self.text_styles, False), "dimensionStyles": (self.dimension_styles, False)} if self.styles else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -721,6 +736,155 @@ class _Schema:
                     self.fail("bad_value", f"“{name}” durumunda “{n['node']}” düğümü iki kez var")
                 seen.add(n["node"])
         return states
+
+    # The named text and dimension styles (schema 21, spec §6.4.4, docs/adr/0183): the tables' rule (an id neither empty
+    # nor twice; a name not empty, without spaces at its ends, at most 64 letters, without a line break, not
+    # “Standart” and not twice, whatever its letters' case), then each style's values.
+
+    def style_names(self, kind, styles):
+        ids, names = set(), set()
+        for st in styles:
+            sid, name = st["id"], st["name"]
+            if not sid:
+                self.fail("bad_value", f"{kind} kimliği boş")
+            if sid in ids:
+                self.fail("bad_value", f"“{sid}” kimlikli {kind} iki kez var")
+            trimmed = name.strip()
+            if not trimmed:
+                self.fail("bad_value", f"{kind} adı boş")
+            if trimmed != name:
+                self.fail("bad_value", f"“{name}” {kind} adının başında ya da sonunda boşluk var")
+            if len(trimmed) > MAX_STYLE_NAME:
+                self.fail("bad_value", f"“{trimmed}” {kind} adı {MAX_STYLE_NAME} harften uzun")
+            if any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in trimmed):
+                self.fail("bad_value", f"“{trimmed}” {kind} adında satır sonu ya da denetim karakteri var")
+            folded = trimmed.lower()
+            if folded == "standart":
+                self.fail("bad_value", f"“{trimmed}” adı Standart'ındır; {kind} başka bir ad almalı")
+            if folded in names:
+                self.fail("bad_value", f"“{trimmed}” adlı {kind} iki kez var")
+            ids.add(sid)
+            names.add(folded)
+
+    def style_flag(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "false yazılmaz; alan yoksa stil öyle değildir")
+        return True
+
+    def text_styles(self, v):
+        styles = self.array(
+            self.fields(
+                {
+                    "id": (self.text, True),
+                    "name": (self.text, True),
+                    "font": (self.enum(DRAWING_FONTS), True),
+                    "bold": (self.style_flag, False),
+                    "italic": (self.style_flag, False),
+                    "oblique": (self.float, False),
+                    "height": (self.float, False),
+                    "widthFactor": (self.float, False),
+                    "fontFile": (self.text, False),
+                }
+            )
+        )(v)
+        self.style_names("yazı stili", styles)
+        for st in styles:
+            name = st["name"]
+            o = st.get("oblique")
+            if o is not None and not (o != 0.0 and abs(o) < MAX_OBLIQUE):
+                self.fail("bad_value", f"“{name}” yazı stilinin eğikliği {o:g}; −85 ile 85 arasında ve sıfırdan farklı olmalı")
+            h = st.get("height")
+            if h is not None and not 0.0 < h <= MAX_STYLE_MM:
+                self.fail("bad_value", f"“{name}” yazı stilinin yüksekliği {h:g} mm; sıfırdan büyük, en çok 1000 olmalı")
+            w = st.get("widthFactor")
+            if w is not None and not (0.0 < w <= MAX_WIDTH_FACTOR and w != 1.0):
+                self.fail("bad_value", f"“{name}” yazı stilinin genişlik çarpanı {w:g}; sıfırdan büyük, en çok 100 ve 1'den farklı olmalı (1 yazılmaz)")
+            if st.get("fontFile") == "":
+                self.fail("bad_value", f"“{name}” yazı stilinin yazı tipi dosyası boş")
+        return styles
+
+    def dimension_styles(self, v):
+        styles = self.array(
+            self.fields(
+                {
+                    "id": (self.text, True),
+                    "name": (self.text, True),
+                    "height": (self.float, True),
+                    "arrow": (self.enum(DIMENSION_ARROWS), False),
+                    "arrowSize": (self.float, False),
+                    "extOffset": (self.float, False),
+                    "extBeyond": (self.float, False),
+                    "textGap": (self.float, False),
+                    "textPlace": (self.enum(("centre",)), False),
+                    "decimals": (self.uint(32), False),
+                    "unit": (self.enum(("mm", "cm", "m")), False),
+                    "prefix": (self.text, False),
+                    "suffix": (self.text, False),
+                    "font": (self.enum(DRAWING_FONTS), False),
+                }
+            )
+        )(v)
+        self.style_names("ölçü stili", styles)
+        for st in styles:
+            name, h = st["name"], st["height"]
+            if not 0.0 < h <= MAX_STYLE_MM:
+                self.fail("bad_value", f"“{name}” ölçü stilinin değer yüksekliği {h:g} mm; sıfırdan büyük, en çok 1000 olmalı")
+            for key, positive in (("arrowSize", True), ("extOffset", False), ("extBeyond", False), ("textGap", False)):
+                x = st.get(key)
+                if x is not None and not ((x > 0.0 if positive else x >= 0.0) and x <= MAX_STYLE_MM and x / h <= MAX_DIMENSION_RATIO):
+                    self.fail("bad_value", f"“{name}” ölçü stilinin {key} değeri {x:g} mm; sınırların dışında")
+            if st.get("decimals", 0) > MAX_DIMENSION_DECIMALS:
+                self.fail("bad_value", f"“{name}” ölçü stilinin basamak sayısı {st['decimals']}; en çok 8 olmalı")
+            for key in ("prefix", "suffix"):
+                if key in st:
+                    self.affix_rule(st[key], key)
+        return styles
+
+    def affix_rule(self, text, key):
+        if not text or len(text) > MAX_AFFIX or any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in text):
+            self.fail("bad_value", f"ölçünün {key} değeri yazılamaz: boş olmamalı, en çok 32 harf, satır sonu ya da denetim karakteri yok")
+
+    # A text's face and a dimension's look (schema 21, spec §6.6, docs/adr/0183).
+
+    def style_id(self, v):
+        t = self.text(v)
+        if not t:
+            self.fail("bad_value", "stil kimliği boş")
+        return t
+
+    def oblique(self, v):
+        x = self.float(v)
+        if not (x != 0.0 and abs(x) < MAX_OBLIQUE):
+            self.fail("bad_value", f"yazının eğikliği {x:g}; −85 ile 85 arasında ve sıfırdan farklı olmalı")
+        return x
+
+    def face_flag(self, v):
+        if self.bool(v) is not True:
+            self.fail("bad_value", "false yazılmaz; alan yoksa yazı öyle değildir")
+        return True
+
+    def size(self, positive):
+        def read(v):
+            x = self.float(v)
+            if not ((x > 0.0 if positive else x >= 0.0) and x <= MAX_DIMENSION_RATIO):
+                self.fail("bad_value", f"ölçünün boyu {x:g}; {'sıfırdan büyük' if positive else '0 ya da büyük'} ve en çok 100 olmalı")
+            return x
+
+        return read
+
+    def decimals(self, v):
+        n = self.uint(32)(v)
+        if n > MAX_DIMENSION_DECIMALS:
+            self.fail("bad_value", f"ölçünün basamak sayısı {n}; en çok 8 olmalı")
+        return n
+
+    def affix(self, key):
+        def read(v):
+            t = self.text(v)
+            self.affix_rule(t, key)
+            return t
+
+        return read
 
     def survey(self, v):
         # The project's survey constants and tolerances (schema 14, spec §6.4.2, docs/adr/0169 §3): at least one, k
@@ -963,6 +1127,10 @@ class _Schema:
                 self.path.append("runs")
                 self.runs_rules(fields["text"], fields["runs"])
                 self.path.pop()
+            # Bold, italic and a slant need a typeface (docs/adr/0183 §2).
+            if kind == "text" and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
+                self.path.append(next(k for k in ("textStyle", "bold", "italic", "oblique") if k in fields))
+                self.fail("bad_value", "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok")
             # The drawing's own insert names a definition read before it (`blocks` comes before `entities`).
             if kind == "insert" and self.inside is None and fields["block"] not in self.index:
                 self.path.append("block")
@@ -1308,6 +1476,18 @@ ENTITY_KINDS = {
         **({"labelOf": (s.id16, False), "labelScale": (s.label_scale, False)} if s.linked_texts and s.inside is None else {}),
         # Schema 20 (docs/adr/0182 §1): a multi-line text's box, line spacing and letter formats.
         **({"boxWidth": (s.box_width, False), "lineSpacing": (s.line_spacing, False), "runs": (s.runs, False)} if s.paragraphs else {}),
+        # Schema 21 (docs/adr/0183 §2): its style, typeface, bold, italic and slant.
+        **(
+            {
+                "textStyle": (s.style_id, False),
+                "font": (s.enum(DRAWING_FONTS), False),
+                "bold": (s.face_flag, False),
+                "italic": (s.face_flag, False),
+                "oblique": (s.oblique, False),
+            }
+            if s.styles
+            else {}
+        ),
     },
     # Schema 9 (docs/adr/0147): five more kinds, `mask` only when true, a slope's two elevations.
     "dimension": lambda s: {
@@ -1320,6 +1500,25 @@ ENTITY_KINDS = {
         "height": (s.float, True),
         "offset": (s.float, True),
         **({"mask": (s.dimension_mask, False), "za": (s.float, False), "zb": (s.float, False)} if s.dimensions else {}),
+        # Schema 21 (docs/adr/0183 §3): its style, arrowheads, sizes, value's place and writing, typeface.
+        **(
+            {
+                "dimStyle": (s.style_id, False),
+                "arrow": (s.enum(DIMENSION_ARROWS), False),
+                "arrowSize": (s.size(True), False),
+                "extOffset": (s.size(False), False),
+                "extBeyond": (s.size(False), False),
+                "textGap": (s.size(False), False),
+                "textPlace": (s.enum(("centre",)), False),
+                "decimals": (s.decimals, False),
+                "unit": (s.enum(("mm", "cm", "m")), False),
+                "prefix": (s.affix("prefix"), False),
+                "suffix": (s.affix("suffix"), False),
+                "font": (s.enum(DRAWING_FONTS), False),
+            }
+            if s.styles
+            else {}
+        ),
     },
     "hatch": lambda s: {
         "ring": (s.array(s.point), True),

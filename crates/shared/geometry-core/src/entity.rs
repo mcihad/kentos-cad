@@ -26,7 +26,7 @@ use crate::geometry::{
 };
 use crate::jsmath::{PI, TAU, cos, js_max, sin};
 use crate::op;
-use crate::text::{Font, TextAlign, width_em};
+use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
 
 /// Half-length (1000 km) an infinite line gets when it meets finite geometry
@@ -170,6 +170,8 @@ pub enum Shape {
         box_width: Option<f64>,
         line_spacing: Option<f64>,
         runs: Option<Vec<crate::text::paragraph::Run>>,
+        /// Its style, typeface, bold, italic and slant (docs/adr/0183 §2).
+        face: crate::text::face::Face,
     },
     Dimension {
         a: Vec2,
@@ -184,6 +186,8 @@ pub enum Shape {
         mask: Option<bool>,
         za: Option<f64>,
         zb: Option<f64>,
+        /// Its style, arrowheads, sizes, value's place and writing (docs/adr/0183 §3).
+        look: crate::geom::dimension::Look,
     },
     Hatch {
         ring: Vec<Vec2>,
@@ -235,8 +239,8 @@ crate::json_tagged!(Shape, "kind",
     Xline => "xline" { p, dir },
     Ray => "ray" { p, dir },
     Spline => "spline" { pts, closed },
-    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs },
-    Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb },
+    Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs & face: crate::text::face::Face },
+    Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern },
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
     Leader => "leader" { pts, text, height, rotation, arrow, mask },
@@ -281,10 +285,9 @@ impl FromJson for Entity {
             Json::Str(k) => k.as_str(),
             _ => "",
         };
-        let own = Shape::field_names(kind);
         let rest = fields
             .iter()
-            .filter(|(k, _)| k != "kind" && !own.contains(&k.as_str()))
+            .filter(|(k, _)| k != "kind" && !Shape::owns_field(kind, k))
             .cloned()
             .collect();
         Ok(Entity { shape, rest })
@@ -322,6 +325,7 @@ pub fn dimension_geom(s: &Shape) -> Option<DimensionGeom> {
             c,
             za,
             zb,
+            look,
             ..
         } => Some(DimensionGeom {
             a: *a,
@@ -333,6 +337,7 @@ pub fn dimension_geom(s: &Shape) -> Option<DimensionGeom> {
             c: *c,
             za: *za,
             zb: *zb,
+            look: look.clone(),
         }),
         _ => None,
     }
@@ -769,6 +774,12 @@ pub struct TextPlace<'a> {
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
     pub runs: &'a [crate::text::paragraph::Run],
+    /// Its own typeface, bold and slant (docs/adr/0183 §2): measured in the
+    /// typeface, bold in the bold table; `lean` (the slant's tangent) leans
+    /// its box with its letters. None, false and 0 for the project's look.
+    pub font: Option<Font>,
+    pub bold: bool,
+    pub lean: f64,
 }
 
 impl<'a> TextPlace<'a> {
@@ -785,6 +796,7 @@ impl<'a> TextPlace<'a> {
                 box_width,
                 line_spacing,
                 runs,
+                face,
                 ..
             } => Some(TextPlace {
                 p: *p,
@@ -796,6 +808,9 @@ impl<'a> TextPlace<'a> {
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: runs.as_deref().unwrap_or_default(),
+                font: face.font,
+                bold: face.is_bold(),
+                lean: face.lean(),
             }),
             _ => None,
         }
@@ -820,6 +835,9 @@ impl<'a> TextPlace<'a> {
             box_width: None,
             line_spacing: None,
             runs: &[],
+            font: None,
+            bold: false,
+            lean: 0.0,
         }
     }
 
@@ -832,6 +850,11 @@ impl<'a> TextPlace<'a> {
             || self.text.contains('\n')
     }
 
+    /// The typeface it is measured in: its own, else `drawing` (the project's).
+    pub fn font_or(&self, drawing: Font) -> Font {
+        self.font.unwrap_or(drawing)
+    }
+
     /// Its lines and box (docs/adr/0182 §2).
     pub fn layout(&self, font: Font) -> crate::text::paragraph::Layout {
         crate::text::paragraph::lay_out(&crate::text::paragraph::Paragraph {
@@ -842,7 +865,8 @@ impl<'a> TextPlace<'a> {
             box_width: self.box_width,
             line_spacing: self.line_spacing.unwrap_or(1.0),
             along: self.align.map_or(0.0, TextAlign::along),
-            font,
+            font: self.font_or(font),
+            bold: self.bold,
         })
     }
 
@@ -850,7 +874,9 @@ impl<'a> TextPlace<'a> {
     /// one line), its line count and its baselines' distance.
     fn extent(&self, font: Font) -> (f64, f64, usize, f64) {
         if !self.is_paragraph() {
-            let w = width_em(self.text, font) * self.height * self.width_factor.unwrap_or(1.0);
+            let w = crate::text::width_em_in(self.text, self.font_or(font), self.bold)
+                * self.height
+                * self.width_factor.unwrap_or(1.0);
             return (w, 0.0, 1, 0.0);
         }
         let laid = self.layout(font);
@@ -905,11 +931,17 @@ impl<'a> TextPlace<'a> {
     }
 
     /// The box from `(x0, y0)` to `(x1, y1)` in metres of its own frame
-    /// (along its baseline and up from it), counted from its origin.
+    /// (along its baseline and up from it), counted from its origin; a
+    /// leaning text's leans with its letters (a point `y` up moves `y` times
+    /// the slant's tangent along, docs/adr/0183 §2).
     fn frame(&self, font: Font, (x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Vec<Vec2> {
         let o = self.origin(font);
         let (u, v) = self.axes();
-        let at = |x: f64, y: f64| Vec2::new(o.x + u.x * x + v.x * y, o.y + u.y * x + v.y * y);
+        let k = self.lean;
+        let at = |x: f64, y: f64| {
+            let x = x + y * k;
+            Vec2::new(o.x + u.x * x + v.x * y, o.y + u.y * x + v.y * y)
+        };
         vec![at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]
     }
 
@@ -1379,6 +1411,9 @@ fn text_readable_json(v: &Json) -> Result<Option<Turned>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     let turned = match width {
@@ -1406,12 +1441,28 @@ fn text_realign_json(v: &Json, to: Option<TextAlign>) -> Result<Vec2, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
     };
     let width: Option<f64> = json::read_field(v, "width")?;
     Ok(match width {
         Some(w) => place.realigned_at(to, w),
         None => place.realigned(to, font),
     })
+}
+
+/// A text's own bold as the JSON ops read it (docs/adr/0183 §2): with the
+/// typeface they measure it in (`font`, the text's own or the drawing's).
+fn bold_of(v: &Json) -> Result<bool, String> {
+    use crate::api::json::Flat;
+    Ok(crate::text::face::Face::read_flat(v)?.is_bold())
+}
+
+/// A text's slant's tangent as the JSON ops read it: 0 without one.
+fn lean_of(v: &Json) -> Result<f64, String> {
+    use crate::api::json::Flat;
+    Ok(crate::text::face::Face::read_flat(v)?.lean())
 }
 
 /// A text place from JSON as `textBox` reads it, and the typeface it names.
@@ -1438,6 +1489,9 @@ fn text_lines_json(v: &Json) -> Result<Vec<f64>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
     };
     let mask: Option<bool> = json::read_field(v, "mask")?;
     let mut out = Vec::new();
@@ -1479,6 +1533,9 @@ fn text_layout_json(v: &Json) -> Result<LaidOut, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: &runs,
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
     };
     let laid = place.layout(font);
     let (along, up) = place.shares(place.align, font);
@@ -1510,6 +1567,9 @@ fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
         box_width: json::read_field(v, "boxWidth")?,
         line_spacing: json::read_field(v, "lineSpacing")?,
         runs: runs.as_deref().unwrap_or_default(),
+        font: None,
+        bold: bold_of(v)?,
+        lean: lean_of(v)?,
     };
     Ok(place.outline(font))
 }

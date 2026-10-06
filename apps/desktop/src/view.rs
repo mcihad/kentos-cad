@@ -950,14 +950,20 @@ impl App {
             .commands(commands)
             .suggest_commands(!self.session.is_running() && !self.session.grip_active());
         let open = self.command_expanded;
-        line.prompt(self.line_prompt().map(|prompt| prompt.fit(width)))
+        let line = line
+            .prompt(self.line_prompt().map(|prompt| prompt.fit(width)))
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
-            .on_run(Message::CommandRun)
-            // As in AutoCAD, Space is a second Enter; Esc clears what is typed, then on an
-            // empty line ends the command (ADR 0018).
-            .space_submits()
-            .escape_clears()
+            .on_run(Message::CommandRun);
+        // As in AutoCAD, Space is a second Enter, except where the step asks for words (a
+        // style's name, docs/adr/0183 §4); Esc clears what is typed, then on an empty line ends
+        // the command (ADR 0018).
+        let line = if self.session.takes_words() {
+            line
+        } else {
+            line.space_submits()
+        };
+        line.escape_clears()
             .on_cancel(Message::CommandCancelled)
             .on_focus(Message::CommandFocus)
             // Geçmiş opens the panel on the tab it was on, or closes it (the web's expand button).
@@ -994,7 +1000,8 @@ impl App {
                                     .option_choices(o.key)
                                     .into_iter()
                                     .find(|c| c.checked)
-                                    .map(|c| crate::icons::from_web(Some(c.icon)));
+                                    .and_then(|c| c.icon)
+                                    .map(|name| crate::icons::from_web(Some(name)));
                                 prompt.choices(chosen, menu)
                             }
                             None => prompt,
@@ -1463,6 +1470,7 @@ impl App {
             Asking::FindReplace => self.find_replace_view(),
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerStates => self.layer_states_view(),
+            Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::LayerList => self.layer_list_view(),
             Asking::DataCompare => self.data_compare_view(),

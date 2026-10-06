@@ -1,7 +1,8 @@
 //! Explode (`apps/web/src/model/ops/explode.ts`): a compound entity breaks into simple
 //! ones. Paths become lines and arcs (holes included), a spline a polyline
-//! through its curve, a dimension lines, an arc and its text, a patterned
-//! hatch its lines, a leader its line, its arrowhead and its note. The
+//! through its curve, a dimension lines, an arc, its filled arrowheads and
+//! dots (solid hatches) and its text, a patterned hatch its lines, a leader
+//! its line, its arrowhead and its note. The
 //! dimension's value text comes in already formatted (project units belong
 //! to the app), and is used only when the dimension has no text of its own.
 
@@ -89,7 +90,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 }
             })])
         }
-        Shape::Dimension { text, height, .. } => {
+        Shape::Dimension {
+            text, height, look, ..
+        } => {
             let Some(l) = dimension_geom(e).and_then(|d| layout_dimension(&d)) else {
                 return Cut::Error("Ölçü geometrisi geçersiz.".into());
             };
@@ -118,13 +121,25 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     a1: norm_angle(a0 + sweep),
                 }));
             }
+            // Its filled arrowheads and dots, solid hatches as a leader's (docs/adr/0183 §3).
+            for ring in l.fills.iter().flatten() {
+                pieces.push(Entity::new(Shape::Hatch {
+                    ring: ring.clone(),
+                    holes: None,
+                    pattern: HatchPattern {
+                        kind: "solid".into(),
+                        angle: 0.0,
+                        spacing: *height,
+                    },
+                }));
+            }
             let text = match text {
                 Some(t) if !t.is_empty() => t.clone(),
                 _ => value_text.to_string(),
             };
             // textAt is the text's centre; single-line text is anchored at its start (measured in the drawing's face).
             let r = (l.rotation * PI) / 180.0;
-            let half = width_em(&text, font) * height * 0.5;
+            let half = width_em(&text, look.font.unwrap_or(font)) * height * 0.5;
             pieces.push(Entity::new(Shape::Text {
                 p: Vec2::new(l.text_at.x - cos(r) * half, l.text_at.y - sin(r) * half),
                 text,
@@ -136,6 +151,11 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                 box_width: None,
                 line_spacing: None,
                 runs: None,
+                // The value's typeface, when the dimension has its own (docs/adr/0183 §3).
+                face: crate::text::face::Face {
+                    font: look.font,
+                    ..Default::default()
+                },
             }));
             Cut::Pieces(pieces)
         }
@@ -205,6 +225,7 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
                     box_width: None,
                     line_spacing: None,
                     runs: None,
+                    face: Default::default(),
                 }));
             }
             Cut::Pieces(pieces)

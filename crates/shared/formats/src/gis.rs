@@ -361,6 +361,8 @@ impl Collect {
             declared_crs: declared,
             view: None,
             blocks: Vec::new(),
+            text_styles: Vec::new(),
+            dimension_styles: Vec::new(),
         };
         crate::import::summarise(&mut result);
         result

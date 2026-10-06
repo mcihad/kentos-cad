@@ -72,9 +72,31 @@ export function registerStyleCommands(ctx: AppContext): void {
       title: 'Stil yöneticisi…',
       category: cat,
       icon: 'styles',
-      aliases: ['STIL', 'STILLER', 'STYLE', 'SEMBOLLER'],
+      // STYLE is AutoCAD's text styles (style.textStyles, docs/adr/0183 §5).
+      aliases: ['STIL', 'STILLER', 'SEMBOLLER'],
       description: 'Sembol kitaplığı: sistem, kullanıcı ve proje sembolleri; kopyala, düzenle, içe ve dışa aktar.',
       run: () => void manager().then((m) => m.openStyleManager(ctx)),
+    },
+    // Yazı ve ölçü stilleri (docs/adr/0183 §5): a CAD project's (app/workspaces.ts hides them elsewhere).
+    {
+      id: 'style.textStyles',
+      title: 'Yazı stilleri…',
+      short: 'Yazı stilleri',
+      category: cat,
+      icon: 'textStyle',
+      aliases: ['STYLE', 'ST', 'YAZISTILI'],
+      description: 'Projenin yazı stilleri: yazı tipi, kalın, italik, eğiklik, yükseklik ve genişlik; kaydedince stili kullanan yazılar uyar.',
+      run: () => void import('../ui/annotation/StylesDialog').then((m) => m.openAnnotationStyles(ctx, 'text')),
+    },
+    {
+      id: 'style.dimensionStyles',
+      title: 'Ölçü stilleri…',
+      short: 'Ölçü stilleri',
+      category: cat,
+      icon: 'dimensionStyle',
+      aliases: ['DIMSTYLE', 'DST', 'OLCUSTILI'],
+      description: 'Projenin ölçü stilleri: uçlar, boylar, değerin yeri, basamak, birim, önek, sonek ve yazı tipi; kaydedince stili kullanan ölçüler uyar.',
+      run: () => void import('../ui/annotation/StylesDialog').then((m) => m.openAnnotationStyles(ctx, 'dimension')),
     },
     {
       id: 'style.svgEditor',

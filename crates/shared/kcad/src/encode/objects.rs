@@ -49,6 +49,8 @@ pub(super) enum Val<'d> {
     Pattern(&'d HatchPattern),
     /// A multi-line text's letter formats (§6.6, docs/adr/0182).
     Runs(&'d [TextRun]),
+    /// A whole number (a dimension's decimals, docs/adr/0183).
+    Uint(u64),
 }
 
 impl<'d> Encoder<'d> {
@@ -301,6 +303,31 @@ impl<'d> Encoder<'d> {
                     f.push(("labelOf", Val::Uid(of)));
                     f.push(("labelScale", Val::Float(scale)));
                 }
+                // Its face (docs/adr/0183 §2): bold, italic and a slant need a typeface. A slant that is
+                // not finite meets the float's own refusal (`non_finite`), with its place.
+                let face = &e.face;
+                if let Some((field, words)) = face.problem()
+                    && (field != "oblique" || face.oblique.is_none_or(f64::is_finite))
+                {
+                    self.path.push(Seg::Name(kind));
+                    self.path.push(Seg::Name(field));
+                    return Err(self.fail(Code::BadValue, &words));
+                }
+                if let Some(id) = &face.text_style {
+                    f.push(("textStyle", Val::Text(id)));
+                }
+                if let Some(font) = face.font {
+                    f.push(("font", Val::Name(font.id())));
+                }
+                if face.bold {
+                    f.push(("bold", Val::Bool(true)));
+                }
+                if face.italic {
+                    f.push(("italic", Val::Bool(true)));
+                }
+                if let Some(o) = face.oblique {
+                    f.push(("oblique", Val::Float(o)));
+                }
             }
             Entity::Dimension(e) => {
                 // What a style needs, and what only a slope has (docs/adr/0147).
@@ -359,6 +386,54 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(z) = e.zb {
                     f.push(("zb", Val::Float(z)));
+                }
+                // Its look (docs/adr/0183 §3). A size that is not finite meets the float's own refusal.
+                let look = &e.look;
+                if let Some((field, words)) = look.problem() {
+                    let finite = match field {
+                        "arrowSize" => look.arrow_size.is_none_or(f64::is_finite),
+                        "extOffset" => look.ext_offset.is_none_or(f64::is_finite),
+                        "extBeyond" => look.ext_beyond.is_none_or(f64::is_finite),
+                        "textGap" => look.text_gap.is_none_or(f64::is_finite),
+                        _ => true,
+                    };
+                    if finite {
+                        return refuse(self, Code::BadValue, field, &words);
+                    }
+                }
+                if let Some(id) = &look.dim_style {
+                    f.push(("dimStyle", Val::Text(id)));
+                }
+                if let Some(a) = look.arrow {
+                    f.push(("arrow", Val::Name(a.name())));
+                }
+                for (key, v) in [
+                    ("arrowSize", look.arrow_size),
+                    ("extOffset", look.ext_offset),
+                    ("extBeyond", look.ext_beyond),
+                    ("textGap", look.text_gap),
+                ] {
+                    if let Some(x) = v {
+                        f.push((key, Val::Float(x)));
+                    }
+                }
+                if look.text_place.is_some() {
+                    f.push(("textPlace", Val::Name("centre")));
+                }
+                if let Some(d) = look.decimals {
+                    f.push(("decimals", Val::Uint(u64::from(d))));
+                }
+                if let Some(u) = look.unit {
+                    f.push(("unit", Val::Name(u.mark())));
+                }
+                if let Some(t) = &look.prefix {
+                    f.push(("prefix", Val::Text(t)));
+                }
+                if let Some(t) = &look.suffix {
+                    f.push(("suffix", Val::Text(t)));
+                }
+                if let Some(font) = look.font {
+                    f.push(("font", Val::Name(font.id())));
                 }
             }
             Entity::Hatch(e) => {
@@ -483,7 +558,7 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
-    fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
+    pub(super) fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
         match v {
             Val::Text(t) => self.text(t),
             Val::Name(t) => {
@@ -491,6 +566,10 @@ impl<'d> Encoder<'d> {
                 Ok(())
             }
             Val::Float(x) => self.float(x),
+            Val::Uint(n) => {
+                self.w.uint(n);
+                Ok(())
+            }
             Val::Bool(b) => {
                 self.w.bool(b);
                 Ok(())

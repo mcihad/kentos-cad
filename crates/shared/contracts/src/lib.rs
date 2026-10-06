@@ -27,6 +27,7 @@
 //! - the style engine's own types (renderers, library items) are opaque JSON
 //!   in v1 and become typed when the style core moves to Rust.
 
+pub mod annotation;
 pub mod api;
 pub mod blocks;
 pub mod cad;
@@ -55,6 +56,7 @@ pub mod project_files;
 pub mod settings;
 pub mod style;
 
+pub use annotation::*;
 pub use api::*;
 pub use cad::*;
 pub use cad_array::*;

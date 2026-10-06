@@ -859,6 +859,94 @@ cases.append({
 })
 
 
+# ── Yazı ve ölçü stilleri (docs/adr/0183 §9) ────────────────────────────
+
+ADA_STYLE = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101"
+MIMARI_STYLE = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2201"
+MISSING_STYLE = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2fff"
+S_SETUP = {**SETUP, "settings": {**SETUP["settings"],
+    "textStyles": [{"id": ADA_STYLE, "name": "Ada no", "font": "arimo", "bold": True, "height": 3.5}],
+    "dimensionStyles": [{"id": MIMARI_STYLE, "name": "Mimari", "height": 3.5, "arrow": "closed", "decimals": 1, "unit": "cm", "suffix": " cm"}]}}
+DIM = {"kind": "dimension", "a": P(487000, 4420140), "b": P(487024.5, 4420140), "offset": -2, "height": 3.5}
+
+
+def face_message():
+    return "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok. Yazıya bir yazı tipi verin ya da bu alanları kaldırın (yazı projenin yazı tipiyle çizilir)."
+
+
+def oblique_message(o):
+    return f"Yazının eğikliği −85 ile 85 derece arasında ve sıfırdan farklı olmalı; {o} verildi. Eğikliği bu aralıkta verin ya da alanı kaldırın (dik)."
+
+
+def size_message(what, floor, v):
+    return f"Ölçünün {what} değer yüksekliğinin katıdır: {floor}, en çok 100 olmalı; {v} verildi. Bu aralıkta verin ya da alanı kaldırın (Standart'ınki)."
+
+
+def affix_message(what, why):
+    return f"Ölçünün {what} yazılamaz: {why}. Tek satır, en çok 32 harf verin ya da alanı kaldırın."
+
+
+def unknown_style_message(style_id, what):
+    return f"“{style_id}” kimlikli {what} projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir {what}nin kimliğini verin ya da alanı kaldırın (Standart)."
+
+
+styled = [
+    O({**TEXT, "textStyle": ADA_STYLE, "font": "arimo", "bold": True, "height": 3.5}),
+    O({**TEXT, "text": "Çınar sokağı", "font": "overpass", "italic": True, "oblique": 15}),
+    O({**DIM, "dimStyle": MIMARI_STYLE, "arrow": "closed", "decimals": 1, "unit": "cm", "suffix": " cm"}),
+    O({**DIM, "a": P(487000, 4420150), "b": P(487010, 4420150), "height": 2.5, "arrow": "dot", "arrowSize": 0.8, "extOffset": 0,
+       "textGap": 0.5, "textPlace": "centre", "prefix": "~", "font": "plex-mono"}),
+]
+cases.append({
+    "name": "yazı stili ve yüzüyle, ölçü stili ve görünüşüyle yazılır; stilsiz yüz ve görünüş de olur (ADR 0183 §9)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": styled}, "result": done([3, 4, 5, 6]),
+         "expect": {"entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(styled)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS, "canUndo": False}},
+    ],
+})
+cases.append({
+    "name": "yazının yüzü ve ölçünün görünüşü kurallarında: invalid_style, yolu alanın; sonlu olmayan önce not_finite (ADR 0183 §9)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(TEXT), O({**TEXT, "bold": True})]},
+         "result": failed("invalid_style", face_message(), "objects[1].geometry.bold"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "oblique": 10})]},
+         "result": failed("invalid_style", face_message(), "objects[0].geometry.oblique"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "font": "arimo", "oblique": 90})]},
+         "result": failed("invalid_style", oblique_message(90), "objects[0].geometry.oblique"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "textStyle": ""})]},
+         "result": failed("invalid_style", "Yazının stil kimliği boş. Stilin kimliğini verin ya da alanı kaldırın (Standart).", "objects[0].geometry.textStyle"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "arrowSize": 0})]},
+         "result": failed("invalid_style", size_message("ok boyu", "sıfırdan büyük", 0), "objects[0].geometry.arrowSize"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "extOffset": -0.5})]},
+         "result": failed("invalid_style", size_message("uzatma çizgisinin boşluğu", "0 ya da büyük", -0.5), "objects[0].geometry.extOffset"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "decimals": 9})]},
+         "result": failed("invalid_style", "Ölçünün basamak sayısı en çok 8; 9 verildi. Daha az basamak verin ya da alanı kaldırın (projenin basamakları).", "objects[0].geometry.decimals"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "prefix": ""})]},
+         "result": failed("invalid_style", affix_message("öneki", "boş"), "objects[0].geometry.prefix"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "suffix": "m\n2"})]},
+         "result": failed("invalid_style", affix_message("soneki", "satır sonu ya da denetim karakteri var"), "objects[0].geometry.suffix"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "font": "arimo", "oblique": 10})]}, "nonFinite": {"objects[0].geometry.oblique": "Infinity"},
+         "result": not_finite(1), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "textGap": 0.5})]}, "nonFinite": {"objects[0].geometry.textGap": "NaN"},
+         "result": not_finite(1), "expect": NOTHING},
+    ],
+})
+cases.append({
+    "name": "yazının ve ölçünün stili projenin olmalı: unknown_style, sırayla; katman denetiminden sonra (ADR 0183 §9)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "textStyle": ADA_STYLE}), O({**TEXT, "textStyle": MISSING_STYLE})]},
+         "result": failed("unknown_style", unknown_style_message(MISSING_STYLE, "yazı stili"), "objects[1].geometry.textStyle"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DIM, "dimStyle": ADA_STYLE})]},
+         "result": failed("unknown_style", unknown_style_message(ADA_STYLE, "ölçü stili"), "objects[0].geometry.dimStyle"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [O({**TEXT, "textStyle": MISSING_STYLE})]}, "result": locked("Kilitli katman"), "expect": NOTHING},
+    ],
+})
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

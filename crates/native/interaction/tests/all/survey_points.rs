@@ -321,6 +321,7 @@ fn named_point_gives_the_running_tool_its_place_as_if_clicked() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }))
         .expect("a slot");
     b.start("line");

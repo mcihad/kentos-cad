@@ -8,6 +8,7 @@ import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import type { EntityGeometry } from '../contracts/generated/EntityGeometry';
 import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
+import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
 import { MAX_WIDTH_FACTOR, paragraphProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
@@ -84,6 +85,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   holeAdd: 'Delik ekle',
   holeRemove: 'Deliği sil',
   holeFill: 'Deliği doldur',
+  textStyle: 'Yazı stili',
+  dimensionStyle: 'Ölçü stili',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -98,8 +101,8 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   spline: ['pts', 'closed'],
   xline: ['p', 'dir'],
   ray: ['p', 'dir'],
-  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs'],
-  dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb'],
+  text: ['p', 'text', 'height', 'rotation', 'align', 'widthFactor', 'mask', 'boxWidth', 'lineSpacing', 'runs', ...FACE_FIELDS],
+  dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c', 'mask', 'za', 'zb', ...LOOK_FIELDS],
   hatch: ['ring', 'holes', 'pattern'],
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
@@ -134,6 +137,8 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
     if (out.boxWidth === null) delete out.boxWidth;
     if (out.lineSpacing === null || out.lineSpacing === 1) delete out.lineSpacing;
     if (Array.isArray(out.runs) && !out.runs.length) delete out.runs;
+    // Its face's (docs/adr/0183 §2): upright, not bold, not italic, the project's typeface, no style.
+    for (const key of FACE_FIELDS) if (out[key] === null || out[key] === false) delete out[key];
   }
   // So are a leader's (docs/adr/0146 §1): no mask, a filled arrow, no note; a null is no value, as serde reads it.
   if (g.kind === 'leader') {
@@ -146,6 +151,8 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
     if (out.mask !== true) delete out.mask;
     if (out.za === null) delete out.za;
     if (out.zb === null) delete out.zb;
+    // Its look's (docs/adr/0183 §3): a null is no value.
+    for (const key of LOOK_FIELDS) if (out[key] === null) delete out[key];
   }
   return out;
 }
@@ -316,6 +323,34 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     const problem = paragraphProblem(g.text, g);
     if (problem) return failed(error('invalid_paragraph', problem[1], at(`.${problem[0]}`)));
   }
+  // A text's face and a dimension's look (docs/adr/0183 §9).
+  const style = g.kind === 'text' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
+  if (style) return failed(error('invalid_style', style[1], at(`.${style[0]}`)));
+  return null;
+}
+
+/**
+ * Every text's and dimension's style among the geometries is the project's, in order (docs/adr/0183 §9):
+ * `unknown_style` at `{list}[i].geometry.textStyle` (`.dimStyle`).
+ */
+export function checkStyles(doc: CadDocument, geometries: readonly (EntityGeometry | null)[], list: string): Stop | null {
+  const settings = doc.settings;
+  for (const [i, g] of geometries.entries()) {
+    const [id, known, what, field] =
+      g?.kind === 'text' && g.textStyle !== undefined
+        ? [g.textStyle, settings.textStyle(g.textStyle) !== null, 'yazı stili', 'textStyle']
+        : g?.kind === 'dimension' && g.dimStyle !== undefined
+          ? [g.dimStyle, settings.dimensionStyle(g.dimStyle) !== null, 'ölçü stili', 'dimStyle']
+          : [null, true, '', ''];
+    if (id !== null && !known)
+      return failed(
+        error(
+          'unknown_style',
+          `“${id}” kimlikli ${what} projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir ${what}nin kimliğini verin ya da alanı kaldırın (Standart).`,
+          `${list}[${i}].geometry.${field}`,
+        ),
+      );
+  }
   return null;
 }
 
@@ -435,6 +470,13 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
     'changes',
   );
   if (blocks) return blocks;
+  // A text's and a dimension's style is the project's (docs/adr/0183 §9).
+  const styles = checkStyles(
+    doc,
+    input.changes.map((c) => (c.kind === 'remove' ? null : c.geometry)),
+    'changes',
+  );
+  if (styles) return styles;
   const checked: Checked = { changed: [], created: [], removed: [], warnings: [] };
   // The elevations of the objects the edit names, for what it writes (docs/adr/0142); nothing to carry
   // when none has one.

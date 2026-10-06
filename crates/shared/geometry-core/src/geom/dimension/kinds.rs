@@ -1,13 +1,18 @@
 //! The dimensions of docs/adr/0147 §2: ordinate (Koordinat), arc length (Yay
 //! uzunluğu), jogged radius (Kırıklı yarıçap), azimuth (Semt) and slope
 //! (Eğim). Every length is in the value's height h, as the older kinds':
-//! the gap h/2, the ticks 0.6h, the value 0.35h above its line. An arc
+//! the gap h/2, the ticks 0.6h, the value 0.35h above its line; a style's
+//! look (docs/adr/0183 §3) sets them for all but the azimuth's and the
+//! slope's own arrows. An arc
 //! length's and an arrow's value keeps off what it measures: when its
 //! "above" faces it, it goes as far under its line. The independent
 //! reference is `scripts/fixtures/dimension_cases.py`
 //! (fixtures/dimension/v1/layout.json).
 
-use super::{DimensionGeom, DimensionLayout, add, at2, dimension_measure, dot, text_along, tick};
+use super::{
+    DimensionGeom, DimensionLayout, add, at2, dimension_measure, dot, end_mark, fills_of, lift,
+    neg, text_along,
+};
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
 use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min, sin};
@@ -18,7 +23,8 @@ use crate::vec2::Vec2;
 /// The product commands refuse it with the place to mend (docs/adr/0147 §6).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DimensionFault {
-    /// An ordinate's line end not more than h/2 across its axis from its point.
+    /// An ordinate's line end not past its extension offset (h/2 by default)
+    /// across its axis from its point.
     OrdinateTooShort,
     /// An arc length without its arc's centre.
     ArcNoCentre,
@@ -73,7 +79,7 @@ pub(super) fn fault(d: &DimensionGeom) -> Option<DimensionFault> {
                 Vec2::new(1.0, 0.0)
             };
             let l = dot(Vec2::new(b.x - a.x, b.y - a.y), n).abs();
-            (l <= d.height / 2.0).then_some(OrdinateTooShort)
+            (l <= d.look.ext_offset() * d.height).then_some(OrdinateTooShort)
         }
         Some("arcLength") => {
             let Some(c) = d.c else {
@@ -144,7 +150,7 @@ fn away_from(m: Vec2, at: Vec2, rotation: f64, away: Vec2, h: f64, top: f64) -> 
 /// (AutoCAD's jog). The value is on the last part.
 pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (a, b, h) = (d.a, d.b, d.height);
-    let g = h / 2.0;
+    let g = d.look.ext_offset() * h;
     let (unit, prefix) = dimension_measure(Some("ordinate"), d.angle);
     let y = prefix == "Y=";
     // e: the measured axis; n: the line's.
@@ -174,7 +180,7 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
     } else {
         u
     };
-    let (text_at, rotation) = text_along(mid(tail.0, tail.1), v, h);
+    let (text_at, rotation) = text_along(mid(tail.0, tail.1), v, lift(d));
     Some(DimensionLayout {
         pick: segs(&lines),
         lines,
@@ -186,6 +192,7 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
         unit,
         prefix,
         handle: b,
+        fills: None,
     })
 }
 
@@ -207,12 +214,14 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
     if sweep < 1e-9 || big < 1e-9 {
         return None;
     }
-    let g = h / 2.0;
+    let g = d.look.ext_offset() * h;
+    let beyond = d.look.ext_beyond() * h;
     let k = if d.offset >= 0.0 { 1.0 } else { -1.0 };
     let mut lines = Vec::new();
+    let mut fills = Vec::new();
     if d.offset.abs() > g {
         for t in [t0, t0 + sweep] {
-            lines.push([at2(c, t, r + k * g), at2(c, t, big + k * g)]);
+            lines.push([at2(c, t, r + k * g), at2(c, t, big + k * beyond)]);
         }
     }
     let steps = js_max(8.0, (sweep / (PI / 36.0)).ceil());
@@ -226,11 +235,21 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
     }
     let tangent = |t: f64| Vec2::new(-sin(t), cos(t));
     let (d1, d2) = (at2(c, t0, big), at2(c, t0 + sweep, big));
-    tick(&mut lines, d1, tangent(t0), h * 0.6);
-    tick(&mut lines, d2, tangent(t0 + sweep), h * 0.6);
+    let size = d.look.arrow_size() * h;
+    end_mark(
+        &mut lines,
+        &mut fills,
+        &d.look,
+        d1,
+        tangent(t0),
+        tangent(t0),
+        size,
+    );
+    let end = tangent(t0 + sweep);
+    end_mark(&mut lines, &mut fills, &d.look, d2, end, neg(end), size);
     let tm = t0 + sweep / 2.0;
     let handle = at2(c, tm, big);
-    let (text_at, rotation) = text_along(handle, tangent(tm), h);
+    let (text_at, rotation) = text_along(handle, tangent(tm), lift(d));
     // Off the arc: outwards for a dimension arc outside it, inwards for one inside.
     let outwards = Vec2::new(
         ((handle.x - c.x) / big) * k,
@@ -263,6 +282,7 @@ pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
             sweep,
         }],
         handle,
+        fills: fills_of(fills),
     })
 }
 
@@ -321,9 +341,19 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
         lines.push([p2, b]);
     }
     let pick = segs(&lines);
-    tick(&mut lines, b, u, h * 0.6);
+    let mut fills = Vec::new();
+    // The arrowhead on the arc, its body inside it.
+    end_mark(
+        &mut lines,
+        &mut fills,
+        &d.look,
+        b,
+        u,
+        neg(u),
+        d.look.arrow_size() * h,
+    );
     let part = if last >= 3.0 * h { (p2, b) } else { (c, p1) };
-    let (text_at, rotation) = text_along(mid(part.0, part.1), u, h);
+    let (text_at, rotation) = text_along(mid(part.0, part.1), u, lift(d));
     let (unit, prefix) = dimension_measure(Some("jogged"), None);
     Some(DimensionLayout {
         lines,
@@ -336,6 +366,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
         prefix,
         pick,
         handle: p1,
+        fills: fills_of(fills),
     })
 }
 
@@ -373,7 +404,8 @@ pub(super) fn arrowed(d: &DimensionGeom, slope: bool) -> Option<DimensionLayout>
         lines.push([tip, add(back, wn, 0.2 * h)]);
         lines.push([tip, add(back, wn, -0.2 * h)]);
     }
-    let (mut text_at, rotation) = text_along(m, u, h);
+    // Its own arrow and the value's own place: a style's marks and gap are not its (docs/adr/0183 §3).
+    let (mut text_at, rotation) = text_along(m, u, super::look::DEFAULT_TEXT_GAP * h);
     // Off the edge: on the arrow's side of it (over the arrow when it is on the edge).
     if d.offset != 0.0 {
         let side = if d.offset > 0.0 { 1.0 } else { -1.0 };
@@ -398,5 +430,6 @@ pub(super) fn arrowed(d: &DimensionGeom, slope: bool) -> Option<DimensionLayout>
         prefix,
         pick: vec![Edge::Seg { a: tail, b: tip }],
         handle: m,
+        fills: None,
     })
 }

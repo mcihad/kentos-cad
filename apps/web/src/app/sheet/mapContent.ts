@@ -113,7 +113,7 @@ export function vectorMap(ctx: AppContext, prim: MapPrim): VectorMap | null {
     spots,
     pxPerM,
     box: { minX: box.minX, maxY: box.maxY, width: (box.maxX - box.minX) * pxPerM, height: (box.maxY - box.minY) * pxPerM },
-    dimensionText: (m) => ctx.view.dimensionText(m),
+    dimensionText: (m, look) => ctx.view.dimensionText(m, look),
     pieces: (b) => ctx.view.geometry.blockPieces(b),
     measure,
   });

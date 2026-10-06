@@ -51,7 +51,8 @@ export function textRows(ctx: AppContext, texts: readonly TextEntity[], locked: 
       ctx,
       texts
         .filter((t) => (t.align ?? null) !== to)
-        .map((t) => ({ e: t, patch: { p: textRealign({ ...t, font }, to), align: to ?? undefined } })),
+        // In its own typeface, bold and slant, else the project's (docs/adr/0183 §2).
+        .map((t) => ({ e: t, patch: { p: textRealign({ ...t, font: t.font ?? font }, to), align: to ?? undefined } })),
     );
   const alignItems = (): MenuItem[] =>
     TEXT_ALIGN_ROWS.flat().map((a) => ({ label: capital(textAlignName(a)), icon: textAlignIcon(a), radio: true, checked: align === a, run: () => realign(a) }));

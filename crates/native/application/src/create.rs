@@ -29,7 +29,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
-use crate::edit::{check_blocks, check_geometry};
+use crate::edit::{check_blocks, check_geometry, check_styles};
 use crate::geometry::entity_of;
 
 /// Checks `input` against the document, writing nothing.
@@ -151,6 +151,16 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Vec<CommandWarning>, 
     let warnings = checks::layer(doc, &input.layer_id)?;
     // An insert's block is the drawing's (docs/adr/0144).
     check_blocks(
+        doc,
+        input
+            .objects
+            .iter()
+            .enumerate()
+            .map(|(i, o)| (i, &o.geometry)),
+        "objects",
+    )?;
+    // A text's and a dimension's style is the project's (docs/adr/0183 §9).
+    check_styles(
         doc,
         input
             .objects

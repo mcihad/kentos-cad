@@ -1,0 +1,732 @@
+999
+Text and dimension styles of another program (docs/adr/0183 §7); crates/shared/formats/tests/all/dxf.rs works each out from this file.
+999
+STYLE: Standard (txt), ADA (arial.ttf, ACAD's family Arial and bold flag), YOL (romans.shx, fixed height 1.25, width 0.8, slant 15), NOT (couri.ttf), Başlık (Barlow-Bold.ttf).
+999
+DIMSTYLE: Standard; KADASTRO (DIMSCALE 2, DIMTXT 1.5, DIMTSZ 0.5, DIMEXO 0.25, DIMEXE 0.5, DIMGAP 0.4, DIMTAD 0, DIMDEC 3, DIMPOST L=<>, DIMLFAC 100, DIMTXSTY ADA);
+999
+NOKTA (_DOT, DIMASZ 1, DIMDEC 2); OZEL (_BoxFilled, DIMASZ 2); YOK (DIMASZ 0, DIMGAP -0.5).
+999
+ENTITIES: texts on Standard, ADA, ADA with its own slant 10, YOL, NOT (an MTEXT), Başlık and a style the file lacks; an ordinate in KADASTRO, an arc length in NOKTA with its own DIMDEC 1, a jogged radius in OZEL, ordinates in YOK and Standard.
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1021
+  9
+$INSUNITS
+ 70
+6
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+2
+  0
+LAYER
+  2
+YAZI
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+OLCU
+ 70
+0
+ 62
+7
+  6
+CONTINUOUS
+  0
+ENDTAB
+  0
+TABLE
+  2
+STYLE
+ 70
+5
+  0
+STYLE
+  5
+11
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+Standard
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+txt
+  4
+
+  0
+STYLE
+  5
+12
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+ADA
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+arial.ttf
+  4
+
+1001
+ACAD
+1000
+Arial
+1071
+33554466
+  0
+STYLE
+  5
+13
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+YOL
+ 70
+0
+ 40
+1.25
+ 41
+0.8
+ 50
+15.0
+ 71
+0
+ 42
+2.5
+  3
+romans.shx
+  4
+
+  0
+STYLE
+  5
+14
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+NOT
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+couri.ttf
+  4
+
+  0
+STYLE
+  5
+15
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+Başlık
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+Barlow-Bold.ttf
+  4
+
+  0
+ENDTAB
+  0
+TABLE
+  2
+DIMSTYLE
+ 70
+5
+100
+AcDbDimStyleTable
+  0
+DIMSTYLE
+105
+21
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+Standard
+ 70
+0
+140
+2.5
+ 41
+2.5
+  0
+DIMSTYLE
+105
+22
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+KADASTRO
+ 70
+0
+  3
+L=<>
+ 40
+2.0
+140
+1.5
+142
+0.5
+ 42
+0.25
+ 44
+0.5
+147
+0.4
+ 77
+0
+271
+3
+144
+100.0
+340
+12
+  0
+DIMSTYLE
+105
+23
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+NOKTA
+ 70
+0
+  5
+_DOT
+140
+2.5
+ 41
+1.0
+271
+2
+  0
+DIMSTYLE
+105
+24
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+OZEL
+ 70
+0
+  5
+_BoxFilled
+140
+2.5
+ 41
+2.0
+  0
+DIMSTYLE
+105
+25
+100
+AcDbSymbolTableRecord
+100
+AcDbDimStyleTableRecord
+  2
+YOK
+ 70
+0
+140
+2.0
+ 41
+0.0
+147
+-0.5
+  0
+ENDTAB
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 40
+1.0
+  1
+Standart yazı
+  7
+Standard
+100
+AcDbText
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+10.0
+ 30
+0.0
+ 40
+1.5
+  1
+Ada 101
+  7
+ADA
+100
+AcDbText
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+20.0
+ 30
+0.0
+ 40
+1.5
+  1
+Ada 102
+ 51
+10.0
+  7
+ADA
+100
+AcDbText
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+30.0
+ 30
+0.0
+ 40
+1.25
+  1
+Atatürk Caddesi
+ 41
+0.8
+  7
+YOL
+100
+AcDbText
+  0
+MTEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbMText
+ 10
+0.0
+ 20
+40.0
+ 30
+0.0
+ 40
+1.0
+ 41
+0.0
+ 71
+1
+ 72
+1
+  1
+Not\Pikinci satır
+  7
+NOT
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+50.0
+ 30
+0.0
+ 40
+2.0
+  1
+Pafta
+  7
+Başlık
+100
+AcDbText
+  0
+TEXT
+  8
+YAZI
+100
+AcDbEntity
+100
+AcDbText
+ 10
+0.0
+ 20
+60.0
+ 30
+0.0
+ 40
+1.0
+  1
+Kayıp stil
+  7
+YOKSTIL
+100
+AcDbText
+  0
+DIMENSION
+  8
+OLCU
+100
+AcDbEntity
+100
+AcDbDimension
+  2
+*D1
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+120.0
+ 21
+32.0
+ 31
+0.0
+ 70
+102
+  1
+
+  3
+KADASTRO
+100
+AcDbOrdinateDimension
+ 13
+100.0
+ 23
+10.0
+ 33
+0.0
+ 14
+100.0
+ 24
+30.0
+ 34
+0.0
+  0
+ARC_DIMENSION
+  8
+OLCU
+100
+AcDbEntity
+100
+AcDbDimension
+  2
+*D2
+ 10
+209.1923881554251
+ 20
+9.192388155425117
+ 30
+0.0
+ 11
+209.1923881554251
+ 21
+10.692388155425117
+ 31
+0.0
+ 70
+37
+  1
+
+  3
+NOKTA
+100
+AcDbArcDimension
+ 13
+210.0
+ 23
+0.0
+ 33
+0.0
+ 14
+200.0
+ 24
+10.0
+ 34
+0.0
+ 15
+200.0
+ 25
+0.0
+ 35
+0.0
+ 70
+0
+ 40
+0.0
+ 41
+1.5707963267948966
+ 71
+0
+1001
+ACAD
+1000
+DSTYLE
+1002
+{
+1070
+271
+1070
+1
+1002
+}
+  0
+LARGE_RADIAL_DIMENSION
+  8
+OLCU
+100
+AcDbEntity
+100
+AcDbDimension
+  2
+*D3
+ 10
+452400.0
+ 20
+4412100.0
+ 30
+0.0
+ 11
+452471.7084945504
+ 21
+4412303.230553068
+ 31
+0.0
+ 70
+41
+  1
+R<>
+  3
+OZEL
+100
+AcDbRadialDimensionLarge
+ 13
+452465.584951
+ 23
+4412288.964585
+ 33
+0.0
+ 14
+452470.24368144694
+ 24
+4412297.378634742
+ 34
+0.0
+ 15
+452475.244432
+ 25
+4412306.732377
+ 35
+0.0
+ 40
+0.0
+  0
+DIMENSION
+  8
+OLCU
+100
+AcDbEntity
+100
+AcDbDimension
+  2
+*D4
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+140.0
+ 21
+50.0
+ 31
+0.0
+ 70
+38
+  1
+
+  3
+YOK
+100
+AcDbOrdinateDimension
+ 13
+100.0
+ 23
+50.0
+ 33
+0.0
+ 14
+130.0
+ 24
+50.0
+ 34
+0.0
+  0
+DIMENSION
+  8
+OLCU
+100
+AcDbEntity
+100
+AcDbDimension
+  2
+*D5
+ 10
+0.0
+ 20
+0.0
+ 30
+0.0
+ 11
+140.0
+ 21
+60.0
+ 31
+0.0
+ 70
+38
+  1
+
+  3
+Standard
+100
+AcDbOrdinateDimension
+ 13
+100.0
+ 23
+60.0
+ 33
+0.0
+ 14
+130.0
+ 24
+60.0
+ 34
+0.0
+  0
+ENDSEC
+  0
+EOF

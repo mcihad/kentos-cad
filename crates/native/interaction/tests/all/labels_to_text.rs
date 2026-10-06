@@ -333,6 +333,7 @@ fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
             label_of: Some(kentos_contracts::EntityId(*parcel.as_bytes())),
             label_scale: Some(1000.0),
             paragraph: Default::default(),
+            face: Default::default(),
         }))
         .expect("a slot");
     assert_eq!(centred(&mut spatial, &b), [2, 3]);

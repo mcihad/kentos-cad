@@ -19,6 +19,9 @@ use kentos_geometry_core::entity::{
     Attrs, Entity as CoreEntity, HatchPattern as CorePattern, Part, PointPart as CorePoint, Shape,
 };
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::geom::dimension::{Arrow, Look};
+use kentos_geometry_core::text::Font;
+use kentos_geometry_core::text::face::Face;
 use kentos_geometry_core::text::paragraph::{Run, Script};
 
 /// A drawing's blocks, flattened once, ready to place inserts.
@@ -99,6 +102,7 @@ impl Placing {
                     box_width,
                     line_spacing,
                     runs,
+                    face: _,
                 } = piece.shape
                 else {
                     return None;
@@ -130,6 +134,7 @@ impl Placing {
                             line_spacing,
                             runs: contract_runs(runs.as_deref()),
                         },
+                        face: Default::default(),
                     },
                 ))
             })
@@ -176,6 +181,78 @@ pub(crate) fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> 
             })
             .collect()
     })
+}
+
+/// A text's face as the core takes it (docs/adr/0183 §2).
+pub(crate) fn core_face(f: &kentos_contracts::TextFace) -> Face {
+    Face {
+        style: f.text_style.clone(),
+        font: f.font.map(|d| Font::from_id(d.id())),
+        bold: f.bold,
+        italic: f.italic,
+        oblique: f.oblique,
+    }
+}
+
+/// The core's face as the contract writes it.
+pub(crate) fn contract_face(f: &Face) -> kentos_contracts::TextFace {
+    kentos_contracts::TextFace {
+        text_style: f.style.clone(),
+        font: f
+            .font
+            .and_then(|c| kentos_contracts::DrawingFont::from_id(c.id())),
+        bold: f.bold,
+        italic: f.italic,
+        oblique: f.oblique,
+    }
+}
+
+/// A dimension's look as the core takes it (docs/adr/0183 §3).
+pub(crate) fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
+    Look {
+        style: l.dim_style.clone(),
+        arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        centre: l.text_place.is_some(),
+        decimals: l.decimals,
+        unit: l.unit.map(|u| u.mark().to_owned()),
+        prefix: l.prefix.clone(),
+        suffix: l.suffix.clone(),
+        font: l.font.map(|d| Font::from_id(d.id())),
+    }
+}
+
+/// The core's look as the contract writes it.
+pub(crate) fn contract_look(l: &Look) -> kentos_contracts::DimensionLook {
+    use kentos_contracts::DrawingUnit;
+    kentos_contracts::DimensionLook {
+        dim_style: l.style.clone(),
+        arrow: l
+            .arrow
+            .and_then(|a| kentos_contracts::DimensionArrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        text_place: l
+            .centre
+            .then_some(kentos_contracts::DimensionTextPlace::Centre),
+        decimals: l.decimals,
+        unit: match l.unit.as_deref() {
+            Some("mm") => Some(DrawingUnit::Mm),
+            Some("cm") => Some(DrawingUnit::Cm),
+            Some("m") => Some(DrawingUnit::M),
+            _ => None,
+        },
+        prefix: l.prefix.clone(),
+        suffix: l.suffix.clone(),
+        font: l
+            .font
+            .and_then(|c| kentos_contracts::DrawingFont::from_id(c.id())),
+    }
 }
 
 /// The core's runs as the contract writes them.
@@ -362,6 +439,7 @@ fn shape(e: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            face: core_face(&t.face),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: core(d.a),
@@ -375,6 +453,7 @@ fn shape(e: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
+            look: core_look(&d.look),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -548,6 +627,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            face,
         } => Entity::Text(TextEntity {
             base,
             p: back(*p),
@@ -564,6 +644,7 @@ fn entity(s: &Shape) -> Option<Entity> {
                 line_spacing: *line_spacing,
                 runs: contract_runs(runs.as_deref()),
             },
+            face: contract_face(face),
         }),
         Shape::Dimension {
             a,
@@ -577,6 +658,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             mask,
             za,
             zb,
+            look,
         } => Entity::Dimension(DimensionEntity {
             base,
             a: back(*a),
@@ -590,6 +672,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             mask: *mask == Some(true),
             za: *za,
             zb: *zb,
+            look: contract_look(look),
         }),
         Shape::Hatch {
             ring,

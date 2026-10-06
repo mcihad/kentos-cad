@@ -497,7 +497,7 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             seen.angle
         ));
     }
-    // A text's height (docs/adr/0175), within 1e-9.
+    // A text's height (docs/adr/0175), a dimension's value's (docs/adr/0183), within 1e-9.
     if let Some(height) = want.height
         && !seen.height.is_some_and(|h| (h - height).abs() <= 1e-9)
     {
@@ -505,6 +505,17 @@ fn compare_shape(name: &str, want: &Newest, seen: Option<&Seen>, trace: &Trace) 
             "{name}.height: {:?}, beklenen {height}",
             seen.height
         ));
+    }
+    // A text's style and face, a dimension's style and look (docs/adr/0183), exact.
+    if let Some(face) = &want.face
+        && seen.face.as_ref() != Some(face)
+    {
+        bad.push(format!("{name}.face: {:?}, beklenen {face:?}", seen.face));
+    }
+    if let Some(look) = &want.look
+        && seen.look.as_ref() != Some(look)
+    {
+        bad.push(format!("{name}.look: {:?}, beklenen {look:?}", seen.look));
     }
     if let Some(rotation) = want.rotation
         && seen.rotation != Some(rotation)

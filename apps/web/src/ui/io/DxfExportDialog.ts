@@ -228,7 +228,7 @@ class DxfExportDialog {
     for (const e of entities) {
       if (e.kind !== 'dimension' || e.text) continue;
       const l = layoutDimension(e);
-      if (l) dimensionValues[e.id] = ctx.view.dimensionText(l);
+      if (l) dimensionValues[e.id] = ctx.view.dimensionText(l, e);
     }
     const input: DxfWriteInput = {
       entities,
@@ -241,6 +241,9 @@ class DxfExportDialog {
       blocks: [...ctx.doc.blocks.value],
       // A local project's drawing goes out in its unit (docs/adr/0165 §2).
       ...(!settings.hasSystem ? { unit: settings.unit } : {}),
+      // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).
+      textStyles: [...settings.textStyles.value],
+      dimensionStyles: [...settings.dimensionStyles.value],
     };
     this.writing = true;
     this.primary.disabled = true;

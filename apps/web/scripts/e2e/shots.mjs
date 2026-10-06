@@ -4618,6 +4618,111 @@ function textToolScenes() {
 // paragraph typed and formatted, the drawing showing it as it will be, and its Renk menu; Öznitelikler's rows; an
 // AutoCAD MTEXT read in (fixtures/formats/v1/mtext.dxf). The desktop's are `paragraph_editor::tests::screens`.
 SCENES.paragraph = paragraphScenes();
+SCENES.styles = stylesScenes();
+
+// Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
+// bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
+// (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
+// Standart); the Yazı stilleri and Ölçü stilleri windows over it; Yazı with a style chosen and its Stil menu;
+// Öznitelikler's Yazı stili row. The desktop's are `tools_screens`' stil-* (apps/desktop/src/style_scenes.rs).
+function stylesScenes() {
+  const ID = (n) => `0192f1a0-0000-7000-8000-0000000000${n}`;
+  const TEXT_STYLES = [
+    { id: ID('01'), name: 'Ada no', font: 'arimo', bold: true, height: 3.5, widthFactor: 0.9 },
+    { id: ID('02'), name: 'Yol adı', font: 'barlow', italic: true, oblique: 12, height: 3 },
+    { id: ID('03'), name: 'Not', font: 'courier-prime', height: 2 },
+  ];
+  const DIMENSION_STYLES = [
+    { id: ID('d1'), name: 'Mimari', height: 2.5, arrow: 'closed', arrowSize: 3, extBeyond: 1.5, decimals: 0, unit: 'cm', suffix: ' cm', font: 'arimo' },
+    { id: ID('d2'), name: 'Kadastro', height: 3, arrowSize: 2, textPlace: 'centre', decimals: 2, prefix: 'L=' },
+    { id: ID('d3'), name: 'Noktalı', height: 2.5, arrow: 'dot', arrowSize: 2 },
+    { id: ID('d4'), name: 'Açık', height: 2.5, arrow: 'open', font: 'overpass' },
+  ];
+  // Each object's look as the style gives it at 1:500 (its sizes times its value's height).
+  const ADA = { textStyle: ID('01'), font: 'arimo', bold: true, widthFactor: 0.9, height: 1.75 };
+  const YOL = { textStyle: ID('02'), font: 'barlow', italic: true, oblique: 12, height: 1.5 };
+  const NOT = { textStyle: ID('03'), font: 'courier-prime', height: 1 };
+  const LOOKS = [
+    { dimStyle: ID('d1'), arrow: 'closed', arrowSize: 1.2, extBeyond: 0.6, decimals: 0, unit: 'cm', suffix: ' cm', font: 'arimo', height: 1.25 },
+    { dimStyle: ID('d2'), arrowSize: 2 / 3, textPlace: 'centre', decimals: 2, prefix: 'L=', height: 1.5 },
+    { dimStyle: ID('d3'), arrow: 'dot', arrowSize: 0.8, height: 1.25 },
+    { dimStyle: ID('d4'), arrow: 'open', font: 'overpass', height: 1.25 },
+  ];
+  // The parcel's corners in metres from the view's middle, and the view about them (as the desktop's scene fits it).
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500, textStyles: ${JSON.stringify(TEXT_STYLES)}, dimensionStyles: ${JSON.stringify(DIMENSION_STYLES)} });
+    const o = { x: c.x - 20, y: c.y - 8 };
+    const P = (x, y) => ({ x: o.x + x, y: o.y + y });
+    const C = [P(0, 0), P(40, 0), P(40, 26), P(0, 26)];
+    add({ kind: 'polygon', pts: C });
+    add({ kind: 'line', a: P(-6, -14), b: P(52, -14) });
+    const ada = add({ kind: 'text', p: P(12, 12), text: 'Ada 101 Parsel 7', rotation: 0, ...${JSON.stringify(ADA)} });
+    add({ kind: 'text', p: P(4, -12.4), text: 'Atatürk Caddesi', rotation: 0, ...${JSON.stringify(YOL)} });
+    add({ kind: 'text', p: P(2, 22), text: "Not: ölçüler cm'dir", rotation: 0, ...${JSON.stringify(NOT)} });
+    add({ kind: 'text', p: P(2, 3), text: 'Standart yazı', height: 1, rotation: 0 });
+    const looks = ${JSON.stringify(LOOKS)};
+    // Round the parcel anticlockwise: a side's left is inside, its dimension goes out (a negative offset).
+    const sides = [[C[0], C[1], -5], [C[1], C[2], -6], [C[2], C[3], -5], [C[3], C[0], -6]];
+    sides.forEach(([a, b, offset], i) => add({ kind: 'dimension', a, b, offset, ...looks[i] }));
+    add({ kind: 'dimension', a: P(0, -14), b: P(40, -14), offset: -4, height: 1.25 });
+    window.__styled = { ada: ada.id };
+    k.view.camera.fit({ minX: o.x - 10, minY: o.y - 21, maxX: o.x + 50, maxY: o.y + 34 }, 24);
+    k.view.requestRender();`);
+  const ground = async (ui, fields = {}) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad', ...fields });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(500);
+  };
+  const close = async (ui) => (
+    await ui.escapeAll(3),
+    await ui.eval(UNDO_ALL),
+    await ui.eval(`window.kentos.doc.settings.assign({ plotScale: 1000, textStyles: [], dimensionStyles: [] })`),
+    await ribbonOff(ui)
+  );
+  /** A styles window over the drawing, `name`'s style chosen. */
+  const window_ = async (ui, command, name) => {
+    await ground(ui);
+    await ui.eval(`window.kentos.commands.execute('${command}')`);
+    await ui.waitFor(`!!document.querySelector('.dialog--annotation')`);
+    await ui.clickText('.dialog--annotation .states-row__name', name);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  /** Yazı with Yol adı chosen, the pointer where the next text goes. */
+  const tool = async (ui) => {
+    await ground(ui, LOGGED);
+    await startTool(ui, 'text');
+    await ui.eval(`window.kentos.tools.active.chooseOption('S', 'Yol adı')`);
+    await hoverAt(ui, ...(await ui.eval(SCRATCH('return [c.x - 14, c.y + 22];'))));
+  };
+  return [
+    { id: 'styles-drawn', open: ground, close },
+    { id: 'styles-text-window', open: (ui) => window_(ui, 'style.textStyles', 'Ada no'), close },
+    { id: 'styles-dimension-window', open: (ui) => window_(ui, 'style.dimensionStyles', 'Mimari'), close },
+    { id: 'styles-text-tool', open: tool, close },
+    {
+      id: 'styles-menu',
+      open: async (ui) => {
+        await tool(ui);
+        const chip = '.cmdline__chip[aria-haspopup="menu"]:not(.cmdline__more):not([hidden])';
+        await ui.clickText(chip, 'Stil');
+        await ui.waitFor(`!!document.querySelector('.menu')`);
+        await ui.sleep(300);
+      },
+      close,
+    },
+    {
+      id: 'styles-props',
+      open: async (ui) => (await ground(ui, { layersFraction: 0.15 }), await ui.eval(`window.kentos.selection.set([window.__styled.ada])`), await ui.move(2, 2), await ui.sleep(500)),
+      close,
+    },
+  ];
+}
+
 function paragraphScenes() {
   const DRAWN = FIT(`
     const P = (fx, fy) => ({ x: c.x + fx * u, y: c.y + fy * u });

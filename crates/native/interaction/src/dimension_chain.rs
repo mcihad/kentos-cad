@@ -12,7 +12,8 @@
 //!   times the base's text height.
 //!
 //! Each click writes one dimension through `cad.entities.create` as its own
-//! undo step (“Ekle”), a linear one along the base's direction; Enter, a
+//! undo step (“Ekle”), a linear one along the base's direction, in the
+//! base's style and look (AutoCAD's DIMCONTINUEMODE 1, docs/adr/0183 §4); Enter, a
 //! quick right click or Esc ends. An undone dimension takes the run back to
 //! where it was. The dimensions are the shared core's
 //! (`construct::continue_dimension`, `baseline_dimension`).
@@ -21,6 +22,7 @@ use kentos_contracts::{DimensionEntity, DimensionStyle, Entity, EntityGeometry};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
 use kentos_geometry_core::tools::construct::{baseline_dimension, continue_dimension};
+use kentos_native_application::geometry::{contract_look, core_look};
 
 use crate::Vec2;
 use crate::edge;
@@ -89,6 +91,8 @@ fn straight(d: &DimensionEntity) -> Option<DimensionGeom> {
         c: None,
         za: None,
         zb: None,
+        // Its style and look go on to the next ones (docs/adr/0183 §4).
+        look: core_look(&d.look),
     };
     layout_dimension(&g).map(|_| g)
 }
@@ -202,6 +206,7 @@ impl DimensionChain {
         let Some(layout) = layout_dimension(&g) else {
             return;
         };
+        let look = contract_look(g.look.clone());
         let geometry = EntityGeometry::Dimension {
             a: wire(g.a),
             b: wire(g.b),
@@ -214,6 +219,7 @@ impl DimensionChain {
             mask: false,
             za: None,
             zb: None,
+            look: look.clone(),
         };
         let operation = match self.kind {
             Kind::Continue => kentos_contracts::CreateOperation::DimensionChain,
@@ -241,7 +247,7 @@ impl DimensionChain {
         }
         let value = cx
             .format()
-            .dimension(layout.prefix, layout.unit, layout.value);
+            .dimension_in(layout.prefix, layout.unit, layout.value, &look);
         cx.say(Level::Success, format!("{} eklendi: {value}", self.label()));
     }
 
@@ -424,15 +430,25 @@ impl Tool for DimensionChain {
                 .collect(),
             ..Preview::default()
         };
-        if let Some(l) = self.next(hover).and_then(|g| layout_dimension(&g)) {
+        if let Some((g, l)) = self
+            .next(hover)
+            .and_then(|g| layout_dimension(&g).map(|l| (g, l)))
+        {
             preview.strokes = l
                 .lines
                 .iter()
                 .map(|&[p, q]| Stroke::solid(vec![p, q], false))
+                // The base's filled arrowheads and dots, outlined (docs/adr/0183 §3).
+                .chain(
+                    l.fills
+                        .iter()
+                        .flatten()
+                        .map(|ring| Stroke::solid(ring.clone(), true)),
+                )
                 .collect();
             preview.tag = Some(Tag {
                 at: hover,
-                lines: vec![format.dimension(l.prefix, l.unit, l.value)],
+                lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &contract_look(g.look))],
             });
         }
         preview

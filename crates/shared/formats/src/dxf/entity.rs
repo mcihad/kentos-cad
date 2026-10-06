@@ -109,6 +109,8 @@ pub enum Kind {
         valign: i64,
         width: f64,
         style: String,
+        /// Its own slant (51, degrees), when it says one (docs/adr/0183 §7).
+        oblique: Option<f64>,
         hidden: bool,
         /// An ATTRIB's tag (group 2): the insert's attribute it gives a value to;
         /// an ATTDEF's: the attribute it defines; empty for a TEXT.
@@ -168,6 +170,9 @@ pub enum Kind {
         groups: super::dimension::Groups,
         style: String,
         own_style: super::leaders::DimStyle,
+        /// Its own changes to its style's variables (DSTYLE, docs/adr/0183 §7);
+        /// boxed: every read entity is kept until the file is emitted.
+        overrides: Box<super::styles::DimVars>,
     },
     Xline {
         p: P3,
@@ -483,6 +488,7 @@ pub fn parse(
                 valign: if attribute { g.int(74) } else { g.int(73) },
                 width: g.num_or(41, 1.0)?,
                 style: g.string(7),
+                oblique: g.num(51)?,
                 hidden: attribute && g.int(70) & 1 == 1,
                 tag: if attribute {
                     g.string(2)
@@ -576,6 +582,7 @@ pub fn parse(
                 },
                 style: g.string(3),
                 own_style: super::leaders::own_style(all),
+                overrides: Box::new(super::styles::dim_overrides(all, dec)),
             }
         }
         "ACAD_TABLE" => Kind::Block {

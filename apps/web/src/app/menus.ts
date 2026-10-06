@@ -197,6 +197,8 @@ export const MAIN_MENU: TopMenu[] = [
       { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.rightAngle', 'draft.polar', 'draft.tracking', 'draft.topology', 'draft.topologyPoints', 'draft.overlap'] },
       { label: 'Çakışma', icon: 'overlap', items: ['draft.overlap.allow', 'draft.overlap.layer', 'draft.overlap.layers'] },
       sec('Stil'),
+      'style.textStyles',
+      'style.dimensionStyles',
       'style.manager',
       'style.svgEditor',
       'style.layerStyle',

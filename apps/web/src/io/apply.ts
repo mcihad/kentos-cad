@@ -2,6 +2,7 @@ import type { BlockDefinition as ContractBlock } from '../contracts/generated/Bl
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import { foldTurkish } from '../core/text';
 import { uuidv7 } from '../core/uuid';
+import { dimensionStylesProblem, textStylesProblem, type DimensionStyleDef, type TextStyleDef } from '../model/annotationStyles';
 import { importNames, type BlockDefinition } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
@@ -39,8 +40,80 @@ export type Applied =
       /** The block definitions taken in, and the names changed on the way: as the file says, as it went in. */
       blocks: number;
       renamed: [string, string][];
+      /** The text and dimension styles added to the project (docs/adr/0183 §7). */
+      styles: [number, number];
     }
   | { ok: false; error: string };
+
+/** The text and dimension styles a reader brought (docs/adr/0183 §7): their ids the reader's (`dxf-text-1` …), the objects naming them so. */
+export interface Styles {
+  readonly text?: readonly TextStyleDef[];
+  readonly dimension?: readonly DimensionStyleDef[];
+}
+
+/**
+ * The styles ready to go in (docs/adr/0183 §7; the desktop's `ImportedStyles`): each the project's style of the same
+ * name (case aside) when it has one, the file's values staying the objects' own; else a new style under a new id. One
+ * the project may not keep (a name of Standart's, values out of the rules) is none: its objects keep their look
+ * without a style.
+ */
+export interface ImportedStyles {
+  /** The reader's id → the project's (null: no style). */
+  readonly ids: ReadonlyMap<string, string | null>;
+  readonly text: TextStyleDef[];
+  readonly dimension: DimensionStyleDef[];
+}
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+export function importedStyles(doc: CadDocument, styles: Styles = {}): ImportedStyles {
+  const ids = new Map<string, string | null>();
+  const text: TextStyleDef[] = [];
+  const dimension: DimensionStyleDef[] = [];
+  const project = doc.settings;
+  for (const s of styles.text ?? []) {
+    const same = project.textStyles.value.find((p) => sameName(p.name, s.name));
+    if (same) ids.set(s.id, same.id);
+    else {
+      const fresh = { ...s, id: uuidv7() };
+      const ok = textStylesProblem([...project.textStyles.value, ...text, fresh]) === null;
+      if (ok) text.push(fresh);
+      ids.set(s.id, ok ? fresh.id : null);
+    }
+  }
+  for (const s of styles.dimension ?? []) {
+    const same = project.dimensionStyles.value.find((p) => sameName(p.name, s.name));
+    if (same) ids.set(s.id, same.id);
+    else {
+      const fresh = { ...s, id: uuidv7() };
+      const ok = dimensionStylesProblem([...project.dimensionStyles.value, ...dimension, fresh]) === null;
+      if (ok) dimension.push(fresh);
+      ids.set(s.id, ok ? fresh.id : null);
+    }
+  }
+  return { ids, text, dimension };
+}
+
+/** An object naming the project's style, or none (`e` as it is when it names none). */
+export function restyled<E extends { kind: string }>(e: E, styles: ImportedStyles): E {
+  const field = e.kind === 'text' ? 'textStyle' : e.kind === 'dimension' ? 'dimStyle' : null;
+  const id = field ? (e as Record<string, unknown>)[field] : undefined;
+  if (!field || typeof id !== 'string') return e;
+  const { [field]: _read, ...rest } = e as Record<string, unknown>;
+  const to = styles.ids.get(id) ?? null;
+  return (to === null ? rest : { ...rest, [field]: to }) as unknown as E;
+}
+
+/** The new styles into the project's tables: a setting, not an undo step (docs/adr/0183 §1); undoing the import leaves them, unused. */
+export function addStyles(doc: CadDocument, styles: ImportedStyles): [number, number] {
+  const added: [number, number] = [styles.text.length, styles.dimension.length];
+  if (added[0] || added[1])
+    doc.settings.assign({
+      textStyles: [...doc.settings.textStyles.value, ...styles.text],
+      dimensionStyles: [...doc.settings.dimensionStyles.value, ...styles.dimension],
+    });
+  return added;
+}
 
 /**
  * The blocks an import brings (docs/adr/0144 §5), ready to go in: each a
@@ -60,7 +133,12 @@ export interface ImportedBlocks {
 const unusableBlocks = (why: string) => `Dosyadan okunan bloklar çizime uymuyor (${why}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.`;
 
 /** Checks a reader's block definitions and readies them for the drawing (nothing changes); the reason in words when one is unusable. */
-export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[] = [], targets: ReadonlyMap<string, string> = new Map()): ImportedBlocks | { error: string } {
+export function importedBlocks(
+  doc: CadDocument,
+  blocks: readonly ContractBlock[] = [],
+  targets: ReadonlyMap<string, string> = new Map(),
+  styles: ImportedStyles = { ids: new Map(), text: [], dimension: [] },
+): ImportedBlocks | { error: string } {
   if (!blocks.length) return { defs: [], ids: new Map(), renamed: [] };
   const read = readBlockDefinitions(blocks);
   if (!read.ok) return { error: unusableBlocks(read.error) };
@@ -72,7 +150,7 @@ export function importedBlocks(doc: CadDocument, blocks: readonly ContractBlock[
   const renamed: [string, string][] = [];
   const defs = read.blocks.map((b, i): BlockDefinition => {
     if (names[i] !== b.name) renamed.push([b.name, names[i]]);
-    return { ...b, id: ids.get(b.id)!, name: names[i], entities: b.entities.map((e) => ({ ...pointAt(e, ids), layerId: targets.get(e.layerId) ?? '' })) };
+    return { ...b, id: ids.get(b.id)!, name: names[i], entities: b.entities.map((e) => ({ ...restyled(pointAt(e, ids), styles), layerId: targets.get(e.layerId) ?? '' })) };
   });
   return { defs, ids, renamed };
 }
@@ -184,16 +262,18 @@ export function makeLayers(doc: CadDocument, plan: ImportPlan, prepared: Prepare
 /** The message for objects a reader produced that the drawing refuses. */
 export const unusable = (why: string) => `Dosyadan okunan nesneler çizime uymuyor (${why}). Hiçbir şey eklenmedi; dosyayla birlikte bildirin.`;
 
-export function applyImport(doc: CadDocument, entities: readonly ContractEntity[], plan: ImportPlan, blocks: readonly ContractBlock[] = []): Applied {
+/** Everything an import chose into the drawing as ONE undo step; the file's text and dimension styles (docs/adr/0183 §7) join the project's tables once the objects are in. */
+export function applyImport(doc: CadDocument, entities: readonly ContractEntity[], plan: ImportPlan, blocks: readonly ContractBlock[] = [], fileStyles: Styles = {}): Applied {
   const prepared = prepareImport(doc, plan);
   if ('error' in prepared) return { ok: false, error: prepared.error };
-  const imported = importedBlocks(doc, blocks, prepared.targets);
+  const styles = importedStyles(doc, fileStyles);
+  const imported = importedBlocks(doc, blocks, prepared.targets, styles);
   if ('error' in imported) return { ok: false, error: imported.error };
   // Checked with the final layer ids and numbered 1…n; the document gives them their own ids.
   const chosen: unknown[] = [];
   for (const e of entities) {
     const layerId = prepared.targets.get(e.layerId);
-    if (layerId) chosen.push(pointAt({ ...e, layerId, id: chosen.length + 1 }, imported.ids));
+    if (layerId) chosen.push(restyled(pointAt({ ...e, layerId, id: chosen.length + 1 }, imported.ids), styles));
   }
   const checked = readEntityList(chosen, prepared.valid, 'İçe aktarılan nesne');
   if (!checked.ok) return { ok: false, error: unusable(checked.error) };
@@ -207,7 +287,7 @@ export function applyImport(doc: CadDocument, entities: readonly ContractEntity[
       addBlocks(doc, imported);
       return doc.addMany(checked.entities as unknown as NewEntity[], plan.label);
     });
-    return { ok: true, ids: added.map((e) => e.id), created, blocks: imported.defs.length, renamed: imported.renamed };
+    return { ok: true, ids: added.map((e) => e.id), created, blocks: imported.defs.length, renamed: imported.renamed, styles: addStyles(doc, styles) };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }

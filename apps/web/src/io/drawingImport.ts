@@ -3,7 +3,22 @@ import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import { readEntityList } from '../model/snapshot';
-import { addBlocks, importedBlocks, makeLayers, pointAt, prepareImport, strayInsert, unusable, type ImportPlan, type ImportedBlocks, type Prepared } from './apply';
+import {
+  addBlocks,
+  addStyles,
+  importedBlocks,
+  importedStyles,
+  makeLayers,
+  pointAt,
+  prepareImport,
+  restyled,
+  strayInsert,
+  unusable,
+  type ImportPlan,
+  type ImportedBlocks,
+  type ImportedStyles,
+  type Prepared,
+} from './apply';
 import type { ImportedDrawing } from './client';
 import { ColumnsReader } from './columns';
 
@@ -60,6 +75,9 @@ export class ProgressiveImport {
   /** The block definitions taken in, and the names changed on the way. */
   readonly blocks: number;
   readonly renamed: readonly [string, string][];
+  /** The text and dimension styles added to the project once every object is in (docs/adr/0183 §7). */
+  styles: [number, number] = [0, 0];
+  private readonly fileStyles: ImportedStyles;
   private readonly doc: CadDocument;
   private readonly label: string;
   private readonly prepared: Prepared;
@@ -72,8 +90,9 @@ export class ProgressiveImport {
   private written = 0;
   private over = false;
 
-  private constructor(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan, prepared: Prepared, blocks: ImportedBlocks) {
+  private constructor(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan, prepared: Prepared, blocks: ImportedBlocks, styles: ImportedStyles) {
     this.doc = doc;
+    this.fileStyles = styles;
     this.label = plan.label;
     this.prepared = prepared;
     this.ids = blocks.ids;
@@ -99,10 +118,11 @@ export class ProgressiveImport {
   static start(doc: CadDocument, d: ImportedDrawing, plan: ImportPlan): ProgressiveImport | { error: string } {
     const prepared = prepareImport(doc, plan);
     if ('error' in prepared) return prepared;
-    const blocks = importedBlocks(doc, d.result.blocks, prepared.targets);
+    const styles = importedStyles(doc, { text: d.result.textStyles, dimension: d.result.dimensionStyles });
+    const blocks = importedBlocks(doc, d.result.blocks, prepared.targets, styles);
     if ('error' in blocks) return blocks;
     try {
-      return new ProgressiveImport(doc, d, plan, prepared, blocks);
+      return new ProgressiveImport(doc, d, plan, prepared, blocks, styles);
     } catch (e) {
       return { error: e instanceof Error ? e.message : String(e) };
     }
@@ -135,7 +155,7 @@ export class ProgressiveImport {
           const { uid: _placeholder, ...e } = r.next();
           this.read++;
           const layerId = targets.get(e.layerId);
-          if (layerId) chunk.push(pointAt({ ...e, layerId, id: chunk.length + 1 }, this.ids));
+          if (layerId) chunk.push(restyled(pointAt({ ...e, layerId, id: chunk.length + 1 }, this.ids), this.fileStyles));
         }
         if (chunk.length) {
           const checked = readEntityList(chunk, valid, 'İçe aktarılan nesne', this.written);
@@ -152,6 +172,7 @@ export class ProgressiveImport {
     }
     this.over = true;
     this.group.end();
+    this.styles = addStyles(this.doc, this.fileStyles);
     return 'done';
   }
 

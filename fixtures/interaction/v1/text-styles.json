@@ -1,0 +1,253 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "text-styles",
+  "title": "Yazı stilleri araçlarda (ADR 0183 §4), CAD projesinde: Yazı'nın Stil (S) seçeneği; olmayan ad söylenir, ad büyük küçük harf ayırmadan okunur; stil Yükseklik'i ve Genişlik'i getirir, yazı stilin görünüşüyle yazılır; yüksekliği olmayan stil Yükseklik'i değiştirmez; Standart görünüşü kaldırır; Çok satırlı yazı'da Stil (S) ve Satır aralığı (R)",
+  "source": "Web'in tools/styleOption.ts, annotateTools.ts (TextTool) ve paragraphTool.ts'i, masaüstünün kentos_interaction::styles, text ve paragraph'ı; cad.entities.create, ADR 0183",
+  "covers": [
+    "UX-01",
+    "UX-06",
+    "CMD-04"
+  ],
+  "document": "styles.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.text",
+      "note": "CAD projesinde Yazı'nın ilk seçeneği Stil (S).",
+      "expect": {
+        "tool": "text",
+        "points": 0,
+        "options": [
+          "S",
+          "Y",
+          "A",
+          "H",
+          "G",
+          "Z",
+          "R"
+        ],
+        "prompt": "Yazı: yazının başlangıcına tıklayın [Stil (S): Standart / Yükseklik (Y): 2.5 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 1 / Zemin (Z): kapalı / Artır (R): kapalı]",
+        "entities": 0
+      }
+    },
+    {
+      "key": "S",
+      "note": "Stil: çizimde S; adı yazılır ya da çipin menüsünden seçilir.",
+      "expect": {
+        "options": [
+          "S"
+        ],
+        "prompt": "Yazı: yazı stilini menüden seçin ya da adını yazın [Stil (S): Standart]"
+      }
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "ada"
+    },
+    {
+      "key": "Enter",
+      "note": "Projede olmayan ad söylenir (komut satırı küçük harfle yazar; ad büyük küçük harf ayırmaz), adım kalır.",
+      "expect": {
+        "log": "warn",
+        "options": [
+          "S"
+        ],
+        "logged": [
+          "› ada",
+          "“ada” adlı yazı stili yok. Stili menüden seçin ya da adını yazın; yeni stil Yazı stilleri penceresinde tanımlanır."
+        ]
+      }
+    },
+    {
+      "text": "ada no"
+    },
+    {
+      "key": "Enter",
+      "note": "Ad büyük küçük harf ayırmadan okunur; stil Yükseklik'i (3 mm) ve Genişlik'i (0,9) getirir.",
+      "expect": {
+        "prompt": "Yazı: yazının başlangıcına tıklayın [Stil (S): Ada no / Yükseklik (Y): 3 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 0.9 / Zemin (Z): kapalı / Artır (R): kapalı]"
+      }
+    },
+    {
+      "click": [
+        0,
+        0
+      ],
+      "expect": {
+        "prompt": "Yazı: yazıyı tıkladığınız yere yazın; Enter ekler, Esc vazgeçer"
+      }
+    },
+    {
+      "text": "Ada 101"
+    },
+    {
+      "key": "Enter",
+      "note": "Yazı stilin görünüşüyle: Arimo kalın, 1:1000'de 3 m, 0,9.",
+      "expect": {
+        "entities": 1,
+        "newest": {
+          "kind": "text",
+          "points": [
+            [
+              0,
+              0
+            ]
+          ],
+          "text": "Ada 101",
+          "height": 3,
+          "widthFactor": 0.9,
+          "face": {
+            "textStyle": "0192f1a0-0000-7000-8000-000000000001",
+            "font": "arimo",
+            "bold": true
+          }
+        },
+        "log": "success"
+      }
+    },
+    {
+      "key": "S",
+      "note": "Klavye yeniden çizimde: S stili sorar."
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "yol adı"
+    },
+    {
+      "key": "Enter",
+      "note": "Yüksekliği olmayan stil Yükseklik'i değiştirmez; Genişlik stilinkine (1) döner.",
+      "expect": {
+        "prompt": "Yazı: yazının başlangıcına tıklayın [Stil (S): Yol adı / Yükseklik (Y): 3 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 1 / Zemin (Z): kapalı / Artır (R): kapalı]"
+      }
+    },
+    {
+      "click": [
+        0,
+        -8
+      ]
+    },
+    {
+      "text": "Atatürk Caddesi"
+    },
+    {
+      "key": "Enter",
+      "note": "Barlow eğik, 12° yatık.",
+      "expect": {
+        "entities": 2,
+        "newest": {
+          "kind": "text",
+          "points": [
+            [
+              0,
+              -8
+            ]
+          ],
+          "text": "Atatürk Caddesi",
+          "height": 3,
+          "widthFactor": 1,
+          "face": {
+            "textStyle": "0192f1a0-0000-7000-8000-000000000002",
+            "font": "barlow",
+            "italic": true,
+            "oblique": 12
+          }
+        }
+      }
+    },
+    {
+      "key": "S"
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "standart"
+    },
+    {
+      "key": "Enter",
+      "note": "Standart görünüşü kaldırır, yükseklik kalır.",
+      "expect": {
+        "prompt": "Yazı: yazının başlangıcına tıklayın [Stil (S): Standart / Yükseklik (Y): 3 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 1 / Zemin (Z): kapalı / Artır (R): kapalı]"
+      }
+    },
+    {
+      "click": [
+        0,
+        -16
+      ]
+    },
+    {
+      "text": "Not"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "entities": 3,
+        "newest": {
+          "kind": "text",
+          "points": [
+            [
+              0,
+              -16
+            ]
+          ],
+          "text": "Not",
+          "height": 3,
+          "widthFactor": 1,
+          "face": {}
+        }
+      }
+    },
+    {
+      "key": "Y",
+      "note": "Yükseklik varsayılana döner: sonraki koşu baştan başlar."
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "2.5"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Yazı: yazının başlangıcına tıklayın [Stil (S): Standart / Yükseklik (Y): 2.5 mm / Açı (A): 0° / Hiza (H): sol taban / Genişlik (G): 1 / Zemin (Z): kapalı / Artır (R): kapalı]"
+      }
+    },
+    {
+      "key": "Esc"
+    },
+    {
+      "run": "tool.mtext",
+      "note": "Çok satırlı yazı da Stil (S); Satır aralığı R.",
+      "expect": {
+        "tool": "mtext"
+      }
+    },
+    {
+      "key": "Esc"
+    }
+  ]
+}

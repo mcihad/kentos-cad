@@ -12,6 +12,10 @@
 const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
+/** The drawing typefaces, numbered as the core's tables number them (`FONTS`, the contract's `DrawingFont` order; docs/adr/0183). */
+const FONTS = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'] as const;
+/** A dimension's arrowheads, numbered as the core numbers them (`Arrow::ALL`); −1 the tick (docs/adr/0183 §3). */
+const ARROWS = ['closed', 'open', 'dot', 'none'] as const;
 /** A multi-line text's run's flags (docs/adr/0182; the store's `RUN_*`). */
 const RUN_BOLD = 1;
 const RUN_ITALIC = 2;
@@ -29,6 +33,9 @@ interface RunFields {
   script?: 'super' | 'sub';
   color?: string;
 }
+
+/** `v`'s place in `list`; −1 when it is not one of them (absent). */
+const place = (list: readonly string[], v: unknown): number => (typeof v === 'string' ? list.indexOf(v) : -1);
 
 const runBits = (r: RunFields): number =>
   (r.bold ? RUN_BOLD : 0) | (r.italic ? RUN_ITALIC : 0) | (r.underline ? RUN_UNDERLINE : 0) | (r.script === 'super' ? RUN_SUPER : r.script === 'sub' ? RUN_SUB : 0);
@@ -199,6 +206,10 @@ export function packEntities(list: Iterable<object>): Packed {
         const runs = Array.isArray(e.runs) ? (e.runs as RunFields[]) : [];
         out.push(runs.length);
         for (const r of runs) out.push(r.start, r.end, runBits(r), str(r.color));
+        // docs/adr/0183: the style (a string, −1 none), the typeface's place (−1 the project's), bold and italic flags,
+        // the slant (NaN none).
+        out.push(str(e.textStyle), place(FONTS, e.font), e.bold === true ? 1 : 0, e.italic === true ? 1 : 0);
+        num(e.oblique);
         break;
       }
       // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
@@ -214,6 +225,16 @@ export function packEntities(list: Iterable<object>): Packed {
         out.push(e.mask === true ? 1 : 0);
         num(e.za);
         num(e.zb);
+        // docs/adr/0183: the style, the arrowhead's place (−1 the tick), the sizes (NaN none), the centre flag, the
+        // decimals (NaN none), the unit, prefix and suffix (strings, −1 none), the typeface's place.
+        out.push(str(e.dimStyle), place(ARROWS, e.arrow));
+        num(e.arrowSize);
+        num(e.extOffset);
+        num(e.extBeyond);
+        num(e.textGap);
+        out.push(e.textPlace === 'centre' ? 1 : 0);
+        num(e.decimals);
+        out.push(str(e.unit), str(e.prefix), str(e.suffix), place(FONTS, e.font));
         break;
       case 12: {
         points(e.ring);
@@ -421,6 +442,14 @@ export function unpackEntities(p: Packed): Unpacked[] {
             if (color !== undefined) r.color = color;
             return r;
           });
+        const textStyle = str();
+        if (textStyle !== undefined) g.textStyle = textStyle;
+        const font = num();
+        if (font >= 0) g.font = FONTS[font];
+        if (flag()) g.bold = true;
+        if (flag()) g.italic = true;
+        const oblique = num();
+        if (!Number.isNaN(oblique)) g.oblique = oblique;
         break;
       }
       case 'dimension': {
@@ -437,6 +466,15 @@ export function unpackEntities(p: Packed): Unpacked[] {
         const mask = flag();
         const za = num();
         const zb = num();
+        const dimStyle = str();
+        const arrow = num();
+        const sizes = [num(), num(), num(), num()];
+        const centre = flag();
+        const decimals = num();
+        const unit = str();
+        const prefix = str();
+        const suffix = str();
+        const font = num();
         g = { kind, a, b, offset, height };
         if (text !== undefined) g.text = text;
         if (style !== undefined) g.style = style;
@@ -445,6 +483,17 @@ export function unpackEntities(p: Packed): Unpacked[] {
         if (mask) g.mask = true;
         if (!Number.isNaN(za)) g.za = za;
         if (!Number.isNaN(zb)) g.zb = zb;
+        if (dimStyle !== undefined) g.dimStyle = dimStyle;
+        if (arrow >= 0) g.arrow = ARROWS[arrow];
+        (['arrowSize', 'extOffset', 'extBeyond', 'textGap'] as const).forEach((k, i) => {
+          if (!Number.isNaN(sizes[i])) g[k] = sizes[i];
+        });
+        if (centre) g.textPlace = 'centre';
+        if (!Number.isNaN(decimals)) g.decimals = decimals;
+        if (unit !== undefined) g.unit = unit;
+        if (prefix !== undefined) g.prefix = prefix;
+        if (suffix !== undefined) g.suffix = suffix;
+        if (font >= 0) g.font = FONTS[font];
         break;
       }
       case 'hatch': {

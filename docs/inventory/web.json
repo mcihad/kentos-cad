@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 327,
-      "implemented": 315,
+      "total": 329,
+      "implemented": 317,
       "partial": 0,
       "pending": 12
     },
@@ -61,14 +61,14 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 354,
-      "implemented": 354,
+      "total": 398,
+      "implemented": 398,
       "partial": 0,
       "pending": 0
     },
     "screens": {
-      "total": 104,
-      "implemented": 104,
+      "total": 105,
+      "implemented": 105,
       "partial": 0,
       "pending": 0
     },
@@ -101,12 +101,12 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 108,
-    "commandsOnDesktop": 255,
+    "commandsWithoutTests": 110,
+    "commandsOnDesktop": 257,
     "desktop": {
       "commands": {
-        "total": 327,
-        "implemented": 255,
+        "total": 329,
+        "implemented": 257,
         "partial": 0,
         "pending": 12,
         "none": 58,
@@ -161,16 +161,16 @@
         "n/a": 2
       },
       "fileFields": {
-        "total": 354,
-        "implemented": 354,
+        "total": 398,
+        "implemented": 398,
         "partial": 0,
         "pending": 0,
         "none": 0,
         "n/a": 0
       },
       "screens": {
-        "total": 104,
-        "implemented": 86,
+        "total": 105,
+        "implemented": 87,
         "partial": 2,
         "pending": 0,
         "none": 15,
@@ -5472,6 +5472,39 @@
       ]
     },
     {
+      "id": "style.dimensionStyles",
+      "title": "Ölçü stilleri…",
+      "short": "Ölçü stilleri",
+      "category": "Stil",
+      "icon": "dimensionStyle",
+      "description": "Projenin ölçü stilleri: uçlar, boylar, değerin yeri, basamak, birim, önek, sonek ve yazı tipi; kaydedince stili kullanan ölçüler uyar.",
+      "aliases": [
+        "DIMSTYLE",
+        "DST",
+        "OLCUSTILI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Araçlar › Stil"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Ölçü",
+        "CAD › Yönet › Stil"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "style.layerStyle",
       "title": "Katman stili…",
       "category": "Stil",
@@ -5547,7 +5580,6 @@
       "aliases": [
         "STIL",
         "STILLER",
-        "STYLE",
         "SEMBOLLER"
       ],
       "kind": "action",
@@ -5607,6 +5639,39 @@
         "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
+    },
+    {
+      "id": "style.textStyles",
+      "title": "Yazı stilleri…",
+      "short": "Yazı stilleri",
+      "category": "Stil",
+      "icon": "textStyle",
+      "description": "Projenin yazı stilleri: yazı tipi, kalın, italik, eğiklik, yükseklik ve genişlik; kaydedince stili kullanan yazılar uyar.",
+      "aliases": [
+        "STYLE",
+        "ST",
+        "YAZISTILI"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Araçlar › Stil"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Yazı",
+        "CAD › Yönet › Stil"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "template.apply",
@@ -6759,6 +6824,7 @@
         "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimension-more-kinds.json",
+        "fixtures/interaction/v1/dimension-styles.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -7807,7 +7873,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/paragraph-text.json"
+        "fixtures/interaction/v1/paragraph-text.json",
+        "fixtures/interaction/v1/text-styles.json"
       ]
     },
     {
@@ -9244,7 +9311,8 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/template-tools.json",
-        "fixtures/interaction/v1/text-options.json"
+        "fixtures/interaction/v1/text-options.json",
+        "fixtures/interaction/v1/text-styles.json"
       ]
     },
     {
@@ -11266,6 +11334,7 @@
         "apps/web/src/tools/methods.test.ts",
         "fixtures/interaction/v1/dimension-kinds.json",
         "fixtures/interaction/v1/dimension-more-kinds.json",
+        "fixtures/interaction/v1/dimension-styles.json",
         "fixtures/interaction/v1/dimensions.json",
         "fixtures/interaction/v1/usage-parcel.json"
       ]
@@ -12078,7 +12147,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "fixtures/interaction/v1/paragraph-text.json"
+        "fixtures/interaction/v1/paragraph-text.json",
+        "fixtures/interaction/v1/text-styles.json"
       ]
     },
     {
@@ -13190,7 +13260,8 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/template-tools.json",
-        "fixtures/interaction/v1/text-options.json"
+        "fixtures/interaction/v1/text-options.json",
+        "fixtures/interaction/v1/text-styles.json"
       ]
     },
     {
@@ -13875,6 +13946,10 @@
           "modify/corner",
           "tool.stretch",
           "tool.lengthen"
+        ],
+        "commands": [
+          "style.textStyles",
+          "style.dimensionStyles"
         ]
       },
       "status": "implemented",
@@ -16258,6 +16333,22 @@
       }
     },
     {
+      "id": "DimensionArrow",
+      "contract": "DimensionArrow",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "values": [
+        "closed",
+        "open",
+        "dot",
+        "none"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.a",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -16275,6 +16366,32 @@
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "angle",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.arrow",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "arrow",
+      "type": "DimensionArrow",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.arrowSize",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "arrowSize",
       "type": "number",
       "optional": true,
       "status": "implemented",
@@ -16328,6 +16445,71 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "color",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.decimals",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "decimals",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.dimStyle",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "dimStyle",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.extBeyond",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "extBeyond",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.extOffset",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "extOffset",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.font",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "font",
+      "type": "DrawingFont",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -16427,11 +16609,37 @@
       }
     },
     {
+      "id": "DimensionEntity.prefix",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "prefix",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "DimensionEntity.style",
       "contract": "DimensionEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "style",
       "type": "DimensionStyle",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.suffix",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "suffix",
+      "type": "string",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -16458,6 +16666,45 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "text",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.textGap",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "textGap",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.textPlace",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "textPlace",
+      "type": "DimensionTextPlace",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionEntity.unit",
+      "contract": "DimensionEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "unit",
+      "type": "DrawingUnit",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -16506,6 +16753,201 @@
         "jogged",
         "azimuth",
         "slope"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.arrow",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "arrow",
+      "type": "DimensionArrow",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.arrowSize",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "arrowSize",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.decimals",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "decimals",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.extBeyond",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "extBeyond",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.extOffset",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "extOffset",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.font",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "font",
+      "type": "DrawingFont",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.height",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "height",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.id",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "id",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.name",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.prefix",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "prefix",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.suffix",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "suffix",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.textGap",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "textGap",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.textPlace",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "textPlace",
+      "type": "DimensionTextPlace",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionStyleDef.unit",
+      "contract": "DimensionStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "unit",
+      "type": "DrawingUnit",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "DimensionTextPlace",
+      "contract": "DimensionTextPlace",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "values": [
+        "centre"
       ],
       "status": "implemented",
       "platforms": {
@@ -18984,6 +19426,19 @@
       }
     },
     {
+      "id": "ProjectSettings.dimensionStyles",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "dimensionStyles",
+      "type": "Array<DimensionStyleDef>",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "ProjectSettings.drawingFont",
       "contract": "ProjectSettings",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -19093,6 +19548,19 @@
       "rust": "crates/shared/contracts/src/document.rs",
       "field": "survey",
       "type": "SurveySettings",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "ProjectSettings.textStyles",
+      "contract": "ProjectSettings",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "textStyles",
+      "type": "Array<TextStyleDef>",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -19477,6 +19945,19 @@
       }
     },
     {
+      "id": "TextEntity.bold",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "bold",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TextEntity.boxWidth",
       "contract": "TextEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -19495,6 +19976,19 @@
       "rust": "crates/shared/contracts/src/entity.rs",
       "field": "color",
       "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.font",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "font",
+      "type": "DrawingFont",
       "optional": true,
       "status": "implemented",
       "platforms": {
@@ -19522,6 +20016,19 @@
       "field": "id",
       "type": "number",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.italic",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "italic",
+      "type": "boolean",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -19620,6 +20127,19 @@
       }
     },
     {
+      "id": "TextEntity.oblique",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "oblique",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
       "id": "TextEntity.p",
       "contract": "TextEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -19678,6 +20198,19 @@
       "field": "text",
       "type": "string",
       "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextEntity.textStyle",
+      "contract": "TextEntity",
+      "rust": "crates/shared/contracts/src/entity.rs",
+      "field": "textStyle",
+      "type": "string",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -19796,6 +20329,123 @@
         "super",
         "sub"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.bold",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "bold",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.font",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "font",
+      "type": "DrawingFont",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.fontFile",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "fontFile",
+      "type": "string",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.height",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "height",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.id",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "id",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.italic",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "italic",
+      "type": "boolean",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.name",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.oblique",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "oblique",
+      "type": "number",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "TextStyleDef.widthFactor",
+      "contract": "TextStyleDef",
+      "rust": "crates/shared/contracts/src/annotation.rs",
+      "field": "widthFactor",
+      "type": "number",
+      "optional": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -19937,6 +20587,18 @@
     }
   ],
   "screens": [
+    {
+      "id": "apps/web/src/ui/annotation/StylesDialog.ts#openAnnotationStyles",
+      "name": "openAnnotationStyles",
+      "role": "window",
+      "source": "apps/web/src/ui/annotation/StylesDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/annotation_styles.rs (ADR 0183 §5)"
+    },
     {
       "id": "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu",
       "name": "openAppMenu",
@@ -21808,6 +22470,8 @@
           {
             "label": "Stil",
             "items": [
+              "style.textStyles",
+              "style.dimensionStyles",
               "style.manager",
               "style.svgEditor",
               "style.layerStyle",
@@ -24831,6 +25495,10 @@
                 {
                   "command": "text.findReplace",
                   "size": "small"
+                },
+                {
+                  "command": "style.textStyles",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -24988,6 +25656,10 @@
                   ],
                   "key": "dimension",
                   "size": "lead"
+                },
+                {
+                  "command": "style.dimensionStyles",
+                  "size": "small"
                 }
               ],
               "overflow": [],
@@ -25690,8 +26362,16 @@
             },
             {
               "label": "Stil",
-              "icon": "styles",
+              "icon": "textStyle",
               "items": [
+                {
+                  "command": "style.textStyles",
+                  "size": "small"
+                },
+                {
+                  "command": "style.dimensionStyles",
+                  "size": "small"
+                },
                 {
                   "command": "style.manager",
                   "size": "large"
@@ -28458,6 +29138,8 @@
     "units": "<path d=\"M3.5 16.5v-13l13 13z\"/><path d=\"M3.5 12.5h2M3.5 9h2M7.5 16.5v-2M11 16.5v-2\"/><path d=\"M6.5 13.5v-3l3 3z\"/>",
     "chip": "<rect x=\"5\" y=\"5\" width=\"10\" height=\"10\" rx=\"1.5\"/><rect x=\"8\" y=\"8\" width=\"4\" height=\"4\"/><path d=\"M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5\"/>",
     "appearance": "<circle cx=\"10\" cy=\"10\" r=\"6.5\"/><path d=\"M10 3.5a6.5 6.5 0 0 1 0 13z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "textStyle": "<path d=\"M2.5 4.5h8.5M6.75 4.5v11\"/><path d=\"M13 6h4.5M13 10h4.5M13 14h4.5\"/><circle cx=\"14.6\" cy=\"6\" r=\"1.1\" fill=\"currentColor\"/><circle cx=\"16.2\" cy=\"10\" r=\"1.1\" fill=\"currentColor\"/><circle cx=\"14.2\" cy=\"14\" r=\"1.1\" fill=\"currentColor\"/>",
+    "dimensionStyle": "<path d=\"M2.5 6v9M10.5 6v9M2.5 12.5h8\"/><path d=\"m4.3 11.3-1.8 1.2 1.8 1.2M8.7 11.3l1.8 1.2-1.8 1.2\"/><path d=\"M13 6h4.5M13 10h4.5M13 14h4.5\"/><circle cx=\"14.6\" cy=\"6\" r=\"1.1\" fill=\"currentColor\"/><circle cx=\"16.2\" cy=\"10\" r=\"1.1\" fill=\"currentColor\"/><circle cx=\"14.2\" cy=\"14\" r=\"1.1\" fill=\"currentColor\"/>",
     "styles": "<path d=\"M10 3a7 7 0 1 0 0 14c1 0 1.5-.8 1.2-1.6-.4-1 .2-2 1.3-2H14a3.5 3.5 0 0 0 3.5-3.5C17.5 6 14.1 3 10 3z\"/><circle cx=\"6.6\" cy=\"9.2\" r=\".9\"/><circle cx=\"8.9\" cy=\"6.2\" r=\".9\"/><circle cx=\"12.6\" cy=\"6.6\" r=\".9\"/>",
     "layerStyle": "<rect x=\"3\" y=\"3\" width=\"10\" height=\"10\" rx=\"1\"/><path d=\"m3 8.5 5.5-5.5M5 13l8-8\"/><circle cx=\"14.5\" cy=\"14.5\" r=\"3\"/>",
     "saveAs": "<path d=\"M3.5 3.5h10l3 3v4\"/><path d=\"M3.5 3.5v13h6\"/><path d=\"M6.5 3.5v4h6v-4M6 16.5v-5h5\"/><path d=\"m12.4 17.6.6-2.6 4.1-4.1a1.2 1.2 0 0 1 1.7 1.7L14.7 16.7z\"/>",

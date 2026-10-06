@@ -107,6 +107,17 @@ pub fn load() {
     });
 }
 
+/// Whether the family has an italic face of its own; one without is leant
+/// as a browser leans it (docs/adr/0183 §2: `SYNTHETIC_ITALIC`).
+pub fn has_italic(font: DrawingFont) -> bool {
+    let id = font.id();
+    FACE_KEYS.iter().any(|&(f, _, italic)| italic && f == id)
+}
+
+/// How far a browser leans the letters of a family without an italic face
+/// (Skia's synthetic oblique: a quarter of the height, about 14°).
+pub const SYNTHETIC_ITALIC: f32 = 0.25;
+
 /// A typeface's family name (the web's CSS family).
 pub fn family(font: DrawingFont) -> &'static str {
     match font {

@@ -345,6 +345,10 @@ pub struct Newest {
     #[serde(rename = "lineWeight", default, deserialize_with = "present")]
     pub(super) line_weight: Option<Option<f64>>,
     pub(super) layer: Option<String>,
+    /// A text's style and face, a dimension's style and look, as the contract
+    /// writes them (`{}` none; docs/adr/0183). Exact; absent, not compared.
+    pub(super) face: Option<kentos_contracts::TextFace>,
+    pub(super) look: Option<kentos_contracts::DimensionLook>,
 }
 
 /// A JSON object's members in the order they are written (a `dialog` step's

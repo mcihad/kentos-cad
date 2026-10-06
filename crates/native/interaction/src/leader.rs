@@ -253,6 +253,7 @@ impl Leader {
             placeholder: Some("Notu yazın"),
             hint: Some("Enter: ekle · boş Enter: notsuz · Esc: köşelere dön"),
             empty: true,
+            face: Default::default(),
         }));
     }
 
@@ -417,10 +418,11 @@ impl Tool for Leader {
         ARROWS
             .iter()
             .map(|&(a, typed, label, icon)| OptionChoice {
-                label,
-                typed,
-                icon,
+                label: label.to_owned(),
+                typed: typed.to_owned(),
+                icon: Some(icon),
                 checked: a == chosen,
+                command: None,
             })
             .collect()
     }

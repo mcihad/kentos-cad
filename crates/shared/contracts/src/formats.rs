@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::document::{Bounds, DrawingUnit};
+use crate::annotation::{DimensionStyleDef, TextStyleDef};
+use crate::document::{Bounds, DrawingFont, DrawingUnit};
 use crate::entity::{BlockDefinition, Entity, Vec2};
 use crate::layer::LineType;
 
@@ -67,7 +68,11 @@ use crate::layer::LineType;
 /// 30: multi-line texts (docs/adr/0182): `.kcad` document schema 20 and the typed columns' layout,
 ///    a text's box width, line spacing and runs behind its fifth to seventh option flags; MTEXT read
 ///    as one text with its line breaks, box, spacing and letter formats, written back as MTEXT.
-pub const FORMATS_VERSION: u32 = 30;
+/// 31: text and dimension styles (docs/adr/0183): `.kcad` document schema 21 and the typed
+///    columns' layout, a text's style, typeface, bold, italic and slant, a dimension's style and
+///    look behind their next option flags; DXF STYLE and DIMSTYLE read as the project's styles,
+///    the import result's `textStyles` and `dimensionStyles`, written back as records.
+pub const FORMATS_VERSION: u32 = 31;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -208,6 +213,17 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BlockDefinition>>", optional))]
     pub blocks: Vec<BlockDefinition>,
+    /// The text and dimension styles the objects follow (a DXF's STYLE and
+    /// DIMSTYLE records, docs/adr/0183 §7), in the file's order: ids the
+    /// reader numbered, their sizes in paper mm at the scale the options
+    /// gave. The app takes a style of a name the project has as that one,
+    /// and gives the others new ids and names the project does not have yet.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextStyleDef>>", optional))]
+    pub text_styles: Vec<TextStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
+    pub dimension_styles: Vec<DimensionStyleDef>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -655,6 +671,17 @@ pub struct DxfReadOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
+    /// The project's plot scale denominator (docs/adr/0183 §7): a style's
+    /// heights and sizes, in drawing units in the file, are paper mm at it;
+    /// none: 1000.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scale: Option<f64>,
+    /// The project's typeface: a style whose typeface KentOS does not have
+    /// takes it (said); none: Barlow.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing_font: Option<DrawingFont>,
 }
 
 /// A layer as the DXF writer receives it. DXF layers are flat and their
@@ -713,6 +740,14 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
+    /// The project's text and dimension styles (docs/adr/0183 §7): each is a
+    /// STYLE or DIMSTYLE record, the objects that follow one name it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TextStyleDef>>", optional))]
+    pub text_styles: Vec<TextStyleDef>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
+    pub dimension_styles: Vec<DimensionStyleDef>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

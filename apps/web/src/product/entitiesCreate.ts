@@ -10,7 +10,7 @@ import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
 import { checkLineWeight, checkLayer, checkRevision, error, failed, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
-import { checkBlocks, checkGeometry, geometryOf } from './entitiesEdit';
+import { checkBlocks, checkGeometry, checkStyles, geometryOf } from './entitiesEdit';
 
 /**
  * `cad.entities.create` v1 (docs/adr/0057): new objects of any kind on a
@@ -94,6 +94,13 @@ function check(doc: CadDocument, input: EntitiesCreate): Stop | CommandWarning[]
     'objects',
   );
   if (blocks) return blocks;
+  // A text's and a dimension's style is the project's (docs/adr/0183 §9).
+  const styles = checkStyles(
+    doc,
+    input.objects.map((o) => o.geometry),
+    'objects',
+  );
+  if (styles) return styles;
   // A linked text's object is the drawing's (docs/adr/0175 §4).
   for (const [i, o] of input.objects.entries())
     if (o.labelOf != null && !doc.byUid(o.labelOf))

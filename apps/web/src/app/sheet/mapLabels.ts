@@ -5,6 +5,8 @@ import type { TextRun } from '../../model/entities';
 import { dimensionMeasure, type DimensionLayout } from '../../model/geom/dimension';
 import { fillTemplate } from '../../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../../render/color';
+import { DRAWING_FAMILY, type Face } from '../../render/drawingFaces';
+import type { DimensionLook } from '../../model/annotationStyles';
 import { DEFAULT_LABELS, DIMENSION_PREFIX, DIMENSION_UNIT, LABEL, LABEL_STRIDE } from '../../viewport/storeRecords';
 import type { VecPath } from './mapVectors';
 
@@ -50,7 +52,8 @@ export interface LabelInput {
   readonly pxPerM: number;
   /** The map's box on the ground (its west and north edges, and its size in CSS px) for the thinning. */
   readonly box: { readonly minX: number; readonly maxY: number; readonly width: number; readonly height: number };
-  dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>): string;
+  /** A dimension's value as drawn, in its look's writing (docs/adr/0183 §3). */
+  dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, look: DimensionLook): string;
   pieces(block: string): readonly BlockPiece[] | null;
   /** A text's width in CSS px in a canvas font (`500 10.0px Barlow, …`). */
   measure(font: string, text: string): number;
@@ -93,7 +96,16 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
   const room = new Room(o.box.width, o.box.height);
   const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
   const halo = { color: pal.labelHalo, width: HALO_PX * PX_MM };
-  const css = (weight: number, px: number, italic = false) => `${italic ? 'italic ' : ''}${weight} ${px.toFixed(1)}px ${pal.drawingFont}`;
+  const css = (weight: number, px: number, italic = false, family: DrawingFont = o.font) =>
+    `${italic ? 'italic ' : ''}${weight} ${px.toFixed(1)}px ${family === o.font ? pal.drawingFont : DRAWING_FAMILY[family]}`;
+  /**
+   * A text's typeface, weight and slant (docs/adr/0183 §2): its own typeface upright at 400 (600 bold, italic), the
+   * run's bold and italic added; without one the project's, `legacy` (italic for a one-line text, as always).
+   */
+  const faceOf = (f: Face, legacy: { weight: number; italic: boolean }, run?: TextRun) =>
+    f.font === undefined
+      ? { family: o.font, weight: run?.bold ? 600 : legacy.weight, italic: legacy.italic || run?.italic === true }
+      : { family: f.font, weight: f.bold || run?.bold ? 600 : 400, italic: f.italic === true || run?.italic === true };
   // Ground metres to the paper's CSS px (y down from the map's north-west corner), and back.
   const sx = (x: number) => (x - o.box.minX) * pxPerM;
   const sy = (y: number) => (o.box.maxY - y) * pxPerM;
@@ -123,7 +135,7 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
     masks.push({ layer, path: { parts: [{ points: corners.flatMap(([u, v]) => [x + u * c - v * s, y + u * s + v * c]), closed: true }], fill: { color, opacity: 1, rule: 'nonzero' } } });
   };
   /** One line of a multi-line text (docs/adr/0182 §3), run by run as the overlay draws it (`paragraphLine`). */
-  const line = (layer: string, words: string, runs: readonly TextRun[] | undefined, [start, end]: readonly [number, number], x: number, y: number, deg: number, h: number, factor: number) => {
+  const line = (layer: string, words: string, runs: readonly TextRun[] | undefined, [start, end]: readonly [number, number], x: number, y: number, deg: number, h: number, factor: number, face: Face = {}) => {
     const letters = Array.from(words);
     const a = (deg * Math.PI) / 180;
     const [c, s] = [Math.cos(a), Math.sin(a)];
@@ -137,11 +149,10 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
       const part = letters.slice(k, j).join('');
       const size = run?.script ? h * 0.6 : h;
       const lift = run?.script === 'super' ? h * 0.4 : run?.script === 'sub' ? -h * 0.15 : 0;
-      const weight = run?.bold ? 600 : 400;
-      const italic = run?.italic === true;
-      const w = (o.measure(css(weight, size * pxPerM, italic), part) / pxPerM) * factor;
+      const font = faceOf(face, { weight: 400, italic: false }, run);
+      const w = (o.measure(css(font.weight, size * pxPerM, font.italic, font.family), part) / pxPerM) * factor;
       const color = run?.color ? resolveColor(run.color, pal) : pal.label;
-      if (part.trim()) text(layer, { text: part, x: x + c * along - s * lift, y: y + s * along + c * lift, size: mm(size), rotation: deg, align: 'left', baseline: 'alphabetic', font: { family: o.font, weight, italic }, color, widthFactor: factor });
+      if (part.trim()) text(layer, { text: part, x: x + c * along - s * lift, y: y + s * along + c * lift, size: mm(size), rotation: deg, align: 'left', baseline: 'alphabetic', font, color, widthFactor: factor });
       if (run?.underline) fill(layer, x, y, deg, [[along, lift - 0.12 * size], [along + w, lift - 0.12 * size], [along + w, lift - 0.18 * size], [along, lift - 0.18 * size]], color);
       along += w;
       k = j;
@@ -161,29 +172,31 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
       continue;
     }
     if (what === LABEL.line && e.kind === 'text') {
-      line(layer, e.text, e.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], spots[i + 6]);
+      line(layer, e.text, e.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], spots[i + 6], e);
       continue;
     }
     if (what === LABEL.pieceLine && e.kind === 'insert') {
       const piece = o.pieces(e.block)?.[spots[i + 6]];
-      if (piece?.kind === 'text') line(layer, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1);
+      if (piece?.kind === 'text') line(layer, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], x, y, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1, piece);
       continue;
     }
     if (what === LABEL.dimension && e.kind === 'dimension') {
       const color = e.color ?? doc.layers.get(e.layerId)?.style.color;
       const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };
-      const t = e.text || o.dimensionText(measured);
+      const t = e.text || o.dimensionText(measured, e);
+      const family = e.font ?? o.font;
       if (spots[i + 8] === 1) {
-        const w = o.measure(css(500, e.height * pxPerM), t) / pxPerM;
+        const w = o.measure(css(500, e.height * pxPerM, false, family), t) / pxPerM;
         mask(layer, x, y, spots[i + 4], w, e.height, -w / 2, true);
       }
-      text(layer, { text: t, x, y, size: mm(e.height), rotation: spots[i + 4], align: 'center', baseline: 'alphabetic', font: { family: o.font, weight: 500, italic: false }, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
+      text(layer, { text: t, x, y, size: mm(e.height), rotation: spots[i + 4], align: 'center', baseline: 'alphabetic', font: { family, weight: 500, italic: false }, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
       continue;
     }
     if ((what === LABEL.text && e.kind === 'text') || (what === LABEL.leader && e.kind === 'leader' && e.text)) {
       const factor = what === LABEL.text ? spots[i + 5] : 1;
       mask(layer, x, y, spots[i + 4], spots[i + 6], e.height);
-      text(layer, { text: e.text ?? '', x, y, size: mm(e.height), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font: { family: o.font, weight: 400, italic: true }, color: pal.label, widthFactor: factor });
+      const font = faceOf(e.kind === 'text' ? e : {}, { weight: 400, italic: true });
+      text(layer, { text: e.text ?? '', x, y, size: mm(e.height), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font, color: pal.label, widthFactor: factor });
       continue;
     }
     if ((what === LABEL.pieceText || what === LABEL.pieceDimension || what === LABEL.pieceLeader) && e.kind === 'insert') {
@@ -192,18 +205,19 @@ export function mapTexts(o: LabelInput): { texts: VecText[]; masks: { layer: str
         const t = pieceText(piece, e.attrs);
         if (!t) continue;
         mask(layer, x, y, spots[i + 4], spots[i + 8], spots[i + 5]);
-        text(layer, { text: t, x, y, size: mm(spots[i + 5]), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font: { family: o.font, weight: 400, italic: true }, color: pal.label, widthFactor: spots[i + 7] });
+        text(layer, { text: t, x, y, size: mm(spots[i + 5]), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font: faceOf(piece, { weight: 400, italic: true }), color: pal.label, widthFactor: spots[i + 7] });
       } else if (what === LABEL.pieceLeader && piece?.kind === 'leader' && piece.text) {
         mask(layer, x, y, spots[i + 4], spots[i + 8], spots[i + 5]);
         text(layer, { text: piece.text, x, y, size: mm(spots[i + 5]), rotation: spots[i + 4], align: 'left', baseline: 'alphabetic', font: { family: o.font, weight: 400, italic: true }, color: pal.label });
       } else if (what === LABEL.pieceDimension && piece?.kind === 'dimension') {
         const color = e.color ?? doc.layers.get(e.layerId)?.style.color;
-        const t = piece.text || o.dimensionText({ value: spots[i + 5], ...dimensionMeasure(piece.style, piece.angle) });
+        const t = piece.text || o.dimensionText({ value: spots[i + 5], ...dimensionMeasure(piece.style, piece.angle) }, piece);
+        const family = piece.font ?? o.font;
         if (spots[i + 8] === 1) {
-          const w = o.measure(css(500, spots[i + 7] * pxPerM), t) / pxPerM;
+          const w = o.measure(css(500, spots[i + 7] * pxPerM, false, family), t) / pxPerM;
           mask(layer, x, y, spots[i + 4], w, spots[i + 7], -w / 2, true);
         }
-        text(layer, { text: t, x, y, size: mm(spots[i + 7]), rotation: spots[i + 4], align: 'center', baseline: 'alphabetic', font: { family: o.font, weight: 500, italic: false }, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
+        text(layer, { text: t, x, y, size: mm(spots[i + 7]), rotation: spots[i + 4], align: 'center', baseline: 'alphabetic', font: { family, weight: 500, italic: false }, color: !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal) });
       }
       continue;
     }

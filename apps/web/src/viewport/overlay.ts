@@ -2,10 +2,13 @@ import type { CrosshairSize } from '../app/state';
 import { pieceText, type BlockPiece } from '../model/blocks';
 import type { CadDocument } from '../model/document';
 import type { TextRun } from '../model/entities';
+import type { DimensionLook } from '../model/annotationStyles';
+import type { DrawingFont } from '../model/projectSettings';
 import { dist, type Vec2 } from '../model/geometry';
 import { dimensionMeasure, type DimensionLayout } from '../model/geom/dimension';
 import { fillTemplate } from '../model/ops/labelText';
 import { resolveColor, type CanvasPalette } from '../render/color';
+import { faceFont, leanOf, valueFont, type Face } from '../render/drawingFaces';
 import type { ToolCursor } from '../tools/Tool';
 import type { Camera } from './Camera';
 import type { TrackHit } from './objectTracking';
@@ -85,13 +88,16 @@ class LabelRoom {
  * A text from where its baseline starts, at `s` on the screen: turned `rotation` degrees, `px` high, its letters
  * `factor` wide, over a mask `mask` px wide (none at 0; docs/adr/0145). Text objects, block texts, leaders' notes.
  */
-function baselineText(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, rotation: number, px: number, factor: number, mask: number, text: string): void {
+function baselineText(g: CanvasRenderingContext2D, pal: CanvasPalette, s: Vec2, rotation: number, px: number, factor: number, mask: number, text: string, face: Face = {}): void {
   g.save();
   g.translate(s.x, s.y);
   g.rotate((-rotation * Math.PI) / 180);
+  // A slant leans the mask and the letters from the baseline (docs/adr/0183 §2).
+  const lean = leanOf(face);
+  if (lean) g.transform(1, 0, -lean, 1, 0, 0);
   maskText(g, mask, px, pal.paper);
   if (factor !== 1) g.scale(factor, 1);
-  g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
+  g.font = faceFont(face, px, pal.drawingFont, 'italic 400');
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
   haloText(g, text, 0, 0, pal.label, pal.labelHalo);
@@ -113,9 +119,12 @@ function maskText(g: CanvasRenderingContext2D, width: number, px: number, paper:
   g.restore();
 }
 
-/** A dimension's value centred on its baseline (the context turned to it), over its mask when it has one (docs/adr/0147). */
-function dimensionValue(g: CanvasRenderingContext2D, pal: CanvasPalette, px: number, text: string, color: string, mask: boolean): void {
-  g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
+/**
+ * A dimension's value centred on its baseline (the context turned to it), over its mask when it has one or stands on
+ * its line (docs/adr/0147, 0183 §3); in its own typeface when it has one.
+ */
+function dimensionValue(g: CanvasRenderingContext2D, pal: CanvasPalette, px: number, text: string, color: string, mask: boolean, font?: DrawingFont): void {
+  g.font = valueFont(font, px, pal.drawingFont);
   g.textAlign = 'center';
   g.textBaseline = 'alphabetic';
   if (mask) {
@@ -128,7 +137,8 @@ function dimensionValue(g: CanvasRenderingContext2D, pal: CanvasPalette, px: num
 /**
  * One line of a multi-line text (docs/adr/0182 §3), run by run from where its baseline starts (`at`): upright at 400
  * (600 bold, italic when italic), raised 0.4 and lowered 0.15 of its height at 0.6 of it, in the run's colour (the
- * label's without one), underlined 0.12 of its height under its baseline; its letters `widthFactor` wide.
+ * label's without one), underlined 0.12 of its height under its baseline; its letters `widthFactor` wide. A text's
+ * face (docs/adr/0183 §2): its typeface, its bold and italic added to the runs', its letters leaning.
  */
 export function paragraphLine(
   g: CanvasRenderingContext2D,
@@ -141,6 +151,7 @@ export function paragraphLine(
   rotation: number,
   height: number,
   widthFactor: number,
+  face: Face = {},
 ): void {
   const letters = Array.from(text);
   const px = height * cam.scale;
@@ -150,6 +161,8 @@ export function paragraphLine(
   g.save();
   g.translate(s.x, s.y);
   g.rotate((-rotation * Math.PI) / 180);
+  const lean = leanOf(face);
+  if (lean) g.transform(1, 0, -lean, 1, 0, 0);
   if (widthFactor !== 1) g.scale(widthFactor, 1);
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
@@ -161,7 +174,7 @@ export function paragraphLine(
     const words = letters.slice(i, j).join('');
     const size = run?.script ? px * 0.6 : px;
     const lift = run?.script === 'super' ? px * 0.4 : run?.script === 'sub' ? -px * 0.15 : 0;
-    g.font = `${run?.italic ? 'italic ' : ''}${run?.bold ? 600 : 400} ${size.toFixed(1)}px ${pal.drawingFont}`;
+    g.font = faceFont(face, size, pal.drawingFont, `${run?.italic ? 'italic ' : ''}${run?.bold ? 600 : 400}`, run);
     const color = run?.color ? resolveColor(run.color, pal) : pal.label;
     const w = g.measureText(words).width;
     if (words.trim()) haloText(g, words, x, -lift, color, pal.labelHalo);
@@ -178,23 +191,35 @@ export function paragraphLine(
   g.restore();
 }
 
-/** A multi-line text's mask (docs/adr/0182 §3): the box from `at` `w` along its turn and `h` up, metres, in the paper's colour. */
-export function paragraphMask(g: CanvasRenderingContext2D, pal: CanvasPalette, cam: { worldToScreen(p: Vec2): Vec2; scale: number }, at: Vec2, rotation: number, w: number, h: number): void {
+/**
+ * A multi-line text's mask (docs/adr/0182 §3): the box from `at` `w` along its turn and `h` up, metres, in the paper's
+ * colour; a leaning text's leans from its corner (docs/adr/0183 §2).
+ */
+export function paragraphMask(g: CanvasRenderingContext2D, pal: CanvasPalette, cam: { worldToScreen(p: Vec2): Vec2; scale: number }, at: Vec2, rotation: number, w: number, h: number, lean = 0): void {
   const s = cam.worldToScreen(at);
   g.save();
   g.translate(s.x, s.y);
   g.rotate((-rotation * Math.PI) / 180);
+  if (lean) g.transform(1, 0, -lean, 1, 0, 0);
   g.fillStyle = pal.paper;
   g.fillRect(0, -h * cam.scale, w * cam.scale, h * cam.scale);
   g.restore();
 }
 
-/** A multi-line text's records as the core gives them (`textLines`, the store's labels): its mask, then its lines. */
-export function paragraphRecords(g: CanvasRenderingContext2D, pal: CanvasPalette, cam: { worldToScreen(p: Vec2): Vec2; scale: number }, records: ArrayLike<number>, text: string, runs: readonly TextRun[] | undefined): void {
+/** A multi-line text's records as the core gives them (`textLines`, the store's labels): its mask, then its lines; in its face. */
+export function paragraphRecords(
+  g: CanvasRenderingContext2D,
+  pal: CanvasPalette,
+  cam: { worldToScreen(p: Vec2): Vec2; scale: number },
+  records: ArrayLike<number>,
+  text: string,
+  runs: readonly TextRun[] | undefined,
+  face: Face = {},
+): void {
   for (let i = 0; i + LABEL_STRIDE <= records.length; i += LABEL_STRIDE) {
     const at = { x: records[i + 2], y: records[i + 3] };
-    if (records[i + 1] === LABEL.paragraphMask) paragraphMask(g, pal, cam, at, records[i + 4], records[i + 5], records[i + 6]);
-    else paragraphLine(g, pal, cam, text, runs, [records[i + 7], records[i + 8]], at, records[i + 4], records[i + 5], records[i + 6]);
+    if (records[i + 1] === LABEL.paragraphMask) paragraphMask(g, pal, cam, at, records[i + 4], records[i + 5], records[i + 6], leanOf(face));
+    else paragraphLine(g, pal, cam, text, runs, [records[i + 7], records[i + 8]], at, records[i + 4], records[i + 5], records[i + 6], face);
   }
 }
 
@@ -217,7 +242,7 @@ export function drawLabels(
   cam: Camera,
   pal: CanvasPalette,
   spots: Float64Array,
-  dimensionText: (l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>) => string,
+  dimensionText: (l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, look: DimensionLook) => string,
   pieces: (block: string) => readonly BlockPiece[] | null = () => null,
 ): void {
   const layers = doc.layers;
@@ -239,27 +264,28 @@ export function drawLabels(
       g.rotate((-spots[i + 4] * Math.PI) / 180);
       const color = e.color ?? layers.get(e.layerId)?.style.color;
       const measured = { value: spots[i + 5], unit: DIMENSION_UNIT[spots[i + 6]] ?? 'length', prefix: DIMENSION_PREFIX[spots[i + 7]] ?? '' };
-      dimensionValue(g, pal, e.height * cam.scale, e.text || dimensionText(measured), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1);
+      dimensionValue(g, pal, e.height * cam.scale, e.text || dimensionText(measured, e), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1, e.font);
       g.restore();
       continue;
     }
     // x, y where the text's baseline starts (its point moved by its alignment); its width factor and mask (docs/adr/0145).
     if (what === LABEL.text && e.kind === 'text') {
-      baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, spots[i + 5], spots[i + 6] * cam.scale, e.text);
+      baselineText(g, pal, cam.worldToScreen({ x, y }), spots[i + 4], e.height * cam.scale, spots[i + 5], spots[i + 6] * cam.scale, e.text, e);
       continue;
     }
-    // A multi-line text: its mask, then its lines (docs/adr/0182 §3); a block's own too.
+    // A multi-line text: its mask, then its lines (docs/adr/0182 §3); a block's own too. Its face (docs/adr/0183 §2).
     if (what === LABEL.paragraphMask) {
-      paragraphMask(g, pal, cam, { x, y }, spots[i + 4], spots[i + 5], spots[i + 6]);
+      const owner = e.kind === 'text' ? e : e.kind === 'insert' ? pieces(e.block)?.[spots[i + 7]] : undefined;
+      paragraphMask(g, pal, cam, { x, y }, spots[i + 4], spots[i + 5], spots[i + 6], owner?.kind === 'text' ? leanOf(owner) : 0);
       continue;
     }
     if (what === LABEL.line && e.kind === 'text') {
-      paragraphLine(g, pal, cam, e.text, e.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], spots[i + 6]);
+      paragraphLine(g, pal, cam, e.text, e.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], spots[i + 6], e);
       continue;
     }
     if (what === LABEL.pieceLine && e.kind === 'insert') {
       const piece = pieces(e.block)?.[spots[i + 6]];
-      if (piece?.kind === 'text') paragraphLine(g, pal, cam, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1);
+      if (piece?.kind === 'text') paragraphLine(g, pal, cam, piece.text, piece.runs, [spots[i + 7], spots[i + 8]], { x, y }, spots[i + 4], spots[i + 5], piece.widthFactor ?? 1, piece);
       continue;
     }
     // A leader's note, as a text (docs/adr/0146 §5).
@@ -275,7 +301,7 @@ export function drawLabels(
         // An attribute's piece shows the insert's value, else its default (docs/adr/0144 §7).
         const text = pieceText(piece, e.attrs);
         if (!text) continue;
-        baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, spots[i + 7], spots[i + 8] * cam.scale, text);
+        baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, spots[i + 7], spots[i + 8] * cam.scale, text, piece);
       } else if (what === LABEL.pieceLeader && piece?.kind === 'leader' && piece.text) {
         // A leader's note (docs/adr/0146 §5), as a text piece's.
         baselineText(g, pal, s, spots[i + 4], spots[i + 5] * cam.scale, 1, spots[i + 8] * cam.scale, piece.text);
@@ -285,7 +311,7 @@ export function drawLabels(
         g.rotate((-spots[i + 4] * Math.PI) / 180);
         const color = e.color ?? layers.get(e.layerId)?.style.color;
         const measured = { value: spots[i + 5], ...dimensionMeasure(piece.style, piece.angle) };
-        dimensionValue(g, pal, spots[i + 7] * cam.scale, piece.text || dimensionText(measured), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1);
+        dimensionValue(g, pal, spots[i + 7] * cam.scale, piece.text || dimensionText(measured, piece), !color || color === 'fg' || color === 'fg-dim' ? pal.label : resolveColor(color, pal), spots[i + 8] === 1, piece.font);
         g.restore();
       }
       continue;

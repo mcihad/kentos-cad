@@ -17,6 +17,7 @@ mod blocks;
 mod crs;
 mod names;
 mod objects;
+mod styles;
 
 use kentos_contracts::{
     DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle, DocumentSnapshotV2,
@@ -33,7 +34,8 @@ use crate::{
     SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES,
     SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS, SCHEMA_WITH_SECOND_SRID,
-    SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
+    SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TEXT_EXTRAS,
+    SCHEMA_WITH_TRAVERSE_TOLERANCES,
 };
 use names::{
     angle_unit, area_unit, drawing_font, drawing_unit, label_ink, label_placement, line_type,
@@ -280,7 +282,9 @@ impl<'d> Encoder<'d> {
             + usize::from(s.second_custom_crs.is_some())
             + usize::from(!s.datum_transforms.is_empty())
             + usize::from(s.survey.is_some())
-            + usize::from(!s.layer_states.is_empty());
+            + usize::from(!s.layer_states.is_empty())
+            + usize::from(!s.text_styles.is_empty())
+            + usize::from(!s.dimension_styles.is_empty());
         self.open(n, true)?;
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -323,6 +327,10 @@ impl<'d> Encoder<'d> {
                 Ok(())
             })?;
         }
+        if !s.text_styles.is_empty() {
+            self.key("textStyles");
+            self.at(Seg::Name("textStyles"), |e| e.text_styles(&s.text_styles))?;
+        }
         if let Some(f) = s.drawing_font {
             self.key("drawingFont");
             self.w.text(drawing_font(f));
@@ -345,6 +353,12 @@ impl<'d> Encoder<'d> {
             self.key("datumTransforms");
             self.at(Seg::Name("datumTransforms"), |e| {
                 e.datum_transforms(&s.datum_transforms)
+            })?;
+        }
+        if !s.dimension_styles.is_empty() {
+            self.key("dimensionStyles");
+            self.at(Seg::Name("dimensionStyles"), |e| {
+                e.dimension_styles(&s.dimension_styles)
             })?;
         }
         if let Some(d) = &s.second_custom_crs {
@@ -693,7 +707,9 @@ impl<'d> Encoder<'d> {
     }
 }
 
-/// The oldest schema that holds the drawing: 20 when a text of it or of a
+/// The oldest schema that holds the drawing: 21 when the project has a text
+/// or a dimension style or a text or a dimension of it or of a block
+/// definition a face or a look (docs/adr/0183), 20 when a text of it or of a
 /// block definition has a box, a line spacing or letter formats
 /// (docs/adr/0182 §1), 19 when the project has layer
 /// states (docs/adr/0177 §4), 18 when a text of it writes an
@@ -724,6 +740,20 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         list.iter()
             .any(|e| matches!(e, Entity::Text(t) if !t.paragraph.is_plain()))
     };
+    let styled = |list: &[Entity]| {
+        list.iter().any(|e| match e {
+            Entity::Text(t) => !t.face.is_plain(),
+            Entity::Dimension(d) => !d.look.is_plain(),
+            _ => false,
+        })
+    };
+    if !doc.settings.text_styles.is_empty()
+        || !doc.settings.dimension_styles.is_empty()
+        || styled(&doc.entities)
+        || doc.blocks.iter().any(|b| styled(&b.entities))
+    {
+        return SCHEMA_WITH_STYLES;
+    }
     if paragraphs(&doc.entities) || doc.blocks.iter().any(|b| paragraphs(&b.entities)) {
         return SCHEMA_WITH_PARAGRAPHS;
     }

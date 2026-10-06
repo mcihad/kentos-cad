@@ -84,8 +84,8 @@ impl App {
                 .into_iter()
                 .find(|c| c.checked);
             let mut face = row![].spacing(6).align_y(Center);
-            if let Some(c) = chosen {
-                face = face.push(icon(crate::icons::from_web(Some(c.icon))).size(14.0));
+            if let Some(name) = chosen.and_then(|c| c.icon) {
+                face = face.push(icon(crate::icons::from_web(Some(name))).size(14.0));
             }
             face = face.push(label::caption(o.label));
             if let Some(value) = &o.value {

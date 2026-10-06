@@ -29,6 +29,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çok satırlı yazı: kutu genişliği ve sözcük sarma, satır aralığı, kalın, eğik, altı çizili, üst ve alt simge, renkli harfler, Çok
   satırlı yazı aracı (iki köşe, Satır aralığı), düzenleyici (çizimde canlı önizleme, Renk ▾, Simge ▾), çift tıkla düzenleme,
   Öznitelikler'in Kutu genişliği ve Satır aralığı; DXF'in MTEXT'i biçimleriyle tek yazı olarak gelir ve gider (ADR 0182, `.kcad` şema 20);
+  yazı ve ölçü stilleri: projenin adlı stilleri (`.kcad` şema 21), nesne görünüşünü kendi alanlarında taşır (yazının yüzü: stil, yazı tipi,
+  kalın, eğik, yatıklık; ölçünün görünüşü: dolu ok, açık ok, nokta, yok ya da çentik, boylar, değerin yeri, basamak, birim, önek, sonek,
+  yazı tipi), stil değişince eski değerdekiler tek adımda izler; CAD projesinde Yazı stilleri ve Ölçü stilleri penceresi, araçların Stil (S)
+  seçeneği (Çok satırlı yazı'nın Satır aralığı R), Öznitelikler'in stil satırları; DXF STYLE ve DIMSTYLE iki yönde, içe aktarılan stiller
+  projeye adıyla eklenir, Standard Standart'tır (ADR 0183);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -231,6 +236,7 @@ KENTOS_WRITE_GIS_EXPORTS=1 cargo test -p kentos-formats --test gis   # GeoJSON y
 KENTOS_WRITE_DXF=1 cargo test -p kentos-formats --test dxf_write   # DXF yazıcısının örnek çıktısını (fixtures/formats/v1/dxf-write) yeniden yaz; farkı okuyun
 python3 scripts/fixtures/dxf_write_reference.py --check   # DXF yazıcısının blok, öznitelik, yazı, kılavuz, çok satırlı yazı (MTEXT) ve yerel projenin birimi örneklerini KentOS kodu olmadan denetle (ADR 0144, 0145, 0146, 0165, 0182)
 python3 scripts/fixtures/text_cases.py --check   # yazı kurallarını (Artır, Bul ve değiştir, Okunur yap) kurallardan denetle (ADR 0145)
+python3 scripts/fixtures/annotation_style_cases.py --check   # yazı ve ölçü stillerinin kurallarını, uygulanmasını, izlenmesini ve ölçü değerinin yazımını bağımsız başvurudan denetle; durumlar fixtures/text/v1/styles.json (ADR 0183)
 python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının satırlarını, sarmasını, kutusunu ve düzenleyicinin dilimlerini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/text/v1/paragraph.json (ADR 0182)
 cargo test -p kentos-desktop paragraph_editor::tests::screens -- --ignored --nocapture   # çok satırlı yazının resimleri, .run/shots/paragraf-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs paragraph); ADR 0182)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
@@ -928,7 +934,14 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `tools/paragraphTool.ts`, masaüstü `kentos_interaction::paragraph`; düzenleyici web `ui/shell/ParagraphEditor.ts`, masaüstü
   `paragraph_editor.rs`; DXF MTEXT biçimleriyle iki yönde (`dxf/strings.rs`'in `mtext_content`'i, `writer/entities/paragraph.rs`;
   `mtext.dxf`, `dxf-write/paragraphs`); `invalid_paragraph`; ortak iz `paragraph-text.json` (oynatıcılarda `paragraph` eylemi).
-  Sıradaki `CAD-21` yazı ve ölçü stilleri.
+  `CAD-21` yazı ve ölçü stilleri ([ADR 0183](docs/adr/0183-text-and-dimension-styles.md)) tek parçada bitti (6 Ekim): sözleşmenin
+  `TextFace`, `DimensionLook`, `TextStyleDef`, `DimensionStyleDef`'i ve kuralları (`annotation.rs`; bağımsız başvuru
+  `annotation_style_cases.py`, ortak `fixtures/text/v1/styles.json`), `.kcad` şema 21 (`FORMATS_VERSION` 31), `cad.entities.edit`'in
+  `textStyle` ve `dimensionStyle` işlemleri; pencere masaüstünde `annotation_styles.rs`, web'de `ui/annotation/StylesDialog.ts`
+  (kaydetme `kentos_interaction::style_tables`, `app/styleTables.ts`); araçların Stil'i `kentos_interaction::styles`,
+  `tools/styleOption.ts` (stil adının adımında Boşluk harftir: `takes_words`, `takesWords`); DXF'te `dxf/styles.rs`,
+  `writer/styles.rs`, içe aktarmanın birleştirmesi `exchange/apply.rs`, `io/apply.ts`; ortak izler `text-styles.json`,
+  `dimension-styles.json` (oynatıcılarda `face`, `look`). Sıradaki `CAD-22` tablo nesnesi.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

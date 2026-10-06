@@ -175,6 +175,17 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LayerState>>", optional))]
     pub layer_states: Vec<LayerState>,
+    /// The project's named text styles (docs/adr/0183 §2), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextStyleDef>>", optional))]
+    pub text_styles: Vec<crate::TextStyleDef>,
+    /// The project's named dimension styles (docs/adr/0183 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::DimensionStyleDef>>", optional)
+    )]
+    pub dimension_styles: Vec<crate::DimensionStyleDef>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -431,6 +442,9 @@ impl ProjectSettings {
         }
         self.survey = self.survey.and_then(SurveySettings::sanitized);
         self.layer_states = sanitized_layer_states(std::mem::take(&mut self.layer_states));
+        self.text_styles = crate::sanitized_text_styles(std::mem::take(&mut self.text_styles));
+        self.dimension_styles =
+            crate::sanitized_dimension_styles(std::mem::take(&mut self.dimension_styles));
         self
     }
 }

@@ -23,6 +23,7 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
         c,
         za,
         zb,
+        look,
         ..
     } = g
     else {
@@ -64,6 +65,7 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
         c: c.as_ref().map(v),
         za: *za,
         zb: *zb,
+        look: crate::geometry::core_look(look),
     };
     let Some(fault) = dimension_fault(&geom) else {
         return Ok(());

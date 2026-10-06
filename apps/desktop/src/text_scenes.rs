@@ -48,7 +48,7 @@ const YOL: Slot = Slot(4);
 fn tool(app: &mut App) {
     open(app, texts_ground());
     run(app, "tool.text");
-    let _ = app.update(Message::PromptChoice("H", "sağ üst"));
+    let _ = app.update(Message::PromptChoice("H", "sağ üst".into()));
     for option in ["G", "0.8", "Z", "R"] {
         typed(app, option);
     }
@@ -123,7 +123,7 @@ fn text_file(app: &mut App) {
     run(app, "tool.text");
     typed(app, "Y");
     typed(app, "3");
-    let _ = app.update(Message::PromptChoice("H", "sol orta"));
+    let _ = app.update(Message::PromptChoice("H", "sol orta".into()));
     let _ = app.update(Message::Run("tool.cancel"));
     let task = app.update(Message::Run("tool.placeTextFile"));
     crate::files_testing::drive(app, task);

@@ -176,6 +176,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::HoleAdd => "Delik ekle",
         EditOperation::HoleRemove => "Deliği sil",
         EditOperation::HoleFill => "Deliği doldur",
+        EditOperation::TextStyle => "Yazı stili",
+        EditOperation::DimensionStyle => "Ölçü stili",
     }
 }
 
@@ -310,6 +312,16 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         }
     }
     check_blocks(
+        doc,
+        input
+            .changes
+            .iter()
+            .enumerate()
+            .filter_map(|(i, c)| Some((i, geometry_of(c)?))),
+        "changes",
+    )?;
+    // A text's and a dimension's style is the project's (docs/adr/0183 §9).
+    check_styles(
         doc,
         input
             .changes
@@ -731,6 +743,63 @@ pub(crate) fn check_geometry(
             )));
         }
     }
+    // A text's face and a dimension's look (docs/adr/0183 §9).
+    let style = match g {
+        EntityGeometry::Text { face, .. } => face.problem(),
+        EntityGeometry::Dimension { look, .. } => look.problem(),
+        _ => None,
+    };
+    if let Some((field, words)) = style {
+        return Err(Stop::Failed(error(
+            codes::INVALID_STYLE,
+            words,
+            at(&format!(".{field}")),
+        )));
+    }
+    Ok(())
+}
+
+/// Every text's and dimension's style among the geometries is the
+/// project's, in order (docs/adr/0183 §9): `unknown_style` at
+/// `{list}[i].geometry.textStyle` (`.dimStyle`).
+pub(crate) fn check_styles<'a>(
+    doc: &Document,
+    geometries: impl Iterator<Item = (usize, &'a EntityGeometry)>,
+    list: &str,
+) -> Result<(), Stop> {
+    let settings = doc.settings();
+    for (i, g) in geometries {
+        let (id, known, what, field) = match g {
+            EntityGeometry::Text { face, .. } => match &face.text_style {
+                Some(id) => (
+                    id,
+                    settings.text_styles.iter().any(|s| s.id == *id),
+                    "yazı stili",
+                    "textStyle",
+                ),
+                None => continue,
+            },
+            EntityGeometry::Dimension { look, .. } => match &look.dim_style {
+                Some(id) => (
+                    id,
+                    settings.dimension_styles.iter().any(|s| s.id == *id),
+                    "ölçü stili",
+                    "dimStyle",
+                ),
+                None => continue,
+            },
+            _ => continue,
+        };
+        if !known {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_STYLE,
+                format!(
+                    "“{id}” kimlikli {what} projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir {what}nin kimliğini verin ya da alanı kaldırın (Standart)."
+                ),
+                Some(format!("{list}[{i}].geometry.{field}")),
+            )));
+        }
+    }
     Ok(())
 }
 
@@ -901,6 +970,7 @@ fn finite(g: &EntityGeometry) -> bool {
             width_factor,
             box_width,
             line_spacing,
+            face,
             ..
         } => {
             pt(p)
@@ -909,6 +979,7 @@ fn finite(g: &EntityGeometry) -> bool {
                 && width_factor.is_none_or(f64::is_finite)
                 && box_width.is_none_or(f64::is_finite)
                 && line_spacing.is_none_or(f64::is_finite)
+                && face.oblique.is_none_or(f64::is_finite)
         }
         EntityGeometry::Dimension {
             a,
@@ -919,6 +990,7 @@ fn finite(g: &EntityGeometry) -> bool {
             c,
             za,
             zb,
+            look,
             ..
         } => {
             pt(a)
@@ -929,6 +1001,14 @@ fn finite(g: &EntityGeometry) -> bool {
                 && c.as_ref().is_none_or(pt)
                 && za.is_none_or(f64::is_finite)
                 && zb.is_none_or(f64::is_finite)
+                && [
+                    look.arrow_size,
+                    look.ext_offset,
+                    look.ext_beyond,
+                    look.text_gap,
+                ]
+                .iter()
+                .all(|x| x.is_none_or(f64::is_finite))
         }
         EntityGeometry::Hatch {
             ring,

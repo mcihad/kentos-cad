@@ -9,6 +9,7 @@
 mod blocks;
 mod crs;
 mod objects;
+mod styles;
 
 use kentos_contracts::{
     AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
@@ -306,6 +307,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let (mut custom_crs, mut second_custom_crs, mut datum_transforms) = (None, None, Vec::new());
     let mut survey = None;
     let mut layer_states = Vec::new();
+    let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -372,6 +374,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "datumTransforms" if has.custom_crs => datum_transforms = crs::datum_transforms(r)?,
             "survey" if has.survey => survey = Some(survey_settings(r, has)?),
             "layerStates" if has.layer_states => layer_states = layer_states_list(r)?,
+            "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
+            "dimensionStyles" if has.styles => dimension_styles = styles::dimension_styles(r)?,
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
                 let at = r.position();
@@ -433,6 +437,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         datum_transforms,
         survey,
         layer_states,
+        text_styles,
+        dimension_styles,
     })
 }
 

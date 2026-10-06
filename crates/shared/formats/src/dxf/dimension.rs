@@ -96,7 +96,8 @@ pub fn style_from_name(s: &str) -> Option<Option<DimensionStyle>> {
     DimensionStyle::from_name(s).map(Some)
 }
 
-/// The dimension as the core lays it out (lines, ticks, where the value goes).
+/// The dimension as the core lays it out (lines, ticks or arrowheads, where
+/// the value goes), in its look (docs/adr/0183 §3).
 pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
     layout_dimension(&DimensionGeom {
         a: core(d.a),
@@ -108,7 +109,30 @@ pub fn layout(d: &DimensionEntity) -> Option<DimensionLayout> {
         c: d.c.map(core),
         za: d.za,
         zb: d.zb,
+        look: look_of(&d.look),
     })
+}
+
+/// A dimension's look as the core lays it out (the arrowheads, sizes and the
+/// value's place; what writes the value is the app's).
+pub fn look_of(l: &kentos_contracts::DimensionLook) -> kentos_geometry_core::geom::dimension::Look {
+    use kentos_geometry_core::geom::dimension::{Arrow, Look};
+    Look {
+        style: l.dim_style.clone(),
+        arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        centre: l.text_place == Some(kentos_contracts::DimensionTextPlace::Centre),
+        decimals: l.decimals,
+        unit: l.unit.map(|u| u.mark().to_owned()),
+        prefix: l.prefix.clone(),
+        suffix: l.suffix.clone(),
+        font: l
+            .font
+            .map(|f| kentos_geometry_core::text::Font::from_id(f.id())),
+    }
 }
 
 /// The DXF type and definition points of a dimension laid out as `l`.
@@ -271,6 +295,7 @@ pub fn read_back(g: &Groups, k: &DimMeta, base: EntityBase, mask: bool) -> Optio
         mask,
         za: k.za.filter(|_| slope),
         zb: k.zb.filter(|_| slope),
+        look: Default::default(),
     };
     let def = definition(&d, &layout(&d)?);
     let same = |p: Vec2, q: Vec2| p.x == q.x && p.y == q.y;
@@ -315,6 +340,7 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
             mask,
             za: None,
             zb: None,
+            look: Default::default(),
         }
     };
     let dist = |p: Vec2, q: Vec2| hypot(p.x - q.x, p.y - q.y);
@@ -364,6 +390,7 @@ pub fn foreign(g: &Groups, base: EntityBase, height: f64, mask: bool) -> Foreign
         c: d.c.map(core),
         za: None,
         zb: None,
+        look: Default::default(),
     };
     if !(d.height > 0.0) || dimension_fault(&geom).is_some() || layout_dimension(&geom).is_none() {
         return Foreign::Block(Some("KentOS bu ölçüyü çizemiyor; bloğunun çizgileri ve değeriyle alındı"));

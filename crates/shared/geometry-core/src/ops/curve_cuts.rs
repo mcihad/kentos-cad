@@ -36,7 +36,11 @@ impl ToJson for Cut {
     }
 }
 
-/// One new geometry, or why there is none.
+/// One new geometry, or why there is none. A value an operation returns once
+/// and its caller takes at once (never kept in a list): a text's face and a
+/// dimension's look (docs/adr/0183) make the entity large, and boxing it
+/// would only add an allocation per edit.
+#[allow(clippy::large_enum_variant)]
 pub enum Geometry {
     Ok(Entity),
     Error(String),

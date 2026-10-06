@@ -29,8 +29,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::blocks::turn_of;
 use kentos_contracts::{
-    BlockId, Bounds, DimensionEntity, DimensionStyle, Entity, EntityBase, HatchEntity,
-    HatchPatternType, InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
+    BlockId, Bounds, DimensionArrow, DimensionEntity, DimensionStyle, Entity, EntityBase,
+    HatchEntity, HatchPatternType, InsertEntity, PathEntity, SplineEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::geom::intersect::Edge;
@@ -223,6 +223,10 @@ pub(super) struct Writer<'a> {
     pub defined: &'a HashMap<BlockId, Written>,
     /// What an insert's attribute texts show, where (docs/adr/0144 §7).
     pub placing: &'a crate::blocks::Placing,
+    /// The STYLE and DIMSTYLE records' names (docs/adr/0183 §7).
+    pub styles: &'a super::styles::StyleNames,
+    /// How many of the file's unit make a metre (a dimension's DIMLFAC).
+    pub per_metre: f64,
 }
 
 impl Writer<'_> {
@@ -962,11 +966,21 @@ impl Writer<'_> {
                 width_factor: t.width_factor,
             },
         );
+        // Its style and slant (docs/adr/0183 §7); Standard is DXF's own default, left unsaid as before styles.
+        let style = self.styles.text(&t.face);
+        if style != "Standard" {
+            self.out.str(7, style);
+        }
+        if let Some(o) = t.face.oblique.filter(|_| t.face.font.is_some()) {
+            self.out.real(51, o);
+        }
         self.out.str(100, "AcDbText");
         if vertical != 0 {
             self.out.int(73, vertical);
         }
         self.grow(t.p);
+        let mut meta = meta;
+        meta.face = face_json(&t.face);
         self.end(meta);
         true
     }
@@ -1032,9 +1046,24 @@ impl Writer<'_> {
         if let Some((c, r, a0, sweep)) = arc {
             self.block_arc(record, c, r, a0, a0 + sweep);
         }
+        // A look's filled arrowheads (SOLID) and dots (a donut: two half arcs as wide as the radius).
+        for ring in l.fills.iter().flatten() {
+            if ring.len() == 3 {
+                self.block_solid(record, [app(ring[0]), app(ring[1]), app(ring[2])]);
+            } else if !ring.is_empty() {
+                let n = ring.len() as f64;
+                let c = v(
+                    ring.iter().map(|p| p.x).sum::<f64>() / n,
+                    ring.iter().map(|p| p.y).sum::<f64>() / n,
+                );
+                let r = hypot(ring[0].x - c.x, ring[0].y - c.y);
+                self.block_dot(record, c, r);
+            }
+        }
         match shown.as_deref() {
             Some(t) if !t.trim().is_empty() => {
-                self.block_mtext(record, middle, d.height, l.rotation, t, d.mask);
+                let style = self.styles.value(d.look.font).to_owned();
+                self.block_mtext(record, middle, d.height, l.rotation, t, d.mask, &style);
                 self.grow(middle);
             }
             _ => self.report.note(
@@ -1057,7 +1086,8 @@ impl Writer<'_> {
         self.out.real(42, l.value);
         self.out
             .str(1, &own.as_deref().map(dim::mtext_value).unwrap_or_default());
-        self.out.str(3, "Standard");
+        self.out
+            .str(3, self.styles.dimension(d.look.dim_style.as_ref()));
         self.dimension_kind(&def);
         let jogged = d.style == Some(DimensionStyle::Jogged);
         self.out.xdata(&dim_overrides(
@@ -1066,7 +1096,15 @@ impl Writer<'_> {
             self.grads,
             d.mask,
             jogged,
+            &d.look,
+            self.per_metre,
         ));
+        if matches!(
+            d.look.arrow,
+            Some(DimensionArrow::Open | DimensionArrow::Dot)
+        ) {
+            self.report.note("Ölçü stili", super::styles::ARROW_NOTE, 0);
+        }
         // Semt and Eğim have no DXF kind (docs/adr/0147 §8): an aligned one, drawn by its block.
         if matches!(d.style, Some(DimensionStyle::Azimuth | DimensionStyle::Slope)) {
             self.report.note(
@@ -1090,6 +1128,10 @@ impl Writer<'_> {
         });
         // The value over the drawing's background (also DIMTFILL in its overrides).
         m.mask = d.mask;
+        // Its style and look (docs/adr/0183 §7).
+        if !d.look.is_plain() {
+            m.look = serde_json::to_string(&d.look).ok();
+        }
         self.end(m);
         true
     }
@@ -1209,6 +1251,34 @@ impl Writer<'_> {
         self.blocks.xyz(11, b);
     }
 
+    /// A filled triangle (a dimension's filled arrowhead, docs/adr/0183 §3).
+    fn block_solid(&mut self, record: u64, p: [Vec2; 3]) {
+        self.block_head("SOLID", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbTrace");
+        o.xyz(10, p[0]);
+        o.xyz(11, p[1]);
+        o.xyz(12, p[2]);
+        o.xyz(13, p[2]);
+    }
+
+    /// A filled disc of radius `r` about `c` (a dimension's dot): a closed
+    /// polyline of two half circles of radius r/2, r wide (AutoCAD's DONUT).
+    fn block_dot(&mut self, record: u64, c: Vec2, r: f64) {
+        self.block_head("LWPOLYLINE", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbPolyline");
+        o.int(90, 2);
+        o.int(70, 1);
+        o.real(43, r);
+        o.real(10, c.x - r / 2.0);
+        o.real(20, c.y);
+        o.real(42, 1.0);
+        o.real(10, c.x + r / 2.0);
+        o.real(20, c.y);
+        o.real(42, 1.0);
+    }
+
     /// Counter-clockwise from a0 to a1 (radians).
     fn block_arc(&mut self, record: u64, c: Vec2, r: f64, a0: f64, a1: f64) {
         self.block_head("ARC", record);
@@ -1223,6 +1293,7 @@ impl Writer<'_> {
 
     /// The value, centred on `middle` along `rotation` (degrees); over the
     /// drawing's background when `mask` (Zemin, docs/adr/0147 §8).
+    #[allow(clippy::too_many_arguments)]
     fn block_mtext(
         &mut self,
         record: u64,
@@ -1231,6 +1302,7 @@ impl Writer<'_> {
         rotation: f64,
         text: &str,
         mask: bool,
+        style: &str,
     ) {
         self.block_head("MTEXT", record);
         let (s, c) = sin_cos_deg(rotation);
@@ -1243,7 +1315,8 @@ impl Writer<'_> {
         o.int(71, 5);
         o.int(72, 1);
         mtext_chunks(o, &dim::mtext_value(text));
-        o.str(7, "Standard");
+        // The value's typeface (docs/adr/0183 §7): a face record's, else Standard.
+        o.str(7, style);
         o.xyz(11, v(c, s));
         if mask {
             // The drawing's background behind it, a tenth of its height round (the app's margin).
@@ -1357,12 +1430,15 @@ fn mtext_chunks(o: &mut Out, text: &str) {
 /// and the project's decimals and angle unit, for a program that redraws it;
 /// a jogged radius's 45° jog, and the value's fill when it has Zemin
 /// (docs/adr/0147 §8).
+#[allow(clippy::too_many_arguments)]
 fn dim_overrides(
     height: f64,
     decimals: u32,
     grads: bool,
     mask: bool,
     jogged: bool,
+    look: &kentos_contracts::DimensionLook,
+    per_metre: f64,
 ) -> Vec<(i32, String)> {
     let mut g: Vec<(i32, String)> = vec![
         (1001, "ACAD".into()),
@@ -1373,11 +1449,28 @@ fn dim_overrides(
         g.push((1070, code.into()));
         g.push((1040, dxf_real(x)));
     };
+    // Its look's sizes (docs/adr/0183 §7); a plain look's are the ones dimensions always had.
     real("140", height);
-    real("142", 0.6 * height * std::f64::consts::FRAC_1_SQRT_2);
-    real("42", 0.5 * height);
-    real("44", 0.5 * height);
-    real("147", 0.35 * height);
+    let size = look.arrow_size_or_default() * height;
+    match look.arrow {
+        // Oblique ticks: DIMTSZ is half a 45° tick's length along the line.
+        None => real("142", size * std::f64::consts::FRAC_1_SQRT_2),
+        // Arrowheads (DIMBLK's filled arrow): their size; none, 0 (AutoCAD then draws none).
+        Some(arrow) => {
+            real("142", 0.0);
+            real(
+                "41",
+                if arrow == DimensionArrow::None {
+                    0.0
+                } else {
+                    size
+                },
+            );
+        }
+    }
+    real("42", look.ext_offset_or_default() * height);
+    real("44", look.ext_beyond_or_default() * height);
+    real("147", look.text_gap_or_default() * height);
     // A jogged radius's jog: 45° (DIMJOGANG, radians; docs/adr/0147 §2).
     if jogged {
         real("50", std::f64::consts::FRAC_PI_4);
@@ -1387,19 +1480,36 @@ fn dim_overrides(
         g.push((1070, "69".into()));
         g.push((1070, "1".into()));
     }
+    let centre = look.text_place == Some(kentos_contracts::DimensionTextPlace::Centre);
     for (code, value) in [
-        ("77", 1),
+        ("77", if centre { 0 } else { 1 }),
         ("73", 0),
         ("74", 0),
-        ("271", i64::from(decimals.min(8))),
+        ("271", i64::from(look.decimals.unwrap_or(decimals).min(8))),
         ("275", if grads { 2 } else { 0 }),
         ("179", 4),
     ] {
         g.push((1070, code.into()));
         g.push((1070, value.to_string()));
     }
+    // The value's prefix and suffix around the number (DIMPOST), its unit (DIMLFAC).
+    if let Some(post) = super::styles::dimpost(look.prefix.as_deref(), look.suffix.as_deref()) {
+        g.push((1070, "3".into()));
+        g.push((1000, post));
+    }
+    if let Some(f) = super::styles::dimlfac(look.unit, per_metre) {
+        g.push((1070, "144".into()));
+        g.push((1040, dxf_real(f)));
+    }
     g.push((1002, "}".into()));
     g
+}
+
+/// A text's face as its KENTOS data writes it (docs/adr/0183 §7); none for a styleless, faceless text.
+fn face_json(face: &kentos_contracts::TextFace) -> Option<String> {
+    (!face.is_plain())
+        .then(|| serde_json::to_string(face).ok())
+        .flatten()
 }
 
 #[cfg(test)]

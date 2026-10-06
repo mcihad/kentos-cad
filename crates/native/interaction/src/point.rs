@@ -117,6 +117,7 @@ pub(crate) fn ask_field(field: Field, near: Option<Vec2>, cx: &Context<'_>) -> V
         placeholder: Some(field.what()),
         hint: Some(field.hint()),
         empty: true,
+        face: Default::default(),
     })
 }
 

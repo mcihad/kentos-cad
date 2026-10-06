@@ -69,7 +69,7 @@ blokları, ölçü krokisindeki notlar birkaç satırdır; bir sözcüğün kal�
 - **Çok satırlı yazı** (`tool.mtext`; CAD şeridinde Açıklama › Yazı ve Çizim menüsünün Açıklama'sı; CBS'nin arayüzünde yok, CAD'in
   aracıdır: sahibin 6 Ekim sözü “CAD sadece CAD arayüzünde”, ADR 0165'in gizleme listesi; takma adlar MTEXT, MT, COKSATIRLIYAZI,
   PARAGRAF): iki köşe kutunun genişliğini (Yazı'nın Açı'sı boyunca) ve sol üst köşesini verir (hiza sol üst); aynı noktaya iki tık
-  kutusuz yazıdır. Yükseklik (Y) ve Açı (A) Yazı ile ortak, Satır aralığı (S) 0,25 ile 4 arası, Zemin (Z) Yazı'nınki. Etkin katman
+  kutusuz yazıdır. Yükseklik (Y) ve Açı (A) Yazı ile ortak, Satır aralığı (S; ADR 0183 §4'ten beri R) 0,25 ile 4 arası, Zemin (Z) Yazı'nınki. Etkin katman
   kilitliyse ilk köşede söylenir.
 - Düzenleyici kutunun yanında açılır, yazının üstüne düşmez: yer varsa kutunun üstünde, yoksa yazının altında. Enter yeni satır,
   Ctrl+Enter ya da Tamam yazar, Esc ya da Vazgeç bırakır, çizime basmak yazar. Üstündeki çubukta Kalın, Eğik, Altı çizili, Üst simge,

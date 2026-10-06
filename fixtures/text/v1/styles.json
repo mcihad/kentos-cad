@@ -1,0 +1,1603 @@
+{
+ "format": "kentos.annotation-style-cases",
+ "version": 1,
+ "title": "Yazı ve ölçü stilleri: tabloların kuralı, yüz ve görünüş denetimi, stili uygulamak ve stile uymak",
+ "note": "ADR 0183. scripts/fixtures/annotation_style_cases.py kurallardan yazar; sözleşmenin (annotation.rs) ve web'in (model/annotationStyles.ts) kuralları bunu geçer. Yükseklikler metrede (kâğıtta mm / 1000 × ölçek), ölçünün boyları değer yüksekliğinin katı.",
+ "cases": [
+  {
+   "name": "Boş tablo",
+   "op": "textStylesProblem",
+   "styles": [],
+   "expect": null
+  },
+  {
+   "name": "Üç yazı stili",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Kimliği boş",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "yazı stili kimliği boş"
+  },
+  {
+   "name": "Aynı kimlik iki kez",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101” kimlikli yazı stili iki kez var"
+  },
+  {
+   "name": "Adı boşluklardan",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "   ",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "yazı stili adı boş"
+  },
+  {
+   "name": "Adının başında boşluk",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": " Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "“ Ada no” yazı stili adının başında ya da sonunda boşluk var"
+  },
+  {
+   "name": "Adı 65 harf",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "“AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA” yazı stili adı 64 harften uzun"
+  },
+  {
+   "name": "Adı 64 harf",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "ÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇ",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Adında satır sonu",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada\nno",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "“Ada\nno” yazı stili adında satır sonu ya da denetim karakteri var"
+  },
+  {
+   "name": "Standart ayrılmıştır, büyük küçük harf ayırmadan",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "STANDART",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    }
+   ],
+   "expect": "“STANDART” adı Standart'ındır; yazı stili başka bir ad almalı"
+  },
+  {
+   "name": "Aynı ad, büyük küçük harf ayırmadan",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "ADA NO",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": "“ADA NO” adlı yazı stili iki kez var"
+  },
+  {
+   "name": "İ'nin küçüğü i̇: İL ile il ayrıdır (Unicode'un kuralı)",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "İL",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "il",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Eğiklik 85",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 85.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": "“Yol adı” yazı stilinin eğikliği 85; −85 ile 85 arasında ve sıfırdan farklı olmalı"
+  },
+  {
+   "name": "Eğiklik −84,5",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": -84.5,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Eğiklik 0 yazılmaz",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 0.0,
+     "widthFactor": 0.8
+    }
+   ],
+   "expect": "“Yol adı” yazı stilinin eğikliği 0; −85 ile 85 arasında ve sıfırdan farklı olmalı"
+  },
+  {
+   "name": "Yükseklik 0",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 0.0
+    }
+   ],
+   "expect": "“Ada no” yazı stilinin yüksekliği 0 mm; sıfırdan büyük, en çok 1000 olmalı"
+  },
+  {
+   "name": "Yükseklik 1001 mm",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 1001.0
+    }
+   ],
+   "expect": "“Ada no” yazı stilinin yüksekliği 1001 mm; sıfırdan büyük, en çok 1000 olmalı"
+  },
+  {
+   "name": "Genişlik çarpanı 1 yazılmaz",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 1.0
+    }
+   ],
+   "expect": "“Yol adı” yazı stilinin genişlik çarpanı 1; sıfırdan büyük, en çok 100 ve 1'den farklı olmalı (1 yazılmaz)"
+  },
+  {
+   "name": "Genişlik çarpanı 0",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.0
+    }
+   ],
+   "expect": "“Yol adı” yazı stilinin genişlik çarpanı 0; sıfırdan büyük, en çok 100 ve 1'den farklı olmalı (1 yazılmaz)"
+  },
+  {
+   "name": "Yazı tipi dosyası boş",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "fontFile": ""
+    }
+   ],
+   "expect": "“Not” yazı stilinin yazı tipi dosyası boş"
+  },
+  {
+   "name": "Yazı tipi dosyası",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "fontFile": "romans.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "İki ölçü stili",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Değer yüksekliği 0",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 0.0,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin değer yüksekliği 0 mm; sıfırdan büyük, en çok 1000 olmalı"
+  },
+  {
+   "name": "Ok boyu 0",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 0.0,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin ok boyu 0 mm; sıfırdan büyük, en çok 1000 ve değer yüksekliğinin 100 katı olmalı"
+  },
+  {
+   "name": "Boşluk −1 mm",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": -1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin uzatma çizgisinin boşluğu -1 mm; 0 ya da büyük, en çok 1000 ve değer yüksekliğinin 100 katı olmalı"
+  },
+  {
+   "name": "Aşma 0 olabilir",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 0.0,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Değerin yüksekliği yüksekliğin 120 katı",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre",
+     "textGap": 300.0
+    }
+   ],
+   "expect": "“Harita” ölçü stilinin değerin çizgiden yüksekliği 300 mm; 0 ya da büyük, en çok 1000 ve değer yüksekliğinin 100 katı olmalı"
+  },
+  {
+   "name": "9 basamak",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 9,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin basamak sayısı 9; en çok 8 olmalı"
+  },
+  {
+   "name": "Önek boş",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "",
+     "suffix": " cm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin öneki yazılamaz: boş"
+  },
+  {
+   "name": "Sonek 33 harf",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin soneki yazılamaz: 33 harf; en çok 32"
+  },
+  {
+   "name": "Sonekte sekme",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": "\tm",
+     "font": "arimo"
+    }
+   ],
+   "expect": "“Mimari” ölçü stilinin soneki yazılamaz: satır sonu ya da denetim karakteri var"
+  },
+  {
+   "name": "Standart adı ölçüde de ayrılmıştır",
+   "op": "dimensionStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "standart",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "expect": "“standart” adı Standart'ındır; ölçü stili başka bir ad almalı"
+  },
+  {
+   "name": "Yüzsüz yazı",
+   "op": "faceProblem",
+   "face": {},
+   "expect": null
+  },
+  {
+   "name": "Stilin yüzü",
+   "op": "faceProblem",
+   "face": {
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0
+   },
+   "expect": null
+  },
+  {
+   "name": "Yazı tipi olmadan kalın",
+   "op": "faceProblem",
+   "face": {
+    "bold": true
+   },
+   "expect": [
+    "bold",
+    "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok. Yazıya bir yazı tipi verin ya da bu alanları kaldırın (yazı projenin yazı tipiyle çizilir)."
+   ]
+  },
+  {
+   "name": "Yazı tipi olmadan eğik",
+   "op": "faceProblem",
+   "face": {
+    "italic": true
+   },
+   "expect": [
+    "italic",
+    "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok. Yazıya bir yazı tipi verin ya da bu alanları kaldırın (yazı projenin yazı tipiyle çizilir)."
+   ]
+  },
+  {
+   "name": "Yazı tipi olmadan yatık",
+   "op": "faceProblem",
+   "face": {
+    "oblique": 10.0
+   },
+   "expect": [
+    "oblique",
+    "Kalın, eğik ve yatık yazı bir yazı tipiyle olur; yazının yazı tipi yok. Yazıya bir yazı tipi verin ya da bu alanları kaldırın (yazı projenin yazı tipiyle çizilir)."
+   ]
+  },
+  {
+   "name": "Yatıklık 90",
+   "op": "faceProblem",
+   "face": {
+    "font": "arimo",
+    "oblique": 90.0
+   },
+   "expect": [
+    "oblique",
+    "Yazının eğikliği −85 ile 85 derece arasında ve sıfırdan farklı olmalı; 90 verildi. Eğikliği bu aralıkta verin ya da alanı kaldırın (dik)."
+   ]
+  },
+  {
+   "name": "Stil kimliği boş",
+   "op": "faceProblem",
+   "face": {
+    "textStyle": ""
+   },
+   "expect": [
+    "textStyle",
+    "Yazının stil kimliği boş. Stilin kimliğini verin ya da alanı kaldırın (Standart)."
+   ]
+  },
+  {
+   "name": "Stili var, yüzü yok",
+   "op": "faceProblem",
+   "face": {
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+   },
+   "expect": null
+  },
+  {
+   "name": "Görünüşsüz ölçü",
+   "op": "lookProblem",
+   "look": {},
+   "expect": null
+  },
+  {
+   "name": "Stilin görünüşü",
+   "op": "lookProblem",
+   "look": {
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "expect": null
+  },
+  {
+   "name": "Ok boyu 0",
+   "op": "lookProblem",
+   "look": {
+    "arrowSize": 0.0
+   },
+   "expect": [
+    "arrowSize",
+    "Ölçünün ok boyu değer yüksekliğinin katıdır: sıfırdan büyük, en çok 100 olmalı; 0 verildi. Bu aralıkta verin ya da alanı kaldırın (Standart'ınki)."
+   ]
+  },
+  {
+   "name": "Boşluk −0,1",
+   "op": "lookProblem",
+   "look": {
+    "extOffset": -0.1
+   },
+   "expect": [
+    "extOffset",
+    "Ölçünün uzatma çizgisinin boşluğu değer yüksekliğinin katıdır: 0 ya da büyük, en çok 100 olmalı; -0.1 verildi. Bu aralıkta verin ya da alanı kaldırın (Standart'ınki)."
+   ]
+  },
+  {
+   "name": "Değer 101 kat yukarıda",
+   "op": "lookProblem",
+   "look": {
+    "textGap": 101.0
+   },
+   "expect": [
+    "textGap",
+    "Ölçünün değerin çizgiden yüksekliği değer yüksekliğinin katıdır: 0 ya da büyük, en çok 100 olmalı; 101 verildi. Bu aralıkta verin ya da alanı kaldırın (Standart'ınki)."
+   ]
+  },
+  {
+   "name": "9 basamak",
+   "op": "lookProblem",
+   "look": {
+    "decimals": 9
+   },
+   "expect": [
+    "decimals",
+    "Ölçünün basamak sayısı en çok 8; 9 verildi. Daha az basamak verin ya da alanı kaldırın (projenin basamakları)."
+   ]
+  },
+  {
+   "name": "Önek boş",
+   "op": "lookProblem",
+   "look": {
+    "prefix": ""
+   },
+   "expect": [
+    "prefix",
+    "Ölçünün öneki yazılamaz: boş. Tek satır, en çok 32 harf verin ya da alanı kaldırın."
+   ]
+  },
+  {
+   "name": "Sonekte sekme",
+   "op": "lookProblem",
+   "look": {
+    "suffix": "\tm"
+   },
+   "expect": [
+    "suffix",
+    "Ölçünün soneki yazılamaz: satır sonu ya da denetim karakteri var. Tek satır, en çok 32 harf verin ya da alanı kaldırın."
+   ]
+  },
+  {
+   "name": "Stil kimliği boş",
+   "op": "lookProblem",
+   "look": {
+    "dimStyle": ""
+   },
+   "expect": [
+    "dimStyle",
+    "Ölçünün stil kimliği boş. Stilin kimliğini verin ya da alanı kaldırın (Standart)."
+   ]
+  },
+  {
+   "name": "Ada no 1:1000: kalın Arimo, 3,5 mm",
+   "op": "applyText",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "plotScale": 1000.0,
+   "text": {
+    "height": 2.0
+   },
+   "expect": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   }
+  },
+  {
+   "name": "Ada no 1:500",
+   "op": "applyText",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "plotScale": 500.0,
+   "text": {
+    "height": 2.0,
+    "widthFactor": 0.7
+   },
+   "expect": {
+    "height": 1.75,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   }
+  },
+  {
+   "name": "Yol adı: yüksekliği yok, yazınınki kalır",
+   "op": "applyText",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "plotScale": 1000.0,
+   "text": {
+    "height": 1.25
+   },
+   "expect": {
+    "height": 1.25,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0,
+    "widthFactor": 0.8
+   }
+  },
+  {
+   "name": "Standart: yüz ve genişlik gider, yükseklik kalır",
+   "op": "applyText",
+   "style": null,
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 0.8
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow"
+    }
+   ],
+   "plotScale": 1000.0,
+   "text": {
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0,
+    "height": 1.25,
+    "widthFactor": 0.8
+   },
+   "expect": {
+    "height": 1.25
+   }
+  },
+  {
+   "name": "Hepsi stilin: hepsi yeni",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "overpass",
+    "bold": false,
+    "height": 4.0,
+    "italic": true,
+    "oblique": -10.0,
+    "widthFactor": 0.9
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   },
+   "expect": {
+    "height": 4.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "overpass",
+    "oblique": -10.0,
+    "italic": true,
+    "widthFactor": 0.9
+   }
+  },
+  {
+   "name": "Kendi genişliği kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "overpass",
+    "bold": false,
+    "height": 4.0,
+    "italic": true,
+    "oblique": -10.0,
+    "widthFactor": 0.9
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true,
+    "widthFactor": 0.6
+   },
+   "expect": {
+    "height": 4.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "widthFactor": 0.6,
+    "font": "overpass",
+    "oblique": -10.0,
+    "italic": true
+   }
+  },
+  {
+   "name": "Kendi yüksekliği kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "overpass",
+    "bold": false,
+    "height": 4.0,
+    "italic": true,
+    "oblique": -10.0,
+    "widthFactor": 0.9
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 5.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   },
+   "expect": {
+    "height": 5.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "overpass",
+    "oblique": -10.0,
+    "italic": true,
+    "widthFactor": 0.9
+   }
+  },
+  {
+   "name": "Kendi yazı tipi kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "overpass",
+    "bold": false,
+    "height": 4.0,
+    "italic": true,
+    "oblique": -10.0,
+    "widthFactor": 0.9
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "plex-mono",
+    "bold": true
+   },
+   "expect": {
+    "height": 4.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "plex-mono",
+    "oblique": -10.0,
+    "italic": true,
+    "widthFactor": 0.9
+   }
+  },
+  {
+   "name": "Eski stilin yüksekliği yoktu: yükseklik kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "name": "Yol adı",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0,
+    "widthFactor": 0.8
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "name": "Yol adı",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0,
+    "widthFactor": 0.8,
+    "height": 3.0
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 1.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "font": "overpass",
+    "italic": true,
+    "oblique": 15.0,
+    "widthFactor": 0.8
+   },
+   "expect": {
+    "height": 1.0,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+    "font": "overpass",
+    "oblique": 15.0,
+    "italic": true,
+    "widthFactor": 0.8
+   }
+  },
+  {
+   "name": "Yeni stilin yüksekliği yok: yükseklik kalır",
+   "op": "followText",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true,
+    "height": 3.5
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "name": "Ada no",
+    "font": "arimo",
+    "bold": true
+   },
+   "plotScale": 1000.0,
+   "text": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   },
+   "expect": {
+    "height": 3.5,
+    "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+    "font": "arimo",
+    "bold": true
+   }
+  },
+  {
+   "name": "Mimari 1:50: dolu ok, cm, bir basamak",
+   "op": "applyDimension",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "plotScale": 50.0,
+   "dimension": {
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre",
+    "height": 0.3
+   },
+   "expect": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "Harita: çentik 1,5 mm (varsayılan oran yazılmaz), değer ortada",
+   "op": "applyDimension",
+   "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "plotScale": 1000.0,
+   "dimension": {
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre",
+    "height": 0.3
+   },
+   "expect": {
+    "height": 2.5,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre"
+   }
+  },
+  {
+   "name": "Standart 1:1000: görünüş gider, değer 2,5 mm",
+   "op": "applyDimension",
+   "style": null,
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+     "name": "Mimari",
+     "height": 3.5,
+     "arrow": "closed",
+     "arrowSize": 3.5,
+     "extOffset": 1.0,
+     "extBeyond": 1.75,
+     "textGap": 0.875,
+     "decimals": 1,
+     "unit": "cm",
+     "prefix": "~",
+     "suffix": " cm",
+     "font": "arimo"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+     "name": "Harita",
+     "height": 2.5,
+     "arrowSize": 1.5,
+     "textPlace": "centre"
+    }
+   ],
+   "plotScale": 1000.0,
+   "dimension": {
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0202",
+    "textPlace": "centre",
+    "height": 0.3
+   },
+   "expect": {
+    "height": 2.5
+   }
+  },
+  {
+   "name": "Hepsi stilin: hepsi yeni",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 2.5,
+    "arrow": "dot",
+    "arrowSize": 2.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "expect": {
+    "height": 0.125,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "dot",
+    "extOffset": 0.4,
+    "extBeyond": 0.7,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "Kendi oku ve öneki kalır",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 2.5,
+    "arrow": "dot",
+    "arrowSize": 2.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.17500000000000002,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "open",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "≈",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "expect": {
+    "height": 0.125,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "open",
+    "prefix": "≈",
+    "extOffset": 0.4,
+    "extBeyond": 0.7,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "Kendi yüksekliği kalır",
+   "op": "followDimension",
+   "old": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 3.5,
+    "arrow": "closed",
+    "arrowSize": 3.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "new": {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "name": "Mimari",
+    "height": 2.5,
+    "arrow": "dot",
+    "arrowSize": 2.5,
+    "extOffset": 1.0,
+    "extBeyond": 1.75,
+    "textGap": 0.875,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   },
+   "plotScale": 50.0,
+   "dimension": {
+    "height": 0.2,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "closed",
+    "extOffset": 0.2857142857142857,
+    "textGap": 0.25,
+    "decimals": 1,
+    "unit": "cm",
+    "prefix": "~",
+    "suffix": " cm",
+    "font": "arimo"
+   },
+   "expect": {
+    "height": 0.2,
+    "dimStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+    "arrow": "dot",
+    "extOffset": 0.4,
+    "extBeyond": 0.7,
+    "decimals": 0,
+    "unit": "mm",
+    "suffix": " mm",
+    "font": "arimo"
+   }
+  },
+  {
+   "name": "Standart: projenin birimi ve basamakları",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "",
+    "unit": "length",
+    "value": 12.3456
+   },
+   "look": {},
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "12.346"
+  },
+  {
+   "name": "cm, bir basamak, sonekle",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "",
+    "unit": "length",
+    "value": 1.2345
+   },
+   "look": {
+    "unit": "cm",
+    "decimals": 1,
+    "suffix": " cm"
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "123.5 cm"
+  },
+  {
+   "name": "mm, sıfır basamak: 0,5 mm yukarı",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "",
+    "unit": "length",
+    "value": 0.0125
+   },
+   "look": {
+    "unit": "mm",
+    "decimals": 0
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "13"
+  },
+  {
+   "name": "Yarıçapın öneki stilin önekinden sonra",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "R ",
+    "unit": "length",
+    "value": 2.5
+   },
+   "look": {
+    "prefix": "≈",
+    "decimals": 2
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "≈R 2.50"
+  },
+  {
+   "name": "Çap, sekiz basamak",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "Ø ",
+    "unit": "length",
+    "value": 0.30000000000000004
+   },
+   "look": {
+    "decimals": 8
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "Ø 0.30000000"
+  },
+  {
+   "name": "Yerel projenin cm'si; stilin birimi m",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "",
+    "unit": "length",
+    "value": 3.25
+   },
+   "look": {
+    "unit": "m",
+    "decimals": 2
+   },
+   "project": {
+    "unit": "cm",
+    "lengthDecimals": 1
+   },
+   "expect": "3.25"
+  },
+  {
+   "name": "Yerel projenin mm'si, stilde birim yok",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "",
+    "unit": "length",
+    "value": 3.25
+   },
+   "look": {
+    "decimals": 0
+   },
+   "project": {
+    "unit": "mm",
+    "lengthDecimals": 1
+   },
+   "expect": "3250"
+  },
+  {
+   "name": "Koordinat cm'de",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "X=",
+    "unit": "coordinate",
+    "value": 120.456
+   },
+   "look": {
+    "unit": "cm",
+    "decimals": 0
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "X=12046"
+  },
+  {
+   "name": "Koordinatın eksi değeri",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "Y=",
+    "unit": "coordinate",
+    "value": -0.0004
+   },
+   "look": {
+    "decimals": 3
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "Y=0.000"
+  },
+  {
+   "name": "Eğim: basamak yoksa 2",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "%",
+    "unit": "percent",
+    "value": 1.255
+   },
+   "look": {
+    "suffix": " eğim"
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "%1.26 eğim"
+  },
+  {
+   "name": "Eğim dört basamak; birim eğime uygulanmaz",
+   "op": "dimensionValue",
+   "measured": {
+    "prefix": "%",
+    "unit": "percent",
+    "value": 1.25549
+   },
+   "look": {
+    "decimals": 4,
+    "unit": "mm"
+   },
+   "project": {
+    "unit": "m",
+    "lengthDecimals": 3
+   },
+   "expect": "%1.2555"
+  }
+ ]
+}

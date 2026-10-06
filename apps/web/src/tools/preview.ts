@@ -1,6 +1,6 @@
 import { entityOutline, polygonRing, type EntityGeometry, type RingGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import { layoutDimension } from '../model/geom/dimension';
+import { layoutDimension, type DimensionLayout } from '../model/geom/dimension';
 import type { ViewTransform } from '../viewport/Camera';
 
 /** Shared drawing helpers for tool previews (numbers go through ctx.format). */
@@ -223,4 +223,10 @@ export function drawSelectionCircle(g: CanvasRenderingContext2D, view: ViewTrans
 export function tint(color: string, alpha: number): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color.trim());
   return m ? `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})` : color;
+}
+
+/** A dimension's lines as it would be, a look's filled arrowheads and dots outlined (docs/adr/0183 §3). */
+export function strokeLayout(g: CanvasRenderingContext2D, view: ViewTransform, l: DimensionLayout, color: string): void {
+  for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color });
+  for (const ring of l.fills ?? []) strokePath(g, view, [...ring, ring[0]], { color });
 }

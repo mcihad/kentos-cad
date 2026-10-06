@@ -38,8 +38,8 @@
 //! | ellipse | | c, major, ratio, t0, t1 | |
 //! | spline | n, closed (0 or 1) | pts (2n) | |
 //! | xline, ray | | p, dir | |
-//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any | text, label's object if linked, each run's colour if it has one |
-//! | dimension | style if any | a, b, offset, height, angle if any, c if any, za if any, zb if any | text if any |
+//! | text | align if any (its place in `TextAlign::ALL`); r if runs, then per run: start, end, run flags; font if any (its place in `DrawingFont::ALL`) | p, height, rotation, width factor if any, label scale if linked, box width if any, line spacing if any, oblique if any | text, label's object if linked, each run's colour if it has one, text style if any |
+//! | dimension | style if any; arrow if any (its place in `DimensionArrow::ALL`), decimals if any, unit if any (mm, cm, m), font if any | a, b, offset, height, angle if any, c if any, za if any, zb if any, arrow size, ext offset, ext beyond, text gap if any | text if any, dimension style if any, prefix if any, suffix if any |
 //! | hatch | n, pattern type; h if holes, then k per hole | ring (2n), pattern angle, spacing, per hole: pts (2k) | |
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
@@ -50,8 +50,12 @@
 //! (point: z; line: za, zb; polyline and polygon: bulges, holes, zs; polygon:
 //! parts; text: align, width factor, mask (no value; docs/adr/0145), link
 //! (docs/adr/0175), box width, line spacing, runs (docs/adr/0182; a run's
-//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour);
-//! dimension: text, style, angle, c, mask (no value), za, zb (docs/adr/0147);
+//! flags: 1 bold, 2 italic, 4 underline, 8 raised, 16 lowered, 32 colour),
+//! text style, font, bold (no value), italic (no value), oblique
+//! (docs/adr/0183); dimension: text, style, angle, c, mask (no value), za, zb
+//! (docs/adr/0147), dimension style, arrow, arrow size, ext offset, ext
+//! beyond, text gap, centred (no value), decimals, unit, prefix, suffix, font
+//! (docs/adr/0183);
 //! hatch: holes; insert: mirror; leader: text, arrow, mask (no value;
 //! docs/adr/0146)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
@@ -79,10 +83,11 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
-    ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
-    DimensionStyle, EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern,
-    HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity,
-    PointEntity, PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextRun, TextScript,
+    ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionArrow,
+    DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
+    EllipseEntity, Entity, EntityBase, EntityId, HatchEntity, HatchPattern, HatchPatternType,
+    InsertEntity, LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PointEntity,
+    PointPart, RingGeometry, SplineEntity, TextAlign, TextEntity, TextFace, TextRun, TextScript,
     Vec2,
 };
 
@@ -112,7 +117,30 @@ const LABEL: u32 = 2;
 const SYMBOL: u32 = 4;
 const WEIGHT: u32 = 8;
 /// A kind's optional fields, in the order the module's table names them.
-const OPT: [u32; 7] = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14];
+const OPT: [u32; 19] = [
+    1 << 8,
+    1 << 9,
+    1 << 10,
+    1 << 11,
+    1 << 12,
+    1 << 13,
+    1 << 14,
+    1 << 15,
+    1 << 16,
+    1 << 17,
+    1 << 18,
+    1 << 19,
+    1 << 20,
+    1 << 21,
+    1 << 22,
+    1 << 23,
+    1 << 24,
+    1 << 25,
+    1 << 26,
+];
+
+/// A dimension's units in the columns, by their place here (docs/adr/0183).
+const UNITS: [DrawingUnit; 3] = [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M];
 
 /// A multi-line text's run's flags in the columns (docs/adr/0182): its
 /// format, and whether its colour follows.
@@ -477,6 +505,7 @@ impl Packer {
                 label_of,
                 label_scale,
                 paragraph,
+                face,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*height, *rotation]);
@@ -521,6 +550,26 @@ impl Packer {
                         }
                     }
                 }
+                // Its face (docs/adr/0183 §2): the style's id, the typeface's place, bold and italic as
+                // flags, the slant.
+                if let Some(id) = &face.text_style {
+                    flags |= OPT[7];
+                    self.text(id);
+                }
+                if let Some(f) = face.font {
+                    flags |= OPT[8];
+                    self.int(font_place(f));
+                }
+                if face.bold {
+                    flags |= OPT[9];
+                }
+                if face.italic {
+                    flags |= OPT[10];
+                }
+                if let Some(o) = face.oblique {
+                    flags |= OPT[11];
+                    self.float(o);
+                }
             }
             Entity::Dimension(DimensionEntity {
                 base: _,
@@ -535,6 +584,7 @@ impl Packer {
                 mask,
                 za,
                 zb,
+                look,
             }) => {
                 self.point(a);
                 self.point(b);
@@ -566,6 +616,53 @@ impl Packer {
                 if let Some(z) = zb {
                     flags |= OPT[6];
                     self.float(*z);
+                }
+                // Its look (docs/adr/0183 §3), field by field in the contract's order.
+                if let Some(id) = &look.dim_style {
+                    flags |= OPT[7];
+                    self.text(id);
+                }
+                if let Some(a) = look.arrow {
+                    flags |= OPT[8];
+                    let at = DimensionArrow::ALL
+                        .iter()
+                        .position(|x| *x == a)
+                        .unwrap_or(0);
+                    self.int(count(at));
+                }
+                for (k, v) in [
+                    (9, look.arrow_size),
+                    (10, look.ext_offset),
+                    (11, look.ext_beyond),
+                    (12, look.text_gap),
+                ] {
+                    if let Some(x) = v {
+                        flags |= OPT[k];
+                        self.float(x);
+                    }
+                }
+                if look.text_place.is_some() {
+                    flags |= OPT[13];
+                }
+                if let Some(d) = look.decimals {
+                    flags |= OPT[14];
+                    self.int(d);
+                }
+                if let Some(u) = look.unit {
+                    flags |= OPT[15];
+                    self.int(count(UNITS.iter().position(|x| *x == u).unwrap_or(0)));
+                }
+                if let Some(t) = &look.prefix {
+                    flags |= OPT[16];
+                    self.text(t);
+                }
+                if let Some(t) = &look.suffix {
+                    flags |= OPT[17];
+                    self.text(t);
+                }
+                if let Some(f) = look.font {
+                    flags |= OPT[18];
+                    self.int(font_place(f));
                 }
             }
             Entity::Hatch(HatchEntity {
@@ -673,6 +770,19 @@ struct Cursor<'c> {
     float: usize,
     unit: usize,
     text: usize,
+}
+
+/// A typeface's place in `DrawingFont::ALL` (docs/adr/0183).
+fn font_place(f: DrawingFont) -> u32 {
+    count(DrawingFont::ALL.iter().position(|x| *x == f).unwrap_or(0))
+}
+
+/// The typeface at its place; a place past them is broken columns.
+fn font_at(v: usize) -> Result<DrawingFont, KcadError> {
+    DrawingFont::ALL
+        .get(v)
+        .copied()
+        .ok_or_else(|| broken(&format!("yazı tipi {v}")))
 }
 
 fn broken(what: &str) -> KcadError {
@@ -918,11 +1028,12 @@ fn allowed(kind: u8) -> u32 {
         // A polyline's parts are schema 17's (docs/adr/0174).
         2 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
         3 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
-        // A text's alignment, width factor and mask, then schema 18's link (docs/adr/0175 §4); a leader's three.
-        10 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
+        // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
+        // spacing and runs, schema 21's face (docs/adr/0183); a leader's three.
+        10 => OPT[..12].iter().fold(0, |m, b| m | b),
         14 => OPT[0] | OPT[1] | OPT[2],
-        // A dimension: text, style, angle, c, then schema 9's mask, za, zb (docs/adr/0147).
-        11 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4] | OPT[5] | OPT[6],
+        // A dimension: text, style, angle, c, schema 9's mask, za, zb (docs/adr/0147), schema 21's look.
+        11 => OPT.iter().fold(0, |m, b| m | b),
         12 | 13 => OPT[0],
         _ => 0,
     }
@@ -1118,6 +1229,17 @@ fn geometry(
             } else {
                 Vec::new()
             };
+            let text_style = if has(7) {
+                Some(c.text(|| place("textStyle"))?)
+            } else {
+                None
+            };
+            let font = if has(8) {
+                Some(font_at(c.usize()?)?)
+            } else {
+                None
+            };
+            let oblique = if has(11) { Some(c.float()?) } else { None };
             Entity::Text(TextEntity {
                 base,
                 p,
@@ -1133,6 +1255,13 @@ fn geometry(
                     box_width,
                     line_spacing,
                     runs,
+                },
+                face: TextFace {
+                    text_style,
+                    font,
+                    bold: has(9),
+                    italic: has(10),
+                    oblique,
                 },
             })
         }
@@ -1158,6 +1287,56 @@ fn geometry(
             let corner = if has(3) { Some(c.point()?) } else { None };
             let za = if has(5) { Some(c.float()?) } else { None };
             let zb = if has(6) { Some(c.float()?) } else { None };
+            let dim_style = if has(7) {
+                Some(c.text(|| place("dimStyle"))?)
+            } else {
+                None
+            };
+            let arrow = if has(8) {
+                let v = c.usize()?;
+                Some(
+                    *DimensionArrow::ALL
+                        .get(v)
+                        .ok_or_else(|| broken(&format!("ölçü oku {v}")))?,
+                )
+            } else {
+                None
+            };
+            let mut size = |k: usize| {
+                if has(k) {
+                    c.float().map(Some)
+                } else {
+                    Ok(None)
+                }
+            };
+            let (arrow_size, ext_offset, ext_beyond, text_gap) =
+                (size(9)?, size(10)?, size(11)?, size(12)?);
+            let decimals = if has(14) { Some(c.int()?) } else { None };
+            let unit = if has(15) {
+                let v = c.usize()?;
+                Some(
+                    *UNITS
+                        .get(v)
+                        .ok_or_else(|| broken(&format!("ölçü birimi {v}")))?,
+                )
+            } else {
+                None
+            };
+            let prefix = if has(16) {
+                Some(c.text(|| place("prefix"))?)
+            } else {
+                None
+            };
+            let suffix = if has(17) {
+                Some(c.text(|| place("suffix"))?)
+            } else {
+                None
+            };
+            let font = if has(18) {
+                Some(font_at(c.usize()?)?)
+            } else {
+                None
+            };
             Entity::Dimension(DimensionEntity {
                 base,
                 a,
@@ -1171,6 +1350,20 @@ fn geometry(
                 mask: has(4),
                 za,
                 zb,
+                look: DimensionLook {
+                    dim_style,
+                    arrow,
+                    arrow_size,
+                    ext_offset,
+                    ext_beyond,
+                    text_gap,
+                    text_place: has(13).then_some(DimensionTextPlace::Centre),
+                    decimals,
+                    unit,
+                    prefix,
+                    suffix,
+                    font,
+                },
             })
         }
         12 => {

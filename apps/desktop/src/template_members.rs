@@ -250,6 +250,7 @@ impl App {
                         box_width: None,
                         line_spacing: None,
                         runs: Vec::new(),
+                        face: Default::default(),
                     };
                     return vec![object(m, g, code_none(), Label::None)];
                 }

@@ -12,9 +12,11 @@ use crate::op;
 use crate::vec2::Vec2;
 
 mod kinds;
+pub mod look;
 mod quick;
 
 pub use kinds::DimensionFault;
+pub use look::{Arrow, Look};
 pub use quick::{QuickDimensions, quick_dimensions};
 
 const SQRT1_2: f64 = std::f64::consts::FRAC_1_SQRT_2;
@@ -31,6 +33,8 @@ pub struct DimensionGeom {
     /// A slope's two elevations (docs/adr/0147).
     pub za: Option<f64>,
     pub zb: Option<f64>,
+    /// Its arrowheads, sizes and value's place (docs/adr/0183 §3).
+    pub look: Look,
 }
 
 crate::json_struct!(DimensionGeom {
@@ -43,6 +47,7 @@ crate::json_struct!(DimensionGeom {
     c,
     za,
     zb
+    & look: Look
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -58,9 +63,12 @@ pub struct DimensionLayout {
     pub prefix: &'static str,
     pub pick: Vec<Edge>,
     pub handle: Vec2,
+    /// The filled arrowheads and dots (docs/adr/0183 §3), each a ring; none
+    /// for ticks, open arrowheads and none.
+    pub fills: Option<Vec<Vec<Vec2>>>,
 }
 
-crate::json_struct!(out DimensionLayout { lines, d1, d2, text_at => "textAt", rotation, value, unit, prefix, pick, handle });
+crate::json_struct!(out DimensionLayout { lines, d1, d2, text_at => "textAt", rotation, value, unit, prefix, pick, handle, fills });
 
 fn add(p: Vec2, v: Vec2, k: f64) -> Vec2 {
     Vec2::new(p.x + v.x * k, p.y + v.y * k)
@@ -81,18 +89,76 @@ fn tick(lines: &mut Vec<[Vec2; 2]>, p: Vec2, u: Vec2, size: f64) {
     ]);
 }
 
-/// Readable text along u through `mid`, lifted to the reader's "above".
-fn text_along(mid: Vec2, u: Vec2, height: f64) -> (Vec2, f64) {
+/// Readable text along u through `mid`, its baseline `lift` to the reader's
+/// "above" (under it when negative).
+fn text_along(mid: Vec2, u: Vec2, lift: f64) -> (Vec2, f64) {
     let mut rotation = (atan2(u.y, u.x) * 180.0) / PI;
     let mut side = 1.0;
     if rotation > 90.0 || rotation <= -90.0 {
         rotation += if rotation > 0.0 { -180.0 } else { 180.0 };
         side = -1.0; // flipped reading direction: "above" is the other normal
     }
-    (
-        add(mid, Vec2::new(-u.y, u.x), side * height * 0.35),
-        rotation,
-    )
+    (add(mid, Vec2::new(-u.y, u.x), side * lift), rotation)
+}
+
+/// How far a dimension's value's baseline is over its line (docs/adr/0183
+/// §3): its gap; centred, under the line by the default gap so that its
+/// middle is on it.
+fn lift(d: &DimensionGeom) -> f64 {
+    if d.look.centre {
+        -(look::DEFAULT_TEXT_GAP * d.height)
+    } else {
+        d.look.text_gap() * d.height
+    }
+}
+
+/// The circle a dot arrowhead is drawn as: this many chords (the leader's).
+const DOT_SEGMENTS: usize = 72;
+
+/// A dimension line's end mark at `p` (docs/adr/0183 §3), `size` long: the
+/// oblique tick centred on p across `u` (the line's direction, as it always
+/// was); an arrowhead with its tip on p and its body along `into` (from p
+/// into the line), s long and s/3 wide as Kılavuz's; a dot s/2 across about
+/// p; nothing.
+fn end_mark(
+    lines: &mut Vec<[Vec2; 2]>,
+    fills: &mut Vec<Vec<Vec2>>,
+    look: &Look,
+    p: Vec2,
+    u: Vec2,
+    into: Vec2,
+    size: f64,
+) {
+    let n = Vec2::new(-into.y, into.x);
+    let base = add(p, into, size);
+    let left = add(base, n, size / 6.0);
+    let right = add(base, n, -size / 6.0);
+    match look.arrow {
+        None => tick(lines, p, u, size),
+        Some(Arrow::Closed) => fills.push(vec![p, left, right]),
+        Some(Arrow::Open) => {
+            lines.push([left, p]);
+            lines.push([p, right]);
+        }
+        Some(Arrow::Dot) => fills.push(
+            (0..DOT_SEGMENTS)
+                .map(|i| {
+                    let t = 2.0 * PI * i as f64 / DOT_SEGMENTS as f64;
+                    Vec2::new(p.x + size / 4.0 * cos(t), p.y + size / 4.0 * sin(t))
+                })
+                .collect(),
+        ),
+        Some(Arrow::None) => {}
+    }
+}
+
+fn neg(v: Vec2) -> Vec2 {
+    Vec2::new(-v.x, -v.y)
+}
+
+/// The fills as the layout keeps them: none for none.
+fn fills_of(fills: Vec<Vec<Vec2>>) -> Option<Vec<Vec<Vec2>>> {
+    (!fills.is_empty()).then_some(fills)
 }
 
 /// Extension line from a measured point towards (and a little past) the dimension line.
@@ -181,17 +247,20 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
         n,
         offset + dot(n, Vec2::new(d.a.x - d.b.x, d.a.y - d.b.y)),
     );
-    let gap = d.height * 0.5;
+    let (h, look) = (d.height, &d.look);
+    let gap = look.ext_offset() * h;
     let mut lines = Vec::new();
-    extension(&mut lines, d.a, d1, gap, d.height * 0.5);
-    extension(&mut lines, d.b, d2, gap, d.height * 0.5);
+    let mut fills = Vec::new();
+    extension(&mut lines, d.a, d1, gap, look.ext_beyond() * h);
+    extension(&mut lines, d.b, d2, gap, look.ext_beyond() * h);
     lines.push([d1, d2]);
     let l = js_hypot(d2.x - d1.x, d2.y - d1.y);
     let along = Vec2::new((d2.x - d1.x) / l, (d2.y - d1.y) / l);
-    tick(&mut lines, d1, along, d.height * 0.6);
-    tick(&mut lines, d2, along, d.height * 0.6);
+    let size = look.arrow_size() * h;
+    end_mark(&mut lines, &mut fills, look, d1, along, along, size);
+    end_mark(&mut lines, &mut fills, look, d2, along, neg(along), size);
     let mid = Vec2::new((d1.x + d2.x) / 2.0, (d1.y + d2.y) / 2.0);
-    let (text_at, rotation) = text_along(mid, along, d.height);
+    let (text_at, rotation) = text_along(mid, along, lift(d));
     Some(DimensionLayout {
         lines,
         d1,
@@ -203,6 +272,7 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
         prefix: "",
         pick: vec![Edge::Seg { a: d1, b: d2 }],
         handle: mid,
+        fills: fills_of(fills),
     })
 }
 
@@ -222,13 +292,15 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
         return None;
     }
     let at = |t: f64| Vec2::new(c.x + cos(t) * r, c.y + sin(t) * r);
+    let (h, look) = (d.height, &d.look);
     let mut lines = Vec::new();
-    let gap = d.height * 0.5;
+    let mut fills = Vec::new();
+    let gap = look.ext_offset() * h;
     // Arms are extended to the arc when it lies beyond the measured points.
     for (p, t) in [(d.a, t0), (d.b, t0 + sweep)] {
         let rp = js_hypot(p.x - c.x, p.y - c.y);
         if r > rp + gap {
-            lines.push([at2(c, t, rp + gap), at2(c, t, r + d.height * 0.5)]);
+            lines.push([at2(c, t, rp + gap), at2(c, t, r + look.ext_beyond() * h)]);
         }
     }
     let steps = js_max(8.0, (sweep / (PI / 36.0)).ceil());
@@ -243,11 +315,22 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
     let d1 = at(t0);
     let d2 = at(t0 + sweep);
     let tangent = |t: f64| Vec2::new(-sin(t), cos(t));
-    tick(&mut lines, d1, tangent(t0), d.height * 0.6);
-    tick(&mut lines, d2, tangent(t0 + sweep), d.height * 0.6);
+    let size = look.arrow_size() * h;
+    // The arrowheads' bodies along the arc's tangent, into the angle.
+    end_mark(
+        &mut lines,
+        &mut fills,
+        look,
+        d1,
+        tangent(t0),
+        tangent(t0),
+        size,
+    );
+    let end = tangent(t0 + sweep);
+    end_mark(&mut lines, &mut fills, look, d2, end, neg(end), size);
     let tm = t0 + sweep / 2.0;
     let mid = at(tm);
-    let (text_at, rotation) = text_along(mid, tangent(tm), d.height);
+    let (text_at, rotation) = text_along(mid, tangent(tm), lift(d));
     Some(DimensionLayout {
         lines,
         d1,
@@ -264,6 +347,7 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
             sweep,
         }],
         handle: mid,
+        fills: fills_of(fills),
     })
 }
 
@@ -278,9 +362,12 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
     let end = add(d.b, u, leader);
     let start = if diameter { add(c, u, -r) } else { c };
     let mut lines = vec![[start, end]];
-    tick(&mut lines, d.b, u, d.height * 0.6);
+    let mut fills = Vec::new();
+    let size = d.look.arrow_size() * d.height;
+    // The arrowheads on the circle, their bodies inside it.
+    end_mark(&mut lines, &mut fills, &d.look, d.b, u, neg(u), size);
     if diameter {
-        tick(&mut lines, start, u, d.height * 0.6);
+        end_mark(&mut lines, &mut fills, &d.look, start, u, u, size);
     }
     // The value sits on the leader when there is one, else half-way from the centre to the circle.
     let (p0, p1) = if leader > d.height {
@@ -289,7 +376,7 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
         (c, d.b)
     };
     let mid = Vec2::new((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0);
-    let (text_at, rotation) = text_along(mid, u, d.height);
+    let (text_at, rotation) = text_along(mid, u, lift(d));
     Some(DimensionLayout {
         lines,
         d1: start,
@@ -301,6 +388,7 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
         prefix: if diameter { "Ø " } else { "R " },
         pick: vec![Edge::Seg { a: start, b: end }],
         handle: end,
+        fills: fills_of(fills),
     })
 }
 

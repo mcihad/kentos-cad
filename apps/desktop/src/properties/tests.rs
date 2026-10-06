@@ -339,6 +339,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
     );
     let s = Slot(text);
@@ -374,6 +375,7 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
             mask: false,
             za: None,
             zb: None,
+            look: Default::default(),
         }),
     );
     let s = Slot(dim);
@@ -454,6 +456,7 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
             label_of: label_of.map(|u| kentos_contracts::EntityId(*u.as_bytes())),
             label_scale: label_of.map(|_| 1000.0),
             paragraph: Default::default(),
+            face: Default::default(),
         })
     };
     let linked = add(&mut app, text(Some(parcel), "12"));
@@ -637,6 +640,7 @@ fn what_the_commands_refuse_is_said_and_not_written() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
     );
     event(
@@ -1546,6 +1550,7 @@ fn two_texts(app: &mut App) -> (u32, u32) {
         label_of: None,
         label_scale: None,
         paragraph: Default::default(),
+        face: Default::default(),
     };
     let a = add(
         app,
@@ -1874,6 +1879,7 @@ fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) 
         mask: false,
         za: None,
         zb: None,
+        look: Default::default(),
     }
 }
 

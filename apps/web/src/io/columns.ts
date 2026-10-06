@@ -52,6 +52,12 @@ const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCen
 const HATCH_PATTERNS = ['solid', 'lines', 'cross'] as const;
 /** A leader's arrowheads, numbered as the columns hold them (the contract's `LeaderArrow::ALL`; the filled arrow is none). */
 const LEADER_ARROWS = ['open', 'dot', 'none'] as const;
+/** The drawing typefaces, numbered as the columns hold them (the contract's `DrawingFont::ALL`, docs/adr/0183). */
+const FONTS = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'] as const;
+/** A dimension's arrowheads, numbered as the columns hold them (the contract's `DimensionArrow::ALL`; the tick is none). */
+const DIMENSION_ARROWS = ['closed', 'open', 'dot', 'none'] as const;
+/** A dimension's units, numbered as the columns hold them (`columns.rs`'s `UNITS`). */
+const UNITS = ['mm', 'cm', 'm'] as const;
 
 const COLOR = 1;
 const LABEL = 2;
@@ -61,11 +67,14 @@ const WEIGHT = 8;
 /**
  * A kind's optional fields from bit 8 up, in the order the Rust module's table
  * names them (point: z; line: za, zb; polyline and polygon: bulges, holes, zs;
- * polygon: parts; text: align, width factor, mask (docs/adr/0145); dimension:
- * text, style, angle, c; hatch: holes; insert: mirror). A block's definitions
- * travel in the head, not here (docs/adr/0144).
+ * polygon: parts; text: align, width factor, mask (docs/adr/0145), link, box
+ * width, line spacing, runs, text style, font, bold, italic, oblique
+ * (docs/adr/0183); dimension: text, style, angle, c, mask, za, zb, dimension
+ * style, arrow, arrow size, ext offset, ext beyond, text gap, centred,
+ * decimals, unit, prefix, suffix, font; hatch: holes; insert: mirror). A
+ * block's definitions travel in the head, not here (docs/adr/0144).
  */
-const OPT = [1 << 8, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14] as const;
+const OPT = Array.from({ length: 19 }, (_, i) => 1 << (8 + i));
 /** A multi-line text's run's flags (docs/adr/0182; `columns.rs`'s `RUN_*`): its format, and whether its colour follows. */
 const RUN_BOLD = 1;
 const RUN_ITALIC = 2;
@@ -160,6 +169,13 @@ class Packer {
 
   int(v: number): void {
     this.ints.push(v);
+  }
+
+  /** `v`'s place in `list` (a name the contract knows); `what` names it in the message when it is not one of them. */
+  place(list: readonly string[], v: unknown, field: string, what: string): number {
+    const at = typeof v === 'string' ? list.indexOf(v) : -1;
+    if (at < 0) throw unwritable('bad_value', `${this.where}/${field}`, `“${String(v)}” ${what} bilinmiyor`);
+    return at;
   }
 
   /** Why `v` cannot be written as a float, or null. */
@@ -430,6 +446,15 @@ class Packer {
             if (r.color !== undefined) this.text(r.color, 'runs');
           }
         }
+        // Its face (docs/adr/0183 §2): the style's id, the typeface's place, bold and italic as flags (only true is
+        // written), the slant; the codec checks them.
+        if (e.textStyle !== undefined) (flags |= OPT[7]), this.text(e.textStyle, 'textStyle');
+        if (e.font !== undefined) (flags |= OPT[8]), this.int(this.place(FONTS, e.font, 'font', 'yazı tipi'));
+        if (e.bold === true) flags |= OPT[9];
+        else if (e.bold !== undefined) throw unwritable('bad_value', `${this.where}/bold`, 'kalın yalnız true yazılır; alan yoksa yazı kalın değildir');
+        if (e.italic === true) flags |= OPT[10];
+        else if (e.italic !== undefined) throw unwritable('bad_value', `${this.where}/italic`, 'italik yalnız true yazılır; alan yoksa yazı italik değildir');
+        if (e.oblique !== undefined) (flags |= OPT[11]), this.float(e.oblique, 'oblique');
         break;
       case 'dimension': {
         this.point(e.a, 'a', kind);
@@ -450,6 +475,24 @@ class Packer {
         else if (e.mask !== undefined) throw unwritable('bad_value', `${this.where}/mask`, 'zemin yalnız true yazılır; zeminsiz ölçüde alan yoktur');
         if (e.za !== undefined) (flags |= OPT[5]), this.float(e.za, 'za');
         if (e.zb !== undefined) (flags |= OPT[6]), this.float(e.zb, 'zb');
+        // Its look (docs/adr/0183 §3), field by field in the contract's order; the codec checks them.
+        if (e.dimStyle !== undefined) (flags |= OPT[7]), this.text(e.dimStyle, 'dimStyle');
+        if (e.arrow !== undefined) (flags |= OPT[8]), this.int(this.place(DIMENSION_ARROWS, e.arrow, 'arrow', 'ölçü oku'));
+        if (e.arrowSize !== undefined) (flags |= OPT[9]), this.float(e.arrowSize, 'arrowSize');
+        if (e.extOffset !== undefined) (flags |= OPT[10]), this.float(e.extOffset, 'extOffset');
+        if (e.extBeyond !== undefined) (flags |= OPT[11]), this.float(e.extBeyond, 'extBeyond');
+        if (e.textGap !== undefined) (flags |= OPT[12]), this.float(e.textGap, 'textGap');
+        if (e.textPlace === 'centre') flags |= OPT[13];
+        else if (e.textPlace !== undefined) throw unwritable('bad_value', `${this.where}/textPlace`, `“${String(e.textPlace)}” değerin yeri bilinmiyor`);
+        if (e.decimals !== undefined) {
+          if (!Number.isInteger(e.decimals) || e.decimals < 0) throw unwritable('bad_value', `${this.where}/decimals`, `basamak sayısı ${e.decimals}; negatif olmayan bir tam sayı olmalı`);
+          flags |= OPT[14];
+          this.int(e.decimals);
+        }
+        if (e.unit !== undefined) (flags |= OPT[15]), this.int(this.place(UNITS, e.unit, 'unit', 'ölçü birimi'));
+        if (e.prefix !== undefined) (flags |= OPT[16]), this.text(e.prefix, 'prefix');
+        if (e.suffix !== undefined) (flags |= OPT[17]), this.text(e.suffix, 'suffix');
+        if (e.font !== undefined) (flags |= OPT[18]), this.int(this.place(FONTS, e.font, 'font', 'yazı tipi'));
         break;
       }
       case 'hatch': {
@@ -571,6 +614,13 @@ export class ColumnsReader {
   private num(): number {
     if (this.float >= this.c.floats.length) throw broken('sayılar erken bitti');
     return this.c.floats[this.float++];
+  }
+
+  /** The name at the next int's place in `list`; a place past them is broken columns (`what` names it). */
+  private at<T extends string>(list: readonly T[], what: string): T {
+    const v = this.readInt();
+    if (v >= list.length) throw broken(`${what} ${v}`);
+    return list[v];
   }
 
   private pt(): { x: number; y: number } {
@@ -757,6 +807,12 @@ export class ColumnsReader {
             if (bits & RUN_COLOR) r.color = this.readText();
             return r;
           });
+        // docs/adr/0183 §2: the style, the typeface, bold, italic, the slant.
+        if (has(7)) e.textStyle = this.readText();
+        if (has(8)) e.font = this.at(FONTS, 'yazı tipi');
+        if (has(9)) e.bold = true;
+        if (has(10)) e.italic = true;
+        if (has(11)) e.oblique = this.num();
         break;
       case 'dimension':
         e.a = this.pt();
@@ -770,6 +826,19 @@ export class ColumnsReader {
         if (has(4)) e.mask = true;
         if (has(5)) e.za = this.num();
         if (has(6)) e.zb = this.num();
+        // docs/adr/0183 §3: the style and the look.
+        if (has(7)) e.dimStyle = this.readText();
+        if (has(8)) e.arrow = this.at(DIMENSION_ARROWS, 'ölçü oku');
+        if (has(9)) e.arrowSize = this.num();
+        if (has(10)) e.extOffset = this.num();
+        if (has(11)) e.extBeyond = this.num();
+        if (has(12)) e.textGap = this.num();
+        if (has(13)) e.textPlace = 'centre';
+        if (has(14)) e.decimals = this.readInt();
+        if (has(15)) e.unit = this.at(UNITS, 'ölçü birimi');
+        if (has(16)) e.prefix = this.readText();
+        if (has(17)) e.suffix = this.readText();
+        if (has(18)) e.font = this.at(FONTS, 'yazı tipi');
         break;
       case 'hatch': {
         e.ring = this.pts();

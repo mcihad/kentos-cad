@@ -16,7 +16,7 @@
 //! - a straight edge gets an aligned dimension along it, an arc an arc length
 //!   dimension about its centre, its ends counter-clockwise.
 
-use super::DimensionGeom;
+use super::{DimensionGeom, Look};
 use crate::entity::Shape;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge};
@@ -241,6 +241,7 @@ pub fn quick_dimensions(
                 c,
                 za: None,
                 zb: None,
+                look: Look::default(),
             };
             dimensions.push(match r.arc() {
                 // An arc length's offset is outwards from its centre; left of a

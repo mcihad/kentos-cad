@@ -1,3 +1,4 @@
+import { lookOfDimension } from '../model/annotationStyles';
 import type { EntityGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { layoutDimension, quickDimensions, type QuickDimensions } from '../model/geom/dimension';
@@ -6,7 +7,9 @@ import { parseNumber } from './coordinateInput';
 import { writeObjects } from './createCommand';
 import { dimensionZemin, paper } from './dimensionTool';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
-import { drawTag, strokePath } from './preview';
+import { drawTag, strokeLayout } from './preview';
+import { dimensionLookNow, dimensionStyleChoices, dimensionStyleName, stylesShown, takeDimensionStyle } from './styleOption';
+import type { OptionChoice } from './Tool';
 
 /** What is said when the selection has nothing to measure. */
 const NOTHING = 'Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.';
@@ -24,6 +27,8 @@ export class QuickDimensionTool extends SelectionFirstTool {
   protected readonly label = 'Hızlı ölçü';
   // The cursor's distance to the nearest edge places them: a snap would put it on an edge.
   override readonly snaps = false;
+  /** Stil (S): a dimension style's name asked for (docs/adr/0183 §4). */
+  private askingStyle = false;
 
   protected begin(): void {
     if (this.targets().some((e) => e.kind === 'line' || e.kind === 'polyline' || e.kind === 'polygon')) return;
@@ -33,13 +38,34 @@ export class QuickDimensionTool extends SelectionFirstTool {
   }
 
   protected stagePrompt(): string {
-    return `ölçülerin yerini gösterin ya da uzaklık yazın [Zemin (Z): ${dimensionZemin.on ? 'açık' : 'kapalı'}]`;
+    if (this.askingStyle) return `ölçü stilini menüden seçin ya da adını yazın [Stil (S): ${dimensionStyleName(this.ctx)}]`;
+    const stil = stylesShown(this.ctx) ? `Stil (S): ${dimensionStyleName(this.ctx)} / ` : '';
+    return `ölçülerin yerini gösterin ya da uzaklık yazın [${stil}Zemin (Z): ${dimensionZemin.on ? 'açık' : 'kapalı'}]`;
   }
 
-  /** The dimensions with the cursor at `at` and `typed` the distance typed: the selection in the drawing's order. */
+  /** Stil's menu: Standart, the project's dimension styles and their window (docs/adr/0183 §4). */
+  optionChoices(key: string): readonly OptionChoice[] | null {
+    return key === 'S' && !this.picking && stylesShown(this.ctx) ? dimensionStyleChoices(this.ctx) : null;
+  }
+
+  /** A style's name is words: Space types a space (docs/adr/0183 §4). */
+  takesWords(): boolean {
+    return this.askingStyle;
+  }
+
+  chooseOption(key: string, typed: string): boolean {
+    if (key !== 'S' || this.picking || !stylesShown(this.ctx)) return false;
+    if (takeDimensionStyle(this.ctx, typed)) this.askingStyle = false;
+    this.refresh();
+    return true;
+  }
+
+  /** The dimensions with the cursor at `at` and `typed` the distance typed, in the style's look: the selection in the drawing's order. */
   private quick(at: Vec2, typed: number | null): QuickDimensions {
     const objects = this.targets().sort((a, b) => a.id - b.id);
-    return quickDimensions(objects, at, typed, paper(this.ctx, 2.5));
+    const { look, height } = dimensionLookNow(this.ctx, paper(this.ctx, 2.5));
+    const q = quickDimensions(objects, at, typed, height);
+    return { ...q, dimensions: q.dimensions.map((d) => ({ ...d, ...look })) };
   }
 
   protected point(p: Vec2): void {
@@ -48,8 +74,19 @@ export class QuickDimensionTool extends SelectionFirstTool {
 
   override input(text: string): boolean {
     if (this.picking) return false;
+    // A dimension style's name: one the project has none of is said, and the tool waits for another.
+    if (this.askingStyle) {
+      if (takeDimensionStyle(this.ctx, text)) this.askingStyle = false;
+      this.refresh();
+      return true;
+    }
     if (text.trim().toLocaleUpperCase('tr-TR') === 'Z') {
       dimensionZemin.on = !dimensionZemin.on;
+      this.refresh();
+      return true;
+    }
+    if (text.trim().toLocaleUpperCase('tr-TR') === 'S' && stylesShown(this.ctx)) {
+      this.askingStyle = true;
       this.refresh();
       return true;
     }
@@ -58,6 +95,15 @@ export class QuickDimensionTool extends SelectionFirstTool {
     // The cursor still gives an open path's side; without one, the origin does.
     this.write(this.hover ?? { x: 0, y: 0 }, this.ctx.format.toMetres(n));
     return true;
+  }
+
+  /** Enter while a style's name is asked for: back to placing them. */
+  override confirm(): void {
+    if (this.askingStyle) {
+      this.askingStyle = false;
+      return this.refresh();
+    }
+    super.confirm();
   }
 
   private write(at: Vec2, typed: number | null): void {
@@ -77,6 +123,7 @@ export class QuickDimensionTool extends SelectionFirstTool {
         ...(d.style && { style: d.style }),
         ...(d.c && { c: d.c }),
         ...(mask && { mask: true }),
+        ...lookOfDimension(d),
       }),
     );
     const out = writeObjects(this.ctx, geometries);
@@ -94,7 +141,7 @@ export class QuickDimensionTool extends SelectionFirstTool {
     // As the modify tools' ghosts: a very large selection previews its first ones.
     for (const d of dimensions.slice(0, MAX_GHOSTS)) {
       const l = layoutDimension(d);
-      if (l) for (const [p, q] of l.lines) strokePath(g, view, [p, q], { color: pal.accent });
+      if (l) strokeLayout(g, view, l, pal.accent);
     }
     if (dimensions.length) {
       const tag = [`${dimensions.length} ölçü`, this.ctx.format.length(Math.abs(dimensions[0].offset))];

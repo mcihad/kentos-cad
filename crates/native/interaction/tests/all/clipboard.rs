@@ -370,6 +370,7 @@ fn a_paste_goes_through_the_commands_in_one_step() {
         label_of: None,
         label_scale: None,
         paragraph: Default::default(),
+        face: Default::default(),
     });
     let mut blank = Clipboard::new();
     blank.set(vec![board.items()[0].clone(), text], None);

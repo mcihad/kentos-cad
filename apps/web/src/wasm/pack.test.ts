@@ -30,6 +30,32 @@ describe('packEntities', () => {
       { id: 5008, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 40, y: 0 }, offset: 1.5, height: 2, style: 'slope', za: 105.25, zb: 104.75, mask: true },
       { id: 5009, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 10, y: 20 }, b: { x: 30, y: 26 }, offset: 0, height: 2.5, style: 'ordinate', angle: 90 },
       { id: 5010, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 60, y: 0 }, b: { x: 50, y: 10 }, c: { x: 50, y: 0 }, offset: 2, height: 2, style: 'arcLength' },
+      // docs/adr/0183: a text's style and face, a dimension's style and look with its value's writing.
+      { id: 5011, layerId: 'a', attrs: {}, kind: 'text', p: { x: 2, y: 3 }, text: 'Ada 105', height: 2, rotation: 0, textStyle: '0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101', font: 'arimo', bold: true, italic: true, oblique: 15 },
+      { id: 5012, layerId: 'a', attrs: {}, kind: 'text', p: { x: 2, y: 3 }, text: 'Not', height: 2, rotation: 0, font: 'plex-mono' },
+      {
+        id: 5013,
+        layerId: 'a',
+        attrs: {},
+        kind: 'dimension',
+        a: { x: 0, y: 0 },
+        b: { x: 8, y: 0 },
+        offset: 2,
+        height: 0.5,
+        dimStyle: '0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201',
+        arrow: 'closed',
+        arrowSize: 1.2,
+        extOffset: 0,
+        extBeyond: 0.8,
+        textGap: 0.5,
+        textPlace: 'centre',
+        decimals: 0,
+        unit: 'cm',
+        prefix: 'L=',
+        suffix: ' cm',
+        font: 'courier-prime',
+      },
+      { id: 5014, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 8, y: 0 }, offset: 2, height: 0.5, arrow: 'none' },
     );
     const packed = new CoreStore();
     const p = packEntities(list);
@@ -42,6 +68,15 @@ describe('packEntities', () => {
     expect(Array.from(packed.ids())).toEqual(Array.from(json.ids()));
     packed.dispose();
     json.dispose();
+  });
+
+  it('reads a text’s face and a dimension’s look back as they went (docs/adr/0183)', () => {
+    const list = [
+      { id: 1, layerId: 'a', attrs: {}, kind: 'text', p: { x: 2, y: 3 }, text: 'Ada 105', height: 2, rotation: 0, textStyle: 's', font: 'arimo', bold: true, italic: true, oblique: -15 },
+      { id: 2, layerId: 'a', attrs: {}, kind: 'dimension', a: { x: 0, y: 0 }, b: { x: 8, y: 0 }, offset: 2, height: 0.5, dimStyle: 'd', arrow: 'dot', arrowSize: 1.2, textPlace: 'centre', decimals: 3, unit: 'mm', prefix: 'R', suffix: '″', font: 'quicksand' },
+    ];
+    const back = unpackEntities(packEntities(list));
+    expect(back.map(({ geometry }) => geometry)).toEqual(list.map(({ id: _id, layerId: _layer, attrs: _attrs, ...g }) => g));
   });
 
   it('keeps −0 and NaN that JSON would lose', () => {

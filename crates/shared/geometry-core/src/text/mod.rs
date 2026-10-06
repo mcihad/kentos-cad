@@ -4,6 +4,7 @@
 //! face's average lowercase letter.
 
 pub mod edit;
+pub mod face;
 pub mod natural;
 pub mod paragraph;
 #[rustfmt::skip]
@@ -29,6 +30,16 @@ impl Font {
 
     pub fn id(self) -> &'static str {
         FONTS[self.0 as usize]
+    }
+
+    /// Its place in the tables (`DrawingFont`'s order).
+    pub fn index(self) -> u8 {
+        self.0
+    }
+
+    /// The face at `i` in the tables; none past them.
+    pub fn from_index(i: usize) -> Option<Font> {
+        (i < FONTS.len()).then_some(Font(i as u8))
     }
 }
 
@@ -64,6 +75,17 @@ pub fn width_em(text: &str, font: Font) -> f64 {
         return advance(font, '\u{fffd}') as f64 / 1000.0;
     }
     text.chars().map(|c| advance(font, c)).sum::<u32>() as f64 / 1000.0
+}
+
+/// `width_em`, its letters bold when `bold` (a text in a bold style, docs/adr/0183 §2).
+pub fn width_em_in(text: &str, font: Font, bold: bool) -> f64 {
+    if !bold {
+        return width_em(text, font);
+    }
+    if text.is_empty() {
+        return advance_of(font, '\u{fffd}', true) as f64 / 1000.0;
+    }
+    text.chars().map(|c| advance_of(font, c, true)).sum::<u32>() as f64 / 1000.0
 }
 
 /// Which point of a text its `p` is (docs/adr/0145 §1, the contract's

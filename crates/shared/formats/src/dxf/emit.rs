@@ -79,6 +79,12 @@ pub struct Library {
     pub dim_styles: HashMap<String, DimStyle>,
     /// A block record's handle → its block's name (a leader's arrowhead block).
     pub block_records: HashMap<u64, String>,
+    /// Upper-case text style name → its STYLE record (docs/adr/0183 §7).
+    pub text_records: HashMap<String, super::styles::StyleRecord>,
+    /// A STYLE record's handle → its upper-case name (a DIMSTYLE's DIMTXSTY).
+    pub style_handles: HashMap<u64, String>,
+    /// Upper-case dimension style name → its name as written and its variables.
+    pub dim_records: HashMap<String, (String, super::styles::DimVars)>,
 }
 
 /// Where an entity lives: the transform down to world XY, the Z map of
@@ -489,6 +495,12 @@ pub struct Emitter<'l> {
     defining: bool,
     /// Leaders and notes waiting for each other (docs/adr/0146 §8).
     pending: notes::Pending,
+    /// The project's typeface: a style's KentOS has no family for (docs/adr/0183 §7).
+    pub project_font: kentos_contracts::DrawingFont,
+    /// The text and dimension styles the objects follow, by upper-case name,
+    /// in the order met: each one's place is its reader id's number.
+    pub text_used: Vec<String>,
+    pub dim_used: Vec<String>,
 }
 
 impl<'l> Emitter<'l> {
@@ -501,6 +513,172 @@ impl<'l> Emitter<'l> {
             explode,
             defining: false,
             pending: notes::Pending::default(),
+            project_font: kentos_contracts::DrawingFont::Barlow,
+            text_used: Vec::new(),
+            dim_used: Vec::new(),
+        }
+    }
+
+    /// The reader's id of the text style `key` (upper case), numbered as met.
+    pub fn text_style_id(&mut self, key: &str) -> String {
+        let at = match self.text_used.iter().position(|k| k == key) {
+            Some(i) => i,
+            None => {
+                self.text_used.push(key.to_owned());
+                self.text_used.len() - 1
+            }
+        };
+        format!("dxf-text-{}", at + 1)
+    }
+
+    /// The reader's id of the dimension style `key` (upper case), numbered as met.
+    pub fn dim_style_id(&mut self, key: &str) -> String {
+        let at = match self.dim_used.iter().position(|k| k == key) {
+            Some(i) => i,
+            None => {
+                self.dim_used.push(key.to_owned());
+                self.dim_used.len() - 1
+            }
+        };
+        format!("dxf-dim-{}", at + 1)
+    }
+
+    /// A text's face from its STYLE (7) and its own slant (51), or as KentOS
+    /// wrote it (its KENTOS data), its style the reader's (docs/adr/0183 §7).
+    /// Standard is Standart: no style, the project's typeface; a record
+    /// KentOS wrote for a styleless face gives its face and no style; one the
+    /// file does not have gives nothing.
+    fn face_of(
+        &mut self,
+        style: &str,
+        own_oblique: Option<f64>,
+        meta: Option<&Meta>,
+    ) -> kentos_contracts::TextFace {
+        let key = style.to_uppercase();
+        let record = self
+            .lib
+            .text_records
+            .get(&key)
+            .filter(|r| !super::styles::is_standard(&r.name))
+            .cloned();
+        let id = record
+            .as_ref()
+            .filter(|r| r.is_style())
+            .map(|_| self.text_style_id(&key));
+        if let Some(mut f) = meta
+            .and_then(|m| m.face.as_deref())
+            .and_then(|j| serde_json::from_str::<kentos_contracts::TextFace>(j).ok())
+        {
+            f.text_style = id;
+            return f;
+        }
+        let Some(r) = record else {
+            return Default::default();
+        };
+        let (font, bold, italic, oblique) = match &r.kentos {
+            Some(k) => (k.font, k.bold, k.italic, k.oblique),
+            None => {
+                let (s, _) =
+                    super::styles::text_style(&r, String::new(), self.project_font, &|x| x, 1000.0);
+                (s.font, s.bold, s.italic, s.oblique)
+            }
+        };
+        let oblique = match own_oblique {
+            Some(0.0) => None,
+            Some(o) => kentos_contracts::oblique_holds(o).then_some(o),
+            None => oblique,
+        };
+        kentos_contracts::TextFace {
+            text_style: id,
+            font: Some(font),
+            bold,
+            italic,
+            oblique,
+        }
+    }
+
+    /// The dimension style `style` names, as its DIMSTYLE's record: its
+    /// reader id (none for Standard: Standart, its look the dimension's own)
+    /// and variables; none for one the file does not have.
+    fn dim_record(&mut self, style: &str) -> Option<(Option<String>, super::styles::DimVars)> {
+        let key = style.to_uppercase();
+        let (name, vars) = self.lib.dim_records.get(&key)?.clone();
+        let id = (!super::styles::is_standard(&name)).then(|| self.dim_style_id(&key));
+        Some((id, vars))
+    }
+
+    /// A KentOS dimension's look (its KENTOS data), its style the reader's.
+    fn kentos_look(&mut self, style: &str, meta: Option<&Meta>) -> kentos_contracts::DimensionLook {
+        let mut look: kentos_contracts::DimensionLook = meta
+            .and_then(|m| m.look.as_deref())
+            .and_then(|j| serde_json::from_str(j).ok())
+            .unwrap_or_default();
+        look.dim_style = self
+            .lib
+            .dim_records
+            .get(&style.to_uppercase())
+            .filter(|(_, v)| v.kentos.is_some())
+            .map(|_| style.to_uppercase())
+            .map(|key| self.dim_style_id(&key));
+        look
+    }
+
+    /// Another program's dimension's look: its DIMSTYLE's variables under
+    /// its own changes (DSTYLE), as KentOS's style would give it.
+    fn look_of_vars(
+        &mut self,
+        style: &str,
+        overrides: super::styles::DimVars,
+    ) -> kentos_contracts::DimensionLook {
+        let Some((id, vars)) = self.dim_record(style) else {
+            return Default::default();
+        };
+        let vars = overrides.over(&vars);
+        let font = vars
+            .dimtxsty
+            .and_then(|h| self.lib.style_handles.get(&h))
+            .and_then(|name| self.lib.text_records.get(name))
+            .filter(|r| !super::styles::is_standard(&r.name))
+            .and_then(|r| {
+                r.kentos.as_ref().map(|k| k.font).or_else(|| {
+                    super::styles::family_of(r.family.as_deref().unwrap_or(&r.file))
+                        .or_else(|| super::styles::family_of(&r.file))
+                })
+            });
+        let (def, _) = super::styles::dimension_style(
+            &vars,
+            id.clone().unwrap_or_default(),
+            style,
+            &self.lib.block_records,
+            font,
+            &|x| x,
+            1000.0,
+        );
+        kentos_contracts::DimensionLook {
+            dim_style: id,
+            ..def.look()
+        }
+    }
+
+    /// The texts pushed since `start` given their face (docs/adr/0183 §7).
+    fn give_faces(
+        &mut self,
+        start: usize,
+        style: &str,
+        own_oblique: Option<f64>,
+        meta: Option<&Meta>,
+    ) {
+        if self.out.entities.len() <= start {
+            return;
+        }
+        let face = self.face_of(style, own_oblique, meta);
+        if face == Default::default() {
+            return;
+        }
+        for e in &mut self.out.entities[start..] {
+            if let Entity::Text(t) = e {
+                t.face = face.clone();
+            }
         }
     }
 
@@ -953,6 +1131,7 @@ impl<'l> Emitter<'l> {
                 valign,
                 width,
                 style,
+                oblique,
                 hidden,
                 tag,
                 prompt,
@@ -990,6 +1169,7 @@ impl<'l> Emitter<'l> {
                         e.line,
                     );
                 }
+                let start = self.out.entities.len();
                 self.text(
                     ctx,
                     ext,
@@ -1005,6 +1185,7 @@ impl<'l> Emitter<'l> {
                     b(),
                     e,
                 );
+                self.give_faces(start, style, *oblique, e.meta.as_ref());
             }
             Kind::MText {
                 p,
@@ -1035,6 +1216,7 @@ impl<'l> Emitter<'l> {
                     b(),
                     e,
                 );
+                self.give_faces(start, style, None, e.meta.as_ref());
                 // A leader's note (docs/adr/0146 §8).
                 if let Some(h) = e.handle {
                     self.mtext_written(h, start);
@@ -1150,6 +1332,7 @@ impl<'l> Emitter<'l> {
                 groups,
                 style,
                 own_style,
+                overrides,
             } => {
                 // A dimension KentOS wrote comes back as the same dimension, while nothing moved it
                 // (at the top of the file, in the plane); another program's ordinate (from the
@@ -1166,7 +1349,11 @@ impl<'l> Emitter<'l> {
                 if let Some(k) = own {
                     let mask = meta.is_some_and(|m| m.mask);
                     match dimension::read_back(groups, k, b(), mask).filter(|_| flat) {
-                        Some(d) => self.push(Entity::Dimension(d)),
+                        Some(mut d) => {
+                            // Its look as KentOS wrote it, its style the reader's (docs/adr/0183 §7).
+                            d.look = self.kentos_look(style, meta);
+                            self.push(Entity::Dimension(d))
+                        }
                         None => {
                             self.note(
                                 what,
@@ -1179,11 +1366,16 @@ impl<'l> Emitter<'l> {
                     return;
                 }
                 // Its style's text height (DIMTXT × DIMSCALE, the entity's own changes first) and fill.
-                let style = own_style.over(self.dim_style(style));
+                let named = style;
+                let style = own_style.over(self.dim_style(named));
                 let height = style.text_length().unwrap_or(DIMENSION_HEIGHT);
                 let mask = style.fill == Some(1);
                 match dimension::foreign(groups, b(), height, mask) {
-                    dimension::Foreign::Taken(d) if flat => self.push(Entity::Dimension(*d)),
+                    dimension::Foreign::Taken(mut d) if flat => {
+                        // Its look from its DIMSTYLE and its own changes (docs/adr/0183 §7).
+                        d.look = self.look_of_vars(named, (**overrides).clone());
+                        self.push(Entity::Dimension(*d))
+                    }
                     dimension::Foreign::Taken(_) => {
                         self.anonymous_block(ctx, e, &layer, block, what);
                     }
@@ -1867,6 +2059,7 @@ impl<'l> Emitter<'l> {
                 box_width: paragraph.box_width.map(|w| w * along),
                 ..paragraph
             },
+            face: Default::default(),
         }));
     }
 

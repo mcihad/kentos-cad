@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { FileKind, PickedFile } from '../../app/fileIO';
 import type { Bounds } from '../../contracts/generated/Bounds';
+import type { DrawingFont } from '../../contracts/generated/DrawingFont';
 import type { DrawingUnit } from '../../contracts/generated/DrawingUnit';
 import type { ImportLayer } from '../../contracts/generated/ImportLayer';
 import type { ReportItem } from '../../contracts/generated/ReportItem';
@@ -179,7 +180,7 @@ class DrawingImportDialog {
       const d =
         this.source === 'ncz'
           ? await formats().readNcz(this.file.bytes, { maxEntities: 0, drawingFont: this.ctx.doc.settings.drawingFont.value }, progress)
-          : await formats().readDxf(this.file.bytes.slice(), { maxEntities: 0, explodeBlocks: this.explode, ...this.dxfUnit() }, progress);
+          : await formats().readDxf(this.file.bytes.slice(), { maxEntities: 0, explodeBlocks: this.explode, ...this.dxfUnit(), ...this.dxfStyles() }, progress);
       if (gen !== this.generation || this.closed) return;
       this.drawing = d;
       // An NCZ says what its coordinates are in (its projection blocks); a DXF says nothing.
@@ -205,6 +206,12 @@ class DrawingImportDialog {
   private dxfUnit(): { unit?: DrawingUnit } {
     const s = this.ctx.doc.settings;
     return !s.hasSystem ? { unit: s.unit } : {};
+  }
+
+  /** The styles' sizes are paper mm at the project's scale, their missing typefaces the project's (docs/adr/0183 §7). */
+  private dxfStyles(): { scale: number; drawingFont: DrawingFont } {
+    const s = this.ctx.doc.settings;
+    return { scale: s.plotScale.value, drawingFont: s.drawingFont.value };
   }
 
   private async pickAnother(): Promise<void> {
@@ -356,7 +363,7 @@ class DrawingImportDialog {
     const total = included.reduce((n, l) => n + l.count, 0);
 
     if (total <= AT_ONCE) {
-      const applied = applyImport(ctx.doc, importedEntities(d, new Set(layers.keys())), plan, d.result.blocks);
+      const applied = applyImport(ctx.doc, importedEntities(d, new Set(layers.keys())), plan, d.result.blocks, { text: d.result.textStyles, dimension: d.result.dimensionStyles });
       if (!applied.ok) {
         this.say(applied.error, 'error');
         return;
@@ -396,18 +403,25 @@ function zoomTo(ctx: AppContext, b: Bounds): void {
   ctx.view.camera.fit({ minX, minY, maxX, maxY });
 }
 
-/** What an import made besides its objects: the new layers, the block definitions and the names changed on the way. */
+/** What an import made besides its objects: the new layers, the block definitions and the names changed on the way, the styles added. */
 interface Made {
   readonly created: readonly string[];
   readonly blocks: number;
   readonly renamed: readonly [string, string][];
+  readonly styles: readonly [number, number];
+}
+
+/** “; 2 yazı stili ve 1 ölçü stili projeye eklendi” (docs/adr/0183 §7), nothing for none; the desktop's `styles_added`. */
+function stylesAdded([text, dimension]: readonly [number, number]): string {
+  const parts = ([[text, 'yazı stili'], [dimension, 'ölçü stili']] as const).filter(([n]) => n > 0).map(([n, what]) => `${n} ${what}`);
+  return parts.length ? `; ${parts.join(' ve ')} projeye eklendi` : '';
 }
 
 /** What went in, said in the message log (the desktop's `import_said`). */
 function said(ctx: AppContext, name: string, objects: number, layers: number, made: Made, skipped: readonly ReportItem[]): void {
   const into = made.created.length ? `; ${made.created.length} yeni katman “${name}” grubunda` : '';
   const blocks = made.blocks ? `; ${made.blocks} blok tanımı eklendi` : '';
-  ctx.log.success(`“${name}”: ${count(objects)} nesne ${layers} katmana alındı${into}${blocks}. Tek adımda geri alınabilir.`);
+  ctx.log.success(`“${name}”: ${count(objects)} nesne ${layers} katmana alındı${into}${blocks}${stylesAdded(made.styles)}. Tek adımda geri alınabilir.`);
   if (made.renamed.length) ctx.log.info(`“${name}” içindeki ${made.renamed.length} bloğun adı çizimde vardı; yeni adla alındı: ${renames(made.renamed)}.`);
   if (skipped.length) ctx.log.warn(`“${name}” içinde alınmayanlar: ${skipped.map(reportText).join(' ')}`);
 }

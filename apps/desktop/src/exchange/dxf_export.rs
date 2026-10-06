@@ -268,7 +268,7 @@ impl App {
             {
                 dimension_values.insert(
                     d.base.id,
-                    dimension_text(&format, l.prefix, l.unit, l.value),
+                    dimension_text(&format, l.prefix, l.unit, l.value, &d.look),
                 );
             }
         }
@@ -288,6 +288,9 @@ impl App {
             blocks: doc.model.blocks().iter().map(|b| (**b).clone()).collect(),
             // A local project's drawing goes out in its unit (docs/adr/0165 §2).
             unit: (!settings.has_system()).then(|| settings.unit()),
+            // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).
+            text_styles: settings.text_styles.clone(),
+            dimension_styles: settings.dimension_styles.clone(),
         };
         if let Some(Window::DxfExport(s)) = &mut self.exchange {
             s.writing = true;
@@ -617,10 +620,17 @@ impl App {
     }
 }
 
-/// A dimension's measured value as drawn: prefix and value in project units,
-/// a length without its unit (the web's `dimensionText`).
-pub fn dimension_text(format: &Format, prefix: &str, unit: &str, value: f64) -> String {
-    format.dimension(prefix, unit, value)
+/// A dimension's measured value as drawn: its look's prefix and suffix, its
+/// kind's prefix, the value in its look's or the project's unit and decimals,
+/// a length without its unit (the web's `dimensionText`, docs/adr/0183 §3).
+pub fn dimension_text(
+    format: &Format,
+    prefix: &str,
+    unit: &str,
+    value: f64,
+    look: &kentos_contracts::DimensionLook,
+) -> String {
+    format.dimension_in(prefix, unit, value, look)
 }
 
 #[cfg(test)]

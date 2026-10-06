@@ -128,6 +128,8 @@ pub struct TextField {
     /// Enter in the empty field answers with an empty text (Kılavuz: the
     /// arrow without a note, docs/adr/0146 §7); otherwise it is as Esc.
     pub empty: bool,
+    /// The text style's face it will have (docs/adr/0183 §2); none for Standart.
+    pub face: kentos_contracts::TextFace,
 }
 
 /// Where the paragraph editor opens and how its text will look (docs/adr/0182
@@ -142,19 +144,26 @@ pub struct ParagraphField {
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
     pub mask: bool,
+    /// The text style's face and width factor it will have (docs/adr/0183
+    /// §2); none and none for Standart.
+    pub face: kentos_contracts::TextFace,
+    pub width_factor: Option<f64>,
 }
 
 /// One value an option offers in its menu (Yazı's Hiza, docs/adr/0145 §6;
-/// the web's `OptionChoice`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// a style, docs/adr/0183 §4; the web's `OptionChoice`).
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OptionChoice {
-    pub label: &'static str,
+    pub label: String,
     /// What typing it after the option's key gives (“sağ üst”): the command
     /// history says it.
-    pub typed: &'static str,
-    /// The web's icon (`ui/icons.ts`).
-    pub icon: &'static str,
+    pub typed: String,
+    /// The web's icon (`ui/icons.ts`); none for a list of names (the styles).
+    pub icon: Option<&'static str>,
     pub checked: bool,
+    /// A command the host runs instead of choosing (“Yazı stilleri…” opens
+    /// its window); none for a value.
+    pub command: Option<&'static str>,
 }
 
 /// The pointer's look over the drawing while a tool runs (the web's `Tool.cursor`):
@@ -566,6 +575,12 @@ pub struct Memory {
     /// The newest aligned or linear dimension written, by its persistent id:
     /// where Zincir ölçü and Baz ölçü start when none is clicked.
     pub last_dimension: Option<kentos_domain::Uuid>,
+    /// The text style Yazı, Çok satırlı yazı and Metin dosyası yerleştir
+    /// write in, and the dimension style of every dimension tool, by their
+    /// ids (docs/adr/0183 §4); none: Standart. A style the project no
+    /// longer has is Standart.
+    pub text_style: Option<kentos_domain::Uuid>,
+    pub dimension_style: Option<kentos_domain::Uuid>,
     /// Ötele's “İki yana” (both sides) and “Kaynağı sil” (delete the source).
     pub offset_both: bool,
     pub offset_erase: bool,
@@ -767,6 +782,8 @@ impl Default for Memory {
             between_ratios: Values::default(),
             meeting_distance: 10.0,
             last_dimension: None,
+            text_style: None,
+            dimension_style: None,
             offset_both: false,
             offset_erase: false,
             path_count: 5,
@@ -1147,6 +1164,12 @@ pub trait Tool {
     /// with no command running (docs/adr/0056).
     fn confirms(&self) -> bool {
         true
+    }
+    /// Whether this step asks for words (a style's name, docs/adr/0183 §4):
+    /// Space types a space in the command line then, Enter alone confirms
+    /// (the web's `Tool.takesWords`).
+    fn takes_words(&self) -> bool {
+        false
     }
     /// The pointer's look over the drawing while it runs.
     fn cursor(&self) -> Cursor {

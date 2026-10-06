@@ -583,6 +583,7 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             width_factor,
             box_width,
             line_spacing,
+            face,
             ..
         } => match rest {
             "height" => Some(height),
@@ -592,6 +593,8 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             // A multi-line text's box and spacing the case gives (docs/adr/0182).
             "boxWidth" => box_width.as_mut(),
             "lineSpacing" => line_spacing.as_mut(),
+            // A text's slant the case gives (docs/adr/0183).
+            "oblique" => face.oblique.as_mut(),
             _ => coordinate(p, "p", rest),
         },
         // A slope's elevations and an arc length's or jogged radius's centre too (docs/adr/0147).
@@ -603,12 +606,18 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             c,
             za,
             zb,
+            look,
             ..
         } => match rest {
             "offset" => Some(offset),
             "height" => Some(height),
             "za" => za.as_mut(),
             "zb" => zb.as_mut(),
+            // A dimension's sizes the case gives (docs/adr/0183).
+            "arrowSize" => look.arrow_size.as_mut(),
+            "extOffset" => look.ext_offset.as_mut(),
+            "extBeyond" => look.ext_beyond.as_mut(),
+            "textGap" => look.text_gap.as_mut(),
             _ => coordinate(a, "a", rest)
                 .or_else(|| coordinate(b, "b", rest))
                 .or_else(|| c.as_mut().and_then(|c| coordinate(c, "c", rest))),

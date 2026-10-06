@@ -49,6 +49,9 @@ DIMENSION_STYLES = ("aligned", "linear", "angular", "radius", "diameter", "ordin
 SCHEMA_9_STYLES = DIMENSION_STYLES[5:]
 # A leader's arrowheads (spec §6.6, docs/adr/0146); the filled arrow is the field's absence.
 LEADER_ARROWS = ("open", "dot", "none")
+# Schema 21 (docs/adr/0183): the drawing typefaces and a dimension's arrowheads by name.
+DRAWING_FONTS = ("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")
+DIMENSION_ARROWS = ("closed", "open", "dot", "none")
 
 
 def head(major, arg):
@@ -287,10 +290,72 @@ def settings(s):
                 "datumTransforms": (datum_transforms, False),
                 "survey": (survey, False),
                 "layerStates": (layer_states, False),
+                "textStyles": (text_styles, False),
+                "dimensionStyles": (dimension_styles, False),
             },
             "settings",
         )
     )
+
+
+def style_names(styles):
+    """The style tables' name rule (schema 21, docs/adr/0183 §5): an id neither empty nor twice; a name not empty, without
+    spaces at its ends, at most 64 letters, without a control character, not “Standart” and not twice, whatever its
+    letters' case."""
+    assert styles, "boş liste yazılmaz"
+    ids, names = set(), set()
+    for st in styles:
+        name = st["name"]
+        assert st["id"] and st["id"] not in ids, "stilin kimliği boş ya da iki kez"
+        assert name.strip() == name and name and len(name) <= 64, "stilin adı boş, boşluklu ya da uzun"
+        assert name.lower() != "standart" and name.lower() not in names, "stilin adı ayrılmış ya da iki kez"
+        ids.add(st["id"])
+        names.add(name.lower())
+
+
+def text_styles(styles):
+    """The project's named text styles (schema 21, docs/adr/0183 §2): a typeface by name, bold and italic only when true,
+    the slant, the height on paper (mm), the width factor (never 1) and the DXF typeface file."""
+    style_names(styles)
+    flag = (lambda b: boolean(b) if b is True else None, False)
+    table = {
+        "id": (text, True),
+        "name": (text, True),
+        "font": (enum(DRAWING_FONTS), True),
+        "bold": flag,
+        "italic": flag,
+        "oblique": (f64, False),
+        "height": (f64, False),
+        "widthFactor": (f64, False),
+        "fontFile": (text, False),
+    }
+    for st in styles:
+        assert st.get("widthFactor", 2.0) != 1.0, "genişlik çarpanı 1 yazılmaz"
+        assert st.get("oblique", 1.0) != 0.0 and abs(st.get("oblique", 1.0)) < 85.0, "eğiklik sınır dışında"
+    return array([cmap(fields(st, table, "textStyle")) for st in styles])
+
+
+def dimension_styles(styles):
+    """The project's named dimension styles (schema 21, docs/adr/0183 §3): the value's height on paper (mm), the
+    arrowheads by name and the sizes (mm), the value's place, decimals, unit, prefix, suffix and typeface."""
+    style_names(styles)
+    table = {
+        "id": (text, True),
+        "name": (text, True),
+        "height": (f64, True),
+        "arrow": (enum(DIMENSION_ARROWS), False),
+        "arrowSize": (f64, False),
+        "extOffset": (f64, False),
+        "extBeyond": (f64, False),
+        "textGap": (f64, False),
+        "textPlace": (enum(("centre",)), False),
+        "decimals": (uint, False),
+        "unit": (enum(("mm", "cm", "m")), False),
+        "prefix": (text, False),
+        "suffix": (text, False),
+        "font": (enum(DRAWING_FONTS), False),
+    }
+    return array([cmap(fields(st, table, "dimensionStyle")) for st in styles])
 
 
 def layer_states(states):
@@ -490,6 +555,12 @@ KINDS = {
         "boxWidth": (f64, False),
         "lineSpacing": (f64, False),
         "runs": (lambda rs: array([text_run(r) for r in rs]), False),
+        # Schema 21 (docs/adr/0183 §2): its style, typeface, bold and italic only when true, slant.
+        "textStyle": (text, False),
+        "font": (enum(DRAWING_FONTS), False),
+        "bold": (lambda b: boolean(b) if b is True else None, False),
+        "italic": (lambda b: boolean(b) if b is True else None, False),
+        "oblique": (f64, False),
     },
     # Schema 9 (docs/adr/0147): five more kinds by name, `mask` only when true, a slope's two elevations.
     "dimension": {
@@ -504,6 +575,20 @@ KINDS = {
         "mask": (lambda b: boolean(b) if b is True else None, False),
         "za": (f64, False),
         "zb": (f64, False),
+        # Schema 21 (docs/adr/0183 §3): its style, arrowheads by name, sizes (times its height), the value's place,
+        # decimals, unit, prefix, suffix and typeface.
+        "dimStyle": (text, False),
+        "arrow": (enum(DIMENSION_ARROWS), False),
+        "arrowSize": (f64, False),
+        "extOffset": (f64, False),
+        "extBeyond": (f64, False),
+        "textGap": (f64, False),
+        "textPlace": (enum(("centre",)), False),
+        "decimals": (uint, False),
+        "unit": (enum(("mm", "cm", "m")), False),
+        "prefix": (text, False),
+        "suffix": (text, False),
+        "font": (enum(DRAWING_FONTS), False),
     },
     "hatch": {
         "ring": (points, True),
@@ -597,7 +682,8 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 20 with a multi-line text's box, line spacing or letter formats, in the
+    """The oldest schema that holds the drawing: 21 with a text or a dimension style or a text's face or a dimension's look,
+    in the drawing or a block definition (docs/adr/0183), 20 with a multi-line text's box, line spacing or letter formats, in the
     drawing or a block definition (docs/adr/0182 §1), 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
     object's label (docs/adr/0175 §4), 17
     with a multi-part polyline or a multi-point object, in the drawing or
@@ -620,6 +706,18 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
     def paragraphs(es):
         return any(e["kind"] == "text" and any(k in e for k in ("boxWidth", "lineSpacing", "runs")) for e in es)
 
+    face = ("textStyle", "font", "bold", "italic", "oblique")
+    look = ("dimStyle", "arrow", "arrowSize", "extOffset", "extBeyond", "textGap", "textPlace", "decimals", "unit", "prefix", "suffix", "font")
+
+    def styled(es):
+        return any(
+            (e["kind"] == "text" and any(k in e for k in face)) or (e["kind"] == "dimension" and any(k in e for k in look)) for e in es
+        )
+
+    if settings and (settings.get("textStyles") or settings.get("dimensionStyles")):
+        return 21
+    if styled(entities) or any(styled(b["entities"]) for b in blocks or []):
+        return 21
     if paragraphs(entities) or any(paragraphs(b["entities"]) for b in blocks or []):
         return 20
     if settings and settings.get("layerStates"):
@@ -849,7 +947,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-21.kcad"] = container(root(cmap(parts), version=b"\x15"))
+    files["schema-version-22.kcad"] = container(root(cmap(parts), version=b"\x16"))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -990,6 +1088,52 @@ def broken(minimal_content, minimal_file):
     files["paragraph-run-empty-color.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, color=text(""))])))
     files["paragraph-run-script-unknown.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, script=text("upper"))])))
     files["paragraph-run-unknown-field.kcad"] = in_schema(20, text_of(runs=array([run_of(0, 2, size=f64(2.0))])))
+    # A text's face and a dimension's look are schema 21's (docs/adr/0183): in schema 20 unknown fields; a typeface by
+    # one of its names, bold and italic written only when true and only with a typeface, a slant not 0 and under 85
+    # either way; a dimension's arrowhead by name, its sizes (times its height) from 0 (the arrowhead's over 0) to
+    # 100, at most 8 decimals, a prefix and a suffix of one line, 1 to 32 letters.
+    def dimension_of(**extra):
+        b = {"x": one["p"]["x"] + 10.0, "y": one["p"]["y"]}
+        return cmap({"dimension": cmap({**common, "a": point(one["p"]), "b": point(b), "offset": f64(2.0), "height": f64(0.5), **extra})})
+
+    files["style-face-in-schema-20.kcad"] = in_schema(20, text_of(font=text("arimo")))
+    files["style-face-font-unknown.kcad"] = in_schema(21, text_of(font=text("arial")))
+    files["style-face-bold-false.kcad"] = in_schema(21, text_of(font=text("arimo"), bold=boolean(False)))
+    files["style-face-bold-without-font.kcad"] = in_schema(21, text_of(bold=boolean(True)))
+    files["style-face-oblique-zero.kcad"] = in_schema(21, text_of(font=text("arimo"), oblique=f64(0.0)))
+    files["style-face-oblique-steep.kcad"] = in_schema(21, text_of(font=text("arimo"), oblique=f64(85.0)))
+    files["style-face-style-empty.kcad"] = in_schema(21, text_of(textStyle=text("")))
+    files["style-look-in-schema-20.kcad"] = in_schema(20, dimension_of(arrow=text("closed")))
+    files["style-look-arrow-unknown.kcad"] = in_schema(21, dimension_of(arrow=text("tick")))
+    files["style-look-arrow-size-zero.kcad"] = in_schema(21, dimension_of(arrowSize=f64(0.0)))
+    files["style-look-gap-negative.kcad"] = in_schema(21, dimension_of(extOffset=f64(-0.5)))
+    files["style-look-gap-too-wide.kcad"] = in_schema(21, dimension_of(textGap=f64(100.5)))
+    files["style-look-decimals-nine.kcad"] = in_schema(21, dimension_of(decimals=uint(9)))
+    files["style-look-unit-unknown.kcad"] = in_schema(21, dimension_of(unit=text("km")))
+    files["style-look-prefix-empty.kcad"] = in_schema(21, dimension_of(prefix=text("")))
+    files["style-look-suffix-line-break.kcad"] = in_schema(21, dimension_of(suffix=text("m\n2")))
+    files["style-look-place-unknown.kcad"] = in_schema(21, dimension_of(textPlace=text("below")))
+
+    # The settings' style tables (schema 21): each style's fields; the tables' name rule.
+    def with_styles(version, **tables):
+        return container(root(cmap({**parts, "settings": cmap({**settings_parts(m["settings"]), **tables})}), version=uint(version)))
+
+    def text_style(**extra):
+        return cmap({"id": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"), "name": text("Ada no"), "font": text("arimo"), **extra})
+
+    def dimension_style(**extra):
+        return cmap({"id": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201"), "name": text("Mimari"), "height": f64(3.5), **extra})
+
+    files["style-table-in-schema-20.kcad"] = with_styles(20, textStyles=array([text_style()]))
+    files["style-table-name-twice.kcad"] = with_styles(21, textStyles=array([text_style(), text_style(id=text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102"), name=text("ADA NO"))]))
+    files["style-table-standart.kcad"] = with_styles(21, textStyles=array([text_style(name=text("Standart"))]))
+    files["style-table-name-padded.kcad"] = with_styles(21, textStyles=array([text_style(name=text(" Ada no"))]))
+    files["style-table-id-empty.kcad"] = with_styles(21, dimensionStyles=array([dimension_style(id=text(""))]))
+    files["style-table-font-missing.kcad"] = with_styles(21, textStyles=array([cmap({"id": text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"), "name": text("Ada no")})]))
+    files["style-table-width-one.kcad"] = with_styles(21, textStyles=array([text_style(widthFactor=f64(1.0))]))
+    files["style-table-height-zero.kcad"] = with_styles(21, dimensionStyles=array([dimension_style(height=f64(0.0))]))
+    files["style-table-ratio-too-big.kcad"] = with_styles(21, dimensionStyles=array([dimension_style(textGap=f64(400.0))]))
+    files["style-table-unknown-field.kcad"] = with_styles(21, textStyles=array([text_style(color=text("red"))]))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
     # A leader is schema 8's (docs/adr/0146): in schema 7 an unknown kind; two vertices or more, a positive height,
     # a note that is not empty, an arrowhead by one of its names (the filled arrow has none), `mask` only when true.
@@ -1202,6 +1346,7 @@ def build():
     out["linked-texts.kcad"] = container(document(load("linked-texts.json")))
     out["layer-states.kcad"] = container(document(load("layer-states.json")))
     out["paragraphs.kcad"] = container(document(load("paragraphs.json")))
+    out["styles.kcad"] = container(document(load("styles.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

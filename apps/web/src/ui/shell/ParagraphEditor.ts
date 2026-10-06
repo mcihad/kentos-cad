@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { faceOfText, type TextFace } from '../../model/annotationStyles';
 import { listen } from '../../core/disposable';
 import { isParagraph, type TextAlign, type TextEntity, type TextRun } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
@@ -26,8 +27,8 @@ export const SYMBOLS: readonly (readonly [string, string])[] = [
   ['≥', 'Büyük eşit'],
 ];
 
-/** The text being written: where it stands and how it looks (its words and runs apart). */
-type Place = Omit<ParagraphText, 'text' | 'runs' | 'font'> & { align?: TextAlign };
+/** The text being written: where it stands and how it looks (its words and runs apart), its face (docs/adr/0183 §2). */
+type Place = Omit<ParagraphText, 'text' | 'runs' | 'font'> & { align?: TextAlign; face: TextFace };
 
 /**
  * The paragraph editor over the drawing (docs/adr/0182 §4; the desktop's `paragraph_editor.rs`), for two things:
@@ -119,7 +120,11 @@ export class ParagraphEditor extends Component {
   private openNew(req: ParagraphInputRequest): void {
     this.close(true);
     this.session = { kind: 'new', req };
-    this.show({ p: req.at, height: req.height, rotation: req.rotation, align: 'topLeft', boxWidth: req.boxWidth, lineSpacing: req.lineSpacing, mask: req.mask }, '', []);
+    this.show(
+      { p: req.at, height: req.height, rotation: req.rotation, align: 'topLeft', boxWidth: req.boxWidth, lineSpacing: req.lineSpacing, mask: req.mask, ...(req.widthFactor !== undefined && { widthFactor: req.widthFactor }), face: req.face ?? {} },
+      '',
+      [],
+    );
   }
 
   private openEdit(id: number): void {
@@ -224,9 +229,8 @@ export class ParagraphEditor extends Component {
     const p = this.place;
     if (!p) return;
     const runs = this.runs;
-    const font = this.ctx.doc.settings.drawingFont.value;
-    const records = textLines({ ...p, text: this.text, ...(runs.length && { runs }), font });
-    this.ctx.view.setParagraphPreview({ records, text: this.text, runs });
+    const records = textLines({ ...this.measured(p), text: this.text, ...(runs.length && { runs }) });
+    this.ctx.view.setParagraphPreview({ records, text: this.text, runs, face: p.face });
   }
 
   /**
@@ -237,8 +241,7 @@ export class ParagraphEditor extends Component {
     const p = this.place;
     if (!p || this.el.hidden) return;
     const cam = this.ctx.view.camera;
-    const font = this.ctx.doc.settings.drawingFont.value;
-    const laid = textLayout({ ...p, text: this.text || ' ', ...(this.runs.length && { runs: this.runs }), font });
+    const laid = textLayout({ ...this.measured(p), text: this.text || ' ', ...(this.runs.length && { runs: this.runs }) });
     const r = (p.rotation * Math.PI) / 180;
     const [c, s] = [Math.cos(r), Math.sin(r)];
     // The origin: the point less its shares along the box and up from the first baseline; the top a height up.
@@ -258,6 +261,12 @@ export class ParagraphEditor extends Component {
       left: `${Math.max(4, Math.min(at.x, room.width - width - 4))}px`,
       top: `${Math.max(4, y)}px`,
     });
+  }
+
+  /** The place as the core measures it: its face's fields beside it, in its typeface or the project's. */
+  private measured(p: Place): Omit<ParagraphText, 'text'> & TextFace {
+    const { face, ...place } = p;
+    return { ...place, ...face, font: face.font ?? this.ctx.doc.settings.drawingFont.value };
   }
 
   private close(commit: boolean): void {
@@ -296,5 +305,6 @@ function placeOf(t: TextEntity): Place {
     ...(t.boxWidth !== undefined && { boxWidth: t.boxWidth }),
     ...(t.lineSpacing !== undefined && { lineSpacing: t.lineSpacing }),
     ...(t.mask && { mask: true }),
+    face: faceOfText(t),
   };
 }

@@ -1,7 +1,9 @@
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
+import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
 import type { LayerState } from '../contracts/generated/LayerState';
 import type { SurveySettings } from '../contracts/generated/SurveySettings';
+import type { TextStyleDef } from '../contracts/generated/TextStyleDef';
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
@@ -9,6 +11,7 @@ import type { LayerNode as ContractLayerNode } from '../contracts/generated/Laye
 import type { V1Identities } from '../contracts/generated/V1Identities';
 import { isUuid } from '../core/uuid';
 import { crsBySrid } from '../geo/crs';
+import { DIMENSION_ARROWS, faceProblem, lookProblem, type DimensionLook, type TextFace } from './annotationStyles';
 import { blockFaultMessage, definitionsFault, type AttributeDefinition, type BlockDefinition } from './blocks';
 import type { CadDocument, DocumentContent } from './document';
 import { MAX_LINE_WEIGHT, MAX_WIDTH_FACTOR, TEXT_ALIGNS, widthFactorOk, type Entity, type TextAlign } from './entities';
@@ -277,6 +280,36 @@ const surveyOf = (v: unknown): SurveySettings =>
 /** A coordinate system definition of the project's (docs/adr/0168 §1): its shape here, its rules where it is written and read (the KCAD codec). */
 const definition = (v: unknown, where: string): CrsDefinition =>
   isObj(v) && typeof v.name === 'string' && isObj(v.system) ? (v as unknown as CrsDefinition) : fail(where, 'bir koordinat sistemi tanımı ({name, system}) olmalı');
+/**
+ * A project's style table (docs/adr/0183): objects whose fields have the contract's types, as serde reads them; the
+ * values' rules are the settings' own (`sanitizedTextStyles`, `sanitizedDimensionStyles` drop a style breaking them).
+ */
+function stylesOf<T>(v: unknown, kind: 'text' | 'dimension'): T[] {
+  const where = `Proje ayarları › ${kind === 'text' ? 'yazı' : 'ölçü'} stilleri`;
+  if (!Array.isArray(v)) return fail(where, 'liste olmalı');
+  return v.map((s, i) => {
+    const w = `${where} › ${i + 1}`;
+    if (!isObj(s)) return fail(w, 'nesne olmalı');
+    str(s.id, at(w, 'kimlik'));
+    str(s.name, at(w, 'ad'));
+    if (kind === 'text') {
+      oneOf(s.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+      for (const f of ['bold', 'italic'] as const) if (s[f] !== undefined) bool(s[f], at(w, f));
+      for (const f of ['oblique', 'height', 'widthFactor'] as const) if (s[f] !== undefined) num(s[f], at(w, f));
+      if (s.fontFile !== undefined) str(s.fontFile, at(w, 'yazı tipi dosyası'));
+    } else {
+      num(s.height, at(w, 'yükseklik'));
+      if (s.arrow !== undefined) oneOf(s.arrow, DIMENSION_ARROWS, at(w, 'ok'));
+      for (const f of ['arrowSize', 'extOffset', 'extBeyond', 'textGap'] as const) if (s[f] !== undefined) num(s[f], at(w, f));
+      if (s.textPlace !== undefined) oneOf(s.textPlace, ['centre'] as const, at(w, 'değerin yeri'));
+      if (s.decimals !== undefined && !(Number.isInteger(s.decimals) && (s.decimals as number) >= 0)) fail(at(w, 'basamak'), 'negatif olmayan tam sayı olmalı');
+      if (s.unit !== undefined) oneOf(s.unit, DRAWING_UNIT_IDS, at(w, 'birim'));
+      for (const f of ['prefix', 'suffix'] as const) if (s[f] !== undefined) str(s[f], at(w, f));
+      if (s.font !== undefined) oneOf(s.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+    }
+    return s as T;
+  });
+}
 // An object's fields, checked in place: the message is made only when a check fails.
 const numAt = (v: unknown, w: string, f: string): number => (finite(v) ? v : num(v, at(w, f)));
 const strAt = (v: unknown, w: string, f: string): string => (typeof v === 'string' ? v : str(v, at(w, f)));
@@ -384,6 +417,9 @@ function head(data: Record<string, unknown>, version: number): { content: Omit<D
           : Array.isArray(settings.layerStates) && settings.layerStates.every(isObj)
             ? { layerStates: settings.layerStates as unknown as LayerState[] }
             : fail('Proje ayarları › katman durumları', 'liste olmalı')),
+        // The project's text and dimension styles (docs/adr/0183): kept as a project keeps them.
+        ...(settings.textStyles === undefined ? {} : { textStyles: stylesOf<TextStyleDef>(settings.textStyles, 'text') }),
+        ...(settings.dimensionStyles === undefined ? {} : { dimensionStyles: stylesOf<DimensionStyleDef>(settings.dimensionStyles, 'dimension') }),
       },
       origin: vec(data.origin, 'Yerel orijin'),
       homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,
@@ -532,6 +568,30 @@ function textExtrasAt(v: Record<string, unknown>, w: string): void {
   if (v.widthFactor !== undefined && !widthFactorOk(numAt(v.widthFactor, w, 'genişlik çarpanı'))) fail(at(w, 'genişlik çarpanı'), `0'dan büyük, en çok ${MAX_WIDTH_FACTOR} olmalı`);
 }
 
+/** A text's style and face (docs/adr/0183 §2): typed fields, bold and italic only when true, then the face's rules. */
+function faceAt(v: Record<string, unknown>, w: string): void {
+  if (v.textStyle !== undefined) strAt(v.textStyle, w, 'stil');
+  if (v.font !== undefined) oneOf(v.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+  for (const f of ['bold', 'italic'] as const) if (v[f] !== undefined && v[f] !== true) fail(at(w, f === 'bold' ? 'kalın' : 'italik'), 'yalnız true yazılır; alan yoksa yazı öyle değildir');
+  if (v.oblique !== undefined) numAt(v.oblique, w, 'eğiklik');
+  const problem = faceProblem(v as TextFace);
+  if (problem) fail(at(w, problem[0]), problem[1]);
+}
+
+/** A dimension's style and look (docs/adr/0183 §3): typed fields, then the look's rules. */
+function lookAt(v: Record<string, unknown>, w: string): void {
+  if (v.dimStyle !== undefined) strAt(v.dimStyle, w, 'stil');
+  if (v.arrow !== undefined) oneOf(v.arrow, DIMENSION_ARROWS, at(w, 'ok'));
+  for (const f of ['arrowSize', 'extOffset', 'extBeyond', 'textGap'] as const) if (v[f] !== undefined) numAt(v[f], w, f);
+  if (v.textPlace !== undefined) oneOf(v.textPlace, ['centre'] as const, at(w, 'değerin yeri'));
+  if (v.decimals !== undefined && !(Number.isInteger(v.decimals) && (v.decimals as number) >= 0)) fail(at(w, 'basamak'), 'negatif olmayan tam sayı olmalı');
+  if (v.unit !== undefined) oneOf(v.unit, DRAWING_UNIT_IDS, at(w, 'birim'));
+  for (const f of ['prefix', 'suffix'] as const) if (v[f] !== undefined) strAt(v[f], w, f === 'prefix' ? 'önek' : 'sonek');
+  if (v.font !== undefined) oneOf(v.font, DRAWING_FONT_IDS, at(w, 'yazı tipi'));
+  const problem = lookProblem(v as DimensionLook);
+  if (problem) fail(at(w, problem[0]), problem[1]);
+}
+
 /** A polygon's or a part's holes (`prefix` names the part): rings of 3 or more vertices, with bulges and elevations. */
 function holesAt(holes: unknown[], w: string, prefix: string): void {
   holes.forEach((h, i) => {
@@ -653,6 +713,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       if ((v.labelOf === undefined) !== (v.labelScale === undefined)) fail(at(w, 'bağlı nesne'), 'nesnesi ve ölçeği birlikte verilir');
       if (v.labelOf !== undefined && !isUuid(v.labelOf)) fail(at(w, 'bağlı nesne'), 'küçük harfli, tireli bir UUID olmalı');
       if (v.labelScale !== undefined && !(numAt(v.labelScale, w, 'bağlı ölçek') > 0)) fail(at(w, 'bağlı ölçek'), "sıfırdan büyük olmalı");
+      faceAt(v, w);
       break;
     case 'dimension': {
       pointAt(v.a, w, 'a');
@@ -671,6 +732,7 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
         numAt(v.zb, w, 'ikinci kot');
       } else if (v.za !== undefined || v.zb !== undefined) fail(at(w, 'kot'), 'yalnız eğim ölçüsünde yazılır');
       if (v.mask !== undefined && v.mask !== true) fail(at(w, 'zemin'), 'yalnız true yazılır; zeminsiz ölçüde alan yoktur');
+      lookAt(v, w);
       break;
     }
     case 'hatch': {

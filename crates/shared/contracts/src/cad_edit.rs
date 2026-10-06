@@ -137,6 +137,12 @@ pub enum EditOperation {
     HoleRemove,
     /// Deliği doldur: a new area filling a hole, made from the area.
     HoleFill,
+    /// Yazı stilleri's Kaydet (docs/adr/0183 §1): the texts of the styles
+    /// changed take their new faces, widths and heights, those of a style
+    /// deleted lose their link; objects updated in place.
+    TextStyle,
+    /// Ölçü stilleri's Kaydet, as `TextStyle` for dimensions.
+    DimensionStyle,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -284,6 +290,10 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TextRun>>", optional))]
         runs: Vec<crate::TextRun>,
+        /// The style it follows and the face it is drawn in (docs/adr/0183 §2).
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        face: crate::TextFace,
     },
     /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
     /// `offset` metres away, its text `height` metres high; `text` replaces
@@ -320,6 +330,10 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         zb: Option<f64>,
+        /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
+        #[serde(flatten)]
+        #[cfg_attr(feature = "ts", ts(flatten))]
+        look: crate::DimensionLook,
     },
     /// A hatched area: its ring, its holes when it has any, and its pattern.
     Hatch {

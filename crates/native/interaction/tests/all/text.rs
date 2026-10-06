@@ -139,6 +139,7 @@ fn a_texts_extras_stay_when_its_words_change() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         })
     };
     let slot = b.doc.add(aligned("Ada 101", 0.8)).expect("a slot");
@@ -202,7 +203,7 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     assert!(b.session.prompt().text().contains("Hiza (H): orta /"));
     // The menu: the twelve points row by row, the chosen one checked.
     let choices = b.session.option_choices("H");
-    let labels: Vec<&str> = choices.iter().map(|c| c.label).collect();
+    let labels: Vec<&str> = choices.iter().map(|c| c.label.as_str()).collect();
     assert_eq!(
         labels,
         [
@@ -210,9 +211,16 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
             "Orta alt", "Sağ alt", "Sol taban", "Orta taban", "Sağ taban"
         ]
     );
-    let checked: Vec<&str> = choices.iter().filter(|c| c.checked).map(|c| c.label).collect();
+    let checked: Vec<&str> = choices
+        .iter()
+        .filter(|c| c.checked)
+        .map(|c| c.label.as_str())
+        .collect();
     assert_eq!(checked, ["Orta"]);
-    assert_eq!((choices[0].icon, choices[9].icon), ("textAlignTopLeft", "textAlignBaselineLeft"));
+    assert_eq!(
+        (choices[0].icon, choices[9].icon),
+        (Some("textAlignTopLeft"), Some("textAlignBaselineLeft"))
+    );
     assert!(b.session.option_choices("Y").is_empty());
     assert!(b.run(|s, cx| s.choose_option("H", "sağ taban", cx)));
     assert!(b.session.prompt().text().contains("Hiza (H): sağ taban /"));

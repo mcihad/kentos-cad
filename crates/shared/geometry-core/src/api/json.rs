@@ -528,6 +528,18 @@ pub fn read_field<T: FromJson>(v: &Json, name: &str) -> Result<T, String> {
     T::from_json(v.get(name)).map_err(|e| format!("“{name}”: {e}"))
 }
 
+/// A part whose fields sit in its owner's object, as serde's flatten puts
+/// them (a text's face, a dimension's look: docs/adr/0183). `json_tagged!`
+/// and `json_struct!` take it after a `&`.
+pub trait Flat: Sized {
+    /// Its fields' JSON names.
+    const NAMES: &'static [&'static str];
+    /// Reads its fields from the owner's object.
+    fn read_flat(v: &Json) -> Result<Self, String>;
+    /// Writes its present fields into the owner's object.
+    fn write_flat(&self, out: &mut String, first: &mut bool);
+}
+
 /// The JSON name of a field: its Rust name, or the one given after `=>`.
 #[macro_export]
 macro_rules! json_name {
@@ -544,24 +556,28 @@ macro_rules! json_name {
 /// `json_struct!(out Layout { … })` only writes (results holding borrowed text).
 #[macro_export]
 macro_rules! json_struct {
-    (out $t:ident { $($f:ident $(=> $n:literal)?),* $(,)? }) => {
+    (out $t:ident { $($f:ident $(=> $n:literal)?),* $(,)? $(& $($flat:ident : $ft:ty),+)? }) => {
         impl $crate::api::json::ToJson for $t {
             fn write_json(&self, out: &mut String) {
                 out.push('{');
                 let mut first = true;
                 $($crate::api::json::field(out, &mut first, $crate::json_name!($f $(, $n)?), &self.$f);)*
+                $($( $crate::api::json::Flat::write_flat(&self.$flat, out, &mut first); )+)?
                 out.push('}');
             }
         }
     };
-    ($t:ident { $($f:ident $(=> $n:literal)?),* $(,)? }) => {
-        $crate::json_struct!(out $t { $($f $(=> $n)?),* });
+    ($t:ident { $($f:ident $(=> $n:literal)?),* $(,)? $(& $($flat:ident : $ft:ty),+)? }) => {
+        $crate::json_struct!(out $t { $($f $(=> $n)?),* $(& $($flat : $ft),+)? });
         impl $crate::api::json::FromJson for $t {
             fn from_json(v: &$crate::api::json::Json) -> Result<$t, String> {
                 if !matches!(v, $crate::api::json::Json::Obj(_)) {
                     return Err(format!("{} nesnesi bekleniyordu", stringify!($t)));
                 }
-                Ok($t { $($f: $crate::api::json::read_field(v, $crate::json_name!($f $(, $n)?))?,)* })
+                Ok($t {
+                    $($f: $crate::api::json::read_field(v, $crate::json_name!($f $(, $n)?))?,)*
+                    $($($flat: <$ft as $crate::api::json::Flat>::read_flat(v)?,)+)?
+                })
             }
         }
     };
@@ -570,27 +586,42 @@ macro_rules! json_struct {
 /// An enum tagged by a field, like TypeScript's discriminated unions:
 /// `json_tagged!(Edge, "kind", Seg => "seg" { a, b }, Arc => "arc" { c, r, a0, sweep })`.
 /// Fields after a `;` are not the variant's JSON (`Insert => "insert" { …; attrs }`):
-/// read as their default, not written; the owner fills them.
+/// read as their default, not written; the owner fills them. Fields after a
+/// `&` sit in the variant's object as serde's flatten does (`Text => "text" {
+/// …; & face: Face }`): a `Flat` reads and writes its own names there.
 #[macro_export]
 macro_rules! json_tagged {
-    ($t:ident, $tag:literal, $($v:ident => $name:literal { $($f:ident $(=> $n:literal)?),* $(,)? $(; $($skip:ident),+)? }),* $(,)?) => {
+    ($t:ident, $tag:literal, $($v:ident => $name:literal { $($f:ident $(=> $n:literal)?),* $(,)? $(; $($skip:ident),+)? $(& $($flat:ident : $ft:ty),+)? }),* $(,)?) => {
         impl $t {
             /// The tag and fields, without the braces (to share an object with more fields).
             #[allow(dead_code)]
             pub fn write_fields(&self, out: &mut String, first: &mut bool) {
                 match self {
-                    $($t::$v { $($f,)* .. } => {
+                    $($t::$v { $($f,)* $($($flat,)+)? .. } => {
                         $crate::api::json::field(out, first, $tag, $name);
                         $($crate::api::json::field(out, first, $crate::json_name!($f $(, $n)?), $f);)*
+                        $($( $crate::api::json::Flat::write_flat($flat, out, first); )+)?
                     })*
                 }
             }
-            /// The JSON names of a variant's fields, by tag.
+            /// The JSON names of a variant's own fields, by tag (a flattened
+            /// part's are `owns_field`'s too).
             #[allow(dead_code)]
             pub fn field_names(tag: &str) -> &'static [&'static str] {
                 match tag {
                     $($name => &[$($crate::json_name!($f $(, $n)?)),*],)*
                     _ => &[],
+                }
+            }
+            /// Whether `key` is one of the variant's fields, a flattened part's included.
+            #[allow(dead_code)]
+            pub fn owns_field(tag: &str, key: &str) -> bool {
+                match tag {
+                    $($name => {
+                        let own: &[&str] = &[$($crate::json_name!($f $(, $n)?)),*];
+                        own.contains(&key) $($(|| <$ft as $crate::api::json::Flat>::NAMES.contains(&key))+)?
+                    })*
+                    _ => false,
                 }
             }
         }
@@ -609,6 +640,7 @@ macro_rules! json_tagged {
                     $($name => Ok($t::$v {
                         $($f: $crate::api::json::read_field(v, $crate::json_name!($f $(, $n)?))?,)*
                         $($($skip: Default::default(),)+)?
+                        $($($flat: <$ft as $crate::api::json::Flat>::read_flat(v)?,)+)?
                     }),)*
                     other => Err(format!("{}: bilinmeyen tür “{}”", stringify!($t), other)),
                 }

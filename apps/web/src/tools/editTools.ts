@@ -6,7 +6,6 @@ import { Signal } from '../core/signal';
 import { ENTITY_KIND_LABEL, type Entity, type EntityGeometry, type NewEntity } from '../model/entities';
 import { dist, type Bounds, type Vec2 } from '../model/geometry';
 import { translation } from '../model/geom/affine';
-import { dimensionLabel } from '../model/geom/dimension';
 import { explodeEntity } from '../model/ops/explode';
 import { joinEntities } from '../model/ops/join';
 import { joinChain } from '../model/ops/trace';
@@ -178,7 +177,7 @@ export class ExplodeTool extends SelectionActionTool {
       const r =
         e.kind === 'insert'
           ? this.ctx.view.explodeInsert(e)
-          : explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a), percent: (v) => format.percent(v) }), this.ctx.doc.settings.drawingFont.value);
+          : explodeEntity(e, (l) => format.dimension(l, e.kind === 'dimension' ? e : {}), this.ctx.doc.settings.drawingFont.value);
       if ('error' in r) {
         firstError ??= r.error;
         continue;

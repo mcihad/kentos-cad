@@ -416,6 +416,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 label_of: None,
                 label_scale: None,
                 paragraph: Default::default(),
+                face: Default::default(),
             }),
             _ => Entity::Hatch(HatchEntity {
                 base: b,
@@ -452,6 +453,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             datum_transforms: Vec::new(),
             layer_states: Vec::new(),
             survey: None,
+            dimension_styles: Vec::new(),
+            text_styles: Vec::new(),
         },
         origin: point(rng),
         home_view: rng.chance(50).then(|| Bounds {

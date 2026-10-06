@@ -9,6 +9,7 @@
  */
 
 import type { DrawingFont } from '../model/projectSettings';
+import { DRAWING_FAMILY } from '../render/drawingFaces';
 
 /** The themes (`appearance.theme`); night and high contrast are dark ones. */
 export type ThemeId = 'dark' | 'light' | 'night' | 'highContrast';
@@ -69,16 +70,14 @@ export interface DrawingFontSpec {
   readonly note: string;
 }
 
-const DRAWING_FALLBACK = 'system-ui, sans-serif';
-
 export const DRAWING_FONTS: readonly DrawingFontSpec[] = [
-  { id: 'barlow', label: 'Barlow', family: `Barlow, ${DRAWING_FALLBACK}`, note: 'Dar ve okunaklı; varsayılan' },
-  { id: 'arimo', label: 'Arimo', family: `Arimo, Arial, ${DRAWING_FALLBACK}`, note: 'Arial ölçülerinde; AutoCAD ve Netcad yazılarıyla aynı genişlik' },
-  { id: 'overpass', label: 'Overpass', family: `Overpass, ${DRAWING_FALLBACK}`, note: 'Karayolu levhası; DIN ve ISO teknik yazısına yakın' },
-  { id: 'quicksand', label: 'Quicksand', family: `Quicksand, ${DRAWING_FALLBACK}`, note: 'İnce, yuvarlak uçlu; plotter (SHX romans) yazısına benzer' },
-  { id: 'architects-daughter', label: 'Architects Daughter', family: `'Architects Daughter', ${DRAWING_FALLBACK}`, note: 'Mimari el yazısı; çizim masası havası' },
-  { id: 'courier-prime', label: 'Courier Prime', family: `'Courier Prime', 'Courier New', monospace`, note: 'Daktilo; eş aralıklı' },
-  { id: 'plex-mono', label: 'IBM Plex Mono', family: `'IBM Plex Mono', ui-monospace, monospace`, note: 'Eş aralıklı ve teknik' },
+  { id: 'barlow', label: 'Barlow', family: DRAWING_FAMILY.barlow, note: 'Dar ve okunaklı; varsayılan' },
+  { id: 'arimo', label: 'Arimo', family: DRAWING_FAMILY.arimo, note: 'Arial ölçülerinde; AutoCAD ve Netcad yazılarıyla aynı genişlik' },
+  { id: 'overpass', label: 'Overpass', family: DRAWING_FAMILY.overpass, note: 'Karayolu levhası; DIN ve ISO teknik yazısına yakın' },
+  { id: 'quicksand', label: 'Quicksand', family: DRAWING_FAMILY.quicksand, note: 'İnce, yuvarlak uçlu; plotter (SHX romans) yazısına benzer' },
+  { id: 'architects-daughter', label: 'Architects Daughter', family: DRAWING_FAMILY['architects-daughter'], note: 'Mimari el yazısı; çizim masası havası' },
+  { id: 'courier-prime', label: 'Courier Prime', family: DRAWING_FAMILY['courier-prime'], note: 'Daktilo; eş aralıklı' },
+  { id: 'plex-mono', label: 'IBM Plex Mono', family: DRAWING_FAMILY['plex-mono'], note: 'Eş aralıklı ve teknik' },
 ];
 
 export const drawingFontById = (id: DrawingFont): DrawingFontSpec => DRAWING_FONTS.find((f) => f.id === id) ?? DRAWING_FONTS[0];

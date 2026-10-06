@@ -286,6 +286,7 @@ fn with_a_selection_corrects_only_it_the_rest_and_the_locked_are_supports() {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
+            face: Default::default(),
         }),
     );
     b.selection.set([second, locked, text]);

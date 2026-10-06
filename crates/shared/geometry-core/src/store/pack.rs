@@ -18,8 +18,8 @@
 //! | 6 ellipse | c.x, c.y, major.x, major.y, ratio, t0, t1 |
 //! | 7 xline, 8 ray | p.x, p.y, dir.x, dir.y |
 //! | 9 spline | points, closed |
-//! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask, boxWidth, lineSpacing, runs |
-//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb |
+//! | 10 text | p.x, p.y, height, rotation, text, align, widthFactor, mask, boxWidth, lineSpacing, runs, textStyle?, font, bold, italic, oblique |
+//! | 11 dimension | a.x, a.y, b.x, b.y, offset, height, text?, style?, hasAngle, angle, hasC, c.x, c.y, mask, za, zb, dimStyle?, arrow, arrowSize, extOffset, extBeyond, textGap, centre, decimals, unit?, prefix?, suffix?, font |
 //! | 12 hatch | points, hatch holes, pattern type, angle, spacing |
 //! | 13 multi-part polygon | path, holes, part count, then per part: path, holes |
 //! | 14 insert | p.x, p.y, scale, rotation, mirror, block, attributes |
@@ -36,7 +36,11 @@
 //! §7: what its block's attribute texts show); a leader's `arrow` (docs/adr/0146)
 //! its name, −1 for the filled arrow. A field left out (`z`, `angle`, `c`, a
 //! dimension's `za` and `zb`, docs/adr/0147)
-//! still takes its numbers, NaN. A multi-part area (docs/adr/0143) is kind
+//! still takes its numbers, NaN. A text's face and a dimension's look (docs/adr/0183):
+//! the style ids, a value's unit, prefix and suffix as strings (−1 none), a typeface's place
+//! in the core's tables (−1: the project's), bold, italic and centre as flags, the slant, the
+//! sizes and the decimals NaN when absent, an arrowhead's place in `Arrow::ALL` (−1: the
+//! tick): all cross, so a moved, copied or pasted object keeps them. A multi-part area (docs/adr/0143) is kind
 //! 13, its first part as a polygon's fields and its other parts after them;
 //! a one-part area stays kind 3, laid out as it always was. A multi-part
 //! polyline (16) and a multi-point object (17) likewise (docs/adr/0174).
@@ -53,9 +57,11 @@ use crate::api::json::Json;
 use crate::entity::{Attrs, HatchPattern, Part, PointPart, Shape};
 use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
+use crate::geom::dimension::{Arrow, Look};
 use crate::ops::transform::transform_shape;
-use crate::text::TextAlign;
+use crate::text::face::Face;
 use crate::text::paragraph::{Run, Script};
+use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
 
 /// A path's points, bulges and holes.
@@ -102,6 +108,16 @@ impl Reader<'_> {
 
     fn flag(&mut self) -> Result<bool, String> {
         Ok(self.num()? != 0.0)
+    }
+
+    /// A typeface by its place in the tables; none at −1 (docs/adr/0183).
+    fn font(&mut self) -> Result<Option<Font>, String> {
+        match self.int()? {
+            None => Ok(None),
+            Some(i) => Font::from_index(i)
+                .map(Some)
+                .ok_or_else(|| format!("paketin {}. sayısı yazı tipi değil ({i})", self.at)),
+        }
     }
 
     fn pt(&mut self) -> Result<Vec2, String> {
@@ -331,6 +347,11 @@ impl Reader<'_> {
                         color: self.string()?,
                     });
                 }
+                // docs/adr/0183: the style, the typeface (−1 the project's), bold, italic, the slant (NaN none).
+                let style = self.string()?;
+                let font = self.font()?;
+                let (bold, italic) = (self.flag()?, self.flag()?);
+                let oblique = self.num()?;
                 Shape::Text {
                     p,
                     text,
@@ -342,6 +363,13 @@ impl Reader<'_> {
                     box_width: (!box_width.is_nan()).then_some(box_width),
                     line_spacing: (!line_spacing.is_nan()).then_some(line_spacing),
                     runs: (!runs.is_empty()).then_some(runs),
+                    face: Face {
+                        style,
+                        font,
+                        bold,
+                        italic,
+                        oblique: (!oblique.is_nan()).then_some(oblique),
+                    },
                 }
             }
             11 => {
@@ -358,6 +386,36 @@ impl Reader<'_> {
                 // docs/adr/0147: the mask a flag, the slope's elevations (NaN none).
                 let mask = self.flag()?.then_some(true);
                 let (za, zb) = (self.num()?, self.num()?);
+                // docs/adr/0183: the style, the arrowhead (−1 the tick), the sizes (NaN none), centre, the
+                // decimals (NaN none), the unit, prefix and suffix, the typeface.
+                let dim_style = self.string()?;
+                let arrow =
+                    match self.int()? {
+                        Some(i) => Some(*Arrow::ALL.get(i).ok_or_else(|| {
+                            format!("paketin {}. sayısı ölçü oku değil", self.at)
+                        })?),
+                        None => None,
+                    };
+                let mut size = || self.num().map(|x| (!x.is_nan()).then_some(x));
+                let (arrow_size, ext_offset, ext_beyond, text_gap) =
+                    (size()?, size()?, size()?, size()?);
+                let centre = self.flag()?;
+                let decimals = self.num()?;
+                let decimals = if decimals.is_nan() {
+                    None
+                } else if decimals >= 0.0
+                    && decimals.fract() == 0.0
+                    && decimals <= f64::from(u32::MAX)
+                {
+                    Some(decimals as u32)
+                } else {
+                    return Err(format!(
+                        "paketin {}. sayısı basamak sayısı değil ({decimals})",
+                        self.at
+                    ));
+                };
+                let (unit, prefix, suffix) = (self.string()?, self.string()?, self.string()?);
+                let font = self.font()?;
                 Shape::Dimension {
                     a,
                     b,
@@ -370,6 +428,20 @@ impl Reader<'_> {
                     mask,
                     za: (!za.is_nan()).then_some(za),
                     zb: (!zb.is_nan()).then_some(zb),
+                    look: Look {
+                        style: dim_style,
+                        arrow,
+                        arrow_size,
+                        ext_offset,
+                        ext_beyond,
+                        text_gap,
+                        centre,
+                        decimals,
+                        unit,
+                        prefix,
+                        suffix,
+                        font,
+                    },
                 }
             }
             12 => {
@@ -436,6 +508,11 @@ fn run_bits(r: &Run) -> u32 {
             Some(Script::Sub) => RUN_SUB,
             None => 0,
         }
+}
+
+/// A typeface's place in the core's tables; −1 for the project's (docs/adr/0183).
+fn font_place(f: Option<Font>) -> f64 {
+    f.map_or(-1.0, |f| f64::from(f.index()))
 }
 
 fn flag(b: bool) -> f64 {
@@ -585,6 +662,7 @@ impl Packer {
                 box_width,
                 line_spacing,
                 runs,
+                face,
             } => {
                 let t = self.string(text);
                 let a = align.map_or(-1.0, |a| {
@@ -614,6 +692,14 @@ impl Packer {
                         color,
                     ]);
                 }
+                let style = self.maybe_string(face.style.as_deref());
+                self.put(&[
+                    style,
+                    font_place(face.font),
+                    flag(face.bold),
+                    flag(face.italic),
+                    face.oblique.unwrap_or(f64::NAN),
+                ]);
             }
             Shape::Dimension {
                 a,
@@ -627,9 +713,14 @@ impl Packer {
                 mask,
                 za,
                 zb,
+                look,
             } => {
                 let t = self.maybe_string(text.as_deref());
                 let st = self.maybe_string(style.as_deref());
+                let ds = self.maybe_string(look.style.as_deref());
+                let unit = self.maybe_string(look.unit.as_deref());
+                let prefix = self.maybe_string(look.prefix.as_deref());
+                let suffix = self.maybe_string(look.suffix.as_deref());
                 let at = c.unwrap_or(NONE);
                 self.put(&[
                     11.0,
@@ -649,6 +740,20 @@ impl Packer {
                     flag(*mask == Some(true)),
                     za.unwrap_or(f64::NAN),
                     zb.unwrap_or(f64::NAN),
+                    ds,
+                    look.arrow.map_or(-1.0, |a| {
+                        Arrow::ALL.iter().position(|x| *x == a).unwrap_or(0) as f64
+                    }),
+                    look.arrow_size.unwrap_or(f64::NAN),
+                    look.ext_offset.unwrap_or(f64::NAN),
+                    look.ext_beyond.unwrap_or(f64::NAN),
+                    look.text_gap.unwrap_or(f64::NAN),
+                    flag(look.centre),
+                    look.decimals.map_or(f64::NAN, f64::from),
+                    unit,
+                    prefix,
+                    suffix,
+                    font_place(look.font),
                 ]);
             }
             Shape::Hatch {
@@ -853,7 +958,8 @@ mod tests {
             5.0,
             6.0,
             -1.0,
-            // A text: no alignment, width factor or mask (docs/adr/0145); no box, spacing or runs (docs/adr/0182).
+            // A text: no alignment, width factor or mask (docs/adr/0145); no box, spacing or runs (docs/adr/0182);
+            // no face (docs/adr/0183).
             2.0,
             0.0,
             0.0,
@@ -869,7 +975,13 @@ mod tests {
             f64::NAN,
             f64::NAN,
             0.0,
-            // A linear dimension with an angle and no centre, mask or elevations (docs/adr/0147).
+            -1.0,
+            -1.0,
+            0.0,
+            0.0,
+            f64::NAN,
+            // A linear dimension with an angle and no centre, mask or elevations (docs/adr/0147); no look
+            // (docs/adr/0183).
             3.0,
             0.0,
             0.0,
@@ -890,6 +1002,18 @@ mod tests {
             0.0,
             f64::NAN,
             f64::NAN,
+            -1.0,
+            -1.0,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            0.0,
+            f64::NAN,
+            -1.0,
+            -1.0,
+            -1.0,
+            -1.0,
             // A hatch with one hole.
             4.0,
             0.0,
@@ -967,11 +1091,18 @@ mod tests {
         r#"{"kind":"text","p":{"x":1,"y":2},"text":"","height":0.5,"rotation":0}"#,
         r#"{"kind":"text","p":{"x":486520,"y":4420200},"text":"Ada 104","height":2,"rotation":30,"align":"middleCenter","widthFactor":0.8,"mask":true}"#,
         r#"{"kind":"text","p":{"x":0,"y":0},"text":"B","height":1,"rotation":0,"align":"topRight"}"#,
+        // A face of its own (docs/adr/0183 §2): a typeface, bold, italic and a slant.
+        r#"{"kind":"text","p":{"x":2,"y":3},"text":"Ada 105","height":2,"rotation":0,"font":"arimo","bold":true,"italic":true,"oblique":15}"#,
+        r#"{"kind":"text","p":{"x":2,"y":3},"text":"Ada 106","height":2,"rotation":0,"textStyle":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101","font":"barlow"}"#,
         r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420200},"offset":2,"height":0.5}"#,
         r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
         r#"{"kind":"dimension","a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":5,"height":1,"text":"","style":"angular","c":{"x":0,"y":0}}"#,
         r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486540,"y":4420210},"offset":1.5,"height":0.5,"style":"slope","mask":true,"za":105.25,"zb":-0}"#,
         r#"{"kind":"dimension","a":{"x":0,"y":10},"b":{"x":10,"y":0},"offset":-3,"height":1,"style":"arcLength","c":{"x":0,"y":0}}"#,
+        // A look of its own (docs/adr/0183 §3): filled arrowheads, sizes, the value on the line, a typeface.
+        r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":8,"y":0},"offset":2,"height":0.5,"arrow":"closed","arrowSize":1.2,"extOffset":0.2,"extBeyond":0.8,"textGap":0.5,"textPlace":"centre","font":"overpass"}"#,
+        // The style it follows and how its value is written (docs/adr/0183 §3) cross too.
+        r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":8,"y":0},"offset":2,"height":0.5,"dimStyle":"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201","decimals":0,"unit":"cm","prefix":"L=","suffix":" cm"}"#,
         r#"{"kind":"hatch","ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],[]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
         r#"{"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
         r#"{"kind":"leader","pts":[{"x":486520,"y":4420200},{"x":486528,"y":4420206}],"text":"Ø150 PVC","height":2,"rotation":30,"arrow":"open","mask":true}"#,

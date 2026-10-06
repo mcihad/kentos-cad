@@ -39,6 +39,8 @@ export interface OptionChoice {
   typed: string;
   icon?: string;
   checked: boolean;
+  /** A command the host runs instead of choosing (“Yazı stilleri…” opens its window, docs/adr/0183 §4). */
+  command?: string;
 }
 
 export interface Tool {
@@ -61,6 +63,8 @@ export interface Tool {
    */
   optionChoices?(key: string): readonly OptionChoice[] | null;
   /** One of `optionChoices(key)` chosen, as typing the key and then `typed`; false when this step takes none. */
+  /** Whether this step asks for words (a style's name, docs/adr/0183 §4): Space types a space in the command line, Enter alone confirms. The desktop's `Tool::takes_words`. */
+  takesWords?(): boolean;
   chooseOption?(key: string, typed: string): boolean;
   /** Enter, Space or right click; Shift+Enter says `shift` (Çitle seç adds to the selection then, docs/adr/0141). */
   confirm?(mods?: ConfirmMods): void;

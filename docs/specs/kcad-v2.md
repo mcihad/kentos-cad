@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17` ya da `18`; değilse `schema_version` |
+| `version` | tam sayı | `2`'den `21`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-22.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -234,6 +234,8 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 **Şema 19**, şema 18'in kendisi ve projenin adlı katman durumlarıdır: proje ayarlarının `layerStates`'i (§6.4, §6.4.3; ADR 0177 §4). Yazıcı `19`'u **yalnız projenin katman durumu varken** yazar. Başka her çizim şema 2–18'dir ve eskisiyle bayt bayt aynıdır. Şema 2–18 yükünde `layerStates` bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/layer-states-in-schema-18.kcad`): eski okuyucu durumları açıp bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 19 şema 18'i kapsar. Örnek dosya `layer-states.kcad`.
 
 **Şema 20**, şema 19'un kendisi ve çok satırlı yazıdır: `text`'in `boxWidth`'i, `lineSpacing`'i ve `runs`'ı (§6.6; ADR 0182 §1). Yazıcı `20`'yi **yalnız belgenin ya da bir blok tanımının bir yazısında bu alanlardan biri varken** yazar. Başka her çizim şema 2–19'dur ve eskisiyle bayt bayt aynıdır; satır sonu (`\n`) taşıyan metin her şemada metindir. Şema 2–19 yükünde üç alan bilinmeyen alandır (`unknown_field`, `fixtures/kcad/v2/broken/paragraph-in-schema-19.kcad`): eski okuyucu yazıyı biçimsiz açıp bir sonraki kayıtta sessizce düşürmez, dosyayı açmaz. Şema 20 şema 19'u kapsar. Örnek dosya `paragraphs.kcad`.
+
+**Şema 21**, şema 20'nin kendisi ve yazı ve ölçü stilleridir: proje ayarlarının `textStyles`'ı ve `dimensionStyles`'ı (§6.4, §6.4.4), `text`'in `textStyle`, `font`, `bold`, `italic`, `oblique`'i ve `dimension`'ın `dimStyle`, `arrow`, `arrowSize`, `extOffset`, `extBeyond`, `textGap`, `textPlace`, `decimals`, `unit`, `prefix`, `suffix`, `font`'u (§6.6; ADR 0183). Yazıcı `21`'i **yalnız projenin bir stili ya da belgenin veya bir blok tanımının bir yazısında ya da ölçüsünde bu alanlardan biri varken** yazar. Başka her çizim şema 2–20'dir ve eskisiyle bayt bayt aynıdır. Şema 2–20 yükünde bu alanlar bilinmeyen alandır (`unknown_field`; `fixtures/kcad/v2/broken/style-table-in-schema-20.kcad`, `style-face-in-schema-20.kcad`, `style-look-in-schema-20.kcad`): eski okuyucu stilleri ve görünüşleri düşürüp bir sonraki kayıtta sessizce silmez, dosyayı açmaz. Şema 21 şema 20'yi kapsar. Örnek dosya `styles.kcad`.
 
 Yazıcı, çizimin taşıdığını tutan **en eski** şemayı yazar: kutusu, satır aralığı ya da biçim dilimi olan yazısı olan çizim 20, katman durumu olan çizim 19, bir nesnenin etiketini yazan yazısı olan çizim 18, çok parçalı çoklu çizgisi ya da çok noktalı nesnesi olan çizim 17, ölçme ayarlarında zemin (ortalama yükseklik ya da projeksiyona indirme) olan çizim 16, poligon toleransı olan çizim 15, ölçme ayarı olan çizim 14, projenin kendi sistemi, ikinci sistemin tanımı ya da datum seçimi olan çizim 13, ikinci koordinat sistemi olan çizim 12, olmayıp çizim birimi adlandıran 11, kendi keneti olan bir katmanı olan 10, olmayıp yeni ölçüsü olan 9, olmayıp kılavuz olan 8, olmayıp yazı eki olan 7, olmayıp blok tanımı olan 6, bloksuz olup çok parçalı alanı olan 5, parçalı alanı olmayıp kotu olan 4, kotu olmayıp nesne kalınlığı olan 3, hiçbiri olmayan 2. Okunan çizimin bellekteki biçimi (`DocumentSnapshotV2`) her şemada aynıdır; şema dosyanın neyi taşıdığını söyler.
 
@@ -288,6 +290,8 @@ Yanlış CBOR türü (float yerine tam sayı, nokta yerine harita) `wrong_type`'
 | `secondSrid` | u32 | | şema 12'de: projenin ikinci koordinat sisteminin EPSG kodu; koordinatları projeninkilerin yanında gösterilir, çizim dönüştürülmez (ADR 0167 §1). 0 olamaz, `srid` ile aynı olamaz, koordinat sistemi olmayan projede (`srid` 0, `customCrs` yok) bulunmaz; değilse `bad_value` (`broken/second-srid-zero.kcad`, `broken/second-srid-same.kcad`, `broken/second-srid-local.kcad`). Okuyucu sistemi tanımasa da alanı korur; değerleri gösterilmez |
 | `drawingUnit` | numaralı metin | | şema 11'de: yerel projenin çizim birimi, `mm`, `cm`, `m` (yokluğu metre). Uzunluklar ve koordinatlar bu birimle yazılır ve gösterilir; geometri metrede saklanır. Koordinat sistemi olan projede birim sistemindir (ADR 0165 §2) |
 | `layerStates` | dizi (§6.4.3) | | şema 19'da: projenin adlı katman durumları, menüdeki sırasıyla (ADR 0177 §4) |
+| `textStyles` | dizi (§6.4.4) | | şema 21'de: projenin adlı yazı stilleri, penceredeki sırasıyla (ADR 0183 §1, §2) |
+| `dimensionStyles` | dizi (§6.4.4) | | şema 21'de: projenin adlı ölçü stilleri, penceredeki sırasıyla (ADR 0183 §1, §3) |
 | `areaDecimals` | u32 | evet | alan gösterim basamağı |
 | `lengthDecimals` | u32 | evet | uzunluk gösterim basamağı |
 | `datumTransforms` | dizi (§6.4.1) | | şema 13'te: projenin datum seçimleri, kayıttaki her datum çifti için en çok biri (ADR 0168 §3); değilse `bad_value` (`broken/datum-transform-twice.kcad`) |
@@ -354,6 +358,38 @@ Düğüm bir haritadır, anahtarları `node` < `style` < `locked` < `visible`:
 | `style` | harita (§6.5'in katman stili) | | durum stille kaydedildiyse katmanın stili; grubun yoktur |
 | `locked` | bool | | durum kilitlerle kaydedildiyse düğümün kendi kilidi |
 | `visible` | bool | evet | düğümün kendi görünürlüğü (`broken/layer-states-without-visible.kcad`, bool değilse `wrong_type`: `broken/layer-states-visible-not-bool.kcad`) |
+
+#### 6.4.4 Yazı ve ölçü stilleri
+
+Şema 21'de (ADR 0183). İki dizi; boş dizi yazılmaz (alan yazılmaz). Her öğe bir haritadır; `false` bayrak ve olmayan değer yazılmaz. Liste bütün olarak denetlenir (`bad_value`): kimlik boş olamaz ve listede bir kez geçer (`broken/style-table-id-empty.kcad`); ad uçlarında boşluksuz, boş değil, en çok 64 harf, satır sonu ve denetim karakteri olmadan ve büyük küçük harf ayırmadan listede bir kezdir (`broken/style-table-name-padded.kcad`, `broken/style-table-name-twice.kcad`); “Standart” (stilsiz yazı ve ölçü) ayrılmıştır (`broken/style-table-standart.kcad`). Stilin kimliği nesnelerin `textStyle`'ı ve `dimStyle`'ıdır; adı değişebilir.
+
+**Yazı stili**, anahtarları kodlanmış sırasıyla `id` < `bold` < `font` < `name` < `height` < `italic` < `oblique` < `fontFile` < `widthFactor`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `id`, `name` | metin | evet | kimlik ve ad (yukarıda) |
+| `font` | numaralı metin | evet | yedi çizim yazı tipinden biri (§6.4'ün `drawingFont`'u gibi; `broken/style-table-font-missing.kcad`) |
+| `bold`, `italic` | bool | | yalnız `true` yazılır |
+| `oblique` | float | | harflerin yatıklığı, derece: −85 ile 85 arası, 0 değil |
+| `height` | float | | kâğıtta mm: sıfırdan büyük, en çok 1000 (`broken/style-table-height-zero.kcad`); yokluğu yüksekliği aracın bırakır |
+| `widthFactor` | float | | 0'dan büyük, en çok 100, 1 değil |
+| `fontFile` | metin | | DXF'ten gelen yazı tipi dosyası (boş değil); DXF'e aynen yazılır |
+
+**Ölçü stili**, anahtarları kodlanmış sırasıyla `id` < `font` < `name` < `unit` < `arrow` < `height` < `prefix` < `suffix` < `textGap` < `decimals` < `arrowSize` < `extBeyond` < `extOffset` < `textPlace`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `id`, `name` | metin | evet | kimlik ve ad (yukarıda) |
+| `height` | float | evet | değerin kâğıttaki yüksekliği, mm: sıfırdan büyük, en çok 1000 |
+| `arrow` | numaralı metin | | `closed` (dolu ok), `open` (açık ok), `dot` (nokta), `none` (yok); yokluğu çentiktir |
+| `arrowSize`, `extOffset`, `extBeyond`, `textGap` | float | | mm: ok boyu sıfırdan, öbürleri 0'dan büyük ya da eşit; en çok 1000 ve değer yüksekliğinin 100 katı (`broken/style-table-ratio-too-big.kcad`) |
+| `textPlace` | numaralı metin | | `centre`: değer çizginin ortasında; yokluğu üstünde |
+| `decimals` | u32 | | en çok 8; yokluğu projenin uzunluk basamakları |
+| `unit` | numaralı metin | | `m`, `cm`, `mm`; yokluğu projenin birimi |
+| `prefix`, `suffix` | metin | | en çok 32 harf, boş değil, satır sonu ve denetim karakteri yok |
+| `font` | numaralı metin | | değerin yazı tipi; yokluğu projenin |
+
+Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`).
 
 ### 6.5 Katman ağacı
 
@@ -442,8 +478,8 @@ Düğüm bir haritadır, anahtarları `node` < `style` < `locked` < `visible`:
 | `ellipse` | `c`, `major` nokta; `ratio`, `t0`, `t1` float |
 | `spline` | `pts` nokta listesi; `closed` bool |
 | `xline`, `ray` | `p`, `dir` nokta |
-| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7 ve sonrası: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda); yalnız şema 18 ve sonrası ve yalnız belgenin yazısında: `labelOf` kimlik, `labelScale` float (isteğe bağlı, birlikte; aşağıda); yalnız şema 20 ve sonrası: `boxWidth`, `lineSpacing` float, `runs` dizi (isteğe bağlı; aşağıda) |
-| `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`; şema 9'da `ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`), şema 9'da `mask` bool, `za`, `zb` float (aşağıda) |
+| `text` | `p` nokta; `text` metin; `height` float (m); `rotation` float (derece, doğudan saat yönünün tersine); yalnız şema 7 ve sonrası: `align` numaralı metin, `widthFactor` float, `mask` bool (isteğe bağlı; aşağıda); yalnız şema 18 ve sonrası ve yalnız belgenin yazısında: `labelOf` kimlik, `labelScale` float (isteğe bağlı, birlikte; aşağıda); yalnız şema 20 ve sonrası: `boxWidth`, `lineSpacing` float, `runs` dizi (isteğe bağlı; aşağıda); yalnız şema 21 ve sonrası: `textStyle` metin, `font` numaralı metin, `bold`, `italic` bool, `oblique` float (isteğe bağlı; aşağıda) |
+| `dimension` | `a`, `b` nokta; `offset`, `height` float; isteğe bağlı: `c` nokta, `text` metin, `angle` float, `style` numaralı metin (`aligned`, `linear`, `angular`, `radius`, `diameter`; şema 9'da `ordinate`, `arcLength`, `jogged`, `azimuth`, `slope`), şema 9'da `mask` bool, `za`, `zb` float (aşağıda); şema 21'de `dimStyle` metin, `arrow`, `textPlace`, `unit`, `font` numaralı metin, `arrowSize`, `extOffset`, `extBeyond`, `textGap` float, `decimals` u32, `prefix`, `suffix` metin (aşağıda) |
 | `hatch` | `ring` nokta listesi; `holes` nokta listesi dizisi (isteğe bağlı); `pattern` harita: `type` (`solid`, `lines`, `cross`), `angle` float, `spacing` float |
 | `insert` | yalnız şema 6 (§6.9): `block` kimlik (tanımın `id`'si); `p` nokta; `scale` float (pozitif; değilse `bad_value`); `rotation` float (radyan, doğudan saat yönünün tersine); `mirror` bool (isteğe bağlı; yalnız `true` yazılır, `false` `bad_value`) |
 | `leader` | yalnız şema 8 (ADR 0146): `pts` nokta listesi (en az iki); `height` float (m, pozitif); `rotation` float (derece, doğudan saat yönünün tersine); isteğe bağlı: `text` metin, `arrow` numaralı metin, `mask` bool (aşağıda) |
@@ -460,6 +496,8 @@ Düğüm bir haritadır, anahtarları `node` < `style` < `locked` < `visible`:
   - `start`, `end` tam sayı (zorunlu, 32 bit): dilimin ilk harfi ve sonuncusunun ötesi, metnin Unicode karakter sırasıyla (kod noktası; UTF-16 değil); `start < end ≤` harf sayısı, değilse `bad_value`.
   - `bold`, `italic`, `underline` bool: yalnız `true` yazılır (`false` `bad_value`); `script` numaralı metin `super` (üst simge) ya da `sub` (alt simge); `color` metin (nesnenin rengi gibi: `#RRGGBB` ya da tema adı; boş `bad_value`). En az biri yazılır: biçimsiz dilim `bad_value`'dur.
   - Dilimler sıralı ve ayrıdır (öncekiyle örtüşen ya da ondan önce başlayan `bad_value`); aynı biçimdeki bitişik iki dilim tek dilimdir (ikisi `bad_value`): biçimlerin tek yazılışı vardır.
+- **Yazının yüzü** (şema 21; ADR 0183 §2): `textStyle` izlediği stilin kimliğidir (§6.4.4; boş `bad_value`: `broken/style-face-style-empty.kcad`; stil tablosunda olmayan kimlik geçerlidir ve stilsiz sayılır). `font` yazının çizildiği yazı tipidir (bilinmeyen değer `bad_value`: `broken/style-face-font-unknown.kcad`); yazı tipi olan yazı dik çizilir, olmayan bugünkü gibi projenin yazı tipiyle. `bold`, `italic` yalnız `true` yazılır (`false` `bad_value`: `broken/style-face-bold-false.kcad`), `oblique` −85 ile 85 arası ve 0 değildir (`broken/style-face-oblique-steep.kcad`, `broken/style-face-oblique-zero.kcad`); üçü yazı tipi olmadan `bad_value`'dur (`broken/style-face-bold-without-font.kcad`). Yazının yüksekliği ve genişlik çarpanı kendi alanlarıdır; stil onları uygulanınca verir.
+- **Ölçünün görünüşü** (şema 21; ADR 0183 §3): `dimStyle` izlediği stilin kimliğidir (boş `bad_value`). `arrow` `closed`, `open`, `dot`, `none`'dır, yokluğu çentiktir (bilinmeyen `bad_value`: `broken/style-look-arrow-unknown.kcad`). `arrowSize`, `extOffset`, `extBeyond`, `textGap` ölçünün `height`'ının katıdır (ok boyu sıfırdan büyük: `broken/style-look-arrow-size-zero.kcad`; öbürleri 0 ya da büyük: `broken/style-look-gap-negative.kcad`; en çok 100: `broken/style-look-gap-too-wide.kcad`); yoklukları bugünkü boylardır (çentik 0,6, ok ve nokta 1, boşluk ve aşma 0,5, değer 0,35). `textPlace` yalnız `centre` (`broken/style-look-place-unknown.kcad`), `decimals` en çok 8 (`broken/style-look-decimals-nine.kcad`), `unit` `m`, `cm`, `mm` (`broken/style-look-unit-unknown.kcad`), `prefix` ve `suffix` boş değil, en çok 32 harf, satır sonu ve denetim karakteri yok (`broken/style-look-prefix-empty.kcad`, `broken/style-look-suffix-line-break.kcad`), `font` değerin yazı tipidir.
 - **Yay değeri** (`bulges`): DXF'teki gibi `tan(θ/4)`, saat yönünün tersi artı; `bulges[i]` `pts[i] → pts[i+1]` kenarınındır, kapalı şekilde son değer kapanış kenarınındır. Yaylar, delikler, elips ve eğri parametreleri tanım olarak saklanır; ekranda çizilen üçgen ya da kısa parçalar dosyaya girmez (`FILE-08`).
 - **Köşe kotları** (şema 4; ADR 0142):
   - **Anlamı:** metre, projenin düşey datumunda; sonlu bir float, eksi olabilir (deniz altı, kazı), aralık sınırı yoktur. Hangi yükseklik olduğu (ortometrik, elipsoidal) proje ayarının işidir, dosya biçiminin değil.

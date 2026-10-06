@@ -237,6 +237,7 @@ impl LabelsToText {
                         box_width: None,
                         line_spacing: None,
                         runs: Vec::new(),
+                        face: Default::default(),
                     },
                     color: None,
                     line_weight: None,

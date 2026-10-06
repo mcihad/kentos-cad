@@ -13,6 +13,8 @@ import { uidOf, writeEdit } from './editCommand';
 import { SelectionActionTool } from './editTools';
 import { drawTag, strokePath } from './preview';
 import type { OptionChoice } from './Tool';
+import { stylesShown, takeTextStyle, textFaceNow, textStyleChoices, textStyleName } from './styleOption';
+import type { TextStyleDef } from '../model/annotationStyles';
 import { fixed } from '../core/displayNumber';
 
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
@@ -49,7 +51,7 @@ export class TextTool extends PointInputTool {
   private static widthFactor = 1;
   private static mask = false;
   private static increment = false;
-  private stage: 'pos' | 'height' | 'angle' | 'align' | 'width' | 'typing' = 'pos';
+  private stage: 'pos' | 'height' | 'angle' | 'align' | 'width' | 'style' | 'typing' = 'pos';
   private at: Vec2 | null = null;
   /** First of the two clicks that give the angle. */
   private angleFrom: Vec2 | null = null;
@@ -100,11 +102,13 @@ export class TextTool extends PointInputTool {
         return `hizayı seçin ya da adını bitişik yazın: sağüst, orta, soltaban … [Hiza (H): ${textAlignName(S.align)}]`;
       case 'width':
         return `genişlik çarpanını yazın (1: harflerin kendi eni; 0'dan büyük, en çok ${MAX_WIDTH_FACTOR})`;
+      case 'style':
+        return `yazı stilini menüden seçin ya da adını yazın [Stil (S): ${textStyleName(this.ctx)}]`;
       case 'typing':
         return 'yazıyı tıkladığınız yere yazın; Enter ekler, Esc vazgeçer';
       default:
         return (
-          `yazının başlangıcına tıklayın [Yükseklik (Y): ${S.heightMm} mm / Açı (A): ${+fixed(S.angle, 4)}° / ` +
+          `yazının başlangıcına tıklayın [${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${S.heightMm} mm / Açı (A): ${+fixed(S.angle, 4)}° / ` +
           `Hiza (H): ${textAlignName(S.align)} / Genişlik (G): ${+fixed(S.widthFactor, 4)} / ` +
           `Zemin (Z): ${S.mask ? 'açık' : 'kapalı'} / Artır (R): ${S.increment ? 'açık' : 'kapalı'}]`
         );
@@ -142,6 +146,10 @@ export class TextTool extends PointInputTool {
       case 'R':
         S.increment = !S.increment;
         break;
+      case 'S':
+        if (!stylesShown(this.ctx)) return false;
+        this.stage = 'style';
+        break;
       default:
         return false;
     }
@@ -149,13 +157,40 @@ export class TextTool extends PointInputTool {
     return true;
   }
 
+  /**
+   * A text style chosen (docs/adr/0183 §4), Yazı's or Çok satırlı yazı's: Yükseklik its when it fixes one, Genişlik
+   * its; Standart's width factor 1.
+   */
+  static useStyle(s: TextStyleDef | null): void {
+    if (s?.height !== undefined) TextTool.heightMm = s.height;
+    TextTool.widthFactor = s?.widthFactor ?? 1;
+  }
+
+  /** A typed or chosen text style: kept, the tool waits for the click again; a name the project has none of is said. */
+  private takeStyle(typed: string): boolean {
+    const s = takeTextStyle(this.ctx, typed);
+    if (s === undefined) return true;
+    TextTool.useStyle(s);
+    this.stage = 'pos';
+    this.refreshPrompt();
+    return true;
+  }
+
   /** Hiza's menu: the twelve points, row by row (docs/adr/0145 §6), while the tool waits for a click or for one. */
   optionChoices(key: string): readonly OptionChoice[] | null {
+    // Stil's: Standart, the project's text styles and their window (docs/adr/0183 §4).
+    if (key === 'S' && stylesShown(this.ctx) && (this.stage === 'pos' || this.stage === 'style')) return textStyleChoices(this.ctx);
     if (key !== 'H' || (this.stage !== 'pos' && this.stage !== 'align')) return null;
     return TEXT_ALIGN_ROWS.flat().map((a) => ({ label: capital(textAlignName(a)), typed: textAlignName(a), icon: alignIcon(a), checked: a === TextTool.align }));
   }
 
+  /** A style's name is words: Space types a space (docs/adr/0183 §4). */
+  takesWords(): boolean {
+    return this.stage === 'style';
+  }
+
   chooseOption(key: string, typed: string): boolean {
+    if (key === 'S' && stylesShown(this.ctx) && (this.stage === 'pos' || this.stage === 'style')) return this.takeStyle(typed);
     if (key !== 'H' || (this.stage !== 'pos' && this.stage !== 'align')) return false;
     return this.takeAlign(typed);
   }
@@ -192,6 +227,8 @@ export class TextTool extends PointInputTool {
     this.stage = 'typing';
     const height = paper(this.ctx, S.heightMm);
     const { align, widthFactor, mask } = S;
+    // The style's face (docs/adr/0183 §2), a CAD project's.
+    const face = textFaceNow(this.ctx);
     // Artır: the last text's number one more; a text that ends with no number comes back as it is (docs/adr/0145 §3).
     const initial = S.increment && this.lastText !== null ? (textIncrement(this.lastText) ?? this.lastText) : undefined;
     this.ctx.view.requestTextInput({
@@ -201,11 +238,12 @@ export class TextTool extends PointInputTool {
       align,
       widthFactor,
       initial,
+      face,
       commit: (text) => {
         // Written by `cad.entities.create` (step “Ekle”). Refused (the layer was locked meanwhile): the refusal
         // was said, nothing was added. The defaults are no fields: the left of the baseline, a factor of 1, no mask.
         const written = this.writeObjects([
-          { kind: 'text', p, text, height, rotation: S.angle, ...(align && { align }), ...(widthFactor !== 1 && { widthFactor }), ...(mask && { mask: true }) },
+          { kind: 'text', p, text, height, rotation: S.angle, ...(align && { align }), ...(widthFactor !== 1 && { widthFactor }), ...(mask && { mask: true }), ...face },
         ]);
         if (written) {
           this.lastText = text;
@@ -230,6 +268,7 @@ export class TextTool extends PointInputTool {
     const t = text.trim();
     if (this.option(t.toLocaleUpperCase('tr-TR'))) return true;
     if (this.stage === 'align') return this.takeAlign(t);
+    if (this.stage === 'style') return this.takeStyle(t);
     const n = parseNumber(t);
     if (this.stage === 'height') {
       if (n === null || n <= 0) return false;
@@ -323,7 +362,8 @@ export class ReadableTool extends SelectionActionTool {
     const font = this.ctx.doc.settings.drawingFont.value;
     const changes: EntityEdit[] = [];
     for (const t of texts) {
-      const turned = textReadable({ ...t, font });
+      // Measured in its own typeface, else the project's (docs/adr/0183 §2).
+      const turned = textReadable({ ...t, font: t.font ?? font });
       if (!turned) continue;
       const geometry = { ...geometryOf(t as unknown as EditGeometry), p: turned.p, rotation: turned.rotation } as unknown as EditGeometry;
       changes.push({ kind: 'update', uid: uidOf(this.ctx, t), geometry });

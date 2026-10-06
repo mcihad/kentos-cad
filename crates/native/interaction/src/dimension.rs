@@ -43,7 +43,7 @@ use kentos_geometry_core::tools::editing::{
     PickedEdge, arc_length_ends, edge_arms, radial_dimension, vertex_arms,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::shape;
+use kentos_native_application::geometry::{core_look, shape};
 
 use kentos_geometry_core::store::snap::SnapHit;
 
@@ -54,8 +54,10 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
+use crate::styles;
 use crate::tool::{
-    Context, DimensionMode as Mode, Flow, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    Context, DimensionMode as Mode, Flow, Memory, OptionChoice, Pointer, Preview, Stroke, Tag,
+    Tone, Tool,
 };
 
 /// The tool's id: its command is `tool.dimension`.
@@ -284,8 +286,15 @@ pub struct Dimension {
     angle_circle: Option<(Vec2, Vec2)>,
     /// The project's units, as of the last call.
     format: Format,
-    /// The text's height in metres, as of the last call.
+    /// The text's height in metres, as of the last call: the dimension
+    /// style's, else 2.5 mm's (docs/adr/0183 §4).
     height: f64,
+    /// The dimension style's look, as of the last call; none for Standart.
+    look: kentos_contracts::DimensionLook,
+    /// The dimension styles as of the last call: a CAD project's Stil.
+    styles: styles::Seen,
+    /// Stil: a dimension style's name is being typed.
+    asking_style: bool,
     /// What the session remembered, as of the last call.
     memory: Memory,
 }
@@ -296,7 +305,11 @@ impl Dimension {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.height = HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale;
+        let (look, height) =
+            styles::dimension_look(cx, HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale);
+        self.height = height;
+        self.look = look;
+        self.styles = styles::Seen::dimension(cx);
         self.memory = *cx.memory;
         self.format = cx.format();
     }
@@ -367,6 +380,15 @@ impl Dimension {
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
         if key == "Z" && !self.asking_angle {
             cx.memory.dimension_mask = !cx.memory.dimension_mask;
+            return true;
+        }
+        // Stil while Zemin is offered: a CAD project's dimension styles (docs/adr/0183 §4).
+        if key == "S"
+            && !self.asking_angle
+            && styles::shown(cx.doc.settings())
+            && (self.fresh() || self.placing())
+        {
+            self.asking_style = true;
             return true;
         }
         if self.fresh() {
@@ -469,6 +491,7 @@ impl Dimension {
             c,
             za: None,
             zb: None,
+            look: core_look(&self.look),
         };
         match mode {
             Mode::Aligned => {
@@ -603,6 +626,7 @@ impl Dimension {
             c: Some(shown),
             za: None,
             zb: None,
+            look: Default::default(),
         })
     }
 
@@ -626,6 +650,7 @@ impl Dimension {
             mask: self.memory.dimension_mask,
             za: g.za,
             zb: g.zb,
+            look: self.look.clone(),
         };
         if let Some(out) = points::write_objects(vec![geometry], None, cx) {
             // Zincir ölçü and Baz ölçü start from the newest straight one (docs/adr/0140).
@@ -635,7 +660,9 @@ impl Dimension {
                     .first()
                     .and_then(|uid| kentos_domain::Uuid::parse_str(uid).ok());
             }
-            let value = cx.format().dimension(layout.prefix, layout.unit, layout.value);
+            let value =
+                cx.format()
+                    .dimension_in(layout.prefix, layout.unit, layout.value, &self.look);
             cx.say(Level::Success, format!("{}: {value}", mode.added()));
         }
         self.reset();
@@ -650,6 +677,7 @@ impl Dimension {
         self.zs.clear();
         self.snap = None;
         self.asking_angle = false;
+        self.asking_style = false;
         self.angle_arc = None;
         self.angle_circle = None;
         self.d.reset();
@@ -678,6 +706,14 @@ impl Tool for Dimension {
     /// the other styles while nothing is picked.
     fn prompt(&self) -> Prompt {
         let n = self.d.pts.len();
+        // Stil (S): a dimension style's name asked for (docs/adr/0183 §4).
+        if self.asking_style {
+            return Prompt::new(LABEL, "ölçü stilini menüden seçin ya da adını yazın").option_with(
+                "Stil",
+                "S",
+                self.styles.chosen.clone(),
+            );
+        }
         // Doğrusal's Açı (A): its measuring direction asked for.
         if self.mode() == Mode::Linear && n == 2 && self.asking_angle {
             return Prompt::new(
@@ -806,7 +842,11 @@ impl Tool for Dimension {
                 prompt = prompt.option(other, "K");
             }
         }
-        // Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7).
+        // Stil and Zemin while nothing is picked and while the dimension is placed (docs/adr/0147 §7,
+        // 0183 §4).
+        if (self.fresh() || self.placing()) && self.styles.shown {
+            prompt = prompt.option_with("Stil", "S", self.styles.chosen.clone());
+        }
         if self.fresh() || self.placing() {
             let on = if self.memory.dimension_mask {
                 "açık"
@@ -937,7 +977,13 @@ impl Tool for Dimension {
     /// are placed by pointing only; a typed point does not pick an edge.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.see(cx);
-        let done = if self.asking_angle {
+        let done = if self.asking_style {
+            // A name the project has none of is said; the tool waits for another.
+            if styles::take_dimension(js_trim(text), cx) {
+                self.asking_style = false;
+            }
+            true
+        } else if self.asking_angle {
             // Doğrusal's measuring direction, in the project's angle unit.
             match points::plain_number(text) {
                 Some(a) => {
@@ -984,8 +1030,42 @@ impl Tool for Dimension {
         done
     }
 
+    /// Stil's menu: Standart, the project's dimension styles and their window (docs/adr/0183 §4).
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "S"
+            && self.styles.shown
+            && (self.asking_style || ((self.fresh() || self.placing()) && !self.asking_angle))
+        {
+            return self
+                .styles
+                .choices(styles::DIMENSION_STYLES_ENTRY, styles::DIMENSION_STYLES);
+        }
+        Vec::new()
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        let open = self.asking_style || ((self.fresh() || self.placing()) && !self.asking_angle);
+        if key != "S" || !open || !styles::shown(cx.doc.settings()) {
+            return false;
+        }
+        if styles::take_dimension(typed, cx) {
+            self.asking_style = false;
+        }
+        self.see(cx);
+        true
+    }
+
     /// With something picked it starts over; with nothing, it leaves.
+    /// A style's name is words: Space types a space (docs/adr/0183 §4).
+    fn takes_words(&self) -> bool {
+        self.asking_style
+    }
+
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        if self.asking_style {
+            self.asking_style = false;
+            return Flow::Stay;
+        }
         if self.fresh() {
             return Flow::Exit;
         }
@@ -1062,9 +1142,16 @@ impl Tool for Dimension {
             let mut tag = None;
             if let Some(l) = self.geom_at(hover, None).and_then(|g| layout_dimension(&g)) {
                 strokes.extend(l.lines.iter().map(|&[p, q]| Stroke::solid(vec![p, q], false)));
+                // A style's filled arrowheads and dots, outlined (docs/adr/0183 §3).
+                strokes.extend(
+                    l.fills
+                        .iter()
+                        .flatten()
+                        .map(|ring| Stroke::solid(ring.clone(), true)),
+                );
                 tag = Some(Tag {
                     at: hover,
-                    lines: vec![format.dimension(l.prefix, l.unit, l.value)],
+                    lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &self.look)],
                 });
             }
             return Preview {
@@ -1096,10 +1183,20 @@ impl Tool for Dimension {
                 .jogged_at(shown, hover, 0.0)
                 .and_then(|g| layout_dimension(&g))
             {
-                strokes.extend(l.lines.iter().map(|&[p, q]| Stroke::solid(vec![p, q], false)));
+                strokes.extend(
+                    l.lines
+                        .iter()
+                        .map(|&[p, q]| Stroke::solid(vec![p, q], false)),
+                );
+                strokes.extend(
+                    l.fills
+                        .iter()
+                        .flatten()
+                        .map(|ring| Stroke::solid(ring.clone(), true)),
+                );
                 tag = Some(Tag {
                     at: hover,
-                    lines: vec![format.dimension(l.prefix, l.unit, l.value)],
+                    lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &self.look)],
                 });
             }
             return Preview {
@@ -1126,6 +1223,7 @@ impl Tool for Dimension {
                         c: Some(ends.c),
                         za: None,
                         zb: None,
+                        look: core_look(&self.look),
                     };
                     let length = layout_dimension(&g).map_or(0.0, |l| l.value);
                     Tag {

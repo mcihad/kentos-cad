@@ -218,7 +218,7 @@ fn ok_chooses_the_arrowhead_zemin_masks_the_note_geri_takes_the_last_vertex_back
     let menu = b.session.option_choices("O");
     assert_eq!(
         menu.iter()
-            .map(|c| (c.label, c.icon, c.checked))
+            .map(|c| (c.label.as_str(), c.icon.unwrap_or_default(), c.checked))
             .collect::<Vec<_>>(),
         [
             ("Dolu", "leaderArrowFilled", true),

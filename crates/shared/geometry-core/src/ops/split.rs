@@ -308,6 +308,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 box_width,
                 line_spacing,
                 runs,
+                face,
             },
             Shape::Text {
                 p: q,
@@ -320,6 +321,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 box_width: bw,
                 line_spacing: ls,
                 runs: rs,
+                face: f,
             },
         ) => {
             same_pt(*p, *q)
@@ -338,6 +340,7 @@ fn same_shape(a: &Shape, b: &Shape) -> bool {
                 }
                 && line_spacing == ls
                 && runs == rs
+                && face == f
         }
         _ => a == b,
     }

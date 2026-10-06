@@ -400,12 +400,12 @@ impl Spatial {
                     }
                 } else if what == LABEL_PIECE_TEXT || what == LABEL_PIECE_LEADER {
                     let piece = self.piece(r[0], r[6])?;
-                    let (text, attribute) = match piece.shape {
-                        Shape::Text { text, .. } => (text, piece.attribute),
+                    let (text, attribute, face) = match piece.shape {
+                        Shape::Text { text, face, .. } => (text, piece.attribute, face),
                         // A leader's note among a block's pieces (docs/adr/0146 §5).
                         Shape::Leader {
                             text: Some(text), ..
-                        } => (text, None),
+                        } => (text, None, Default::default()),
                         _ => return None,
                     };
                     LabelSpot::PieceText {
@@ -417,6 +417,7 @@ impl Spatial {
                         attribute,
                         width_factor: r[7],
                         mask: r[8],
+                        face,
                     }
                 } else if what == LABEL_LINE {
                     LabelSpot::Line {
@@ -428,12 +429,14 @@ impl Spatial {
                         start: r[7] as usize,
                         end: r[8] as usize,
                         piece: None,
+                        face: None,
                     }
                 } else if what == LABEL_PIECE_LINE {
                     let Shape::Text {
                         text,
                         width_factor,
                         runs,
+                        face,
                         ..
                     } = self.piece(r[0], r[6])?.shape
                     else {
@@ -448,18 +451,34 @@ impl Spatial {
                         start: r[7] as usize,
                         end: r[8] as usize,
                         piece: Some(std::rc::Rc::new((text, runs.unwrap_or_default()))),
+                        face: Some(face),
                     }
                 } else if what == LABEL_PARAGRAPH_MASK {
+                    // Its text's slant: the object's own, or a block's piece's (its place, d).
+                    let lean = match self.store.get(r[0]).map(|it| &it.shape) {
+                        Some(Shape::Text { face, .. }) => face.lean(),
+                        Some(Shape::Insert { .. }) => match self.piece(r[0], r[7]).map(|p| p.shape)
+                        {
+                            Some(Shape::Text { face, .. }) => face.lean(),
+                            _ => 0.0,
+                        },
+                        _ => 0.0,
+                    };
                     LabelSpot::ParagraphMask {
                         slot,
                         at,
                         rotation: r[4],
                         width: r[5],
                         height: r[6],
+                        lean,
                     }
                 } else if what == LABEL_PIECE_DIMENSION {
                     let Shape::Dimension {
-                        text, style, angle, ..
+                        text,
+                        style,
+                        angle,
+                        look,
+                        ..
                     } = self.piece(r[0], r[6])?.shape
                     else {
                         return None;
@@ -475,6 +494,7 @@ impl Spatial {
                         unit,
                         prefix,
                         mask: r[8] == 1.0,
+                        look,
                     }
                 } else {
                     return None;
@@ -559,6 +579,8 @@ pub enum LabelSpot {
         attribute: Option<String>,
         width_factor: f64,
         mask: f64,
+        /// The piece's face (docs/adr/0183 §2); a leader's note has none.
+        face: kentos_geometry_core::text::face::Face,
     },
     /// One line of a multi-line text (docs/adr/0182 §3): its letters
     /// `start..end` (Unicode scalar values) from where its baseline starts,
@@ -573,6 +595,8 @@ pub enum LabelSpot {
         start: usize,
         end: usize,
         piece: Option<std::rc::Rc<(String, Vec<kentos_geometry_core::text::paragraph::Run>)>>,
+        /// A block's piece's face (docs/adr/0183 §2); a text's own is its object's.
+        face: Option<kentos_geometry_core::text::face::Face>,
     },
     /// A multi-line text's mask (docs/adr/0182 §3): the box from `at` (its
     /// corner under the first letter's left) `width` along its baseline and
@@ -583,6 +607,9 @@ pub enum LabelSpot {
         rotation: f64,
         width: f64,
         height: f64,
+        /// The slant's tangent of the text it is under: the box leans from
+        /// its corner (docs/adr/0183 §2); 0 upright.
+        lean: f64,
     },
     /// A dimension's value among a block's pieces, as `Dimension`, its own
     /// text when it has one and `height` as placed.
@@ -596,6 +623,8 @@ pub enum LabelSpot {
         unit: &'static str,
         prefix: &'static str,
         mask: bool,
+        /// The piece's look: its value's typeface and writing (docs/adr/0183 §3).
+        look: kentos_geometry_core::geom::dimension::Look,
     },
 }
 

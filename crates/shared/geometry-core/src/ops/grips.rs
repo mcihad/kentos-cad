@@ -251,6 +251,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width,
             line_spacing,
             runs,
+            face,
             ..
         } => Shape::Text {
             p,
@@ -263,6 +264,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             box_width: *box_width,
             line_spacing: *line_spacing,
             runs: runs.clone(),
+            face: face.clone(),
         },
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {
@@ -505,6 +507,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             mask,
             za,
             zb,
+            look,
         } => {
             let d = |a: Vec2, b: Vec2, offset: f64, c: Option<Vec2>| Shape::Dimension {
                 a,
@@ -518,6 +521,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 mask: *mask,
                 za: *za,
                 zb: *zb,
+                look: look.clone(),
             };
             let grip = dimension_grips(&e.shape).get(index)?.1;
             // An arc length's ends stay on its arc, a jogged radius's point on its circle (docs/adr/0147 §4).

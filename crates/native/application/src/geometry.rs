@@ -15,6 +15,8 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Attrs, HatchPattern, Part, PointPart as CorePoint, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::geom::dimension::{Arrow, Look};
+use kentos_geometry_core::text::face::Face;
 use kentos_geometry_core::text::paragraph::{Run, Script};
 use kentos_geometry_core::text::{Font, TextAlign};
 
@@ -55,6 +57,74 @@ pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
             color: r.color,
         })
         .collect()
+}
+
+/// A text's face as the core takes it (docs/adr/0183 §2).
+pub fn core_face(f: &kentos_contracts::TextFace) -> Face {
+    Face {
+        style: f.text_style.clone(),
+        font: f.font.map(|d| Font::from_id(d.id())),
+        bold: f.bold,
+        italic: f.italic,
+        oblique: f.oblique,
+    }
+}
+
+/// The core's face as the contract writes it.
+pub fn contract_face(f: Face) -> kentos_contracts::TextFace {
+    kentos_contracts::TextFace {
+        text_style: f.style,
+        font: f.font.and_then(|c| DrawingFont::from_id(c.id())),
+        bold: f.bold,
+        italic: f.italic,
+        oblique: f.oblique,
+    }
+}
+
+/// A dimension's look as the core takes it (docs/adr/0183 §3).
+pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
+    Look {
+        style: l.dim_style.clone(),
+        arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        centre: l.text_place == Some(kentos_contracts::DimensionTextPlace::Centre),
+        decimals: l.decimals,
+        unit: l.unit.map(|u| u.mark().to_owned()),
+        prefix: l.prefix.clone(),
+        suffix: l.suffix.clone(),
+        font: l.font.map(|d| Font::from_id(d.id())),
+    }
+}
+
+/// The core's look as the contract writes it.
+pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
+    use kentos_contracts::DrawingUnit;
+    kentos_contracts::DimensionLook {
+        dim_style: l.style,
+        arrow: l
+            .arrow
+            .and_then(|a| kentos_contracts::DimensionArrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        text_place: l
+            .centre
+            .then_some(kentos_contracts::DimensionTextPlace::Centre),
+        decimals: l.decimals,
+        unit: l.unit.as_deref().and_then(|u| match u {
+            "mm" => Some(DrawingUnit::Mm),
+            "cm" => Some(DrawingUnit::Cm),
+            "m" => Some(DrawingUnit::M),
+            _ => None,
+        }),
+        prefix: l.prefix,
+        suffix: l.suffix,
+        font: l.font.and_then(|c| DrawingFont::from_id(c.id())),
+    }
 }
 
 fn v(p: &Point) -> Vec2 {
@@ -213,6 +283,7 @@ pub fn shape(entity: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: core_runs(&t.paragraph.runs),
+            face: core_face(&t.face),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -226,6 +297,7 @@ pub fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
+            look: core_look(&d.look),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),
@@ -460,8 +532,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 box_width,
                 line_spacing,
                 runs,
+                face: _,
             },
         ) => {
+            // The face is the object's own (docs/adr/0183): the core carries it through unchanged.
             e.p = p(at);
             e.text = text;
             e.height = height;
@@ -489,9 +563,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 mask,
                 za,
                 zb,
+                look: _,
             },
         ) => {
-            // The style is the object's own: the core carries its name through unchanged.
+            // The style and the look are the object's own: the core carries them through unchanged.
             e.a = p(a);
             e.b = p(b);
             e.offset = offset;
@@ -662,6 +737,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             box_width,
             line_spacing,
             runs,
+            face,
         } => Entity::Text(TextEntity {
             base,
             p,
@@ -680,6 +756,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
                 runs,
             },
+            face,
         }),
         EntityGeometry::Dimension {
             a,
@@ -693,6 +770,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
             za,
             zb,
+            look,
         } => Entity::Dimension(DimensionEntity {
             base,
             a,
@@ -706,6 +784,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             mask,
             za,
             zb,
+            look,
         }),
         EntityGeometry::Hatch {
             ring,
@@ -831,6 +910,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             box_width,
             line_spacing,
             runs,
+            face,
         } => EntityGeometry::Text {
             p: p(at),
             text,
@@ -842,6 +922,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             box_width,
             line_spacing,
             runs: contract_runs(runs),
+            face: contract_face(face),
         },
         Shape::Dimension {
             a,
@@ -855,6 +936,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             mask,
             za,
             zb,
+            look,
         } => EntityGeometry::Dimension {
             a: p(a),
             b: p(b),
@@ -870,6 +952,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             mask: mask == Some(true),
             za,
             zb,
+            look: contract_look(look),
         },
         Shape::Hatch {
             ring,

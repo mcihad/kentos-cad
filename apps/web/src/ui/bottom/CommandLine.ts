@@ -320,9 +320,13 @@ export class CommandLine extends Component {
 
   private onKey(e: KeyboardEvent): void {
     switch (e.key) {
-      case 'Enter':
-      // As in AutoCAD, Space submits too; Y,X is written with a comma or semicolon (docs/adr/0018).
+      // As in AutoCAD, Space submits too; Y,X is written with a comma or semicolon (docs/adr/0018). A step that asks for
+      // words (a style's name, docs/adr/0183 §4) takes it as a letter.
       case ' ':
+        if (this.ctx.tools.active.takesWords?.()) return;
+        e.preventDefault();
+        return this.submit();
+      case 'Enter':
         e.preventDefault();
         return this.submit();
       case 'Escape':

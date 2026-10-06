@@ -553,6 +553,7 @@ fn dimensions_keep_their_hairlines_at_every_scale() {
             mask: None,
             za: None,
             zb: None,
+            look: Default::default(),
         },
         attrs: &[],
         how: [MODE_DIMENSION, 0, -1, 0],

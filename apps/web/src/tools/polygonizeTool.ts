@@ -1,3 +1,4 @@
+import { faceOfText } from '../model/annotationStyles';
 import type { AppContext } from '../app/context';
 import type { EntityGeometry as NewGeometry } from '../contracts/generated/EntityGeometry';
 import { Signal } from '../core/signal';
@@ -289,7 +290,8 @@ export function labelValue(e: Entity): string | null {
 /** Where a label is: a text's box middle (its alignment and the drawing's typeface counted), a point itself. */
 export function labelAt(e: Entity, font: string): Vec2 {
   if (e.kind !== 'text') return 'p' in e ? (e.p as Vec2) : { x: 0, y: 0 };
-  const b = textBox({ p: e.p, text: e.text, height: e.height, rotation: e.rotation, ...(e.align && { align: e.align }), ...(e.widthFactor !== undefined && { widthFactor: e.widthFactor }), font });
+  // In its own typeface, bold and slant, else the project's (docs/adr/0183 §2).
+  const b = textBox({ p: e.p, text: e.text, height: e.height, rotation: e.rotation, ...(e.align && { align: e.align }), ...(e.widthFactor !== undefined && { widthFactor: e.widthFactor }), ...faceOfText(e), font: e.font ?? font });
   return { x: (b[0].x + b[1].x + b[2].x + b[3].x) / 4, y: (b[0].y + b[1].y + b[2].y + b[3].y) / 4 };
 }
 

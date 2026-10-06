@@ -211,6 +211,8 @@
     "view.symbols.screen",
     "style.layerStyle",
     "style.manager",
+    "style.textStyles",
+    "style.dimensionStyles",
     "style.assign",
     "style.clearSymbol",
     "style.legend",

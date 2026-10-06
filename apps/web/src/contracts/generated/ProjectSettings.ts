@@ -3,10 +3,12 @@ import type { AngleUnit } from "./AngleUnit";
 import type { AreaUnit } from "./AreaUnit";
 import type { CrsDefinition } from "./CrsDefinition";
 import type { DatumTransform } from "./DatumTransform";
+import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { LayerState } from "./LayerState";
 import type { SurveySettings } from "./SurveySettings";
+import type { TextStyleDef } from "./TextStyleDef";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -59,4 +61,12 @@ survey?: SurveySettings,
 /**
  * The project's named layer states (docs/adr/0177 §4), in the menu's order.
  */
-layerStates?: Array<LayerState>, };
+layerStates?: Array<LayerState>, 
+/**
+ * The project's named text styles (docs/adr/0183 §2), in the order they were made.
+ */
+textStyles?: Array<TextStyleDef>, 
+/**
+ * The project's named dimension styles (docs/adr/0183 §3).
+ */
+dimensionStyles?: Array<DimensionStyleDef>, };

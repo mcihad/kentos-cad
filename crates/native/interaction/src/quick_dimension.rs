@@ -16,7 +16,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geom::dimension::{QuickDimensions, layout_dimension, quick_dimensions};
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::shape;
+use kentos_native_application::geometry::{core_look, shape};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -24,7 +24,8 @@ use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag};
+use crate::styles;
+use crate::tool::{Context, Flow, OptionChoice, Pointer, Preview, Stroke, Tag};
 
 pub const ID: &str = "quickDimension";
 const LABEL: &str = "Hızlı ölçü";
@@ -41,6 +42,12 @@ pub struct QuickDimension {
     hover: Option<Vec2>,
     height: f64,
     mask: bool,
+    /// The dimension style's look (docs/adr/0183 §4); none for Standart.
+    look: kentos_contracts::DimensionLook,
+    /// The dimension styles as of the last call: a CAD project's Stil.
+    styles: styles::Seen,
+    /// Stil: a dimension style's name is being typed.
+    asking_style: bool,
 }
 
 impl QuickDimension {
@@ -48,8 +55,14 @@ impl QuickDimension {
         Modify::with(Self::default())
     }
 
+    /// The dimensions at `at`, in the style's look.
     fn quick(&self, at: Vec2, typed: Option<f64>) -> QuickDimensions {
-        quick_dimensions(&self.shapes, at, typed, self.height)
+        let mut q = quick_dimensions(&self.shapes, at, typed, self.height);
+        let look = core_look(&self.look);
+        for d in &mut q.dimensions {
+            d.look = look.clone();
+        }
+        q
     }
 
     /// Writes them all in one step and leaves.
@@ -77,6 +90,7 @@ impl QuickDimension {
                 mask,
                 za: None,
                 zb: None,
+                look: self.look.clone(),
             })
             .collect();
         if let Some(out) = points::write_objects(geometries, None, cx) {
@@ -104,7 +118,11 @@ impl Stages for QuickDimension {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        self.height = HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale;
+        let (look, height) =
+            styles::dimension_look(cx, HEIGHT_MM / 1000.0 * cx.doc.settings().plot_scale);
+        self.height = height;
+        self.look = look;
+        self.styles = styles::Seen::dimension(cx);
         self.mask = cx.memory.dimension_mask;
     }
 
@@ -139,11 +157,37 @@ impl Stages for QuickDimension {
     }
 
     fn prompt(&self, _n: usize) -> Prompt {
-        Prompt::new(LABEL, "ölçülerin yerini gösterin ya da uzaklık yazın").option_with(
-            "Zemin",
-            "Z",
-            if self.mask { "açık" } else { "kapalı" },
-        )
+        if self.asking_style {
+            return Prompt::new(LABEL, "ölçü stilini menüden seçin ya da adını yazın").option_with(
+                "Stil",
+                "S",
+                self.styles.chosen.clone(),
+            );
+        }
+        Prompt::new(LABEL, "ölçülerin yerini gösterin ya da uzaklık yazın")
+            .option_if(self.styles.shown, "Stil", "S", self.styles.chosen.clone())
+            .option_with("Zemin", "Z", if self.mask { "açık" } else { "kapalı" })
+    }
+
+    /// Stil's menu: Standart, the project's dimension styles and their window (docs/adr/0183 §4).
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "S" && self.styles.shown {
+            return self
+                .styles
+                .choices(styles::DIMENSION_STYLES_ENTRY, styles::DIMENSION_STYLES);
+        }
+        Vec::new()
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key != "S" || !styles::shown(cx.doc.settings()) {
+            return false;
+        }
+        if styles::take_dimension(typed, cx) {
+            self.asking_style = false;
+        }
+        self.see(cx);
+        true
     }
 
     /// The cursor as it is, for a typed distance (an open path's side is the cursor's).
@@ -159,14 +203,39 @@ impl Stages for QuickDimension {
     }
 
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow> {
+        if self.asking_style {
+            // A name the project has none of is said; the tool waits for another.
+            if styles::take_dimension(js_trim(text), cx) {
+                self.asking_style = false;
+            }
+            return Some(Flow::Stay);
+        }
         if upper_tr(js_trim(text)) == "Z" {
             cx.memory.dimension_mask = !cx.memory.dimension_mask;
+            return Some(Flow::Stay);
+        }
+        if upper_tr(js_trim(text)) == "S" && styles::shown(cx.doc.settings()) {
+            self.asking_style = true;
             return Some(Flow::Stay);
         }
         let n = points::plain_length(text, cx)?;
         // Without a cursor, the origin gives an open path's side (the web's).
         let at = self.hover.unwrap_or(Vec2::new(0.0, 0.0));
         Some(self.write(at, Some(n), cx))
+    }
+
+    /// Enter while a style's name is asked for: back to placing them.
+    /// A style's name is words: Space types a space (docs/adr/0183 §4).
+    fn takes_words(&self) -> bool {
+        self.asking_style
+    }
+
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        if self.asking_style {
+            self.asking_style = false;
+            return Flow::Stay;
+        }
+        Flow::Exit
     }
 
     /// A typed number is a distance, never a point.
@@ -188,8 +257,19 @@ impl Stages for QuickDimension {
             .iter()
             .take(MAX_GHOSTS)
             .filter_map(layout_dimension)
-            .flat_map(|l| l.lines)
-            .map(|[p, q]| Stroke::solid(vec![p, q], false))
+            .flat_map(|l| {
+                // A style's filled arrowheads and dots, outlined (docs/adr/0183 §3).
+                let fills = l
+                    .fills
+                    .into_iter()
+                    .flatten()
+                    .map(|ring| Stroke::solid(ring, true));
+                l.lines
+                    .into_iter()
+                    .map(|[p, q]| Stroke::solid(vec![p, q], false))
+                    .chain(fills)
+                    .collect::<Vec<_>>()
+            })
             .collect();
         let tag = dimensions.first().map(|d| Tag {
             at: hover,

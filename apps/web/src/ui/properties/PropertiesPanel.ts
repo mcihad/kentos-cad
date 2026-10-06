@@ -18,6 +18,7 @@ import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
+import { dimensionStyleRows, textStyleRows } from './styleRows';
 import { setGeometry, setProperties, uidsOf } from './write';
 import { fixed } from '../../core/displayNumber';
 import { projectCrsCode, projectCrsName } from '../../model/projectCrs';
@@ -347,6 +348,8 @@ export class PropertiesPanel extends Panel {
         // An ordinate has no offset; a jogged radius's is where its jog is.
         if (style !== 'ordinate') geo.push(n(style === 'angular' ? 'Yay yarıçapı' : style === 'radius' || style === 'diameter' ? 'Dışa uzantı' : style === 'jogged' ? 'Kırık uzaklığı' : 'Ötelenme', 'offset', e.offset));
         geo.push(
+          // Ölçü stili, a CAD project's (docs/adr/0183 §6).
+          ...dimensionStyleRows(this.ctx, [e], locked),
           n('Yazı yüksekliği', 'height', e.height),
           {
             label: 'Yazı',
@@ -391,6 +394,8 @@ export class PropertiesPanel extends Panel {
       }
       case 'text':
         geo.push(
+          // Yazı stili, a CAD project's (docs/adr/0183 §6).
+          ...textStyleRows(this.ctx, [e], locked),
           // Trimmed, as the in-place editor stores it; an empty text is not taken. A multi-line text's lines and
           // letter formats are its editor's (a double click, docs/adr/0182 §4): here they only show, ⏎ its breaks.
           isParagraph(e)
@@ -550,14 +555,14 @@ export class PropertiesPanel extends Panel {
     const sections: PropSection[] = [{ id: 'general', title: 'Ortak özellikler', rows }];
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or “Çeşitli” (docs/adr/0145 §6).
     const texts = ents.filter((e): e is TextEntity => e.kind === 'text');
-    if (texts.length) sections.push({ id: 'texts', title: texts.length === ents.length ? 'Yazı' : `Yazılar (${texts.length})`, rows: textRows(this.ctx, texts, anyLocked) });
+    if (texts.length) sections.push({ id: 'texts', title: texts.length === ents.length ? 'Yazı' : `Yazılar (${texts.length})`, rows: [...textStyleRows(this.ctx, texts, anyLocked), ...textRows(this.ctx, texts, anyLocked)] });
     // The selection's leaders: their note, height, turn, arrowhead and mask, common or “Çeşitli” (docs/adr/0146 §7).
     const leaders = ents.filter((e): e is LeaderEntity => e.kind === 'leader');
     if (leaders.length)
       sections.push({ id: 'leaders', title: leaders.length === ents.length ? 'Kılavuz' : `Kılavuzlar (${leaders.length})`, rows: leaderRows(this.ctx, leaders, anyLocked) });
     // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
     const dims = ents.filter((e): e is DimensionEntity => e.kind === 'dimension');
-    if (dims.length) sections.push({ id: 'dimensions', title: dims.length === ents.length ? 'Ölçü' : `Ölçüler (${dims.length})`, rows: dimensionRows(this.ctx, dims, anyLocked) });
+    if (dims.length) sections.push({ id: 'dimensions', title: dims.length === ents.length ? 'Ölçü' : `Ölçüler (${dims.length})`, rows: [...dimensionStyleRows(this.ctx, dims, anyLocked), ...dimensionRows(this.ctx, dims, anyLocked)] });
     if (totals.length) sections.push({ id: 'totals', title: 'Toplamlar', rows: totals });
     return sections;
   }

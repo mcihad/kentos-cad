@@ -1,5 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
+import { faceOfText, type DimensionLook, type TextFace } from '../../model/annotationStyles';
+import { DRAWING_FAMILY } from '../../render/drawingFaces';
 import { isParagraph, textAlignShares, type Entity } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
 import { layoutDimension, type DimensionLayout } from '../../model/geom/dimension';
@@ -81,7 +83,7 @@ export class InlineTextEditor extends Component {
     this.hint.textContent = req.hint ?? 'Enter: ekle · Esc: vazgeç';
     // The field stands where the text will, by its alignment and width factor.
     const [along, up] = textAlignShares(req.align ?? null);
-    this.show({ at: req.at, height: req.height, rotation: req.rotation, along, up, widthFactor: req.widthFactor ?? 1 });
+    this.show({ at: req.at, height: req.height, rotation: req.rotation, along, up, widthFactor: req.widthFactor ?? 1, ...(req.face && { face: req.face }) });
   }
 
   private show(place: Placement): void {
@@ -106,11 +108,19 @@ export class InlineTextEditor extends Component {
     // The field's baseline sits at 85% of its height; its point is `along` of its width and `up` heights over the
     // baseline (the text's alignment, docs/adr/0145), and it turns and widens about that point.
     const up = p.up * px;
+    // A text's own typeface, bold, italic and slant (docs/adr/0183 §2); without one the field's own look.
+    const f = p.face?.font ? p.face : null;
+    Object.assign(this.input.style, {
+      fontFamily: f?.font ? DRAWING_FAMILY[f.font] : '',
+      fontWeight: f ? (f.bold ? '600' : '400') : '',
+      fontStyle: f ? (f.italic ? 'italic' : 'normal') : '',
+    });
+    const skew = f?.oblique ? ` skewX(${-f.oblique}deg)` : '';
     Object.assign(this.el.style, {
       left: `${s.x}px`,
       top: `${s.y}px`,
       fontSize: `${px}px`,
-      transform: `translate(${-p.along * 100}%, calc(-85% + ${up}px)) rotate(${-p.rotation}deg) scaleX(${p.widthFactor})`,
+      transform: `translate(${-p.along * 100}%, calc(-85% + ${up}px)) rotate(${-p.rotation}deg) scaleX(${p.widthFactor})${skew}`,
       transformOrigin: `${p.along * 100}% calc(85% - ${up}px)`,
     });
   }
@@ -152,16 +162,18 @@ interface Placement {
   widthFactor: number;
   /** A dimension's own value, shown when its text is cleared. */
   measured?: string;
+  /** A text's face (docs/adr/0183 §2): the field writes in its typeface, bold and italic, leaning with it. */
+  face?: TextFace;
 }
 
-function placementOf(e: Entity, view: { dimensionText(l: DimensionLayout): string }): Placement | null {
+function placementOf(e: Entity, view: { dimensionText(l: DimensionLayout, look: DimensionLook): string }): Placement | null {
   if (e.kind === 'text') {
     const [along, up] = textAlignShares(e.align ?? null);
-    return { at: e.p, height: e.height, rotation: e.rotation, along, up, widthFactor: e.widthFactor ?? 1 };
+    return { at: e.p, height: e.height, rotation: e.rotation, along, up, widthFactor: e.widthFactor ?? 1, face: faceOfText(e) };
   }
   if (e.kind === 'dimension') {
     const l = layoutDimension(e);
-    return l ? { at: l.textAt, height: e.height, rotation: l.rotation, along: 0.5, up: 0, widthFactor: 1, measured: view.dimensionText(l) } : null;
+    return l ? { at: l.textAt, height: e.height, rotation: l.rotation, along: 0.5, up: 0, widthFactor: 1, measured: view.dimensionText(l, e) } : null;
   }
   // A leader's note stands past its landing, on the side its last segment goes (docs/adr/0146 §2); one without a
   // note is laid out as if it had one, so the field opens where its note will be.

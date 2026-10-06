@@ -15,6 +15,7 @@ mod coordinate_z;
 mod data_search;
 mod dimension;
 mod dimension_chains;
+mod dimension_values;
 mod drawing;
 mod drawing_unit;
 mod edits;

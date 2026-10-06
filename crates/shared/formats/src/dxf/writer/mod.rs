@@ -21,6 +21,7 @@ mod blocks;
 mod entities;
 mod input;
 mod layers;
+mod styles;
 
 /// The line weight (mm) a DXF holds for `mm` once written: the nearest of
 /// AutoCAD's weights, read back as a reader reads group 370 (docs/adr/0139).
@@ -322,6 +323,15 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut dimensions = 0usize;
     // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
     let placing = crate::blocks::Placing::with_attributes(&input.blocks);
+    // The STYLE and DIMSTYLE records' names: the project's styles, the styleless faces' (docs/adr/0183 §7).
+    let style_names = styles::StyleNames::new(
+        &input.text_styles,
+        &input.dimension_styles,
+        input
+            .entities
+            .iter()
+            .chain(input.blocks.iter().flat_map(|b| b.entities.iter())),
+    );
     for def in order {
         let Some(name) = names.get(&def.id) else {
             continue;
@@ -347,6 +357,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
                 names: &names,
                 defined: &defined,
                 placing: &placing,
+                styles: &style_names,
+            per_metre: unit.per_metre(),
             };
             for e in &def.entities {
                 w.entity(e);
@@ -393,6 +405,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             names: &names,
             defined: &defined,
             placing: &placing,
+            styles: &style_names,
+            per_metre: unit.per_metre(),
         };
         for e in &input.entities {
             w.entity(e);
@@ -408,9 +422,19 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let paper = scale * unit.per_metre();
     layers.ltype_table(&mut tables, &mut handles, paper);
     layers.layer_table(&mut tables, &mut handles);
-    template::style_view_ucs(&mut tables);
+    // A style's paper mm in drawing units (docs/adr/0183 §7).
+    let length = |mm: f64| mm / 1000.0 * paper;
+    styles::style_table(&mut tables, &mut handles, &style_names, &input.text_styles, &length);
+    template::view_ucs(&mut tables);
     template::appid_table(&mut tables);
-    template::dimstyle_table(&mut tables);
+    styles::dimstyle_table(
+        &mut tables,
+        &mut handles,
+        &style_names,
+        &input.dimension_styles,
+        &length,
+        unit.per_metre(),
+    );
     template::block_record_table(&mut tables, &records);
     tables.str(0, "ENDSEC");
 

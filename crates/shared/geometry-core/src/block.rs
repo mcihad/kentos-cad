@@ -67,6 +67,7 @@ impl Attribute {
             box_width: None,
             line_spacing: None,
             runs: None,
+            face: Default::default(),
         }
     }
 }

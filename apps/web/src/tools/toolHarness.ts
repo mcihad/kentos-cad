@@ -4,7 +4,8 @@ import { MessageLog } from '../app/state';
 import { Signal } from '../core/signal';
 import { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
-import { dimensionLabel } from '../model/geom/dimension';
+import type { DimensionLook } from '../model/annotationStyles';
+import type { Measured } from '../model/dimensionValue';
 import { LayerStore } from '../model/layers';
 import { entityEdges } from '../model/ops/edges';
 import { extendEntity, trimEntity } from '../model/ops/trim';
@@ -84,8 +85,8 @@ export function toolHarness() {
       trim: (target: Entity, at: { x: number; y: number }) => trimEntity(target, at, boundaries(target)),
       extend: (target: Entity, at: { x: number; y: number }) => extendEntity(target, at, boundaries(target)),
       ghosts: () => new Float64Array(),
-      // The app's (ViewportController.dimensionText): prefix and value in the project's units.
-      dimensionText: (l: Parameters<typeof dimensionLabel>[1]) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a), percent: (v) => format.percent(v) }),
+      // The app's (ViewportController.dimensionText): the value in its look's or the project's units.
+      dimensionText: (l: Measured, look: DimensionLook = {}) => format.dimension(l, look),
       requestTextInput: (req: TextInputRequest) => void state.textInputs.push(req),
       focus: () => {},
     },

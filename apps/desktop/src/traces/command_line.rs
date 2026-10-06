@@ -139,7 +139,11 @@ impl CommandLine {
                 messages.extend(self.report());
                 return Some(messages);
             }
-            if plain && let Some(messages) = list_key(*named, open, value, &suggestions) {
+            // Space is a second Enter unless the step asks for words (view.rs, docs/adr/0183 §4).
+            let space_submits = !app.session.takes_words();
+            if plain
+                && let Some(messages) = list_key(*named, open, value, &suggestions, space_submits)
+            {
                 return Some(messages);
             }
             // The text box's own keys.
@@ -169,15 +173,20 @@ impl CommandLine {
 }
 
 /// A key the widget takes before its text box: the suggestion list's, and
-/// Space and Esc as view.rs configures them (`space_submits`,
-/// `escape_clears`). The list's arrows are not in the traces' keys.
+/// Space and Esc as view.rs configures them (`space_submits` but where the
+/// step asks for words, `escape_clears`). The list's arrows are not in the
+/// traces' keys.
 fn list_key(
     named: Named,
     open: bool,
     value: &str,
     suggestions: &[Suggested<Message>],
+    space_submits: bool,
 ) -> Option<Vec<Message>> {
     let first = suggestions.first().filter(|_| open);
+    if named == Named::Space && !space_submits {
+        return None;
+    }
     match (named, first) {
         // Tab writes the highlighted suggestion's name into the line.
         (Named::Tab, Some(first)) => Some(vec![Message::CommandInput(match first {

@@ -288,6 +288,10 @@ pub struct TextEntity {
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub paragraph: Paragraph,
+    /// The style it follows and the face it is drawn in (docs/adr/0183 §2).
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub face: crate::TextFace,
 }
 
 /// A multi-line text's own fields (docs/adr/0182 §1): the width its lines
@@ -762,6 +766,10 @@ pub struct DimensionEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zb: Option<f64>,
+    /// The style it follows, its arrowheads, sizes and value's writing (docs/adr/0183 §3).
+    #[serde(flatten)]
+    #[cfg_attr(feature = "ts", ts(flatten))]
+    pub look: crate::DimensionLook,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

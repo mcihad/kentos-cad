@@ -574,6 +574,12 @@ impl Session {
             .map_or(self.select.grip_active(), |t| t.confirms())
     }
 
+    /// Whether the running command's step asks for words: Space is a letter
+    /// in the command line, not a second Enter (docs/adr/0183 §4).
+    pub fn takes_words(&self) -> bool {
+        self.tool.as_ref().is_some_and(|t| t.takes_words())
+    }
+
     /// Whether no command runs and a grip of the selection is being moved
     /// (docs/adr/0068): typed points, Enter and Esc are the grip's then.
     pub fn grip_active(&self) -> bool {

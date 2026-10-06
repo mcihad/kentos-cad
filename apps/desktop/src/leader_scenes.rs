@@ -65,7 +65,7 @@ fn note(app: &mut App) {
 fn written(app: &mut App) {
     note(app);
     let _ = app.update(Message::TextField(FieldEvent::Keep));
-    let _ = app.update(Message::PromptChoice("O", "açık"));
+    let _ = app.update(Message::PromptChoice("O", "açık".into()));
     typed(app, "Z");
     click(app, [50.0, -4.0]);
     click(app, [46.0, 4.0]);
@@ -73,7 +73,7 @@ fn written(app: &mut App) {
     typed(app, "");
     let _ = app.update(Message::TextField(FieldEvent::Input("Ø150 PVC".into())));
     let _ = app.update(Message::TextField(FieldEvent::Keep));
-    let _ = app.update(Message::PromptChoice("O", "nokta"));
+    let _ = app.update(Message::PromptChoice("O", "nokta".into()));
     typed(app, "Z");
     click(app, [8.0, 18.0]);
     click(app, [3.0, 23.0]);

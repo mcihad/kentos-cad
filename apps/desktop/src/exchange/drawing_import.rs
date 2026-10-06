@@ -38,7 +38,7 @@ use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
 
-use super::apply::{self, ImportPlan, LayerTarget, Progressive, layer_named};
+use super::apply::{self, ImportPlan, LayerTarget, Progressive, Styles, layer_named};
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message};
 use crate::app::{App, Message};
@@ -167,6 +167,22 @@ struct Made<'a> {
     layers: &'a [String],
     blocks: usize,
     renamed: &'a [(String, String)],
+    /// The text and dimension styles added to the project (docs/adr/0183 §7).
+    styles: (usize, usize),
+}
+
+/// “; 2 yazı stili ve 1 ölçü stili projeye eklendi” (docs/adr/0183 §7), nothing for none; the web's `stylesAdded`.
+fn styles_added((text, dimension): (usize, usize)) -> String {
+    let parts: Vec<String> = [(text, "yazı stili"), (dimension, "ölçü stili")]
+        .into_iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, what)| format!("{n} {what}"))
+        .collect();
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!("; {} projeye eklendi", parts.join(" ve "))
+    }
 }
 
 /// ““KAPI” → “KAPI (2)”, “Rögar” → “Rögar (2)” ve 3 tane daha”.
@@ -288,6 +304,10 @@ impl App {
     fn read_drawing(&mut self) -> Task<Message> {
         let font = self.drawing_font_id();
         let unit = self.dxf_unit();
+        // The styles' sizes are paper mm at the project's scale, their missing typefaces the project's (docs/adr/0183 §7).
+        let (scale, typeface) = self.document.as_ref().map_or((None, None), |d| {
+            (Some(d.settings().plot_scale), d.settings().drawing_font)
+        });
         let Some(Window::DrawingImport(s)) = &mut self.exchange else {
             return Task::none();
         };
@@ -326,6 +346,8 @@ impl App {
                             max_entities: 0,
                             explode_blocks: explode,
                             unit,
+                            scale,
+                            drawing_font: typeface,
                         },
                         &mut watch,
                     ),
@@ -502,12 +524,23 @@ impl App {
             group: Some(name.clone()),
         };
         let skipped = result.report.skipped.clone();
+        // The file's text and dimension styles (docs/adr/0183 §7).
+        let styles = Styles {
+            text: result.text_styles.clone(),
+            dimension: result.dimension_styles.clone(),
+        };
         let Some(doc) = &mut self.document else {
             return Task::none();
         };
 
         if result.entities.len() <= AT_ONCE {
-            match apply::apply_import(&mut doc.model, result.entities.clone(), result.blocks.clone(), &plan) {
+            match apply::apply_styled_import(
+                &mut doc.model,
+                result.entities.clone(),
+                result.blocks.clone(),
+                styles,
+                &plan,
+            ) {
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                         s.status = Some((true, error));
@@ -519,6 +552,7 @@ impl App {
                         layers: &applied.created,
                         blocks: applied.blocks,
                         renamed: &applied.renamed,
+                        styles: applied.styles,
                     };
                     self.import_done(&name, chosen, &applied.slots, &made, &skipped);
                 }
@@ -527,7 +561,7 @@ impl App {
         }
 
         // A large file: the layers and blocks now, the objects a frame at a time, one undo step.
-        match Progressive::start(&mut doc.model, result.blocks.clone(), &plan) {
+        match Progressive::start(&mut doc.model, result.blocks.clone(), styles, &plan) {
             Err(error) => {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.status = Some((true, error));
@@ -587,6 +621,7 @@ impl App {
                         layers: &job.work.created,
                         blocks: job.work.blocks,
                         renamed: &job.work.renamed,
+                        styles: job.work.added_styles,
                     };
                     self.import_said(&job.name, job.layers, job.work.slots.len(), &made, &job.skipped);
                 }
@@ -628,10 +663,11 @@ impl App {
         } else {
             format!("; {} blok tanımı eklendi", made.blocks)
         };
+        let styles = styles_added(made.styles);
         self.say(
             Level::Success,
             format!(
-                "“{name}”: {} nesne {chosen} katmana alındı{into}{blocks}. Tek adımda geri alınabilir.",
+                "“{name}”: {} nesne {chosen} katmana alındı{into}{blocks}{styles}. Tek adımda geri alınabilir.",
                 grouped(count as f64)
             ),
         );

@@ -59,6 +59,7 @@ fn dimension() -> DimensionEntity {
         mask: false,
         za: None,
         zb: None,
+        look: Default::default(),
     }
 }
 

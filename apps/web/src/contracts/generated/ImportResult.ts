@@ -2,9 +2,11 @@
 import type { BlockDefinition } from "./BlockDefinition";
 import type { Bounds } from "./Bounds";
 import type { DeclaredCrs } from "./DeclaredCrs";
+import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { Entity } from "./Entity";
 import type { ImportLayer } from "./ImportLayer";
 import type { ImportReport } from "./ImportReport";
+import type { TextStyleDef } from "./TextStyleDef";
 
 /**
  * What a reader produced. Objects have id 0 (the app numbers them when it
@@ -31,4 +33,12 @@ view?: Bounds,
  * app gives them new ones and a name the drawing does not have yet),
  * their objects on layer "0". None when blocks were exploded.
  */
-blocks?: Array<BlockDefinition>, };
+blocks?: Array<BlockDefinition>, 
+/**
+ * The text and dimension styles the objects follow (a DXF's STYLE and
+ * DIMSTYLE records, docs/adr/0183 §7), in the file's order: ids the
+ * reader numbered, their sizes in paper mm at the scale the options
+ * gave. The app takes a style of a name the project has as that one,
+ * and gives the others new ids and names the project does not have yet.
+ */
+textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, };

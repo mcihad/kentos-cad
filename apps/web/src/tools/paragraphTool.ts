@@ -6,6 +6,8 @@ import { TextTool } from './annotateTools';
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath } from './preview';
+import { stylesShown, takeTextStyle, textFaceNow, textStyleChoices, textStyleName, textWidthFactorNow } from './styleOption';
+import type { OptionChoice } from './Tool';
 import { fixed } from '../core/displayNumber';
 
 /** Paper sizes (mm) as world metres at the project's plot scale. */
@@ -20,7 +22,7 @@ const paper = (plotScale: number, mm: number) => (mm / 1000) * plotScale;
  * - the paragraph editor opens at the box (`view.requestParagraphInput`, ui/shell/ParagraphEditor.ts): Tamam writes the
  *   text and its letter formats through `cad.entities.create` (one step, “Ekle”), its ends' white space left out;
  *   Vazgeç drops it; the tool waits for the next box;
- * - Yükseklik (Y) and Açı (A) are Yazı's, Zemin (Z) Yazı's mask; Satır aralığı (S) the lines' spacing, from 0.25 to
+ * - Yükseklik (Y) and Açı (A) are Yazı's, Zemin (Z) Yazı's mask; Satır aralığı (R) the lines' spacing, from 0.25 to
  *   4, kept as long as the page lives;
  * - a locked active layer is said at the first corner and nothing opens.
  */
@@ -28,7 +30,7 @@ export class ParagraphTextTool extends PointInputTool {
   readonly id = 'mtext';
   protected readonly label = 'Çok satırlı yazı';
   private static spacing = 1;
-  private stage: 'first' | 'second' | 'height' | 'angle' | 'spacing' | 'typing' = 'first';
+  private stage: 'first' | 'second' | 'height' | 'angle' | 'spacing' | 'style' | 'typing' = 'first';
   private first: Vec2 | null = null;
 
   protected promptFor(): string {
@@ -42,12 +44,14 @@ export class ParagraphTextTool extends PointInputTool {
         return `satır aralığını yazın (1: yüksekliğin 5/3'ü; ${MIN_LINE_SPACING} ile ${MAX_LINE_SPACING} arası)`;
       case 'second':
         return 'kutunun karşı köşesine tıklayın';
+      case 'style':
+        return `yazı stilini menüden seçin ya da adını yazın [Stil (S): ${textStyleName(this.ctx)}]`;
       case 'typing':
         return 'yazıyı kutuya yazın; Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer';
       default:
         return (
-          `yazı kutusunun ilk köşesine tıklayın [Yükseklik (Y): ${o.heightMm} mm / Açı (A): ${+fixed(o.angle, 4)}° / ` +
-          `Satır aralığı (S): ${+fixed(ParagraphTextTool.spacing, 4)} / Zemin (Z): ${o.mask ? 'açık' : 'kapalı'}]`
+          `yazı kutusunun ilk köşesine tıklayın [${stylesShown(this.ctx) ? `Stil (S): ${textStyleName(this.ctx)} / ` : ''}Yükseklik (Y): ${o.heightMm} mm / Açı (A): ${+fixed(o.angle, 4)}° / ` +
+          `Satır aralığı (R): ${+fixed(ParagraphTextTool.spacing, 4)} / Zemin (Z): ${o.mask ? 'açık' : 'kapalı'}]`
         );
     }
   }
@@ -74,8 +78,13 @@ export class ParagraphTextTool extends PointInputTool {
       case 'A':
         this.stage = 'angle';
         break;
-      case 'S':
+      // Satır aralığı's R: S is Stil, as in Yazı (docs/adr/0183 §4).
+      case 'R':
         this.stage = 'spacing';
+        break;
+      case 'S':
+        if (!stylesShown(this.ctx)) return false;
+        this.stage = 'style';
         break;
       case 'Z':
         TextTool.setMask(!TextTool.options().mask);
@@ -83,6 +92,31 @@ export class ParagraphTextTool extends PointInputTool {
       default:
         return false;
     }
+    this.refreshPrompt();
+    return true;
+  }
+
+  /** Stil's menu: Standart, the project's text styles and their window (docs/adr/0183 §4). */
+  optionChoices(key: string): readonly OptionChoice[] | null {
+    return key === 'S' && stylesShown(this.ctx) && (this.stage === 'first' || this.stage === 'style') ? textStyleChoices(this.ctx) : null;
+  }
+
+  /** A style's name is words: Space types a space (docs/adr/0183 §4). */
+  takesWords(): boolean {
+    return this.stage === 'style';
+  }
+
+  chooseOption(key: string, typed: string): boolean {
+    if (key !== 'S' || !stylesShown(this.ctx) || (this.stage !== 'first' && this.stage !== 'style')) return false;
+    return this.takeStyle(typed);
+  }
+
+  /** A typed or chosen text style, Yazı's too: the tool waits for the first corner again; a name the project has none of is said. */
+  private takeStyle(typed: string): boolean {
+    const s = takeTextStyle(this.ctx, typed);
+    if (s === undefined) return true;
+    TextTool.useStyle(s);
+    this.stage = 'first';
     this.refreshPrompt();
     return true;
   }
@@ -100,6 +134,9 @@ export class ParagraphTextTool extends PointInputTool {
     const { corner, width } = textCornerBox(this.first, p, o.angle);
     const height = paper(this.ctx.doc.settings.plotScale.value, o.heightMm);
     const spacing = ParagraphTextTool.spacing;
+    // The style's face and width factor (docs/adr/0183 §2), a CAD project's.
+    const face = textFaceNow(this.ctx);
+    const factor = textWidthFactorNow(this.ctx);
     this.stage = 'typing';
     this.ctx.view.requestParagraphInput({
       at: corner,
@@ -108,6 +145,8 @@ export class ParagraphTextTool extends PointInputTool {
       ...(width !== undefined && { boxWidth: width }),
       ...(spacing !== 1 && { lineSpacing: spacing }),
       ...(o.mask && { mask: true }),
+      ...(factor !== undefined && { widthFactor: factor }),
+      face,
       commit: (typed, typedRuns) => {
         const { text, runs } = trimmedParagraph(typed, typedRuns);
         if (text) {
@@ -119,10 +158,12 @@ export class ParagraphTextTool extends PointInputTool {
               height,
               rotation: o.angle,
               align: 'topLeft',
+              ...(factor !== undefined && { widthFactor: factor }),
               ...(o.mask && { mask: true }),
               ...(width !== undefined && { boxWidth: width }),
               ...(spacing !== 1 && { lineSpacing: spacing }),
               ...(runs.length && { runs: runs as TextRun[] }),
+              ...face,
             },
           ]);
           if (written) this.ctx.log.success(`Çok satırlı yazı eklendi: “${text.split('\n')[0]}${text.includes('\n') ? ' …' : ''}”`);
@@ -145,6 +186,7 @@ export class ParagraphTextTool extends PointInputTool {
   override input(text: string): boolean {
     const t = text.trim();
     if (this.option(t.toLocaleUpperCase('tr-TR'))) return true;
+    if (this.stage === 'style') return this.takeStyle(t);
     const n = parseNumber(t);
     if (this.stage === 'height') {
       if (n === null || n <= 0) return false;

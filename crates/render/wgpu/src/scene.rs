@@ -186,7 +186,7 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                 }
                 Entity::Hatch(h) => b.hatch(h, color),
                 Entity::Dimension(_) => {
-                    let drawn = dimension_lines(&mut b, entity, color);
+                    let drawn = dimension_lines(&mut b, entity, color, Some(color));
                     if !drawn {
                         *not_drawn.entry(entity.kind()).or_insert(0) += 1;
                     }
@@ -205,12 +205,16 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
 
 /// A dimension's layout lines (`layout_dimension`: extension lines, the
 /// dimension line and its arrows); false when the core cannot lay it out.
-fn dimension_lines(b: &mut Builder, entity: &Entity, color: Rgba8) -> bool {
+fn dimension_lines(b: &mut Builder, entity: &Entity, color: Rgba8, fill: Option<Rgba8>) -> bool {
     let Some(layout) = dimension_geom(&shape(entity)).and_then(|d| layout_dimension(&d)) else {
         return false;
     };
     for [from, to] in layout.lines {
         b.segment(from, to, color);
+    }
+    // Filled arrowheads and dots (docs/adr/0183 §3): each outlined, filled with `fill` when given.
+    for ring in layout.fills.unwrap_or_default() {
+        b.polygon(&[ring], color, fill);
     }
     true
 }
@@ -612,7 +616,7 @@ fn highlight_one(b: &mut Builder, entity: &Entity, style: &Highlight, tol: f64, 
             );
         }
         Entity::Dimension(_) => {
-            dimension_lines(b, entity, color);
+            dimension_lines(b, entity, color, style.fill);
         }
         Entity::Leader(_) => leader_parts(b, entity, color, style.fill),
         Entity::Xline(_) | Entity::Ray(_) => construction_line(b, entity, clip, color),
@@ -1034,6 +1038,36 @@ fn other_parts(p: &PathEntity, tol: f64) -> Vec<Vec<Vec<Vec2>>> {
         .collect()
 }
 
+/// A text's face as the core takes it (docs/adr/0183 §2): the scene draws no
+/// text, but its box (extents) is measured in its own typeface and slant.
+fn text_face(f: &kentos_contracts::TextFace) -> kentos_geometry_core::text::face::Face {
+    kentos_geometry_core::text::face::Face {
+        style: f.text_style.clone(),
+        font: f.font.map(|d| Font::from_id(d.id())),
+        bold: f.bold,
+        italic: f.italic,
+        oblique: f.oblique,
+    }
+}
+
+/// A dimension's look as the core lays it out (docs/adr/0183 §3): its
+/// arrowheads, sizes and value's place; the value's writing is the host's.
+fn dimension_look(
+    l: &kentos_contracts::DimensionLook,
+) -> kentos_geometry_core::geom::dimension::Look {
+    use kentos_geometry_core::geom::dimension::{Arrow, Look};
+    Look {
+        arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
+        arrow_size: l.arrow_size,
+        ext_offset: l.ext_offset,
+        ext_beyond: l.ext_beyond,
+        text_gap: l.text_gap,
+        centre: l.text_place.is_some(),
+        font: l.font.map(|d| Font::from_id(d.id())),
+        ..Look::default()
+    }
+}
+
 /// A multi-line text's runs as the core takes them (docs/adr/0182); none for none.
 fn text_runs(
     runs: &[kentos_contracts::TextRun],
@@ -1151,6 +1185,7 @@ fn shape(entity: &Entity) -> Shape {
             box_width: t.paragraph.box_width,
             line_spacing: t.paragraph.line_spacing,
             runs: text_runs(&t.paragraph.runs),
+            face: text_face(&t.face),
         },
         Entity::Dimension(d) => Shape::Dimension {
             a: v(&d.a),
@@ -1164,6 +1199,7 @@ fn shape(entity: &Entity) -> Shape {
             mask: d.mask.then_some(true),
             za: d.za,
             zb: d.zb,
+            look: dimension_look(&d.look),
         },
         Entity::Hatch(h) => Shape::Hatch {
             ring: points(&h.ring),

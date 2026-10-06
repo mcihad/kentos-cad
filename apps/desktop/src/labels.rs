@@ -38,7 +38,6 @@ use kentos_render_wgpu::color::{Palette, Rgba8};
 
 use crate::app::Message;
 use crate::drawing_fonts;
-use crate::exchange::dimension_text;
 use crate::viewport::Canvas;
 
 /// The labels a view shows, as last asked of the store, and what they were
@@ -110,6 +109,8 @@ pub struct Preview {
     pub text: String,
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
+    /// Its face (docs/adr/0183 §2): its typeface, bold, italic and slant.
+    pub face: kentos_contracts::TextFace,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -162,6 +163,7 @@ fn build<'a>(
     if let Some(p) = &preview {
         p.text.hash(&mut key);
         format!("{:?}", p.runs).hash(&mut key);
+        format!("{:?}", p.face).hash(&mut key);
         for r in &p.records {
             r.to_bits().hash(&mut key);
         }
@@ -345,6 +347,8 @@ pub struct MapLabel {
     pub size: f64,
     pub weight: u16,
     pub italic: bool,
+    /// Its own typeface (docs/adr/0183 §2); none: the project's.
+    pub font: Option<DrawingFont>,
     pub color: Color,
     pub halo: Color,
     pub mask: Option<Vec<[f64; 2]>>,
@@ -490,6 +494,12 @@ impl Ink for Collect<'_> {
                 _ => 700,
             },
             italic: piece.font.style == iced::font::Style::Italic,
+            font: match piece.font.family {
+                iced::font::Family::Name(name) => DrawingFont::ALL
+                    .into_iter()
+                    .find(|f| drawing_fonts::family(*f) == name),
+                _ => None,
+            },
             color: piece.color,
             halo,
             mask,
@@ -536,6 +546,7 @@ impl Ink for Collect<'_> {
             size: 0.0,
             weight: 400,
             italic: false,
+            font: None,
             color,
             halo: color,
             mask: Some(ground),
@@ -593,7 +604,10 @@ enum Anchor {
 /// wide; `mask` pixels long, the box filled with the drawing area's colour
 /// under it first (a text object's, docs/adr/0145; a dimension value's,
 /// docs/adr/0147), 0 for none; `underline` pixels long, a bar under it (a
-/// multi-line text's run, docs/adr/0182 §3), 0 for none.
+/// multi-line text's run, docs/adr/0182 §3), 0 for none; `lean` how far its
+/// letters' tops move along per pixel up (a slant's tangent, docs/adr/0183
+/// §2; a family without an italic face leant as a browser leans it), the
+/// mask with them.
 struct Piece<'t> {
     text: &'t str,
     at: Point,
@@ -605,6 +619,49 @@ struct Piece<'t> {
     width_factor: f32,
     mask: f32,
     underline: f32,
+    lean: f32,
+}
+
+/// A text's typeface, weight, italic and lean as drawn (docs/adr/0183 §2):
+/// its own typeface upright at 400 (600 bold, its italic face when italic)
+/// leaning by its slant; without one the project's in `legacy` (italic for
+/// a text of one line, as always); a run's bold and italic added. A family
+/// without an italic face is leant as a browser leans it.
+fn face_font(
+    face: &kentos_contracts::TextFace,
+    project: DrawingFont,
+    legacy_italic: bool,
+    run: Option<&Run>,
+) -> (Font, f32) {
+    let (bold_run, italic_run) = run.map_or((false, false), |r| (r.bold, r.italic));
+    let (family, weight, italic, slant) = match face.font {
+        Some(f) => (
+            f,
+            if face.bold || bold_run { 600 } else { 400 },
+            face.italic || italic_run,
+            face.oblique.map_or(0.0, |o| o.to_radians().tan() as f32),
+        ),
+        None => (
+            project,
+            if bold_run { 600 } else { 400 },
+            legacy_italic || italic_run,
+            0.0,
+        ),
+    };
+    let synthetic = if italic && !drawing_fonts::has_italic(family) {
+        drawing_fonts::SYNTHETIC_ITALIC
+    } else {
+        0.0
+    };
+    (
+        drawing_fonts::font(family, weight, italic),
+        slant + synthetic,
+    )
+}
+
+/// A block's piece's face as the contract writes it (the core's `Face`).
+fn contract_face(face: &kentos_geometry_core::text::face::Face) -> kentos_contracts::TextFace {
+    kentos_native_application::geometry::contract_face(face.clone())
 }
 
 impl Labels<'_> {
@@ -642,7 +699,9 @@ impl Labels<'_> {
     /// the shared layout's advances put it (bold from the bold table, raised
     /// and lowered at 0.6), upright at 400 (600 bold, italic when italic),
     /// raised 0.4 and lowered 0.15 of the height, in the run's colour, its
-    /// underline 0.12 of the height under the baseline.
+    /// underline 0.12 of the height under the baseline. A text's face
+    /// (docs/adr/0183 §2): its typeface, its bold and italic added to the
+    /// runs', the line leaning by its slant about its baseline.
     #[allow(clippy::too_many_arguments)]
     fn line(
         &self,
@@ -654,10 +713,19 @@ impl Labels<'_> {
         rotation: f64,
         height: f64,
         width_factor: f64,
+        text_face: &kentos_contracts::TextFace,
     ) {
         let letters: Vec<char> = text.chars().collect();
         let (start, end) = (start.min(letters.len()), end.min(letters.len()));
-        let face = kentos_native_application::geometry::drawing_font(Some(self.font));
+        let face = kentos_native_application::geometry::drawing_font(Some(
+            text_face.font.unwrap_or(self.font),
+        ));
+        let own_bold = text_face.font.is_some() && text_face.bold;
+        // The slant's tangent: a raised or lowered run starts that much further along.
+        let slant = match (text_face.font, text_face.oblique) {
+            (Some(_), Some(o)) => o.to_radians().tan(),
+            _ => 0.0,
+        };
         let r = rotation.to_radians();
         let (c, s) = (r.cos(), r.sin());
         let size = height * self.camera.scale;
@@ -675,7 +743,7 @@ impl Labels<'_> {
             while j < end && look(j) == f {
                 j += 1;
             }
-            let bold = f.is_some_and(|r| r.bold);
+            let bold = f.is_some_and(|r| r.bold) || own_bold;
             let script = f.and_then(|r| r.script);
             let width: f64 = letters[i..j]
                 .iter()
@@ -688,7 +756,9 @@ impl Labels<'_> {
                 None => 0.0,
             };
             let words: String = letters[i..j].iter().collect();
-            let place = Vec2::new(at.x + c * x - s * lift, at.y + s * x + c * lift);
+            let along = x + lift * slant;
+            let place = Vec2::new(at.x + c * along - s * lift, at.y + s * along + c * lift);
+            let (font, lean) = face_font(text_face, self.font, false, f);
             let scaled = if script.is_some() { size * 0.6 } else { size };
             let color = f
                 .and_then(|r| r.color.as_deref())
@@ -702,11 +772,7 @@ impl Labels<'_> {
                         at: self.screen(place),
                         angle: (-r) as f32,
                         size: scaled as f32,
-                        font: drawing_fonts::font(
-                            self.font,
-                            if bold { 600 } else { 400 },
-                            f.is_some_and(|r| r.italic),
-                        ),
+                        font,
                         anchor: Anchor::LeftBaseline,
                         color,
                         width_factor: width_factor as f32,
@@ -716,6 +782,7 @@ impl Labels<'_> {
                         } else {
                             0.0
                         },
+                        lean,
                     },
                     self.colors.halo,
                 );
@@ -771,9 +838,10 @@ impl Labels<'_> {
                     },
                     Entity::Dimension(d),
                 ) => {
+                    // Its value in its look's writing and typeface (docs/adr/0183 §3).
                     let text = match d.text.as_deref().filter(|t| !t.is_empty()) {
                         Some(own) => own.to_owned(),
-                        None => dimension_text(&self.format, prefix, unit, *value),
+                        None => self.format.dimension_in(prefix, unit, *value, &d.look),
                     };
                     let color = self.ink_of(
                         base.color
@@ -781,7 +849,7 @@ impl Labels<'_> {
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
                     let size = (d.height * self.camera.scale) as f32;
-                    let font = drawing_fonts::font(self.font, 500, false);
+                    let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
                     self.draw(
                         frame,
                         &Piece {
@@ -795,6 +863,7 @@ impl Labels<'_> {
                             width_factor: 1.0,
                             mask: value_mask(*mask, &text, font, size),
                             underline: 0.0,
+                            lean: 0.0,
                         },
                         self.colors.halo,
                     );
@@ -808,22 +877,27 @@ impl Labels<'_> {
                         ..
                     },
                     Entity::Text(t),
-                ) => self.draw(
-                    frame,
-                    &Piece {
-                        text: &t.text,
-                        at: self.screen(*at),
-                        angle: (-rotation.to_radians()) as f32,
-                        size: (t.height * self.camera.scale) as f32,
-                        font: drawing_fonts::font(self.font, 400, true),
-                        anchor: Anchor::LeftBaseline,
-                        color: self.colors.label,
-                        width_factor: *width_factor as f32,
-                        mask: (mask * self.camera.scale) as f32,
-                        underline: 0.0,
-                    },
-                    self.colors.halo,
-                ),
+                ) => {
+                    // Its face (docs/adr/0183 §2), else the project's typeface, italic.
+                    let (font, lean) = face_font(&t.face, self.font, true, None);
+                    self.draw(
+                        frame,
+                        &Piece {
+                            text: &t.text,
+                            at: self.screen(*at),
+                            angle: (-rotation.to_radians()) as f32,
+                            size: (t.height * self.camera.scale) as f32,
+                            font,
+                            anchor: Anchor::LeftBaseline,
+                            color: self.colors.label,
+                            width_factor: *width_factor as f32,
+                            mask: (mask * self.camera.scale) as f32,
+                            underline: 0.0,
+                            lean,
+                        },
+                        self.colors.halo,
+                    );
+                }
                 // A leader's note, as a text (docs/adr/0146 §5).
                 (
                     LabelSpot::Text {
@@ -834,6 +908,7 @@ impl Labels<'_> {
                     let Some(note) = l.text.as_deref() else {
                         continue;
                     };
+                    let (font, lean) = face_font(&Default::default(), self.font, true, None);
                     self.draw(
                         frame,
                         &Piece {
@@ -841,12 +916,13 @@ impl Labels<'_> {
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
                             size: (l.height * self.camera.scale) as f32,
-                            font: drawing_fonts::font(self.font, 400, true),
+                            font,
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
                             width_factor: 1.0,
                             mask: (mask * self.camera.scale) as f32,
                             underline: 0.0,
+                            lean,
                         },
                         self.colors.halo,
                     );
@@ -862,6 +938,7 @@ impl Labels<'_> {
                         attribute,
                         width_factor,
                         mask,
+                        face,
                         ..
                     },
                     _,
@@ -874,6 +951,7 @@ impl Labels<'_> {
                     if shown.is_empty() {
                         continue;
                     }
+                    let (font, lean) = face_font(&contract_face(face), self.font, true, None);
                     self.draw(
                         frame,
                         &Piece {
@@ -881,12 +959,13 @@ impl Labels<'_> {
                             at: self.screen(*at),
                             angle: (-rotation.to_radians()) as f32,
                             size: (height * self.camera.scale) as f32,
-                            font: drawing_fonts::font(self.font, 400, true),
+                            font,
                             anchor: Anchor::LeftBaseline,
                             color: self.colors.label,
                             width_factor: *width_factor as f32,
                             mask: (mask * self.camera.scale) as f32,
                             underline: 0.0,
+                            lean,
                         },
                         self.colors.halo,
                     );
@@ -901,13 +980,15 @@ impl Labels<'_> {
                         unit,
                         prefix,
                         mask,
+                        look,
                         ..
                     },
                     _,
                 ) => {
+                    let look = kentos_native_application::geometry::contract_look(look.clone());
                     let text = match text {
                         Some(own) => own.clone(),
-                        None => dimension_text(&self.format, prefix, unit, *value),
+                        None => self.format.dimension_in(prefix, unit, *value, &look),
                     };
                     let color = self.ink_of(
                         base.color
@@ -915,7 +996,7 @@ impl Labels<'_> {
                             .or(layer.map(|l| l.style.color.as_str())),
                     );
                     let size = (height * self.camera.scale) as f32;
-                    let font = drawing_fonts::font(self.font, 500, false);
+                    let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
                     self.draw(
                         frame,
                         &Piece {
@@ -929,17 +1010,20 @@ impl Labels<'_> {
                             width_factor: 1.0,
                             mask: value_mask(*mask, &text, font, size),
                             underline: 0.0,
+                            lean: 0.0,
                         },
                         self.colors.halo,
                     );
                 }
-                // A multi-line text's mask, then its lines (docs/adr/0182 §3).
+                // A multi-line text's mask, then its lines (docs/adr/0182 §3); a leaning one's box
+                // leans from its corner (docs/adr/0183 §2).
                 (
                     LabelSpot::ParagraphMask {
                         at,
                         rotation,
                         width,
                         height,
+                        lean,
                         ..
                     },
                     _,
@@ -947,6 +1031,7 @@ impl Labels<'_> {
                     let r = rotation.to_radians();
                     let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
                     let corner = |x: f64, y: f64| {
+                        let x = x + y * lean;
                         self.screen(Vec2::new(
                             at.x + u.x * x + v.x * y,
                             at.y + u.y * x + v.y * y,
@@ -971,19 +1056,25 @@ impl Labels<'_> {
                         start,
                         end,
                         piece,
+                        face,
                         ..
                     },
                     entity,
                 ) => {
                     let own;
-                    let (text, runs): (&str, &[Run]) = match (piece, entity) {
-                        (Some(p), _) => (&p.0, &p.1),
-                        (None, Entity::Text(t)) => {
-                            own = core_runs(&t.paragraph.runs).unwrap_or_default();
-                            (&t.text, &own)
-                        }
-                        _ => continue,
-                    };
+                    let (text, runs, face): (&str, &[Run], kentos_contracts::TextFace) =
+                        match (piece, entity) {
+                            (Some(p), _) => (
+                                &p.0,
+                                &p.1,
+                                face.as_ref().map(contract_face).unwrap_or_default(),
+                            ),
+                            (None, Entity::Text(t)) => {
+                                own = core_runs(&t.paragraph.runs).unwrap_or_default();
+                                (&t.text, &own, t.face.clone())
+                            }
+                            _ => continue,
+                        };
                     self.line(
                         frame,
                         text,
@@ -993,6 +1084,7 @@ impl Labels<'_> {
                         *rotation,
                         *height,
                         *width_factor,
+                        &face,
                     );
                 }
                 (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
@@ -1021,7 +1113,9 @@ impl Labels<'_> {
                         Vec2::new(rad.cos(), rad.sin()),
                         Vec2::new(-rad.sin(), rad.cos()),
                     );
+                    let lean = kentos_native_application::geometry::core_face(&p.face).lean();
                     let corner = |x: f64, y: f64| {
+                        let x = x + y * lean;
                         self.screen(Vec2::new(
                             at.x + u.x * x + v.x * y,
                             at.y + u.y * x + v.y * y,
@@ -1044,6 +1138,7 @@ impl Labels<'_> {
                         r[4],
                         r[5],
                         r[6],
+                        &p.face,
                     );
                 }
             }
@@ -1116,6 +1211,7 @@ impl Labels<'_> {
             width_factor: 1.0,
             mask: 0.0,
             underline: 0.0,
+            lean: 0.0,
         };
         let halo = self.colors.halo;
         let Some(s) = self.anchor(spot) else {
@@ -1263,7 +1359,8 @@ pub(crate) fn ghost(
     if size < SMALLEST || text.is_empty() {
         return;
     }
-    let font = drawing_fonts::font(drawing, 400, true);
+    // The texts it will write have the project's look (docs/adr/0175 §1): italic, leant where the family has no italic face.
+    let (font, lean) = face_font(&Default::default(), drawing, true, None);
     let width = measure(text, font).width * size / REFERENCE;
     // From its point to where its baseline starts, in the text's own frame (y down the screen).
     let (dx, dy) = (-along * width, up * size);
@@ -1279,6 +1376,69 @@ pub(crate) fn ghost(
         width_factor: 1.0,
         mask: if mask { width } else { 0.0 },
         underline: 0.0,
+        lean,
+    };
+    draw(frame, &piece, halo);
+}
+
+/// A sample of a text style (the styles' window, docs/adr/0183 §5): `text`
+/// from where its baseline starts at `at`, `size` px high, in `face` (else
+/// the project's `project`, italic), its letters `width_factor` wide.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn sample_text(
+    frame: &mut Frame,
+    text: &str,
+    at: Point,
+    size: f32,
+    face: &kentos_contracts::TextFace,
+    width_factor: f32,
+    project: DrawingFont,
+    (color, halo): (Color, Color),
+) {
+    let (font, lean) = face_font(face, project, true, None);
+    let piece = Piece {
+        text,
+        at,
+        angle: 0.0,
+        size,
+        font,
+        anchor: Anchor::LeftBaseline,
+        color,
+        width_factor,
+        mask: 0.0,
+        underline: 0.0,
+        lean,
+    };
+    draw(frame, &piece, halo);
+}
+
+/// A sample of a dimension's value (the styles' window): centred on its
+/// baseline at `at`, turned `angle` (screen radians), in `font` at 500, over
+/// its mask when `mask`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn sample_value(
+    frame: &mut Frame,
+    text: &str,
+    at: Point,
+    angle: f32,
+    size: f32,
+    font: DrawingFont,
+    mask: bool,
+    (color, halo): (Color, Color),
+) {
+    let font = drawing_fonts::font(font, 500, false);
+    let piece = Piece {
+        text,
+        at,
+        angle,
+        size,
+        font,
+        anchor: Anchor::CenterBaseline,
+        color,
+        width_factor: 1.0,
+        mask: value_mask(mask, text, font, size),
+        underline: 0.0,
+        lean: 0.0,
     };
     draw(frame, &piece, halo);
 }
@@ -1343,8 +1503,12 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         align_y: Vertical::Top,
         shaping: text::Shaping::Advanced,
     };
-    // Upright, plain text through the glyph cache; a width factor or a mask needs the frame's transform.
-    if piece.angle.abs() < 1e-4 && piece.width_factor == 1.0 && piece.mask <= 0.0 {
+    // Upright, plain text through the glyph cache; a width factor, a mask or a lean needs the frame's transform.
+    if piece.angle.abs() < 1e-4
+        && piece.width_factor == 1.0
+        && piece.mask <= 0.0
+        && piece.lean == 0.0
+    {
         let top_left = Point::new(piece.at.x + dx, piece.at.y + dy);
         // The halo as eight copies around the text, then the text.
         for i in 0..8 {
@@ -1365,6 +1529,16 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         // 1.15 of it over the baseline and 0.23 under (`TextPlace::mask`), in the area's colour;
         // from where the text starts. A dimension's value (centred) is wider on its sides only,
         // leaving its dimension line and an arc length's symbol in view (docs/adr/0147).
+        // A leaning text's mask leans with its letters from the baseline (docs/adr/0183 §2).
+        let sheared = |path: Path, lean: f32| {
+            if lean == 0.0 {
+                path
+            } else {
+                path.transform(&canvas::path::lyon_path::math::Transform::new(
+                    1.0, 0.0, -lean, 1.0, 0.0, 0.0,
+                ))
+            }
+        };
         if piece.mask > 0.0 {
             let m = piece.size * 0.1;
             let v = if piece.anchor == Anchor::CenterBaseline {
@@ -1373,9 +1547,12 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
                 m
             };
             frame.fill(
-                &Path::rectangle(
-                    Point::new(dx - m, -piece.size * 1.15 - v),
-                    Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * v),
+                &sheared(
+                    Path::rectangle(
+                        Point::new(dx - m, -piece.size * 1.15 - v),
+                        Size::new(piece.mask + 2.0 * m, piece.size * 1.38 + 2.0 * v),
+                    ),
+                    piece.lean,
                 ),
                 halo,
             );
@@ -1383,9 +1560,12 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         if piece.width_factor != 1.0 {
             frame.scale_nonuniform(Vector::new(piece.width_factor, 1.0));
         }
+        // The letters lean before the width factor narrows them: their own lean is the text's over the factor.
+        let lean = piece.lean / piece.width_factor;
         let glyphs = outlines(piece, dx, dy, || {
             let mut glyphs: Vec<Path> = Vec::new();
-            text(Point::new(dx, dy), piece.color).draw_with(|path, _| glyphs.push(path));
+            text(Point::new(dx, dy), piece.color)
+                .draw_with(|path, _| glyphs.push(sheared(path, lean)));
             glyphs
         });
         let stroke = Stroke {
@@ -1409,9 +1589,9 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
 const OUTLINES_KEPT: usize = 8_192;
 
 /// What a turned text's outlines depend on: the text, its typeface, its
-/// size and its offset from the anchor. The turn and the place are the
-/// frame's transform, so a pan finds every text of the last frame here.
-type OutlineKey = (String, Font, u32, u32, u32);
+/// size, its offset from the anchor and its lean. The turn and the place
+/// are the frame's transform, so a pan finds every text of the last frame here.
+type OutlineKey = (String, Font, u32, u32, u32, u32);
 
 thread_local! {
     /// Shaping a text and taking its glyphs' outlines is most of a turned
@@ -1433,6 +1613,7 @@ fn outlines(
         piece.size.to_bits(),
         dx.to_bits(),
         dy.to_bits(),
+        (piece.lean / piece.width_factor).to_bits(),
     );
     OUTLINES.with(|kept| {
         if let Some(glyphs) = kept.borrow().get(&key) {

@@ -125,12 +125,17 @@ pub const LABEL_PIECE_LEADER: f64 = 9.0;
 /// One line of a multi-line text (docs/adr/0182 §3): x, y where its
 /// baseline starts, a the text's rotation, b its height, c its width factor
 /// (1 without one), d and e the line's letters `start..end` (Unicode scalar
-/// values of the text). Its letters' formats are the text's `runs`.
+/// values of the text). Its letters' formats are the text's `runs`. A
+/// leaning text's (docs/adr/0183 §2) lower lines start their depth times
+/// the slant's tangent back: the box leans as a whole; each line leans its
+/// letters from its own baseline.
 pub const LABEL_LINE: f64 = 10.0;
 /// A multi-line text's mask (docs/adr/0182 §3), before its lines, its own
 /// or a block's piece's: x, y the box's corner under its first letter's
 /// left, a the rotation, b the box's width along the baseline and c its
-/// height up from the corner, metres, a tenth of the height around the lines.
+/// height up from the corner, metres, a tenth of the height around the lines;
+/// d a block's piece's place (0 for a text's own). A leaning text's corner
+/// moves with the slant; the box leans from it.
 pub const LABEL_PARAGRAPH_MASK: f64 = 11.0;
 /// One line of a multi-line text among a block's pieces, as `LABEL_LINE`
 /// but c the piece's place (its width factor the piece's own: an insert
@@ -150,10 +155,12 @@ fn code(of: &[&str], s: &str) -> f64 {
     of.iter().position(|x| *x == s).unwrap_or(0) as f64
 }
 
-/// 1 for a dimension with a mask, else 0.
+/// 1 for a dimension with a mask or its value on its line, else 0.
 fn masked(s: &Shape) -> f64 {
     match s {
         Shape::Dimension { mask: Some(true), .. } => 1.0,
+        // A value on its line hides the line under it, as a mask does (docs/adr/0183 §3).
+        Shape::Dimension { look, .. } if look.centre => 1.0,
         _ => 0.0,
     }
 }
@@ -587,7 +594,8 @@ pub fn paragraph_records(
     if masked {
         let (h, m) = (t.height * 1.15, t.height * 0.1);
         let below = laid.lines.len().saturating_sub(1) as f64 * laid.pitch;
-        let (x0, y0) = (-m, -h * 0.2 - m - below);
+        let y0 = -h * 0.2 - m - below;
+        let x0 = -m + y0 * t.lean;
         out.extend([
             id,
             LABEL_PARAGRAPH_MASK,
@@ -596,7 +604,7 @@ pub fn paragraph_records(
             t.rotation,
             laid.width + 2.0 * m,
             h * 1.2 + 2.0 * m + below,
-            0.0,
+            piece.unwrap_or(0.0),
             0.0,
         ]);
     }
@@ -605,11 +613,12 @@ pub fn paragraph_records(
         None => (LABEL_LINE, t.width_factor.unwrap_or(1.0)),
     };
     for line in &laid.lines {
+        let x = line.x - line.y * t.lean;
         out.extend([
             id,
             kind,
-            o.x + u.x * line.x - v.x * line.y,
-            o.y + u.y * line.x - v.y * line.y,
+            o.x + u.x * x - v.x * line.y,
+            o.y + u.y * x - v.y * line.y,
             t.rotation,
             t.height,
             c,

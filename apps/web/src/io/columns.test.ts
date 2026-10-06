@@ -194,6 +194,47 @@ describe('the page packs a drawing into typed columns', () => {
     readsBack([linked, paragraph] as unknown as PageEntity[]);
   });
 
+  it('carries a text’s style and face and a dimension’s style and look, field by field (docs/adr/0183)', () => {
+    const styled = { ...base(), kind: 'text', p: P(1, 2), text: 'Ada 105', height: 2, rotation: 0, textStyle: '0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101', font: 'arimo', bold: true, italic: true, oblique: -12.5 };
+    const face = { ...base(), kind: 'text', p: P(1, 2), text: 'Not', height: 2, rotation: 0, font: 'plex-mono' };
+    const looked = {
+      ...base(),
+      kind: 'dimension',
+      a: P(0, 0),
+      b: P(8, 0),
+      offset: 2,
+      height: 0.5,
+      dimStyle: '0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201',
+      arrow: 'closed',
+      arrowSize: 1.2,
+      extOffset: -0,
+      extBeyond: 0.8,
+      textGap: 0.5,
+      textPlace: 'centre',
+      decimals: 0,
+      unit: 'cm',
+      prefix: 'L=',
+      suffix: ' cm',
+      font: 'courier-prime',
+    };
+    const some = { ...base(), kind: 'dimension', a: P(0, 0), b: P(8, 0), offset: 2, height: 0.5, style: 'slope', za: 1, zb: 2, arrow: 'none', decimals: 8, unit: 'm' };
+    readsBack([styled, face, looked, some] as unknown as PageEntity[]);
+    const packs = (e: Record<string, unknown>) => {
+      try {
+        packDrawing(head, [{ ...base(), ...e } as unknown as PageEntity]);
+      } catch (x) {
+        return `${(x as KcadError).code}: ${(x as Error).message}`;
+      }
+      return null;
+    };
+    expect(packs({ ...styled, font: 'comic' })).toMatch(/^bad_value: .*font: “comic” yazı tipi bilinmiyor/);
+    expect(packs({ ...styled, bold: false })).toMatch(/^bad_value: .*bold: kalın yalnız true yazılır/);
+    expect(packs({ ...looked, arrow: 'tick' })).toMatch(/^bad_value: .*arrow: “tick” ölçü oku bilinmiyor/);
+    expect(packs({ ...looked, unit: 'km' })).toMatch(/ölçü birimi bilinmiyor/);
+    expect(packs({ ...looked, decimals: 1.5 })).toMatch(/^bad_value: .*decimals: basamak sayısı 1.5/);
+    expect(packs({ ...looked, textPlace: 'above' })).toMatch(/değerin yeri bilinmiyor/);
+  });
+
   it('orders text as UTF-8 bytes do, beyond U+FFFF too', () => {
     const words = ['b', 'a', 'ab', '10', '2', 'İ', 'z', '￿', '𐀀', '', 'Ç'];
     const utf8 = (s: string) => [...new TextEncoder().encode(s)];

@@ -1,0 +1,213 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "dimension-styles",
+  "title": "Ölçü stilleri araçta (ADR 0183 §4), CAD projesinde: Ölçülendirme'nin Stil (S) seçeneği; ad büyük küçük harf ayırmadan okunur; ölçü stilin görünüşüyle ve değer yüksekliğiyle yazılır (dolu ok, cm ve sonek; çentik, ortada değer ve önek); Standart görünüşü kaldırır",
+  "source": "Web'in tools/styleOption.ts ve dimensionTool.ts'i, masaüstünün kentos_interaction::styles ve dimension'ı; cad.entities.create, ADR 0183",
+  "covers": [
+    "UX-01",
+    "UX-06",
+    "CMD-04"
+  ],
+  "document": "styles.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.125,
+  "steps": [
+    {
+      "run": "tool.dimension",
+      "note": "CAD projesinde Ölçülendirme'de Stil (S).",
+      "expect": {
+        "tool": "dimension",
+        "points": 0,
+        "entities": 0
+      }
+    },
+    {
+      "key": "S",
+      "expect": {
+        "options": [
+          "S"
+        ],
+        "prompt": "Ölçü: ölçü stilini menüden seçin ya da adını yazın [Stil (S): Standart]"
+      }
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "mimari"
+    },
+    {
+      "key": "Enter",
+      "note": "Ad büyük küçük harf ayırmadan okunur."
+    },
+    {
+      "click": [
+        -4,
+        -20
+      ]
+    },
+    {
+      "click": [
+        6,
+        -20
+      ]
+    },
+    {
+      "click": [
+        1,
+        -17
+      ],
+      "note": "Ölçü stilin görünüşüyle: dolu ok, cm, değer Arimo; 1:1000'de 2 m.",
+      "expect": {
+        "entities": 1,
+        "newest": {
+          "kind": "dimension",
+          "points": [
+            [
+              -4,
+              -20
+            ],
+            [
+              6,
+              -20
+            ]
+          ],
+          "height": 2,
+          "look": {
+            "dimStyle": "0192f1a0-0000-7000-8000-0000000000d1",
+            "arrow": "closed",
+            "arrowSize": 1.5,
+            "decimals": 0,
+            "unit": "cm",
+            "suffix": " cm",
+            "font": "arimo"
+          }
+        },
+        "log": "success"
+      }
+    },
+    {
+      "key": "S"
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "kadastro"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "click": [
+        -4,
+        -30
+      ]
+    },
+    {
+      "click": [
+        6,
+        -30
+      ]
+    },
+    {
+      "click": [
+        1,
+        -27
+      ],
+      "note": "Çentikler (boyu varsayılanınkine eşit: yazılmaz), değer çizginin ortasında, “L=”, iki basamak.",
+      "expect": {
+        "entities": 2,
+        "newest": {
+          "kind": "dimension",
+          "points": [
+            [
+              -4,
+              -30
+            ],
+            [
+              6,
+              -30
+            ]
+          ],
+          "height": 2.5,
+          "look": {
+            "dimStyle": "0192f1a0-0000-7000-8000-0000000000d2",
+            "textPlace": "centre",
+            "decimals": 2,
+            "prefix": "L="
+          }
+        }
+      }
+    },
+    {
+      "key": "S"
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "standart"
+    },
+    {
+      "key": "Enter",
+      "note": "Standart: görünüş alanı yok, değer 2,5 mm."
+    },
+    {
+      "click": [
+        -4,
+        -40
+      ]
+    },
+    {
+      "click": [
+        6,
+        -40
+      ]
+    },
+    {
+      "click": [
+        1,
+        -37
+      ],
+      "expect": {
+        "entities": 3,
+        "newest": {
+          "kind": "dimension",
+          "points": [
+            [
+              -4,
+              -40
+            ],
+            [
+              6,
+              -40
+            ]
+          ],
+          "height": 2.5,
+          "look": {}
+        }
+      }
+    },
+    {
+      "key": "Esc"
+    }
+  ]
+}

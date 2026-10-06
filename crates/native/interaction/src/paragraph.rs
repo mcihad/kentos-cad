@@ -24,8 +24,10 @@ use crate::format::{Format, fixed, js_number};
 use crate::log::Level;
 use crate::points::{self, Taken};
 use crate::prompt::{Prompt, upper_tr};
+use crate::styles;
 use crate::tool::{
-    Context, Flow, Memory, ParagraphField, Pointer, Preview, Stroke, Tag, Tone, Tool, ViewChange,
+    Context, Flow, Memory, OptionChoice, ParagraphField, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    ViewChange,
 };
 
 /// The tool's id: its command is `tool.mtext`.
@@ -42,6 +44,8 @@ enum Stage {
     Height,
     Angle,
     Spacing,
+    /// Stil: a text style's name typed, or chosen from its menu (docs/adr/0183 §4).
+    Style,
     /// The editor is open at `at`.
     Typing,
 }
@@ -55,6 +59,8 @@ pub struct ParagraphText {
     /// The editor's box: the text's point and width.
     at: Option<(Vec2, Option<f64>)>,
     seen: Option<(Memory, Format)>,
+    /// The text styles as of the last call: a CAD project's Stil (docs/adr/0183 §4).
+    styles: styles::Seen,
 }
 
 /// Paper millimetres as metres at the project's plot scale (Yazı's).
@@ -137,6 +143,7 @@ impl ParagraphText {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some((*cx.memory, cx.format()));
+        self.styles = styles::Seen::text(cx);
     }
 
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> bool {
@@ -146,7 +153,9 @@ impl ParagraphText {
         match key {
             "Y" => self.stage = Stage::Height,
             "A" => self.stage = Stage::Angle,
-            "S" => self.stage = Stage::Spacing,
+            // Satır aralığı's R: S is Stil, as in Yazı (docs/adr/0183 §4).
+            "R" => self.stage = Stage::Spacing,
+            "S" if styles::shown(cx.doc.settings()) => self.stage = Stage::Style,
             "Z" => cx.memory.text_mask = !cx.memory.text_mask,
             _ => return false,
         }
@@ -178,6 +187,8 @@ impl ParagraphText {
                     box_width: width,
                     line_spacing: (m.paragraph_spacing != 1.0).then_some(m.paragraph_spacing),
                     mask: m.text_mask,
+                    face: styles::text_face(cx),
+                    width_factor: styles::text_width_factor(cx),
                 }));
             }
             _ => {}
@@ -226,18 +237,21 @@ impl Tool for ParagraphText {
                 ),
             ),
             Stage::Second => Prompt::new(LABEL, "kutunun karşı köşesine tıklayın"),
+            Stage::Style => Prompt::new(LABEL, "yazı stilini menüden seçin ya da adını yazın")
+                .option_with("Stil", "S", self.styles.chosen.clone()),
             Stage::Typing => Prompt::new(
                 LABEL,
                 "yazıyı kutuya yazın; Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer",
             ),
             Stage::First => Prompt::new(LABEL, "yazı kutusunun ilk köşesine tıklayın")
+                .option_if(self.styles.shown, "Stil", "S", self.styles.chosen.clone())
                 .option_with(
                     "Yükseklik",
                     "Y",
                     format!("{} mm", js_number(memory.text_height_mm)),
                 )
                 .option_with("Açı", "A", format!("{}°", trimmed(memory.text_angle, 4)))
-                .option_with("Satır aralığı", "S", trimmed(memory.paragraph_spacing, 4))
+                .option_with("Satır aralığı", "R", trimmed(memory.paragraph_spacing, 4))
                 .option_with("Zemin", "Z", on_off(memory.text_mask)),
         }
     }
@@ -272,6 +286,12 @@ impl Tool for ParagraphText {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let t = js_trim(text);
         let done = if self.option(&upper_tr(t), cx) {
+            true
+        } else if self.stage == Stage::Style {
+            // A name the project has none of is said; the tool waits for another.
+            if styles::take_text(t, cx) {
+                self.stage = Stage::First;
+            }
             true
         } else {
             match (self.stage, parse_number(t)) {
@@ -315,6 +335,30 @@ impl Tool for ParagraphText {
         done
     }
 
+    /// Stil's menu: Standart, the project's text styles and their window (docs/adr/0183 §4).
+    fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "S" && self.styles.shown && matches!(self.stage, Stage::First | Stage::Style) {
+            return self
+                .styles
+                .choices(styles::TEXT_STYLES_ENTRY, styles::TEXT_STYLES);
+        }
+        Vec::new()
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key != "S"
+            || !styles::shown(cx.doc.settings())
+            || !matches!(self.stage, Stage::First | Stage::Style)
+        {
+            return false;
+        }
+        if styles::take_text(typed, cx) {
+            self.stage = Stage::First;
+        }
+        self.see(cx);
+        true
+    }
+
     /// The editor's answer: the text and its formats to add, or none (Vazgeç).
     fn paragraph_typed(&mut self, typed: Option<(&str, &[TextRun])>, cx: &mut Context<'_>) {
         if self.stage != Stage::Typing {
@@ -330,11 +374,12 @@ impl Tool for ParagraphText {
                     height: paper(m.text_height_mm, cx),
                     rotation: m.text_angle,
                     align: Some(TextAlign::TopLeft),
-                    width_factor: None,
+                    width_factor: styles::text_width_factor(cx),
                     mask: m.text_mask,
                     box_width: width,
                     line_spacing: (m.paragraph_spacing != 1.0).then_some(m.paragraph_spacing),
                     runs,
+                    face: styles::text_face(cx),
                 };
                 if let Some(out) = points::write_objects(vec![geometry], None, cx)
                     && let Some(&id) = out.ids.first()
@@ -354,6 +399,11 @@ impl Tool for ParagraphText {
     }
 
     /// At the first corner a confirm leaves; past it, it drops the box.
+    /// A style's name is words: Space types a space (docs/adr/0183 §4).
+    fn takes_words(&self) -> bool {
+        self.stage == Stage::Style
+    }
+
     fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
         match self.stage {
             Stage::First => Flow::Exit,

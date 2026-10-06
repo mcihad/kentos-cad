@@ -694,6 +694,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -702,6 +727,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -735,6 +779,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -772,6 +860,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -780,6 +875,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -794,6 +896,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -858,6 +990,130 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionStyleDef": {
+            "description": "A named dimension style (docs/adr/0183 §3): sizes in paper mm.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, mm; absent: the arrowhead's default times the height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "description": "The value's height on paper, mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "description": "One of its kind among the project's dimension styles (a UUIDv7).",
+                "type": "string"
+              },
+              "name": {
+                "description": "As a text style's.",
+                "type": "string"
+              },
+              "prefix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textGap": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
                 "type": "string"
               }
             ]
@@ -2370,6 +2626,13 @@
                 },
                 "type": "array"
               },
+              "dimensionStyles": {
+                "description": "The project's named dimension styles (docs/adr/0183 §3).",
+                "items": {
+                  "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
               "drawingFont": {
                 "anyOf": [
                   {
@@ -2444,6 +2707,13 @@
                   }
                 ],
                 "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
+              "textStyles": {
+                "description": "The project's named text styles (docs/adr/0183 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/TextStyleDef"
+                },
+                "type": "array"
               },
               "workspace": {
                 "anyOf": [
@@ -2715,6 +2985,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -2730,6 +3003,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -2739,6 +3023,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -2792,6 +3079,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -2816,6 +3113,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -2894,6 +3198,65 @@
               "sub"
             ],
             "type": "string"
+          },
+          "TextStyleDef": {
+            "description": "A named text style (docs/adr/0183 §2).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "fontFile": {
+                "description": "The typeface file a DXF named for it, written back as it came.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The texts' height on paper, mm; absent: the tool's height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "One of its kind among the project's text styles (a UUIDv7).",
+                "type": "string"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Its name: trimmed, one of its kind whatever its letters' case, never\n`STANDARD_STYLE`.",
+                "type": "string"
+              },
+              "oblique": {
+                "description": "As a text's (`TextFace::oblique`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "As a text's; absent: 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "font"
+            ],
+            "type": "object"
           },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
@@ -3665,6 +4028,155 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionStyleDef": {
+            "description": "A named dimension style (docs/adr/0183 §3): sizes in paper mm.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, mm; absent: the arrowhead's default times the height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "description": "The value's height on paper, mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "description": "One of its kind among the project's dimension styles (a UUIDv7).",
+                "type": "string"
+              },
+              "name": {
+                "description": "As a text style's.",
+                "type": "string"
+              },
+              "prefix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textGap": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
           "DrawingFont": {
             "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
             "enum": [
@@ -4186,6 +4698,13 @@
                 },
                 "type": "array"
               },
+              "dimensionStyles": {
+                "description": "The project's named dimension styles (docs/adr/0183 §3).",
+                "items": {
+                  "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
               "drawingFont": {
                 "anyOf": [
                   {
@@ -4260,6 +4779,13 @@
                   }
                 ],
                 "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
+              "textStyles": {
+                "description": "The project's named text styles (docs/adr/0183 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/TextStyleDef"
+                },
+                "type": "array"
               },
               "workspace": {
                 "anyOf": [
@@ -4440,6 +4966,65 @@
                 ]
               }
             },
+            "type": "object"
+          },
+          "TextStyleDef": {
+            "description": "A named text style (docs/adr/0183 §2).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "fontFile": {
+                "description": "The typeface file a DXF named for it, written back as it came.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The texts' height on paper, mm; absent: the tool's height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "One of its kind among the project's text styles (a UUIDv7).",
+                "type": "string"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Its name: trimmed, one of its kind whatever its letters' case, never\n`STANDARD_STYLE`.",
+                "type": "string"
+              },
+              "oblique": {
+                "description": "As a text's (`TextFace::oblique`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "As a text's; absent: 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "font"
+            ],
             "type": "object"
           },
           "TmDefinition": {
@@ -5296,6 +5881,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -5304,6 +5914,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -5337,6 +5966,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -5374,6 +6047,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -5382,6 +6062,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -5396,6 +6083,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -5460,6 +6177,130 @@
               {
                 "const": "slope",
                 "description": "Eğim: the slope between `a` at `za` and `b` at `zb`.",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionStyleDef": {
+            "description": "A named dimension style (docs/adr/0183 §3): sizes in paper mm.",
+            "properties": {
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "arrowSize": {
+                "description": "The arrowhead's length, mm; absent: the arrowhead's default times the height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "description": "The value's height on paper, mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "description": "One of its kind among the project's dimension styles (a UUIDv7).",
+                "type": "string"
+              },
+              "name": {
+                "description": "As a text style's.",
+                "type": "string"
+              },
+              "prefix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "suffix": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "textGap": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
                 "type": "string"
               }
             ]
@@ -6960,6 +7801,13 @@
                 },
                 "type": "array"
               },
+              "dimensionStyles": {
+                "description": "The project's named dimension styles (docs/adr/0183 §3).",
+                "items": {
+                  "$ref": "#/$defs/DimensionStyleDef"
+                },
+                "type": "array"
+              },
               "drawingFont": {
                 "anyOf": [
                   {
@@ -7034,6 +7882,13 @@
                   }
                 ],
                 "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
+              },
+              "textStyles": {
+                "description": "The project's named text styles (docs/adr/0183 §2), in the order they were made.",
+                "items": {
+                  "$ref": "#/$defs/TextStyleDef"
+                },
+                "type": "array"
               },
               "workspace": {
                 "anyOf": [
@@ -7357,6 +8212,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -7372,6 +8230,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -7381,6 +8250,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -7434,6 +8306,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -7458,6 +8340,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -7536,6 +8425,65 @@
               "sub"
             ],
             "type": "string"
+          },
+          "TextStyleDef": {
+            "description": "A named text style (docs/adr/0183 §2).",
+            "properties": {
+              "bold": {
+                "type": "boolean"
+              },
+              "font": {
+                "$ref": "#/$defs/DrawingFont"
+              },
+              "fontFile": {
+                "description": "The typeface file a DXF named for it, written back as it came.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "The texts' height on paper, mm; absent: the tool's height.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "One of its kind among the project's text styles (a UUIDv7).",
+                "type": "string"
+              },
+              "italic": {
+                "type": "boolean"
+              },
+              "name": {
+                "description": "Its name: trimmed, one of its kind whatever its letters' case, never\n`STANDARD_STYLE`.",
+                "type": "string"
+              },
+              "oblique": {
+                "description": "As a text's (`TextFace::oblique`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "widthFactor": {
+                "description": "As a text's; absent: 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "font"
+            ],
+            "type": "object"
           },
           "TmDefinition": {
             "description": "A transverse Mercator grid: its origin's latitude (0 when left out),\ncentral meridian, scale and false origin.",
@@ -13472,6 +14420,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -13480,6 +14453,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -13513,6 +14505,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -13550,6 +14586,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -13558,6 +14601,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -13572,6 +14622,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -13639,6 +14719,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -14662,6 +15774,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -14677,6 +15792,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -14686,6 +15812,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -14739,6 +15868,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -14763,6 +15902,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -15369,6 +16515,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -15377,6 +16548,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -15410,6 +16600,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -15447,6 +16681,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -15455,6 +16696,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -15469,6 +16717,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -15536,6 +16814,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -16559,6 +17869,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -16574,6 +17887,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -16583,6 +17907,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -16636,6 +17963,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -16660,6 +17997,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -17227,6 +18571,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -17235,6 +18604,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -17268,6 +18656,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -17305,6 +18737,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -17313,6 +18752,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -17327,6 +18773,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -17394,6 +18870,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -18417,6 +19925,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -18432,6 +19943,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -18441,6 +19963,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -18494,6 +20019,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -18518,6 +20053,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -19220,6 +20762,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -19228,6 +20795,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -19261,6 +20847,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -19298,6 +20928,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -19306,6 +20943,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -19320,6 +20964,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -19387,6 +21061,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -20410,6 +22116,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -20425,6 +22134,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -20434,6 +22154,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -20487,6 +22210,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -20511,6 +22244,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -21063,6 +22803,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -21071,6 +22836,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -21104,6 +22888,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -21141,6 +22969,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -21149,6 +22984,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -21163,6 +23005,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -21230,6 +23102,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -22253,6 +24157,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -22268,6 +24175,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -22277,6 +24195,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -22330,6 +24251,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -22354,6 +24285,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -22916,6 +24854,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -22924,6 +24887,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -22957,6 +24939,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -22994,6 +25020,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -23002,6 +25035,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -23016,6 +25056,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -23083,6 +25153,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -24106,6 +26208,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -24121,6 +26226,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -24130,6 +26246,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -24183,6 +26302,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -24207,6 +26336,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -25005,6 +27141,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -25013,6 +27174,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -25046,6 +27226,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -25083,6 +27307,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -25091,6 +27322,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -25105,6 +27343,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -25172,6 +27440,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -26195,6 +28495,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -26210,6 +28513,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -26219,6 +28533,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -26272,6 +28589,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -26296,6 +28623,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -26585,6 +28919,31 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionStyle": {
             "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
             "oneOf": [
@@ -26624,6 +28983,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EditOperation": {
             "description": "The modify tool an edit comes from; it names the undo step.",
@@ -26816,6 +29207,16 @@
               {
                 "const": "holeFill",
                 "description": "Deliği doldur: a new area filling a hole, made from the area.",
+                "type": "string"
+              },
+              {
+                "const": "textStyle",
+                "description": "Yazı stilleri's Kaydet (docs/adr/0183 §1): the texts of the styles\nchanged take their new faces, widths and heights, those of a style\ndeleted lose their link; objects updated in place.",
+                "type": "string"
+              },
+              {
+                "const": "dimensionStyle",
+                "description": "Ölçü stilleri's Kaydet, as `TextStyle` for dimensions.",
                 "type": "string"
               }
             ]
@@ -27319,6 +29720,9 @@
                     ],
                     "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
                   },
+                  "bold": {
+                    "type": "boolean"
+                  },
                   "boxWidth": {
                     "description": "A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.",
                     "format": "double",
@@ -27327,9 +29731,23 @@
                       "null"
                     ]
                   },
+                  "font": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingFont"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
+                  },
+                  "italic": {
+                    "type": "boolean"
                   },
                   "kind": {
                     "const": "text",
@@ -27349,6 +29767,16 @@
                     "description": "Its box filled with the drawing area's colour before it is drawn.",
                     "type": "boolean"
                   },
+                  "oblique": {
+                    "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                    "format": "double",
+                    "maximum": 85.0,
+                    "minimum": -85.0,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "p": {
                     "$ref": "#/$defs/Vec2"
                   },
@@ -27365,6 +29793,13 @@
                   },
                   "text": {
                     "type": "string"
+                  },
+                  "textStyle": {
+                    "description": "The project's text style it follows, by its id; absent: Standart.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "widthFactor": {
                     "description": "The letters' width times this, the height kept; absent: 1. Over 0, at most 100.",
@@ -27399,6 +29834,25 @@
                       "null"
                     ]
                   },
+                  "arrow": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionArrow"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its arrowheads; absent: oblique ticks."
+                  },
+                  "arrowSize": {
+                    "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "b": {
                     "$ref": "#/$defs/Vec2"
                   },
@@ -27411,6 +29865,50 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "decimals": {
+                    "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                    "format": "uint32",
+                    "maximum": 8,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "dimStyle": {
+                    "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "extBeyond": {
+                    "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "extOffset": {
+                    "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "font": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingFont"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The value's typeface; absent: the project's."
                   },
                   "height": {
                     "format": "double",
@@ -27428,6 +29926,13 @@
                     "format": "double",
                     "type": "number"
                   },
+                  "prefix": {
+                    "description": "Written before the value (and its kind's own prefix).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "style": {
                     "anyOf": [
                       {
@@ -27438,11 +29943,48 @@
                       }
                     ]
                   },
+                  "suffix": {
+                    "description": "Written after the value.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "text": {
                     "type": [
                       "string",
                       "null"
                     ]
+                  },
+                  "textGap": {
+                    "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "textPlace": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionTextPlace"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where the value stands; absent: over the line."
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingUnit"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The unit lengths and coordinates are written in; absent: the project's."
                   },
                   "za": {
                     "description": "A slope's two elevations, metres (docs/adr/0147).",
@@ -28124,6 +30666,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -28132,6 +30699,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -28165,6 +30751,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -28202,6 +30832,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -28210,6 +30847,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -28224,6 +30868,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -28291,6 +30965,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -29314,6 +32020,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -29329,6 +32038,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -29338,6 +32058,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -29391,6 +32114,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -29415,6 +32148,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -30099,6 +32839,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -30107,6 +32872,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -30140,6 +32924,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -30177,6 +33005,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -30185,6 +33020,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -30199,6 +33041,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -30266,6 +33138,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -31289,6 +34193,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -31304,6 +34211,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -31313,6 +34231,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -31366,6 +34287,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -31390,6 +34321,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -31753,6 +34691,31 @@
               }
             ]
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionStyle": {
             "description": "A dimension's kind (none: aligned). The last five came with KCAD schema 9\n(docs/adr/0147): what `a`, `b`, `c`, `offset`, `angle`, `za` and `zb`\nmean for each is the ADR's table.",
             "oneOf": [
@@ -31792,6 +34755,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EntityGeometry": {
             "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise.",
@@ -32148,6 +35143,9 @@
                     ],
                     "description": "Where `p` is on the text; absent: the left of its baseline (docs/adr/0145)."
                   },
+                  "bold": {
+                    "type": "boolean"
+                  },
                   "boxWidth": {
                     "description": "A multi-line text's box width, metres (docs/adr/0182 §1); absent: no box.",
                     "format": "double",
@@ -32156,9 +35154,23 @@
                       "null"
                     ]
                   },
+                  "font": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingFont"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+                  },
                   "height": {
                     "format": "double",
                     "type": "number"
+                  },
+                  "italic": {
+                    "type": "boolean"
                   },
                   "kind": {
                     "const": "text",
@@ -32178,6 +35190,16 @@
                     "description": "Its box filled with the drawing area's colour before it is drawn.",
                     "type": "boolean"
                   },
+                  "oblique": {
+                    "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                    "format": "double",
+                    "maximum": 85.0,
+                    "minimum": -85.0,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "p": {
                     "$ref": "#/$defs/Vec2"
                   },
@@ -32194,6 +35216,13 @@
                   },
                   "text": {
                     "type": "string"
+                  },
+                  "textStyle": {
+                    "description": "The project's text style it follows, by its id; absent: Standart.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "widthFactor": {
                     "description": "The letters' width times this, the height kept; absent: 1. Over 0, at most 100.",
@@ -32228,6 +35257,25 @@
                       "null"
                     ]
                   },
+                  "arrow": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionArrow"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Its arrowheads; absent: oblique ticks."
+                  },
+                  "arrowSize": {
+                    "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
                   "b": {
                     "$ref": "#/$defs/Vec2"
                   },
@@ -32240,6 +35288,50 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "decimals": {
+                    "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                    "format": "uint32",
+                    "maximum": 8,
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "dimStyle": {
+                    "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "extBeyond": {
+                    "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "extOffset": {
+                    "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "font": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingFont"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The value's typeface; absent: the project's."
                   },
                   "height": {
                     "format": "double",
@@ -32257,6 +35349,13 @@
                     "format": "double",
                     "type": "number"
                   },
+                  "prefix": {
+                    "description": "Written before the value (and its kind's own prefix).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "style": {
                     "anyOf": [
                       {
@@ -32267,11 +35366,48 @@
                       }
                     ]
                   },
+                  "suffix": {
+                    "description": "Written after the value.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "text": {
                     "type": [
                       "string",
                       "null"
                     ]
+                  },
+                  "textGap": {
+                    "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "textPlace": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionTextPlace"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where the value stands; absent: over the line."
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DrawingUnit"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The unit lengths and coordinates are written in; absent: the project's."
                   },
                   "za": {
                     "description": "A slope's two elevations, metres (docs/adr/0147).",
@@ -33028,6 +36164,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -33036,6 +36197,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -33069,6 +36249,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -33106,6 +36330,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -33114,6 +36345,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -33128,6 +36366,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -33195,6 +36463,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -34218,6 +37518,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -34233,6 +37536,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -34242,6 +37556,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -34295,6 +37612,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -34319,6 +37646,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -35013,6 +38347,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -35021,6 +38380,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -35054,6 +38432,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -35091,6 +38513,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -35099,6 +38528,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -35113,6 +38549,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -35180,6 +38646,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -36203,6 +39701,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -36218,6 +39719,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -36227,6 +39739,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -36280,6 +39795,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -36304,6 +39829,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -36985,6 +40517,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -36993,6 +40550,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -37026,6 +40602,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -37063,6 +40683,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -37071,6 +40698,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -37085,6 +40719,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -37152,6 +40816,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -38175,6 +41871,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -38190,6 +41889,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -38199,6 +41909,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -38252,6 +41965,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -38276,6 +41999,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",
@@ -39121,6 +42851,31 @@
             ],
             "type": "object"
           },
+          "DimensionArrow": {
+            "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "closed",
+                "description": "A filled triangle, its tip on the dimension line's end (Dolu ok).",
+                "type": "string"
+              },
+              {
+                "const": "open",
+                "description": "The triangle's two sides (Açık ok).",
+                "type": "string"
+              },
+              {
+                "const": "dot",
+                "description": "A filled circle about the end (Nokta).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nothing at the ends (Yok).",
+                "type": "string"
+              }
+            ]
+          },
           "DimensionEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
@@ -39129,6 +42884,25 @@
               },
               "angle": {
                 "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "arrow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionArrow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its arrowheads; absent: oblique ticks."
+              },
+              "arrowSize": {
+                "description": "The arrowhead's (or tick's) length; absent: `DEFAULT_TICK` for ticks,\n`DEFAULT_ARROW` for the others.",
                 "format": "double",
                 "type": [
                   "number",
@@ -39162,6 +42936,50 @@
                   "string",
                   "null"
                 ]
+              },
+              "decimals": {
+                "description": "A length's, a coordinate's or a slope's decimals; absent: the\nproject's length decimals (a slope's 2). Angles keep the project's.",
+                "format": "uint32",
+                "maximum": 8,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "dimStyle": {
+                "description": "The project's dimension style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "extBeyond": {
+                "description": "How far the extension lines pass the dimension line; absent: `DEFAULT_EXT_BEYOND`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "extOffset": {
+                "description": "The extension lines' gap from the measured points; absent: `DEFAULT_EXT_OFFSET`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The value's typeface; absent: the project's."
               },
               "height": {
                 "format": "double",
@@ -39199,6 +43017,13 @@
                 "format": "double",
                 "type": "number"
               },
+              "prefix": {
+                "description": "Written before the value (and its kind's own prefix).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "style": {
                 "anyOf": [
                   {
@@ -39207,6 +43032,13 @@
                   {
                     "type": "null"
                   }
+                ]
+              },
+              "suffix": {
+                "description": "Written after the value.",
+                "type": [
+                  "string",
+                  "null"
                 ]
               },
               "symbol": {
@@ -39221,6 +43053,36 @@
                   "string",
                   "null"
                 ]
+              },
+              "textGap": {
+                "description": "The value's baseline over the dimension line; absent: `DEFAULT_TEXT_GAP`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "textPlace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionTextPlace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the value stands; absent: over the line."
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingUnit"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The unit lengths and coordinates are written in; absent: the project's."
               },
               "za": {
                 "description": "Slope: the two points' elevations, metres (docs/adr/0147).",
@@ -39288,6 +43150,38 @@
                 "type": "string"
               }
             ]
+          },
+          "DimensionTextPlace": {
+            "description": "Where a dimension's value stands other than over its line (docs/adr/0183 §3).",
+            "oneOf": [
+              {
+                "const": "centre",
+                "description": "Its middle on the line, the line hidden under it.",
+                "type": "string"
+              }
+            ]
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "DrawingUnit": {
+            "description": "The unit a local project's lengths are typed and read in (docs/adr/0165 §2).\nGeometry stays in metres: the unit is where the user meets the numbers\n(typed and shown lengths, coordinates and areas, DXF's `$INSUNITS`). A\nproject with a coordinate system has the system's unit.",
+            "enum": [
+              "mm",
+              "cm",
+              "m"
+            ],
+            "type": "string"
           },
           "EllipseEntity": {
             "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
@@ -40311,6 +44205,9 @@
                 "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
                 "type": "object"
               },
+              "bold": {
+                "type": "boolean"
+              },
               "boxWidth": {
                 "description": "Metres, finite and over 0: the lines wrap word by word to this width.\nAbsent: they end only at line breaks.",
                 "format": "double",
@@ -40326,6 +44223,17 @@
                   "null"
                 ]
               },
+              "font": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Its typeface; absent: the project's, in the look of docs/adr/0055."
+              },
               "height": {
                 "description": "Metres.",
                 "format": "double",
@@ -40335,6 +44243,9 @@
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer"
+              },
+              "italic": {
+                "type": "boolean"
               },
               "label": {
                 "type": [
@@ -40388,6 +44299,16 @@
                 "description": "The text's box is filled with the drawing area's colour before the\ntext is drawn (Netcad's “fon”): what lies under it does not show.",
                 "type": "boolean"
               },
+              "oblique": {
+                "description": "How far its letters lean, degrees, positive with their tops to the\nright; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).",
+                "format": "double",
+                "maximum": 85.0,
+                "minimum": -85.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
               "p": {
                 "$ref": "#/$defs/Vec2"
               },
@@ -40412,6 +44333,13 @@
               },
               "text": {
                 "type": "string"
+              },
+              "textStyle": {
+                "description": "The project's text style it follows, by its id; absent: Standart.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "widthFactor": {
                 "description": "The letters' width times this, the height kept (Netcad's “sıkışma”,\nDXF's group 41); absent: 1. Finite, over 0, at most `MAX_WIDTH_FACTOR`.",

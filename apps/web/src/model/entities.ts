@@ -1,6 +1,7 @@
 import { op } from '../wasm/core';
 import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
+import type { DimensionLook, TextFace } from './annotationStyles';
 
 export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader';
 
@@ -155,9 +156,10 @@ export interface SplineEntity extends EntityBase {
 /**
  * Dimension (aligned unless `style` says otherwise; see geom/dimension for
  * what a, b, offset, angle and c mean per style). `text` overrides the
- * measured value when set.
+ * measured value when set. Its look (arrowheads, sizes, the value's place and
+ * writing; docs/adr/0183 §3) is its own, all absent the look dimensions always had.
  */
-export interface DimensionEntity extends EntityBase {
+export interface DimensionEntity extends EntityBase, DimensionLook {
   kind: 'dimension';
   a: Vec2;
   b: Vec2;
@@ -191,7 +193,8 @@ export interface HatchEntity extends EntityBase {
   holes?: Vec2[][];
   pattern: HatchPattern;
 }
-export interface TextEntity extends EntityBase {
+/** A text; its face (style, typeface, bold, italic, slant; docs/adr/0183 §2) is its own, all absent the project's typeface. */
+export interface TextEntity extends EntityBase, TextFace {
   kind: 'text';
   p: Vec2;
   text: string;
@@ -466,7 +469,7 @@ export const insidePolygon = op<(e: Extract<EntityGeometry, { kind: 'polyline' |
  * Rotated box of a text: its letters' advances measured in the drawing typeface
  * (`font`, Barlow without one; geometry-core `text`), one line tall.
  */
-export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; align?: TextAlign; widthFactor?: number; font?: string }) => Vec2[]>('textBox');
+export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; align?: TextAlign; widthFactor?: number; font?: string; bold?: boolean; oblique?: number }) => Vec2[]>('textBox');
 /**
  * Where a text's `p` is on it (the core's `TextAlign::along` and `up`, docs/adr/0145): [a share of its width along
  * it, a share of its height over its baseline]; [0, 0] without an alignment.

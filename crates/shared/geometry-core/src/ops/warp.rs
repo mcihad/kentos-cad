@@ -573,6 +573,7 @@ fn common<M: Map + ?Sized>(
             box_width,
             line_spacing,
             runs,
+            face,
         } => {
             let (height, rotation, width) = text_rule(&m.jac(*p)?, *h0, *rotation, *width_factor);
             // A multi-line text's box takes its letters' change of width (docs/adr/0182).
@@ -588,6 +589,7 @@ fn common<M: Map + ?Sized>(
                 box_width: box_width.map(|w| w * along),
                 line_spacing: *line_spacing,
                 runs: runs.clone(),
+                face: face.clone(),
             })
         }
         Shape::Leader {

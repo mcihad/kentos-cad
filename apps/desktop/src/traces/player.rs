@@ -90,6 +90,9 @@ pub struct Seen {
     pub color: Option<String>,
     pub line_weight: Option<f64>,
     pub layer: String,
+    /// A text's style and face, a dimension's style and look (docs/adr/0183); none for other kinds.
+    pub face: Option<kentos_contracts::TextFace>,
+    pub look: Option<kentos_contracts::DimensionLook>,
 }
 
 impl Seen {
@@ -199,6 +202,7 @@ impl Seen {
             },
             height: match e {
                 Entity::Text(t) => Some(t.height),
+                Entity::Dimension(d) => Some(d.height),
                 _ => None,
             },
             arrow: match e {
@@ -263,6 +267,14 @@ impl Seen {
                 .layers()
                 .get(&e.base().layer_id)
                 .map_or_else(String::new, |l| l.name.clone()),
+            face: match e {
+                Entity::Text(t) => Some(t.face.clone()),
+                _ => None,
+            },
+            look: match e {
+                Entity::Dimension(d) => Some(d.look.clone()),
+                _ => None,
+            },
         }
     }
 }

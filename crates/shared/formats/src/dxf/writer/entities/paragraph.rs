@@ -172,6 +172,10 @@ impl Writer<'_> {
                     box_width: t.paragraph.box_width,
                     line_spacing: t.paragraph.line_spacing,
                     runs: &runs,
+                    // Measured as the file draws it (Arimo for Arial); bold and slant its own.
+                    font: None,
+                    bold: t.face.font.is_some() && t.face.bold,
+                    lean: crate::blocks::core_face(&t.face).lean(),
                 };
                 let q = place.realigned(core_align(top), Font::from_id("arimo"));
                 self.report.note(
@@ -201,7 +205,11 @@ impl Writer<'_> {
         self.out.int(71, attach);
         self.out.int(72, 1);
         mtext_chunks(self.out, &value);
-        self.out.str(7, "Standard");
+        // Its style (docs/adr/0183 §7); its face in its KENTOS data.
+        self.out.str(7, self.styles.text(&t.face));
+        if !t.face.is_plain() {
+            meta.face = serde_json::to_string(&t.face).ok();
+        }
         let (s, c) = sin_cos_deg(t.rotation);
         self.out.xyz(11, v(c, s));
         if let Some(spacing) = t.paragraph.line_spacing {

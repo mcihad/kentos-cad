@@ -298,6 +298,27 @@ fn each_kind_explodes_into_lines_and_its_value() {
     let slope = dim(r#""a":{"x":0,"y":0},"b":{"x":40,"y":0},"offset":1,"height":1,"style":"slope","za":105.25,"zb":104.75"#);
     let out = pieces(&slope, "%1.25");
     assert_eq!(out.len(), 4, "the arrow, its head's two sides and the value");
+    // docs/adr/0183 §3: filled arrowheads come out as solid hatches, the value in the dimension's typeface.
+    let styled = dim(
+        r#""a":{"x":0,"y":0},"b":{"x":10,"y":0},"offset":2,"height":1,"arrow":"closed","font":"arimo""#,
+    );
+    let out = pieces(&styled, "10.000");
+    let solids: Vec<usize> = out
+        .iter()
+        .filter_map(|s| match s {
+            Shape::Hatch { ring, pattern, .. } if pattern.kind == "solid" => Some(ring.len()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(solids, [3, 3], "two arrowheads, three corners each");
+    let typeface = out.iter().find_map(|s| match s {
+        Shape::Text { face, .. } => Some(face.font),
+        _ => None,
+    });
+    assert_eq!(
+        typeface,
+        Some(Some(kentos_geometry_core::text::Font::from_id("arimo")))
+    );
 }
 
 /// The label record (docs/adr/0147 §5): the unit and prefix codes and the mask.
@@ -405,6 +426,7 @@ fn a_fault_says_why_exactly_when_there_is_no_layout() {
             c: has_c.then_some(c),
             za: has_za.then_some(za),
             zb: has_zb.then_some(zb),
+            look: Default::default(),
         };
         assert_eq!(
             dimension_fault(&d).is_some(),

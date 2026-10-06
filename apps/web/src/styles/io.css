@@ -620,3 +620,44 @@
   gap: 6px;
   width: 100%;
 }
+
+/* Yazı stilleri and Ölçü stilleri (docs/adr/0183 §5): the styles on the left, the chosen one's form and its preview. */
+.dialog--annotation .astyle-body {
+  display: grid;
+  grid-template-columns: minmax(calc(180px * var(--ui-scale)), 0.38fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.dialog--annotation .astyle-side,
+.dialog--annotation .astyle-main,
+.dialog--annotation .astyle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.dialog--annotation .astyle-list {
+  min-height: calc(220px * var(--ui-scale));
+  max-height: min(calc(320px * var(--ui-scale)), 42vh);
+}
+.dialog--annotation .astyle-preview {
+  width: 100%;
+  height: calc(120px * var(--ui-scale));
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.dialog--annotation .astyle-standard {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.dialog--annotation .astyle-file {
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.dialog--annotation .io-row > .io-field {
+  flex: 1 1 0;
+  min-width: 0;
+}

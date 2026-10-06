@@ -155,3 +155,47 @@ describe('applyImport with blocks', () => {
     expect(doc.canUndo.value).toBe(false);
   });
 });
+
+/** A file's text styles (docs/adr/0183 §7), in the desktop's case (apps/desktop/src/exchange/apply.rs). */
+describe('applyImport with styles', () => {
+  const textIn = (layerId: string, textStyle: string): ContractEntity => ({
+    kind: 'text',
+    id: 0,
+    layerId,
+    attrs: {},
+    p: { x: 0, y: 0 },
+    text: 'Ada 101',
+    height: 2,
+    rotation: 0,
+    textStyle,
+    font: 'arimo',
+    bold: true,
+  });
+  const style = (id: string, name: string) => ({ id, name, font: 'arimo' as const, bold: true, height: 3, fontFile: 'arialbd.ttf' });
+
+  it('takes the project’s style of a name, adds a new one once the objects are in, and leaves Standart’s name out', () => {
+    const doc = makeDoc();
+    doc.settings.assign({ textStyles: [style('0192f1a0-0000-7000-8000-000000000001', 'Ada no')] });
+    const def = block(1, 'Pafta');
+    const defWithText = { ...def, entities: [...def.entities, { ...textIn('', 'dxf-text-2'), id: 3 }] };
+    const r = applyImport(doc, [textIn('0', 'dxf-text-1'), textIn('0', 'dxf-text-2'), textIn('0', 'dxf-text-3')], onto, [defWithText], {
+      text: [style('dxf-text-1', 'ADA NO'), style('dxf-text-2', 'Yol adı'), style('dxf-text-3', 'Standart')],
+    });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.styles).toEqual([1, 0]);
+    const table = doc.settings.textStyles.value;
+    expect(table.map((s) => s.name)).toEqual(['Ada no', 'Yol adı']);
+    const fresh = table[1].id;
+    expect(fresh).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7/);
+    const named = [...doc.all()].map((e) => (e.kind === 'text' ? (e.textStyle ?? null) : undefined));
+    expect(named).toEqual(['0192f1a0-0000-7000-8000-000000000001', fresh, null]);
+    // Each keeps the file's look: the face without the style is still the text's.
+    expect([...doc.all()].every((e) => e.kind === 'text' && e.bold)).toBe(true);
+    const inside = doc.blocks.value[0].entities.find((e) => e.kind === 'text');
+    expect(inside?.kind === 'text' && inside.textStyle).toBe(fresh);
+    // Undo takes the objects; the styles are the project's setting.
+    expect(doc.undo()).toBe('DXF: plan.dxf');
+    expect(doc.size).toBe(0);
+    expect(doc.settings.textStyles.value).toHaveLength(2);
+  });
+});

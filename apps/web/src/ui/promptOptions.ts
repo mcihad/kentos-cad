@@ -86,7 +86,12 @@ export function runPromptChoice(ctx: AppContext, key: string, typed: string): vo
 export function choiceItems(ctx: AppContext, key: string): MenuItem[] | null {
   const choices = ctx.tools.active.optionChoices?.(key);
   if (!choices?.length) return null;
-  return choices.map((c) => ({ label: c.label, icon: c.icon, radio: true, checked: c.checked, run: () => runPromptChoice(ctx, key, c.typed) }));
+  return choices.flatMap((c): MenuItem[] =>
+    c.command
+      ? // An entry that opens a window (“Yazı stilleri…”, docs/adr/0183 §4), apart.
+        [{ kind: 'separator' }, { label: c.label, icon: c.icon, run: () => void ctx.commands.execute(c.command!) }]
+      : [{ label: c.label, icon: c.icon, radio: true, checked: c.checked, run: () => runPromptChoice(ctx, key, c.typed) }],
+  );
 }
 
 /**

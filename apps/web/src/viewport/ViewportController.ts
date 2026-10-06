@@ -4,12 +4,14 @@ import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { changedDefinitions } from '../model/blocks';
 import type { Entity, TextAlign, TextRun } from '../model/entities';
-import { dimensionLabel, type DimensionLayout } from '../model/geom/dimension';
+import type { DimensionLook, TextFace } from '../model/annotationStyles';
+import type { DimensionLayout } from '../model/geom/dimension';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import type { Bounds, Vec2 } from '../model/geometry';
 import { parseHex, readCanvasPalette, withAlpha, type CanvasPalette } from '../render/color';
+import { onFaceLoaded } from '../render/drawingFaces';
 import { createBackend } from '../render/createBackend';
 import { buildGrid, gridExtent, type GridExtent } from '../render/grid';
 import { Atlas } from '../render/atlas';
@@ -49,6 +51,8 @@ export interface TextInputRequest {
   /** What the empty field shows, and the hint under it; none: Yazı's. */
   placeholder?: string;
   hint?: string;
+  /** The text style's face it will have (docs/adr/0183 §2): the field writes in it; none: the project's look. */
+  face?: TextFace;
   commit(text: string): void;
   /** Enter in the empty field (Kılavuz: the arrow without a note, docs/adr/0146 §7); none: as Esc. */
   empty?(): void;
@@ -67,15 +71,19 @@ export interface ParagraphInputRequest {
   boxWidth?: number;
   lineSpacing?: number;
   mask?: boolean;
+  /** The tool's style's width factor and face (docs/adr/0183 §2): the text is drawn and measured as it will be. */
+  widthFactor?: number;
+  face?: TextFace;
   commit(text: string, runs: TextRun[]): void;
   cancel(): void;
 }
 
-/** A multi-line text being written or edited, drawn as it will be: its label records (`textLines`), words and runs. */
+/** A multi-line text being written or edited, drawn as it will be: its label records (`textLines`), words, runs and face. */
 export interface ParagraphPreview {
   records: readonly number[];
   text: string;
   runs: readonly TextRun[];
+  face?: TextFace;
 }
 
 /** Holding the right button this long opens the command menu instead of confirming. */
@@ -499,10 +507,9 @@ export class ViewportController {
     return this.picker.explodeInsert(e);
   }
 
-  /** A dimension's measured value as drawn: prefix and value in project units (length without unit). */
-  dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>): string {
-    const f = this.ctx.format;
-    return dimensionLabel(undefined, l, { length: (m) => f.length(m, false), angle: (a) => f.angle(a), percent: (v) => f.percent(v) });
+  /** A dimension's measured value as drawn: its look's prefix and suffix, its kind's prefix, the value in its look's or the project's unit and decimals (length without unit; docs/adr/0183 §3). */
+  dimensionText(l: Pick<DimensionLayout, 'prefix' | 'unit' | 'value'>, look: DimensionLook = {}): string {
+    return this.ctx.format.dimension(l, look);
   }
 
   /** Visible entities whose bounds overlap `r` (candidates for boundaries and cut lines). */
@@ -719,6 +726,13 @@ export class ViewportController {
     d.add(doc.events.on('attrs', stale));
     d.add(doc.layers.events.on('state', stale));
     d.add(doc.layers.events.on('structure', stale));
+    // A text's own typeface came in (docs/adr/0183 §2): its labels are drawn again in it.
+    d.add(
+      onFaceLoaded(() => {
+        stale();
+        this.requestOverlay();
+      }),
+    );
     d.add(
       doc.events.on('changed', ({ layerIds }) => {
         layerIds.forEach((id) => this.dirtyLayers.add(id));
@@ -1446,7 +1460,7 @@ export class ViewportController {
       const lg = cache.canvas.getContext('2d')!;
       lg.setTransform(dpr, 0, 0, dpr, 0, 0);
       lg.clearRect(0, 0, view.width, view.height);
-      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l) => this.dimensionText(l), (b) => this.picker.blockPieces(b));
+      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
       cache.key = key;
       cache.center = view.center;
       sx = -mx * dpr;
@@ -1493,8 +1507,8 @@ export class ViewportController {
     g.rect(x, y, w, h);
     g.clip();
     g.translate(x, y);
-    drawLabels(g, this.ctx.doc, lens, pal, this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l) => this.dimensionText(l), (b) => this.picker.blockPieces(b));
-    if (this.paragraphPreview) paragraphRecords(g, pal, lens, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs);
+    drawLabels(g, this.ctx.doc, lens, pal, this.picker.labels(lens.visibleBounds(), lens.scale, this.editingId), (l, look) => this.dimensionText(l, look), (b) => this.picker.blockPieces(b));
+    if (this.paragraphPreview) paragraphRecords(g, pal, lens, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs, this.paragraphPreview.face);
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), lens, pal, this.ctx.tools.active.activeGrip?.() ?? null);
     drawMarkedVertices(g, this.ctx.selection.vertices.value, lens, pal);
@@ -1520,7 +1534,7 @@ export class ViewportController {
     const pal = this.palette;
     const l0 = import.meta.env.DEV ? performance.now() : 0;
     this.drawCachedLabels(g);
-    if (this.paragraphPreview) paragraphRecords(g, pal, cam, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs);
+    if (this.paragraphPreview) paragraphRecords(g, pal, cam, this.paragraphPreview.records, this.paragraphPreview.text, this.paragraphPreview.runs, this.paragraphPreview.face);
     const l1 = import.meta.env.DEV ? performance.now() : 0;
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);
