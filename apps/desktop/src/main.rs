@@ -39,6 +39,8 @@ mod files_testing;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
+#[cfg(test)]
+mod selection_scenes;
 mod hover_card;
 #[cfg(test)]
 mod icon_tour;
@@ -100,6 +102,8 @@ mod screens;
 mod search;
 mod second_crs;
 mod selecting;
+mod selection_chip;
+mod selection_commands;
 mod settings;
 mod settings_look;
 #[cfg(test)]

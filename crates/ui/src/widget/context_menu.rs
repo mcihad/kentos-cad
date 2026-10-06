@@ -190,6 +190,9 @@ fn header_height() -> f32 {
 #[derive(Debug, Clone)]
 pub struct Menu<Message> {
     items: Vec<Item<Message>>,
+    /// Sent as the highlight leaves the commands that say theirs, and as
+    /// the menu closes ([`Menu::on_unhighlight`]).
+    unhighlight: Option<Message>,
 }
 
 #[derive(Debug, Clone)]
@@ -221,6 +224,8 @@ struct Command<Message> {
     swatch: Option<Color>,
     /// A wide sample in place of the icon (a hatch pattern's).
     preview: Option<Icon>,
+    /// Sent as the command is highlighted by the pointer or the arrows.
+    highlight: Option<Message>,
     danger: bool,
     /// A muted note at the right, before the shortcut (“sabit”, what a method does).
     hint: Option<String>,
@@ -254,7 +259,10 @@ impl<Message> Item<Message> {
 
 impl<Message> Menu<Message> {
     pub fn new() -> Self {
-        Self { items: Vec::new() }
+        Self {
+            items: Vec::new(),
+            unhighlight: None,
+        }
     }
 
     /// Komut; `on_press` yoksa devre dışıdır.
@@ -269,6 +277,7 @@ impl<Message> Menu<Message> {
             radio: false,
             swatch: None,
             preview: None,
+            highlight: None,
             danger: false,
             hint: None,
         }));
@@ -292,6 +301,7 @@ impl<Message> Menu<Message> {
             radio: false,
             swatch: None,
             preview: None,
+            highlight: None,
             danger: false,
             hint: None,
         }));
@@ -316,6 +326,7 @@ impl<Message> Menu<Message> {
             radio: true,
             swatch: None,
             preview: None,
+            highlight: None,
             danger: false,
             hint: None,
         }));
@@ -341,6 +352,24 @@ impl<Message> Menu<Message> {
             command.preview = Some(glyph);
         }
 
+        self
+    }
+
+    /// Son eklenen komut vurgulanınca (imleç ya da oklarla) gönderilen ileti:
+    /// ör. Sıradakini seç listesindeki aday çizimde vurgulanır (docs/adr/0187
+    /// §1).
+    pub fn highlight(mut self, message: Message) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.highlight = Some(message);
+        }
+
+        self
+    }
+
+    /// Vurgu, vurgulanınca ileti gönderen komutlardan ayrılınca ve menü
+    /// kapanınca gönderilen ileti (çizimdeki vurguyu kaldırmak için).
+    pub fn on_unhighlight(mut self, message: Message) -> Self {
+        self.unhighlight = Some(message);
         self
     }
 
@@ -1171,6 +1200,9 @@ struct Overlay<'a, 'b, Message> {
 
 impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
     fn close(&mut self, shell: &mut Shell<'_, Message>) {
+        if let Some(message) = &self.menu.unhighlight {
+            shell.publish(message.clone());
+        }
         *self.state = State {
             over: self.state.over,
             modifiers: self.state.modifiers,
@@ -1188,6 +1220,17 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
     fn set_hovered(&mut self, hovered: Option<Target>, shell: &mut Shell<'_, Message>) {
         if self.state.hovered != hovered {
             self.state.hovered = hovered;
+            // What a command says as it is highlighted, or that none is (docs/adr/0187 §1).
+            let highlight = match hovered {
+                Some(Target::Main(index)) => match self.menu.items.get(index) {
+                    Some(Item::Command(command)) => command.highlight.clone(),
+                    _ => None,
+                },
+                _ => None,
+            };
+            if let Some(message) = highlight.or_else(|| self.menu.unhighlight.clone()) {
+                shell.publish(message);
+            }
             shell.request_redraw();
         }
     }

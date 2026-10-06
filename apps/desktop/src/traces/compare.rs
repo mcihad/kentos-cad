@@ -194,6 +194,14 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{want:?}"),
         );
     }
+    if let Some(want) = &expect.cycle {
+        check(
+            "cycle",
+            &got.cycle == want,
+            format!("{:?}", got.cycle),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.dialog {
         check(
             "dialog",

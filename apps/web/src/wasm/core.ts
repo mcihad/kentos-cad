@@ -753,6 +753,11 @@ export class CoreStore {
     return typed(() => this.raw.hitEdge(x, y, tol));
   }
 
+  /** Every object a click could mean, the most specific first (Sıradakini seç, docs/adr/0187 §1). */
+  hits(x: number, y: number, tol: number): Float64Array {
+    return typed(() => this.raw.hits(x, y, tol));
+  }
+
   /** `[kind bit number, x, y, id]` or empty; `from` is the command's last point. */
   snap(x: number, y: number, tol: number, kinds: number, from: { x: number; y: number } | null): Float64Array {
     return typed(() => this.raw.snap(x, y, tol, kinds, !!from, from?.x ?? 0, from?.y ?? 0));
@@ -824,6 +829,11 @@ export class CoreStore {
   /** Ids of the objects wholly inside the circle, or also those it touches when `crossing`. */
   inCircle(x: number, y: number, r: number, crossing: boolean): Float64Array {
     return typed(() => this.raw.inCircle(x, y, r, crossing));
+  }
+
+  /** Çokgenle seç (docs/adr/0187 §2): `mode` 0 inside, 1 touching too, 2 not touching. */
+  inPolygon(ring: Float64Array, mode: number): Float64Array {
+    return typed(() => this.raw.inPolygon(ring, mode));
   }
 
   /** Ids of the objects lying far from the rest of the drawing (Kapsam denetimi). */

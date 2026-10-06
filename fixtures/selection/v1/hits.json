@@ -1,0 +1,279 @@
+{
+ "format": "kentos.selection-hits",
+ "version": 1,
+ "source": "scripts/fixtures/selection_cases.py (docs/adr/0187)",
+ "objects": [
+  {
+   "id": 1,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 0,
+     "y": 0
+    },
+    {
+     "x": 10,
+     "y": 0
+    },
+    {
+     "x": 10,
+     "y": 10
+    },
+    {
+     "x": 0,
+     "y": 10
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 2,
+     "y": 2
+    },
+    {
+     "x": 4,
+     "y": 2
+    },
+    {
+     "x": 4,
+     "y": 4
+    },
+    {
+     "x": 2,
+     "y": 4
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 0,
+    "y": 3
+   },
+   "b": {
+    "x": 10,
+    "y": 3
+   }
+  },
+  {
+   "id": 4,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "point",
+   "p": {
+    "x": 3.125,
+    "y": 3.125
+   }
+  },
+  {
+   "id": 5,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "circle",
+   "c": {
+    "x": 7,
+    "y": 7
+   },
+   "r": 1
+  },
+  {
+   "id": 6,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 6,
+     "y": 0
+    },
+    {
+     "x": 6,
+     "y": 10
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 20,
+     "y": 20
+    },
+    {
+     "x": 30,
+     "y": 20
+    },
+    {
+     "x": 30,
+     "y": 30
+    },
+    {
+     "x": 20,
+     "y": 30
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 22,
+       "y": 22
+      },
+      {
+       "x": 28,
+       "y": 22
+      },
+      {
+       "x": 28,
+       "y": 28
+      },
+      {
+       "x": 22,
+       "y": 28
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 0,
+    "y": 15
+   },
+   "b": {
+    "x": 10,
+    "y": 15
+   }
+  },
+  {
+   "id": 9,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 0,
+    "y": 16
+   },
+   "b": {
+    "x": 10,
+    "y": 16
+   }
+  },
+  {
+   "id": 10,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "point",
+   "p": {
+    "x": 40,
+    "y": 40
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "a line and a point before the building and the parcel around",
+   "at": [
+    3,
+    3.0625
+   ],
+   "tol": 0.25,
+   "expect": [
+    3,
+    4,
+    2,
+    1
+   ]
+  },
+  {
+   "name": "a circle by its edge, then the parcel; its own area not again",
+   "at": [
+    7,
+    7.96875
+   ],
+   "tol": 0.25,
+   "expect": [
+    5,
+    1
+   ]
+  },
+  {
+   "name": "two lines as near: the document's order",
+   "at": [
+    8,
+    15.5
+   ],
+   "tol": 0.625,
+   "expect": [
+    8,
+    9
+   ]
+  },
+  {
+   "name": "in a hole: nothing",
+   "at": [
+    25,
+    25
+   ],
+   "tol": 0.25,
+   "expect": []
+  },
+  {
+   "name": "in an area with a hole, away from it",
+   "at": [
+    21,
+    21
+   ],
+   "tol": 0.25,
+   "expect": [
+    7
+   ]
+  },
+  {
+   "name": "a point within one and a half tolerances",
+   "at": [
+    40.25,
+    40
+   ],
+   "tol": 0.25,
+   "expect": [
+    10
+   ]
+  },
+  {
+   "name": "a point beyond one and a half tolerances",
+   "at": [
+    40.25,
+    40
+   ],
+   "tol": 0.125,
+   "expect": []
+  },
+  {
+   "name": "nothing near",
+   "at": [
+    100,
+    100
+   ],
+   "tol": 0.25,
+   "expect": []
+  }
+ ]
+}

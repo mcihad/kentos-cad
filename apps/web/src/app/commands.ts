@@ -15,6 +15,7 @@ import { settingDescriptor } from '../core/settings/schema';
 import { checkExtent } from './extentCheck';
 import { effectiveWorkspace, WORKSPACES, type WorkspaceSpec } from './workspaces';
 import { lockCommands } from './lockCommands';
+import { selectionCommands } from './selectionCommands';
 import { duplicateLayer, unisolateLayers } from './layerActions';
 import { quickSaveLayerState, statesLocked } from './layerStates';
 import { focusSearch } from '../ui/bottom/SearchPanel';
@@ -428,25 +429,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => ctx.clipboard.count.value > 0,
       watch: [ctx.clipboard.count],
     },
-    {
-      id: 'edit.selectAll',
-      title: 'Tümünü seç',
-      category: E,
-      icon: 'selectAll',
-      run: () => {
-        const ids = [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId)).map((e) => e.id);
-        selection.set(ids);
-        log.info(`${ids.length} nesne seçildi.`);
-      },
-    },
-    { id: 'edit.deselect', title: 'Seçimi kaldır', category: E, icon: 'deselect', run: () => selection.clear(), isEnabled: () => selection.size > 0, watch: [selection.ids] },
-    {
-      id: 'edit.invertSelection',
-      title: 'Seçimi ters çevir',
-      category: E,
-      icon: 'invertSelection',
-      run: () => selection.set([...doc.all()].filter((e) => doc.layers.isVisible(e.layerId) && !selection.has(e.id)).map((e) => e.id)),
-    },
+    ...selectionCommands(ctx),
 
     // Görünüm
     { id: 'view.zoomExtents', title: 'Tümünü göster', category: V, icon: 'zoomExtents', aliases: ['ZE', 'TUMU', 'LIMITBUL'], run: () => view.zoomExtents() },

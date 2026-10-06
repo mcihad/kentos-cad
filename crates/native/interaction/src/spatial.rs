@@ -42,6 +42,7 @@ use kentos_geometry_core::store::labels::{
     LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE, LABEL_PIECE_TEXT, LABEL_STRIDE,
     LABEL_TEXT, LabelRule, Placement,
 };
+use kentos_geometry_core::store::polygon::PolygonMode;
 use kentos_geometry_core::store::snap::{Extension, SnapExtras, SnapHit};
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::blocks::{core_blocks, piece_entities};
@@ -195,6 +196,16 @@ impl Spatial {
         self.store.hit(at, tol).and_then(slot)
     }
 
+    /// Every visible object a click at `at` could mean, the most specific
+    /// first (`Store::hits`, docs/adr/0187 §1): the first is [`Self::pick`]'s.
+    pub fn hits(&self, at: Vec2, tol: f64) -> Vec<Slot> {
+        self.store
+            .hits(at, tol)
+            .into_iter()
+            .filter_map(slot)
+            .collect()
+    }
+
     /// The nearest visible object whose edge comes within `tol` world units
     /// of `at` and that `accept` takes (`PickIndex.hitEdge`): what the edge
     /// tools act on. Points and text have no edges; among equal distances
@@ -276,6 +287,17 @@ impl Spatial {
     pub fn in_circle(&self, centre: Vec2, radius: f64, crossing: bool) -> Vec<Slot> {
         self.store
             .in_circle(centre, radius, crossing)
+            .into_iter()
+            .filter_map(slot)
+            .collect()
+    }
+
+    /// Çokgenle seç (`Store::in_polygon`, docs/adr/0187 §2): the visible
+    /// objects wholly inside a simple ring, touching it too, or not touching
+    /// it, in the document's order.
+    pub fn in_polygon(&self, ring: &[Vec2], mode: PolygonMode) -> Vec<Slot> {
+        self.store
+            .in_polygon(ring, mode)
             .into_iter()
             .filter_map(slot)
             .collect()

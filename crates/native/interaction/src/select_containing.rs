@@ -51,7 +51,10 @@ impl SelectContaining {
     /// A click at `at`: the smallest area around it, or the next larger when
     /// the place is the last click's. With `add` it joins the selection.
     fn click(&mut self, at: Vec2, add: bool, cx: &mut Context<'_>) {
-        let list = cx.spatial.containing(at);
+        let all = cx.spatial.containing(at);
+        // The kinds the selection filter holds (docs/adr/0187 §5).
+        let kept = crate::selectable::ids(cx, all.iter().map(|(s, _)| *s).collect());
+        let list: Vec<(Slot, f64)> = all.into_iter().filter(|(s, _)| kept.contains(s)).collect();
         if list.is_empty() {
             cx.say(Level::Warn, "Tıklanan noktayı içeren kapalı alan yok.");
             return;

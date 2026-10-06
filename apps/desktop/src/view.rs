@@ -716,6 +716,8 @@ impl App {
                         .extend(self.navigation_view())
                         // The rollover card beside the pointer (hover_card.rs).
                         .extend(self.hover_card_view())
+                        // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
+                        .extend(self.selection_chip())
                         .extend(typing)
                         .extend(writing)
                         .extend(self.command_bar()),
@@ -1260,6 +1262,10 @@ impl App {
         if id == "draft.overlap" {
             return ContextMenu::new(toggle, move |_| self.overlap_menu()).into();
         }
+        // Seçim süzgeci's kinds on the cell's right-click menu (docs/adr/0187 §5).
+        if id == "edit.selectFilter" {
+            return ContextMenu::new(toggle, move |_| self.select_filter_menu()).into();
+        }
         // The snap kinds one by one, Çizilmekte olan nesneye and Karelaj aralığı on the
         // cell's right-click menu; out of the scale range it is idle (snap_menu.rs, docs/adr/0163 §5–§6).
         if id == "draft.snap" {
@@ -1563,7 +1569,7 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
 }
 
 /// The status bar's drafting aids, as the web's (`StatusBar.ts`).
-const STATUS_AIDS: [(&str, &str); 9] = [
+const STATUS_AIDS: [(&str, &str); 10] = [
     ("draft.snap", "Kenet"),
     ("draft.grid", "Izgara"),
     ("draft.ortho", "Orto"),
@@ -1572,6 +1578,7 @@ const STATUS_AIDS: [(&str, &str); 9] = [
     ("draft.tracking", "İzleme"),
     ("draft.topology", "Topoloji"),
     ("draft.overlap", "Çakışma"),
+    ("edit.selectFilter", "Süzgeç"),
     ("view.lineWeights", "Kalınlık"),
 ];
 

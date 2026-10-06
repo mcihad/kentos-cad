@@ -25,6 +25,7 @@ pub mod labels;
 pub mod overview;
 mod pack;
 pub mod pick;
+pub mod polygon;
 pub mod processing;
 mod select;
 pub(crate) mod rtree;

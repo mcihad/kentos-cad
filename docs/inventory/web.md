@@ -4,15 +4,15 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 335 | 323 | 0 | 12 |
-| Araçlar | 105 | 103 | 0 | 2 |
+| Komutlar | 356 | 344 | 0 | 12 |
+| Araçlar | 107 | 105 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Proje türleri | 4 | 2 | 0 | 2 |
-| Ayarlar | 84 | 84 | 0 | 0 |
+| Ayarlar | 86 | 86 | 0 | 0 |
 | Tarayıcı depoları | 11 | 11 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 451 | 451 | 0 | 0 |
-| Pencereler ve paneller | 107 | 107 | 0 | 0 |
+| Pencereler ve paneller | 108 | 108 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -49,15 +49,15 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 263 | 0 | 58 | 12 | 2 | 335 |
-| Araçlar | 103 | 0 | 0 | 2 | 0 | 105 |
+| Komutlar | 284 | 0 | 58 | 12 | 2 | 356 |
+| Araçlar | 105 | 0 | 0 | 2 | 0 | 107 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Proje türleri | 2 | 0 | 0 | 2 | 0 | 4 |
-| Ayarlar | 81 | 0 | 2 | 0 | 1 | 84 |
+| Ayarlar | 82 | 0 | 3 | 0 | 1 | 86 |
 | Tarayıcı depoları | 9 | 0 | 0 | 0 | 2 | 11 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 451 | 0 | 0 | 0 | 0 | 451 |
-| Pencereler ve paneller | 89 | 2 | 15 | 0 | 1 | 107 |
+| Pencereler ve paneller | 89 | 2 | 16 | 0 | 1 | 108 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -76,7 +76,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (58 / 335; ayrıca 12 iki platformda da bekliyor)
+#### Komutlar (58 / 356; ayrıca 12 iki platformda da bekliyor)
 
 - `sheet.align.bottom` Alta hizala
 - `sheet.align.center` Yatayda ortala
@@ -149,7 +149,7 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `workspace.disaster` Afet Analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `workspace.plan3d` 3D Plan (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Araçlar (0 / 105; ayrıca 2 iki platformda da bekliyor)
+#### Araçlar (0 / 107; ayrıca 2 iki platformda da bekliyor)
 
 - `stakeout` Aplikasyon (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır.
 - `subdivide` İfraz (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)) — İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13).
@@ -167,10 +167,11 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (2 / 84)
+#### Ayarlar (3 / 86)
 
 - `session.overlapLast`
 - `session.overlapLayers`
+- `session.selectKinds`
 
 #### Tarayıcı depoları (0 / 11)
 
@@ -180,7 +181,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (17 / 107)
+#### Pencereler ve paneller (18 / 108)
 
 - `apps/web/src/ui/settings/ProjectTypeDialog.ts#openProjectTypeDialog` openProjectTypeDialog
 - `apps/web/src/ui/sheet/ExportDialog.ts#openExportDialog` openExportDialog
@@ -197,9 +198,10 @@ Yok.
 - `apps/web/src/ui/sheet/SheetsPanel.ts#SheetsPanel` SheetsPanel
 - `apps/web/src/ui/sheet/TemplateGallery.ts#openTemplateGallery` openTemplateGallery
 - `apps/web/src/ui/sheet/VariablesDialog.ts#openVariables` openVariables
+- `apps/web/src/ui/shell/SelectionChip.ts#SelectionChip` SelectionChip
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 
-109 / 335 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+125 / 356 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

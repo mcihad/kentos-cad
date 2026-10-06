@@ -424,6 +424,12 @@ pub enum Message {
     ServerChecked(Result<kentos_contracts::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
+    /// Seçim süzgeci's kinds all ticked or none (the Süzgeç cell's menu, docs/adr/0187 §5).
+    SelectKinds(bool),
+    /// Sıradakini seç's list: the chip's candidate to choose (docs/adr/0187 §1).
+    CycleTo(usize),
+    /// The candidate the pointer rests on in that list: highlighted in the drawing.
+    CycleHover(Option<kentos_domain::Slot>),
     /// The Kenet cell's menu: a Karelaj spacing, the settings (snap_menu.rs, docs/adr/0163 §6).
     Snap(crate::snap_menu::Event),
     /// The status bar's scale selector (screen_scale.rs, docs/adr/0165 §5).
@@ -617,6 +623,9 @@ pub struct App {
     /// Seçili katmanlarda önle's layers, by id (docs/adr/0162 §1): the
     /// session's, not a setting; the tools see them in their context.
     pub(crate) overlap_layers: Vec<String>,
+    /// Seçim süzgeci's kinds, as `kentos_interaction::selectable::bit`s: the
+    /// session's, every kind at first (docs/adr/0187 §5).
+    pub(crate) select_kinds: u32,
     /// The digitizing locks (docs/adr/0166): what holds the next point; the
     /// session's, the tools see them in their context.
     pub locks: kentos_interaction::LockState,
@@ -876,6 +885,7 @@ impl App {
             calc: crate::calc::Calc::default(),
             tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
             overlap_layers: Vec::new(),
+            select_kinds: kentos_interaction::selectable::ALL,
             locks: kentos_interaction::LockState::default(),
             template: None,
             last_template: None,
@@ -1431,6 +1441,9 @@ impl App {
             Message::Recovery(event) => return self.recovery_event(event),
             Message::ServerChecked(answer) => self.server_checked(answer),
             Message::OverlapLayer(id) => self.toggle_overlap_layer(id),
+            Message::SelectKinds(on) => self.select_all_kinds(on),
+            Message::CycleTo(index) => self.selection.cycle_to(index),
+            Message::CycleHover(slot) => self.selection.set_hover(slot),
             Message::Snap(event) => self.snap_event(event),
             Message::ScreenScale(event) => return self.screen_scale_event(event),
             Message::SecondCrs(event) => self.second_crs_event(event),
@@ -1464,6 +1477,8 @@ impl App {
             color: self.draft.color,
             line_weight: self.draft.line_weight,
             geographic: kentos_interaction::second::Notation::parse(&s.text("display.geographic")),
+            // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
+            select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
@@ -1797,6 +1812,13 @@ impl App {
             "edit.deselect" => self.selection.clear(),
             "edit.selectAll" => self.select_all(),
             "edit.invertSelection" => self.invert_selection(),
+            // Seçim ekleri (docs/adr/0187, selection_commands.rs).
+            "edit.previousSelection" => self.previous_selection(),
+            "edit.cycleSelection" => self.cycle_selection(),
+            "edit.selectFilter" => self.toggle_select_filter(),
+            id if id.starts_with("edit.selectFilter.") => {
+                self.toggle_select_kind(&id["edit.selectFilter.".len()..]);
+            }
             "view.ribbonCollapse" => {
                 self.ribbon_collapsed = !self.ribbon_collapsed;
                 self.ribbon_peek = false;
@@ -1920,6 +1942,10 @@ impl App {
             "draft.topology" => self.draft.topology,
             "draft.topologyPoints" => self.draft.topology_points,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
+            "edit.selectFilter" => self.draft.select_kinds.is_some(),
+            id if id.starts_with("edit.selectFilter.") => {
+                self.select_kind_checked(&id["edit.selectFilter.".len()..])
+            }
             "draft.lock.keep" => self.locks.keep,
             "draft.lock.construction" => self.session.construction(),
             "draft.overlap.allow" => self.draft.overlap == kentos_interaction::Overlap::Allow,
@@ -1966,6 +1992,8 @@ impl App {
             }
             "draft.lock.clear" => self.session.lock_reference().is_some() && self.locks.any(),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            "edit.previousSelection" => !self.previous_selection_ids().is_empty(),
+            "edit.cycleSelection" => self.selection.cycle().is_some(),
             // Only while a place is marked (search/, docs/adr/0178 §6).
             "data.unmark" => self.data_mark().is_some(),
             // Only where there is a view to go to (docs/adr/0141).

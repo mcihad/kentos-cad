@@ -75,6 +75,7 @@ impl SelectFence {
         }
         let fence = std::mem::take(&mut self.pts);
         let hits = cx.spatial.in_fence(&fence, cx.pick_tolerance());
+        let hits = crate::selectable::ids(cx, hits);
         let n = hits.len();
         if n == 0 {
             cx.say(Level::Warn, "Çit hiçbir nesneyi kesmedi.");

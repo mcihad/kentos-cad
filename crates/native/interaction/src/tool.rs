@@ -238,6 +238,10 @@ pub struct Draft {
     /// How a geographic second system's values are written
     /// (`display.geographic`, docs/adr/0167 §1).
     pub geographic: crate::second::Notation,
+    /// Seçim süzgeci (`drafting.selectFilter`, docs/adr/0187 §5): the kinds
+    /// that may be selected, as [`crate::selectable::bit`]s; `None` while the
+    /// filter is off.
+    pub select_kinds: Option<u32>,
 }
 
 impl Default for Draft {
@@ -266,6 +270,7 @@ impl Default for Draft {
             color: None,
             line_weight: None,
             geographic: crate::second::Notation::Dms,
+            select_kinds: None,
         }
     }
 }
@@ -616,6 +621,11 @@ pub struct Memory {
     pub measure_fixed: bool,
     pub area_inside: bool,
     pub circle_crossing: bool,
+    /// Çokgenle seç's mode: İçindekiler, Kesişenler or Dışındakiler
+    /// (docs/adr/0187 §2).
+    pub polygon_select: kentos_geometry_core::store::polygon::PolygonMode,
+    /// Benzerini seç's criteria (docs/adr/0187 §4): all on at first.
+    pub similar: crate::select_similar::Criteria,
     /// The path tools' İzle: the next segments follow the visible line work
     /// (docs/adr/0161 §1).
     pub trace: bool,
@@ -827,6 +837,8 @@ impl Default for Memory {
             measure_fixed: false,
             area_inside: false,
             circle_crossing: false,
+            polygon_select: kentos_geometry_core::store::polygon::PolygonMode::Inside,
+            similar: crate::select_similar::Criteria::ALL,
             trace: false,
             stream: false,
             stream_step: 1.0,

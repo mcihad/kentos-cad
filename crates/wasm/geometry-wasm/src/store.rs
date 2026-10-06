@@ -372,6 +372,12 @@ impl GeometryStore {
         self.inner.hit(Vec2::new(x, y), tol)
     }
 
+    /// Every object a click at the point could mean, the most specific
+    /// first (Sıradakini seç, docs/adr/0187 §1); the first is `hit`'s.
+    pub fn hits(&self, x: f64, y: f64, tol: f64) -> Vec<f64> {
+        self.inner.hits(Vec2::new(x, y), tol)
+    }
+
     /// `id, distance` pairs of objects whose edges are within `tol`, nearest first.
     #[wasm_bindgen(js_name = hitEdge)]
     pub fn hit_edge(&self, x: f64, y: f64, tol: f64) -> Vec<f64> {
@@ -564,6 +570,21 @@ impl GeometryStore {
     #[wasm_bindgen(js_name = inCircle)]
     pub fn in_circle(&self, x: f64, y: f64, r: f64, crossing: bool) -> Vec<f64> {
         self.inner.in_circle(Vec2::new(x, y), r, crossing)
+    }
+
+    /// Ids of visible objects wholly inside the ring `[x0, y0, x1, y1, …]`
+    /// (`mode` 0), touching it too (1), or not touching it (2): Çokgenle seç
+    /// (docs/adr/0187 §2). A ring that cannot select gives none.
+    #[wasm_bindgen(js_name = inPolygon)]
+    pub fn in_polygon(&self, ring: &[f64], mode: u8) -> Vec<f64> {
+        let pts: Vec<Vec2> = ring
+            .chunks_exact(2)
+            .map(|c| Vec2::new(c[0], c[1]))
+            .collect();
+        self.inner.in_polygon(
+            &pts,
+            kentos_geometry_core::store::polygon::PolygonMode::of(mode),
+        )
     }
 
     /// Ids of visible objects lying far from the rest of the drawing

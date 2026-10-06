@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { commandItem } from '../../app/menus';
 import { overlapMenu } from './overlapMenu';
+import { selectFilterMenu } from './selectFilterMenu';
 import { snapMenu } from './snapMenu';
 import { screenScale, snapInRange } from '../../viewport/snapRange';
 import { effectiveWorkspace, WORKSPACES, workspaceById } from '../../app/workspaces';
@@ -77,6 +78,8 @@ export class StatusBar extends Component {
       this.toggle('draft.topology', 'Topoloji', () => [commandItem(ctx, 'draft.topologyPoints', { label: 'Noktalar da' })]),
       // Çakışma denetimi (docs/adr/0162 §1): its modes and Seçili katmanlarda önle's layers are on the cell's right-click menu.
       this.toggle('draft.overlap', 'Çakışma', () => overlapMenu(ctx)),
+      // Seçim süzgeci (docs/adr/0187 §5): its kinds are on the cell's right-click menu.
+      this.toggle('edit.selectFilter', 'Süzgeç', () => selectFilterMenu(ctx)),
       this.toggle('view.lineWeights', 'Kalınlık'),
     );
 

@@ -186,6 +186,9 @@ pub mod select;
 pub mod select_circle;
 pub mod select_containing;
 pub mod select_fence;
+pub mod select_polygon;
+pub mod select_similar;
+pub mod selectable;
 mod selection;
 mod session;
 pub mod set_elevation;
@@ -227,7 +230,7 @@ pub use log::{Level, Line};
 pub use path::NO_SQUARE_CLOSE;
 pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
-pub use selection::Selection;
+pub use selection::{Cycle, Selection};
 pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRAVEL, Session};
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,

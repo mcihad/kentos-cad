@@ -41,6 +41,7 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::areas::OPS,
     crate::triangulate::OPS,
     crate::store::draw::OPS,
+    crate::store::polygon::OPS,
     crate::tools::point_input::OPS,
     crate::tools::object_tracking::OPS,
     crate::tools::construct::OPS,

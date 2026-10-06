@@ -4637,6 +4637,13 @@ SCENES.coordinates = coordinateScenes();
 // desktop's are `tools_screens`' tarama-* (apps/desktop/src/hatch_scenes.rs).
 SCENES.hatches = hatchScenes();
 
+// Seçim ekleri (docs/adr/0187) in a CAD project at 1:500: two parcels sharing an edge, a red parcel above them, a road, a
+// point on their shared corner, a line and a circle. A click on the shared edge with Sıradakini seç's chip and its list;
+// Çokgenle seç on Kesişenler before the last corner and its answer; Benzerini seç from the first parcel; Seçim süzgeci
+// without Kapalı alan after a window over the drawing, and the Süzgeç cell's menu. The desktop's are `tools_screens`' secim-*
+// (apps/desktop/src/selection_scenes.rs).
+SCENES.selecting = selectingScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -4968,6 +4975,90 @@ function hatchScenes() {
     },
     { id: 'hatch-props', open: props, close: propsClose },
     { id: 'hatch-props-pattern-menu', open: async (ui) => (await props(ui), await menuOpen(ui, '.panel--props [data-prop-key="geometry:Desen"]')), close: propsClose },
+  ];
+}
+
+function selectingScenes() {
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x, y: c.y - 2 };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    add({ kind: 'polygon', pts: [[-20, -10], [0, -10], [0, 10], [-20, 10]].map(P) });
+    add({ kind: 'polygon', pts: [[0, -10], [20, -10], [20, 10], [0, 10]].map(P) });
+    add({ kind: 'line', a: P([-25, -14]), b: P([25, -14]), color: '#E5484D' });
+    add({ kind: 'point', p: P([0, 10]) });
+    add({ kind: 'polygon', pts: [[-20, 12], [0, 12], [0, 18], [-20, 18]].map(P), color: '#E5484D' });
+    add({ kind: 'line', a: P([5, 0]), b: P([15, 0]) });
+    add({ kind: 'circle', c: P([-10, 0]), r: 3 });
+    window.__sel = { o };
+    k.view.camera.fit({ minX: o.x - 30, minY: o.y - 18, maxX: o.x + 30, maxY: o.y + 22 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__sel.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const ground = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'home', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  /** The session's filter and Çokgenle seç's mode as a new session has them. */
+  const close = async (ui) => {
+    await ui.escapeAll(3);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { FILTER_KINDS } = await import('/src/tools/selectable.ts');
+      k.settings.selectFilter.set(false);
+      k.settings.selectKinds.set(new Set(FILTER_KINDS));
+      k.commands.execute('tool.selectPolygon');
+      k.tools.active.input('i');
+    })()`);
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  const CORNERS = [[-24, -12], [4, -12], [4, 2], [-6, 2], [-6, 12], [-24, 12]];
+  const chip = async (ui) => (await ground(ui), await click(ui, 0, 0), await hover(ui, 8, -5));
+  /** Çokgenle seç on Kesişenler, five corners given, the pointer at the sixth. */
+  const polygon = async (ui) => {
+    await ground(ui);
+    await startTool(ui, 'selectPolygon');
+    await ui.eval(`window.kentos.tools.active.input('K')`);
+    for (const [x, y] of CORNERS.slice(0, 5)) await click(ui, x, y);
+    await hover(ui, ...CORNERS[5]);
+  };
+  /** Seçim süzgeci without Kapalı alan, then a window over the drawing: the rest selected, what it left out said. */
+  const filtered = async (ui) => {
+    await ground(ui);
+    await ui.eval(`window.kentos.commands.execute('edit.selectFilter.polygon')`);
+    const [a, b] = [await ui.eval(PAGE_AT(...(await ui.eval(AT(-28, -18))))), await ui.eval(PAGE_AT(...(await ui.eval(AT(28, 21)))))];
+    await ui.drag(a[0], b[1], b[0], a[1]);
+    await ui.sleep(300);
+    await hover(ui, 26, 18);
+  };
+  return [
+    { id: 'selection-chip', open: chip, close },
+    {
+      id: 'selection-chip-list',
+      open: async (ui) => (await chip(ui), await ui.clickSel('.sel-chip'), await ui.waitFor(`!!document.querySelector('.menu')`), await ui.sleep(300)),
+      close,
+    },
+    { id: 'selection-polygon', open: polygon, close },
+    {
+      id: 'selection-polygon-done',
+      open: async (ui) => (await polygon(ui), await click(ui, ...CORNERS[5]), await ui.eval(`window.kentos.commands.execute('tool.confirm')`), await ui.sleep(300), await hover(ui, 26, 18)),
+      close,
+    },
+    {
+      id: 'selection-similar',
+      open: async (ui) => (await ground(ui), await click(ui, -10, 6), await startTool(ui, 'selectSimilar'), await hover(ui, 26, 18)),
+      close,
+    },
+    { id: 'selection-filter', open: filtered, close },
+    { id: 'selection-filter-menu', open: async (ui) => (await filtered(ui), await rightClick(ui, '.status__toggle[data-command="edit.selectFilter"]')), close },
   ];
 }
 

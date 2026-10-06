@@ -27,7 +27,7 @@ import { ViewNavigation } from './viewHistory';
 import { NavigationCards } from './navigationCards';
 import { METRES_PER_PX, symbolScaleOf } from './symbolScale';
 import type { ExprColumnData } from '../wasm/core';
-import { extensionAlong, extensionAt, PickIndex, type Extension, type SnapHit, type SnapKind } from './picking';
+import { extensionAlong, extensionAt, PickIndex, type Extension, type PolygonMode, type SnapHit, type SnapKind } from './picking';
 import { screenScale, snapInRange } from './snapRange';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -458,6 +458,11 @@ export class ViewportController {
     return this.picker.hit(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale);
   }
 
+  /** Sıradakini seç (docs/adr/0187 §1): every visible object a click at `screen` could mean, the most specific first. */
+  pickAll(screen: Vec2): Entity[] {
+    return this.picker.hits(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale);
+  }
+
   pickRect(r: Bounds, crossing: boolean): number[] {
     return this.picker.inRect(r, crossing);
   }
@@ -470,6 +475,11 @@ export class ViewportController {
   /** Daireyle seç: the visible objects wholly inside the circle, and with `crossing` those it touches too. */
   inCircle(c: Vec2, r: number, crossing: boolean): number[] {
     return this.picker.inCircle(c, r, crossing);
+  }
+
+  /** Çokgenle seç (docs/adr/0187 §2): the visible objects wholly inside the ring, touching it too, or not touching it. */
+  inPolygon(ring: readonly Vec2[], mode: PolygonMode): number[] {
+    return this.picker.inPolygon(ring, mode);
   }
 
   /** İçeren alanı seç: the visible closed shapes around a point with their areas, smallest first. */

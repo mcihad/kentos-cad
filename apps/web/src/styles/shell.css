@@ -328,6 +328,33 @@
   display: none;
 }
 
+/* Sıradakini seç's chip (docs/adr/0187 §1): beside a click that found several objects, over the drawing. */
+.sel-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: calc(22px * var(--ui-scale));
+  padding: 0 4px 0 8px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: 999px;
+  background: var(--c-panel);
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+}
+.sel-chip:hover {
+  background: var(--c-hover);
+}
+.sel-chip[hidden] {
+  display: none;
+}
+
 /*
  * Genel bakış and Büyüteç over the drawing (docs/adr/0181): a title row over a picture, where navigation.ts puts
  * them. The overview's picture is its own canvas; the magnifier's is the drawing backend's, seen through the card's

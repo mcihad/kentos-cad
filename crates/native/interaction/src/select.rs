@@ -22,6 +22,10 @@
 //! web (the erase tool leaves them in place), but their grips are not
 //! taken. Ctrl does nothing here, as on the web.
 //!
+//! The selection filter (docs/adr/0187 §5) passes what it holds: the hover,
+//! the click and the box. A click among several objects opens Sıradakini
+//! seç's chip (§1): Shift+Boşluk or its list takes the next.
+//!
 //! With Topolojik düzenleme on (docs/adr/0160) a grip's edit puts the shared
 //! corners and edges of the objects around it right too, in the same step
 //! (`neighbours`): they are drawn dashed while the grip moves.
@@ -192,7 +196,8 @@ impl Select {
             return;
         }
         let Some(start) = self.start else {
-            let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
+            // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
+            let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
             // On a tagged grip the pointer is on the vertex, not on the object: it is not
             // hovered, and no rollover card opens over the tag (docs/adr/0142, 0160).
@@ -238,18 +243,32 @@ impl Select {
                 }
                 .crossing();
                 let ids = cx.spatial.in_rect(start.world, current.world, crossing);
+                let ids = crate::selectable::ids(cx, ids);
                 if p.shift {
                     cx.selection.add(ids);
                 } else {
                     cx.selection.set(ids);
                 }
             }
-            _ => match cx.spatial.pick(p.raw, cx.pick_tolerance()) {
-                Some(hit) if p.shift => cx.selection.toggle(hit),
-                Some(hit) => cx.selection.set([hit]),
-                None if !p.shift => cx.selection.clear(),
-                None => {}
-            },
+            _ => {
+                // Every object the click could mean, the most specific first (docs/adr/0187 §1):
+                // the first is selected; among several, Sıradakini seç's chip opens.
+                let candidates = crate::selectable::candidates(cx, p.raw);
+                match candidates.first().copied() {
+                    Some(hit) if p.shift => {
+                        cx.selection.toggle(hit);
+                        if cx.selection.contains(hit) {
+                            cx.selection.start_cycle(p.raw, candidates);
+                        }
+                    }
+                    Some(hit) => {
+                        cx.selection.set([hit]);
+                        cx.selection.start_cycle(p.raw, candidates);
+                    }
+                    None if !p.shift => cx.selection.clear(),
+                    None => {}
+                }
+            }
         }
     }
 

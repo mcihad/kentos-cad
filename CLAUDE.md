@@ -47,6 +47,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (menüde her desenin geniş örneği, adı yazılarak), Ölçek, Açı, İkinci renk, Ters, İlişkili ve Yazılar seçenekleri; Çoklu tara; ilişkili tarama kapalı
   nesnesini, adalarını ve boş bıraktığı yazıları iki belgede kayıttan önce izler, Öznitelikler'de İlişkiyi kopar; DXF'in HATCH'i desen
   satırları ve degradesiyle iki yönde (ADR 0186);
+  seçim ekleri: Sıradakini seç (tıklamanın adayları çekirdeğin sırasıyla, “1/3 ▾” çipi ve listesi, Shift+Boşluk), Çokgenle seç
+  (İçindekiler, Kesişenler, Dışındakiler), Önceki seçim, Benzerini seç (Tür, Katman, Renk, Sembol), Seçim süzgeci (durum çubuğunda Süzgeç,
+  on altı tür; tıklama, kutu, seçim araçları ve seçme adımları süzülür, dışarıda kalan söylenir) (ADR 0187);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -257,6 +260,8 @@ python3 scripts/fixtures/table_file_cases.py --check   # Tablo ekle'nin dosya ok
 python3 scripts/fixtures/coordinate_label_cases.py --check   # Koordinat yaz'ın yerlerini ve adlarını, şablonun satırlarını (yer tutucular, değeri olmayan satır, birimler, basamak) ve yerleşimi (kol, dirsek, çizgi, dört yön, Otomatik, kolsuz satırlar) kesirlerle ve yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/coordinate-labels/v1/cases.json (ADR 0185)
 KENTOS_SHOTS_ONLY=koordinat-yaz,koordinat-koseler,koordinat-cizelge,koordinat-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Koordinat yaz'ın resimleri, .run/shots/arac-koordinat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs coordinates); ADR 0185)
 python3 scripts/fixtures/hatch_pattern_cases.py --check   # tarama desenlerinin kitaplığını, kesiklerin çizilişini, boyalarını, bölgeye kesilen çizgi ve noktalarını, taşınmasını ve taramanın bölgesini ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/hatch/v1/cases.json (ADR 0186)
+python3 scripts/fixtures/selection_cases.py --check   # Seçim eklerinin kurallarını (tıklamanın adayları ve sırası, Çokgenle seç'in üç kipi ve halka sorunları kesirlerle, Benzerini seç) ADR'den, KentOS kodu olmadan yazılmış başvurudan denetle; durumlar fixtures/selection/v1 (ADR 0187)
+KENTOS_SHOTS_ONLY=secim-cip,secim-cip-liste,secim-cokgen,secim-cokgen-sonuc,secim-benzeri,secim-suzgec,secim-suzgec-menu cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # seçim eklerinin resimleri, .run/shots/arac-secim-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs selecting); ADR 0187)
 python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs hatches); ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
@@ -981,8 +986,14 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   `hatch_selected`, web `tools/hatchOptions.ts`, `tools/hatchSelectedTool.ts`; Öznitelikler `properties::hatch_rows`,
   `ui/properties/hatchRows.ts`; Desen menülerinde 56 × 24'lük geniş örnekler (sahibin seçimi; KentOS UI menüsünün `preview`'ü ve
   `Glyph::wide`'ı, web `iconPreview`); DXF `dxf/emit/pattern.rs` ve yazıcı (`hatch-patterns.dxf`, `dxf-write/hatches`); ortak izler `hatches.json`,
-  `hatch-patterns.json` (oynatıcılarda taramanın `pattern` ve `assoc` beklentisi). Sıradaki `CAD-25` seçim ekleri (`CAD-24` [M] sahibin
-  tarifini bekler).
+  `hatch-patterns.json` (oynatıcılarda taramanın `pattern` ve `assoc` beklentisi). `CAD-25` seçim ekleri
+  ([ADR 0187](docs/adr/0187-selection-extras.md)) tek parçada bitti (6 Ekim; ikonlar sahibin seçtikleri): çekirdekte `Store::hits` (`hit` aynı
+  puandan) ve `store/polygon.rs` (`in_polygon`, `ring_problem`; bağımsız başvuru `selection_cases.py`, ortak `fixtures/selection/v1`);
+  seçimin önceki seti ve çipi (`Selection`'ın `previous`, `Cycle`'ı; web `model/selection.ts`), süzgeç (`drafting.selectFilter`;
+  `kentos_interaction::selectable`, `tools/selectable.ts`), araçlar `select_polygon.rs`, `select_similar.rs`, web `PolygonSelectTool`,
+  `tools/selectSimilarTool.ts`; komutlar `selection_commands.rs`, `app/selectionCommands.ts`; çip `selection_chip.rs` (KentOS UI menüsünün
+  `highlight`'ı, `beside`'ın menü iletimi), `ui/shell/SelectionChip.ts`; ortak iz `selection-extras.json` (oynatıcılarda `cycle`). Sıradaki
+  `CAD-26` nokta hesaplayıcı ekleri (`CAD-24` [M] sahibin tarifini bekler).
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

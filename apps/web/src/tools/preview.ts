@@ -227,6 +227,35 @@ export function drawSelectionCircle(g: CanvasRenderingContext2D, view: ViewTrans
   g.restore();
 }
 
+/**
+ * The polygon of Çokgenle seç (docs/adr/0187 §2), closed back to its first corner: dashed, as the selection box and
+ * circle are, its inside lightly filled in the window's blue for İçindekiler and in `crossingColor` for Kesişenler;
+ * Dışındakiler leaves it unfilled.
+ */
+export function drawSelectionPolygon(g: CanvasRenderingContext2D, view: ViewTransform, pts: readonly Vec2[], mode: 'inside' | 'crossing' | 'outside', crossingColor: string): void {
+  if (pts.length < 2) return;
+  const color = mode === 'crossing' ? crossingColor : WINDOW_COLOR;
+  g.save();
+  g.beginPath();
+  pts.forEach((p, i) => {
+    const s = view.worldToScreen(p);
+    if (i === 0) g.moveTo(s.x, s.y);
+    else g.lineTo(s.x, s.y);
+  });
+  g.closePath();
+  if (mode !== 'outside') {
+    g.fillStyle = color;
+    g.globalAlpha = 0.1;
+    g.fill();
+    g.globalAlpha = 1;
+  }
+  g.strokeStyle = color;
+  g.lineWidth = 1.5;
+  g.setLineDash([5, 4]);
+  g.stroke();
+  g.restore();
+}
+
 /** A palette colour (#rrggbb) at the given opacity, for translucent preview fills. */
 export function tint(color: string, alpha: number): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color.trim());

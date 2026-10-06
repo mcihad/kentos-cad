@@ -206,6 +206,14 @@ fn settings() -> Vec<SettingDescriptor> {
             "Çakışma denetimi",
             "Çizilen yeni alanın komşu alanlarla örtüşen kısmı: serbest bırakılır ya da yeni alanın katmanındaki veya seçilen katmanlardaki görünen alanlarla örtüşen kısmı çıkarılarak yazılır.",
         ),
+        // The selection filter (docs/adr/0187 §5): off at the start of every session; its kinds are the session's.
+        boolean("drafting.selectFilter", false)
+            .scope(SettingScope::Session)
+            .hosts(&[Web, Desktop])
+            .text(
+                "Seçim süzgeci",
+                "Açıkken yalnız süzgeçte işaretli türlerin nesneleri seçilir: tıklama, pencere ve kesişim, seçim araçları, Tümünü seç, Ters çevir ve komutların nesne seçme adımı.",
+            ),
         // ── Snap kinds ──────────────────────────────────────────────────
         snap_kind(
             "snap.endpoint",

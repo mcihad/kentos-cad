@@ -1,0 +1,243 @@
+{
+ "format": "kentos.selection-similar",
+ "version": 1,
+ "source": "scripts/fixtures/selection_cases.py (docs/adr/0187)",
+ "objects": [
+  {
+   "id": 1,
+   "kind": "polygon",
+   "block": null,
+   "layer": "Parsel",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 2,
+   "kind": "polygon",
+   "block": null,
+   "layer": "Parsel",
+   "color": "#E5484D",
+   "symbol": null
+  },
+  {
+   "id": 3,
+   "kind": "polygon",
+   "block": null,
+   "layer": "Yapı",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 4,
+   "kind": "line",
+   "block": null,
+   "layer": "Parsel",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 5,
+   "kind": "polygon",
+   "block": null,
+   "layer": "Parsel",
+   "color": null,
+   "symbol": "sys/parsel"
+  },
+  {
+   "id": 6,
+   "kind": "insert",
+   "block": "0b0a0c3e-2d5b-4c47-9e7e-1d2c3b4a5f60",
+   "layer": "Donatı",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 7,
+   "kind": "insert",
+   "block": "5d1f9a20-7c34-4b8e-a1f2-3c4d5e6f7a80",
+   "layer": "Donatı",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 8,
+   "kind": "insert",
+   "block": "0b0a0c3e-2d5b-4c47-9e7e-1d2c3b4a5f60",
+   "layer": "Donatı",
+   "color": null,
+   "symbol": null
+  },
+  {
+   "id": 9,
+   "kind": "point",
+   "block": null,
+   "layer": "Nokta",
+   "color": "#E5484D",
+   "symbol": null
+  },
+  {
+   "id": 10,
+   "kind": "polygon",
+   "block": null,
+   "layer": "Parsel",
+   "color": null,
+   "symbol": null
+  }
+ ],
+ "cases": [
+  {
+   "name": "every criterion",
+   "examples": [
+    1
+   ],
+   "criteria": {
+    "kind": true,
+    "layer": true,
+    "color": true,
+    "symbol": true
+   },
+   "expect": [
+    1,
+    10
+   ]
+  },
+  {
+   "name": "the colour left out",
+   "examples": [
+    1
+   ],
+   "criteria": {
+    "kind": true,
+    "layer": true,
+    "color": false,
+    "symbol": true
+   },
+   "expect": [
+    1,
+    2,
+    10
+   ]
+  },
+  {
+   "name": "the kind only",
+   "examples": [
+    1
+   ],
+   "criteria": {
+    "kind": true,
+    "layer": false,
+    "color": false,
+    "symbol": false
+   },
+   "expect": [
+    1,
+    2,
+    3,
+    5,
+    10
+   ]
+  },
+  {
+   "name": "the layer only",
+   "examples": [
+    4
+   ],
+   "criteria": {
+    "kind": false,
+    "layer": true,
+    "color": false,
+    "symbol": false
+   },
+   "expect": [
+    1,
+    2,
+    4,
+    5,
+    10
+   ]
+  },
+  {
+   "name": "an insert by its block",
+   "examples": [
+    6
+   ],
+   "criteria": {
+    "kind": true,
+    "layer": true,
+    "color": true,
+    "symbol": true
+   },
+   "expect": [
+    6,
+    8
+   ]
+  },
+  {
+   "name": "the colour only, by two examples",
+   "examples": [
+    2,
+    9
+   ],
+   "criteria": {
+    "kind": false,
+    "layer": false,
+    "color": true,
+    "symbol": false
+   },
+   "expect": [
+    2,
+    9
+   ]
+  },
+  {
+   "name": "no criterion: every object",
+   "examples": [
+    3
+   ],
+   "criteria": {
+    "kind": false,
+    "layer": false,
+    "color": false,
+    "symbol": false
+   },
+   "expect": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ]
+  },
+  {
+   "name": "the symbol only",
+   "examples": [
+    5
+   ],
+   "criteria": {
+    "kind": false,
+    "layer": false,
+    "color": false,
+    "symbol": true
+   },
+   "expect": [
+    5
+   ]
+  },
+  {
+   "name": "no example: nothing",
+   "examples": [],
+   "criteria": {
+    "kind": true,
+    "layer": true,
+    "color": true,
+    "symbol": true
+   },
+   "expect": []
+  }
+ ]
+}

@@ -8,6 +8,8 @@ import type { SettingsStore } from './settings/store';
 import { NO_LOCKS, type LockAsk, type LockState } from '../tools/locks';
 import type { GeographicNotation } from '../model/secondCrs';
 import type { TemplateRun } from '../tools/templateStamp';
+import { FILTER_KINDS } from '../tools/selectable';
+import type { EntityKind } from '../model/entities';
 
 const sessionDefault = (key: string) => settingDefault(key) as boolean;
 
@@ -38,6 +40,10 @@ export class DraftingSettings {
   readonly overlapLast = new Signal<Exclude<OverlapMode, 'allow'>>('layer');
   /** Seçili katmanlarda önle's layers, by id: the session's, not a setting (settings hold no lists). */
   readonly overlapLayers = new Signal<ReadonlySet<string>>(new Set());
+  /** Seçim süzgeci (docs/adr/0187 §5): while on, only the kinds it holds are selected. */
+  readonly selectFilter = new Signal(sessionDefault('drafting.selectFilter'));
+  /** The kinds the selection filter holds: the session's, every kind at first. */
+  readonly selectKinds = new Signal<ReadonlySet<EntityKind>>(new Set(FILTER_KINDS));
   /** The digitizing locks (docs/adr/0166): what holds the next point; a new command starts with none. */
   readonly locks = new Signal<LockState>(NO_LOCKS);
   /** What the value card asks for after a lock was chosen from the menu (Uzunluk…, Açı…, Sapma…). */

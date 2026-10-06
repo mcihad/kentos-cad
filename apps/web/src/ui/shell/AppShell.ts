@@ -12,6 +12,7 @@ import { StatusBar } from '../statusbar/StatusBar';
 import { CommandBar } from './CommandBar';
 import { CursorInput } from './CursorInput';
 import { HoverCard } from './HoverCard';
+import { SelectionChip } from './SelectionChip';
 import { InlineTextEditor } from './InlineTextEditor';
 import { ParagraphEditor } from './ParagraphEditor';
 import { bindViewportMenus } from './viewportMenus';
@@ -76,6 +77,7 @@ export class AppShell extends Component {
     this.own(new ParagraphEditor(ctx, this.viewportHost));
     this.own(new CommandBar(ctx, this.viewportHost));
     this.own(new HoverCard(ctx, this.viewportHost));
+    this.own(new SelectionChip(ctx, this.viewportHost));
     this.bottom.commandLine.direct = this.own(new CursorInput(ctx, this.viewportHost));
 
     // The kept width, within what the window allows now (app/layoutPlan.ts); a narrower window does not change what is kept.

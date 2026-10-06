@@ -92,9 +92,9 @@ describe('ribbon', () => {
     expect(pano.items.slice(1).every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
     const seçim = home.panels.find((p) => p.label === 'Seçim')!;
     expect(seçim.items.every((i) => i.kind !== 'builtin' && i.size === 'small')).toBe(true);
-    // Seç ▾: the ways of selecting are one split button (docs/adr/0141).
+    // Seç ▾: the ways of selecting are one split button (docs/adr/0141), Çokgenle seç and Benzerini seç among them (docs/adr/0187).
     const selecting = seçim.items.find((i) => i.kind === 'split');
-    expect(selecting?.kind === 'split' && selecting.entries.map((e) => e.command)).toEqual(['tool.select', 'tool.selectFence', 'tool.selectCircle', 'tool.selectContaining']);
+    expect(selecting?.kind === 'split' && selecting.entries.map((e) => e.command)).toEqual(['tool.select', 'tool.selectFence', 'tool.selectCircle', 'tool.selectPolygon', 'tool.selectContaining', 'tool.selectSimilar']);
     const ölçme = tabs.find((t) => t.id === 'map')!.panels.find((p) => p.label === 'Ölçme')!;
     // Four tools and none of them main: small, three to a column.
     expect(sized(ölçme.items)).toEqual(['tool.measure:small', 'tool.area:small', 'tool.measureAngle:small', 'tool.stationOffset:small']);

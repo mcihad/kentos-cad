@@ -27,6 +27,7 @@ mod point_editor;
 mod point_text;
 mod polygonize;
 mod reshape;
+mod selection;
 mod snap;
 mod template_members;
 mod text;

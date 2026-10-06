@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 335,
-      "implemented": 323,
+      "total": 356,
+      "implemented": 344,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 105,
-      "implemented": 103,
+      "total": 107,
+      "implemented": 105,
       "partial": 0,
       "pending": 2
     },
@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 84,
-      "implemented": 84,
+      "total": 86,
+      "implemented": 86,
       "partial": 0,
       "pending": 0
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 107,
-      "implemented": 107,
+      "total": 108,
+      "implemented": 108,
       "partial": 0,
       "pending": 0
     },
@@ -101,20 +101,20 @@
       "sheet.tool.select",
       "sheet.undo"
     ],
-    "commandsWithoutTests": 109,
-    "commandsOnDesktop": 263,
+    "commandsWithoutTests": 125,
+    "commandsOnDesktop": 284,
     "desktop": {
       "commands": {
-        "total": 335,
-        "implemented": 263,
+        "total": 356,
+        "implemented": 284,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 105,
-        "implemented": 103,
+        "total": 107,
+        "implemented": 105,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -145,11 +145,11 @@
         "n/a": 0
       },
       "settings": {
-        "total": 84,
-        "implemented": 81,
+        "total": 86,
+        "implemented": 82,
         "partial": 0,
         "pending": 0,
-        "none": 2,
+        "none": 3,
         "n/a": 1
       },
       "storage": {
@@ -169,11 +169,11 @@
         "n/a": 0
       },
       "screens": {
-        "total": 107,
+        "total": 108,
         "implemented": 89,
         "partial": 2,
         "pending": 0,
-        "none": 15,
+        "none": 16,
         "n/a": 1
       }
     },
@@ -2274,6 +2274,39 @@
       ]
     },
     {
+      "id": "edit.cycleSelection",
+      "title": "Sıradakini seç",
+      "category": "Düzen",
+      "icon": "selectCycle",
+      "description": "Tıklanan yerde üst üste binen nesnelerden sıradakini seçer; tıklamanın yanındaki çip listeyi açar.",
+      "aliases": [
+        "SIRADAKINISEC",
+        "SELECTIONCYCLING"
+      ],
+      "kind": "action",
+      "shortcuts": [
+        "Shift+Space"
+      ],
+      "menus": [
+        "Düzen › Seçim"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/shell/SelectionChip.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
       "id": "edit.deselect",
       "title": "Seçimi kaldır",
       "category": "Düzen",
@@ -2402,6 +2435,37 @@
       ]
     },
     {
+      "id": "edit.previousSelection",
+      "title": "Önceki seçim",
+      "category": "Düzen",
+      "icon": "selectPrevious",
+      "description": "Yerini yeni bir seçime bırakan ya da kaldırılan son seçimi geri getirir; yeniden basmak bir önceki hâle döner.",
+      "aliases": [
+        "ONCEKISECIM",
+        "SELECTPREVIOUS"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
       "id": "edit.redo",
       "title": "Yinele",
       "category": "Düzen",
@@ -2460,6 +2524,459 @@
       "tests": [
         "fixtures/interaction/v1/table.json"
       ]
+    },
+    {
+      "id": "edit.selectFilter",
+      "title": "Seçim süzgeci",
+      "short": "Süzgeç",
+      "category": "Düzen",
+      "icon": "selectFilter",
+      "description": "Açıkken yalnız işaretli türlerin nesneleri seçilir; türler hücrenin sağ tık menüsündedir.",
+      "aliases": [
+        "SUZGEC",
+        "SECIMSUZGECI",
+        "FILTER"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/statusbar/StatusBar.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "edit.selectFilter.arc",
+      "title": "Seçim süzgecinde Yay",
+      "short": "Yay",
+      "category": "Düzen",
+      "icon": "arc",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.circle",
+      "title": "Seçim süzgecinde Daire",
+      "short": "Daire",
+      "category": "Düzen",
+      "icon": "circle",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.dimension",
+      "title": "Seçim süzgecinde Ölçü",
+      "short": "Ölçü",
+      "category": "Düzen",
+      "icon": "dimension",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.ellipse",
+      "title": "Seçim süzgecinde Elips",
+      "short": "Elips",
+      "category": "Düzen",
+      "icon": "ellipse",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.hatch",
+      "title": "Seçim süzgecinde Tarama",
+      "short": "Tarama",
+      "category": "Düzen",
+      "icon": "hatch",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.insert",
+      "title": "Seçim süzgecinde Blok",
+      "short": "Blok",
+      "category": "Düzen",
+      "icon": "blockInsert",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.leader",
+      "title": "Seçim süzgecinde Kılavuz",
+      "short": "Kılavuz",
+      "category": "Düzen",
+      "icon": "leader",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.line",
+      "title": "Seçim süzgecinde Çizgi",
+      "short": "Çizgi",
+      "category": "Düzen",
+      "icon": "line",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.point",
+      "title": "Seçim süzgecinde Nokta",
+      "short": "Nokta",
+      "category": "Düzen",
+      "icon": "point",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.polygon",
+      "title": "Seçim süzgecinde Kapalı alan",
+      "short": "Kapalı alan",
+      "category": "Düzen",
+      "icon": "polygon",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "edit.selectFilter.polyline",
+      "title": "Seçim süzgecinde Çoklu çizgi",
+      "short": "Çoklu çizgi",
+      "category": "Düzen",
+      "icon": "polyline",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.ray",
+      "title": "Seçim süzgecinde Işın",
+      "short": "Işın",
+      "category": "Düzen",
+      "icon": "ray",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.spline",
+      "title": "Seçim süzgecinde Eğri",
+      "short": "Eğri",
+      "category": "Düzen",
+      "icon": "spline",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.table",
+      "title": "Seçim süzgecinde Tablo",
+      "short": "Tablo",
+      "category": "Düzen",
+      "icon": "table",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.text",
+      "title": "Seçim süzgecinde Yazı",
+      "short": "Yazı",
+      "category": "Düzen",
+      "icon": "text",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
+    },
+    {
+      "id": "edit.selectFilter.xline",
+      "title": "Seçim süzgecinde Yardımcı çizgi",
+      "short": "Yardımcı çizgi",
+      "category": "Düzen",
+      "icon": "xline",
+      "aliases": [],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim › Seçim süzgeci"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": []
     },
     {
       "id": "edit.undo",
@@ -9177,6 +9694,74 @@
       ]
     },
     {
+      "id": "tool.selectPolygon",
+      "title": "Çokgenle seç",
+      "category": "Seçim",
+      "icon": "selectPolygon",
+      "description": "Çizilen çokgenin içinde kalan, ona dokunan ya da dışında kalan nesneleri seçer.",
+      "aliases": [
+        "COKGENSEC",
+        "WPOLYGON",
+        "CPOLYGON",
+        "WP",
+        "CP"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "tool.selectSimilar",
+      "title": "Benzerini seç",
+      "category": "Seçim",
+      "icon": "selectSimilar",
+      "description": "Örnek nesnelere türde, katmanda, renkte ve sembolde eşit olan görünür nesneleri seçer; ölçütler tek tek kapatılır.",
+      "aliases": [
+        "BENZERSEC",
+        "BENZERINISEC",
+        "SELECTSIMILAR"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Düzen › Seçim"
+      ],
+      "ribbon": [
+        "CAD › Giriş › Seçim",
+        "CBS › Giriş › Seçim"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
       "id": "tool.setElevation",
       "title": "Kot ver",
       "category": "Düzenle",
@@ -13274,6 +13859,60 @@
       ]
     },
     {
+      "id": "selectPolygon",
+      "label": "Çokgenle seç",
+      "icon": "selectPolygon",
+      "group": "select",
+      "aliases": [
+        "COKGENSEC",
+        "WPOLYGON",
+        "CPOLYGON",
+        "WP",
+        "CP"
+      ],
+      "primary": false,
+      "family": "select",
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Çizilen çokgenin içinde kalan, ona dokunan ya da dışında kalan nesneleri seçer.",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
+      "id": "selectSimilar",
+      "label": "Benzerini seç",
+      "icon": "selectSimilar",
+      "group": "select",
+      "aliases": [
+        "BENZERSEC",
+        "BENZERINISEC",
+        "SELECTSIMILAR"
+      ],
+      "primary": false,
+      "family": "select",
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Örnek nesnelere türde, katmanda, renkte ve sembolde eşit olan görünür nesneleri seçer; ölçütler tek tek kapatılır.",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/selection-extras.json"
+      ]
+    },
+    {
       "id": "setElevation",
       "label": "Kot ver",
       "icon": "setElevation",
@@ -14825,6 +15464,33 @@
       "platforms": {
         "web": "implemented",
         "desktop": "implemented"
+      }
+    },
+    {
+      "id": "session.selectFilter",
+      "key": "selectFilter",
+      "scope": "session",
+      "persistence": "none",
+      "type": "boolean",
+      "default": false,
+      "setting": "drafting.selectFilter",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "session.selectKinds",
+      "key": "selectKinds",
+      "scope": "session",
+      "persistence": "none",
+      "type": "object",
+      "default": {},
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
       }
     },
     {
@@ -22652,6 +23318,17 @@
       "desktopWhere": "apps/desktop/src/paragraph_editor.rs (ADR 0182)"
     },
     {
+      "id": "apps/web/src/ui/shell/SelectionChip.ts#SelectionChip",
+      "name": "SelectionChip",
+      "role": "panel",
+      "source": "apps/web/src/ui/shell/SelectionChip.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/start/StartScreen.ts#openStartScreen",
       "name": "openStartScreen",
       "role": "window",
@@ -22964,10 +23641,41 @@
             "items": [
               "tool.selectFence",
               "tool.selectCircle",
+              "tool.selectPolygon",
               "tool.selectContaining",
+              "tool.selectSimilar",
               "edit.selectAll",
               "edit.deselect",
-              "edit.invertSelection"
+              "edit.invertSelection",
+              "edit.previousSelection",
+              "edit.cycleSelection",
+              {
+                "label": "Seçim süzgeci",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilter",
+                      "edit.selectFilter.point",
+                      "edit.selectFilter.line",
+                      "edit.selectFilter.polyline",
+                      "edit.selectFilter.polygon",
+                      "edit.selectFilter.circle",
+                      "edit.selectFilter.arc",
+                      "edit.selectFilter.ellipse",
+                      "edit.selectFilter.spline",
+                      "edit.selectFilter.xline",
+                      "edit.selectFilter.ray",
+                      "edit.selectFilter.text",
+                      "edit.selectFilter.dimension",
+                      "edit.selectFilter.hatch",
+                      "edit.selectFilter.insert",
+                      "edit.selectFilter.leader",
+                      "edit.selectFilter.table"
+                    ]
+                  }
+                ]
+              }
             ]
           },
           {
@@ -23733,9 +24441,19 @@
                     "label": "Daireyle seç"
                   },
                   {
+                    "command": "tool.selectPolygon",
+                    "title": "Çokgenle seç",
+                    "label": "Çokgenle seç"
+                  },
+                  {
                     "command": "tool.selectContaining",
                     "title": "İçeren alanı seç",
                     "label": "İçeren alanı seç"
+                  },
+                  {
+                    "command": "tool.selectSimilar",
+                    "title": "Benzerini seç",
+                    "label": "Benzerini seç"
                   }
                 ],
                 "key": "select",
@@ -23760,6 +24478,42 @@
               {
                 "command": "edit.invertSelection",
                 "size": "small"
+              },
+              {
+                "command": "edit.previousSelection",
+                "size": "small"
+              },
+              {
+                "command": "edit.cycleSelection",
+                "size": "small"
+              },
+              {
+                "menu": "Seçim süzgeci",
+                "size": "small",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "edit.selectFilter",
+                      "edit.selectFilter.point",
+                      "edit.selectFilter.line",
+                      "edit.selectFilter.polyline",
+                      "edit.selectFilter.polygon",
+                      "edit.selectFilter.circle",
+                      "edit.selectFilter.arc",
+                      "edit.selectFilter.ellipse",
+                      "edit.selectFilter.spline",
+                      "edit.selectFilter.xline",
+                      "edit.selectFilter.ray",
+                      "edit.selectFilter.text",
+                      "edit.selectFilter.dimension",
+                      "edit.selectFilter.hatch",
+                      "edit.selectFilter.insert",
+                      "edit.selectFilter.leader",
+                      "edit.selectFilter.table"
+                    ]
+                  }
+                ]
               }
             ],
             "overflow": [],
@@ -25845,9 +26599,19 @@
                       "label": "Daireyle seç"
                     },
                     {
+                      "command": "tool.selectPolygon",
+                      "title": "Çokgenle seç",
+                      "label": "Çokgenle seç"
+                    },
+                    {
                       "command": "tool.selectContaining",
                       "title": "İçeren alanı seç",
                       "label": "İçeren alanı seç"
+                    },
+                    {
+                      "command": "tool.selectSimilar",
+                      "title": "Benzerini seç",
+                      "label": "Benzerini seç"
                     }
                   ],
                   "key": "select",
@@ -25872,6 +26636,42 @@
                 {
                   "command": "edit.invertSelection",
                   "size": "small"
+                },
+                {
+                  "command": "edit.previousSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.cycleSelection",
+                  "size": "small"
+                },
+                {
+                  "menu": "Seçim süzgeci",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilter",
+                        "edit.selectFilter.point",
+                        "edit.selectFilter.line",
+                        "edit.selectFilter.polyline",
+                        "edit.selectFilter.polygon",
+                        "edit.selectFilter.circle",
+                        "edit.selectFilter.arc",
+                        "edit.selectFilter.ellipse",
+                        "edit.selectFilter.spline",
+                        "edit.selectFilter.xline",
+                        "edit.selectFilter.ray",
+                        "edit.selectFilter.text",
+                        "edit.selectFilter.dimension",
+                        "edit.selectFilter.hatch",
+                        "edit.selectFilter.insert",
+                        "edit.selectFilter.leader",
+                        "edit.selectFilter.table"
+                      ]
+                    }
+                  ]
                 }
               ],
               "overflow": [],
@@ -27973,9 +28773,19 @@
                       "label": "Daireyle seç"
                     },
                     {
+                      "command": "tool.selectPolygon",
+                      "title": "Çokgenle seç",
+                      "label": "Çokgenle seç"
+                    },
+                    {
                       "command": "tool.selectContaining",
                       "title": "İçeren alanı seç",
                       "label": "İçeren alanı seç"
+                    },
+                    {
+                      "command": "tool.selectSimilar",
+                      "title": "Benzerini seç",
+                      "label": "Benzerini seç"
                     }
                   ],
                   "key": "select",
@@ -28000,6 +28810,42 @@
                 {
                   "command": "edit.invertSelection",
                   "size": "small"
+                },
+                {
+                  "command": "edit.previousSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.cycleSelection",
+                  "size": "small"
+                },
+                {
+                  "menu": "Seçim süzgeci",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "edit.selectFilter",
+                        "edit.selectFilter.point",
+                        "edit.selectFilter.line",
+                        "edit.selectFilter.polyline",
+                        "edit.selectFilter.polygon",
+                        "edit.selectFilter.circle",
+                        "edit.selectFilter.arc",
+                        "edit.selectFilter.ellipse",
+                        "edit.selectFilter.spline",
+                        "edit.selectFilter.xline",
+                        "edit.selectFilter.ray",
+                        "edit.selectFilter.text",
+                        "edit.selectFilter.dimension",
+                        "edit.selectFilter.hatch",
+                        "edit.selectFilter.insert",
+                        "edit.selectFilter.leader",
+                        "edit.selectFilter.table"
+                      ]
+                    }
+                  ]
                 }
               ],
               "overflow": [],
@@ -29893,6 +30739,11 @@
     "selectFence": "<path d=\"M6 3.5v6M14 10.5v6\"/><path d=\"M2.5 11 9 5.5l4 7 4.5-4\" stroke-dasharray=\"2.2 1.5\"/><rect x=\"1\" y=\"9.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
     "selectCircle": "<circle cx=\"10\" cy=\"10\" r=\"7.2\" stroke-dasharray=\"2.4 1.6\"/><path d=\"M7 12.6h6L10 7z\"/>",
     "selectContaining": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><rect x=\"6\" y=\"6\" width=\"8\" height=\"8\" stroke-width=\"2\"/><circle cx=\"10\" cy=\"10\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/>",
+    "selectPolygon": "<path d=\"M3 7 9 3l8 3.5-2.5 5L17 16.5 6.5 17z\" stroke-dasharray=\"2.2 1.5\"/><path d=\"M7.8 13.6h4.8L10.2 9.4z\"/><rect x=\"1.5\" y=\"5.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"15.5\" y=\"5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"5\" y=\"15.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "selectSimilar": "<path d=\"M2.5 15.5h6.5L5.75 8.5z\"/><rect x=\"1\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"7.5\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"4.25\" y=\"7\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M11 15.5h6.5l-3.25-7z\" stroke-dasharray=\"2.2 1.5\"/>",
+    "selectPrevious": "<rect x=\"2.5\" y=\"8.5\" width=\"9\" height=\"9\" stroke-dasharray=\"2 1.6\"/><path d=\"M8.5 5.5h6a3 3 0 0 1 0 6H14\"/><path d=\"M10.5 3 8 5.5 10.5 8\"/>",
+    "selectFilter": "<path d=\"M3 4h14l-5.5 6.5V16l-3-1.5v-4z\"/>",
+    "selectCycle": "<rect x=\"2.5\" y=\"6.5\" width=\"8\" height=\"8\" stroke-dasharray=\"2 1.6\"/><rect x=\"6.5\" y=\"2.5\" width=\"8\" height=\"8\"/><path d=\"M17.5 9.5a5 5 0 0 1-6.5 7.3\"/><path d=\"M10.6 14.6l.4 2.2 2.2-.6\"/>",
     "pan": "<path d=\"M7.2 10V4.7a1.2 1.2 0 0 1 2.4 0V9M9.6 8.6V3.6a1.2 1.2 0 0 1 2.4 0V9M12 9V4.8a1.2 1.2 0 0 1 2.4 0V11c0 3.4-2 6-5.3 6-2.2 0-3.5-1.2-4.6-3.1l-1.6-2.8a1.25 1.25 0 0 1 2.1-1.4L7.2 12\"/>",
     "point": "<path d=\"M10 3.5v13M3.5 10h13\"/><circle cx=\"10\" cy=\"10\" r=\"3.2\"/>",
     "line": "<path d=\"M4.5 15.5 15.5 4.5\"/><rect x=\"3\" y=\"14\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"14\" y=\"3\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",

@@ -5,16 +5,18 @@ import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { dotMark } from './constructPreview';
 import { PointInputTool } from './drawTools';
-import { drawSelectionCircle, drawTag, strokePath } from './preview';
+import { drawSelectionCircle, drawSelectionPolygon, drawTag, strokePath } from './preview';
 import type { ConfirmMods, Tool, ToolPointer } from './Tool';
 import { pointFromText } from './tracking';
+import { selectableIds } from './selectable';
+import { ringProblem, type PolygonMode } from '../viewport/picking';
 
 /**
- * The selection tools of docs/adr/0141, beside Seç: Çitle seç, Daireyle seç and İçeren alanı seç.
- * Each asks the geometry store (`ctx.view.inFence`, `inCircle`, `containing`: the shared core's,
- * visible objects only) and puts the answer in the selection, replacing it, or adding to it when
- * Shift is held as the tool finishes. Çitle seç and Daireyle seç then go back to Seç; İçeren alanı seç
- * stays for more clicks. Nothing is written to the drawing.
+ * The selection tools of docs/adr/0141 and 0187, beside Seç: Çitle seç, Daireyle seç, Çokgenle seç and İçeren alanı
+ * seç. Each asks the geometry store (`ctx.view.inFence`, `inCircle`, `inPolygon`, `containing`: the shared core's,
+ * visible objects only), lets the selection filter (docs/adr/0187 §5) pass what it holds, and puts the answer in the
+ * selection, replacing it, or adding to it when Shift is held as the tool finishes. Çitle seç, Daireyle seç and
+ * Çokgenle seç then go back to Seç; İçeren alanı seç stays for more clicks. Nothing is written to the drawing.
  */
 
 /** A toggle's state in the prompt: shown only when it is on (docs/adr/0140, Ötele's pattern). */
@@ -64,7 +66,7 @@ export class FenceSelectTool extends PointInputTool {
   override confirm(mods?: ConfirmMods): void {
     if (!this.pts.length) return this.ctx.tools.exit();
     if (this.pts.length < 2) return void this.ctx.log.warn('Çit için en az iki nokta gerekir; ikinci noktayı gösterin.');
-    const ids = this.ctx.view.inFence(this.pts);
+    const ids = selectableIds(this.ctx, this.ctx.view.inFence(this.pts));
     if (!ids.length) this.ctx.log.warn('Çit hiçbir nesneyi kesmedi.');
     else {
       take(this.ctx, ids, mods?.shift ?? this.shift);
@@ -138,7 +140,7 @@ export class CircleSelectTool extends PointInputTool {
     const { log } = this.ctx;
     if (!(r > 0)) return void log.warn('Yarıçap sıfırdan büyük olmalı.');
     const crossing = CircleSelectTool.crossing;
-    const ids = this.ctx.view.inCircle(c, r, crossing);
+    const ids = selectableIds(this.ctx, this.ctx.view.inCircle(c, r, crossing));
     if (!ids.length) log.warn('Dairede nesne yok.');
     else {
       take(this.ctx, ids, this.shift);
@@ -157,6 +159,90 @@ export class CircleSelectTool extends PointInputTool {
     drawSelectionCircle(g, view, c, r, CircleSelectTool.crossing, pal.snap);
     strokePath(g, view, [c, at], { color: pal.accent, dash: [2, 3] });
     drawTag(g, view.worldToScreen(at), [`R ${this.ctx.format.length(r)}`], pal.accent, pal.labelHalo);
+    this.drawTracking(g, view);
+  }
+}
+
+/** What Çokgenle seç says it found, and found none of, by its mode. */
+const POLYGON_FOUND: Record<PolygonMode, (n: number) => string> = {
+  inside: (n) => `Çokgenin içinde ${n} nesne; seçildi.`,
+  crossing: (n) => `Çokgene dokunan ${n} nesne; seçildi.`,
+  outside: (n) => `Çokgenin dışında ${n} nesne; seçildi.`,
+};
+const POLYGON_NONE: Record<PolygonMode, string> = {
+  inside: 'Çokgenin içinde nesne yok.',
+  crossing: 'Çokgene dokunan nesne yok.',
+  outside: 'Çokgenin dışında nesne yok.',
+};
+/** The modes' options in the prompt and the keys that choose them. */
+const POLYGON_OPTIONS: readonly [PolygonMode, string, string][] = [
+  ['inside', 'İçindekiler', 'İ'],
+  ['crossing', 'Kesişenler', 'K'],
+  ['outside', 'Dışındakiler', 'D'],
+];
+
+/**
+ * Çokgenle seç (docs/adr/0187 §2): the polygon's corners clicked (snaps, ortho and polar tracking from the last), Geri
+ * (G) drops the last, Enter or a right click ends. İçindekiler (İ) takes what lies wholly inside, Kesişenler (K) what it
+ * touches too, Dışındakiler (D) every visible object it does not touch; the mode is kept for the session. A polygon of
+ * fewer than three corners, or crossing itself, is said and the tool waits. Shift held at the last click, or
+ * Shift+Enter, adds to the selection.
+ */
+export class PolygonSelectTool extends PointInputTool {
+  readonly id = 'selectPolygon';
+  protected readonly label = 'Çokgenle seç';
+  private static mode: PolygonMode = 'inside';
+  private shift = false;
+
+  protected promptFor(n: number): string {
+    const modes = POLYGON_OPTIONS.map(([m, name, key]) => `${name} (${key})${whenOn(PolygonSelectTool.mode === m)}`).join(' / ');
+    return n === 0 ? `çokgenin ilk köşesine tıklayın [${modes}]` : `sonraki köşeye tıklayın [Geri (G) / Bitir (Enter) / ${modes}]`;
+  }
+
+  protected onPoint(p: Vec2): void {
+    const last = this.last;
+    if (last && dist(last, p) <= 1e-9) return;
+    this.pts.push(p);
+  }
+
+  protected override option(key: string): boolean {
+    if (key === 'G' && this.pts.length) {
+      this.pts.pop();
+    } else {
+      const mode = POLYGON_OPTIONS.find(([, , k]) => k === key)?.[0];
+      if (!mode) return false;
+      PolygonSelectTool.mode = mode;
+    }
+    this.refreshPrompt();
+    this.ctx.view.requestOverlay();
+    return true;
+  }
+
+  override pointerDown(p: ToolPointer): void {
+    this.shift = p.shift;
+    super.pointerDown(p);
+  }
+
+  override confirm(mods?: ConfirmMods): void {
+    if (!this.pts.length) return this.ctx.tools.exit();
+    const problem = ringProblem(this.pts);
+    if (problem) return void this.ctx.log.warn(problem);
+    const mode = PolygonSelectTool.mode;
+    const ids = selectableIds(this.ctx, this.ctx.view.inPolygon(this.pts, mode));
+    if (!ids.length) this.ctx.log.warn(POLYGON_NONE[mode]);
+    else {
+      take(this.ctx, ids, mods?.shift ?? this.shift);
+      this.ctx.log.info(POLYGON_FOUND[mode](ids.length));
+    }
+    this.pts = [];
+    this.ctx.tools.exit();
+  }
+
+  override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
+    const pal = this.ctx.view.palette;
+    const ring = this.hover && this.pts.length ? [...this.pts, this.hover] : this.pts;
+    drawSelectionPolygon(g, view, ring, PolygonSelectTool.mode, pal.snap);
+    for (const p of this.pts) dotMark(g, view, p, pal.accent, pal.labelHalo, 3);
     this.drawTracking(g, view);
   }
 }
@@ -199,7 +285,10 @@ export class ContainingSelectTool implements Tool {
 
   private click(at: Vec2, add: boolean): void {
     const { ctx } = this;
-    const found = ctx.view.containing(at);
+    const all = ctx.view.containing(at);
+    // The kinds the selection filter holds (docs/adr/0187 §5).
+    const kept = new Set(selectableIds(ctx, all.map((f) => f.entity.id)));
+    const found = all.filter((f) => kept.has(f.entity.id));
     if (!found.length) return void ctx.log.warn('Tıklanan noktayı içeren kapalı alan yok.');
     // The same place again is the next larger one; anywhere else starts at the smallest.
     const again = this.last && dist(this.last.at, at) <= ctx.view.worldTolerance(ctx.prefs.pickAperture.value);

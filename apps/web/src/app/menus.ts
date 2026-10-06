@@ -5,6 +5,7 @@ import { parseToolRef, toolSections } from '../tools/sections';
 import type { AppContext } from './context';
 import { modelCommandId, processingCommandId } from './processing';
 import { filterOf, SHOW_ALL, type WorkspaceFilter } from './workspaces';
+import { FILTER_KINDS } from '../tools/selectable';
 
 /**
  * Declarative main menu: the single source for where commands live. The
@@ -102,10 +103,16 @@ export const MAIN_MENU: TopMenu[] = [
       sec('Seçim'),
       'tool.selectFence',
       'tool.selectCircle',
+      'tool.selectPolygon',
       'tool.selectContaining',
+      'tool.selectSimilar',
       'edit.selectAll',
       'edit.deselect',
       'edit.invertSelection',
+      'edit.previousSelection',
+      'edit.cycleSelection',
+      // Seçim süzgeci and its kinds (docs/adr/0187 §5); the status bar's Süzgeç cell has them on its right-click menu.
+      { label: 'Seçim süzgeci', icon: 'selectFilter', items: ['edit.selectFilter', ...FILTER_KINDS.map((k) => `edit.selectFilter.${k}`)] },
       sec('Bul'),
       'data.search',
       'data.unmark',

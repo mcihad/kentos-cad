@@ -168,6 +168,10 @@ pub struct Expect {
     /// The hovered object's id; `null` (none) and absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) hover: Option<Option<u32>>,
+    /// Sıradakini seç's chip (docs/adr/0187 §1): which candidate is chosen
+    /// (from 0) of how many; `null` (no chip) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) cycle: Option<Option<CycleSeen>>,
     /// The object snap's kind the marker shows (`endpoint` …); `null` (none) and absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) snap: Option<Option<String>>,
@@ -468,4 +472,12 @@ impl Trace {
     pub fn by_id(id: &str) -> Result<Self, String> {
         Self::read(&folder().join(format!("{id}.json")))
     }
+}
+
+/// Sıradakini seç's chip as a trace sees it: the candidate chosen, from 0, of how many.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CycleSeen {
+    pub(crate) index: usize,
+    pub(crate) count: usize,
 }

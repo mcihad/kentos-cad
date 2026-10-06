@@ -14,6 +14,7 @@ import { GRIP_HIT_PX } from '../viewport/overlay';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
+import { candidatesAt, pickSelectable, selectableIds } from './selectable';
 
 const DRAG_THRESHOLD = 4;
 
@@ -90,6 +91,8 @@ export class SelectTool implements Tool {
   deactivate(): void {
     this.hoverScreen = null;
     this.ctx.selection.hover.set(null);
+    // A command starting closes Sıradakini seç's chip (docs/adr/0187 §1).
+    this.ctx.selection.cycle.set(null);
   }
 
   cancel(): boolean {
@@ -202,7 +205,7 @@ export class SelectTool implements Tool {
     }
     this.hoverScreen = p.screen;
     // On a grip that has a tag the pointer is on the vertex, not on the object: no highlight, and no card over the tag.
-    const hit = this.gripTagAt(p.screen) === null ? this.ctx.view.pick(p.screen) : null;
+    const hit = this.gripTagAt(p.screen) === null ? pickSelectable(this.ctx, p.screen, true) : null;
     this.ctx.selection.hover.set(hit?.id ?? null);
   }
 
@@ -219,16 +222,21 @@ export class SelectTool implements Tool {
       const a = this.start.world;
       const b = this.current.world;
       const crossing = this.current.screen.x < this.start.screen.x;
-      const ids = this.ctx.view.pickRect(
-        { minX: Math.min(a.x, b.x), minY: Math.min(a.y, b.y), maxX: Math.max(a.x, b.x), maxY: Math.max(a.y, b.y) },
-        crossing,
+      const ids = selectableIds(
+        this.ctx,
+        this.ctx.view.pickRect({ minX: Math.min(a.x, b.x), minY: Math.min(a.y, b.y), maxX: Math.max(a.x, b.x), maxY: Math.max(a.y, b.y) }, crossing),
       );
       p.shift ? selection.add(ids) : selection.set(ids);
     } else {
-      const hit = this.ctx.view.pick(p.screen);
+      // Every object the click could mean, the most specific first (docs/adr/0187 §1): the first is selected.
+      const candidates = candidatesAt(this.ctx, p.screen);
+      const hit = candidates[0] ?? null;
       if (hit && !p.shift && this.maybeEditText(hit.id)) selection.set([hit.id]);
-      else if (hit) p.shift ? selection.toggle(hit.id) : selection.set([hit.id]);
-      else if (!p.shift) selection.clear();
+      else if (hit) {
+        p.shift ? selection.toggle(hit.id) : selection.set([hit.id]);
+        // Among several, Sıradakini seç's chip: Shift+Boşluk or its list takes the next.
+        if (candidates.length > 1 && selection.has(hit.id)) selection.cycle.set({ at: p.raw, candidates: candidates.map((e) => e.id), index: 0 });
+      } else if (!p.shift) selection.clear();
     }
     this.start = this.current = null;
     this.dragging = false;

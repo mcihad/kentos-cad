@@ -22,6 +22,7 @@
 //! kadar kendi boyunda yerleşir, sonra kurala göre konur.
 
 use iced::advanced::layout::{self, Layout, Node};
+use iced::advanced::overlay;
 use iced::advanced::renderer;
 use iced::advanced::widget::{Operation, Tree, Widget};
 use iced::advanced::{Clipboard, Shell};
@@ -203,6 +204,26 @@ impl<Message> Widget<Message, Theme, Renderer> for Beside<'_, Message> {
                 viewport,
             );
         }
+    }
+
+    /// The content's own overlay: a menu the placed element opens (Sıradakini
+    /// seç's chip, docs/adr/0187 §1).
+    fn overlay<'b>(
+        &'b mut self,
+        tree: &'b mut Tree,
+        layout: Layout<'b>,
+        renderer: &Renderer,
+        viewport: &Rectangle,
+        translation: Vector,
+    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
+        let card = layout.children().next()?;
+        self.content.as_widget_mut().overlay(
+            &mut tree.children[0],
+            card,
+            renderer,
+            viewport,
+            translation,
+        )
     }
 
     fn mouse_interaction(

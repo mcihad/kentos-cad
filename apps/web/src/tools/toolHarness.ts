@@ -3,7 +3,7 @@ import { Formatter } from '../app/format';
 import { MessageLog } from '../app/state';
 import { Signal } from '../core/signal';
 import { CadDocument } from '../model/document';
-import type { Entity, NewEntity } from '../model/entities';
+import type { Entity, EntityKind, NewEntity } from '../model/entities';
 import type { DimensionLook } from '../model/annotationStyles';
 import type { Measured } from '../model/dimensionValue';
 import { LayerStore } from '../model/layers';
@@ -11,6 +11,7 @@ import { entityEdges } from '../model/ops/edges';
 import { extendEntity, trimEntity } from '../model/ops/trim';
 import { Selection } from '../model/selection';
 import type { TextInputRequest } from '../viewport/ViewportController';
+import { FILTER_KINDS } from './selectable';
 import type { ToolPointer } from './Tool';
 import type { TemplateRun } from './templateStamp';
 
@@ -69,6 +70,9 @@ export function toolHarness() {
       overlap: new Signal<'allow' | 'layer' | 'layers'>('allow'),
       overlapLast: new Signal<'layer' | 'layers'>('layer'),
       overlapLayers: new Signal<ReadonlySet<string>>(new Set()),
+      // The selection filter (docs/adr/0187 §5): off, every kind held, as every session starts.
+      selectFilter: new Signal(false),
+      selectKinds: new Signal<ReadonlySet<EntityKind>>(new Set(FILTER_KINDS)),
     },
     prefs: { snapAperture: new Signal(8), pickAperture: new Signal(8), polarIncrement: new Signal(15), geographic: new Signal<'dms' | 'dd'>('dms') },
     view: {
@@ -76,6 +80,8 @@ export function toolHarness() {
       requestOverlay: () => {},
       worldTolerance: (px: number) => px,
       pick: () => state.hit,
+      // The click's candidates (Sıradakini seç, docs/adr/0187 §1): the one hit, if any.
+      pickAll: () => (state.hit ? [state.hit] : []),
       pickEdge: (_s: unknown, filter?: (e: Entity) => boolean) => (state.hit && (!filter || filter(state.hit)) ? state.hit : null),
       pickRect: () => state.inWindow,
       trackAlong: () => null,

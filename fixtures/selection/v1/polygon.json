@@ -1,0 +1,493 @@
+{
+ "format": "kentos.selection-polygon",
+ "version": 1,
+ "source": "scripts/fixtures/selection_cases.py (docs/adr/0187)",
+ "objects": [
+  {
+   "id": 1,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 5,
+    "y": 15
+   },
+   "b": {
+    "x": 25,
+    "y": 15
+   }
+  },
+  {
+   "id": 2,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 2,
+    "y": 2
+   },
+   "b": {
+    "x": 8,
+    "y": 18
+   }
+  },
+  {
+   "id": 3,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "point",
+   "p": {
+    "x": 15,
+    "y": 15
+   }
+  },
+  {
+   "id": 4,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 0,
+    "y": 0
+   },
+   "b": {
+    "x": 30,
+    "y": 0
+   }
+  },
+  {
+   "id": 5,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 25,
+    "y": 5
+   },
+   "b": {
+    "x": 35,
+    "y": 5
+   }
+  },
+  {
+   "id": 6,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": -10,
+     "y": -10
+    },
+    {
+     "x": 40,
+     "y": -10
+    },
+    {
+     "x": 40,
+     "y": 40
+    },
+    {
+     "x": -10,
+     "y": 40
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "point",
+   "p": {
+    "x": 100,
+    "y": 100
+   }
+  },
+  {
+   "id": 8,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": -50,
+     "y": -50
+    },
+    {
+     "x": 80,
+     "y": -50
+    },
+    {
+     "x": 80,
+     "y": 80
+    },
+    {
+     "x": -50,
+     "y": 80
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": -20,
+       "y": -20
+      },
+      {
+       "x": 50,
+       "y": -20
+      },
+      {
+       "x": 50,
+       "y": 50
+      },
+      {
+       "x": -20,
+       "y": 50
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 22,
+     "y": 2
+    },
+    {
+     "x": 28,
+     "y": 6
+    },
+    {
+     "x": 22,
+     "y": 10
+    },
+    {
+     "x": 28,
+     "y": 18
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "circle",
+   "c": {
+    "x": 5,
+    "y": 5
+   },
+   "r": 2
+  },
+  {
+   "id": 11,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "circle",
+   "c": {
+    "x": 15,
+    "y": 0
+   },
+   "r": 3
+  },
+  {
+   "id": 12,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "circle",
+   "c": {
+    "x": 15,
+    "y": 15
+   },
+   "r": 2
+  },
+  {
+   "id": 13,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "point",
+   "p": {
+    "x": 30,
+    "y": 10
+   }
+  },
+  {
+   "id": 14,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 12,
+     "y": 2
+    },
+    {
+     "x": 18,
+     "y": 2
+    },
+    {
+     "x": 15,
+     "y": 8
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "polyline",
+   "pts": [
+    {
+     "x": 5,
+     "y": 25
+    },
+    {
+     "x": 25,
+     "y": 25
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "layerId": "a",
+   "attrs": {},
+   "kind": "line",
+   "a": {
+    "x": 10,
+    "y": 12
+   },
+   "b": {
+    "x": 20,
+    "y": 12
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "the U",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     30,
+     0
+    ],
+    [
+     30,
+     20
+    ],
+    [
+     20,
+     20
+    ],
+    [
+     20,
+     10
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     10,
+     20
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "inside": [
+    2,
+    4,
+    9,
+    10,
+    13,
+    14
+   ],
+   "crossing": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    13,
+    14,
+    16
+   ],
+   "outside": [
+    3,
+    7,
+    8,
+    12,
+    15
+   ]
+  }
+ ],
+ "rings": [
+  {
+   "name": "two corners",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ]
+   ],
+   "problem": "Çokgen için en az üç köşe gerekir; sonraki köşeyi gösterin."
+  },
+  {
+   "name": "three corners in a line",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     10,
+     0
+    ]
+   ],
+   "problem": "Çokgenin alanı yok; köşeleri bir doğru üzerinde olmayan noktalara verin."
+  },
+  {
+   "name": "a bow tie",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     0,
+     10
+    ]
+   ],
+   "problem": "Çokgen kendini kesiyor; son köşeyi geri alın (G) ya da kesmeyen bir köşe gösterin."
+  },
+  {
+   "name": "a spike turning back",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     5,
+     0
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "problem": "Çokgen kendini kesiyor; son köşeyi geri alın (G) ya da kesmeyen bir köşe gösterin."
+  },
+  {
+   "name": "a corner on a side it does not end",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     5,
+     0
+    ]
+   ],
+   "problem": "Çokgen kendini kesiyor; son köşeyi geri alın (G) ya da kesmeyen bir köşe gösterin."
+  },
+  {
+   "name": "the U",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     30,
+     0
+    ],
+    [
+     30,
+     20
+    ],
+    [
+     20,
+     20
+    ],
+    [
+     20,
+     10
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     10,
+     20
+    ],
+    [
+     0,
+     20
+    ]
+   ],
+   "problem": null
+  },
+  {
+   "name": "a triangle",
+   "ring": [
+    [
+     0,
+     0
+    ],
+    [
+     10,
+     0
+    ],
+    [
+     5,
+     8
+    ]
+   ],
+   "problem": null
+  }
+ ]
+}

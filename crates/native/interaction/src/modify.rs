@@ -353,7 +353,8 @@ impl<S: Stages> Tool for Modify<S> {
                     }
                 }
                 None => {
-                    let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
+                    // The selection filter's kinds (docs/adr/0187 §5).
+                    let hit = crate::selectable::hover(cx, p.raw);
                     cx.selection.set_hover(hit);
                 }
             }
@@ -400,8 +401,9 @@ impl<S: Stages> Tool for Modify<S> {
             let ids = cx
                 .spatial
                 .in_rect(press.from_world, press.to_world, crossing);
+            let ids = crate::selectable::ids(cx, ids);
             cx.selection.add(ids);
-        } else if let Some(hit) = cx.spatial.pick(p.raw, cx.pick_tolerance()) {
+        } else if let Some(hit) = crate::selectable::pick(cx, p.raw) {
             if let Some(flow) = self.stages.picked(hit, cx) {
                 self.after(flow, cx);
                 return;

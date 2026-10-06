@@ -199,6 +199,8 @@ impl App {
         // Another command ends an object template's run (docs/adr/0176 §3).
         self.release_template();
         if self.session.start(id) {
+            // A command starting closes Sıradakini seç's chip (docs/adr/0187 §1).
+            self.selection.end_cycle();
             // Kaydır is not repeated; any other command is, not the template before it.
             if id != kentos_interaction::navigate::PAN_ID {
                 self.last_template = None;

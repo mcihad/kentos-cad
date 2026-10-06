@@ -23,6 +23,13 @@ fn infinite(s: &Shape) -> bool {
     matches!(s, Shape::Xline { .. } | Shape::Ray { .. })
 }
 
+/// An object's answer to a click: its distance when a point or edge of it
+/// is within reach, its area when the click is inside it.
+struct Score {
+    edge: Option<f64>,
+    area: Option<f64>,
+}
+
 impl Store {
     /// Visible objects whose boxes come within `tol` of `p` (`PickIndex.near`).
     pub fn near(&self, p: Vec2, tol: f64) -> Vec<&Item> {
@@ -74,63 +81,114 @@ impl Store {
     /// The most specific object at `p`: points and edges first, then the
     /// smallest area containing it (building before parcel before block).
     /// Layers with `pickInterior: false` are edge-pick only (`PickIndex.hit`).
+    /// The first of [`Store::hits`], found without sorting them.
     pub fn hit(&self, p: Vec2, tol: f64) -> Option<f64> {
         let mut edge: Option<(f64, f64)> = None;
         let mut area: Option<(f64, f64)> = None;
         for it in self.near(p, tol * 1.5) {
-            let interior = self.flags(it).pick_interior;
-            // An insert by its pieces (docs/adr/0144), each as an object of its own would be.
-            for e in it.shapes() {
-                let d = edge_distance(e, p, self.font);
-                let t = if matches!(
-                    e,
-                    Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
-                ) {
-                    tol * 1.5
-                } else {
-                    tol
-                };
-                if d <= t && edge.is_none_or(|(_, best)| d < best) {
-                    edge = Some((it.id, d));
-                }
-                if !interior {
-                    continue;
-                }
-                let a = match e {
-                    Shape::Hatch { ring, holes, .. }
-                        if point_in_polygon(p, ring)
-                            && !holes.iter().flatten().any(|h| point_in_polygon(p, h)) =>
-                    {
-                        // Slightly smaller than its boundary so the hatch wins over the parcel it fills.
-                        Some(entity_area(e).unwrap_or(0.0) * 0.999)
-                    }
-                    // Net area: a parcel with a building hole still loses to the building.
-                    Shape::Polygon { .. } if inside_polygon(e, p) => {
-                        Some(entity_area(e).unwrap_or(0.0))
-                    }
-                    Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => {
-                        Some(PI * r * r)
-                    }
-                    Shape::Ellipse {
-                        c,
-                        major,
-                        ratio,
-                        t0,
-                        t1,
-                    } => {
-                        let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
-                        (is_full_ellipse(&g) && inside_ellipse(&g, p)).then(|| ellipse_area(&g))
-                    }
-                    _ => None,
-                };
-                if let Some(a) = a
-                    && area.is_none_or(|(_, best)| a < best)
-                {
-                    area = Some((it.id, a));
-                }
+            let s = self.score(it, p, tol);
+            if let Some(d) = s.edge
+                && edge.is_none_or(|(_, best)| d < best)
+            {
+                edge = Some((it.id, d));
+            }
+            if let Some(a) = s.area
+                && area.is_none_or(|(_, best)| a < best)
+            {
+                area = Some((it.id, a));
             }
         }
         edge.or(area).map(|(id, _)| id)
+    }
+
+    /// Every object a click at `p` could mean, the most specific first
+    /// (Sıradakini seç, docs/adr/0187 §1): points, texts and edges within
+    /// reach by their distance, then the areas around `p` by their size;
+    /// equals keep the document's order. The first is [`Store::hit`]'s.
+    pub fn hits(&self, p: Vec2, tol: f64) -> Vec<f64> {
+        let mut edges: Vec<(f64, f64)> = Vec::new();
+        let mut areas: Vec<(f64, f64)> = Vec::new();
+        for it in self.near(p, tol * 1.5) {
+            let s = self.score(it, p, tol);
+            match (s.edge, s.area) {
+                (Some(d), _) => edges.push((it.id, d)),
+                (None, Some(a)) => areas.push((it.id, a)),
+                (None, None) => {}
+            }
+        }
+        // As `hit`'s strict `<`: a later equal never goes first, a NaN area never moves.
+        let order = |a: &(f64, f64), b: &(f64, f64)| {
+            if b.1 < a.1 {
+                std::cmp::Ordering::Greater
+            } else if a.1 < b.1 {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        };
+        crate::jsmath::stable_sort(&mut edges, &mut |a, b| order(a, b));
+        crate::jsmath::stable_sort(&mut areas, &mut |a, b| order(a, b));
+        edges.into_iter().chain(areas).map(|(id, _)| id).collect()
+    }
+
+    /// How an object answers a click at `p`: its nearest point or edge
+    /// within reach, and the smallest of its areas around `p` when its
+    /// layer picks interiors. An insert by its pieces (docs/adr/0144), each
+    /// as an object of its own would be.
+    fn score(&self, it: &Item, p: Vec2, tol: f64) -> Score {
+        let interior = self.flags(it).pick_interior;
+        let mut out = Score {
+            edge: None,
+            area: None,
+        };
+        for e in it.shapes() {
+            let d = edge_distance(e, p, self.font);
+            let t = if matches!(
+                e,
+                Shape::Point { .. } | Shape::Text { .. } | Shape::Insert { .. }
+            ) {
+                tol * 1.5
+            } else {
+                tol
+            };
+            if d <= t && out.edge.is_none_or(|best| d < best) {
+                out.edge = Some(d);
+            }
+            if !interior {
+                continue;
+            }
+            let a = match e {
+                Shape::Hatch { ring, holes, .. }
+                    if point_in_polygon(p, ring)
+                        && !holes.iter().flatten().any(|h| point_in_polygon(p, h)) =>
+                {
+                    // Slightly smaller than its boundary so the hatch wins over the parcel it fills.
+                    Some(entity_area(e).unwrap_or(0.0) * 0.999)
+                }
+                // Net area: a parcel with a building hole still loses to the building.
+                Shape::Polygon { .. } if inside_polygon(e, p) => {
+                    Some(entity_area(e).unwrap_or(0.0))
+                }
+                Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
+                Shape::Ellipse {
+                    c,
+                    major,
+                    ratio,
+                    t0,
+                    t1,
+                } => {
+                    let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
+                    (is_full_ellipse(&g) && inside_ellipse(&g, p)).then(|| ellipse_area(&g))
+                }
+                _ => None,
+            };
+            if let Some(a) = a
+                && out.area.is_none_or(|best| a < best)
+            {
+                out.area = Some(a);
+            }
+        }
+        out
     }
 
     /// Objects whose edges come within `tol` of `p` (not points or text),
@@ -424,4 +482,62 @@ pub fn touches_rect(e: &Shape, r: &Bounds, font: Font) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn store(items: &[String]) -> Store {
+        let mut s = Store::new();
+        s.put_json(&format!("[{}]", items.join(","))).unwrap();
+        s
+    }
+
+    fn square(id: u32, x: f64, y: f64, side: f64) -> String {
+        format!(
+            r#"{{"id":{id},"layerId":"a","attrs":{{}},"kind":"polygon","pts":[{{"x":{x},"y":{y}}},{{"x":{},"y":{y}}},{{"x":{},"y":{}}},{{"x":{x},"y":{}}}]}}"#,
+            x + side,
+            x + side,
+            y + side,
+            y + side
+        )
+    }
+
+    fn line(id: u32, a: (f64, f64), b: (f64, f64)) -> String {
+        format!(
+            r#"{{"id":{id},"layerId":"a","attrs":{{}},"kind":"line","a":{{"x":{},"y":{}}},"b":{{"x":{},"y":{}}}}}"#,
+            a.0, a.1, b.0, b.1
+        )
+    }
+
+    fn point(id: u32, x: f64, y: f64) -> String {
+        format!(
+            r#"{{"id":{id},"layerId":"a","attrs":{{}},"kind":"point","p":{{"x":{x},"y":{y}}}}}"#
+        )
+    }
+
+    #[test]
+    fn hits_come_most_specific_first_and_the_first_is_the_pick() {
+        // A parcel, a building in it, a line and a point near the click.
+        let s = store(&[
+            square(1, 0.0, 0.0, 10.0),
+            square(2, 2.0, 2.0, 2.0),
+            line(3, (0.0, 3.0), (10.0, 3.0)),
+            point(4, 3.1, 3.1),
+        ]);
+        let at = Vec2::new(3.0, 3.05);
+        assert_eq!(s.hits(at, 0.2), vec![3.0, 4.0, 2.0, 1.0]);
+        assert_eq!(s.hit(at, 0.2), Some(3.0));
+        // Inside the parcel only: its area alone.
+        assert_eq!(s.hits(Vec2::new(8.0, 8.0), 0.2), vec![1.0]);
+        assert!(s.hits(Vec2::new(50.0, 50.0), 0.2).is_empty());
+        // Wherever it is clicked, the first of the hits is the pick.
+        for i in 0..60 {
+            for j in 0..60 {
+                let p = Vec2::new(-1.0 + f64::from(i) * 0.2, -1.0 + f64::from(j) * 0.2);
+                assert_eq!(s.hits(p, 0.25).first().copied(), s.hit(p, 0.25), "{p:?}");
+            }
+        }
+    }
 }

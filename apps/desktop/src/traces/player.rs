@@ -367,6 +367,8 @@ pub struct Observation {
     pub view_center: [f64; 2],
     pub selected: Vec<u32>,
     pub hover: Option<u32>,
+    /// Sıradakini seç's chip: the candidate chosen, of how many.
+    pub cycle: Option<super::format::CycleSeen>,
     /// The snap marker's kind, as the web names it.
     pub snap: Option<String>,
     /// Every object's id in the drawing's order.
@@ -1096,6 +1098,10 @@ impl<'a> Player<'a> {
             view_center: [app.viewport.camera.center.x, app.viewport.camera.center.y],
             selected: app.selection.ids().iter().map(|s| s.0).collect(),
             hover: app.selection.hover().map(|s| s.0),
+            cycle: app.selection.cycle().map(|c| super::format::CycleSeen {
+                index: c.index,
+                count: c.candidates.len(),
+            }),
             snap: app.snap.map(|s| snap_name(s.kind).to_owned()),
             ids: doc.map_or_else(Vec::new, |d| {
                 d.model.entities().map(|e| e.base().id).collect()

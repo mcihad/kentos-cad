@@ -24,6 +24,8 @@ export interface MenuItem {
   /** A second line under the label saying what the item does (the row grows). */
   detail?: string;
   run?: () => void;
+  /** Called as the row is highlighted by the pointer or the keys (Sıradakini seç's list shows the candidate, docs/adr/0187 §1). */
+  highlight?: () => void;
   items?: MenuItem[] | (() => MenuItem[]);
 }
 
@@ -196,8 +198,10 @@ export class PopupMenu {
 
   private setActive(i: number): void {
     this.rows[this.active]?.removeAttribute('data-active');
+    const changed = this.active !== i;
     this.active = i;
     this.rows[i]?.setAttribute('data-active', '');
+    if (changed) this.items[i]?.highlight?.();
   }
 
   private move(dir: 1 | -1): void {

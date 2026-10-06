@@ -726,6 +726,8 @@ const observe = (mark) =>
       viewCenter: [k.view.camera.center.x, k.view.camera.center.y],
       selected: [...k.selection.ids.value],
       hover: k.selection.hover.value,
+      // Sıradakini seç's chip (docs/adr/0187 §1): the candidate chosen, of how many.
+      cycle: k.selection.cycle.value && { index: k.selection.cycle.value.index, count: k.selection.cycle.value.candidates.length },
       snap: k.view.currentSnap?.kind ?? null,
       // Object tracking: the acquired points, and the alignment the cursor is locked to.
       trackPoints: k.view.trackPoints.map((p) => [p.x, p.y]),

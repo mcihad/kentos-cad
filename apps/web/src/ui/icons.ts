@@ -45,6 +45,14 @@ export const ICONS = {
   selectFence: `<path d="M6 3.5v6M14 10.5v6"/><path d="M2.5 11 9 5.5l4 7 4.5-4" stroke-dasharray="2.2 1.5"/>${grip(2.5, 11)}${grip(17.5, 8.5)}`,
   selectCircle: '<circle cx="10" cy="10" r="7.2" stroke-dasharray="2.4 1.6"/><path d="M7 12.6h6L10 7z"/>',
   selectContaining: '<rect x="2.5" y="2.5" width="15" height="15"/><rect x="6" y="6" width="8" height="8" stroke-width="2"/><circle cx="10" cy="10" r="1.1" fill="currentColor" stroke="none"/>',
+  // Seçim ekleri (docs/adr/0187), the owner's choices (6 October): a dashed polygon with an object inside and grips at
+  // its corners; a gripped example and its dashed like; a dashed box and an undo arrow; a funnel; two stacked boxes and
+  // a turning arrow.
+  selectPolygon: `<path d="M3 7 9 3l8 3.5-2.5 5L17 16.5 6.5 17z" stroke-dasharray="2.2 1.5"/><path d="M7.8 13.6h4.8L10.2 9.4z"/>${grip(3, 7)}${grip(17, 6.5)}${grip(6.5, 17)}`,
+  selectSimilar: `<path d="M2.5 15.5h6.5L5.75 8.5z"/>${grip(2.5, 15.5)}${grip(9, 15.5)}${grip(5.75, 8.5)}<path d="M11 15.5h6.5l-3.25-7z" stroke-dasharray="2.2 1.5"/>`,
+  selectPrevious: '<rect x="2.5" y="8.5" width="9" height="9" stroke-dasharray="2 1.6"/><path d="M8.5 5.5h6a3 3 0 0 1 0 6H14"/><path d="M10.5 3 8 5.5 10.5 8"/>',
+  selectFilter: '<path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z"/>',
+  selectCycle: '<rect x="2.5" y="6.5" width="8" height="8" stroke-dasharray="2 1.6"/><rect x="6.5" y="2.5" width="8" height="8"/><path d="M17.5 9.5a5 5 0 0 1-6.5 7.3"/><path d="M10.6 14.6l.4 2.2 2.2-.6"/>',
   pan: '<path d="M7.2 10V4.7a1.2 1.2 0 0 1 2.4 0V9M9.6 8.6V3.6a1.2 1.2 0 0 1 2.4 0V9M12 9V4.8a1.2 1.2 0 0 1 2.4 0V11c0 3.4-2 6-5.3 6-2.2 0-3.5-1.2-4.6-3.1l-1.6-2.8a1.25 1.25 0 0 1 2.1-1.4L7.2 12"/>',
   point: '<path d="M10 3.5v13M3.5 10h13"/><circle cx="10" cy="10" r="3.2"/>',
   line: `<path d="M4.5 15.5 15.5 4.5"/>${grip(4.5, 15.5)}${grip(15.5, 4.5)}`,

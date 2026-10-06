@@ -5,6 +5,7 @@
 
 use kentos_domain::Slot;
 use kentos_interaction::ViewChange;
+use kentos_interaction::selectable;
 
 use crate::app::App;
 
@@ -18,15 +19,31 @@ impl App {
             return;
         };
         let mut shown = Shown::default();
+        let filter = self.draft.select_kinds;
+        let mut left_out = 0;
         let ids: Vec<Slot> = doc
             .model
             .entities()
             .filter(|e| shown.of(&doc.model, &e.base().layer_id))
+            // The kinds the selection filter holds (docs/adr/0187 §5).
+            .filter(|e| {
+                let kept = selectable::entity_allowed(filter, e);
+                left_out += usize::from(!kept);
+                kept
+            })
             .map(|e| Slot(e.base().id))
             .collect();
         let n = ids.len();
         self.selection.set(ids);
+        self.say_filtered(left_out);
         self.output(format!("{n} nesne seçildi."));
+    }
+
+    /// What the selection filter left out of a selection, said (the web's `sayFiltered`).
+    fn say_filtered(&mut self, n: usize) {
+        if n > 0 {
+            self.output(format!("Seçim süzgeci {n} nesneyi dışarıda bıraktı."));
+        }
     }
 
     /// `edit.invertSelection`: the objects on shown layers not selected now.
@@ -36,14 +53,22 @@ impl App {
         };
         let mut shown = Shown::default();
         let selection = &self.selection;
+        let filter = self.draft.select_kinds;
+        let mut left_out = 0;
         let ids: Vec<Slot> = doc
             .model
             .entities()
             .filter(|e| shown.of(&doc.model, &e.base().layer_id))
+            .filter(|e| !selection.contains(Slot(e.base().id)))
+            .filter(|e| {
+                let kept = selectable::entity_allowed(filter, e);
+                left_out += usize::from(!kept);
+                kept
+            })
             .map(|e| Slot(e.base().id))
-            .filter(|slot| !selection.contains(*slot))
             .collect();
         self.selection.set(ids);
+        self.say_filtered(left_out);
     }
 
     /// `view.zoomSelection` (Ctrl+Shift+F): the selection's box as large as

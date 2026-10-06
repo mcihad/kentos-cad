@@ -13,6 +13,7 @@ import { parseNumber } from './coordinateInput';
 import { drawSelectionBox, drawTag, strokePath, strokePaths } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { constrainPoint, drawTracking, pointFromText, type Tracking } from './tracking';
+import { pickSelectable, selectableIds } from './selectable';
 import { fixed } from '../core/displayNumber';
 
 export const MAX_GHOSTS = 400;
@@ -120,7 +121,7 @@ export abstract class SelectionFirstTool implements Tool {
         if (this.box.dragging) this.ctx.view.requestOverlay();
         return;
       }
-      this.ctx.selection.hover.set(this.ctx.view.pick(p.screen)?.id ?? null);
+      this.ctx.selection.hover.set(pickSelectable(this.ctx, p.screen, true)?.id ?? null);
       return;
     }
     this.hover = this.constrain(p);
@@ -134,9 +135,9 @@ export abstract class SelectionFirstTool implements Tool {
     if (box.dragging) {
       const { aw, bw } = box;
       const r = { minX: Math.min(aw.x, bw.x), minY: Math.min(aw.y, bw.y), maxX: Math.max(aw.x, bw.x), maxY: Math.max(aw.y, bw.y) };
-      this.ctx.selection.add(this.ctx.view.pickRect(r, box.b.x < box.a.x));
+      this.ctx.selection.add(selectableIds(this.ctx, this.ctx.view.pickRect(r, box.b.x < box.a.x)));
     } else {
-      const hit = this.ctx.view.pick(p.screen);
+      const hit = pickSelectable(this.ctx, p.screen);
       if (hit && this.picked(hit.id)) return;
       if (hit) this.ctx.selection.toggle(hit.id);
     }

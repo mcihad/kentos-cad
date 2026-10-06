@@ -55,6 +55,8 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('Shift+Enter', 'tool.confirm', { args: { shift: true } });
   // As in AutoCAD, Space is a second Enter (docs/adr/0018); the command line is a click away.
   keymap.bind('Space', 'tool.confirm');
+  // Sıradakini seç (docs/adr/0187 §1): AutoCAD's old selection cycling; Space stays Enter.
+  keymap.bind('Shift+Space', 'edit.cycleSelection');
 
   for (const d of tools.list()) {
     // Esc is shared with "cancel"; the select tool only displays it.

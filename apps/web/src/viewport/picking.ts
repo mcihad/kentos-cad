@@ -29,6 +29,10 @@ export type SnapKind =
   | 'parallel'
   | 'grid';
 
+/** How Çokgenle seç selects (docs/adr/0187 §2), in the store's order: İçindekiler, Kesişenler, Dışındakiler. */
+export const POLYGON_MODES = ['inside', 'crossing', 'outside'] as const;
+export type PolygonMode = (typeof POLYGON_MODES)[number];
+
 export interface SnapHit {
   kind: SnapKind;
   point: Vec2;
@@ -100,6 +104,9 @@ export function readExtensions(f: ArrayLike<number>): Extension[] {
  * the rest of the circle) when it lies on the extension within 1 µm; the snap's tag and a typed distance read it
  * (docs/adr/0163 §2).
  */
+/** Why a ring cannot select (Çokgenle seç, docs/adr/0187 §2): fewer than three corners, no area, crossing itself; null when it can. */
+export const ringProblem = op<(ring: readonly Vec2[]) => string | null>('selectionRingProblem');
+
 export const extensionAlong = op<(x: Extension, p: Vec2) => number | null>('extensionAlong');
 
 /** The point `d` along an acquired extension from its end; null before the end or past an arc's remainder. */
@@ -313,6 +320,12 @@ export class PickIndex {
     this.sync();
     const id = this.store.hit(p.x, p.y, tol);
     return id === undefined ? null : (this.doc.get(id) ?? null);
+  }
+
+  /** Every visible object a click at `p` could mean, the most specific first (Sıradakini seç, docs/adr/0187 §1); the first is `hit`'s. */
+  hits(p: Vec2, tol: number): Entity[] {
+    this.sync();
+    return this.entities(this.store.hits(p.x, p.y, tol));
   }
 
   /** Edge-only pick (targets for trim, extend, offset and fillet): the nearest edge `filter` accepts. */
@@ -587,6 +600,12 @@ export class PickIndex {
   inCircle(c: Vec2, r: number, crossing: boolean): number[] {
     this.sync();
     return Array.from(this.store.inCircle(c.x, c.y, r, crossing));
+  }
+
+  /** Çokgenle seç (docs/adr/0187 §2): what lies wholly inside the ring, touches it too, or does not touch it at all. */
+  inPolygon(ring: readonly Vec2[], mode: PolygonMode): number[] {
+    this.sync();
+    return Array.from(this.store.inPolygon(Float64Array.from(ring.flatMap((p) => [p.x, p.y])), POLYGON_MODES.indexOf(mode)));
   }
 
   /** The visible objects lying far from the rest of the drawing (Kapsam denetimi). */

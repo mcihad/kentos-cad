@@ -63,8 +63,9 @@ use crate::{
     continuation, coordinate, coordinate_labels, dimension, dimension_chain, divide, donut,
     ellipse, hatch, hatch_selected, holes, labels_to_text, layer_move, layer_tools, leader,
     match_properties, meeting, paragraph, parallel, polygonize, quick_dimension, reshape_by,
-    revcloud, sector, select_circle, select_containing, select_fence, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points,
+    revcloud, sector, select_circle, select_containing, select_fence, select_polygon,
+    select_similar, set_elevation, spline, split, station_offset, text, text_file, topology,
+    vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -164,6 +165,9 @@ pub const TOOLS: &[&str] = &[
     select_fence::ID,
     select_circle::ID,
     select_containing::ID,
+    // docs/adr/0187: Çokgenle seç and Benzerini seç.
+    select_polygon::ID,
+    select_similar::ID,
     // docs/adr/0142: Kot ver.
     set_elevation::ID,
     // docs/adr/0148: Topolojik temizlik.
@@ -366,6 +370,8 @@ impl Session {
             select_fence::ID => Box::new(select_fence::SelectFence::new()),
             select_circle::ID => Box::new(select_circle::SelectCircle::new()),
             select_containing::ID => Box::new(select_containing::SelectContaining::new()),
+            select_polygon::ID => Box::new(select_polygon::SelectPolygon::new()),
+            select_similar::ID => Box::new(select_similar::SelectSimilar::new()),
             set_elevation::ID => Box::new(set_elevation::SetElevation::tool()),
             topology::ID => Box::new(crate::topology::Topology::new()),
             labels_to_text::ID => Box::new(crate::labels_to_text::LabelsToText::new()),
