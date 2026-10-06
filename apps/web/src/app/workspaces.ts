@@ -81,6 +81,9 @@ export const WORKSPACES: readonly WorkspaceSpec[] = [
         'tool.mtext',
         'tool.leader',
         'tool.placeTextFile',
+        // Koordinat yaz (docs/adr/0185): CAD's annotation too.
+        'tool.coordinateLabel',
+        'tool.coordinateVertices',
         'tool.revcloud',
         'tool.hatch',
         'transform/array',

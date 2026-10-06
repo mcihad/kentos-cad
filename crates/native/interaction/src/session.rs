@@ -60,11 +60,11 @@ use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, construction,
-    continuation, coordinate, dimension, dimension_chain, divide, donut, ellipse, hatch, holes,
-    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
-    parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
-    select_containing, select_fence, set_elevation, spline, split, station_offset, text, text_file,
-    topology, vertex_points,
+    continuation, coordinate, coordinate_labels, dimension, dimension_chain, divide, donut,
+    ellipse, hatch, holes, labels_to_text, layer_move, layer_tools, leader, match_properties,
+    meeting, paragraph, parallel, polygonize, quick_dimension, reshape_by, revcloud, sector,
+    select_circle, select_containing, select_fence, set_elevation, spline, split, station_offset,
+    text, text_file, topology, vertex_points,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -189,6 +189,9 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0177 §2: Katmanı eşle and Katmana kopyala.
     layer_move::MATCH_ID,
     layer_move::COPY_ID,
+    // docs/adr/0185: Koordinat yaz and Köşelere koordinat yaz.
+    coordinate_labels::ID,
+    coordinate_labels::VERTICES_ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -366,6 +369,10 @@ impl Session {
             labels_to_text::ID => Box::new(crate::labels_to_text::LabelsToText::new()),
             polygonize::ID => Box::new(crate::polygonize::Polygonize::new()),
             vertex_points::ID => Box::new(crate::vertex_points::VertexPoints::tool()),
+            coordinate_labels::ID => Box::new(coordinate_labels::CoordinateLabel::new()),
+            coordinate_labels::VERTICES_ID => {
+                Box::new(coordinate_labels::CoordinateVertices::tool())
+            }
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

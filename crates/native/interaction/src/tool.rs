@@ -108,6 +108,11 @@ pub enum ViewChange {
     /// Metin dosyası yerleştir's file ([`crate::text_file`], docs/adr/0145 §6):
     /// the host picks one and gives back its name and bytes with [`Tool::file_given`].
     OpenTextFile,
+    /// A table to place from the cursor, its top left corner at the origin
+    /// (Köşelere koordinat yaz's Çizelge, docs/adr/0185 §1): the host runs
+    /// Tablo ekle's placement ([`crate::table_place::TablePlace`]) with it
+    /// under this name.
+    PlaceTable(kentos_contracts::EntityGeometry, &'static str),
 }
 
 /// Where a text field opens and how its text will look: its start, height in
@@ -632,6 +637,15 @@ pub struct Memory {
     pub labels_mask: bool,
     pub labels_active: bool,
     pub labels_linked: bool,
+    /// Koordinat yaz's Kollu, Yön, Şablon (empty: the project type's),
+    /// Basamak (none: the project's) and Yükseklik on paper, mm, and
+    /// Köşelere koordinat yaz's Çizelge (`coordinateOptions`; docs/adr/0185 §5).
+    pub coordinate_leader: bool,
+    pub coordinate_direction: kentos_geometry_core::ops::coordinate_labels::Direction,
+    pub coordinate_template: Name,
+    pub coordinate_decimals: Option<u8>,
+    pub coordinate_height_mm: f64,
+    pub coordinate_schedule: bool,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -812,6 +826,12 @@ impl Default for Memory {
             labels_mask: false,
             labels_active: false,
             labels_linked: false,
+            coordinate_leader: true,
+            coordinate_direction: kentos_geometry_core::ops::coordinate_labels::Direction::Auto,
+            coordinate_template: Name::EMPTY,
+            coordinate_decimals: None,
+            coordinate_height_mm: crate::coordinate_labels::FIRST_HEIGHT_MM,
+            coordinate_schedule: false,
         }
     }
 }
@@ -1057,15 +1077,19 @@ pub struct CellGhost {
 }
 
 /// A text to come: where its alignment puts it, its text, its height on
-/// the ground, its turn in degrees and its alignment's name; over its mask.
+/// the ground, its turn in degrees and its alignment (none: the left of its
+/// baseline); over its mask; in its face (a style's, docs/adr/0183 §2) and
+/// width factor.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TextGhost {
     pub p: Vec2,
     pub text: String,
     pub height: f64,
     pub rotation: f64,
-    pub align: kentos_geometry_core::text::TextAlign,
+    pub align: Option<kentos_geometry_core::text::TextAlign>,
     pub mask: bool,
+    pub face: kentos_contracts::TextFace,
+    pub width_factor: f64,
 }
 
 /// An area of a draft, filled in its tone and outlined: the outer ring, then

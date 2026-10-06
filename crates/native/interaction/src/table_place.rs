@@ -28,6 +28,9 @@ pub const LABEL: &str = "Tablo ekle";
 pub struct TablePlace {
     d: Taken,
     table: EntityGeometry,
+    /// What it is called: Tablo ekle, or the command that made the table
+    /// (Koordinat çizelgesi, docs/adr/0185 §1).
+    label: &'static str,
     /// The table at the cursor, as of the last pointer move.
     ghost: Preview,
     /// Written (or refused): the tool leaves.
@@ -46,9 +49,15 @@ fn placed(table: &EntityGeometry, p: Vec2) -> EntityGeometry {
 impl TablePlace {
     /// The tool with the table it places.
     pub fn new(table: EntityGeometry) -> Self {
+        Self::named(table, LABEL)
+    }
+
+    /// The tool with the table it places, called `label`.
+    pub fn named(table: EntityGeometry, label: &'static str) -> Self {
         Self {
             d: Taken::default(),
             table,
+            label,
             ghost: Preview::default(),
             done: false,
         }
@@ -149,11 +158,14 @@ impl Tool for TablePlace {
     }
 
     fn label(&self) -> &'static str {
-        LABEL
+        self.label
     }
 
     fn prompt(&self) -> Prompt {
-        Prompt::new(LABEL, "tablonun sol üst köşesine tıklayın ya da Y,X yazın")
+        Prompt::new(
+            self.label,
+            "tablonun sol üst köşesine tıklayın ya da Y,X yazın",
+        )
     }
 
     fn point_count(&self) -> usize {

@@ -220,6 +220,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     sources: [
       { pick: 'Yazı', icon: 'text', commands: ['tool.text', 'tool.mtext', 'tool.placeTextFile', 'tool.labelsToText', 'text.findReplace', 'style.textStyles'] },
       { pick: 'Ölçü', icon: 'dimension', commands: ['tool.dimension', 'style.dimensionStyles'] },
+      // Koordinat yaz (docs/adr/0185): a place's coordinates on the drawing, and every corner's with their schedule.
+      { pick: 'Koordinat', icon: 'coordinateLabel', commands: ['tool.coordinateLabel', 'tool.coordinateVertices'] },
       { pick: 'Kılavuz', icon: 'leader', commands: ['tool.leader'] },
       // Tablo (docs/adr/0184): AutoCAD's Annotate › Tables.
       { pick: 'Tablo', icon: 'table', commands: ['table.insert', 'table.edit', 'table.update'] },

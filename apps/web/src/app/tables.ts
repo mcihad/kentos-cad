@@ -1,15 +1,16 @@
 import type { TableFileRead } from '../contracts/generated/TableFileRead';
 import { Signal } from '../core/signal';
 import { applyTextStyle, FACE_FIELDS, type TextFace } from '../model/annotationStyles';
-import type { Entity, TableEntity, TableGrid, TableSource } from '../model/entities';
+import type { Entity, TableEntity, TableGrid } from '../model/entities';
 import { sheetCells } from '../model/tables';
-import type { Vec2 } from '../model/geometry';
-import { tableRefresh, tableSchedule, tableSizes, type ListedObject, type ScheduleKind, type TableCells, type TableGeometry, type TableUnits } from '../model/ops/table';
+import { tableRefresh, type ScheduleKind, type TableCells, type TableGeometry } from '../model/ops/table';
 import { entitiesEdit, geometryOf } from '../product/entitiesEdit';
-import { elevatedPaths } from '../product/elevation';
 import { formats } from '../io/client';
 import type { AppContext } from './context';
 import { readFile } from './fileAccess';
+import { BLANK_COLUMN, inOrder, listedOf, newTable, scheduleOf, sourceOf, tableUnits, type TableLook } from '../tools/newTable';
+
+export { BLANK_COLUMN, inOrder, listedOf, newTable, scheduleOf, sourceOf, tableUnits, type TableLook };
 
 /**
  * Tablo (docs/adr/0184 §3–§6) in the app: what Tablo ekle, its placement, Tabloyu düzenle and Tabloyu güncelle read
@@ -20,9 +21,6 @@ import { readFile } from './fileAccess';
 
 /** Where a new table's rows come from. */
 export type InsertSource = 'blank' | 'file' | ScheduleKind;
-
-/** A blank table's columns, text heights wide (Boş tablo: room to type in). */
-export const BLANK_COLUMN = 8;
 
 /** The most rows and columns Boş tablo asks for. */
 export const BLANK_MOST = 100;
@@ -51,42 +49,12 @@ export const insertState = {
   objects: [] as string[],
 };
 
-/** The project's settings a schedule writes its numbers by. */
-export function tableUnits(ctx: AppContext): TableUnits {
-  const s = ctx.doc.settings;
-  return { axes: ctx.format.axes, unit: ctx.format.unit, areaUnit: s.areaUnit.value, lengthDecimals: s.lengthDecimals.value, areaDecimals: s.areaDecimals.value };
-}
-
-/** An object as a schedule reads it: its shape, paths with their elevations, label and attributes. */
-export const listedOf = (e: Entity): ListedObject => ({ shape: geometryOf(e as never), paths: elevatedPaths(e), label: e.label ?? null, attrs: { ...e.attrs } });
-
-/** The objects with these ids, in the drawing's order. */
-export function inOrder(ctx: AppContext, ids: Iterable<number>): Entity[] {
-  const wanted = new Set(ids);
-  return [...ctx.doc.all()].filter((e) => wanted.has(e.id));
-}
-
-/** The schedule of `kind` the objects write, in the order given. */
-export const scheduleOf = (ctx: AppContext, kind: ScheduleKind, objects: readonly Entity[]): TableCells => tableSchedule(kind, objects.map(listedOf), tableUnits(ctx));
-
-/** The source a schedule keeps: the objects' persistent ids, in order. */
-export const sourceOf = (kind: ScheduleKind, objects: readonly Entity[]): TableSource => ({ kind, objects: objects.flatMap((e) => e.uid ?? []) });
-
 /** Which objects a schedule of `kind` reads (Sahneden seç takes only these). */
 export const SCHEDULE_KINDS: Readonly<Record<ScheduleKind, readonly Entity['kind'][] | undefined>> = {
   coordinates: ['point', 'line', 'polyline', 'polygon'],
   areas: ['polygon', 'circle', 'ellipse'],
   attributes: undefined,
 };
-
-/** What a new table looks like besides its cells: its heading row, text height, face, lines and frame width. */
-export interface TableLook {
-  readonly header: boolean;
-  readonly height: number;
-  readonly face: TextFace;
-  readonly grid?: TableGrid;
-  readonly frame?: number;
-}
 
 /** Tablo ekle's look: the chosen style's face and fixed height, else the paper height; lines and frame at the plot scale. */
 export function lookOf(ctx: AppContext, style: string | null, header: boolean): TableLook {
@@ -104,40 +72,6 @@ export function lookOf(ctx: AppContext, style: string | null, header: boolean): 
   };
 }
 
-/** A table geometry as the core reads it. */
-const shapeOf = (t: Omit<TableEntity, 'id' | 'uid' | 'layerId' | 'attrs'>): TableGeometry => t as unknown as TableGeometry;
-
-/**
- * A new table of `cells` with its top left corner at `p`, as `look` says, from `source`: every row and column as the
- * core's sizes fit its words in the project's typeface; a blank table's columns `BLANK_COLUMN` heights wide.
- */
-export function newTable(ctx: AppContext, cells: TableCells, look: TableLook, p: Vec2, source?: TableSource): Omit<TableEntity, 'id' | 'uid' | 'layerId' | 'attrs'> {
-  const n = cells.cells.length;
-  const m = cells.cells[0]?.length ?? 0;
-  const h = look.height;
-  const table: Omit<TableEntity, 'id' | 'uid' | 'layerId' | 'attrs'> = {
-    kind: 'table',
-    p: { x: p.x, y: p.y },
-    rotation: 0,
-    height: h,
-    rows: new Array<number>(n).fill(h),
-    columns: new Array<number>(m).fill(h),
-    cells: cells.cells.map((r) => [...r]),
-    ...(cells.aligns.some((a) => a !== 'left') && { aligns: cells.aligns as TableEntity['aligns'] }),
-    ...(look.header && { header: true }),
-    ...(look.grid && { grid: look.grid }),
-    ...(look.frame !== undefined && { frame: look.frame }),
-    ...look.face,
-    ...(source && { source }),
-  };
-  const sizes = tableSizes(shapeOf(table), ctx.doc.settings.drawingFont.value);
-  if (sizes) {
-    table.rows = sizes.rows;
-    table.columns = sizes.columns;
-  }
-  if (cells.cells.every((r) => r.every((w) => !w))) table.columns = new Array<number>(m).fill(BLANK_COLUMN * h);
-  return table;
-}
 
 /** A blank table's cells: `rows` × `columns` empty ones. */
 export const blankCells = (rows: number, columns: number): TableCells => ({
@@ -164,7 +98,7 @@ export function sourceCells(ctx: AppContext, t: TableEntity): { cells: TableCell
 
 /** A table with a source's new cells (Tabloyu güncelle); null when the core gives none. */
 export const refreshed = (ctx: AppContext, t: TableEntity, cells: TableCells): TableGeometry | null =>
-  tableRefresh(shapeOf(t), cells.cells, cells.aligns, ctx.doc.settings.drawingFont.value);
+  tableRefresh(t as unknown as TableGeometry, cells.cells, cells.aligns, ctx.doc.settings.drawingFont.value);
 
 /** Writes tables over tables in one step (`table`: Tabloyu düzenle, `tableUpdate`: Tabloyu güncelle); whether it did. */
 export function writeTables(ctx: AppContext, operation: 'table' | 'tableUpdate', tables: readonly { uid: string; geometry: TableGeometry }[]): boolean {

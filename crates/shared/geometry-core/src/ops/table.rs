@@ -35,9 +35,7 @@ use crate::geom::table::{fit_widths, layout_of, table_geom};
 use crate::op;
 use crate::ops::compare::Attrs;
 use crate::ops::elevation::Elevated;
-use crate::ops::vertex_points::Grid;
 use crate::text::Font;
-use crate::vec2::Vec2;
 
 /// The most rows, columns and cells a table may have, and letters a cell
 /// (the contract's `MAX_TABLE_ROWS` …).
@@ -359,7 +357,7 @@ impl FromJson for Listed {
 
 impl Listed {
     /// Its label, spaces round it aside; none when that leaves nothing.
-    fn name(&self) -> Option<&str> {
+    pub(crate) fn name(&self) -> Option<&str> {
         self.label
             .as_deref()
             .map(|l| l.trim_matches(' '))
@@ -385,67 +383,15 @@ impl Numbers<'_> {
     }
 }
 
-/// A place in Koordinat çizelgesi.
-struct Place {
-    p: Vec2,
-    z: Option<f64>,
-    name: Option<String>,
-}
-
 fn coordinates(objects: &[Listed], u: &Units) -> Cells {
-    let mut places: Vec<Place> = Vec::new();
-    let mut grid = Grid::default();
-    let mut add = |p: Vec2, z: Option<f64>, name: Option<String>| {
-        if let Some(i) = grid.near(p, |i| places[i].p) {
-            let place = &mut places[i];
-            if place.z.is_none() {
-                place.z = z;
-            }
-            if place.name.is_none() {
-                place.name = name;
-            }
-            return;
-        }
-        grid.put(p, places.len());
-        places.push(Place { p, z, name });
-    };
-    for o in objects {
-        match &o.shape {
-            Shape::Point { p, z, parts } => {
-                let label = o.name();
-                let points =
-                    std::iter::once((*p, *z)).chain(parts.iter().flatten().map(|q| (q.p, q.z)));
-                for (k, (p, z)) in points.enumerate() {
-                    let name = label.map(|l| {
-                        if k == 0 {
-                            l.to_owned()
-                        } else {
-                            format!("{l} ({})", k + 1)
-                        }
-                    });
-                    add(p, z, name);
-                }
-            }
-            _ => {
-                for path in &o.paths {
-                    for (k, &p) in path.pts.iter().enumerate() {
-                        add(p, path.zs.get(k).copied().flatten(), None);
-                    }
-                }
-            }
-        }
-    }
+    // The places and their names are Koordinat yaz's too (docs/adr/0185 §2).
+    let places = crate::ops::coordinate_labels::places(objects);
     if places.is_empty() {
         return Cells::refused(
             "Seçili nesnelerde nokta ya da köşe yok; koordinat çizelgesi noktalardan, çizgilerden ve alanlardan yazılır."
                 .to_owned(),
         );
     }
-    let taken: HashSet<String> = places.iter().filter_map(|p| p.name.clone()).collect();
-    let mut numbers = Numbers {
-        next: 1,
-        taken: &taken,
-    };
     let elevated = places.iter().any(|p| p.z.is_some());
     let mut rows = vec![
         ["Nokta", u.east(), u.north()]
@@ -454,9 +400,12 @@ fn coordinates(objects: &[Listed], u: &Units) -> Cells {
             .map(str::to_owned)
             .collect::<Vec<_>>(),
     ];
-    for place in &places {
-        let name = place.name.clone().unwrap_or_else(|| numbers.give());
-        let mut row = vec![name, u.length(place.p.x), u.length(place.p.y)];
+    for place in places {
+        let mut row = vec![
+            place.name.unwrap_or_default(),
+            u.length(place.p.x),
+            u.length(place.p.y),
+        ];
         if elevated {
             row.push(place.z.map(|z| u.length(z)).unwrap_or_default());
         }
@@ -613,6 +562,7 @@ pub(crate) static OPS: &[Op] = &[
 mod tests {
     use super::*;
     use crate::geom::table::table_geom;
+    use crate::vec2::Vec2;
 
     fn file() -> Json {
         let path = concat!(

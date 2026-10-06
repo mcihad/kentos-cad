@@ -1,0 +1,2158 @@
+{
+ "format": "kentos.coordinate-label-cases",
+ "version": 1,
+ "source": "scripts/fixtures/coordinate_label_cases.py; docs/adr/0185",
+ "places": [
+  {
+   "name": "iki komşu parsel: ortak köşeler bir kez, adsızlar 1'den, kutunun ortası ilk nesnenin",
+   "objects": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 486970,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 486970,
+        "y": 4420000
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 486970,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 486970,
+         "y": 4420000
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 487000,
+         "y": 4419980
+        },
+        {
+         "x": 487020,
+         "y": 4419980
+        },
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487000,
+         "y": 4420000
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 486970,
+      "y": 4419980
+     },
+     "name": "1",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4419980
+     },
+     "name": "2",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "name": "3",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 486970,
+      "y": 4420000
+     },
+     "name": "4",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4419980
+     },
+     "name": "5",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4420000
+     },
+     "name": "6",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    }
+   ]
+  },
+  {
+   "name": "adlı noktalar köşelerin önünde: köşe noktanın adını ve kotunu alır, numaralar adları atlar",
+   "objects": [
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 486970,
+       "y": 4419980
+      },
+      "z": 812.4
+     },
+     "paths": [],
+     "label": "101",
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487000,
+       "y": 4419980
+      }
+     },
+     "paths": [],
+     "label": "2",
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 486970,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 486970,
+        "y": 4420000
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 486970,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 486970,
+         "y": 4420000
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 487000,
+         "y": 4419980
+        },
+        {
+         "x": 487020,
+         "y": 4419980
+        },
+        {
+         "x": 487020,
+         "y": 4420000
+        },
+        {
+         "x": 487000,
+         "y": 4420000
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 486970,
+      "y": 4419980
+     },
+     "z": 812.4,
+     "name": "101",
+     "centre": {
+      "x": 486970,
+      "y": 4419980
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4419980
+     },
+     "name": "2",
+     "centre": {
+      "x": 487000,
+      "y": 4419980
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "name": "1",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 486970,
+      "y": 4420000
+     },
+     "name": "3",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4419980
+     },
+     "name": "4",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4420000
+     },
+     "name": "5",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    }
+   ]
+  },
+  {
+   "name": "köşe önce: adsız ve kotsuz yer sonraki noktanın adını ve kotunu alır",
+   "objects": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 486970,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 486970,
+        "y": 4420000
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 486970,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4419980
+        },
+        {
+         "x": 487000,
+         "y": 4420000
+        },
+        {
+         "x": 486970,
+         "y": 4420000
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        811.5,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 486970,
+       "y": 4419980
+      },
+      "z": 812.4
+     },
+     "paths": [],
+     "label": " 101 ",
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 487000,
+       "y": 4419980
+      },
+      "z": 900.0
+     },
+     "paths": [],
+     "label": "B",
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 486970,
+      "y": 4419980
+     },
+     "z": 812.4,
+     "name": "101",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4419980
+     },
+     "z": 811.5,
+     "name": "B",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "name": "1",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 486970,
+      "y": 4420000
+     },
+     "name": "2",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    }
+   ]
+  },
+  {
+   "name": "çok noktalı nesne: parçalar “ad (2)”, adsız çok noktalı nesne numara alır",
+   "objects": [
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 10,
+       "y": 20
+      },
+      "parts": [
+       {
+        "p": {
+         "x": 30,
+         "y": 20
+        }
+       },
+       {
+        "p": {
+         "x": 30,
+         "y": 40
+        },
+        "z": 5.25
+       }
+      ]
+     },
+     "paths": [],
+     "label": "P",
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 0,
+       "y": 0
+      },
+      "parts": [
+       {
+        "p": {
+         "x": 5,
+         "y": 5
+        }
+       }
+      ]
+     },
+     "paths": [],
+     "label": null,
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 10,
+      "y": 20
+     },
+     "name": "P",
+     "centre": {
+      "x": 20,
+      "y": 30
+     }
+    },
+    {
+     "p": {
+      "x": 30,
+      "y": 20
+     },
+     "name": "P (2)",
+     "centre": {
+      "x": 20,
+      "y": 30
+     }
+    },
+    {
+     "p": {
+      "x": 30,
+      "y": 40
+     },
+     "z": 5.25,
+     "name": "P (3)",
+     "centre": {
+      "x": 20,
+      "y": 30
+     }
+    },
+    {
+     "p": {
+      "x": 0,
+      "y": 0
+     },
+     "name": "1",
+     "centre": {
+      "x": 2.5,
+      "y": 2.5
+     }
+    },
+    {
+     "p": {
+      "x": 5,
+      "y": 5
+     },
+     "name": "2",
+     "centre": {
+      "x": 2.5,
+      "y": 2.5
+     }
+    }
+   ]
+  },
+  {
+   "name": "1 µm içinde aynı, 2 µm ötesi ayrı yer; delik köşeleri de",
+   "objects": [
+    {
+     "shape": {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 10
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 2,
+          "y": 2
+         },
+         {
+          "x": 4,
+          "y": 2
+         },
+         {
+          "x": 4,
+          "y": 4
+         }
+        ]
+       }
+      ]
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 0,
+         "y": 0
+        },
+        {
+         "x": 10,
+         "y": 0
+        },
+        {
+         "x": 10,
+         "y": 10
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null
+       ]
+      },
+      {
+       "pts": [
+        {
+         "x": 2,
+         "y": 2
+        },
+        {
+         "x": 4,
+         "y": 2
+        },
+        {
+         "x": 4,
+         "y": 4
+        }
+       ],
+       "closed": true,
+       "zs": [
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 0,
+       "y": 1e-06
+      },
+      "b": {
+       "x": 0,
+       "y": 2e-06
+      }
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 0,
+         "y": 1e-06
+        },
+        {
+         "x": 0,
+         "y": 2e-06
+        }
+       ],
+       "closed": false,
+       "zs": [
+        null,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 0,
+      "y": 0
+     },
+     "name": "1",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 10,
+      "y": 0
+     },
+     "name": "2",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 10,
+      "y": 10
+     },
+     "name": "3",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 2,
+      "y": 2
+     },
+     "name": "4",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 4,
+      "y": 2
+     },
+     "name": "5",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 4,
+      "y": 4
+     },
+     "name": "6",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    },
+    {
+     "p": {
+      "x": 0,
+      "y": 2e-06
+     },
+     "name": "7",
+     "centre": {
+      "x": 0,
+      "y": 1.5e-06
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşluklu etiket ad değildir; nesnesiz liste boştur",
+   "objects": [
+    {
+     "shape": {
+      "kind": "point",
+      "p": {
+       "x": 1,
+       "y": 1
+      }
+     },
+     "paths": [],
+     "label": "   ",
+     "attrs": {}
+    },
+    {
+     "shape": {
+      "kind": "line",
+      "a": {
+       "x": 5,
+       "y": 5
+      },
+      "b": {
+       "x": 7,
+       "y": 9
+      }
+     },
+     "paths": [
+      {
+       "pts": [
+        {
+         "x": 5,
+         "y": 5
+        },
+        {
+         "x": 7,
+         "y": 9
+        }
+       ],
+       "closed": false,
+       "zs": [
+        1.5,
+        null
+       ]
+      }
+     ],
+     "label": null,
+     "attrs": {}
+    }
+   ],
+   "want": [
+    {
+     "p": {
+      "x": 1,
+      "y": 1
+     },
+     "name": "1",
+     "centre": {
+      "x": 1,
+      "y": 1
+     }
+    },
+    {
+     "p": {
+      "x": 5,
+      "y": 5
+     },
+     "z": 1.5,
+     "name": "2",
+     "centre": {
+      "x": 6,
+      "y": 7
+     }
+    },
+    {
+     "p": {
+      "x": 7,
+      "y": 9
+     },
+     "name": "3",
+     "centre": {
+      "x": 6,
+      "y": 7
+     }
+    }
+   ]
+  },
+  {
+   "name": "hiç nesne yok",
+   "objects": [],
+   "want": []
+  }
+ ],
+ "labels": [
+  {
+   "name": "CBS, kollu, Otomatik: köşeler parselin dışına; doğu üstte, kuzey altta; kotsuz yerde Z satırı yok",
+   "places": [
+    {
+     "p": {
+      "x": 486970,
+      "y": 4419980
+     },
+     "z": 812.4,
+     "name": "1",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4419980
+     },
+     "name": "2",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "z": 813.125,
+     "name": "3",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 486970,
+      "y": 4420000
+     },
+     "name": "4",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4419980
+     },
+     "name": "5",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487020,
+      "y": 4420000
+     },
+     "name": "6",
+     "centre": {
+      "x": 487010,
+      "y": 4419990
+     }
+    }
+   ],
+   "options": {
+    "template": "{Y}|{X}|Z={Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": true,
+    "direction": "auto",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 486970,
+        "y": 4419980
+       },
+       {
+        "x": 486967,
+        "y": 4419977
+       },
+       {
+        "x": 486960.392,
+        "y": 4419977
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 486966.5,
+         "y": 4419977.4
+        },
+        "text": "486970.000",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 486966.5,
+         "y": 4419976.6
+        },
+        "text": "4419980.000",
+        "align": "topRight"
+       },
+       {
+        "p": {
+         "x": 486966.5,
+         "y": 4419974.933333334
+        },
+        "text": "Z=812.400",
+        "align": "topRight"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487003,
+        "y": 4419977
+       },
+       {
+        "x": 487009.608,
+        "y": 4419977
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487003.5,
+         "y": 4419977.4
+        },
+        "text": "487000.000"
+       },
+       {
+        "p": {
+         "x": 487003.5,
+         "y": 4419976.6
+        },
+        "text": "4419980.000",
+        "align": "topLeft"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487003,
+        "y": 4420003
+       },
+       {
+        "x": 487009.921,
+        "y": 4420003
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487003.5,
+         "y": 4420003.4
+        },
+        "text": "487000.000"
+       },
+       {
+        "p": {
+         "x": 487003.5,
+         "y": 4420002.6
+        },
+        "text": "4420000.000",
+        "align": "topLeft"
+       },
+       {
+        "p": {
+         "x": 487003.5,
+         "y": 4420000.933333334
+        },
+        "text": "Z=813.125",
+        "align": "topLeft"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 486970,
+        "y": 4420000
+       },
+       {
+        "x": 486967,
+        "y": 4420003
+       },
+       {
+        "x": 486960.079,
+        "y": 4420003
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 486966.5,
+         "y": 4420003.4
+        },
+        "text": "486970.000",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 486966.5,
+         "y": 4420002.6
+        },
+        "text": "4420000.000",
+        "align": "topRight"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487023,
+        "y": 4419977
+       },
+       {
+        "x": 487029.608,
+        "y": 4419977
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487023.5,
+         "y": 4419977.4
+        },
+        "text": "487020.000"
+       },
+       {
+        "p": {
+         "x": 487023.5,
+         "y": 4419976.6
+        },
+        "text": "4419980.000",
+        "align": "topLeft"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487023,
+        "y": 4420003
+       },
+       {
+        "x": 487029.921,
+        "y": 4420003
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487023.5,
+         "y": 4420003.4
+        },
+        "text": "487020.000"
+       },
+       {
+        "p": {
+         "x": 487023.5,
+         "y": 4420002.6
+        },
+        "text": "4420000.000",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "CAD, kollu, eksen adlarıyla: X doğu, Y kuzey; iki basamak",
+   "places": [
+    {
+     "p": {
+      "x": 486970,
+      "y": 4419980
+     },
+     "z": 812.4,
+     "name": "1",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4419980
+     },
+     "name": "2",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    },
+    {
+     "p": {
+      "x": 487000,
+      "y": 4420000
+     },
+     "z": 813.125,
+     "name": "3",
+     "centre": {
+      "x": 486985,
+      "y": 4419990
+     }
+    }
+   ],
+   "options": {
+    "template": "X = {X}|Y = {Y}",
+    "decimals": 2,
+    "height": 0.5,
+    "leader": true,
+    "direction": "auto",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "cad",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 486970,
+        "y": 4419980
+       },
+       {
+        "x": 486968.5,
+        "y": 4419978.5
+       },
+       {
+        "x": 486964.739,
+        "y": 4419978.5
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 486968.25,
+         "y": 4419978.7
+        },
+        "text": "X = 486970.00",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 486968.25,
+         "y": 4419978.3
+        },
+        "text": "Y = 4419980.00",
+        "align": "topRight"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487000,
+        "y": 4419980
+       },
+       {
+        "x": 487001.5,
+        "y": 4419978.5
+       },
+       {
+        "x": 487005.261,
+        "y": 4419978.5
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487001.75,
+         "y": 4419978.7
+        },
+        "text": "X = 487000.00"
+       },
+       {
+        "p": {
+         "x": 487001.75,
+         "y": 4419978.3
+        },
+        "text": "Y = 4419980.00",
+        "align": "topLeft"
+       }
+      ]
+     },
+     {
+      "leader": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487001.5,
+        "y": 4420001.5
+       },
+       {
+        "x": 487005.4175,
+        "y": 4420001.5
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 487001.75,
+         "y": 4420001.7
+        },
+        "text": "X = 487000.00"
+       },
+       {
+        "p": {
+         "x": 487001.75,
+         "y": 4420001.3
+        },
+        "text": "Y = 4420000.00",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kolsuz, kuzeydoğu: son satırın tabanı köşenin yarım yükseklik üstünde; sola dayalı",
+   "places": [
+    {
+     "p": {
+      "x": 100,
+      "y": 200
+     },
+     "z": 5.5,
+     "name": "7"
+    }
+   ],
+   "options": {
+    "template": "{ad}|{Y}|{X}|{Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": false,
+    "direction": "ne",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "texts": [
+       {
+        "p": {
+         "x": 100.5,
+         "y": 205.5
+        },
+        "text": "7"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 203.83333333333334
+        },
+        "text": "100.000"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 202.16666666666666
+        },
+        "text": "200.000"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 200.5
+        },
+        "text": "5.500"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kolsuz, kuzeybatı: son satırın tabanı köşenin yarım yükseklik üstünde; sağa dayalı",
+   "places": [
+    {
+     "p": {
+      "x": 100,
+      "y": 200
+     },
+     "z": 5.5,
+     "name": "7"
+    }
+   ],
+   "options": {
+    "template": "{ad}|{Y}|{X}|{Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": false,
+    "direction": "nw",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "texts": [
+       {
+        "p": {
+         "x": 99.5,
+         "y": 205.5
+        },
+        "text": "7",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 203.83333333333334
+        },
+        "text": "100.000",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 202.16666666666666
+        },
+        "text": "200.000",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 200.5
+        },
+        "text": "5.500",
+        "align": "baselineRight"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kolsuz, güneybatı: ilk satırın üstü köşenin yarım yükseklik altında; sağa dayalı",
+   "places": [
+    {
+     "p": {
+      "x": 100,
+      "y": 200
+     },
+     "z": 5.5,
+     "name": "7"
+    }
+   ],
+   "options": {
+    "template": "{ad}|{Y}|{X}|{Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": false,
+    "direction": "sw",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "texts": [
+       {
+        "p": {
+         "x": 99.5,
+         "y": 199.5
+        },
+        "text": "7",
+        "align": "topRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 197.83333333333334
+        },
+        "text": "100.000",
+        "align": "topRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 196.16666666666666
+        },
+        "text": "200.000",
+        "align": "topRight"
+       },
+       {
+        "p": {
+         "x": 99.5,
+         "y": 194.5
+        },
+        "text": "5.500",
+        "align": "topRight"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kolsuz, güneydoğu: ilk satırın üstü köşenin yarım yükseklik altında; sola dayalı",
+   "places": [
+    {
+     "p": {
+      "x": 100,
+      "y": 200
+     },
+     "z": 5.5,
+     "name": "7"
+    }
+   ],
+   "options": {
+    "template": "{ad}|{Y}|{X}|{Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": false,
+    "direction": "se",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "texts": [
+       {
+        "p": {
+         "x": 100.5,
+         "y": 199.5
+        },
+        "text": "7",
+        "align": "topLeft"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 197.83333333333334
+        },
+        "text": "100.000",
+        "align": "topLeft"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 196.16666666666666
+        },
+        "text": "200.000",
+        "align": "topLeft"
+       },
+       {
+        "p": {
+         "x": 100.5,
+         "y": 194.5
+        },
+        "text": "5.500",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kollu, kuzeybatı: yatay çizgi batıya, satırlar sağa dayalı",
+   "places": [
+    {
+     "p": {
+      "x": -34.076,
+      "y": 270.333
+     }
+    }
+   ],
+   "options": {
+    "template": "{Y}|{X}",
+    "decimals": 3,
+    "height": 0.8,
+    "leader": true,
+    "direction": "nw",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": -34.076,
+        "y": 270.333
+       },
+       {
+        "x": -36.476,
+        "y": 272.733
+       },
+       {
+        "x": -40.0264,
+        "y": 272.733
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": -36.876,
+         "y": 273.05300000000005
+        },
+        "text": "-34.076",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": -36.876,
+         "y": 272.413
+        },
+        "text": "270.333",
+        "align": "topRight"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kollu, güneybatı: yatay çizgi batıya, satırlar sağa dayalı",
+   "places": [
+    {
+     "p": {
+      "x": -34.076,
+      "y": 270.333
+     }
+    }
+   ],
+   "options": {
+    "template": "{Y}|{X}",
+    "decimals": 3,
+    "height": 0.8,
+    "leader": true,
+    "direction": "sw",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": -34.076,
+        "y": 270.333
+       },
+       {
+        "x": -36.476,
+        "y": 267.93300000000005
+       },
+       {
+        "x": -40.0264,
+        "y": 267.93300000000005
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": -36.876,
+         "y": 268.25300000000004
+        },
+        "text": "-34.076",
+        "align": "baselineRight"
+       },
+       {
+        "p": {
+         "x": -36.876,
+         "y": 267.613
+        },
+        "text": "270.333",
+        "align": "topRight"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "kollu, güneydoğu: yatay çizgi doğuya, satırlar sola dayalı",
+   "places": [
+    {
+     "p": {
+      "x": -34.076,
+      "y": 270.333
+     }
+    }
+   ],
+   "options": {
+    "template": "{Y}|{X}",
+    "decimals": 3,
+    "height": 0.8,
+    "leader": true,
+    "direction": "se",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": -34.076,
+        "y": 270.333
+       },
+       {
+        "x": -31.676000000000002,
+        "y": 267.93300000000005
+       },
+       {
+        "x": -28.1256,
+        "y": 267.93300000000005
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": -31.276,
+         "y": 268.25300000000004
+        },
+        "text": "-34.076"
+       },
+       {
+        "p": {
+         "x": -31.276,
+         "y": 267.613
+        },
+        "text": "270.333",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "şablonun harfleri büyük ya da küçük; bilinmeyen yer tutucu olduğu gibi; adsız yerde {ad}'lı satır yok; boş satır yok",
+   "places": [
+    {
+     "p": {
+      "x": 486512.34,
+      "y": 4420187.5
+     }
+    }
+   ],
+   "options": {
+    "template": " {y} m | {AD} || {x} {foo} |{Ad}",
+    "decimals": 3,
+    "height": 1,
+    "leader": true,
+    "direction": "auto",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 486512.34,
+        "y": 4420187.5
+       },
+       {
+        "x": 486515.34,
+        "y": 4420190.5
+       },
+       {
+        "x": 486524.215,
+        "y": 4420190.5
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 486515.84,
+         "y": 4420190.9
+        },
+        "text": "486512.340 m"
+       },
+       {
+        "p": {
+         "x": 486515.84,
+         "y": 4420190.1
+        },
+        "text": "4420187.500 {foo}",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "satırı kalmayan yer yazılmaz ve sayılır",
+   "places": [
+    {
+     "p": {
+      "x": 1,
+      "y": 2
+     }
+    },
+    {
+     "p": {
+      "x": 3,
+      "y": 4
+     },
+     "z": 2.0,
+     "name": "N"
+    }
+   ],
+   "options": {
+    "template": "{ad}: {Z}",
+    "decimals": 3,
+    "height": 1,
+    "leader": true,
+    "direction": "auto",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 3,
+        "y": 4
+       },
+       {
+        "x": 6,
+        "y": 7
+       },
+       {
+        "x": 10.738,
+        "y": 7
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 6.5,
+         "y": 7.4
+        },
+        "text": "N: 2.000"
+       }
+      ]
+     }
+    ],
+    "skipped": 1
+   }
+  },
+  {
+   "name": "yerel proje, santimetre: eksi değer; sıfır basamak; kot da birimde",
+   "places": [
+    {
+     "p": {
+      "x": -12.3456,
+      "y": 0.5
+     },
+     "z": -0.25,
+     "name": "A"
+    }
+   ],
+   "options": {
+    "template": "{X}|{Y}|{Z}",
+    "decimals": 0,
+    "height": 1,
+    "leader": false,
+    "direction": "ne",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "cad",
+    "unit": "cm"
+   },
+   "want": {
+    "labels": [
+     {
+      "texts": [
+       {
+        "p": {
+         "x": -11.8456,
+         "y": 4.333333333333333
+        },
+        "text": "-1235"
+       },
+       {
+        "p": {
+         "x": -11.8456,
+         "y": 2.6666666666666665
+        },
+        "text": "50"
+       },
+       {
+        "p": {
+         "x": -11.8456,
+         "y": 1
+        },
+        "text": "-25"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "milimetre, kalın yazı, genişlik çarpanı",
+   "places": [
+    {
+     "p": {
+      "x": 1.2345,
+      "y": -2.5
+     },
+     "name": "K1"
+    }
+   ],
+   "options": {
+    "template": "{ad}|{X}|{Y}",
+    "decimals": 1,
+    "height": 1,
+    "leader": true,
+    "direction": "auto",
+    "font": "arimo",
+    "bold": true,
+    "widthFactor": 0.8
+   },
+   "units": {
+    "axes": "cad",
+    "unit": "mm"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 1.2345,
+        "y": -2.5
+       },
+       {
+        "x": 4.2345,
+        "y": 0.5
+       },
+       {
+        "x": 7.9473,
+        "y": 0.5
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 4.7345,
+         "y": 0.9
+        },
+        "text": "K1"
+       },
+       {
+        "p": {
+         "x": 4.7345,
+         "y": 0.1
+        },
+        "text": "1234.5",
+        "align": "topLeft"
+       },
+       {
+        "p": {
+         "x": 4.7345,
+         "y": -1.5666666666666667
+        },
+        "text": "-2500.0",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "Otomatik eşitlikte doğu ve kuzey: kutunun ortasındaki yer",
+   "places": [
+    {
+     "p": {
+      "x": 5,
+      "y": 5
+     },
+     "name": "M",
+     "centre": {
+      "x": 5,
+      "y": 5
+     }
+    }
+   ],
+   "options": {
+    "template": "{Y}|{X}",
+    "decimals": 3,
+    "height": 1,
+    "leader": true,
+    "direction": "auto",
+    "font": "barlow"
+   },
+   "units": {
+    "axes": "gis",
+    "unit": "m"
+   },
+   "want": {
+    "labels": [
+     {
+      "leader": [
+       {
+        "x": 5,
+        "y": 5
+       },
+       {
+        "x": 8,
+        "y": 8
+       },
+       {
+        "x": 11.496,
+        "y": 8
+       }
+      ],
+      "texts": [
+       {
+        "p": {
+         "x": 8.5,
+         "y": 8.4
+        },
+        "text": "5.000"
+       },
+       {
+        "p": {
+         "x": 8.5,
+         "y": 7.6
+        },
+        "text": "5.000",
+        "align": "topLeft"
+       }
+      ]
+     }
+    ],
+    "skipped": 0
+   }
+  }
+ ]
+}

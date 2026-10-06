@@ -132,6 +132,8 @@ mod parts_scenes;
 #[cfg(test)]
 mod query_tests;
 #[cfg(test)]
+mod coordinate_scenes;
+#[cfg(test)]
 mod dimension_scenes;
 #[cfg(test)]
 mod leader_scenes;

@@ -1392,10 +1392,11 @@ fn measure(text: &str, font: Font) -> Measure {
 }
 
 /// A text to come, faint, drawn as a text object will be (Etiketleri yazıya
-/// çevir's preview, docs/adr/0175 §3; the web's `drawTextGhost`): `at` its
-/// point on the screen, `size` px high, turned `angle` (screen radians), its
-/// point on its alignment (`along` of its width, `up` of its height over its
-/// baseline); over its mask in `halo` when it will have one.
+/// çevir's and Koordinat yaz's previews, docs/adr/0175 §3, 0185 §5; the
+/// web's `drawTextGhost`): `at` its point on the screen, `size` px high,
+/// turned `angle` (screen radians), its point on its alignment (`along` of
+/// its width, `up` of its height over its baseline), in its face and width
+/// factor; over its mask in `halo` when it will have one.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn ghost(
     frame: &mut Frame,
@@ -1404,6 +1405,7 @@ pub(crate) fn ghost(
     size: f32,
     angle: f32,
     (along, up): (f32, f32),
+    (face, width_factor): (&kentos_contracts::TextFace, f32),
     drawing: DrawingFont,
     (color, halo): (Color, Color),
     mask: bool,
@@ -1411,9 +1413,10 @@ pub(crate) fn ghost(
     if size < SMALLEST || text.is_empty() {
         return;
     }
-    // The texts it will write have the project's look (docs/adr/0175 §1): italic, leant where the family has no italic face.
-    let (font, lean) = face_font(&Default::default(), drawing, true, None);
-    let width = measure(text, font).width * size / REFERENCE;
+    // A text with no face of its own has the project's look (docs/adr/0175 §1): italic, leant where the
+    // family has no italic face.
+    let (font, lean) = face_font(face, drawing, true, None);
+    let width = measure(text, font).width * size / REFERENCE * width_factor;
     // From its point to where its baseline starts, in the text's own frame (y down the screen).
     let (dx, dy) = (-along * width, up * size);
     let (sin, cos) = angle.sin_cos();
@@ -1425,7 +1428,7 @@ pub(crate) fn ghost(
         font,
         anchor: Anchor::LeftBaseline,
         color,
-        width_factor: 1.0,
+        width_factor,
         mask: if mask { width } else { 0.0 },
         underline: 0.0,
         lean,

@@ -126,6 +126,11 @@ const LAYOUTS = {
     '<': { code: 'IntlBackslash', vk: 226 },
     '/': { code: 'Slash', vk: 191 },
     ' ': { code: 'Space', vk: 32 },
+    // Koordinat yaz's template (docs/adr/0185 §3): {Y}|{X}, Z={Z}.
+    '{': { code: 'BracketLeft', vk: 219, shift: true },
+    '}': { code: 'BracketRight', vk: 221, shift: true },
+    '|': { code: 'Backslash', vk: 220, shift: true },
+    '=': { code: 'Equal', vk: 187 },
   },
   // Turkish Q: + is Shift+4, - sits right of *, / is Shift+7, @ is AltGr+Q, # AltGr+3. Windows
   // reports AltGr as Ctrl+Alt, so that is what the page receives.
@@ -140,6 +145,11 @@ const LAYOUTS = {
     '<': { code: 'IntlBackslash', vk: 226 },
     '/': { code: 'Digit7', vk: 55, shift: true },
     ' ': { code: 'Space', vk: 32 },
+    // { is AltGr+7, } AltGr+0, | AltGr and the key right of *, = Shift+0.
+    '{': { code: 'Digit7', vk: 55, altGr: true },
+    '}': { code: 'Digit0', vk: 48, altGr: true },
+    '|': { code: 'Equal', vk: 187, altGr: true },
+    '=': { code: 'Digit0', vk: 48, shift: true },
     ı: { code: 'KeyI', vk: 73 },
     i: { code: 'Quote', vk: 222 },
     ş: { code: 'Semicolon', vk: 186 },

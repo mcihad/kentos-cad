@@ -143,6 +143,7 @@ class CreateOperation(_StrEnum):
     - ``adjoin``: Bitişik alan (docs/adr/0162 §3): the region a drawn path closes with
     - ``labels``: Etiketleri yazıya çevir (docs/adr/0175 §2): the layers' labels as
     - ``table``: Tablo (docs/adr/0184 §3): a table placed by its tool.
+    - ``coordinates``: Koordinat yaz (docs/adr/0185): coordinate labels (texts and their
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -165,9 +166,10 @@ class CreateOperation(_StrEnum):
     ADJOIN = "adjoin"
     LABELS = "labels"
     TABLE = "table"
+    COORDINATES = "coordinates"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 

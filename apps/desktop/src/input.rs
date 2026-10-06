@@ -154,6 +154,8 @@ impl App {
                 ViewChange::AttributeValues(block) => self.open_attribute_values(block),
                 // Metin dosyası yerleştir's file: the dialog opens after the update (text_file.rs).
                 ViewChange::OpenTextFile => self.text_file_wanted = true,
+                // Köşelere koordinat yaz's schedule hangs from the cursor (docs/adr/0185 §1).
+                ViewChange::PlaceTable(table, label) => self.place_table(table, label),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p) && !self.blocks_picked(p) {

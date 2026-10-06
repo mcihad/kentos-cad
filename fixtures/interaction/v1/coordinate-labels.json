@@ -1,0 +1,581 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "coordinate-labels",
+  "title": "Koordinat yaz (ADR 0185), coordinates.kcad üzerinde (CAD projesi, 1:500): 101'e kollu yazı (doğu üstte, kuzey altta), Ctrl+Z ve yeniden; Kollu kapalı, Yön Sağ üst, Basamak 1, Şablon {ad}|Z={Z}: 102'ye adı ve kotu, boş yere satır yok; seçenekler geri. Köşelere koordinat yaz pencereyle seçilen iki parsel ve iki noktada: altı yer, şablon {ad}, kolsuz, Çizelge açık; Enter adları yazar, koordinat çizelgesi imleçten yerleşir; geri alınır, seçenekler başladığı gibi bırakılır",
+  "source": "Web'in CoordinateLabelTool ve CoordinateVerticesTool'u (coordinateLabelTool.ts), masaüstünün kentos_interaction::coordinate_labels'ı; çekirdeğin ops::coordinate_labels'ı; cad.entities.create coordinates, ADR 0185",
+  "covers": [
+    "UX-01",
+    "UX-06",
+    "CMD-04"
+  ],
+  "document": "coordinates.kcad",
+  "view": {
+    "center": [
+      486995,
+      4419990
+    ],
+    "metresPerPixel": 0.125
+  },
+  "draft": {
+    "snap": true,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "clickTolerance": 0.1,
+  "steps": [
+    {
+      "run": "tool.coordinateLabel",
+      "note": "CAD projesi: X doğu, Y kuzey; ilk şablon {X}|{Y}, doğu üstte. Yazı yüksekliği 2 mm, 1:500'de 1 m.",
+      "expect": {
+        "tool": "coordinateLabel",
+        "options": [
+          "S",
+          "K",
+          "O",
+          "Ş",
+          "B",
+          "Y"
+        ],
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): açık / Yön (O): Otomatik / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "move": [
+        -25,
+        -10
+      ],
+      "note": "101 noktası parselin köşesinde; yazı imleçle birlikte görünür."
+    },
+    {
+      "click": [
+        -25,
+        -10
+      ],
+      "note": "Kollu, Otomatik: tıklanan yer sağ üste yazılır; kol 3 m, çizgi en uzun satır artı 1 m.",
+      "expect": {
+        "tool": "coordinateLabel",
+        "entities": 7,
+        "canUndo": true,
+        "objects": [
+          {
+            "id": 5,
+            "kind": "polyline",
+            "points": [
+              [
+                -25,
+                -10
+              ],
+              [
+                -22,
+                -7
+              ],
+              [
+                -15.392,
+                -7
+              ]
+            ]
+          },
+          {
+            "id": 6,
+            "kind": "text",
+            "points": [
+              [
+                -21.5,
+                -6.6
+              ]
+            ],
+            "text": "486970.000",
+            "align": null,
+            "height": 1
+          },
+          {
+            "id": 7,
+            "kind": "text",
+            "points": [
+              [
+                -21.5,
+                -7.4
+              ]
+            ],
+            "text": "4419980.000",
+            "align": "topLeft",
+            "height": 1
+          }
+        ]
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Komut sürerken Ctrl+Z son yazıyı geri alır.",
+      "expect": {
+        "tool": "coordinateLabel",
+        "entities": 4
+      }
+    },
+    {
+      "click": [
+        -25,
+        -10
+      ],
+      "expect": {
+        "entities": 7
+      }
+    },
+    {
+      "key": "K",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Otomatik / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "O",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Sağ üst / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "B",
+      "expect": {
+        "prompt": "Koordinat yaz: ondalık basamak sayısını yazın (0–8; boş Enter: projeninki)"
+      }
+    },
+    {
+      "text": "1"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Sağ üst / Şablon (Ş): {X}|{Y} / Basamak (B): 1 / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "Ş",
+      "note": "Şablon yazı kutusunda sorulur, içinde şimdiki şablon seçili.",
+      "expect": {
+        "prompt": "Koordinat yaz: şablonu yazın"
+      }
+    },
+    {
+      "text": "{ad}|Z={Z}"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Sağ üst / Şablon (Ş): {ad}|Z={Z} / Basamak (B): 1 / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "move": [
+        25,
+        -10
+      ]
+    },
+    {
+      "click": [
+        25,
+        -10
+      ],
+      "note": "102 noktası: adı ve kotu yerindeki noktanın; kolsuz, iki satır sağ üstte, son satırın tabanı köşenin yarım yükseklik üstünde. Kimlikler sürer: geri alınan nesnelerin kimliği yeniden verilmez.",
+      "expect": {
+        "entities": 9,
+        "objects": [
+          {
+            "id": 11,
+            "kind": "text",
+            "points": [
+              [
+                25.5,
+                -7.833333333
+              ]
+            ],
+            "text": "102",
+            "align": null,
+            "height": 1
+          },
+          {
+            "id": 12,
+            "kind": "text",
+            "points": [
+              [
+                25.5,
+                -9.5
+              ]
+            ],
+            "text": "Z=812.9",
+            "align": null,
+            "height": 1
+          }
+        ]
+      }
+    },
+    {
+      "move": [
+        0,
+        5
+      ]
+    },
+    {
+      "click": [
+        0,
+        5
+      ],
+      "note": "Boş yer: adı ve kotu yok, şablon satır bırakmaz.",
+      "expect": {
+        "entities": 9,
+        "logged": [
+          "Koordinat yaz: şablon bu noktaya satır bırakmadı (adı ya da kotu yok)."
+        ]
+      }
+    },
+    {
+      "key": "Ş"
+    },
+    {
+      "key": "Backspace"
+    },
+    {
+      "key": "Enter",
+      "note": "Boş Enter türün şablonunu geri getirir.",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Sağ üst / Şablon (Ş): {X}|{Y} / Basamak (B): 1 / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "B"
+    },
+    {
+      "key": "Enter",
+      "note": "Boş Enter projenin basamağını geri getirir.",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Sağ üst / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "K"
+    },
+    {
+      "key": "O"
+    },
+    {
+      "key": "O"
+    },
+    {
+      "key": "O"
+    },
+    {
+      "key": "O",
+      "expect": {
+        "prompt": "Koordinat yaz: yazılacak noktaya tıklayın ya da Y,X yazın [Stil (S): Standart / Kollu (K): açık / Yön (O): Otomatik / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm]"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    },
+    {
+      "key": "Ctrl+Z"
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "entities": 4,
+        "canUndo": false
+      }
+    },
+    {
+      "drag": [
+        [
+          -28,
+          -13
+        ],
+        [
+          28,
+          13
+        ]
+      ],
+      "note": "Pencereyle iki parsel ve iki nokta.",
+      "expect": {
+        "selected": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "run": "tool.coordinateVertices",
+      "note": "Seçimden önce seçen araç: altı yer, ortak köşeler bir kez.",
+      "expect": {
+        "tool": "coordinateVertices",
+        "options": [
+          "S",
+          "K",
+          "O",
+          "Ş",
+          "B",
+          "Y",
+          "Ç",
+          "Enter"
+        ],
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): açık / Yön (O): Otomatik / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): kapalı / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Ş"
+    },
+    {
+      "text": "{ad}"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): açık / Yön (O): Otomatik / Şablon (Ş): {ad} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): kapalı / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "K",
+      "expect": {
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Otomatik / Şablon (Ş): {ad} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): kapalı / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Ç",
+      "expect": {
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Otomatik / Şablon (Ş): {ad} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): açık / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Enter",
+      "note": "Köşelere adları yazılır: noktası olan köşe noktanın adını, ötekiler 1'den numara alır; Otomatik yön parselin dışına. Çizelge imleçle gelir.",
+      "expect": {
+        "tool": "tablePlace",
+        "entities": 10,
+        "logged": [
+          "Köşelere koordinat yaz: 6 yere yazıldı."
+        ],
+        "prompt": "Koordinat çizelgesi: tablonun sol üst köşesine tıklayın ya da Y,X yazın",
+        "objects": [
+          {
+            "id": 13,
+            "kind": "text",
+            "points": [
+              [
+                -25.5,
+                -10.5
+              ]
+            ],
+            "text": "101",
+            "align": "topRight",
+            "height": 1
+          },
+          {
+            "id": 14,
+            "kind": "text",
+            "points": [
+              [
+                5.5,
+                -10.5
+              ]
+            ],
+            "text": "1",
+            "align": "topLeft",
+            "height": 1
+          },
+          {
+            "id": 15,
+            "kind": "text",
+            "points": [
+              [
+                5.5,
+                10.5
+              ]
+            ],
+            "text": "2",
+            "align": null,
+            "height": 1
+          },
+          {
+            "id": 16,
+            "kind": "text",
+            "points": [
+              [
+                -25.5,
+                10.5
+              ]
+            ],
+            "text": "3",
+            "align": "baselineRight",
+            "height": 1
+          },
+          {
+            "id": 17,
+            "kind": "text",
+            "points": [
+              [
+                25.5,
+                -10.5
+              ]
+            ],
+            "text": "102",
+            "align": "topLeft",
+            "height": 1
+          },
+          {
+            "id": 18,
+            "kind": "text",
+            "points": [
+              [
+                25.5,
+                10.5
+              ]
+            ],
+            "text": "4",
+            "align": null,
+            "height": 1
+          }
+        ]
+      }
+    },
+    {
+      "click": [
+        -27,
+        19
+      ],
+      "note": "Koordinat çizelgesi: yazılardaki adlarla, projenin basamağıyla; kaynağı aynı nesneler.",
+      "expect": {
+        "tool": "select",
+        "entities": 11,
+        "selected": [
+          19
+        ],
+        "newest": {
+          "kind": "table",
+          "points": [
+            [
+              -27,
+              19
+            ]
+          ],
+          "table": {
+            "cells": [
+              [
+                "Nokta",
+                "X",
+                "Y",
+                "Z"
+              ],
+              [
+                "101",
+                "486970.000",
+                "4419980.000",
+                "812.400"
+              ],
+              [
+                "1",
+                "487000.000",
+                "4419980.000",
+                ""
+              ],
+              [
+                "2",
+                "487000.000",
+                "4420000.000",
+                ""
+              ],
+              [
+                "3",
+                "486970.000",
+                "4420000.000",
+                ""
+              ],
+              [
+                "102",
+                "487020.000",
+                "4419980.000",
+                "812.900"
+              ],
+              [
+                "4",
+                "487020.000",
+                "4420000.000",
+                ""
+              ]
+            ],
+            "header": true,
+            "merges": [],
+            "source": "coordinates"
+          }
+        }
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "entities": 10
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "entities": 4
+      }
+    },
+    {
+      "drag": [
+        [
+          -28,
+          -13
+        ],
+        [
+          28,
+          13
+        ]
+      ],
+      "expect": {
+        "selected": [
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "run": "tool.coordinateVertices",
+      "note": "Seçenekler başladığı gibi bırakılır.",
+      "expect": {
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): kapalı / Yön (O): Otomatik / Şablon (Ş): {ad} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): açık / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Ş"
+    },
+    {
+      "key": "Backspace"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "key": "K"
+    },
+    {
+      "key": "Ç",
+      "expect": {
+        "prompt": "Köşelere koordinat yaz: 6 yere yazılacak [Stil (S): Standart / Kollu (K): açık / Yön (O): Otomatik / Şablon (Ş): {X}|{Y} / Basamak (B): 3 (proje) / Yükseklik (Y): 2 mm / Çizelge (Ç): kapalı / Uygula (Enter)]"
+      }
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    }
+  ]
+}

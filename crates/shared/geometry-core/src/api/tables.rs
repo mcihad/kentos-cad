@@ -81,4 +81,5 @@ pub(super) static TABLES: &[&[Op]] = &[
     crate::ops::data_search::OPS,
     crate::ops::table::OPS,
     crate::ops::table_edit::OPS,
+    crate::ops::coordinate_labels::OPS,
 ];

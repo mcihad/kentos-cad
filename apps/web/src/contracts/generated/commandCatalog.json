@@ -38877,6 +38877,11 @@
                 "const": "table",
                 "description": "Tablo (docs/adr/0184 §3): a table placed by its tool.",
                 "type": "string"
+              },
+              {
+                "const": "coordinates",
+                "description": "Koordinat yaz (docs/adr/0185): coordinate labels (texts and their\nleaders) at clicked points or at the selection's vertices.",
+                "type": "string"
               }
             ]
           },

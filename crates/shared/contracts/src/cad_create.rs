@@ -81,6 +81,9 @@ pub enum CreateOperation {
     Labels,
     /// Tablo (docs/adr/0184 §3): a table placed by its tool.
     Table,
+    /// Koordinat yaz (docs/adr/0185): coordinate labels (texts and their
+    /// leaders) at clicked points or at the selection's vertices.
+    Coordinates,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

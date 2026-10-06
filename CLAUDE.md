@@ -38,6 +38,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (boş, Excel .xlsx ya da CSV/TXT dosyasından, koordinat, alan ve öznitelik çizelgesi; önizleme, imleçten yerleştirme), Tabloyu düzenle
   (elektronik tablo gibi; çift tıkla), Tabloyu güncelle (kaynağına bağlı: çizelgenin nesneleri ya da yeniden seçilen dosya), Öznitelikler'in
   satırları; DXF'e adsız blok olarak gider, KENTOS verisiyle tablo olarak gelir (ADR 0184);
+  koordinat yazımı: CAD projesinde Koordinat yaz (tıklanan, yazılan ya da `#ad` noktaya; yerindeki noktanın adı ve kotu) ve Köşelere koordinat
+  yaz (seçili nokta, çizgi ve alanların bütün köşelerine, tek adımda); eğik kol ve yatay çizgi, üstünde doğu, altında kuzey ya da kolsuz
+  satırlar; Şablon (`{Y}`, `{X}`, `{Z}`, `{ad}`), Basamak, Yön (Otomatik dışa), Yükseklik, Stil; Çizelge açıkken aynı nesnelerin koordinat
+  çizelgesi imleçten yerleşir (ADR 0185);
   alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine tıklayarak alan (ADR 0065);
   topolojik temizlik: uçlar ve köşeler var olan köşede birleşir, kısa uç uzar, taşan uç budanır, yazılan toleransla, önizlemeli tek adım (ADR 0148);
   topolojik düzenleme: durum çubuğundaki Topoloji açıkken tutamaç, tutamaç menüsü ve Esnet görünen ve kilitsiz komşuların ortak köşe ve kenarlarını da tek adımda değiştirir, kart ortak köşeyi sayar, Noktalar da seçeneğiyle (ADR 0160);
@@ -245,6 +249,8 @@ python3 scripts/fixtures/paragraph_cases.py --check   # çok satırlı yazının
 cargo test -p kentos-desktop paragraph_editor::tests::screens -- --ignored --nocapture   # çok satırlı yazının resimleri, .run/shots/paragraf-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs paragraph); ADR 0182)
 python3 scripts/fixtures/table_cases.py --check   # tablonun yerleşimini, çerçevesini, tutamaçlarını, boylarını, çizelgelerini, düzenlemelerini ve güncellemesini yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/table/v1/cases.json (ADR 0184)
 python3 scripts/fixtures/table_file_cases.py --check   # Tablo ekle'nin dosya okuyucusunu (CSV/TXT ayırıcı ve kodlama, XLSX sayfaları; .xls ve bozuk dosya) Python'un zipfile ve xml.etree'siyle yazılmış örneklerden denetle; durumlar fixtures/table/v1/files.json (ADR 0184 §4)
+python3 scripts/fixtures/coordinate_label_cases.py --check   # Koordinat yaz'ın yerlerini ve adlarını, şablonun satırlarını (yer tutucular, değeri olmayan satır, birimler, basamak) ve yerleşimi (kol, dirsek, çizgi, dört yön, Otomatik, kolsuz satırlar) kesirlerle ve yazı tiplerinin ölçülmüş ilerlemeleriyle bağımsız başvurudan denetle; durumlar fixtures/coordinate-labels/v1/cases.json (ADR 0185)
+KENTOS_SHOTS_ONLY=koordinat-yaz,koordinat-koseler,koordinat-cizelge,koordinat-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Koordinat yaz'ın resimleri, .run/shots/arac-koordinat-* (web'inkiler: (cd apps/web && node scripts/e2e/shots.mjs coordinates); ADR 0185)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
 python3 scripts/fixtures/quick_dimension_cases.py --check   # Hızlı ölçü'nün ölçülerini (taraf, uzaklık, ortak kenar) kurallardan denetle (ADR 0147 §7)
@@ -953,7 +959,12 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
   dosya okuyucusu `formats::table_file` (`table_file_cases.py`, `fixtures/table/v1/files`); pencereler masaüstünde `tables/`, web'de
   `ui/table/`, kuralları `kentos_interaction::table` ve `app/tables.ts`; yerleştirme `kentos_interaction::table_place`,
   `tools/tablePlaceTool.ts`; DXF adsız blok ve KENTOS verisi (`dxf-write/tables`); ortak iz `table.json` (oynatıcılarda `table`
-  beklentisi, ok tuşları). Sıradaki `CAD-23` tarama ekleri.
+  beklentisi, ok tuşları). `CAD-19` koordinat yazımı ([ADR 0185](docs/adr/0185-coordinate-labels.md)) tek parçada bitti (6 Ekim; ikonlar
+  sahibin seçimi, yeni ikonlarda seçenekler sunulur): çekirdek `ops::coordinate_labels` (yerler ve adlar koordinat çizelgesiyle ortak, şablon,
+  yerleşim; bağımsız başvuru `coordinate_label_cases.py`, ortak `fixtures/coordinate-labels/v1/cases.json`), `cad.entities.create`'in
+  `coordinates` işlemi; araçlar masaüstünde `kentos_interaction::coordinate_labels`, web'de `tools/coordinateLabelTool.ts`; Çizelge Tablo
+  ekle'nin yerleştirmesiyle (`ViewChange::PlaceTable`; web'in tablo yapma yardımcıları `tools/newTable.ts`); ortak iz `coordinate-labels.json`
+  (oynatıcılar `{`, `}`, `|`, `=`'i yazar). Sıradaki `CAD-23` tarama ekleri.
   `HYB-24` canlı GNSS ertelendi (sahibin kararı, 5 Ekim: elde alıcı yok); sıra gelince atlanır; sahip cihazı bulunca söyleyecek.
   4 Ekim: derleme ve test süreleri
   ([ADR 0170](docs/adr/0170-build-and-test-times.md)). Sahibin sorusu üzerine (4 Ekim) pyproj'la rastgele fark testi eklendi (`crs_sweep.py`; PROJ'un kendi `+towgs84`

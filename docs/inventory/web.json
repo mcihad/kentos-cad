@@ -19,14 +19,14 @@
   },
   "summary": {
     "commands": {
-      "total": 332,
-      "implemented": 320,
+      "total": 334,
+      "implemented": 322,
       "partial": 0,
       "pending": 12
     },
     "tools": {
-      "total": 102,
-      "implemented": 100,
+      "total": 104,
+      "implemented": 102,
       "partial": 0,
       "pending": 2
     },
@@ -102,19 +102,19 @@
       "sheet.undo"
     ],
     "commandsWithoutTests": 109,
-    "commandsOnDesktop": 260,
+    "commandsOnDesktop": 262,
     "desktop": {
       "commands": {
-        "total": 332,
-        "implemented": 260,
+        "total": 334,
+        "implemented": 262,
         "partial": 0,
         "pending": 12,
         "none": 58,
         "n/a": 2
       },
       "tools": {
-        "total": 102,
-        "implemented": 100,
+        "total": 104,
+        "implemented": 102,
         "partial": 0,
         "pending": 2,
         "none": 0,
@@ -6720,6 +6720,71 @@
       ]
     },
     {
+      "id": "tool.coordinateLabel",
+      "title": "Koordinat yaz",
+      "category": "Açıklama",
+      "icon": "coordinateLabel",
+      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey (Netcad’in Koordinat Yaz’ı); şablon, basamak, yön ve yükseklik seçilir.",
+      "aliases": [
+        "KOORDINATYAZ",
+        "KOORYAZ",
+        "COORDLABEL"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Koordinat"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/coordinate-labels.json"
+      ]
+    },
+    {
+      "id": "tool.coordinateVertices",
+      "title": "Köşelere koordinat yaz",
+      "category": "Açıklama",
+      "icon": "coordinateVertices",
+      "description": "Seçili noktaların, çizgilerin ve alanların bütün köşelerine koordinatlarını yazar, ortak köşeye bir kez; istenirse köşelerin koordinat çizelgesini tablo olarak yerleştirir, adlar yazılardakilerdir.",
+      "aliases": [
+        "KOSEKOORDINAT",
+        "KOORDINATKOSE"
+      ],
+      "kind": "toggle",
+      "shortcuts": [],
+      "menus": [
+        "Çizim › Açıklama"
+      ],
+      "ribbon": [
+        "CAD › Açıklama › Koordinat"
+      ],
+      "quickAccess": false,
+      "hiddenIn": [
+        "gis"
+      ],
+      "uiSources": [],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/coordinate-labels.json"
+      ]
+    },
+    {
       "id": "tool.copy",
       "title": "Kopyala",
       "category": "Dönüştür",
@@ -11264,6 +11329,55 @@
       ]
     },
     {
+      "id": "coordinateLabel",
+      "label": "Koordinat yaz",
+      "icon": "coordinateLabel",
+      "group": "annotate",
+      "aliases": [
+        "KOORDINATYAZ",
+        "KOORYAZ",
+        "COORDLABEL"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey (Netcad’in Koordinat Yaz’ı); şablon, basamak, yön ve yükseklik seçilir.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/coordinate-labels.json"
+      ]
+    },
+    {
+      "id": "coordinateVertices",
+      "label": "Köşelere koordinat yaz",
+      "icon": "coordinateVertices",
+      "group": "annotate",
+      "aliases": [
+        "KOSEKOORDINAT",
+        "KOORDINATKOSE"
+      ],
+      "primary": false,
+      "rare": false,
+      "methods": [],
+      "steps": 3,
+      "description": "Seçili noktaların, çizgilerin ve alanların bütün köşelerine koordinatlarını yazar, ortak köşeye bir kez; istenirse köşelerin koordinat çizelgesini tablo olarak yerleştirir, adlar yazılardakilerdir.",
+      "productCommand": "cad.entities.create",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "tests": [
+        "fixtures/interaction/v1/coordinate-labels.json"
+      ]
+    },
+    {
       "id": "copy",
       "label": "Kopyala",
       "icon": "copy",
@@ -14040,6 +14154,8 @@
           "tool.mtext",
           "tool.leader",
           "tool.placeTextFile",
+          "tool.coordinateLabel",
+          "tool.coordinateVertices",
           "tool.revcloud",
           "tool.hatch",
           "transform/array",
@@ -22744,6 +22860,8 @@
               "tool.mtext",
               "tool.leader",
               "tool.placeTextFile",
+              "tool.coordinateLabel",
+              "tool.coordinateVertices",
               "tool.labelsToText",
               "tool.dimension",
               "tool.dimContinue",
@@ -26277,6 +26395,22 @@
               "keep": false
             },
             {
+              "label": "Koordinat",
+              "icon": "coordinateLabel",
+              "items": [
+                {
+                  "command": "tool.coordinateLabel",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.coordinateVertices",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
               "label": "Kılavuz",
               "icon": "leader",
               "items": [
@@ -29496,6 +29630,13 @@
     "textSymbol": "<path d=\"M3.8 16.5h3.9v-1.7a6 6 0 1 1 4.6 0v1.7h3.9\"/>",
     "textFile": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9.5h5M10 9.5v5\"/>",
     "labelsToText": "<path d=\"M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z\"/><circle cx=\"4.7\" cy=\"6.2\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8\"/><path d=\"M12.3 10.8h5.2M14.9 10.8v6.7\"/>",
+    "coordinateLabel": "<rect x=\"2\" y=\"15\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M3.5 16.5 8.5 11.2H18.8\"/><path d=\"M10.2 4.9l1.35 1.7 1.35-1.7M11.55 6.6v2\" stroke-width=\"1.2\"/><path d=\"M14.4 7.9h4\" stroke-width=\"1.5\"/><path d=\"M10.3 12.9l2.5 3M12.8 12.9l-2.5 3\" stroke-width=\"1.2\"/><path d=\"M14.4 14.6h3.4\" stroke-width=\"1.5\"/>",
+    "coordinateVertices": "<path d=\"M2.5 7.5h7v7h-7z\" fill=\"currentColor\" fill-opacity=\".14\" stroke-width=\"1.2\"/><rect x=\"1\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"6\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"1\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8\" y=\"13\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m9.5 7.5 2.5-2.5h6.5M9.5 14.5l2.5 2.5h6.5\" stroke-width=\"1.3\"/><path d=\"M13 2.9h4.6M13 14.9h4.6\" stroke-width=\"1.4\"/>",
+    "labelAuto": "<path d=\"M7.5 7.5h5v5h-5z\" fill=\"currentColor\" fill-opacity=\".14\" stroke-width=\"1.2\"/><path d=\"m12.5 7.5 3.5-3.5M7.5 7.5 4 4M7.5 12.5 4 16M12.5 12.5l3.5 3.5\" stroke-width=\"1.3\"/><path d=\"M13.4 4h2.6v2.6M4 6.6V4h2.6M4 13.4V16h2.6M13.4 16H16v-2.6\" stroke-width=\"1.2\"/>",
+    "labelNorthEast": "<circle cx=\"5\" cy=\"15\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6.5 13.5 15.5 4.5\"/><path d=\"M10.5 4.5h5v5\"/>",
+    "labelNorthWest": "<circle cx=\"15\" cy=\"15\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M13.5 13.5 4.5 4.5\"/><path d=\"M9.5 4.5h-5v5\"/>",
+    "labelSouthWest": "<circle cx=\"15\" cy=\"5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M13.5 6.5 4.5 15.5\"/><path d=\"M4.5 10.5v5h5\"/>",
+    "labelSouthEast": "<circle cx=\"5\" cy=\"5\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M6.5 6.5 15.5 15.5\"/><path d=\"M15.5 10.5v5h-5\"/>",
     "leader": "<path d=\"M4 16 10 9.5h2.5\"/><path d=\"M4 16 7 14.2 5.6 12.8z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M14 8.2h3.2M14 10.8h2.4\" stroke-width=\"1.2\"/>",
     "leaderArrowFilled": "<path d=\"M6.5 10H17\"/><path d=\"M2.5 10 7.2 7.6v4.8z\" fill=\"currentColor\" stroke=\"none\"/>",
     "leaderArrowOpen": "<path d=\"M2.5 10H17\"/><path d=\"M7.2 7.6 2.5 10l4.7 2.4\"/>",

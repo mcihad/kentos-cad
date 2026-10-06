@@ -147,6 +147,8 @@
     "tool.adjoin",
     "tool.vertexPoints",
     "tool.labelsToText",
+    "tool.coordinateLabel",
+    "tool.coordinateVertices",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

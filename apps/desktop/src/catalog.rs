@@ -244,6 +244,10 @@ pub const PORTED: &[&str] = &[
     "tool.vertexPoints",
     // Etiketleri yazıya çevir: the layers' labels as texts at a scale (labels_to_text.rs, docs/adr/0175 §3).
     "tool.labelsToText",
+    // Koordinat yaz and Köşelere koordinat yaz: coordinate labels at points or at the selection's
+    // vertices, the latter with its coordinate schedule (coordinate_labels.rs, docs/adr/0185).
+    "tool.coordinateLabel",
+    "tool.coordinateVertices",
     // Drawing and editing tools, phase 1 (docs/adr/0140): every corner at once, Parçala
     // with its three methods, direction, thinning, cleaning and property copying.
     "tool.filletAll",

@@ -488,13 +488,16 @@ impl canvas::Program<Message> for Draft {
         }
         // Texts to come, faint, as text objects will draw them (docs/adr/0175 §3).
         for t in &self.preview.texts {
+            // No alignment: the left of the baseline.
+            let (along, up) = t.align.map_or((0.0, 0.0), |a| (a.along(), a.up()));
             crate::labels::ghost(
                 &mut frame,
                 &t.text,
                 self.screen(t.p),
                 (t.height * self.camera.scale) as f32,
                 (-t.rotation.to_radians()) as f32,
-                (t.align.along() as f32, t.align.up() as f32),
+                (along as f32, up as f32),
+                (&t.face, t.width_factor as f32),
                 self.font,
                 (accent.scale_alpha(0.65), self.halo),
                 t.mask,

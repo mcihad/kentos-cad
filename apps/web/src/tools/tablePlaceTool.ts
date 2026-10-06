@@ -18,12 +18,14 @@ export type TableAt = (p: Vec2) => Omit<TableEntity, 'id' | 'uid' | 'layerId' | 
  */
 export class TablePlaceTool extends PointInputTool {
   readonly id = 'tablePlace';
-  protected readonly label = 'Tablo ekle';
+  /** Tablo ekle, or the command that made the table (Koordinat çizelgesi, docs/adr/0185 §1). */
+  protected readonly label: string;
   private readonly tableAt: TableAt;
 
-  constructor(ctx: AppContext, tableAt: TableAt) {
+  constructor(ctx: AppContext, tableAt: TableAt, label = 'Tablo ekle') {
     super(ctx);
     this.tableAt = tableAt;
+    this.label = label;
   }
 
   protected promptFor(): string {

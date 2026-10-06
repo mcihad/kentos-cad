@@ -1,6 +1,7 @@
 import { entityOutline, polygonRing, type EntityGeometry, type RingGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { layoutDimension, type DimensionLayout } from '../model/geom/dimension';
+import { faceFont, leanOf, type Face } from '../render/drawingFaces';
 import type { ViewTransform } from '../viewport/Camera';
 
 /** Shared drawing helpers for tool previews (numbers go through ctx.format). */
@@ -31,27 +32,31 @@ export function strokePath(
 }
 
 /**
- * A text to come as it will be drawn, faint (Etiketleri yazıya çevir, docs/adr/0175 §3): `height` metres high in the
- * drawing's face as text objects are drawn (italic 400), turned `rotation` degrees, its point on its alignment (the
- * middle of a line is half its height over the baseline, docs/adr/0145), over its mask in `mask` when it will have
- * one. Under a pixel high it is not drawn.
+ * A text to come as it will be drawn, faint (Etiketleri yazıya çevir, docs/adr/0175 §3; Koordinat yaz, 0185 §5):
+ * `height` metres high in its face (the drawing's family as text objects are drawn, italic 400, without one) and width
+ * factor, turned `rotation` degrees, its point on its alignment (the middle of a line is half its height over the
+ * baseline, docs/adr/0145; none: the left of the baseline), over its mask in `mask` when it will have one. Under a
+ * pixel high it is not drawn.
  */
 export function drawTextGhost(
   g: CanvasRenderingContext2D,
   view: ViewTransform,
-  t: { p: Vec2; text: string; height: number; rotation: number; align: string },
+  t: { p: Vec2; text: string; height: number; rotation: number; align?: string; face?: Face; widthFactor?: number },
   opts: { color: string; font: string; mask: string | null },
 ): void {
   const px = t.height * view.scale;
   if (!(px >= 1)) return;
   const s = view.worldToScreen(t.p);
+  const align = t.align ?? '';
+  const factor = t.widthFactor ?? 1;
   g.save();
   g.translate(s.x, s.y);
   g.rotate((-t.rotation * Math.PI) / 180);
-  g.font = `italic 400 ${px.toFixed(1)}px ${opts.font}`;
-  const w = g.measureText(t.text).width;
-  const along = /Center$/.test(t.align) ? 0.5 : /Right$/.test(t.align) ? 1 : 0;
-  const up = /^middle/.test(t.align) ? 0.5 : /^top/.test(t.align) ? 1 : /^bottom/.test(t.align) ? -0.2 : 0;
+  const lean = t.face ? leanOf(t.face) : 0;
+  g.font = faceFont(t.face ?? {}, px, opts.font, 'italic 400');
+  const w = g.measureText(t.text).width * factor;
+  const along = /Center$/.test(align) ? 0.5 : /Right$/.test(align) ? 1 : 0;
+  const up = /^middle/.test(align) ? 0.5 : /^top/.test(align) ? 1 : /^bottom/.test(align) ? -0.2 : 0;
   const x0 = -along * w;
   // From p to the baseline: down the screen by `up` of the height.
   const base = up * px;
@@ -64,7 +69,10 @@ export function drawTextGhost(
   g.fillStyle = opts.color;
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
-  g.fillText(t.text, x0, base);
+  // The width factor stretches the letters along, the slant leans them (docs/adr/0145, 0183 §2).
+  g.translate(x0, base);
+  g.transform(factor, 0, -lean, 1, 0, 0);
+  g.fillText(t.text, 0, 0);
   g.restore();
 }
 

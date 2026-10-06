@@ -84,6 +84,18 @@ export const ICONS = {
   // Etiketleri yazıya çevir (docs/adr/0175): a label's tag becoming a text.
   labelsToText: '<path d="M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z"/><circle cx="4.7" cy="6.2" r=".9" fill="currentColor" stroke="none"/><path d="M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8"/><path d="M12.3 10.8h5.2M14.9 10.8v6.7"/>',
   // Kılavuz (docs/adr/0146): the arrow at the tip, the line, the landing and the note's lines.
+  // Koordinat yaz (docs/adr/0185): the place (a grip), the slanted leader and the bar, a Y over the bar and an X under it,
+  // each with its value (the owner's choice, 6 October).
+  coordinateLabel: `${grip(3.5, 16.5)}<path d="M3.5 16.5 8.5 11.2H18.8"/><path d="M10.2 4.9l1.35 1.7 1.35-1.7M11.55 6.6v2" stroke-width="1.2"/><path d="M14.4 7.9h4" stroke-width="1.5"/><path d="M10.3 12.9l2.5 3M12.8 12.9l-2.5 3" stroke-width="1.2"/><path d="M14.4 14.6h3.4" stroke-width="1.5"/>`,
+  // Köşelere koordinat yaz: a parcel, a grip at each corner, two corners' leaders and bars with their values.
+  coordinateVertices: `<path d="M2.5 7.5h7v7h-7z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/>${grip(2.5, 7.5)}${grip(9.5, 7.5)}${grip(2.5, 14.5)}${grip(9.5, 14.5)}<path d="m9.5 7.5 2.5-2.5h6.5M9.5 14.5l2.5 2.5h6.5" stroke-width="1.3"/><path d="M13 2.9h4.6M13 14.9h4.6" stroke-width="1.4"/>`,
+  // Koordinat yaz's Yön (docs/adr/0185 §4): Otomatik, out of an object every way; the four corners, an arrow from the place.
+  labelAuto:
+    '<path d="M7.5 7.5h5v5h-5z" fill="currentColor" fill-opacity=".14" stroke-width="1.2"/><path d="m12.5 7.5 3.5-3.5M7.5 7.5 4 4M7.5 12.5 4 16M12.5 12.5l3.5 3.5" stroke-width="1.3"/><path d="M13.4 4h2.6v2.6M4 6.6V4h2.6M4 13.4V16h2.6M13.4 16H16v-2.6" stroke-width="1.2"/>',
+  labelNorthEast: `${dot(5, 15, 1.5)}<path d="M6.5 13.5 15.5 4.5"/><path d="M10.5 4.5h5v5"/>`,
+  labelNorthWest: `${dot(15, 15, 1.5)}<path d="M13.5 13.5 4.5 4.5"/><path d="M9.5 4.5h-5v5"/>`,
+  labelSouthWest: `${dot(15, 5, 1.5)}<path d="M13.5 6.5 4.5 15.5"/><path d="M4.5 10.5v5h5"/>`,
+  labelSouthEast: `${dot(5, 5, 1.5)}<path d="M6.5 6.5 15.5 15.5"/><path d="M15.5 10.5v5h-5"/>`,
   leader: '<path d="M4 16 10 9.5h2.5"/><path d="M4 16 7 14.2 5.6 12.8z" fill="currentColor" stroke="none"/><path d="M14 8.2h3.2M14 10.8h2.4" stroke-width="1.2"/>',
   // Its arrowheads (Ok's menu): filled, open, a dot, none.
   leaderArrowFilled: '<path d="M6.5 10H17"/><path d="M2.5 10 7.2 7.6v4.8z" fill="currentColor" stroke="none"/>',

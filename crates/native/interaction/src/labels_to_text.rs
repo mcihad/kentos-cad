@@ -542,8 +542,10 @@ impl Tool for LabelsToText {
                     text: t.text.clone(),
                     height: t.height,
                     rotation: t.rotation,
-                    align: t.align,
+                    align: Some(t.align),
                     mask,
+                    face: Default::default(),
+                    width_factor: 1.0,
                 })
                 .collect(),
             tag: self.hover.map(|at| Tag {

@@ -4624,6 +4624,12 @@ SCENES.styles = stylesScenes();
 // düzenle with a range chosen, Öznitelikler's rows. The desktop's are `tables::tests::screens`.
 SCENES.tables = tableScenes();
 
+// Koordinat yaz (docs/adr/0185) in a CAD project at 1:500: two parcels and parcel 7's numbered corner points; Koordinat
+// yaz's label at the cursor over a corner after one written, Köşelere koordinat yaz's labels at every corner before
+// Enter, its numbers and the coordinate schedule hanging from the cursor, the drawing with both written. The desktop's
+// are `tools_screens`' koordinat-* (apps/desktop/src/coordinate_scenes.rs).
+SCENES.coordinates = coordinateScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -4812,6 +4818,114 @@ function tableScenes() {
       id: 'table-props',
       open: async (ui) => (await drawn(ui), await ui.eval(`(() => { const k = window.kentos; const t = [...k.doc.all()].find((e) => e.kind === 'table'); k.selection.set([t.id]); })()`), await ui.move(2, 2), await ui.sleep(500)),
       close,
+    },
+  ];
+}
+
+function coordinateScenes() {
+  const PARCEL = [[0, 0], [42.5, -3.25], [47, 24], [18, 31.5], [-2, 22]];
+  const NEIGHBOUR = [[42.5, -3.25], [71, -6], [74.5, 19], [47, 24]];
+  // The parcels in metres from a point left of the view's middle, the view about them (as the desktop's scene fits it).
+  const DRAWN = SCRATCH(`
+    k.doc.settings.assign({ plotScale: 500 });
+    const o = { x: c.x - 30, y: c.y - 12 };
+    const P = ([x, y]) => ({ x: o.x + x, y: o.y + y });
+    const pa = add({ kind: 'polygon', pts: ${JSON.stringify(PARCEL)}.map(P), label: '7', attrs: { Ada: '1043', Parsel: '7' } });
+    const pb = add({ kind: 'polygon', pts: ${JSON.stringify(NEIGHBOUR)}.map(P), label: '8', attrs: { Ada: '1043', Parsel: '8' } });
+    const pts = ${JSON.stringify(PARCEL)}.map((q, i) => add({ kind: 'point', p: P(q), z: 812.4 + i * 0.35, label: String(101 + i) }));
+    window.__coords = { o, ids: [pa.id, pb.id, ...pts.map((e) => e.id)] };
+    k.view.camera.fit({ minX: o.x - 14, minY: o.y - 14, maxX: o.x + 82, maxY: o.y + 46 }, 24);
+    k.view.requestRender();`);
+  const AT = (x, y) => `(() => { const o = window.__coords.o; return [o.x + ${x}, o.y + ${y}]; })()`;
+  const ground = async (ui) => {
+    await ribbonOn(ui, { ribbonTab: 'annotate', type: 'cad' });
+    await ui.eval(CLEAR_VIEW);
+    await ui.sleep(300);
+    await ui.eval(DRAWN);
+    await ui.eval(`window.kentos.log.clear()`);
+    await ui.move(2, 2);
+    await ui.sleep(400);
+  };
+  const close = async (ui) => (await ui.escapeAll(3), await ui.eval(UNDO_ALL), await ribbonOff(ui));
+  const hover = async (ui, x, y) => hoverAt(ui, ...(await ui.eval(AT(x, y))));
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(...(await ui.eval(AT(x, y))))))), await ui.sleep(300));
+  const selectGround = (ui) => ui.eval(`window.kentos.selection.set(window.__coords.ids)`);
+  const input = (ui, key) => ui.eval(`window.kentos.tools.active.input('${key}')`);
+  /** Şablon typed into its field. */
+  const template = async (ui, text) => {
+    await input(ui, 'Ş');
+    await ui.sleep(300);
+    await ui.type(text);
+    await ui.key('Enter');
+    await ui.sleep(300);
+  };
+  /** Köşelere koordinat yaz with the template {ad}, no leader and Çizelge on: Enter writes the numbers, the schedule hangs. */
+  const numbered = async (ui) => {
+    await selectGround(ui);
+    await startTool(ui, 'coordinateVertices');
+    await template(ui, '{ad}');
+    await input(ui, 'K');
+    await input(ui, 'Ç');
+    await pressEnter(ui);
+  };
+  /** The options back as they began (the session keeps them). */
+  const reset = async (ui) => {
+    await ui.escapeAll(3);
+    await selectGround(ui);
+    await startTool(ui, 'coordinateVertices');
+    await input(ui, 'Ş');
+    await ui.sleep(300);
+    await ui.key('Backspace');
+    await ui.key('Enter');
+    await ui.sleep(200);
+    const prompt = await ui.eval(`window.kentos.tools.active.prompt.value`);
+    if (prompt.includes('Kollu (K): kapalı')) await input(ui, 'K');
+    if (prompt.includes('Çizelge (Ç): açık')) await input(ui, 'Ç');
+    await ui.escapeAll(3);
+  };
+  return [
+    {
+      id: 'coordinate-label',
+      open: async (ui) => {
+        await ground(ui);
+        await startTool(ui, 'coordinateLabel');
+        await click(ui, ...PARCEL[2]);
+        await hover(ui, ...PARCEL[3]);
+      },
+      close,
+    },
+    {
+      id: 'coordinate-vertices',
+      open: async (ui) => {
+        await ground(ui);
+        await selectGround(ui);
+        await startTool(ui, 'coordinateVertices');
+        await hover(ui, 62, 36);
+      },
+      close,
+    },
+    {
+      id: 'coordinate-schedule',
+      open: async (ui) => {
+        await ground(ui);
+        await numbered(ui);
+        await hover(ui, 56, 44);
+      },
+      close: async (ui) => (await reset(ui), await close(ui)),
+    },
+    {
+      id: 'coordinate-drawn',
+      open: async (ui) => {
+        await ground(ui);
+        await selectGround(ui);
+        await startTool(ui, 'coordinateVertices');
+        await pressEnter(ui);
+        await numbered(ui);
+        await click(ui, 56, 44);
+        await ui.eval(`window.kentos.selection.clear()`);
+        await hover(ui, -10, 40);
+      },
+      close: async (ui) => (await reset(ui), await close(ui)),
     },
   ];
 }

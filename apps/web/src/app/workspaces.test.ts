@@ -89,7 +89,7 @@ describe('project types (docs/adr/0165)', () => {
     expect(çizim.overflow).not.toContain('tool.ellipse');
     // Açıklama a panel a kind, as AutoCAD's Annotate; a pick shows what it names, seldom used or not.
     const panel = (tab: string, label: string) => tabs.find((t) => t.id === tab)!.panels.find((p) => p.label === label)!;
-    expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Kılavuz', 'Tablo', 'Tarama', 'İşaretleme', 'Bul']);
+    expect(tabs.find((t) => t.id === 'annotate')!.panels.map((p) => p.label)).toEqual(['Yazı', 'Ölçü', 'Koordinat', 'Kılavuz', 'Tablo', 'Tarama', 'İşaretleme', 'Bul']);
     // Bul holds what Yazı does not already show: Veride ara and İşareti kaldır (docs/adr/0178).
     expect(panelCommands(panel('annotate', 'Bul'))).toEqual(['data.search', 'data.unmark']);
     expect(panelCommands(panel('annotate', 'İşaretleme'))).toEqual(['tool.revcloud']);

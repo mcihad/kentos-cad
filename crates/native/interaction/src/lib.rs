@@ -113,6 +113,7 @@ pub mod clipboard;
 pub mod construction;
 pub mod continuation;
 pub mod coordinate;
+pub mod coordinate_labels;
 pub mod corner;
 pub mod data_search;
 pub mod dimension;

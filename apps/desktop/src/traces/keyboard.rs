@@ -135,6 +135,11 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         (Layout::Us, '#') => Some(shifted("3", Code::Digit3)),
         (Layout::Us, '<') => Some(plain("<", Code::IntlBackslash)),
         (Layout::Us, '/') => Some(plain("/", Code::Slash)),
+        // Koordinat yaz's template (docs/adr/0185 §3): {Y}|{X}, Z={Z}.
+        (Layout::Us, '{') => Some(shifted("[", Code::BracketLeft)),
+        (Layout::Us, '}') => Some(shifted("]", Code::BracketRight)),
+        (Layout::Us, '|') => Some(shifted("\\", Code::Backslash)),
+        (Layout::Us, '=') => Some(plain("=", Code::Equal)),
         // Turkish Q: + is Shift+4, − sits right of *, @ is AltGr+Q (Ctrl+Alt on Windows).
         (Layout::TurkishQ, '.') => Some(plain(".", Code::Slash)),
         (Layout::TurkishQ, ',') => Some(plain(",", Code::Backslash)),
@@ -153,6 +158,20 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         (Layout::TurkishQ, '<') => Some(plain("<", Code::IntlBackslash)),
         // Turkish Q: / is Shift+7.
         (Layout::TurkishQ, '/') => Some(shifted("7", Code::Digit7)),
+        // Turkish Q: { is AltGr+7, } AltGr+0, | AltGr and the key right of *, = Shift+0.
+        (Layout::TurkishQ, '{') => Some(Stroke {
+            modifiers: Modifiers::CTRL | Modifiers::ALT,
+            ..plain("7", Code::Digit7)
+        }),
+        (Layout::TurkishQ, '}') => Some(Stroke {
+            modifiers: Modifiers::CTRL | Modifiers::ALT,
+            ..plain("0", Code::Digit0)
+        }),
+        (Layout::TurkishQ, '|') => Some(Stroke {
+            modifiers: Modifiers::CTRL | Modifiers::ALT,
+            ..plain("-", Code::Equal)
+        }),
+        (Layout::TurkishQ, '=') => Some(shifted("0", Code::Digit0)),
         _ => None,
     };
     if let Some(stroke) = symbol {

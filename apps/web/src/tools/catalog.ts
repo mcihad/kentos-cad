@@ -22,6 +22,7 @@ import { AlignTool, PolarArrayTool } from './arrangeTools';
 import { LengthenTool } from './lengthenTool';
 import { CleanupTool } from './cleanupTool';
 import { LabelsToTextTool } from './labelsToTextTool';
+import { CoordinateLabelTool, CoordinateVerticesTool } from './coordinateLabelTool';
 import { ParagraphTextTool } from './paragraphTool';
 import { TopologyTool } from './topologyTool';
 import { PolygonizeTool } from './polygonizeTool';
@@ -115,6 +116,36 @@ const defs: Def[] = [
   { id: 'mtext', label: 'Çok satırlı yazı', icon: 'mtext', group: 'annotate', aliases: ['MTEXT', 'MT', 'COKSATIRLIYAZI', 'PARAGRAF'], description: 'Kutuya sarılan, satır aralıklı, kalın, eğik, altı çizili, üst ve alt simgeli, renkli harfli yazı. Kutu iki köşeyle verilir; yazı açılan düzenleyiciye yazılır, çizimde yazıldığı gibi görünür.', steps: ['Yazı kutusunun ilk köşesine, sonra karşı köşesine tıklayın: kutunun genişliği satırların sarıldığı genişliktir (aynı noktaya iki tık: kutusuz).', 'Yazıyı açılan düzenleyiciye yazın: Enter yeni satır; Kalın, Eğik, Altı çizili, Üst ve Alt simge seçili harflere (seçim yoksa imlecin sözcüğüne), Renk ve Simge menüden. Ctrl+Enter ya da Tamam ekler, Esc vazgeçer.', '“Yükseklik” ve “Açı” Yazı ile ortaktır; “Satır aralığı” 0,25 ile 4 arası. Var olan çok satırlı yazıya çift tıklayarak düzenleyin.'], productCommand: entitiesCreate.id, create: (c) => new ParagraphTextTool(c) },
   { id: 'leader', primary: true, label: 'Kılavuz', icon: 'leader', group: 'annotate', aliases: ['KILAVUZ', 'LEADER', 'LE', 'MLEADER', 'MLD'], description: 'Oklu not: okun ucundan köşelerden geçen çizgi, kol ve kolun ucunda not. Ok başı, not yüksekliği ve zemin seçilir.', steps: ['Okun ucuna, sonra köşelere tıklayın.', 'Enter ya da sağ tık köşeleri bitirir: notu kolun ucunda açılan kutuya yazıp Enter’a basın. Boş kutuda Enter notsuz kılavuz ekler, Esc köşelere döner.', '“Ok” ok başını (dolu, açık, nokta, yok), “Yükseklik” notun kâğıt mm yüksekliğini (Yazı ile ortak), “Zemin” notun altını doldurmayı seçer; “Geri” son köşeyi siler.'], productCommand: entitiesCreate.id, create: (c) => new LeaderTool(c) },
   { id: 'placeTextFile', label: 'Metin dosyası yerleştir', icon: 'textFile', group: 'annotate', aliases: ['METINDOSYASI', 'PLACETEXTFILE', 'MTD'], description: 'Bir UTF-8 metin dosyasının her satırını, Yazı aracının seçenekleriyle, alt alta yazı olarak yerleştirir; tek adımda.', steps: ['Metin dosyasını seçin (en çok 1 MB, 10 000 satır).', 'İlk satırın başlayacağı yere tıklayın: satırlar yazı yüksekliğinin 1,5 katı aralıkla alt alta dizilir; boş satır yerini tutar.'], productCommand: entitiesCreate.id, create: (c) => new PlaceTextFileTool(c) },
+  {
+    id: 'coordinateLabel',
+    label: 'Koordinat yaz',
+    icon: 'coordinateLabel',
+    group: 'annotate',
+    aliases: ['KOORDINATYAZ', 'KOORYAZ', 'COORDLABEL'],
+    description: 'Tıklanan noktaya koordinatını yazar: noktadan eğik kol ve yatay çizgi, çizginin üstünde doğu, altında kuzey (Netcad’in Koordinat Yaz’ı); şablon, basamak, yön ve yükseklik seçilir.',
+    steps: [
+      'Yazılacak noktaya tıklayın (kenet çalışır) ya da Y,X veya #ad yazın: yazı imleçle birlikte görünür, her nokta kendi adımında yazılır.',
+      'Şablon (Ş) satırları | ile ayırır; {Y}, {X}, {Z} ve {ad} yerine değerler yazılır, değeri olmayan satır yazılmaz. Kollu (K), Yön (O), Basamak (B) ve Yükseklik (Y) hatırlanır.',
+      'Enter ya da Esc bitirir.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new CoordinateLabelTool(c),
+  },
+  {
+    id: 'coordinateVertices',
+    label: 'Köşelere koordinat yaz',
+    icon: 'coordinateVertices',
+    group: 'annotate',
+    aliases: ['KOSEKOORDINAT', 'KOORDINATKOSE'],
+    description: 'Seçili noktaların, çizgilerin ve alanların bütün köşelerine koordinatlarını yazar, ortak köşeye bir kez; istenirse köşelerin koordinat çizelgesini tablo olarak yerleştirir, adlar yazılardakilerdir.',
+    steps: [
+      'Noktaları, çizgileri, çoklu çizgileri ya da alanları seçin; sağ tık ya da Enter.',
+      'Yazılar yerlerinde soluk görünür; seçenekler Koordinat yaz’ınkilerdir, Çizelge (Ç) açıkken yazılardan sonra koordinat çizelgesi imleçle gelir.',
+      'Enter, Uygula ya da sağ tık: yazılar tek adımda yazılır.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new CoordinateVerticesTool(c),
+  },
   { id: 'labelsToText', label: 'Etiketleri yazıya çevir', icon: 'labelsToText', group: 'annotate', aliases: ['ETIKETYAZI', 'ETIKETCEVIR', 'LABELCONVERT'], description: 'Katmanların etiketlerini (parsel numarası, nokta adı, yol adı) seçilen ölçekte, paftanın yazdığı gibi yazı nesnesine çevirir: boyları, yerleri ve dönüşleriyle; tek adımda.', steps: ['Seçim yoksa görünen katmanlardaki bütün etiketler, seçim varsa seçili nesnelerinki çevrilir; etiketin stili katmanınkidir.', 'Yazılar yerlerinde soluk görünür. Ölçeği yazın (1:500 ya da 500); Örtüşenler de (R), Zemin (Z) ve Katman (K) seçenekleri açılıp kapanır.', 'Enter, Uygula ya da sağ tık: yazılar yazı katmanına (yoksa açılır) ya da etkin katmana tek adımda yazılır ve seçilir.'], productCommand: entitiesCreate.id, create: (c) => new LabelsToTextTool(c) },
   {
     id: 'dimension',

@@ -57,6 +57,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   labels: 'Etiketleri yazıya çevir',
   // Tablo ekle (docs/adr/0184 §6).
   table: 'Tablo',
+  // Koordinat yaz (docs/adr/0185 §1).
+  coordinates: 'Koordinat yaz',
 };
 
 /**

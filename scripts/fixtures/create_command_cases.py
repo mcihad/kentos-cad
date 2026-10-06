@@ -1036,6 +1036,27 @@ cases.append({
 })
 
 
+# ── Koordinat yaz (docs/adr/0185 §1) ────────────────────────────────────
+
+coordinate_labels = [
+    O({"kind": "polyline", "pts": [P(487000, 4420000), P(487003, 4420003), P(487010.5, 4420003)]}),
+    O({"kind": "text", "p": P(487003.5, 4420003.4), "text": "487000.000", "height": 1, "rotation": 0}),
+    O({"kind": "text", "p": P(487003.5, 4420002.6), "text": "4420000.000", "height": 1, "rotation": 0, "align": "topLeft"}),
+    O({"kind": "text", "p": P(486996.5, 4420003.4), "text": "101", "height": 1, "rotation": 0, "align": "baselineRight", "textStyle": ADA_STYLE}),
+]
+cases.append({
+    "name": "Koordinat yaz: kolu ve satırları tek adımda yazılır, adı “Koordinat yaz” (ADR 0185 §1)",
+    "setup": S_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "coordinates", "objects": coordinate_labels}, "result": done([3, 4, 5, 6]),
+         "expect": {"ids": IDS + [3, 4, 5, 6], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(coordinate_labels)},
+                    "uids": {"3": "new", "4": "new", "5": "new", "6": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Koordinat yaz", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Koordinat yaz", "expect": {"ids": IDS + [3, 4, 5, 6]}},
+    ],
+})
+
+
 # ── Kılavuz (docs/adr/0146) ─────────────────────────────────────────────
 
 LEADER = {"kind": "leader", "pts": [P(487060, 4420110), P(487066, 4420115)], "text": "Mevcut bina", "height": 2.5, "rotation": 0}

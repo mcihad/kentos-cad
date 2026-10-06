@@ -718,7 +718,8 @@ impl Viewport {
             | ViewChange::PickedObjects(_)
             | ViewChange::DefineBlock(_)
             | ViewChange::AttributeValues(_)
-            | ViewChange::OpenTextFile => {}
+            | ViewChange::OpenTextFile
+            | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }

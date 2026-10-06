@@ -131,6 +131,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::Labels) => "Etiketleri yazıya çevir",
         // Tablo ekle (docs/adr/0184 §6).
         Some(CreateOperation::Table) => "Tablo",
+        // Koordinat yaz (docs/adr/0185 §1).
+        Some(CreateOperation::Coordinates) => "Koordinat yaz",
     }
 }
 

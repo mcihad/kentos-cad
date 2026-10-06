@@ -29,3 +29,19 @@ pub fn source_words(t: &TableEntity) -> String {
         }
     }
 }
+
+impl crate::app::App {
+    /// A table a tool made, placed from the cursor by Tablo ekle's tool under
+    /// the tool's name (Köşelere koordinat yaz's Çizelge, docs/adr/0185 §1).
+    pub(crate) fn place_table(
+        &mut self,
+        table: kentos_contracts::EntityGeometry,
+        label: &'static str,
+    ) {
+        self.session.run(Box::new(
+            kentos_interaction::table_place::TablePlace::named(table, label),
+        ));
+        self.say(kentos_interaction::Level::Command, label);
+        self.with_tool(|s, cx| s.activate(cx));
+    }
+}
