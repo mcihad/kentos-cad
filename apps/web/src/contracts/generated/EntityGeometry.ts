@@ -9,6 +9,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { HatchAssoc } from "./HatchAssoc";
 import type { HatchPattern } from "./HatchPattern";
+import type { ImageFields } from "./ImageFields";
 import type { LeaderArrow } from "./LeaderArrow";
 import type { PointPart } from "./PointPart";
 import type { RingGeometry } from "./RingGeometry";
@@ -215,4 +216,4 @@ font?: DrawingFont, bold?: boolean, italic?: boolean,
  * How far its letters lean, degrees, positive with their tops to the
  * right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence).
  */
-oblique?: number, };
+oblique?: number, } | { "kind": "image" } & ImageFields;

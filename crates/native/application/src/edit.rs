@@ -182,6 +182,7 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Table => "Tablo",
         EditOperation::TableUpdate => "Tabloyu güncelle",
         EditOperation::EdgeShift => "Paralel kaydır",
+        EditOperation::ImageClip => "Resmi kırp",
     }
 }
 
@@ -819,6 +820,14 @@ pub(crate) fn check_geometry(
             )));
         }
     }
+    // A picture's size, its one source, its clip and opacity (docs/adr/0192 §6); a number that
+    // is not finite is `not_finite`'s.
+    if let EntityGeometry::Image(image) = g
+        && image_finite(image)
+        && let Some(words) = image.problem()
+    {
+        return Err(Stop::Failed(error(codes::INVALID_IMAGE, words, at(""))));
+    }
     // A text's face and a dimension's look (docs/adr/0183 §9).
     let style = match g {
         EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => face.problem(),
@@ -881,14 +890,52 @@ pub(crate) fn check_styles<'a>(
     Ok(())
 }
 
+/// Whether every number of a picture is finite.
+fn image_finite(i: &kentos_contracts::ImageFields) -> bool {
+    [i.p.x, i.p.y, i.width, i.height, i.rotation]
+        .iter()
+        .chain(i.opacity.iter())
+        .all(|v| v.is_finite())
+        && i.clip
+            .iter()
+            .flatten()
+            .all(|q| q.x.is_finite() && q.y.is_finite())
+}
+
+/// Whether the project's library has the PNG or JPEG image `id` (docs/adr/0192 §2).
+pub fn has_picture(doc: &Document, id: &str) -> bool {
+    doc.styles().items.iter().any(|it| {
+        it.get("kind").and_then(|k| k.as_str()) == Some("asset")
+            && it.get("id").and_then(|k| k.as_str()) == Some(id)
+            && matches!(
+                it.get("format").and_then(|k| k.as_str()),
+                Some("png" | "jpeg")
+            )
+    })
+}
+
 /// Every insert among the geometries names a block of the drawing, in
-/// order (docs/adr/0144): `unknown_block` at `{list}[i].geometry.block`.
+/// order (docs/adr/0144): `unknown_block` at `{list}[i].geometry.block`;
+/// every embedded picture an image of the project's library (docs/adr/0192
+/// §6): `unknown_asset` at `{list}[i].geometry.asset`.
 pub(crate) fn check_blocks<'a>(
     doc: &Document,
     geometries: impl Iterator<Item = (usize, &'a EntityGeometry)>,
     list: &str,
 ) -> Result<(), Stop> {
     for (i, g) in geometries {
+        if let EntityGeometry::Image(image) = g
+            && let Some(asset) = &image.asset
+            && !has_picture(doc, asset)
+        {
+            return Err(Stop::Failed(error(
+                codes::UNKNOWN_ASSET,
+                format!(
+                    "“{asset}” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin."
+                ),
+                Some(format!("{list}[{i}].geometry.asset")),
+            )));
+        }
         if let EntityGeometry::Insert { block, .. } = g
             && doc.block(*block).is_none()
         {
@@ -1133,5 +1180,6 @@ fn finite(g: &EntityGeometry) -> bool {
             rotation,
             ..
         } => pts(p) && height.is_finite() && rotation.is_finite(),
+        EntityGeometry::Image(image) => image_finite(image),
     }
 }

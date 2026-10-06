@@ -4668,6 +4668,15 @@ SCENES.centerline = centerlineScenes();
 // (apps/desktop/src/edge_shift_scenes.rs).
 SCENES.edgeshift = edgeShiftScenes();
 
+// Resim nesnesi (docs/adr/0192) in a CAD project at 1:500 on the shared traces' drawing (fixtures/interaction/v1/
+// images.kcad): an embedded site picture and a parcel. Resim ekle with its frame following the cursor (the picker gives
+// the traces' logo.png); the logo placed 16 m wide and selected, Öznitelikler's rows; Resmi kırp with its rectangle
+// following the cursor; the site clipped to its middle, a third see-through, selected. The desktop's are
+// `tools_screens`' resim-* (apps/desktop/src/image_scenes.rs).
+const IMAGES = readFileSync(new URL('../../../../fixtures/interaction/v1/images.kcad', import.meta.url), 'utf8');
+const LOGO = [...readFileSync(new URL('../../../../fixtures/interaction/v1/logo.png', import.meta.url))];
+SCENES.images = imageScenes();
+
 // Yazı ve ölçü stilleri (docs/adr/0183) in a CAD project at 1:500: a parcel drawn with the project's styles (its number
 // bold in Arimo, the road's name in Barlow italic and slanted, a note in Courier Prime, its sides measured in Mimari
 // (arrows, cm), Kadastro (ticks, the value centred, “L=”), Noktalı (dots) and Açık (open arrows), one dimension in
@@ -5110,6 +5119,89 @@ function edgeShiftScenes() {
     { id: 'edgeshift', open: shown, close },
     { id: 'edgeshift-area', open: area, close },
     { id: 'edgeshift-written', open: written, close },
+  ];
+}
+
+function imageScenes() {
+  const o = { x: 487000, y: 4420000 };
+  const hover = async (ui, x, y) => hoverAt(ui, o.x + x, o.y + y);
+  const click = async (ui, x, y) => (await ui.clickAt(...(await ui.eval(PAGE_AT(o.x + x, o.y + y)))), await ui.sleep(300));
+  const input = async (ui, list) => {
+    for (const t of list) await ui.eval(`window.kentos.tools.active.input(${JSON.stringify(t)})`);
+  };
+  /** The traces' drawing open (a CAD project), the view round the site and the parcel; the picker gives the logo. */
+  const opened = async (ui, tab, props = false) => {
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      k.files.ask = async () => 'drop';
+      if (!(await k.files.load(${JSON.stringify(IMAGES)}, null))) throw new Error('images.kcad did not load');
+      k.selection.clear();
+      k.files.picker.open = async () => ({ name: 'logo.png', async getFile() { return new Blob([new Uint8Array(${JSON.stringify(LOGO)})]); } });
+    })()`);
+    await ribbonOn(ui, { ribbonTab: tab, ...(props ? { layersFraction: 0.15 } : {}) });
+    await ui.eval(`(() => { const k = window.kentos; k.view.camera.fit({ minX: ${o.x - 26}, minY: ${o.y - 20}, maxX: ${o.x + 46}, maxY: ${o.y + 26} }, 24); k.view.requestRender(); k.log.clear(); })()`);
+    await ui.move(2, 2);
+    await ui.sleep(900);
+  };
+  const fold = async (ui, title, open) => {
+    const head = `[...document.querySelectorAll('.panel--props .props__section')].find((b) => b.textContent.includes(${JSON.stringify('Genel')}))`;
+    if (await ui.eval(`(() => { const b = ${head}; return !!b && (b.getAttribute('aria-expanded') === 'true') !== ${open}; })()`)) await ui.clickText('.panel--props .props__section', title);
+  };
+  const inserting = async (ui, props = false) => {
+    await opened(ui, 'insert', props);
+    await startTool(ui, 'imageInsert');
+    await ui.waitFor(`window.kentos.tools.active.prompt.value.includes('logo.png')`);
+  };
+  const insert = async (ui) => {
+    await inserting(ui);
+    await click(ui, 24, 8);
+    await hover(ui, 41, 18);
+  };
+  const inserted = async (ui) => {
+    await inserting(ui, true);
+    await click(ui, 24, 8);
+    await input(ui, ['16']);
+    await ui.eval(`(() => { const k = window.kentos; const ids = [...k.doc.all()].filter((e) => e.kind === 'image').map((e) => e.id); k.selection.set([ids[ids.length - 1]]); })()`);
+    await ui.sleep(400);
+    await fold(ui, 'Genel', false);
+    await hover(ui, 44, -14);
+  };
+  const clip = async (ui) => {
+    await opened(ui, 'insert');
+    await startTool(ui, 'imageClip');
+    await click(ui, 0, -15);
+    await click(ui, -12, -6);
+    await hover(ui, 10, 10);
+  };
+  const clipped = async (ui) => {
+    await opened(ui, 'insert', true);
+    await startTool(ui, 'imageClip');
+    await click(ui, 0, -15);
+    await click(ui, -12, -6);
+    await click(ui, 10, 10);
+    await ui.escapeAll(2);
+    await ui.eval(`(async () => {
+      const k = window.kentos;
+      const { setGeometry } = await import('/src/ui/properties/write.ts');
+      const site = [...k.doc.all()].find((e) => e.kind === 'image');
+      setGeometry(k, site, { opacity: 0.7 });
+      k.selection.set([site.id]);
+    })()`);
+    await ui.sleep(400);
+    await fold(ui, 'Genel', false);
+    await hover(ui, 44, -14);
+  };
+  const close = async (ui) => {
+    await fold(ui, 'Genel', true);
+    await ui.escapeAll(3);
+    await ui.eval(UNDO_ALL);
+    await ribbonOff(ui);
+  };
+  return [
+    { id: 'image-insert', open: insert, close },
+    { id: 'image-inserted', open: inserted, close },
+    { id: 'image-clip', open: clip, close },
+    { id: 'image-clipped', open: clipped, close },
   ];
 }
 

@@ -143,6 +143,12 @@ pub const INVALID_DIMENSION: &str = "invalid_dimension";
 pub const INVALID_TABLE: &str = "invalid_table";
 /// A table among the objects a block is defined from (docs/adr/0184 §1).
 pub const TABLE_IN_BLOCK: &str = "table_in_block";
+/// A picture's size, source, clip or opacity out of its rules (docs/adr/0192 §6).
+pub const INVALID_IMAGE: &str = "invalid_image";
+/// A picture's asset the project's library does not have as a PNG or JPEG image (docs/adr/0192 §6).
+pub const UNKNOWN_ASSET: &str = "unknown_asset";
+/// A picture among the objects a block is defined from (docs/adr/0192 §1).
+pub const IMAGE_IN_BLOCK: &str = "image_in_block";
 /// Tablo's edit (`table`, `tableUpdate`) changing an object that is not a
 /// table, or into one that is not (docs/adr/0184 §6).
 pub const NOT_A_TABLE: &str = "not_a_table";

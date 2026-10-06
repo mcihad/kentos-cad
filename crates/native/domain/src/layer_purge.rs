@@ -11,7 +11,7 @@
 //! of a staying definition places; a symbol an object draws with, a staying
 //! layer's style names (`ref`) or a template of any library names (`symbol`);
 //! an asset a staying symbol of any library or a staying layer's style draws
-//! with (`asset`). What is found is the largest set nothing staying uses;
+//! with (`asset`), or a picture of the drawing shows (docs/adr/0192 §2). What is found is the largest set nothing staying uses;
 //! removing the checked ones takes the same rule over them alone.
 
 use std::collections::HashSet;
@@ -20,12 +20,14 @@ use kentos_contracts::{LayerNode, LayerNodeType};
 use serde_json::Value;
 
 /// An object as the rule reads it: its layer, the library symbol it draws
-/// with, the definition it places (its id as text).
+/// with, the definition it places (its id as text), the library image a
+/// picture shows (docs/adr/0192 §2).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PurgeObject {
     pub layer: String,
     pub symbol: Option<String>,
     pub block: Option<String>,
+    pub asset: Option<String>,
 }
 
 /// A block definition and its objects.
@@ -281,6 +283,9 @@ fn used_by_staying(src: &PurgeSource<'_>, going: &HashSet<Key>) -> HashSet<Key> 
             }
             if let Some(b) = &o.block {
                 used.insert(key(PurgeKind::Blocks, b));
+            }
+            if let Some(a) = &o.asset {
+                used.insert(key(PurgeKind::Assets, a));
             }
         }
     }

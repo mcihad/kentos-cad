@@ -91,6 +91,10 @@ export const ICONS = {
   textSymbol: '<path d="M3.8 16.5h3.9v-1.7a6 6 0 1 1 4.6 0v1.7h3.9"/>',
   // Metin dosyası yerleştir (docs/adr/0145 §6): a page with its corner turned, a T on it.
   textFile: '<path d="M5 2.5h7l3 3v12H5z"/><path d="M12 2.5v3h3"/><path d="M7.5 9.5h5M10 9.5v5"/>',
+  // Resim ekle (docs/adr/0192 §5): a picture, its mountain and sun, the two clicks at its lower corners.
+  imageInsert: `<rect x="3" y="4" width="14" height="11" rx=".8"/><path d="m5.6 12.6 3-3.4 2.3 2.2 1.6-1.6 2.1 2.8" stroke-width="1.2"/>${dot(13.2, 7.2, 1.1)}${grip(3, 15)}${grip(17, 15)}`,
+  // Resmi kırp: the crop marks around a picture's mountain.
+  imageClip: '<path d="M5.5 2.5v12h12"/><path d="M2.5 5.5h12v12"/><path d="m7.4 12 2.1-2.5 1.5 1.5 1.1-1.1 1.4 2.1" stroke-width="1.1"/>',
   // Etiketleri yazıya çevir (docs/adr/0175): a label's tag becoming a text.
   labelsToText: '<path d="M2.5 3.5h6.4l2.6 2.7-2.6 2.7H2.5z"/><circle cx="4.7" cy="6.2" r=".9" fill="currentColor" stroke="none"/><path d="M6 10.5v4h4.3m-1.8-1.8 1.8 1.8-1.8 1.8"/><path d="M12.3 10.8h5.2M14.9 10.8v6.7"/>',
   // Kılavuz (docs/adr/0146): the arrow at the tip, the line, the landing and the note's lines.

@@ -662,6 +662,22 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::Insert {
             p, scale, rotation, ..
         } => pt(p) && scale.is_finite() && rotation.is_finite(),
+        Shape::Image {
+            p,
+            width,
+            height,
+            rotation,
+            clip,
+            opacity,
+            ..
+        } => {
+            pt(p)
+                && width.is_finite()
+                && height.is_finite()
+                && rotation.is_finite()
+                && clip.as_deref().is_none_or(pts)
+                && opacity.is_none_or(f64::is_finite)
+        }
         Shape::Line { a, b } => pt(a) && pt(b),
         Shape::Polyline {
             pts: p,

@@ -76,6 +76,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Insert(_) => "Blok",
         Entity::Leader(_) => "Kılavuz",
         Entity::Table(_) => "Tablo",
+        Entity::Image(_) => "Resim",
     }
 }
 
@@ -169,6 +170,8 @@ fn finite(e: &Entity) -> bool {
         }
         Entity::Insert(i) => ok(i.p) && nums_ok(&[i.scale, i.rotation]),
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
+        // Never written (docs/adr/0192, Kapsam dışı): said in the report.
+        Entity::Image(_) => true,
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -526,6 +529,15 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // DXF's IMAGE needs its file beside the drawing (docs/adr/0192, Kapsam dışı).
+            Entity::Image(_) => {
+                self.report.skip(
+                    "Resim",
+                    "DXF'e resim yazılmaz: DXF resmi ayrı bir dosyadan okur (IMAGE, IMAGEDEF); resmi ayrıca verin",
+                    0,
+                );
+                false
+            }
         };
         if written && !self.defining {
             self.report.count(e.kind());

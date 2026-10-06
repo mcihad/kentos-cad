@@ -1486,6 +1486,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1902,6 +1916,121 @@
               "rotation",
               "scale",
               "convention"
+            ],
+            "type": "object"
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
             ],
             "type": "object"
           },
@@ -7200,6 +7329,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -7554,6 +7697,121 @@
               "rotation",
               "scale",
               "convention"
+            ],
+            "type": "object"
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
             ],
             "type": "object"
           },
@@ -16130,6 +16388,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -16384,6 +16656,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -18752,6 +19139,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -19006,6 +19407,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -21335,6 +21851,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -21589,6 +22119,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -24053,6 +24698,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -24307,6 +24966,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -26621,6 +27395,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -26875,6 +27663,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -29199,6 +30102,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -29453,6 +30370,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -32013,6 +33045,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -32267,6 +33313,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -34008,6 +35169,11 @@
                 "const": "edgeShift",
                 "description": "Paralel kaydır (docs/adr/0191): an area's or a polyline's straight\nedge moved parallel to itself, its neighbours lengthened or shortened;\nthe object updated in place, each vertex keeping its elevation.",
                 "type": "string"
+              },
+              {
+                "const": "imageClip",
+                "description": "Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or\ntaken away, the picture updated in place.",
+                "type": "string"
               }
             ]
           },
@@ -35072,6 +36238,20 @@
                   "cells"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageFields",
+                "description": "A picture (docs/adr/0192 §1): its lower left corner `p`, its width\nand height (metres, over 0), turned by `rotation` (radians,\ncounter-clockwise) about `p` and mirrored in its own x axis when\n`mirror`; its bytes the project library's asset `asset` or the file\n`file`, exactly one; clipped to `clip` in its own fractions; drawn at\n`opacity`.",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -35236,6 +36416,73 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageFields": {
+            "description": "What places and shows a picture: the image object's own fields, and its\ngeometry in the commands (`EntityGeometry::Image`).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LeaderArrow": {
             "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
@@ -36549,6 +37796,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -36803,6 +38064,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -39249,6 +40625,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -39503,6 +40893,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -41021,6 +42526,11 @@
                 "const": "centerline",
                 "description": "Orta hat (docs/adr/0190): the axis between two sides, a polyline.",
                 "type": "string"
+              },
+              {
+                "const": "image",
+                "description": "Resim ekle (docs/adr/0192): a picture placed.",
+                "type": "string"
               }
             ]
           },
@@ -42038,6 +43548,20 @@
                   "cells"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageFields",
+                "description": "A picture (docs/adr/0192 §1): its lower left corner `p`, its width\nand height (metres, over 0), turned by `rotation` (radians,\ncounter-clockwise) about `p` and mirrored in its own x axis when\n`mirror`; its bytes the project library's asset `asset` or the file\n`file`, exactly one; clipped to `clip` in its own fractions; drawn at\n`opacity`.",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -42202,6 +43726,73 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageFields": {
+            "description": "What places and shows a picture: the image object's own fields, and its\ngeometry in the commands (`EntityGeometry::Image`).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "LeaderArrow": {
             "description": "A leader's arrowhead other than the filled arrow, which is no value but\nthe field's absence: a leader has one spelling (docs/adr/0146 §1).",
@@ -43590,6 +45181,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -43844,6 +45449,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -46300,6 +48020,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -46554,6 +48288,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -48997,6 +50846,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -49251,6 +51114,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",
@@ -51858,6 +53836,20 @@
                   "kind"
                 ],
                 "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ImageEntity",
+                "description": "A picture (docs/adr/0192).",
+                "properties": {
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -52112,6 +54104,121 @@
                 "type": "string"
               }
             ]
+          },
+          "ImageEntity": {
+            "description": "A picture (docs/adr/0192 §1).",
+            "properties": {
+              "asset": {
+                "description": "The project library's PNG or JPEG asset its bytes are (embedded);\nexactly one of `asset` and `file` is given.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "clip": {
+                "description": "The part shown, in the picture's own fractions (0,0 its lower left,\n1,1 its upper right): at least three corners inside the unit square;\nabsent: the whole picture.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it shows (linked): absolute, or relative to the drawing's folder.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Along its left edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "lineWeight": {
+                "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+                "format": "double",
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "mirror": {
+                "description": "The picture mirrored in its own x axis (Aynala), before the turn.",
+                "type": "boolean"
+              },
+              "opacity": {
+                "description": "0.1 to 1; absent: opaque.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2",
+                "description": "Its lower left corner."
+              },
+              "rotation": {
+                "description": "Radians, counter-clockwise from east, about `p`.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "Along its bottom edge, metres, over 0.",
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "width",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
           },
           "InsertEntity": {
             "description": "A block placed in the drawing (docs/adr/0144): its definition drawn\nmoved from the definition's base point to `p`, mirrored in the\ndefinition's x axis when `mirror`, then scaled and turned about `p`. The\ntransform is a similarity: shapes keep their kind. The insert's own\nattributes carry the values of the definition's attribute definitions.",

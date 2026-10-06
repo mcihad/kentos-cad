@@ -1,6 +1,7 @@
 import { ReadableTool, TextTool } from './annotateTools';
 import { CenterlineTool } from './centerlineTool';
 import { EdgeShiftTool } from './edgeShiftTool';
+import { ImageClipTool, ImageInsertTool } from './imageTools';
 import { PlaceTextFileTool } from './textFileTool';
 import { LeaderTool } from './leaderTool';
 import { BlockDefineTool, BlockInsertTool } from './blockTools';
@@ -249,8 +250,40 @@ const defs: Def[] = [
     create: (c) => new HatchSelectedTool(c),
   },
   // Blok (docs/adr/0144)
-  { id: 'blockDefine', label: 'Blok oluştur', icon: 'blockDefine', group: 'block', aliases: ['BLOCK', 'BLOKOLUSTUR', 'BLOKTANIMLA'], description: 'Seçili nesnelerden, taban noktası ve adıyla bir blok tanımlar; istenirse nesnelerin yerine bloğun bir yerleştirmesini koyar.', steps: ['Nesnelere tıklayın ya da pencereyle seçin, sonra sağ tıklayın. Önceden seçiliyse bu adım atlanır.', 'Taban noktasına tıklayın ya da Y,X yazın: bloğun yerleştirmeleri bu noktadan konur.', 'Açılan pencerede adı yazın; “Seçilenleri blokla değiştir” nesnelerin yerine bloğu koyar.'], productCommand: blocksDefine.id, create: (c) => new BlockDefineTool(c) },
-  { id: 'blockInsert', primary: true, label: 'Blok ekle', icon: 'blockInsert', group: 'block', aliases: ['INSERT', 'BLOKEKLE', 'SEMBOLEKLE'], description: 'Çizimde tanımlı bir bloğu tıklanan ya da yazılan noktalara yerleştirir; ölçeği, dönüşü ve aynalanması seçilir.', steps: ['Yerleştirme noktasına tıklayın ya da Y,X yazın: her tık bir yerleştirmedir.', '“Blok” sıradaki bloğa geçer; “Ölçek” ve “Dönüş” (derece) yazılır, “Aynala” bloğu x ekseninde aynalar.', 'Sağ tık ya da Enter bitirir.'], productCommand: entitiesCreate.id, create: (c) => new BlockInsertTool(c) },
+  { id: 'blockDefine', label: 'Blok oluştur', icon: 'blockDefine', group: 'block', section: 'block', aliases: ['BLOCK', 'BLOKOLUSTUR', 'BLOKTANIMLA'], description: 'Seçili nesnelerden, taban noktası ve adıyla bir blok tanımlar; istenirse nesnelerin yerine bloğun bir yerleştirmesini koyar.', steps: ['Nesnelere tıklayın ya da pencereyle seçin, sonra sağ tıklayın. Önceden seçiliyse bu adım atlanır.', 'Taban noktasına tıklayın ya da Y,X yazın: bloğun yerleştirmeleri bu noktadan konur.', 'Açılan pencerede adı yazın; “Seçilenleri blokla değiştir” nesnelerin yerine bloğu koyar.'], productCommand: blocksDefine.id, create: (c) => new BlockDefineTool(c) },
+  { id: 'blockInsert', primary: true, label: 'Blok ekle', icon: 'blockInsert', group: 'block', section: 'block', aliases: ['INSERT', 'BLOKEKLE', 'SEMBOLEKLE'], description: 'Çizimde tanımlı bir bloğu tıklanan ya da yazılan noktalara yerleştirir; ölçeği, dönüşü ve aynalanması seçilir.', steps: ['Yerleştirme noktasına tıklayın ya da Y,X yazın: her tık bir yerleştirmedir.', '“Blok” sıradaki bloğa geçer; “Ölçek” ve “Dönüş” (derece) yazılır, “Aynala” bloğu x ekseninde aynalar.', 'Sağ tık ya da Enter bitirir.'], productCommand: entitiesCreate.id, create: (c) => new BlockInsertTool(c) },
+  {
+    id: 'imageInsert',
+    label: 'Resim ekle',
+    icon: 'imageInsert',
+    group: 'block',
+    section: 'image',
+    aliases: ['RESIMEKLE', 'IMAGEATTACH', 'IMAGE', 'RESIM'],
+    description: 'Bir PNG ya da JPEG resmi çizime yerleştirir: sol alt köşesi ve ikinci noktası genişliğini ve dönüşünü verir, yüksekliği resmin oranındandır. Resim projenin kitaplığında saklanır.',
+    steps: [
+      'Resim dosyasını seçin (PNG ya da JPEG, en çok 32 MB).',
+      'Resmin sol alt köşesine tıklayın, sonra ikinci noktaya: aradaki uzaklık genişlik, doğrultu dönüştür; ya da genişliği yazın (dönüşsüz).',
+      'Tek adımda yazılır, araç biter.',
+    ],
+    productCommand: entitiesCreate.id,
+    create: (c) => new ImageInsertTool(c),
+  },
+  {
+    id: 'imageClip',
+    label: 'Resmi kırp',
+    icon: 'imageClip',
+    group: 'block',
+    section: 'image',
+    aliases: ['RESIMKIRP', 'IMAGECLIP', 'ICL'],
+    description: 'Resmin yalnız bir bölümünü gösterir: sınır dikdörtgen ya da çokgen olarak çizilir, resmin çerçevesiyle kesiştirilir; kırpma kaldırılabilir.',
+    steps: [
+      'Kırpılacak resmin kenarına tıklayın.',
+      'Dikdörtgen (D) için iki köşeye, Çokgen (Ç) için köşelere tıklayıp Enter’a basın; Kaldır (K) kırpmayı kaldırır.',
+      'Tek adımda yazılır, araç sonraki resmi bekler. Esc ve Ctrl+Z son köşeyi, sonra resmi bırakır.',
+    ],
+    productCommand: entitiesEdit.id,
+    create: (c) => new ImageClipTool(c),
+  },
 
   // Dönüştür
   { id: 'move', primary: true, label: 'Taşı', icon: 'move', group: 'transform', section: 'move', shortcut: 'Shift+M', aliases: ['M', 'MOVE', 'TASI'], description: 'Seçili nesneleri temel noktadan hedefe taşır.', steps: ['Nesnelere tıklayın ya da pencereyle seçin, sonra sağ tıklayın. Önceden seçiliyse bu adım atlanır.', 'Temel noktaya tıklayın.', 'Hedef noktaya tıklayın.'], productCommand: entitiesTransform.id, create: (c) => new MoveTool(c, { id: 'move', label: 'Taşı', copy: false }) },

@@ -32,6 +32,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Table { .. } => crate::geom::table::table_geom(e)
             .map(|t| t.grips())
             .unwrap_or_default(),
+        // Its frame's corners, the lower left first (docs/adr/0192 §4).
+        Shape::Image { .. } => crate::geom::image::Frame::of(e)
+            .map(|f| f.corners().to_vec())
+            .unwrap_or_default(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             let polygon = matches!(e, Shape::Polygon { .. });
@@ -272,6 +276,27 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         },
         // Its corner moves it; a column's end on its top line sets the column's width (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(&e.shape)?.moved_grip(index, p)?,
+        // The lower left corner moves it; another corner scales it about the lower left, its
+        // shape kept (docs/adr/0192 §4).
+        Shape::Image { .. } => {
+            let f = crate::geom::image::Frame::of(&e.shape)?;
+            let corners = f.corners();
+            let mut frame = f;
+            if index == 0 {
+                frame.p = p;
+            } else {
+                let c = corners.get(index)?;
+                let was = crate::jsmath::js_hypot(c.x - f.p.x, c.y - f.p.y);
+                let now = crate::jsmath::js_hypot(p.x - f.p.x, p.y - f.p.y);
+                let k = now / was;
+                if !(k > 0.0 && k.is_finite()) {
+                    return None;
+                }
+                frame.u = Vec2::new(f.u.x * k, f.u.y * k);
+                frame.v = Vec2::new(f.v.x * k, f.v.y * k);
+            }
+            crate::geom::image::with_frame(&e.shape, &frame)
+        }
         // A vertex moves; a segment's middle becomes a new vertex there (docs/adr/0146 §4).
         Shape::Leader {
             pts,

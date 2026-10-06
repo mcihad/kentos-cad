@@ -101,6 +101,10 @@ export const edgeShiftPick = op<(e: Entity, p: Vec2) => { picked?: EdgeShiftPick
 export const edgeShift = op<(e: Entity, ring: number, edge: number, d: number) => { entity?: Entity | null; area?: number | null; problem?: string | null }>('edgeShift');
 /** The distance for an area to reach `target` m², or why none. */
 export const edgeShiftForArea = op<(e: Entity, ring: number, edge: number, target: number) => { distance?: number | null; problem?: string | null }>('edgeShiftForArea');
+/** A picture's frame from its lower left corner `p` and a second point `q` (docs/adr/0192 §5), or why none. */
+export const imagePlaced = op<(p: Vec2, q: Vec2, aspect: number) => { placed?: { width: number; height: number; rotation: number } | null; problem?: string | null }>('imagePlaced');
+/** A boundary drawn in the world as a picture's clip, in its own fractions cut to it (docs/adr/0192 §5), or why none. */
+export const imageClip = op<(e: Entity, world: readonly Vec2[]) => { clip?: Vec2[] | null; problem?: string | null }>('imageClip');
 /** The candidate nearest to p (the first of equally near ones); null for none. */
 export const nearestOf = op<(points: readonly Vec2[], p: Vec2) => Vec2 | null>('nearestOf');
 

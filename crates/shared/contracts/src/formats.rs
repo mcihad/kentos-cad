@@ -78,7 +78,9 @@ use crate::layer::LineType;
 /// 33: hatch patterns (docs/adr/0186): `.kcad` document schema 23 and the typed columns' hatch
 ///    name, scale, families, gradient and tie behind their next option flags; DXF HATCH's
 ///    pattern lines read whole and written turned and scaled, its gradient both ways.
-pub const FORMATS_VERSION: u32 = 33;
+/// 34: pictures (docs/adr/0192): `.kcad` document schema 24 and the typed columns' `image`
+///    kind; DXF and GeoJSON leave pictures out and say so.
+pub const FORMATS_VERSION: u32 = 34;
 
 // ── Every import ────────────────────────────────────────────────────────
 

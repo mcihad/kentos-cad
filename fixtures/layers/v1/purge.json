@@ -294,6 +294,10 @@
      },
      {
       "layer": "isaret"
+     },
+     {
+      "layer": "cizim",
+      "asset": "p-foto"
      }
     ],
     "blocks": [
@@ -483,6 +487,12 @@
       "kind": "asset",
       "source": "project",
       "name": "yalnız.svg"
+     },
+     {
+      "id": "p-foto",
+      "kind": "asset",
+      "source": "project",
+      "name": "saha.jpg"
      },
      {
       "id": "u-logo",

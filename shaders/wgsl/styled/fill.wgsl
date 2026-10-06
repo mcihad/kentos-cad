@@ -54,6 +54,15 @@ struct AreaOut {
   if (st.flags.z == 1u) { t = 1.0 - t; }
   return mix(st.color, st.stroke, t);
 }
+// Picture (docs/adr/0192 §3): a = (corner.x, corner.y, width, height) from the batch's tile, b = (cos, sin, opacity,
+// mirror); its pixels the texture group 0 holds for it (premultiplied, mip levels). Premultiplied out.
+@fragment fn imageFs(i: AreaOut) -> @location(0) vec4f {
+  let d = i.world - st.a.xy;
+  let s = (d.x * st.b.x + d.y * st.b.y) / st.a.z;
+  var t = (d.y * st.b.x - d.x * st.b.y) / st.a.w;
+  if (st.b.w > 0.5) { t = 1.0 - t; }
+  return textureSample(atlasTex, atlasSmp, vec2f(s, 1.0 - t)) * st.b.z;
+}
 // Tile: rect, a = (tile.x, tile.y, cos, sin), b = (shift.x, shift.y, opacity, 0), flags.x = unit. Premultiplied out.
 @fragment fn tileFs(i: AreaOut) -> @location(0) vec4f {
   var p = i.world;

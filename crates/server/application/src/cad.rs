@@ -264,6 +264,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0192 §1): its size, one source, clip and opacity; the drawing's only.
+        Image(x) => {
+            if in_block {
+                return Err("Blok tanımında resim olamaz".into());
+            }
+            if let Some(why) = x.image.problem() {
+                return Err(why);
+            }
+        }
     }
     Ok(())
 }
@@ -336,6 +345,23 @@ fn flat(g: Geometry) -> Geometry {
     match g {
         Geometry::Point { p, .. } => Geometry::Point { p, z: None },
         other => other,
+    }
+}
+
+/// A picture as the geometry core takes it (its frame and clip).
+fn core_image(x: &kentos_contracts::ImageEntity) -> kentos_geometry_core::entity::Shape {
+    let i = &x.image;
+    let core = |q: &kentos_contracts::Vec2| kentos_geometry_core::Vec2::new(q.x, q.y);
+    kentos_geometry_core::entity::Shape::Image {
+        p: core(&i.p),
+        width: i.width,
+        height: i.height,
+        rotation: i.rotation,
+        mirror: i.mirror.then_some(true),
+        asset: i.asset.clone(),
+        file: i.file.clone(),
+        clip: i.clip.as_ref().map(|c| c.iter().map(core).collect()),
+        opacity: i.opacity,
     }
 }
 
@@ -427,6 +453,16 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         // The rectangle it covers; its lines and words are its own (docs/adr/0184 §8).
         Entity::Table(x) => {
             let mut ring = pts(&kentos_formats::blocks::table_corners(x));
+            ring.extend(ring.first().copied());
+            Geometry::Polygon(vec![ring])
+        }
+        // The part of its frame it shows (docs/adr/0192): its pixels are the project's asset or its file.
+        Entity::Image(x) => {
+            let shape = core_image(x);
+            let mut ring: Vec<_> = kentos_geometry_core::geom::image::shown(&shape)
+                .into_iter()
+                .map(|q| p(kentos_contracts::Vec2 { x: q.x, y: q.y }))
+                .collect();
             ring.extend(ring.first().copied());
             Geometry::Polygon(vec![ring])
         }

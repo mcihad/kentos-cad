@@ -23,10 +23,12 @@ const REFERENCE: f32 = 100.0;
 
 type TextKey = (String, Option<String>, u16, bool);
 
-/// The atlas's pictures and glyphs, read on first use and kept.
+/// The atlas's pictures and glyphs, read on first use and kept; the
+/// drawing's picture objects' pixels as the app hands them (docs/adr/0192 §3).
 #[derive(Default)]
 pub struct Images {
     pictures: Mutex<HashMap<String, Option<Arc<Picture>>>>,
+    bitmaps: Mutex<HashMap<String, Option<Arc<kentos_render_wgpu::styled::Bitmap>>>>,
     texts: Mutex<HashMap<TextKey, Option<Arc<TextOutline>>>>,
     faces: Mutex<HashMap<String, &'static str>>,
 }
@@ -189,7 +191,7 @@ fn base64(text: &str) -> Option<Vec<u8>> {
 /// A JPEG's pixels as opaque RGBA (zune-jpeg; docs/adr/0092). The decoder's
 /// own limits (16 384 pixels a side) keep a hostile file from asking for
 /// unbounded memory; a broken file is no picture.
-pub(crate) fn jpeg(bytes: &[u8]) -> Option<Picture> {
+pub fn jpeg(bytes: &[u8]) -> Option<Picture> {
     use zune_jpeg::JpegDecoder;
     use zune_jpeg::zune_core::bytestream::ZCursor;
     use zune_jpeg::zune_core::colorspace::ColorSpace;
@@ -209,7 +211,7 @@ pub(crate) fn jpeg(bytes: &[u8]) -> Option<Picture> {
 }
 
 /// A PNG's pixels as straight-alpha RGBA.
-pub(crate) fn png(bytes: &[u8]) -> Option<Picture> {
+pub fn png(bytes: &[u8]) -> Option<Picture> {
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
     let mut reader = decoder.read_info().ok()?;
@@ -241,6 +243,22 @@ pub(crate) fn png(bytes: &[u8]) -> Option<Picture> {
 impl Images {
     pub fn new() -> Images {
         Images::default()
+    }
+
+    /// Whether the picture `key` was handed in (with pixels or none).
+    pub fn has_bitmap(&self, key: &str) -> bool {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .contains_key(key)
+    }
+
+    /// Hands in a picture's pixels, or none when it cannot be read.
+    pub fn put_bitmap(&self, key: String, bitmap: Option<Arc<kentos_render_wgpu::styled::Bitmap>>) {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(key, bitmap);
     }
 
     fn family(&self, stack: Option<&str>) -> &'static str {
@@ -307,6 +325,15 @@ impl Images {
 }
 
 impl ImageSource for Images {
+    fn bitmap(&self, key: &str) -> Option<Arc<kentos_render_wgpu::styled::Bitmap>> {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(key)
+            .cloned()
+            .flatten()
+    }
+
     fn picture(&self, image: &AtlasImage) -> Option<Arc<Picture>> {
         match image {
             AtlasImage::Svg { key, svg, .. } => self.svg(key, svg),

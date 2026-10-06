@@ -1097,6 +1097,63 @@
       ]
     },
     {
+      "name": "Resmi kırp: resmin kırpma sınırı yazılır, kimliği ve verisi kalır, kırpmasız resim bütündür; tek adım, adı Resmi kırp (ADR 0192 §5)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}},
+          {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "id": 2, "layerId": "kilitli", "attrs": {}}
+        ],
+        "styles": {"items": [{"kind": "asset", "id": "resim-0011223344556677", "name": "logo", "path": ["Resimler"], "format": "png", "data": "data:image/png;base64,iVBORw0KGgo=", "width": 4, "height": 3}], "categories": []}
+      },
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "resim"},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "clip": [{"x": 0, "y": 0}, {"x": 0.5, "y": 0}, {"x": 0.5, "y": 1}, {"x": 0, "y": 1}]}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "image", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}, "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "clip": [{"x": 0, "y": 0}, {"x": 0.5, "y": 0}, {"x": 0.5, "y": 1}, {"x": 0, "y": 1}]}}, "uids": {"1": "resim"}, "canUndo": true, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "mirror": false}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "image", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}, "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677"}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"entities": {"1": {"kind": "image", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}, "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "clip": [{"x": 0, "y": 0}, {"x": 0.5, "y": 0}, {"x": 0.5, "y": 1}, {"x": 0, "y": 1}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"entities": {"1": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Resmi kırp, ret: kırpma sınırı resmin içinde, en az üç köşe; görüntüsü projenin kitaplığında; kilitli katmandaki resim; hiçbir şey yazılmaz (ADR 0192 §6)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}},
+          {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "id": 2, "layerId": "kilitli", "attrs": {}}
+        ],
+        "styles": {"items": [{"kind": "asset", "id": "resim-0011223344556677", "name": "logo", "path": ["Resimler"], "format": "png", "data": "data:image/png;base64,iVBORw0KGgo=", "width": 4, "height": 3}], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "clip": [{"x": 0, "y": 0}, {"x": 2, "y": 0}, {"x": 1, "y": 1}]}}]}, "result": {"status": "failed", "error": {"code": "invalid_image", "message": "Resmin kırpma sınırı en az 3, en çok 10000 köşe olmalı, köşeleri resmin kesirleriyle 0 ile 1 arasında.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "opacity": 1.5}}]}, "result": {"status": "failed", "error": {"code": "invalid_image", "message": "Resmin donukluğu 0.1 ile 1 arasında olmalı; 1.5 verildi.", "path": "changes[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-ffffffffffffffff"}}]}, "result": {"status": "failed", "error": {"code": "unknown_asset", "message": "“resim-ffffffffffffffff” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin.", "path": "changes[0].geometry.asset"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "image", "p": {"x": 487000, "y": 4420010}, "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677", "clip": [{"x": 0, "y": 0}, {"x": 0.5, "y": 0}, {"x": 0.5, "y": 1}, {"x": 0, "y": 1}]}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "changes[0].uid"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
       "name": "Kot ver, ret: kotlar köşe sayısı kadar değilse ya da sonlu değilse hiçbir şey yazılmaz",
       "setup": {
         "format": "kentos.document",

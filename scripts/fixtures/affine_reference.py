@@ -175,6 +175,27 @@ def moved(e, m, new_id=None):
         sideways = style in ("aligned", "azimuth", "slope")
         e["offset"] = e["offset"] * s * (-1.0 if sideways and reflects(m) else 1.0)
         e["height"] = e["height"] * s
+    elif k == "image":
+        # docs/adr/0192 §4: the frame's corners map (lower left, lower right, upper right, upper left, each the lower left
+        # plus its sides' shares); under a reflection the mapped upper left is the new lower left and the picture turns
+        # over. Its size and turn are the new frame's sides'.
+        p, w, h, r = xy(e["p"]), e["width"], e["height"], e["rotation"]
+        c, sn = math.cos(r), math.sin(r)
+        u, v = (w * c, w * sn), (-h * sn, h * c)
+        q = [apply(m, (p[0] + u[0] * a + v[0] * b, p[1] + u[1] * a + v[1] * b)) for a, b in ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0))]
+        mirrored = e.get("mirror", False)
+        if reflects(m):
+            corner, along, up, mirrored = q[3], (q[2][0] - q[3][0], q[2][1] - q[3][1]), (q[0][0] - q[3][0], q[0][1] - q[3][1]), not mirrored
+        else:
+            corner, along, up = q[0], (q[1][0] - q[0][0], q[1][1] - q[0][1]), (q[3][0] - q[0][0], q[3][1] - q[0][1])
+        e["p"] = pt(corner)
+        e["width"] = js_hypot(*along)
+        e["height"] = js_hypot(*up)
+        e["rotation"] = math.atan2(along[1], along[0])
+        if mirrored:
+            e["mirror"] = True
+        else:
+            e.pop("mirror", None)
     elif k == "hatch":
         # The pattern's lines keep their direction on the object, modulo a half turn; their spacing scales.
         rad = (e["pattern"]["angle"] * math.pi) / 180.0
@@ -188,6 +209,22 @@ def moved(e, m, new_id=None):
     else:
         raise ValueError(k)
     return e
+
+
+def js_hypot(a, b):
+    """JavaScript's Math.hypot as V8 computes it (the arguments over the largest, the squares summed with Kahan's
+    compensation, scaled back): what the drawing's lengths are measured with on both platforms."""
+    big = max(abs(a), abs(b))
+    if big == 0.0:
+        return 0.0
+    total, comp = 0.0, 0.0
+    for x in (a, b):
+        n = abs(x) / big
+        summand = n * n - comp
+        pre = total + summand
+        comp = (pre - total) - summand
+        total = pre
+    return math.sqrt(total) * big
 
 
 def assert_no_negative_zero(v, where):

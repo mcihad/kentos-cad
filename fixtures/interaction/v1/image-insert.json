@@ -1,0 +1,27 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "image-insert",
+  "title": "Resim ekle: araç başlarken resim dosyası sorulur (iz logo.png'yi, 160 × 120 piksel, verir); sol alt köşe ve yazılan genişlikle dönüşsüz yerleşir, yükseklik resmin oranındandır; tek adımda, araç biter; Ctrl+Z geri alır; ikinci noktayla genişliği ve dönüşü o noktadan alır; iç tıklama resmi seçmez, kenarı seçer",
+  "source": "tools/imageTools.ts (ImageInsertTool); kentos_interaction::image_insert; docs/adr/0192 §4, §5",
+  "covers": ["CAD-30"],
+  "document": "images.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "openFile": "logo.png",
+  "steps": [
+    { "run": "tool.imageInsert", "note": "Araç başlarken resim dosyası sorulur.", "expect": { "tool": "imageInsert", "points": 0 } },
+    { "click": [24, 8], "note": "Sol alt köşe.", "expect": { "points": 1, "entities": 2 } },
+    { "text": "16", "expect": { "dynamicInput": "16" } },
+    { "key": "Enter", "note": "Genişlik 16 m, dönüşsüz; yükseklik 12 m (4:3).", "expect": { "tool": "select", "entities": 3, "log": "success", "objects": [{ "id": 3, "kind": "image", "points": [[24, 8], [40, 8], [40, 20], [24, 20]] }] } },
+    { "key": "Ctrl+Z", "expect": { "entities": 2 } },
+    { "run": "tool.imageInsert", "expect": { "tool": "imageInsert", "points": 0 } },
+    { "click": [24, 8] },
+    { "click": [32, 14], "note": "Genişlik 10 m, doğrultusu dönüştür; yükseklik 7,5 m (geri alınanın yuvası iki platformda başka olabilir: en yeni nesne).", "expect": { "tool": "select", "entities": 3, "log": "success", "newest": { "kind": "image", "points": [[24, 8], [32, 14], [27.5, 20], [19.5, 14]] } } },
+    { "click": [0, 0], "note": "Resmin içi: seçilmez.", "expect": { "tool": "select", "selected": [] } },
+    { "click": [0, -15], "note": "Resmin kenarı seçer.", "expect": { "selected": [1] } },
+    { "key": "Esc", "expect": { "selected": [] } }
+  ]
+}

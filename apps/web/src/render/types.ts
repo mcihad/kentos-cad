@@ -86,6 +86,11 @@ export type FillPaintBatch =
   /** A gradient (docs/adr/0186 §3): `shape` 0 linear, 1 cylinder, 2 spherical; its frame in metres from the batch's tile once folded. */
   | { kind: 'gradient'; color: RGBA; color2: RGBA; shape: number; inverted: boolean; dir: number; from: number; to: number; centre: readonly [number, number]; radius: number }
   /**
+   * A picture over its frame (docs/adr/0192 §3): `image` its key, `url` its pixels (an embedded picture's data
+   * address; null for a linked file, which the browser cannot read); its frame from the batch's tile once folded.
+   */
+  | { kind: 'image'; image: string; url: string | null; corner: readonly [number, number]; size: readonly [number, number]; angle: number; mirror: boolean; opacity: number }
+  /**
    * One shape on a grid computed per pixel (sizes in `unit`): `size` is the
    * cell, `mark` the shape in it; `jitter` and `coverage` scatter it at
    * random per cell; `tint` is the share of a cell the shape inks, used
@@ -261,6 +266,11 @@ export interface AtlasSource {
    * being made, or null while nothing is ready yet.
    */
   lookup(image: AtlasImage, px: number): AtlasHit | null;
+  /**
+   * A picture's pixels (docs/adr/0192 §3) by its key, decoded once from `url` and kept: null while it decodes or when
+   * it cannot be (no url: a linked file the browser cannot read); the view redraws when one arrives.
+   */
+  picture(key: string, url: string | null): HTMLImageElement | null;
 }
 
 /** The atlas image a styled batch draws with. */

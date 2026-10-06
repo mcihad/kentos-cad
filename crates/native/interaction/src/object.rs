@@ -169,6 +169,7 @@ impl ObjectAction {
             Shape::Insert { .. } => "blok",
             Shape::Leader { .. } => "kılavuz",
             Shape::Table { .. } => "tablo",
+            Shape::Image { .. } => "resim",
         }
     }
 

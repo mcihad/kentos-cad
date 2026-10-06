@@ -107,6 +107,19 @@ pub enum FillPaint {
         unit: PrimUnit,
         level: f64,
     },
+    /// A picture over its frame (docs/adr/0192 §3): `image` names its bytes
+    /// (`asset:<id>` or `file:<path>`); its frame's lower left corner (world
+    /// metres, from the anchor in a batch), width and height, turn (radians)
+    /// and whether the picture is upside down in it.
+    Image {
+        image: String,
+        corner: [f64; 2],
+        size: [f64; 2],
+        angle: f64,
+        mirror: bool,
+        opacity: f64,
+        level: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -536,6 +549,24 @@ impl FillPaint {
                 o.str("unit", unit.name());
                 o.num("level", *level);
             }
+            FillPaint::Image {
+                image,
+                corner,
+                size,
+                angle,
+                mirror,
+                opacity,
+                level,
+            } => {
+                o.str("kind", "image");
+                o.str("image", image);
+                nums(o.key("corner"), corner);
+                nums(o.key("size"), size);
+                o.num("angle", *angle);
+                o.bool("mirror", *mirror);
+                o.num("opacity", *opacity);
+                o.num("level", *level);
+            }
         }
         o.end();
     }
@@ -546,7 +577,8 @@ impl FillPaint {
             | FillPaint::Hatch { level, .. }
             | FillPaint::Gradient { level, .. }
             | FillPaint::Pattern { level, .. }
-            | FillPaint::Tile { level, .. } => *level,
+            | FillPaint::Tile { level, .. }
+            | FillPaint::Image { level, .. } => *level,
         }
     }
 }

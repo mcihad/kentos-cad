@@ -641,6 +641,14 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
             _ => point_number(pts, rest),
         },
         // A table's sizes and corner (docs/adr/0184): `rows[1]`, `columns[0]`, `height`, `p.x` ….
+        // A picture's corner, size, turn and opacity (docs/adr/0192).
+        EntityGeometry::Image(i) => match rest {
+            "width" => Some(&mut i.width),
+            "height" => Some(&mut i.height),
+            "rotation" => Some(&mut i.rotation),
+            "opacity" => i.opacity.as_mut(),
+            _ => coordinate(&mut i.p, "p", rest),
+        },
         EntityGeometry::Table {
             p,
             rotation,

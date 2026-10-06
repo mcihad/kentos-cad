@@ -478,6 +478,11 @@ fn fill(
     let Some((mask, [x0, y0, x1, y1])) = coverage(view, b, data, w, h) else {
         return;
     };
+    // A picture's pixels (docs/adr/0192 §3); light grey while there are none.
+    let picture = match paint {
+        FillPaintBatch::Image { image, .. } => Some(source.bitmap(image)),
+        _ => None,
+    };
     // A tile's image, drawn once at the atlas's step.
     let tile = match paint {
         FillPaintBatch::Tile { image, .. } => {
@@ -515,6 +520,9 @@ fn fill(
                     Some(t) => tile_at(st, t, p),
                     None => continue,
                 },
+                FillPaintBatch::Image { .. } => {
+                    picture_at(st, picture.as_ref().and_then(|b| b.as_deref()), p)
+                }
             };
             let cov = f64::from(m) / 255.0;
             over(
@@ -628,6 +636,52 @@ fn tile_at(st: &Style, t: &Painted, p: [f64; 2]) -> V4 {
     let c = sample(t, u, v);
     let o = st.b[2];
     [c[0] * o, c[1] * o, c[2] * o, c[3] * o]
+}
+
+/// `imageFs` (premultiplied): the picture's pixel under `p`, bilinear, at its opacity;
+/// light grey for a picture without pixels.
+fn picture_at(st: &Style, bitmap: Option<&super::picture::Bitmap>, p: [f64; 2]) -> V4 {
+    let o = st.b[2];
+    let Some(bm) = bitmap.filter(|b| b.width > 0 && b.height > 0) else {
+        let g = 200.0 / 255.0;
+        return [g * o, g * o, g * o, o];
+    };
+    let d = [p[0] - st.a[0], p[1] - st.a[1]];
+    let s = (d[0] * st.b[0] + d[1] * st.b[1]) / st.a[2];
+    let mut t = (d[1] * st.b[0] - d[0] * st.b[1]) / st.a[3];
+    if st.b[3] > 0.5 {
+        t = 1.0 - t;
+    }
+    let (w, h) = (f64::from(bm.width), f64::from(bm.height));
+    let u = (s.clamp(0.0, 1.0) * w - 0.5).clamp(0.0, w - 1.0);
+    let v = ((1.0 - t).clamp(0.0, 1.0) * h - 0.5).clamp(0.0, h - 1.0);
+    let (x0, y0) = (u.floor(), v.floor());
+    let (fx, fy) = (u - x0, v - y0);
+    let at = |x: f64, y: f64| -> V4 {
+        let x = x.clamp(0.0, w - 1.0) as usize;
+        let y = y.clamp(0.0, h - 1.0) as usize;
+        let i = (y * bm.width as usize + x) * 4;
+        let a = f64::from(bm.rgba[i + 3]) / 255.0;
+        [
+            f64::from(bm.rgba[i]) / 255.0 * a,
+            f64::from(bm.rgba[i + 1]) / 255.0 * a,
+            f64::from(bm.rgba[i + 2]) / 255.0 * a,
+            a,
+        ]
+    };
+    let (c00, c10, c01, c11) = (
+        at(x0, y0),
+        at(x0 + 1.0, y0),
+        at(x0, y0 + 1.0),
+        at(x0 + 1.0, y0 + 1.0),
+    );
+    let mut out = [0.0; 4];
+    for k in 0..4 {
+        let top = c00[k] + (c10[k] - c00[k]) * fx;
+        let bottom = c01[k] + (c11[k] - c01[k]) * fx;
+        out[k] = (top + (bottom - top) * fy) * o;
+    }
+    out
 }
 
 /// `hash3`, in float32 as the GPU computes it: the cell's random shift and whether it is drawn.

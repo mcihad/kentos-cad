@@ -46,9 +46,9 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             moved
         })?,
         // A table moves whole when its top left corner is in the window (docs/adr/0184 §2).
-        Shape::Table { p, .. } => inside(*p, r).then(|| {
+        Shape::Table { p, .. } | Shape::Image { p, .. } => inside(*p, r).then(|| {
             let mut moved = geom.shape.clone();
-            if let Shape::Table { p: at, .. } = &mut moved {
+            if let Shape::Table { p: at, .. } | Shape::Image { p: at, .. } = &mut moved {
                 *at = mv(*p);
             }
             moved

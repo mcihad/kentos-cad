@@ -258,6 +258,32 @@ cases.append({
     ],
 })
 
+# A picture (docs/adr/0192 §4): its frame's corners map; turned, it keeps its corner's place under the turn; mirrored,
+# its frame's new lower left is the old upper left's image and the picture turns over (`mirror`), twice back. It is
+# unturned and turns by a quarter: there the core's atan2 (libm's, fdlibm's algorithm) and this Python's agree, as the
+# polar arrays' sines do (array_command_cases.py); at a turn of 0.5 they differ in the last bit.
+PICTURE = {"kind": "image", "id": 22, "layerId": "yapi", "attrs": {"Not": "logo"}, "p": P(487000, 4420040), "width": 8, "height": 6,
+           "rotation": 0, "asset": "resim-0011223344556677"}
+I_SETUP = {**SETUP, "entities": ENTITIES + [PICTURE],
+           "styles": {"items": [{"kind": "asset", "id": "resim-0011223344556677", "name": "logo", "path": ["Resimler"], "format": "png",
+                                  "data": "data:image/png;base64,iVBORw0KGgo=", "width": 4, "height": 3}], "categories": []}}
+I_IDS = IDS + [22]
+cases.append({
+    "name": "resim: döndürülünce çerçevesinin köşeleri döner; aynalanınca yeni sol alt köşesi eski sol üstün görüntüsüdür, resim ters döner, iki aynada geri gelir (ADR 0192 §4)",
+    "setup": I_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(22)], "transform": rotate(*O10, HALF_PI)}, "result": done(changed=[U(22)]),
+         "expect": {"ids": I_IDS, "entities": entities((22, moved(PICTURE, M_ROT))), "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür", "expect": {"entities": entities((22, PICTURE))}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": mirror_t(*AX)}, "result": done(changed=[U(22)]),
+         "expect": {"entities": entities((22, moved(PICTURE, M_MIRROR))), "revision": "changed"}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": mirror_t(*AX)}, "result": done(changed=[U(22)]),
+         "expect": {"entities": entities((22, moved(moved(PICTURE, M_MIRROR), M_MIRROR))), "revision": "changed"}},
+        {"op": "execute", "input": {"uids": [U(22)], "transform": scale(487000, 4420040, 2), "copy": True}, "result": done(created=[U(23)]),
+         "expect": {"ids": I_IDS + [23], "entities": entities((23, moved(moved(moved(PICTURE, M_MIRROR), M_MIRROR), scaling(2, (487000, 4420040)), 23))), "revision": "changed"}},
+    ],
+})
+
 cases.append({
     "name": "birden çok nesne ve tekrarlanan kimlik: her nesne bir kez, girdinin sırasıyla; yayın açıları ve noktanın kotu, yazısı, öznitelikleri kalır",
     "steps": [

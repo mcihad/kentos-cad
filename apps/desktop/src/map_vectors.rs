@@ -513,6 +513,7 @@ fn fill_paths(
         FillPaintBatch::Gradient { .. } => Err("degrade dolgu"),
         FillPaintBatch::Pattern { .. } => Err("desen dolgusu"),
         FillPaintBatch::Tile { .. } => Err("resimli dolgu"),
+        FillPaintBatch::Image { .. } => Err("resim"),
     }
 }
 
@@ -671,6 +672,7 @@ fn why_not(layer: &StyledLayer, b: &StyledBatch) -> Option<&'static str> {
             }
             FillPaintBatch::Pattern { .. } => Some("desen dolgusu"),
             FillPaintBatch::Tile { .. } => Some("resimli dolgu"),
+            FillPaintBatch::Image { .. } => Some("resim"),
             FillPaintBatch::Gradient { .. } => Some("degrade dolgu"),
         },
         BatchKind::Marker { look, .. } => match look {

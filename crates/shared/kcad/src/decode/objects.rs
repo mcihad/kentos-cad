@@ -18,12 +18,13 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockDefinition, BlockId, CellRange, CircleEntity, ConstructionEntity,
     DimensionArrow, DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace,
     DrawingFont, DrawingUnit, EllipseEntity, Entity, EntityBase, EntityId, GradientShape,
-    HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, InsertEntity,
-    LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX, MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO,
-    MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE, MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph,
-    PathEntity, PatternLine, PointEntity, PointPart, RingGeometry, SplineEntity, TableAlign,
-    TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace, TextRun, TextScript,
-    Vec2, label_scale_ok, oblique_holds, width_factor_ok,
+    HatchAssoc, HatchEntity, HatchGradient, HatchPattern, HatchPatternType, ImageEntity,
+    ImageFields, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, MAX_AFFIX,
+    MAX_DIMENSION_DECIMALS, MAX_DIMENSION_RATIO, MAX_LINE_SPACING, MAX_LINE_WEIGHT, MAX_OBLIQUE,
+    MAX_WIDTH_FACTOR, MIN_LINE_SPACING, Paragraph, PathEntity, PatternLine, PointEntity, PointPart,
+    RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign,
+    TextEntity, TextFace, TextRun, TextScript, Vec2, label_scale_ok, oblique_holds,
+    width_factor_ok,
 };
 
 use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
@@ -32,8 +33,8 @@ use crate::error::{Code, KcadError};
 use crate::watch::{EVERY, Step};
 use crate::{
     SCHEMA_WITH_BLOCKS, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_DRAWING_UNIT,
-    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_LAYER_SNAP,
-    SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
+    SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_GROUND, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES,
+    SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_LEADERS, SCHEMA_WITH_LINE_PARTS,
     SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_PARTS,
     SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_STYLES, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TABLES,
     SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_TRAVERSE_TOLERANCES,
@@ -57,6 +58,7 @@ enum Kind {
     Insert,
     Leader,
     Table,
+    Image,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -79,6 +81,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("insert", Kind::Insert),
     ("leader", Kind::Leader),
     ("table", Kind::Table),
+    ("image", Kind::Image),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -130,6 +133,8 @@ pub(super) struct Features {
     tables: bool,
     /// Schema 23: a hatch's pattern and gradient fields and its tie (docs/adr/0186).
     hatches: bool,
+    /// Schema 24: the `image` kind (docs/adr/0192).
+    images: bool,
     /// Whether an object has its persistent id (`uid`): the drawing's do, a
     /// block definition's do not.
     uids: bool,
@@ -159,6 +164,7 @@ impl Features {
             styles: schema >= SCHEMA_WITH_STYLES,
             tables: schema >= SCHEMA_WITH_TABLES,
             hatches: schema >= SCHEMA_WITH_HATCH_PATTERNS,
+            images: schema >= SCHEMA_WITH_IMAGES,
             uids: true,
         }
     }
@@ -257,6 +263,17 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     | "italic"
                     | "oblique"
             ),
+            Kind::Image => matches!(
+                key,
+                "p" | "width"
+                    | "height"
+                    | "rotation"
+                    | "mirror"
+                    | "asset"
+                    | "file"
+                    | "clip"
+                    | "opacity"
+            ),
         }
 }
 
@@ -318,6 +335,12 @@ struct Fields {
     arrow: Option<LeaderArrow>,
     width_factor: Option<f64>,
     mask: Option<bool>,
+    /// A picture's own fields (docs/adr/0192 §1), and where the object's map starts (for a refusal).
+    width: Option<f64>,
+    asset: Option<String>,
+    file: Option<String>,
+    clip: Option<Vec<Vec2>>,
+    opacity: Option<f64>,
     /// A linked text's object and scale (docs/adr/0175 §4), and where the first of them is.
     label_of: Option<EntityId>,
     label_scale: Option<f64>,
@@ -454,6 +477,7 @@ pub(super) fn object(
         (has.blocks || *kind != Kind::Insert)
             && (has.leaders || *kind != Kind::Leader)
             && (has.tables || *kind != Kind::Table)
+            && (has.images || *kind != Kind::Image)
     }) else {
         return Err(r.fail(
             Code::UnknownKind,
@@ -465,6 +489,10 @@ pub(super) fn object(
     // Only the drawing's: a block definition holds no table (docs/adr/0184 §1).
     if kind == Kind::Table && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında tablo olamaz"));
+    }
+    // Only the drawing's: a block definition holds no picture (docs/adr/0192 §1).
+    if kind == Kind::Image && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında resim olamaz"));
     }
     let mut f = Fields::default();
     map(r, |r, key| {
@@ -533,6 +561,11 @@ pub(super) fn object(
                 f.height = Some(r.float()?);
             }
             "rotation" => f.rotation = Some(r.float()?),
+            "width" => f.width = Some(r.float()?),
+            "asset" => f.asset = Some(text(r)?),
+            "file" => f.file = Some(text(r)?),
+            "clip" => f.clip = Some(points(r)?),
+            "opacity" => f.opacity = Some(r.float()?),
             "rows" => {
                 f.table_at.rows = r.position();
                 f.rows = Some(floats(r)?);
@@ -1106,6 +1139,24 @@ fn build(
                 return Err(field_fail(r, field, f.table_at.of(field), &words));
             }
             Entity::Table(table)
+        }
+        Kind::Image => {
+            let image = ImageFields {
+                p: required(r, f.p, "p")?,
+                width: required(r, f.width, "width")?,
+                height: required(r, f.height, "height")?,
+                rotation: required(r, f.rotation, "rotation")?,
+                mirror: f.mirror.unwrap_or(false),
+                asset: f.asset.take(),
+                file: f.file.take(),
+                clip: f.clip.take(),
+                opacity: f.opacity,
+            };
+            // Its size, its one source, its clip and opacity hold together (docs/adr/0192 §1).
+            if let Some(words) = image.problem() {
+                return Err(r.fail(Code::BadValue, &words));
+            }
+            Entity::Image(ImageEntity { base, image })
         }
     })
 }

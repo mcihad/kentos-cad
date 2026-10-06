@@ -12,6 +12,7 @@ import type { CadDocument } from '../model/document';
 import { FACE_FIELDS, faceProblem, LOOK_FIELDS, lookProblem } from '../model/annotationStyles';
 import { MAX_WIDTH_FACTOR, paragraphProblem, widthFactorOk, type Entity, type NewEntity } from '../model/entities';
 import { assocProblem, patternProblem } from '../model/hatchRules';
+import { imageProblem } from '../model/imageRules';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
 import { checkLayer, checkLineWeight, checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import { checkDimension } from './dimension';
@@ -94,6 +95,8 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   tableUpdate: 'Tabloyu güncelle',
   // Paralel kaydır (docs/adr/0191).
   edgeShift: 'Paralel kaydır',
+  // Resmi kırp (docs/adr/0192 §5).
+  imageClip: 'Resmi kırp',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -114,6 +117,7 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   insert: ['block', 'p', 'scale', 'rotation', 'mirror'],
   leader: ['pts', 'text', 'height', 'rotation', 'arrow', 'mask'],
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', ...FACE_FIELDS, 'source'],
+  image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
 };
 
 interface Checked {
@@ -135,8 +139,10 @@ export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   const src = g as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = { kind: g.kind };
   for (const key of FIELDS[g.kind]) if (src[key] !== undefined) out[key] = structuredClone(src[key]);
-  // An insert is mirrored or has no `mirror` (docs/adr/0144): false is not written.
-  if (g.kind === 'insert' && out.mirror !== true) delete out.mirror;
+  // An insert is mirrored or has no `mirror` (docs/adr/0144): false is not written. So is a picture (docs/adr/0192 §1),
+  // whose other optional fields are no value when null, as serde reads them.
+  if ((g.kind === 'insert' || g.kind === 'image') && out.mirror !== true) delete out.mirror;
+  if (g.kind === 'image') for (const key of ['asset', 'file', 'clip', 'opacity']) if (out[key] === null) delete out[key];
   // A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
   if (g.kind === 'text') {
     if (out.mask !== true) delete out.mask;
@@ -348,6 +354,12 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
     const problem = tableProblem(g as unknown as TableShape);
     if (problem) return failed(error('invalid_table', problem[1], at(`.${problem[0]}`)));
   }
+  // A picture's size, its one source, its clip and opacity (docs/adr/0192 §6); a number that is not finite is
+  // `not_finite`'s, said above.
+  if (g.kind === 'image') {
+    const problem = imageProblem(g);
+    if (problem) return failed(error('invalid_image', problem, at('')));
+  }
   // A text's face and a dimension's look (docs/adr/0183 §9); a table's face as a text's.
   const style = g.kind === 'text' || g.kind === 'table' ? faceProblem(g) : g.kind === 'dimension' ? lookProblem(g) : null;
   if (style) return failed(error('invalid_style', style[1], at(`.${style[0]}`)));
@@ -379,10 +391,27 @@ export function checkStyles(doc: CadDocument, geometries: readonly (EntityGeomet
   return null;
 }
 
-/** Every insert among the geometries names a block of the drawing, in order (docs/adr/0144): `unknown_block` at `{list}[i].geometry.block`. */
+/** Whether the project's library has the PNG or JPEG image `id` (docs/adr/0192 §2). */
+export function hasPicture(doc: CadDocument, id: string): boolean {
+  return doc.styles.value.items.some((it) => it.kind === 'asset' && it.id === id && (it.format === 'png' || it.format === 'jpeg'));
+}
+
+/**
+ * Every insert among the geometries names a block of the drawing, in order (docs/adr/0144): `unknown_block` at
+ * `{list}[i].geometry.block`; every embedded picture an image of the project's library (docs/adr/0192 §6):
+ * `unknown_asset` at `{list}[i].geometry.asset`.
+ */
 export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeometry | null)[], list: string): Stop | null {
   const known = new Set(doc.blocks.value.map((b) => b.id));
-  for (const [i, g] of geometries.entries())
+  for (const [i, g] of geometries.entries()) {
+    if (g?.kind === 'image' && g.asset !== undefined && !hasPicture(doc, g.asset))
+      return failed(
+        error(
+          'unknown_asset',
+          `“${g.asset}” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin.`,
+          `${list}[${i}].geometry.asset`,
+        ),
+      );
     if (g?.kind === 'insert' && !known.has(g.block))
       return failed(
         error(
@@ -391,6 +420,7 @@ export function checkBlocks(doc: CadDocument, geometries: readonly (EntityGeomet
           `${list}[${i}].geometry.block`,
         ),
       );
+  }
   return null;
 }
 

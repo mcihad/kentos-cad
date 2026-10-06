@@ -52,6 +52,8 @@ export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   // Its corner, turn, sizes, cells, ranges, alignments, heading, lines, frame, source and face (docs/adr/0184): an
   // edit without a source detaches it; the store does not carry it, so a transform keeps the object's (`withGeometry`).
   table: ['p', 'rotation', 'height', 'rows', 'columns', 'cells', 'merges', 'aligns', 'header', 'grid', 'frame', 'source', ...FACE_FIELDS],
+  // A picture's frame, source, clip and opacity (docs/adr/0192 §1).
+  image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
 };
 
 /**
@@ -93,6 +95,8 @@ export function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E
   if ((g.kind === 'polyline' || g.kind === 'polygon') && !('bulges' in g)) out.bulges = undefined;
   if ((g.kind === 'polygon' || g.kind === 'hatch') && !('holes' in g)) out.holes = undefined;
   if ((g.kind === 'polygon' || g.kind === 'polyline' || g.kind === 'point') && !('parts' in g)) out.parts = undefined;
+  // A mirror a second reflection took away (docs/adr/0144, 0192 §4).
+  if ((g.kind === 'insert' || g.kind === 'image') && !('mirror' in g)) out.mirror = undefined;
   // A transform moves each vertex and keeps it: the elevations stay with their vertices, the
   // holes' too, and each part's and its holes' (docs/adr/0143); a vertex count that changed
   // leaves them out (docs/adr/0142).

@@ -256,6 +256,7 @@ export function fillPaths(b: PaintFillBatch, o: VectorScale): { paths: VecPath[]
     return { paths };
   }
   if (p.kind === 'gradient') return { why: 'degrade dolgu' };
+  if (p.kind === 'image') return { why: 'resim' };
   return { why: p.kind === 'pattern' ? 'desen dolgusu' : 'resimli dolgu' };
 }
 

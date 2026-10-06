@@ -1,4 +1,5 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type StyledBatch } from '../types';
+import { fitted, GREY, levelCanvas, levelCount } from '../pictures';
 import { dashValues, inScale, patternReach, type StyledFrame } from '../webgl2/styledRenderer';
 import { SHAPE_IDS } from '../webgl2/styledShaders';
 import { STYLED_WGSL } from './styledShaders';
@@ -37,7 +38,14 @@ export interface GpuStyledLayer {
   list: GpuStyled[];
 }
 
-type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker' | 'gradient', GPURenderPipeline>;
+type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker' | 'gradient' | 'image', GPURenderPipeline>;
+
+/** A picture's texture with its group 0 for the frame and for the magnifier (docs/adr/0192 §3; contract version 5). */
+interface GpuPicture {
+  texture: GPUTexture;
+  frame: GPUBindGroup;
+  lens: GPUBindGroup;
+}
 
 export class WebGPUStyledRenderer {
   private readonly device: GPUDevice;
@@ -50,6 +58,13 @@ export class WebGPUStyledRenderer {
   /** The same with the magnifier's frame uniform (docs/adr/0181 §5). */
   private readonly lensBind: GPUBindGroup;
   private readonly texture: GPUTexture;
+  private readonly frameLayout: GPUBindGroupLayout;
+  private readonly frameBuffer: GPUBuffer;
+  private readonly lensBuffer: GPUBuffer;
+  /** Pictures sample their mip levels (docs/adr/0192 §3). */
+  private readonly pictureSampler: GPUSampler;
+  /** The pictures' own textures by key; the grey stand-in under `''`. */
+  private readonly pictures = new Map<string, GpuPicture>();
   /** Pipelines by sample count (the backend's multisampled passes need their own). */
   private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
@@ -61,13 +76,16 @@ export class WebGPUStyledRenderer {
     this.module = device.createShaderModule({ code: STYLED_WGSL });
     this.styleLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } }] });
     // shaders/wgsl/styled.layout.json v3: group 0 is the frame, the atlas texture and its sampler; group 1 the batch's style.
-    const frameLayout = device.createBindGroupLayout({
+    const frameLayout = (this.frameLayout = device.createBindGroupLayout({
       entries: [
         { binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } },
         { binding: 1, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } },
         { binding: 2, visibility: STAGE.FRAGMENT, sampler: { type: 'filtering' } },
       ],
-    });
+    }));
+    this.frameBuffer = frame;
+    this.lensBuffer = lens;
+    this.pictureSampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear', mipmapFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
     this.texture = device.createTexture({ size: [2048, 2048], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING | TEXTURE.RENDER_ATTACHMENT });
     const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
     const bindFor = (buffer: GPUBuffer) =>
@@ -122,6 +140,8 @@ export class WebGPUStyledRenderer {
       gradient: pipe('areaVs', 'gradientFs', [area], straight),
       pattern: pipe('areaVs', 'patternFs', [area], premul),
       tile: pipe('areaVs', 'tileFs', [area], premul),
+      // docs/adr/0192 §3: the contract's version 5.
+      image: pipe('areaVs', 'imageFs', [area], premul),
       marker: pipe(
         'markerVs',
         'markerFs',
@@ -214,6 +234,9 @@ export class WebGPUStyledRenderer {
         f.set([Math.cos(p.dir), Math.sin(p.dir), p.from, p.to], 20);
         f.set([p.centre[0], p.centre[1], p.radius, 0], 24);
         u.set([0, p.shape, p.inverted ? 1 : 0, 0], 32);
+      } else if (p.kind === 'image') {
+        f.set([p.corner[0], p.corner[1], p.size[0], p.size[1]], 20);
+        f.set([Math.cos(p.angle), Math.sin(p.angle), p.opacity, p.mirror ? 1 : 0], 24);
       } else if (p.kind === 'pattern') {
         const r = patternReach(p);
         f.set(p.fill ?? [0, 0, 0, 0], 0);
@@ -245,6 +268,46 @@ export class WebGPUStyledRenderer {
       }
     }
     return data;
+  }
+
+  /**
+   * A picture's texture and group 0 (docs/adr/0192 §3): made once from its decoded pixels, premultiplied, its mip
+   * levels drawn by the canvas; the grey stand-in while the atlas has none (looked for again next frame).
+   */
+  private picture(key: string, url: string | null): GpuPicture {
+    const kept = this.pictures.get(key);
+    if (kept) return kept;
+    const img = this.atlas?.picture(key, url) ?? null;
+    const name = img ? key : '';
+    const known = this.pictures.get(name);
+    if (known) return known;
+    const { device } = this;
+    let texture: GPUTexture;
+    if (!img) {
+      texture = device.createTexture({ size: [1, 1], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING });
+      device.queue.writeTexture({ texture }, new Uint8Array(GREY), { bytesPerRow: 4 }, [1, 1]);
+    } else {
+      const p = fitted(img, device.limits.maxTextureDimension2D);
+      const levels = levelCount(p.width, p.height);
+      texture = device.createTexture({ size: [p.width, p.height], mipLevelCount: levels, format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING | TEXTURE.RENDER_ATTACHMENT });
+      for (let i = 0; i < levels; i++) {
+        const source = i === 0 ? p.source : levelCanvas(p, i);
+        const size = i === 0 ? [p.width, p.height] : [(source as HTMLCanvasElement).width, (source as HTMLCanvasElement).height];
+        device.queue.copyExternalImageToTexture({ source: source as GPUCopyExternalImageSource }, { texture, mipLevel: i, premultipliedAlpha: true }, size);
+      }
+    }
+    const bindFor = (buffer: GPUBuffer) =>
+      device.createBindGroup({
+        layout: this.frameLayout,
+        entries: [
+          { binding: 0, resource: { buffer } },
+          { binding: 1, resource: texture.createView() },
+          { binding: 2, resource: this.pictureSampler },
+        ],
+      });
+    const made = { texture, frame: bindFor(this.frameBuffer), lens: bindFor(this.lensBuffer) };
+    this.pictures.set(name, made);
+    return made;
   }
 
   // ── Drawing ──────────────────────────────────────────────────────────
@@ -306,7 +369,13 @@ export class WebGPUStyledRenderer {
       }
       pass.setBindGroup(1, s.bind);
       pass.setVertexBuffer(0, s.vertex);
-      if (b.kind === 'fill') pass.draw(s.count);
+      if (b.kind === 'fill' && b.paint.kind === 'image') {
+        // Its own texture in group 0, then the atlas again for the batches after it.
+        const picture = this.picture(b.paint.image, b.paint.url);
+        pass.setBindGroup(0, lens ? picture.lens : picture.frame);
+        pass.draw(s.count);
+        pass.setBindGroup(0, lens ? this.lensBind : this.frameBind);
+      } else if (b.kind === 'fill') pass.draw(s.count);
       else pass.draw(6, s.count);
     }
     return true;
@@ -314,5 +383,7 @@ export class WebGPUStyledRenderer {
 
   dispose(): void {
     this.texture.destroy();
+    for (const p of this.pictures.values()) p.texture.destroy();
+    this.pictures.clear();
   }
 }

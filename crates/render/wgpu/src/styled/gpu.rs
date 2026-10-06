@@ -66,6 +66,7 @@ enum Pipe {
     Tile,
     Marker,
     Gradient,
+    Image,
 }
 
 struct Pipelines {
@@ -76,6 +77,7 @@ struct Pipelines {
     tile: wgpu::RenderPipeline,
     marker: wgpu::RenderPipeline,
     gradient: wgpu::RenderPipeline,
+    image: wgpu::RenderPipeline,
 }
 
 impl Pipelines {
@@ -88,6 +90,7 @@ impl Pipelines {
             Pipe::Tile => &self.tile,
             Pipe::Marker => &self.marker,
             Pipe::Gradient => &self.gradient,
+            Pipe::Image => &self.image,
         }
     }
 }
@@ -157,8 +160,8 @@ pub struct StyledPipelineSpec {
     pub buffer: wgpu::VertexBufferLayout<'static>,
 }
 
-/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient.
-pub const STYLED_PIPELINES: [StyledPipelineSpec; 7] = [
+/// The contract's pipelines, in its order: stroke, solid, hatch, pattern, tile, marker, gradient, image.
+pub const STYLED_PIPELINES: [StyledPipelineSpec; 8] = [
     StyledPipelineSpec {
         name: "stroke",
         vertex: "strokeVs",
@@ -215,6 +218,14 @@ pub const STYLED_PIPELINES: [StyledPipelineSpec; 7] = [
         blend: STRAIGHT,
         buffer: AREA_BUFFER,
     },
+    StyledPipelineSpec {
+        name: "image",
+        vertex: "areaVs",
+        fragment: "imageFs",
+        vertex_count: None,
+        blend: PREMULTIPLIED,
+        buffer: AREA_BUFFER,
+    },
 ];
 
 /// The styled pipelines, layouts and atlas of one device.
@@ -229,6 +240,8 @@ pub struct StyledGpu {
     atlas_view: wgpu::TextureView,
     sampler: wgpu::Sampler,
     pub(crate) atlas: Atlas,
+    /// The drawing's pictures (docs/adr/0192 §3).
+    pictures: super::pictures::PictureTextures,
     /// The device's alignment of dynamic uniform offsets.
     align: u64,
     /// Colours are sRGB-encoded as written; an sRGB target would encode them twice.
@@ -320,6 +333,7 @@ impl StyledGpu {
         let min_align = u64::from(device.limits().min_uniform_buffer_offset_alignment).max(16);
         let align = (STYLE_BYTES as u64).next_multiple_of(min_align);
         StyledGpu {
+            pictures: super::pictures::PictureTextures::new(device),
             format,
             module,
             frame_layout,
@@ -373,7 +387,7 @@ impl StyledGpu {
                     cache: None,
                 })
             };
-            let [stroke, solid, hatch, pattern, tile, marker, gradient] = &STYLED_PIPELINES;
+            let [stroke, solid, hatch, pattern, tile, marker, gradient, image] = &STYLED_PIPELINES;
             Pipelines {
                 stroke: pipe(stroke),
                 solid: pipe(solid),
@@ -382,6 +396,7 @@ impl StyledGpu {
                 tile: pipe(tile),
                 marker: pipe(marker),
                 gradient: pipe(gradient),
+                image: pipe(image),
             }
         })
     }
@@ -421,6 +436,7 @@ impl StyledGpu {
                         FillPaintBatch::Gradient { .. } => Pipe::Gradient,
                         FillPaintBatch::Pattern { .. } => Pipe::Pattern,
                         FillPaintBatch::Tile { .. } => Pipe::Tile,
+                        FillPaintBatch::Image { .. } => Pipe::Image,
                     },
                     AREA_FLOATS,
                     false,
@@ -431,7 +447,14 @@ impl StyledGpu {
             blocks.extend_from_slice(&block.bytes());
             blocks.resize((i + 1) * self.align as usize, 0);
             let range = b.range.clone();
+            let picture = match &b.kind {
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Image { image, .. },
+                } => Some(image.clone()),
+                _ => None,
+            };
             batches.push(GpuBatch {
+                picture,
                 pipe,
                 bytes: (range.start as u64 * 4)..(range.end as u64 * 4),
                 count: (range.len() / floats) as u32,
@@ -555,6 +578,33 @@ impl StyledGpu {
                 break;
             }
         }
+        // The visible pictures' textures, each bound with the frame (docs/adr/0192 §3).
+        let mut drawn = std::collections::HashSet::new();
+        for layer in &view.layers {
+            for g in &layer.batches {
+                if let (true, Some(key)) = (g.visible, &g.picture) {
+                    drawn.insert(key.clone());
+                }
+            }
+        }
+        for key in &drawn {
+            let texture = self.pictures.view(device, queue, key, images);
+            let fresh = view
+                .pictures
+                .get(key)
+                .is_some_and(|(t, _)| Arc::ptr_eq(t, &texture));
+            if !fresh {
+                let bind = super::pictures::binding(
+                    device,
+                    &self.frame_layout,
+                    &view.frame,
+                    &texture,
+                    &self.pictures.sampler,
+                );
+                view.pictures.insert(key.clone(), (texture, bind));
+            }
+        }
+        view.pictures.retain(|k, _| drawn.contains(k));
         for up in self.atlas.take_uploads() {
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
@@ -601,6 +651,25 @@ impl StyledGpu {
             .lens
             .get_or_insert_with(|| frame_binding(device, self, "kentos.styled.lens"));
         queue.write_buffer(buffer, 0, bytemuck::bytes_of(&uniform));
+        // The pictures the view binds, with the lens's frame too (docs/adr/0192 §3).
+        let mut lens_pictures = std::mem::take(&mut view.lens_pictures);
+        for (key, (texture, _)) in &view.pictures {
+            let fresh = lens_pictures
+                .get(key)
+                .is_some_and(|(t, _)| Arc::ptr_eq(t, texture));
+            if !fresh && let Some((buffer, _)) = &view.lens {
+                let bind = super::pictures::binding(
+                    device,
+                    &self.frame_layout,
+                    buffer,
+                    texture,
+                    &self.pictures.sampler,
+                );
+                lens_pictures.insert(key.clone(), (texture.clone(), bind));
+            }
+        }
+        lens_pictures.retain(|k, _| view.pictures.contains_key(k));
+        view.lens_pictures = lens_pictures;
         let px_per_m = frame.scale * frame.dpr;
         let hw = f64::from(frame.size_px[0]) / 2.0 / px_per_m;
         let hh = f64::from(frame.size_px[1]) / 2.0 / px_per_m;
@@ -618,14 +687,14 @@ impl StyledGpu {
 
     /// Draws a view's visible batches, layer by layer in their order.
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32) {
-        self.draw_through(pass, view, samples, &view.frame_bind, None);
+        self.draw_through(pass, view, samples, &view.frame_bind, &view.pictures, None);
     }
 
     /// The same through the lens [`StyledGpu::prepare_lens`] set: only the
     /// batches that reach its box.
     pub fn draw_lens(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled) {
         if let (Some((_, bind)), Some(seen)) = (&view.lens, view.lens_view) {
-            self.draw_through(pass, view, 1, bind, Some(seen));
+            self.draw_through(pass, view, 1, bind, &view.lens_pictures, Some(seen));
         }
     }
 
@@ -635,6 +704,7 @@ impl StyledGpu {
         view: &ViewStyled,
         samples: u32,
         frame_bind: &wgpu::BindGroup,
+        pictures: &HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
         seen: Option<([f64; 4], f64, f64)>,
     ) {
         let Some(pipes) = self.pipelines.get(&samples) else {
@@ -665,9 +735,20 @@ impl StyledGpu {
             {
                 return;
             }
+            // A picture draws with its own texture in group 0 (docs/adr/0192 §3).
+            let picture = match &b.picture {
+                Some(key) => match pictures.get(key) {
+                    Some((_, bind)) => Some(bind),
+                    None => return,
+                },
+                None => None,
+            };
             if current != Some(b.pipe) {
                 pass.set_pipeline(pipes.get(b.pipe));
                 current = Some(b.pipe);
+            }
+            if let Some(bind) = picture {
+                pass.set_bind_group(0, bind, &[]);
             }
             pass.set_bind_group(1, &layer.bind, &[b.offset]);
             pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
@@ -675,6 +756,9 @@ impl StyledGpu {
                 pass.draw(0..6, 0..b.count);
             } else {
                 pass.draw(0..b.count, 0..1);
+            }
+            if picture.is_some() {
+                pass.set_bind_group(0, frame_bind, &[]);
             }
         };
         match &view.order {
@@ -758,6 +842,8 @@ fn srgb_to_linear(c: f32) -> f32 {
 }
 
 struct GpuBatch {
+    /// A picture's key (docs/adr/0192 §3): its texture is bound in group 0 for it.
+    picture: Option<String>,
     pipe: Pipe,
     /// Bytes of the layer's vertex buffer this batch draws.
     bytes: Range<u64>,
@@ -798,6 +884,9 @@ pub struct ViewStyled {
     /// metre and pixel ratio (docs/adr/0181 §5).
     lens: Option<(wgpu::Buffer, wgpu::BindGroup)>,
     lens_view: Option<([f64; 4], f64, f64)>,
+    /// Each drawn picture bound with the frame uniform, and with the lens's.
+    pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
+    lens_pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
 }
 
 impl ViewStyled {
@@ -812,6 +901,8 @@ impl ViewStyled {
             order: None,
             lens: None,
             lens_view: None,
+            pictures: HashMap::new(),
+            lens_pictures: HashMap::new(),
         }
     }
 

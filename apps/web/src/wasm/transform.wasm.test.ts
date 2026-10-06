@@ -24,7 +24,7 @@ import { packEntities, unpackEntities } from './pack';
 
 const env = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
 const ROUNDS = Number(env.TRANSFORM_ROUNDS ?? 200);
-const KINDS: EntityKind[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
+const KINDS: Exclude<EntityKind, 'image'>[] = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'xline', 'ray', 'spline', 'text', 'dimension', 'hatch', 'insert'];
 
 /** The first difference: keys in order, numbers bit for bit (NaN equals NaN, −0 is not 0). */
 function difference(a: unknown, b: unknown, path = ''): string | null {
@@ -101,6 +101,25 @@ const SPECIAL: NewEntity[] = [
     bold: true,
     source: { kind: 'file', name: 'a.csv' },
   },
+  // docs/adr/0192: pictures, embedded and linked, turned, mirrored, clipped and see-through.
+  { layerId: 'b', attrs: {}, kind: 'image', p: { x: 486520, y: 4420200 }, width: 40, height: 30, rotation: 0.5, asset: 'resim-0011223344556677' },
+  {
+    layerId: 'b',
+    attrs: { Not: 'saha' },
+    kind: 'image',
+    p: { x: 10, y: 20 },
+    width: 12,
+    height: 9,
+    rotation: -2,
+    mirror: true,
+    file: 'foto/saha.jpg',
+    clip: [
+      { x: 0.1, y: 0.1 },
+      { x: 0.9, y: 0.1 },
+      { x: 0.5, y: 0.8 },
+    ],
+    opacity: 0.6,
+  },
 ];
 
 /** A random affine: translation, rotation, uniform or non-uniform scale, reflection, or two of them composed. */
@@ -172,9 +191,9 @@ describe('move, copy and paste through the geometry store, packed', () => {
     const point = back.at(-2)!.geometry;
     expect([Object.is((point.p as { x: number }).x, -0), Number.isNaN((point.p as { y: number }).y), Object.is(point.z, -0)]).toEqual([true, true, true]);
     // 13 is the multi-part area (docs/adr/0143), 14 a block's insert (docs/adr/0144), 15 a leader (docs/adr/0146), 16 a
-    // multi-part polyline and 17 a multi-point object (docs/adr/0174), 18 a table (docs/adr/0184); the first number that
-    // is no kind is 19.
-    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 19), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
+    // multi-part polyline and 17 a multi-point object (docs/adr/0174), 18 a table (docs/adr/0184), 19 a picture
+    // (docs/adr/0192); the first number that is no kind is 20.
+    expect(() => unpackEntities({ nums: Float64Array.of(1, 0, 0, 20), strings: '["a"]' })).toThrow(/bilinmeyen bir nesne türü/);
   });
 
   it('gives what the JSON call gives, bit for bit, on random objects and affines', () => {

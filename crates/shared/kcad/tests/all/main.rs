@@ -8,6 +8,7 @@ mod dimensions;
 mod elevations;
 mod fixtures;
 mod hatches;
+mod images;
 mod layer_states;
 mod leaders;
 mod line_parts;

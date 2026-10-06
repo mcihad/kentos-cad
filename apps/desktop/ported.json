@@ -153,6 +153,8 @@
     "tool.stationLabels",
     "tool.centerline",
     "tool.edgeShift",
+    "tool.imageInsert",
+    "tool.imageClip",
     "tool.filletAll",
     "tool.chamferAll",
     "tool.split",

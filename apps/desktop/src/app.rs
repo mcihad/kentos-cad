@@ -335,6 +335,8 @@ pub enum Message {
     Navigation(crate::navigation_cards::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
+    /// Resim ekle's file: its name, path and bytes, or none (cancelled).
+    ImageFile(Option<(String, Option<String>, Vec<u8>)>),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
     /// The pointer rested on a snap past the tracking dwell (tracking.rs).
@@ -512,6 +514,8 @@ pub struct App {
     pub(crate) find_replace: Option<crate::find_replace::Window>,
     /// Metin dosyası yerleştir asked for its file: the dialog opens after the update (text_file.rs).
     pub(crate) text_file_wanted: bool,
+    /// Resim ekle asked for a picture file (docs/adr/0192 §5).
+    pub(crate) image_file_wanted: bool,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
     /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
@@ -817,6 +821,7 @@ impl App {
             attribute_values: None,
             find_replace: None,
             text_file_wanted: false,
+            image_file_wanted: false,
             text_field_select: false,
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
@@ -1098,6 +1103,7 @@ impl App {
             self.attribute_values_tasks(),
             self.find_replace_tasks(),
             self.text_file_tasks(),
+            self.image_file_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
@@ -1288,6 +1294,7 @@ impl App {
             Message::TableUpdate(event) => return self.table_update_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
+            Message::ImageFile(file) => self.image_file_given(file),
             Message::HoverCard(version) => self.hover_card_due(version),
             Message::TrackDwell(number) => {
                 let spatial = &self.spatial;

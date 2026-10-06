@@ -378,6 +378,8 @@ impl Canvas {
             }
             // Pieces of a block are their own shapes; the rest show as dots (`object`).
             Shape::Insert { p, .. } => self.dot_at(*p, c),
+            // A picture's part shown, filled (docs/adr/0192 §3).
+            Shape::Image { .. } => self.area(&[crate::geom::image::shown(s)], c),
             // A table's outline (docs/adr/0184 §2).
             Shape::Table { .. } => {
                 if let Some(t) = crate::geom::table::table_geom(s) {

@@ -584,6 +584,58 @@ impl<'d> Encoder<'d> {
                     f.push(("source", Val::Source(source)));
                 }
             }
+            Entity::Image(e) => {
+                let refuse = |this: &mut Self, field: &'static str, words: &str| {
+                    this.path.push(Seg::Name(kind));
+                    this.path.push(Seg::Name(field));
+                    Err(this.fail(Code::BadValue, words))
+                };
+                // Only the drawing's: a block definition holds no picture (docs/adr/0192 §1).
+                if uid.is_none() {
+                    return refuse(self, "p", "blok tanımında resim olamaz");
+                }
+                let i = &e.image;
+                // A number that is not finite meets the float's own refusal (`non_finite`), with its place.
+                let finite = [i.p.x, i.p.y, i.width, i.height, i.rotation]
+                    .iter()
+                    .chain(i.opacity.iter())
+                    .all(|v| v.is_finite())
+                    && i.clip
+                        .iter()
+                        .flatten()
+                        .all(|q| q.x.is_finite() && q.y.is_finite());
+                if finite && let Some(words) = i.problem() {
+                    let field = if i.clip.is_some() && words.contains("kırpma") {
+                        "clip"
+                    } else if words.contains("donukluğu") {
+                        "opacity"
+                    } else if words.contains("kaynağı") || words.contains("yolu") {
+                        "asset"
+                    } else {
+                        "width"
+                    };
+                    return refuse(self, field, &words);
+                }
+                f.push(("p", Val::Point(&i.p)));
+                f.push(("width", Val::Float(i.width)));
+                f.push(("height", Val::Float(i.height)));
+                f.push(("rotation", Val::Float(i.rotation)));
+                if i.mirror {
+                    f.push(("mirror", Val::Bool(true)));
+                }
+                if let Some(a) = &i.asset {
+                    f.push(("asset", Val::Text(a)));
+                }
+                if let Some(file) = &i.file {
+                    f.push(("file", Val::Text(file)));
+                }
+                if let Some(clip) = &i.clip {
+                    f.push(("clip", Val::Points(clip)));
+                }
+                if let Some(o) = i.opacity {
+                    f.push(("opacity", Val::Float(o)));
+                }
+            }
             Entity::Leader(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {
                     this.path.push(Seg::Name(kind));

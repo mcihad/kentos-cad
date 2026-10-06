@@ -39,6 +39,9 @@ export const NIL_BLOCK = '00000000-0000-0000-0000-000000000000';
 /** A block's name: something besides white space (`empty_name`). */
 /** None of the objects a block is defined from is a table: a block holds none (docs/adr/0184 §1), `table_in_block` at the first. */
 export function checkNoTables(found: readonly { entity: Entity; at: number }[]): Stop | null {
+  // Nor a picture (docs/adr/0192 §1), `image_in_block`.
+  const image = found.find((f) => f.entity.kind === 'image');
+  if (image) return failed(error('image_in_block', 'Seçilenlerde resim var; resim bloğa konamaz. Resmi seçimden çıkarın.', `uids[${image.at}]`));
   const table = found.find((f) => f.entity.kind === 'table');
   return table ? failed(error('table_in_block', 'Seçilenlerde tablo var; tablo bloğa konamaz. Tabloyu seçimden çıkarın.', `uids[${table.at}]`)) : null;
 }

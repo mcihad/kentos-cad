@@ -1,4 +1,5 @@
 import { tableProblem, type TableShape } from './tables';
+import { imageProblem, type ImageShape } from './imageRules';
 import type { CrsDefinition } from '../contracts/generated/CrsDefinition';
 import type { DatumTransform } from '../contracts/generated/DatumTransform';
 import type { DimensionStyleDef } from '../contracts/generated/DimensionStyleDef';
@@ -334,7 +335,7 @@ const numbersAt = (v: unknown, w: string, f: string): number => {
   return v.length;
 };
 
-const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table'] as const;
+const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image'] as const;
 /** The dimension's kinds; KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
@@ -827,6 +828,21 @@ function entity(v: unknown, where: string, layers: ReadonlySet<string> | null, i
       faceAt(v, w);
       const problem = tableProblem(v as unknown as TableShape);
       if (problem) fail(at(w, problem[0]), problem[1]);
+      break;
+    }
+    // A picture (docs/adr/0192 §1): its fields' types here, its size, one source, clip and opacity by the contract's rule.
+    case 'image': {
+      pointAt(v.p, w, 'konum');
+      numAt(v.width, w, 'genişlik');
+      numAt(v.height, w, 'yükseklik');
+      numAt(v.rotation, w, 'dönüş');
+      if (v.mirror !== undefined && v.mirror !== true) fail(at(w, 'ayna'), 'yalnız true yazılır; aynasız resimde alan yoktur');
+      if (v.asset !== undefined) strAt(v.asset, w, 'varlık');
+      if (v.file !== undefined) strAt(v.file, w, 'dosya');
+      if (v.clip !== undefined) pointsAt(v.clip, w, 'kırpma', 3);
+      if (v.opacity !== undefined) numAt(v.opacity, w, 'donukluk');
+      const problem = imageProblem(v as unknown as ImageShape);
+      if (problem) fail(at(w, 'resim'), problem);
       break;
     }
   }

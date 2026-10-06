@@ -98,6 +98,14 @@ pub struct TextOutline {
     pub glyphs: Vec<Vec<Segment>>,
 }
 
+/// A picture object's pixels (docs/adr/0192 §3): sRGB with straight alpha, row by row.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Bitmap {
+    pub width: u32,
+    pub height: u32,
+    pub rgba: Vec<u8>,
+}
+
 /// Where the atlas gets pictures and glyphs from (the host keeps them by key).
 pub trait ImageSource {
     /// The picture of an SVG or raster image; None when it cannot be read
@@ -113,6 +121,12 @@ pub trait ImageSource {
         weight: f64,
         italic: bool,
     ) -> Option<Arc<TextOutline>>;
+
+    /// A picture object's pixels by its key (`asset:<id>`, `file:<path>`;
+    /// docs/adr/0192 §3); none while the host has none (light grey stands in).
+    fn bitmap(&self, _key: &str) -> Option<Arc<Bitmap>> {
+        None
+    }
 }
 
 /// No pictures and no glyphs: shapes, strokes and fills still draw (tests, previews without fonts).

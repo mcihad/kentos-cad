@@ -20,9 +20,10 @@ pub mod atlas;
 pub mod cpu;
 pub mod gpu;
 pub mod picture;
+pub mod pictures;
 pub mod raster;
 pub mod shader;
 pub mod uniform;
 
 pub use gpu::{StyledFrame, StyledGpu, StyledLayerPart, StyledScene, ViewStyled};
-pub use picture::{ImageSource, NoImages, Picture, TextOutline};
+pub use picture::{Bitmap, ImageSource, NoImages, Picture, TextOutline};

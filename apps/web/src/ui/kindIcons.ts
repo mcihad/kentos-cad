@@ -21,4 +21,5 @@ export const ENTITY_KIND_ICON: Record<EntityKind, string> = {
   insert: 'blockInsert',
   leader: 'leader',
   table: 'table',
+  image: 'imageInsert',
 };

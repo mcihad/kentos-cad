@@ -17,6 +17,7 @@ import { commonElevationRow, lineEndRow, pathElevationRow, spaceRow } from './el
 import { cornerRows, holeRows } from './pathRows';
 import { dimensionRows } from './dimensionRows';
 import { hatchRows } from './hatchRows';
+import { imageRows } from './imageRows';
 import { leaderRows } from './leaderRows';
 import { textRows } from './textRows';
 import { dimensionStyleRows, textStyleRows } from './styleRows';
@@ -482,6 +483,10 @@ export class PropertiesPanel extends Panel {
         );
         break;
       }
+      // Its source, place, size, turn, see-through share, clip and mirror (docs/adr/0192 §4). The desktop's are the same.
+      case 'image':
+        geo.push(...imageRows(this.ctx, e, locked));
+        break;
       // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7). The desktop's are the same.
       case 'leader':
         geo.push(...leaderRows(this.ctx, [e], locked), { label: 'Köşe sayısı', value: String(e.pts.length), numeric: true }, num('Uzunluk', entityLength(e) ?? 0, 'm'));

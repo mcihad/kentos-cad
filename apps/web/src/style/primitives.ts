@@ -90,6 +90,21 @@ export type FillPaint =
       readonly level: number;
     }
   | {
+      /**
+       * A picture over its frame (docs/adr/0192 §3): `image` names its pixels (`asset:<id>`, `file:<path>`); its
+       * frame's lower left corner (world metres, from the anchor in a batch), width and height, turn (radians) and
+       * whether the picture is upside down in it.
+       */
+      readonly kind: 'image';
+      readonly image: string;
+      readonly corner: readonly [number, number];
+      readonly size: readonly [number, number];
+      readonly angle: number;
+      readonly mirror: boolean;
+      readonly opacity: number;
+      readonly level: number;
+    }
+  | {
       /** A tile repeated over the area: a marker pattern or an image asset. */
       readonly kind: 'tile';
       readonly tile: TileSource;

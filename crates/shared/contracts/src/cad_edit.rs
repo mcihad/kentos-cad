@@ -152,6 +152,9 @@ pub enum EditOperation {
     /// edge moved parallel to itself, its neighbours lengthened or shortened;
     /// the object updated in place, each vertex keeping its elevation.
     EdgeShift,
+    /// Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or
+    /// taken away, the picture updated in place.
+    ImageClip,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -433,6 +436,13 @@ pub enum EntityGeometry {
         #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<crate::TableSource>,
     },
+    /// A picture (docs/adr/0192 §1): its lower left corner `p`, its width
+    /// and height (metres, over 0), turned by `rotation` (radians,
+    /// counter-clockwise) about `p` and mirrored in its own x axis when
+    /// `mirror`; its bytes the project library's asset `asset` or the file
+    /// `file`, exactly one; clipped to `clip` in its own fractions; drawn at
+    /// `opacity`.
+    Image(crate::ImageFields),
 }
 
 impl EntityGeometry {
@@ -447,6 +457,7 @@ impl EntityGeometry {
                 | EntityGeometry::Dimension { .. }
                 | EntityGeometry::Hatch { .. }
                 | EntityGeometry::Insert { .. }
+                | EntityGeometry::Image(_)
         )
     }
 }

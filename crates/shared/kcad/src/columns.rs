@@ -44,6 +44,7 @@
 //! | insert | | p, scale, rotation | block (its id as UUID text) |
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation | text if any |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet |
+//! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
 //! line weight (docs/adr/0139); a
@@ -60,7 +61,8 @@
 //! hatch: holes, name, scale, families, gradient, tie (docs/adr/0186); insert: mirror; leader: text, arrow, mask (no value;
 //! docs/adr/0146); table: merges, aligns, header (no value), grid, text
 //! style, font, bold (no value), italic (no value), oblique, source, frame
-//! (docs/adr/0184)). A
+//! (docs/adr/0184); image: mirror (no value), asset, file, clip, opacity
+//! (docs/adr/0192)). A
 //! hole's flags: 1 bulges, 2 elevations; a part's: 1 bulges, 2 elevations, 4
 //! holes. Dimension styles and hatch pattern types are numbered in the
 //! contract's order.
@@ -89,16 +91,16 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionArrow,
     DimensionEntity, DimensionLook, DimensionStyle, DimensionTextPlace, DrawingFont, DrawingUnit,
     EllipseEntity, Entity, EntityBase, EntityId, GradientShape, HatchAssoc, HatchEntity,
-    HatchGradient, HatchPattern, HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity,
-    LineEntity, Paragraph, PathEntity, PatternLine, PointEntity, PointPart, RingGeometry,
-    SplineEntity, TableAlign, TableEntity, TableGrid, TableSource, TextAlign, TextEntity, TextFace,
-    TextRun, TextScript, Vec2,
+    HatchGradient, HatchPattern, HatchPatternType, ImageEntity, ImageFields, InsertEntity,
+    LeaderArrow, LeaderEntity, LineEntity, Paragraph, PathEntity, PatternLine, PointEntity,
+    PointPart, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
+    TextAlign, TextEntity, TextFace, TextRun, TextScript, Vec2,
 };
 
 use crate::error::{Code, KcadError};
 
 /// The kinds, numbered as `kinds` holds them.
-pub const KINDS: [&str; 16] = [
+pub const KINDS: [&str; 17] = [
     "point",
     "line",
     "polyline",
@@ -115,6 +117,7 @@ pub const KINDS: [&str; 16] = [
     "insert",
     "leader",
     "table",
+    "image",
 ];
 
 const COLOR: u32 = 1;
@@ -247,6 +250,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Insert(_) => 13,
         Entity::Leader(_) => 14,
         Entity::Table(_) => 15,
+        Entity::Image(_) => 16,
     }
 }
 
@@ -765,6 +769,43 @@ impl Packer {
                     flags |= OPT[0];
                 }
             }
+            Entity::Image(ImageEntity {
+                base: _,
+                image:
+                    ImageFields {
+                        p,
+                        width,
+                        height,
+                        rotation,
+                        mirror,
+                        asset,
+                        file,
+                        clip,
+                        opacity,
+                    },
+            }) => {
+                self.point(p);
+                self.out.floats.extend([*width, *height, *rotation]);
+                if *mirror {
+                    flags |= OPT[0];
+                }
+                if let Some(a) = asset {
+                    flags |= OPT[1];
+                    self.text(a);
+                }
+                if let Some(f) = file {
+                    flags |= OPT[2];
+                    self.text(f);
+                }
+                if let Some(clip) = clip {
+                    flags |= OPT[3];
+                    self.points(clip);
+                }
+                if let Some(o) = opacity {
+                    flags |= OPT[4];
+                    self.float(*o);
+                }
+            }
             Entity::Leader(LeaderEntity {
                 base: _,
                 pts,
@@ -1203,6 +1244,8 @@ fn allowed(kind: u8) -> u32 {
         13 => OPT[0],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184).
         15 => OPT[..11].iter().fold(0, |m, b| m | b),
+        // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
+        16 => OPT[..5].iter().fold(0, |m, b| m | b),
         _ => 0,
     }
 }
@@ -1786,6 +1829,36 @@ fn geometry(
                     oblique,
                 },
                 source,
+            })
+        }
+        16 => {
+            let p = c.point()?;
+            let (width, height, rotation) = (c.float()?, c.float()?, c.float()?);
+            let asset = if has(1) {
+                Some(c.text(|| place("asset"))?)
+            } else {
+                None
+            };
+            let file = if has(2) {
+                Some(c.text(|| place("file"))?)
+            } else {
+                None
+            };
+            let clip = if has(3) { Some(c.points()?) } else { None };
+            let opacity = if has(4) { Some(c.float()?) } else { None };
+            Entity::Image(ImageEntity {
+                base,
+                image: ImageFields {
+                    p,
+                    width,
+                    height,
+                    rotation,
+                    mirror: has(0),
+                    asset,
+                    file,
+                    clip,
+                    opacity,
+                },
             })
         }
         13 => {

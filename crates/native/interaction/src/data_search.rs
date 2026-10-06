@@ -34,6 +34,7 @@ pub fn kind_name(e: &Entity) -> &'static str {
         Entity::Insert(_) => "Blok",
         Entity::Leader(_) => "Kılavuz",
         Entity::Table(_) => "Tablo",
+        Entity::Image(_) => "Resim",
     }
 }
 

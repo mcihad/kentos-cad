@@ -697,6 +697,13 @@ fn finite(e: &Entity) -> bool {
                     && e.pattern.spacing.is_finite()
             }
             Entity::Insert(e) => p(&e.p) && fs(&[e.scale, e.rotation]),
+            Entity::Image(e) => {
+                let i = &e.image;
+                p(&i.p)
+                    && fs(&[i.width, i.height, i.rotation])
+                    && i.clip.as_deref().is_none_or(ps)
+                    && i.opacity.is_none_or(f64::is_finite)
+            }
             Entity::Leader(e) => ps(&e.pts) && fs(&[e.height, e.rotation]),
             Entity::Table(e) => {
                 p(&e.p)

@@ -625,6 +625,19 @@ fn common<M: Map + ?Sized>(
             }
             kept(out)
         }
+        // A picture keeps its shape under the similarity at its lower left corner, which
+        // goes where the point goes; mirrored, its frame's new corner moves with it
+        // (docs/adr/0192 §4).
+        Shape::Image { p, .. } => {
+            let at = m.at(*p)?;
+            let s = nearest_similarity(&m.jac(*p)?);
+            let from = crate::geom::affine::apply(&s, *p);
+            let mut out = transform_shape(shape, &s);
+            if let Shape::Image { p: corner, .. } = &mut out {
+                *corner = Vec2::new(corner.x + at.x - from.x, corner.y + at.y - from.y);
+            }
+            kept(out)
+        }
         Shape::Dimension {
             a,
             b,

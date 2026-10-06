@@ -138,6 +138,8 @@ pub mod hatch;
 pub mod hatch_options;
 pub mod hatch_selected;
 pub mod holes;
+pub mod image_clip;
+pub mod image_insert;
 mod junctions;
 pub mod labels_to_text;
 pub mod layer_move;
@@ -238,7 +240,7 @@ pub use session::{LOCKS_GONE, NO_LOCK_REFERENCE, NO_REFERENCE_TOOL, NO_TRAVEL, S
 pub use spatial::{
     GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
-pub use tool::{Area, CellGhost, Label, TextGhost};
+pub use tool::{Area, CellGhost, ImageFile, Label, TextGhost};
 pub use view_history::{ViewHistory, Viewpoint};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,

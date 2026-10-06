@@ -1,0 +1,33 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "image-clip",
+  "title": "Resmi kırp: resmin içine tıklamak onu seçmez, söylenir; kenarı seçer; Dikdörtgen'in iki köşesi resmin kesirleriyle kırpar; kırpılmış resim kırpma sınırının kenarından seçilir, Çokgen (Ç) üç köşe ve Enter'la yeni sınırı yazar; Kaldır (K) kırpmayı kaldırır; Dikdörtgen'e (D) dönülür, Esc resmi sonra aracı bırakır; Ctrl+Z kaldırmayı geri alır",
+  "source": "tools/imageTools.ts (ImageClipTool); kentos_interaction::image_clip; docs/adr/0192 §5",
+  "covers": ["CAD-30"],
+  "document": "images.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.imageClip", "expect": { "tool": "imageClip", "points": 0, "prompt": "Resmi kırp: kırpılacak resmin kenarına tıklayın" } },
+    { "click": [5, 0], "note": "Resmin içi.", "expect": { "points": 0, "log": "warn", "logged": ["Tıklanan yerde kilitsiz bir resim yok; kırpılacak resmin kenarına tıklayın."] } },
+    { "click": [0, -15], "note": "Resmin alt kenarı.", "expect": { "points": 1, "prompt": "Resmi kırp: sınırın ilk köşesine tıklayın [Dikdörtgen (D): açık / Çokgen (Ç)]" } },
+    { "click": [-10, -10], "expect": { "points": 2, "prompt": "Resmi kırp: sınırın karşı köşesine tıklayın [Dikdörtgen (D): açık / Çokgen (Ç)]" } },
+    { "click": [10, 10], "note": "Dikdörtgen: resmin ortası.", "expect": { "points": 0, "log": "success", "logged": ["Resmi kırp: resim kırpıldı."], "objects": [{ "id": 1, "kind": "image", "points": [[-10, -10], [10, -10], [10, 10], [-10, 10]] }] } },
+    { "click": [-10, 0], "note": "Kırpma sınırının sol kenarı.", "expect": { "points": 1, "prompt": "Resmi kırp: sınırın ilk köşesine tıklayın [Dikdörtgen (D): açık / Çokgen (Ç) / Kaldır (K)]" } },
+    { "text": "ç", "note": "Çokgen bir tuşla açılır (seçeneğin harfi).", "expect": { "points": 1, "prompt": "Resmi kırp: sınırın köşelerine tıklayın [Dikdörtgen (D) / Çokgen (Ç): açık / Kaldır (K)]" } },
+    { "click": [-5, -5] },
+    { "click": [5, -5] },
+    { "click": [0, 5], "expect": { "points": 4, "prompt": "Resmi kırp: sonraki köşeye tıklayın ya da Enter ile bitirin [Dikdörtgen (D) / Çokgen (Ç): açık / Kaldır (K)]" } },
+    { "key": "Enter", "note": "Üçgen: yeni sınır eskisinin yerine.", "expect": { "points": 0, "log": "success", "logged": ["Resmi kırp: resim kırpıldı."], "objects": [{ "id": 1, "kind": "image", "points": [[-5, -5], [5, -5], [0, 5]] }] } },
+    { "click": [0, -5], "note": "Üçgenin alt kenarı.", "expect": { "points": 1 } },
+    { "text": "k", "note": "Kırpma kalkar: bütün resim.", "expect": { "points": 0, "log": "success", "logged": ["Resmi kırp: kırpma kaldırıldı."], "objects": [{ "id": 1, "kind": "image", "points": [[-20, -15], [20, -15], [20, 15], [-20, 15]] }] } },
+    { "click": [0, -15] },
+    { "text": "d", "note": "Dikdörtgen'e dönülür (bellek başladığı gibi).", "expect": { "points": 1, "prompt": "Resmi kırp: sınırın ilk köşesine tıklayın [Dikdörtgen (D): açık / Çokgen (Ç)]" } },
+    { "key": "Esc", "note": "Önce resim bırakılır.", "expect": { "tool": "imageClip", "points": 0 } },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "key": "Ctrl+Z", "note": "Kaldırma geri alınır.", "expect": { "objects": [{ "id": 1, "kind": "image", "points": [[-5, -5], [5, -5], [0, 5]] }] } }
+  ]
+}

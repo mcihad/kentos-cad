@@ -229,6 +229,12 @@ pub fn entity(e: &mut Entity, s: Scale) {
                 *x = s.apply(*x);
             }
         }
+        // Its clip is in its own fractions: unchanged (docs/adr/0192 §1).
+        Entity::Image(i) => {
+            s.point(&mut i.image.p);
+            i.image.width = s.apply(i.image.width);
+            i.image.height = s.apply(i.image.height);
+        }
     }
 }
 

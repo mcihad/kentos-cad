@@ -347,6 +347,8 @@ function drawFill(view: View, paint: FillPaint, rings: readonly (readonly Vec2[]
     g.fillRect(...px(view, v(box.minX, box.maxY)), (box.maxX - box.minX) * view.k, (box.maxY - box.minY) * view.k);
     return;
   }
+  // A picture is a drawing's object, never a symbol's paint (docs/adr/0192 §3).
+  if (paint.kind === 'image') return;
   const size: [number, number] = [toMm(paint.size[0], paint.unit), toMm(paint.size[1], paint.unit)];
   if (!(size[0] > 0 && size[1] > 0)) return;
   const cos = Math.cos(paint.angle);

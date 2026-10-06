@@ -13,6 +13,7 @@ mod data_search;
 mod dimensions;
 mod display;
 mod edge_shift;
+mod image;
 mod field_reduce;
 mod field_traverse;
 mod geodesy;

@@ -48,6 +48,7 @@ pub mod entity;
 pub mod formats;
 pub mod hatch;
 pub mod identity;
+pub mod image;
 pub mod invitations;
 pub mod job;
 pub mod layer;
@@ -87,6 +88,7 @@ pub use project_files::*;
 pub use settings::*;
 pub use style::*;
 pub use table::*;
+pub use image::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;

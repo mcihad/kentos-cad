@@ -114,6 +114,13 @@ class Looks {
     return { key: `img|${a.id}|${a.data.length}`, kind: 'raster', url: a.data, width: a.width, height: a.height };
   }
 
+  /** An embedded picture's pixels from the project's library (docs/adr/0192 §2); none for a linked file or a gone image. */
+  private pictureUrl(key: string): string | null {
+    if (!key.startsWith('asset:')) return null;
+    const a = this.opts.asset(key.slice('asset:'.length));
+    return a && a.format !== 'svg' ? a.data : null;
+  }
+
   paint(p: FillPaint): FillPaintBatch {
     switch (p.kind) {
       case 'solid':
@@ -133,6 +140,8 @@ class Looks {
         };
       case 'gradient':
         return { kind: 'gradient', color: this.rgba(p.color, p.opacity), color2: this.rgba(p.color2, p.opacity), shape: p.shape, inverted: p.inverted, dir: p.dir, from: p.from, to: p.to, centre: [p.centre[0], p.centre[1]], radius: p.radius };
+      case 'image':
+        return { kind: 'image', image: p.image, url: this.pictureUrl(p.image), corner: [p.corner[0], p.corner[1]], size: [p.size[0], p.size[1]], angle: p.angle, mirror: p.mirror, opacity: p.opacity };
       case 'pattern': {
         const m = p.mark;
         const size: [number, number] = [p.size[0], p.size[1]];
@@ -212,6 +221,8 @@ function dashPeriod(dash: readonly number[]): number {
  */
 function fold(paint: FillPaintBatch, o: readonly [number, number] | undefined): FillPaintBatch {
   if (!o || (o[0] === 0 && o[1] === 0) || paint.kind === 'solid') return paint;
+  // A picture's frame from the tile (docs/adr/0192 §3).
+  if (paint.kind === 'image') return { ...paint, corner: [paint.corner[0] - o[0], paint.corner[1] - o[1]] };
   // A gradient's frame from the tile: along its direction, and its middle (docs/adr/0186 §3).
   if (paint.kind === 'gradient') {
     const shift = Math.cos(paint.dir) * o[0] + Math.sin(paint.dir) * o[1];

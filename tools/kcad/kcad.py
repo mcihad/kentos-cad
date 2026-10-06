@@ -103,6 +103,14 @@ SCHEMA_WITH_TABLES = 22
 # Schema 23: schema 22 and the hatch's patterns, gradients and ties: `pattern`'s types `pattern` and `gradient`, its
 # `name`, `scale`, `lines` and `gradient`; a hatch's `assoc`, only in the drawing (docs/adr/0186).
 SCHEMA_WITH_HATCH_PATTERNS = 23
+# Schema 24: schema 23 and the `image` kind, only in the drawing (docs/adr/0192 §1).
+SCHEMA_WITH_IMAGES = 24
+# A picture's bounds (kentos_contracts::image): its opacity, its clip's corners, a side (m), a linked file's letters.
+MIN_IMAGE_OPACITY = 0.1
+MAX_IMAGE_OPACITY = 1.0
+MAX_CLIP_CORNERS = 10_000
+MAX_IMAGE_SIZE = 1e7
+MAX_IMAGE_PATH = 4096
 HATCH_TYPES = ("solid", "lines", "cross", "pattern", "gradient")
 GRADIENT_SHAPES = ("linear", "cylinder", "spherical")
 # A pattern's bounds (kentos_contracts::hatch): families, dashes a family, its name's letters, a number; a tie's objects.
@@ -144,7 +152,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -640,6 +648,7 @@ class _Schema:
         self.styles = version >= SCHEMA_WITH_STYLES
         self.tables = version >= SCHEMA_WITH_TABLES
         self.hatches = version >= SCHEMA_WITH_HATCH_PATTERNS
+        self.images = version >= SCHEMA_WITH_IMAGES
         self.blocks = version >= SCHEMA_WITH_BLOCKS
         self.texts = version >= SCHEMA_WITH_TEXT_EXTRAS
         self.leaders = version >= SCHEMA_WITH_LEADERS
@@ -1134,13 +1143,17 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
         if kind == "table" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında tablo olamaz")
+        # Nor a picture (docs/adr/0192 §1).
+        if kind == "image" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında resim olamaz")
         table = dict(self.common())
         table.update(ENTITY_KINDS[kind](self))
         self.path.append(kind)
@@ -1159,6 +1172,8 @@ class _Schema:
                 self.path.pop()
             if kind == "table":
                 self.table_rules(fields)
+            if kind == "image":
+                self.image_rules(fields)
             # Bold, italic and a slant need a typeface (docs/adr/0183 §2); a table's face is a text's.
             if kind in ("text", "table") and "font" not in fields and any(k in fields for k in ("bold", "italic", "oblique")):
                 self.path.append(next(k for k in ("textStyle", "bold", "italic", "oblique") if k in fields))
@@ -1353,6 +1368,25 @@ class _Schema:
                 self.path.append("objects")
                 self.fail("missing_field", "“objects” alanı yok")
         return d
+
+    def image_rules(self, i):
+        """The contract's `ImageFields::problem` (kentos_contracts::image), in its order; the numbers are finite already."""
+        if not (0.0 < i["width"] <= MAX_IMAGE_SIZE and 0.0 < i["height"] <= MAX_IMAGE_SIZE):
+            self.fail("bad_value", f"Resmin genişliği ve yüksekliği sıfırdan büyük ve en çok {MAX_IMAGE_SIZE:g} m olmalı.")
+        asset = i.get("asset", "").strip() or None
+        file = i.get("file", "").strip() or None
+        if asset and file:
+            self.fail("bad_value", "Resmin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.")
+        if not ((asset and "file" not in i) or (file and "asset" not in i)):
+            self.fail("bad_value", "Resmin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.")
+        if file and (len(file) > MAX_IMAGE_PATH or any(ord(c) < 32 or 0x7F <= ord(c) <= 0x9F for c in file)):
+            self.fail("bad_value", f"Bağlı dosyanın yolu en çok {MAX_IMAGE_PATH} harf olmalı ve denetim karakteri içermemeli.")
+        clip = i.get("clip")
+        if clip is not None and not (3 <= len(clip) <= MAX_CLIP_CORNERS and all(0.0 <= q["x"] <= 1.0 and 0.0 <= q["y"] <= 1.0 for q in clip)):
+            self.fail("bad_value", f"Resmin kırpma sınırı en az 3, en çok {MAX_CLIP_CORNERS} köşe olmalı, köşeleri resmin kesirleriyle 0 ile 1 arasında.")
+        o = i.get("opacity")
+        if o is not None and not (MIN_IMAGE_OPACITY <= o <= MAX_IMAGE_OPACITY):
+            self.fail("bad_value", f"Resmin donukluğu {MIN_IMAGE_OPACITY} ile {MAX_IMAGE_OPACITY} arasında olmalı; {o} verildi.")
 
     def table_rules(self, t):
         """The contract's `TableShape::problem` (kentos_contracts::table), in its order: what it names is refused at its field."""
@@ -1765,6 +1799,19 @@ ENTITY_KINDS = {
         "italic": (s.face_flag, False),
         "oblique": (s.oblique, False),
         "source": (s.table_source, False),
+    },
+    # Schema 24 (docs/adr/0192): a picture's frame, its one source, its clip and opacity; `mirror` only when true; only in
+    # the drawing.
+    "image": lambda s: {
+        "p": (s.point, True),
+        "width": (s.float, True),
+        "height": (s.float, True),
+        "rotation": (s.float, True),
+        "mirror": (s.mirror, False),
+        "asset": (s.text, False),
+        "file": (s.text, False),
+        "clip": (s.array(s.point), False),
+        "opacity": (s.float, False),
     },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     "leader": lambda s: {

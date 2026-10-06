@@ -87,7 +87,10 @@ mod centerline_scenes;
 #[cfg(test)]
 mod edge_shift_scenes;
 #[cfg(test)]
+mod image_scenes;
+#[cfg(test)]
 mod stationing_scenes;
+mod pictures;
 mod points;
 mod preview;
 mod processing;

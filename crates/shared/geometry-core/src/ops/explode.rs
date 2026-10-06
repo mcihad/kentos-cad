@@ -311,6 +311,9 @@ pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
         Shape::Ellipse { .. } => {
             Cut::Error("Elips patlatılamaz; parçalamak için Kır (B) kullanın.".into())
         }
+        Shape::Image { .. } => Cut::Error(
+            "Resim patlatılmaz; bir kısmını göstermek için Resmi kırp'ı kullanın.".into(),
+        ),
         _ => Cut::Error("Bu nesne zaten temel bir nesne; patlatılacak bir şey yok.".into()),
     }
 }

@@ -9,7 +9,8 @@ import { op } from '../../wasm/core';
  * and hatch in the result gets the field back, undefined. An area's parts
  * (docs/adr/0143) are the same: an area the core gives back with one part
  * has none, so the old ones must not stay; so are a polyline's and a
- * point's (docs/adr/0174).
+ * point's (docs/adr/0174). So is an insert's or a picture's mirror, which a second reflection takes away
+ * (docs/adr/0144, 0192 §4).
  */
 export function entityOp<F extends (...args: never[]) => unknown>(name: string): F {
   const call = op<(...args: unknown[]) => unknown>(name);
@@ -33,6 +34,8 @@ function clear(v: unknown): void {
   if ((kind === 'polyline' || kind === 'polygon') && !('bulges' in o)) o.bulges = undefined;
   if ((kind === 'polygon' || kind === 'hatch') && !('holes' in o)) o.holes = undefined;
   if ((kind === 'polygon' || kind === 'polyline' || kind === 'point') && !('parts' in o)) o.parts = undefined;
+  // A mirror a second reflection took away: an insert's (docs/adr/0144), a picture's (docs/adr/0192 §4).
+  if ((kind === 'insert' || kind === 'image') && !('mirror' in o)) o.mirror = undefined;
   for (const key in o) {
     const x = o[key];
     if (x && typeof x === 'object') clear(x);

@@ -1,5 +1,6 @@
 import { batchImage, batchImagePx, batchInView, batchLegible, MARKER_STRIDE, STROKE_STRIDE, type AtlasHit, type AtlasSource, type RGBA, type ScaleRange, type StyledBatch } from '../types';
-import { AREA_VS, GRADIENT_FS, HATCH_FS, MARKER_FS, MARKER_VS, PATTERN_FS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
+import { fitted, GREY } from '../pictures';
+import { AREA_VS, GRADIENT_FS, HATCH_FS, IMAGE_FS, MARKER_FS, MARKER_VS, PATTERN_FS, SHAPE_IDS, STROKE_FS, STROKE_VS, TILE_FS } from './styledShaders';
 
 /**
  * WebGL2 side of the styled batches (docs/STYLE.md §6): creates the vertex
@@ -82,6 +83,9 @@ export class StyledRenderer {
   private readonly solid: Program;
   private readonly pattern: Program;
   private readonly marker: Program;
+  private readonly image: Program;
+  /** The pictures' own textures by key (docs/adr/0192 §3); the grey stand-in under `''`. */
+  private readonly pictures = new Map<string, WebGLTexture>();
   private atlas: AtlasSource | null = null;
   private texture: WebGLTexture | null = null;
   private frameNo = 0;
@@ -107,6 +111,43 @@ void main() { outColor = u_color; }`;
     this.tile = make(AREA_VS, TILE_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_atlas', 'u_rect', 'u_tile', 'u_rot', 'u_shift', 'u_opacity', 'u_unit']);
     this.pattern = make(AREA_VS, PATTERN_FS, ['a_pos'], [...FRAME_UNIFORMS, ...PATTERN_UNIFORMS]);
     this.marker = make(MARKER_VS, MARKER_FS, ['a_i0', 'a_i1'], [...FRAME_UNIFORMS, 'u_unit', 'u_offset', 'u_anchor', 'u_fit', 'u_aspect', 'u_strokeW', 'u_kind', 'u_shape', 'u_sp', 'u_fill', 'u_stroke', 'u_atlas', 'u_rect', 'u_opacity']);
+    this.image = make(AREA_VS, IMAGE_FS, ['a_pos'], [...FRAME_UNIFORMS, 'u_picture', 'u_frame', 'u_rot', 'u_opacity', 'u_mirror']);
+  }
+
+  /**
+   * A picture's texture (docs/adr/0192 §3): made once from its decoded pixels, premultiplied with its mip levels; the
+   * grey stand-in while the atlas has none (looked for again next frame).
+   */
+  private pictureTexture(key: string, url: string | null): WebGLTexture | null {
+    const gl = this.gl;
+    const kept = this.pictures.get(key);
+    if (kept) return kept;
+    const img = this.atlas?.picture(key, url) ?? null;
+    if (!img) {
+      let grey = this.pictures.get('');
+      if (!grey) {
+        grey = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, grey);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(GREY));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        this.pictures.set('', grey);
+      }
+      return grey;
+    }
+    const p = fitted(img, gl.getParameter(gl.MAX_TEXTURE_SIZE) as number);
+    const texture = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, p.source);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    this.pictures.set(key, texture);
+    return texture;
   }
 
   useAtlas(atlas: AtlasSource): void {
@@ -320,6 +361,21 @@ void main() { outColor = u_color; }`;
           gl.uniform3f(p.u.u_round, paint.centre[0], paint.centre[1], paint.radius);
           gl.uniform1i(p.u.u_shape, paint.shape);
           gl.uniform1i(p.u.u_inverted, paint.inverted ? 1 : 0);
+        } else if (paint.kind === 'image') {
+          const p = this.image;
+          this.use(p, f, b);
+          this.premultiplied(true);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.pictureTexture(paint.image, paint.url));
+          gl.uniform1i(p.u.u_picture, 0);
+          gl.uniform4f(p.u.u_frame, paint.corner[0], paint.corner[1], paint.size[0], paint.size[1]);
+          gl.uniform2f(p.u.u_rot, Math.cos(paint.angle), Math.sin(paint.angle));
+          gl.uniform1f(p.u.u_opacity, paint.opacity);
+          gl.uniform1i(p.u.u_mirror, paint.mirror ? 1 : 0);
+          gl.drawArrays(gl.TRIANGLES, 0, s.count);
+          // The atlas again for the batches after it.
+          gl.bindTexture(gl.TEXTURE_2D, this.texture);
+          continue;
         } else if (paint.kind === 'pattern') {
           const p = this.pattern;
           this.use(p, f, b);
@@ -397,7 +453,9 @@ void main() { outColor = u_color; }`;
   dispose(): void {
     const gl = this.gl;
     // The atlas is not detached: after a backend switch it already feeds the new backend.
-    for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker]) gl.deleteProgram(p.program);
+    for (const p of [this.stroke, this.hatch, this.gradient, this.tile, this.solid, this.pattern, this.marker, this.image]) gl.deleteProgram(p.program);
     if (this.texture) gl.deleteTexture(this.texture);
+    for (const t of this.pictures.values()) gl.deleteTexture(t);
+    this.pictures.clear();
   }
 }

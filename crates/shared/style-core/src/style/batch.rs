@@ -410,6 +410,27 @@ impl Sink for BatchSink {
                 };
                 &anchored
             }
+            // A picture's frame likewise, from the anchor (docs/adr/0192 §3).
+            FillPaint::Image {
+                image,
+                corner,
+                size,
+                angle,
+                mirror,
+                opacity,
+                level,
+            } => {
+                anchored = FillPaint::Image {
+                    image: image.clone(),
+                    corner: [corner[0] - self.origin.x, corner[1] - self.origin.y],
+                    size: *size,
+                    angle: *angle,
+                    mirror: *mirror,
+                    opacity: *opacity,
+                    level: *level,
+                };
+                &anchored
+            }
             _ => paint,
         };
         let tile = self.tile_of(rings[0][0]);

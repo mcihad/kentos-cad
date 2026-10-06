@@ -177,6 +177,19 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
             None => out.push(NONE),
         },
+        // The part shown: its outline as a line, then as an area the style engine paints with
+        // the picture (docs/adr/0192 §3).
+        Shape::Image { .. } => {
+            let shown = crate::geom::image::shown(s);
+            if shown.len() < 3 {
+                out.push(NONE);
+            } else {
+                out.extend([MIXED, 1.0]);
+                path(out, true, &shown);
+                out.push(1.0);
+                ring(out, &shown, false, oriented.then_some(true));
+            }
+        }
         // Its lines, then its frame's band, four strips each a ring of its own; its words are
         // labels (docs/adr/0184 §2).
         Shape::Table { .. } => {

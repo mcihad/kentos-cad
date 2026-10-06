@@ -20,8 +20,8 @@ use kentos_geometry_core::jsmath::{js_max, js_round};
 use kentos_geometry_core::store::Store;
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
-    LayerObjects, MODE_DIMENSION, MODE_OWN, MODE_RENDERER, MODE_SET, MODE_SKIP, Program,
-    build_layer as core_build,
+    LayerObjects, MODE_DIMENSION, MODE_IMAGE, MODE_OWN, MODE_RENDERER, MODE_SET, MODE_SKIP,
+    Program, build_layer as core_build,
 };
 use serde_json::{Map, Value, json};
 
@@ -259,6 +259,8 @@ pub fn layer_call(
         let (mode, a) = match e {
             Entity::Text(_) => (MODE_SKIP, 0),
             Entity::Dimension(_) => (MODE_DIMENSION, 0),
+            // Its own bytes over its frame, its frame a hairline (docs/adr/0192 §3).
+            Entity::Image(_) => (MODE_IMAGE, 0),
             Entity::Hatch(h) => (
                 MODE_SET,
                 it.set(json!({ "fill": hatch_symbol_of(h, color) })),

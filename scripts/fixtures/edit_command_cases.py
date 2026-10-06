@@ -84,6 +84,7 @@ GEOMETRY = {
     "leader": ["pts", "text", "height", "rotation", "arrow", "mask"],
     "table": ["p", "rotation", "height", "rows", "columns", "cells", "merges", "aligns", "header", "grid", "frame", "textStyle", "font", "bold",
               "italic", "oblique", "source"],
+    "image": ["p", "width", "height", "rotation", "mirror", "asset", "file", "clip", "opacity"],
 }
 
 
@@ -96,7 +97,7 @@ def reshaped(e, geometry):
     An insert is mirrored or has no `mirror` (docs/adr/0144)."""
     out = {k: v for k, v in e.items() if k != "kind" and k not in GEOMETRY[e["kind"]]}
     out.update(json.loads(json.dumps(geometry)))
-    if out.get("kind") == "insert" and out.get("mirror") is not True:
+    if out.get("kind") in ("insert", "image") and out.get("mirror") is not True:
         out.pop("mirror", None)
     # A text's defaults are no fields (docs/adr/0145): no mask, a width factor of 1.
     if out.get("kind") == "text":
@@ -1164,6 +1165,57 @@ cases.append({
          "result": done(changed=[uid(2)]),
          "expect": {"entities": {"2": z_updated(2, SHIFTED, zs=[1, 2, None])}, "canUndo": True, "revision": "changed"}},
         {"op": "undo", "returns": "Paralel kaydır", "expect": {"entities": {"2": ZE(2)}, "canUndo": False}},
+    ],
+})
+
+# Resmi kırp (docs/adr/0192 §5): the tool computes the clip in the picture's own fractions (the core's `ops::image`); the
+# picture is updated in place, its id and data kept; without a clip the whole picture shows again.
+PICTURE_ID = "resim-0011223344556677"
+PICTURE = {"kind": "asset", "id": PICTURE_ID, "name": "logo", "path": ["Resimler"], "format": "png", "data": "data:image/png;base64,iVBORw0KGgo=", "width": 4, "height": 3}
+IMAGE = {"kind": "image", "p": P(487000, 4420010), "width": 8, "height": 6, "rotation": 0, "asset": PICTURE_ID}
+I_ENTITIES = [{**IMAGE, "id": 1, "layerId": "yapi", "attrs": {"Not": "logo"}}, {**IMAGE, "id": 2, "layerId": "kilitli", "attrs": {}}]
+I_SETUP = {**SETUP, "entities": I_ENTITIES, "styles": {"items": [PICTURE], "categories": []}}
+I_NOTHING = {"ids": [1, 2], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+CLIP = [P(0, 0), P(0.5, 0), P(0.5, 1), P(0, 1)]
+
+
+def picture(geometry):
+    out = {**{k: v for k, v in I_ENTITIES[0].items() if k not in GEOMETRY["image"]}, **json.loads(json.dumps(geometry))}
+    if out.get("mirror") is not True:
+        out.pop("mirror", None)
+    return out
+
+
+cases.append({
+    "name": "Resmi kırp: resmin kırpma sınırı yazılır, kimliği ve verisi kalır, kırpmasız resim bütündür; tek adım, adı Resmi kırp (ADR 0192 §5)",
+    "setup": I_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "resim"},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**IMAGE, "clip": CLIP}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": picture({**IMAGE, "clip": CLIP})}, "uids": {"1": "resim"}, "canUndo": True, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**IMAGE, "mirror": False}}]},
+         "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": picture(IMAGE)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"entities": {"1": picture({**IMAGE, "clip": CLIP})}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"entities": {"1": I_ENTITIES[0]}, "canUndo": False}},
+    ],
+})
+cases.append({
+    "name": "Resmi kırp, ret: kırpma sınırı resmin içinde, en az üç köşe; görüntüsü projenin kitaplığında; kilitli katmandaki resim; hiçbir şey yazılmaz (ADR 0192 §6)",
+    "setup": I_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**IMAGE, "clip": [P(0, 0), P(2, 0), P(1, 1)]}}]},
+         "result": failed("invalid_image", "Resmin kırpma sınırı en az 3, en çok 10000 köşe olmalı, köşeleri resmin kesirleriyle 0 ile 1 arasında.", "changes[0].geometry"),
+         "expect": I_NOTHING},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**IMAGE, "opacity": 1.5}}]},
+         "result": failed("invalid_image", "Resmin donukluğu 0.1 ile 1 arasında olmalı; 1.5 verildi.", "changes[0].geometry"), "expect": I_NOTHING},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(1), "geometry": {**IMAGE, "asset": "resim-ffffffffffffffff"}}]},
+         "result": failed("unknown_asset", "“resim-ffffffffffffffff” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin.",
+                          "changes[0].geometry.asset"),
+         "expect": I_NOTHING},
+        {"op": "execute", "input": {"operation": "imageClip", "changes": [{"kind": "update", "uid": uid(2), "geometry": {**IMAGE, "clip": CLIP}}]},
+         "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": I_NOTHING},
     ],
 })
 

@@ -520,6 +520,18 @@ define.append({
     ],
 })
 
+# Nor a picture (docs/adr/0192 §1); a picture is said before a table.
+IMAGE = {"kind": "image", "id": 10, "layerId": "yapi", "attrs": {}, "p": P(487000, 4420080), "width": 8, "height": 6, "rotation": 0, "asset": "resim-0011223344556677"}
+IMAGE_IN_BLOCK = "Seçilenlerde resim var; resim bloğa konamaz. Resmi seçimden çıkarın."
+I_NOTHING = {**NOTHING, "ids": IDS + [9, 10]}
+define.append({
+    "name": "resim bloğa konamaz: image_in_block, ilk resmin yeriyle; tablodan önce (ADR 0192 §1)",
+    "setup": setup(entities=ENTITIES + [TABLE, IMAGE]),
+    "steps": [
+        {"op": "execute", "input": {"name": "Logo", "base": BASE, "uids": ["$uidOf:1", "$uidOf:9", "$uidOf:10"]}, "result": failed("image_in_block", IMAGE_IN_BLOCK, "uids[2]"), "expect": I_NOTHING},
+    ],
+})
+
 edit = []
 
 
@@ -647,6 +659,14 @@ edit.append({
     "setup": setup(entities=ENTITIES + [TABLE]),
     "steps": [
         {"op": "execute", "input": {"operation": "redefine", "block": ROGAR, "uids": ["$uidOf:9"]}, "result": failed("table_in_block", TABLE_IN_BLOCK, "uids[0]"), "expect": T_NOTHING},
+    ],
+})
+
+edit.append({
+    "name": "yeniden tanımlanan blok da resim alamaz: image_in_block (ADR 0192 §1)",
+    "setup": setup(entities=ENTITIES + [TABLE, IMAGE]),
+    "steps": [
+        {"op": "execute", "input": {"operation": "redefine", "block": ROGAR, "uids": ["$uidOf:10"]}, "result": failed("image_in_block", IMAGE_IN_BLOCK, "uids[0]"), "expect": I_NOTHING},
     ],
 })
 
@@ -947,13 +967,13 @@ assert not name_ok(" \u0085　") and name_ok("﻿")
 write(
     "cad.blocks.define",
     "Blok tanımla: doğrulama, plan, yazma, geri alma",
-    "ADR 0144 §4. Denetim sırası: adın boş olmaması (yalnız boşluk da boştur, Unicode White_Space; U+FEFF boşluk değildir); en az bir kimlik (no_entities), her kimliğin yazımı; taban noktasının sonlu olması (doğu önce); replace ile katman verilmesi (no_layer); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması (iki kez verilen tek nesnedir); tablonun olmaması (table_in_block, ilk tablonun uids[i]'si; ADR 0184 §1); blok kuralları: adın çizimde bir kez olması (Türkçe büyük küçük harf katlamasıyla: I → ı, İ → i; duplicate_block, ileti ilk tanımın adını verir), en çok 16 düzey (block_too_deep); replace ile yerleştirmenin katmanı (var, grup değil, kilitli değil; gizliyse layer_hidden uyarısı), sonra nesnelerin katmanı kilitli değil (layer_locked, uids[i]). Nesneler olduğu gibi kopyalanır: geometrisi, katmanı, rengi, kalınlığı, öznitelikleri, etiketi, kimlikleri girdinin sırasıyla 1'den. replace ile nesneler silinir, yerine yeni bloğun yerleştirmesi taban noktasına, verilen katmana konur (ölçek 1, dönüş yok, öznitelik yok). Adım “Blok tanımla”. Plan tanımı boş UUID kimlikle, yerleştirmeyi yuva 0 ve boş UUID blokla verir. Kurulumdaki en büyük nesne kimliği 8. $blockOf:Ad çizimdeki o adlı bloğun kimliğidir.",
+    "ADR 0144 §4. Denetim sırası: adın boş olmaması (yalnız boşluk da boştur, Unicode White_Space; U+FEFF boşluk değildir); en az bir kimlik (no_entities), her kimliğin yazımı; taban noktasının sonlu olması (doğu önce); replace ile katman verilmesi (no_layer); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması (iki kez verilen tek nesnedir); resmin olmaması (image_in_block, ilk resmin uids[i]'si; ADR 0192 §1), tablonun olmaması (table_in_block, ilk tablonun uids[i]'si; ADR 0184 §1); blok kuralları: adın çizimde bir kez olması (Türkçe büyük küçük harf katlamasıyla: I → ı, İ → i; duplicate_block, ileti ilk tanımın adını verir), en çok 16 düzey (block_too_deep); replace ile yerleştirmenin katmanı (var, grup değil, kilitli değil; gizliyse layer_hidden uyarısı), sonra nesnelerin katmanı kilitli değil (layer_locked, uids[i]). Nesneler olduğu gibi kopyalanır: geometrisi, katmanı, rengi, kalınlığı, öznitelikleri, etiketi, kimlikleri girdinin sırasıyla 1'den. replace ile nesneler silinir, yerine yeni bloğun yerleştirmesi taban noktasına, verilen katmana konur (ölçek 1, dönüş yok, öznitelik yok). Adım “Blok tanımla”. Plan tanımı boş UUID kimlikle, yerleştirmeyi yuva 0 ve boş UUID blokla verir. Kurulumdaki en büyük nesne kimliği 8. $blockOf:Ad çizimdeki o adlı bloğun kimliğidir.",
     define,
 )
 write(
     "cad.blocks.edit",
     "Blok tanımını değiştir: yeniden adlandır, yeniden tanımla, taban noktası, sil, temizle, öznitelikler",
-    "ADR 0144 §4. Denetim sırası: blok verilmesi (temizle dışında; no_block); işlemin girdisi: rename adın boş olmaması (empty_name), redefine en az bir kimlik ve yazımları, verildiyse sonlu taban noktası, replace ile katman (no_layer), rebase taban noktası (no_base) ve sonluluğu; beklenen sürümün yazımı, sonra çizimin sürümü; bloğun çizimde olması (unknown_block); işlemin kendisi: rename ve rebase blok kuralları (duplicate_block), redefine nesnelerin çizimde olması, tablonun olmaması (table_in_block), blok kuralları (block_cycle: blok kendini doğrudan ya da başka bloklar yoluyla içeremez; block_too_deep), replace ile katman denetimleri; remove bloğun çizimde ya da başka bir tanımda yerleştirmesi olmaması (block_in_use). attributes (ADR 0144 §7) girdide listeyi ister (no_attributes; boş liste öznitelikleri kaldırır), sonra her özniteliği sırayla: etiketin boş ya da yalnız boşluk olmaması (empty_tag), listede önceki bir etiketin tam aynısı olmaması (duplicate_tag; büyük küçük harf ayrı etikettir), yerin sonlu olması (önce doğu), açının sonlu olması (not_finite), yüksekliğin sıfırdan büyük ve sonlu olması (invalid_height); bu denetimler blok verilmesinden sonra, sürümden ve bloğun çizimde olmasından önce yapılır. Bir şey değiştirmeyen istek hiçbir şey yazmaz; sonuç tamamlanır, changed ve removed boş. Temizle kullanılmayan tanımları, yalnız onların kullandıklarıyla birlikte siler; removed çizimin sırasıyladır. Adımlar: rename, redefine, rebase, attributes “Blok değiştir”; remove “Blok sil”; purge “Blokları temizle”. Kurulumdaki en büyük nesne kimliği 8.",
+    "ADR 0144 §4. Denetim sırası: blok verilmesi (temizle dışında; no_block); işlemin girdisi: rename adın boş olmaması (empty_name), redefine en az bir kimlik ve yazımları, verildiyse sonlu taban noktası, replace ile katman (no_layer), rebase taban noktası (no_base) ve sonluluğu; beklenen sürümün yazımı, sonra çizimin sürümü; bloğun çizimde olması (unknown_block); işlemin kendisi: rename ve rebase blok kuralları (duplicate_block), redefine nesnelerin çizimde olması, resmin olmaması (image_in_block), tablonun olmaması (table_in_block), blok kuralları (block_cycle: blok kendini doğrudan ya da başka bloklar yoluyla içeremez; block_too_deep), replace ile katman denetimleri; remove bloğun çizimde ya da başka bir tanımda yerleştirmesi olmaması (block_in_use). attributes (ADR 0144 §7) girdide listeyi ister (no_attributes; boş liste öznitelikleri kaldırır), sonra her özniteliği sırayla: etiketin boş ya da yalnız boşluk olmaması (empty_tag), listede önceki bir etiketin tam aynısı olmaması (duplicate_tag; büyük küçük harf ayrı etikettir), yerin sonlu olması (önce doğu), açının sonlu olması (not_finite), yüksekliğin sıfırdan büyük ve sonlu olması (invalid_height); bu denetimler blok verilmesinden sonra, sürümden ve bloğun çizimde olmasından önce yapılır. Bir şey değiştirmeyen istek hiçbir şey yazmaz; sonuç tamamlanır, changed ve removed boş. Temizle kullanılmayan tanımları, yalnız onların kullandıklarıyla birlikte siler; removed çizimin sırasıyladır. Adımlar: rename, redefine, rebase, attributes “Blok değiştir”; remove “Blok sil”; purge “Blokları temizle”. Kurulumdaki en büyük nesne kimliği 8.",
     edit,
 )
 print(f"{len(define)} + {len(edit)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

@@ -430,6 +430,26 @@ pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
                 face: face.clone(),
             }
         }
+        // Its frame's corners map; mirrored, the picture turns over in its new frame
+        // (docs/adr/0192 §4). A shear keeps the frame square: its width along the bottom's
+        // image, its height the left side's length.
+        Shape::Image { .. } => {
+            let Some(f) = crate::geom::image::Frame::of(shape) else {
+                return shape.clone();
+            };
+            let c = f.corners().map(|q| apply(m, q));
+            let frame = if is_reflection(m) {
+                crate::geom::image::reflected(&f, c)
+            } else {
+                crate::geom::image::Frame {
+                    p: c[0],
+                    u: Vec2::new(c[1].x - c[0].x, c[1].y - c[0].y),
+                    v: Vec2::new(c[3].x - c[0].x, c[3].y - c[0].y),
+                    mirror: f.mirror,
+                }
+            };
+            crate::geom::image::with_frame(shape, &frame)
+        }
     }
 }
 

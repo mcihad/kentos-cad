@@ -1,0 +1,555 @@
+{
+ "format": "kentos.image-cases",
+ "version": 1,
+ "source": "scripts/fixtures/image_cases.py (docs/adr/0192)",
+ "placements": [
+  {
+   "name": "doğuya: genişlik uzaklık, dönüşsüz",
+   "p": {
+    "x": 10.0,
+    "y": 20.0
+   },
+   "q": {
+    "x": 26.0,
+    "y": 20.0
+   },
+   "aspect": 0.75,
+   "placed": {
+    "width": 16.0,
+    "height": 12.0,
+    "rotation": 0.0
+   }
+  },
+  {
+   "name": "3-4-5 doğrultusunda",
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "q": {
+    "x": 30.0,
+    "y": 40.0
+   },
+   "aspect": 0.75,
+   "placed": {
+    "width": 50.0,
+    "height": 37.5,
+    "rotation": 0.9272952180016122
+   }
+  },
+  {
+   "name": "kuzeye: çeyrek tur",
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "q": {
+    "x": 0.0,
+    "y": 30.0
+   },
+   "aspect": 0.5,
+   "placed": {
+    "width": 30.0,
+    "height": 15.0,
+    "rotation": 1.5707963267948966
+   }
+  },
+  {
+   "name": "batıya: yarım tur, uzun resim",
+   "p": {
+    "x": 5.0,
+    "y": 5.0
+   },
+   "q": {
+    "x": -7.0,
+    "y": 5.0
+   },
+   "aspect": 2.0,
+   "placed": {
+    "width": 12.0,
+    "height": 24.0,
+    "rotation": 3.141592653589793
+   }
+  },
+  {
+   "name": "güneybatıya: eksi açı",
+   "p": {
+    "x": 100.0,
+    "y": 100.0
+   },
+   "q": {
+    "x": 97.0,
+    "y": 96.0
+   },
+   "aspect": 1.0,
+   "placed": {
+    "width": 5.0,
+    "height": 5.0,
+    "rotation": -2.214297435588181
+   }
+  },
+  {
+   "name": "aynı nokta: çerçeve yok",
+   "p": {
+    "x": 3.0,
+    "y": 4.0
+   },
+   "q": {
+    "x": 3.0,
+    "y": 4.0
+   },
+   "aspect": 1.0,
+   "problem": "İkinci nokta birinciyle aynı yerde; resmin genişliği için başka bir noktaya tıklayın."
+  }
+ ],
+ "clips": [
+  {
+   "name": "içte dikdörtgen",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 110.0,
+     "y": 205.0
+    },
+    {
+     "x": 130.0,
+     "y": 205.0
+    },
+    {
+     "x": 130.0,
+     "y": 215.0
+    },
+    {
+     "x": 110.0,
+     "y": 215.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.25,
+     "y": 0.25
+    },
+    {
+     "x": 0.75,
+     "y": 0.25
+    },
+    {
+     "x": 0.75,
+     "y": 0.75
+    },
+    {
+     "x": 0.25,
+     "y": 0.75
+    }
+   ]
+  },
+  {
+   "name": "saat yönünde verilen sınır ters döner",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 110.0,
+     "y": 205.0
+    },
+    {
+     "x": 110.0,
+     "y": 215.0
+    },
+    {
+     "x": 130.0,
+     "y": 215.0
+    },
+    {
+     "x": 130.0,
+     "y": 205.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.25,
+     "y": 0.25
+    },
+    {
+     "x": 0.75,
+     "y": 0.25
+    },
+    {
+     "x": 0.75,
+     "y": 0.75
+    },
+    {
+     "x": 0.25,
+     "y": 0.75
+    }
+   ]
+  },
+  {
+   "name": "taşan sınır resmin kenarlarında kesilir",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 90.0,
+     "y": 190.0
+    },
+    {
+     "x": 120.0,
+     "y": 190.0
+    },
+    {
+     "x": 120.0,
+     "y": 230.0
+    },
+    {
+     "x": 90.0,
+     "y": 230.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 0.5,
+     "y": 0.0
+    },
+    {
+     "x": 0.5,
+     "y": 1.0
+    },
+    {
+     "x": 0.0,
+     "y": 1.0
+    }
+   ]
+  },
+  {
+   "name": "resmi saran sınır bütün resimdir",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 500.0,
+     "y": 0.0
+    },
+    {
+     "x": 500.0,
+     "y": 500.0
+    },
+    {
+     "x": 0.0,
+     "y": 500.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 1.0,
+     "y": 0.0
+    },
+    {
+     "x": 1.0,
+     "y": 1.0
+    },
+    {
+     "x": 0.0,
+     "y": 1.0
+    }
+   ]
+  },
+  {
+   "name": "köşeyi kesen üçgen",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 130.0,
+     "y": 195.0
+    },
+    {
+     "x": 150.0,
+     "y": 195.0
+    },
+    {
+     "x": 150.0,
+     "y": 225.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.8333333333333334,
+     "y": 0.0
+    },
+    {
+     "x": 1.0,
+     "y": 0.0
+    },
+    {
+     "x": 1.0,
+     "y": 0.5
+    }
+   ]
+  },
+  {
+   "name": "en alttaki köşeden: eşit alttakilerin en solu",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 130.0,
+     "y": 205.0
+    },
+    {
+     "x": 110.0,
+     "y": 215.0
+    },
+    {
+     "x": 110.0,
+     "y": 205.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.25,
+     "y": 0.25
+    },
+    {
+     "x": 0.75,
+     "y": 0.25
+    },
+    {
+     "x": 0.25,
+     "y": 0.75
+    }
+   ]
+  },
+  {
+   "name": "aynalı resim: kesir yukarı ters",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677",
+    "mirror": true
+   },
+   "world": [
+    {
+     "x": 100.0,
+     "y": 200.0
+    },
+    {
+     "x": 140.0,
+     "y": 200.0
+    },
+    {
+     "x": 140.0,
+     "y": 205.0
+    },
+    {
+     "x": 100.0,
+     "y": 205.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.0,
+     "y": 0.75
+    },
+    {
+     "x": 1.0,
+     "y": 0.75
+    },
+    {
+     "x": 1.0,
+     "y": 1.0
+    },
+    {
+     "x": 0.0,
+     "y": 1.0
+    }
+   ]
+  },
+  {
+   "name": "dışarıda: söylenir",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 300.0,
+     "y": 300.0
+    },
+    {
+     "x": 310.0,
+     "y": 300.0
+    },
+    {
+     "x": 310.0,
+     "y": 310.0
+    }
+   ],
+   "problem": "Kırpma sınırı resmin dışında kalıyor; resmin üzerinde bir sınır çizin."
+  },
+  {
+   "name": "yalnız kenara değen: alansız, söylenir",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 0.0,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 140.0,
+     "y": 205.0
+    },
+    {
+     "x": 150.0,
+     "y": 205.0
+    },
+    {
+     "x": 150.0,
+     "y": 210.0
+    },
+    {
+     "x": 140.0,
+     "y": 210.0
+    }
+   ],
+   "problem": "Kırpma sınırı resmin dışında kalıyor; resmin üzerinde bir sınır çizin."
+  },
+  {
+   "name": "dönük resim",
+   "shape": {
+    "kind": "image",
+    "p": {
+     "x": 100.0,
+     "y": 200.0
+    },
+    "width": 40.0,
+    "height": 20.0,
+    "rotation": 1.5707963267948966,
+    "asset": "resim-0011223344556677"
+   },
+   "world": [
+    {
+     "x": 95.0,
+     "y": 205.0
+    },
+    {
+     "x": 105.0,
+     "y": 205.0
+    },
+    {
+     "x": 105.0,
+     "y": 230.0
+    },
+    {
+     "x": 95.0,
+     "y": 230.0
+    }
+   ],
+   "clip": [
+    {
+     "x": 0.125,
+     "y": 0.0
+    },
+    {
+     "x": 0.75,
+     "y": 0.0
+    },
+    {
+     "x": 0.75,
+     "y": 0.2500000000000001
+    },
+    {
+     "x": 0.125,
+     "y": 0.25
+    }
+   ],
+   "tolerance": 1e-12
+  }
+ ]
+}

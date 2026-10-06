@@ -203,6 +203,9 @@ pub const TOOLS: &[&str] = &[
     crate::centerline::ID,
     // docs/adr/0191: Paralel kaydır.
     crate::edge_shift::ID,
+    // docs/adr/0192: Resim ekle and Resmi kırp.
+    crate::image_insert::ID,
+    crate::image_clip::ID,
 ];
 
 /// What a tool running over another one suspended (docs/adr/0083).
@@ -390,6 +393,8 @@ impl Session {
             crate::station_labels::ID => Box::new(crate::station_labels::StationLabels::new()),
             crate::centerline::ID => Box::new(crate::centerline::Centerline::new()),
             crate::edge_shift::ID => Box::new(crate::edge_shift::EdgeShift::new()),
+            crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),
+            crate::image_clip::ID => Box::new(crate::image_clip::ImageClip::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command
@@ -1099,6 +1104,14 @@ impl Session {
     pub fn file_given(&mut self, file: Option<(&str, &[u8])>, cx: &mut Context<'_>) {
         if let Some(tool) = self.tool.as_mut() {
             tool.file_given(file, cx);
+        }
+        self.settle(cx);
+    }
+
+    /// The picture the running tool asked for (Resim ekle, docs/adr/0192 §5).
+    pub fn image_given(&mut self, file: Option<crate::tool::ImageFile>, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.image_given(file, cx);
         }
         self.settle(cx);
     }

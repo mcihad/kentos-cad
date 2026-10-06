@@ -319,6 +319,22 @@ pub enum Shape {
         source: Option<crate::api::json::Json>,
         face: crate::text::face::Face,
     },
+    /// A picture (docs/adr/0192): its frame from `p`, its lower left corner,
+    /// `width` along and `height` up, turned `rotation` radians about `p`,
+    /// the picture upside down in it when `mirror`; its source (`asset` or
+    /// `file`), its clip in its own fractions and its opacity, which the
+    /// style engine draws with (`geom::image`).
+    Image {
+        p: Vec2,
+        width: f64,
+        height: f64,
+        rotation: f64,
+        mirror: Option<bool>,
+        asset: Option<String>,
+        file: Option<String>,
+        clip: Option<Vec<Vec2>>,
+        opacity: Option<f64>,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -338,6 +354,7 @@ crate::json_tagged!(Shape, "kind",
     Insert => "insert" { block, p, scale, rotation, mirror; attrs },
     Leader => "leader" { pts, text, height, rotation, arrow, mask },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source & face: crate::text::face::Face },
+    Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -518,6 +535,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         }
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => vec![*p],
         Shape::Spline { pts, .. } => pts.clone(),
+        // The corners of the part shown (docs/adr/0192 §4).
+        Shape::Image { .. } => crate::geom::image::shown(e),
         // Its corners, its top left first (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::table_geom(e)
             .map(|t| t.outline().to_vec())
@@ -597,8 +616,8 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
             Some(l) => leader::drawn_path(pts, &l),
             None => pts.clone(),
         },
-        // Its outline, closed (docs/adr/0184 §2).
-        Shape::Table { .. } => {
+        // Its outline, closed (docs/adr/0184 §2); a picture's, the part shown (docs/adr/0192 §4).
+        Shape::Table { .. } | Shape::Image { .. } => {
             let mut ring = entity_vertices(e);
             if let Some(&first) = ring.first() {
                 ring.push(first);
@@ -1328,6 +1347,8 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         | Shape::Ray { p, .. }
         | Shape::Insert { p, .. }
         | Shape::Table { p, .. } => *p,
+        // The middle of the part shown (docs/adr/0192).
+        Shape::Image { .. } => centroid(&crate::geom::image::shown(e)),
     })
 }
 

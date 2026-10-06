@@ -554,6 +554,14 @@ def table_shape(e):
         assert 0 < 2 * e["frame"] < min(sum(e["columns"]), sum(e["rows"])), "çerçeve tablonun içinde"
 
 
+def image_shape(e):
+    """The contract's picture rule, as far as an example needs it held (docs/adr/0192 §1)."""
+    assert 0 < e["width"] <= 1e7 and 0 < e["height"] <= 1e7, "resmin boyu sıfırdan büyük"
+    assert ("asset" in e) != ("file" in e), "resmin tek kaynağı olmalı"
+    assert all(0 <= q["x"] <= 1 and 0 <= q["y"] <= 1 for q in e.get("clip", [])) and len(e.get("clip", [None] * 3)) >= 3, "kırpma resmin içinde"
+    assert 0.1 <= e.get("opacity", 1.0) <= 1.0, "donukluk 0,1 ile 1 arasında"
+
+
 KINDS = {
     # Schema 17 (docs/adr/0174): a multi-point object's points past its first.
     "point": {"p": (point, True), "z": (f64, False), "parts": (lambda ps: array([point_part(pp) for pp in ps]), False)},
@@ -648,6 +656,19 @@ KINDS = {
         "oblique": (f64, False),
         "source": (table_source, False),
     },
+    # Schema 24 (docs/adr/0192): a picture's frame, one source, its clip in its own fractions, its opacity; `mirror`
+    # only when true; only in the drawing.
+    "image": {
+        "p": (point, True),
+        "width": (f64, True),
+        "height": (f64, True),
+        "rotation": (f64, True),
+        "mirror": (lambda b: boolean(b) if b is True else None, False),
+        "asset": (text, False),
+        "file": (text, False),
+        "clip": (points, False),
+        "opacity": (f64, False),
+    },
     # Schema 8 (docs/adr/0146): two vertices or more, a note only when there is one, an arrowhead by name, `mask` only when true.
     "leader": {
         "pts": (points, True),
@@ -713,6 +734,9 @@ def entity(e, uid, index):
     if kind == "table":
         assert uid is not None, "blok tanımında tablo olamaz"
         table_shape(e)
+    if kind == "image":
+        assert uid is not None, "blok tanımında resim olamaz"
+        image_shape(e)
     # A block definition's objects have no persistent ids to name (docs/adr/0186 §6).
     assert "assoc" not in e or uid is not None, "blok tanımının taraması nesnelere bağlı olamaz"
     body = fields({k: v for k, v in e.items() if k not in ("kind", "id")}, table, f"nesne {index} ({kind})")
@@ -774,7 +798,7 @@ def document(d):
 
 
 def schema_of(entities, blocks=None, layers=(), settings=None):
-    """The oldest schema that holds the drawing: 23 with a hatch's pattern of families or gradient (a field of theirs) or
+    """The oldest schema that holds the drawing: 24 with a picture, only in the drawing (docs/adr/0192), 23 with a hatch's pattern of families or gradient (a field of theirs) or
     its tie, in the drawing or a block definition (docs/adr/0186), 22 with a table, only in the drawing (docs/adr/0184), 21 with a text or a dimension style or a text's face or a dimension's look,
     in the drawing or a block definition (docs/adr/0183), 20 with a multi-line text's box, line spacing or letter formats, in the
     drawing or a block definition (docs/adr/0182 §1), 19 with layer states (docs/adr/0177 §4), 18 with a text that writes an
@@ -814,6 +838,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None):
             for e in es
         )
 
+    if any(e["kind"] == "image" for e in entities):
+        return 24
     if patterned(entities) or any(patterned(b["entities"]) for b in blocks or []):
         return 23
     if any(e["kind"] == "table" for e in entities):
@@ -1051,7 +1077,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-24.kcad"] = container(root(cmap(parts), version=uint(24)))
+    files["schema-version-25.kcad"] = container(root(cmap(parts), version=uint(25)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -1292,6 +1318,23 @@ def broken(minimal_content, minimal_file):
     files["hatch-assoc-seed-nan.kcad"] = in_schema(23, hatch_of(ansi, assoc=cmap({"outer": blob(uid_bytes(m["uids"][0])), "seed": array([nan, f64(0.0)])})))
     files["hatch-assoc-islands-empty.kcad"] = in_schema(23, hatch_of(ansi, assoc=tie(islands=array([]))))
     files["hatch-assoc-in-block.kcad"] = with_blocks([block(1, "Tarama", [cmap({"hatch": cmap({"attrs": cmap({}), "layerId": text("0"), "ring": square, "pattern": cmap(ansi), "assoc": tie()})})])], version=23)
+    # A picture is schema 24's (docs/adr/0192): in schema 23 an unknown kind; only in the drawing; a positive size, one
+    # source, a clip of three corners or more inside the picture, an opacity from 0.1 to 1, `mirror` only when true.
+    def image_of(**extra):
+        body = {**common, "p": point(one["p"]), "width": f64(8.0), "height": f64(6.0), "rotation": f64(0.0), "asset": text("resim-0011223344556677"), **extra}
+        return cmap({"image": cmap({k: v for k, v in body.items() if v is not None})})
+
+    unit_square = lambda *xy: array([point({"x": x, "y": y}) for x, y in xy])  # noqa: E731
+    files["image-in-schema-23.kcad"] = in_schema(23, image_of())
+    files["image-in-block.kcad"] = with_blocks([block(1, "Logo", [cmap({"image": cmap({"attrs": cmap({}), "layerId": text("0"), "p": point({"x": 0.0, "y": 0.0}), "width": f64(8.0), "height": f64(6.0), "rotation": f64(0.0), "asset": text("resim-0011223344556677")})})])], version=24)
+    files["image-two-sources.kcad"] = in_schema(24, image_of(file=text("logo.png")))
+    files["image-no-source.kcad"] = in_schema(24, image_of(asset=None))
+    files["image-width-zero.kcad"] = in_schema(24, image_of(width=f64(0.0)))
+    files["image-clip-outside.kcad"] = in_schema(24, image_of(clip=unit_square((0.0, 0.0), (1.5, 0.0), (1.5, 1.0))))
+    files["image-clip-two-corners.kcad"] = in_schema(24, image_of(clip=unit_square((0.0, 0.0), (1.0, 1.0))))
+    files["image-opacity-low.kcad"] = in_schema(24, image_of(opacity=f64(0.05)))
+    files["image-mirror-false.kcad"] = in_schema(24, image_of(mirror=boolean(False)))
+    files["image-file-line-break.kcad"] = in_schema(24, image_of(asset=None, file=text("foto/\nsaha.jpg")))
     files["table-source-file-objects.kcad"] = in_schema(22, table_of(source=cmap({"kind": text("file"), "name": text("a.csv"), "objects": array([blob(uid_bytes(m["uids"][0]))])})))
     files["table-bold-without-font.kcad"] = in_schema(22, table_of(bold=boolean(True)))
     files["attribute-width-factor-negative.kcad"] = with_blocks([block(1, "Rögar", attributes=array([cmap({"p": point({"x": 0.0, "y": 0.0}), "tag": text("NO"), "height": f64(0.5), "rotation": f64(0.0), "widthFactor": f64(-1.0)})]))], version=7)
@@ -1509,6 +1552,7 @@ def build():
     out["styles.kcad"] = container(document(load("styles.json")))
     out["tables.kcad"] = container(document(load("tables.json")))
     out["hatches.kcad"] = container(document(load("hatches.json")))
+    out["images.kcad"] = container(document(load("images.json")))
     # A newer writer that used no newer feature: 2.0 readers read it.
     out["readable-minor.kcad"] = container(document(minimal), minor=7, min_reader=0)
     for name, data in broken(minimal, out["minimal.kcad"]).items():

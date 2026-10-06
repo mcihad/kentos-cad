@@ -10,10 +10,12 @@ import type { AppContext } from './context';
  * the library, which keeps no undo (docs/adr/0092). A project without project.edit may not change its tree.
  */
 
-const objectOf = (e: { layerId: string; symbol?: string; kind?: string; block?: string }): PurgeObject => ({
+const objectOf = (e: { layerId: string; symbol?: string; kind?: string; block?: string; asset?: string }): PurgeObject => ({
   layer: e.layerId,
   ...(e.symbol && { symbol: e.symbol }),
   ...(e.kind === 'insert' && e.block && { block: e.block }),
+  // A picture's image (docs/adr/0192 §2).
+  ...(e.kind === 'image' && e.asset && { asset: e.asset }),
 });
 
 /** What the rule reads of the open drawing and the library. */

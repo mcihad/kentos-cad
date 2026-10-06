@@ -96,6 +96,7 @@ fn object(v: &Value) -> PurgeObject {
         layer: text(v, "layer"),
         symbol: v["symbol"].as_str().map(str::to_owned),
         block: v["block"].as_str().map(str::to_owned),
+        asset: v["asset"].as_str().map(str::to_owned),
     }
 }
 

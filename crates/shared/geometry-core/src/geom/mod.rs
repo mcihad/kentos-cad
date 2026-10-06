@@ -10,6 +10,7 @@ pub mod dimension;
 pub mod ellipse;
 pub mod hatch;
 pub mod hatch_pattern;
+pub mod image;
 pub mod intersect;
 pub mod leader;
 pub mod offset;

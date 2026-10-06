@@ -9,7 +9,7 @@
  * This only packs and reads: no coordinate is computed here.
  */
 
-const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15, table: 18 };
+const KIND: Record<string, number> = { point: 0, line: 1, polyline: 2, polygon: 3, circle: 4, arc: 5, ellipse: 6, xline: 7, ray: 8, spline: 9, text: 10, dimension: 11, hatch: 12, insert: 14, leader: 15, table: 18, image: 19 };
 /** A text's alignments, numbered as the store numbers them (`TextAlign::ALL`, docs/adr/0145). */
 const TEXT_ALIGNS = ['baselineCenter', 'baselineRight', 'bottomLeft', 'bottomCenter', 'bottomRight', 'middleLeft', 'middleCenter', 'middleRight', 'topLeft', 'topCenter', 'topRight'] as const;
 /** The drawing typefaces, numbered as the core's tables number them (`FONTS`, the contract's `DrawingFont` order; docs/adr/0183). */
@@ -65,6 +65,11 @@ const MULTI_POINT = 17;
  * the frame's width (NaN none); its face as a text's. Its source is not packed: the store draws, picks and snaps.
  */
 const TABLE = 18;
+/**
+ * A picture (docs/adr/0192): its corner, width, height and turn; the mirror flag; its asset and file; its clip (−1
+ * none, else a count and the corners); its opacity (NaN none).
+ */
+const IMAGE = 19;
 /** A table's alignments and lines, numbered as the store numbers them (`TABLE_ALIGNS`, `TABLE_GRIDS`). */
 const TABLE_ALIGNS = ['left', 'center', 'right'] as const;
 const TABLE_GRIDS = ['outer', 'rows', 'none'] as const;
@@ -313,6 +318,16 @@ export function packEntities(list: Iterable<object>): Packed {
         num(e.rotation);
         out.push(str(e.text), str(e.arrow), e.mask === true ? 1 : 0);
         break;
+      case IMAGE:
+        pt(e.p);
+        num(e.width);
+        num(e.height);
+        num(e.rotation);
+        out.push(e.mirror === true ? 1 : 0, str(e.asset), str(e.file));
+        if (Array.isArray(e.clip)) points(e.clip);
+        else out.push(-1);
+        num(e.opacity);
+        break;
       case TABLE: {
         pt(e.p);
         num(e.rotation);
@@ -435,7 +450,9 @@ export function unpackEntities(p: Packed): Unpacked[] {
                 ? 'leader'
                 : code === TABLE
                   ? 'table'
-                  : KINDS[code];
+                  : code === IMAGE
+                    ? 'image'
+                    : KINDS[code];
     let g: Geometry;
     switch (kind) {
       case 'point': {
@@ -649,6 +666,25 @@ export function unpackEntities(p: Packed): Unpacked[] {
         g.rotation = rotation;
         if (arrow !== undefined) g.arrow = arrow;
         if (mask) g.mask = true;
+        break;
+      }
+      case 'image': {
+        const p = pt();
+        const width = num();
+        const height = num();
+        const rotation = num();
+        const mirror = flag();
+        const asset = str();
+        const file = str();
+        const n = num();
+        const clip = n < 0 ? undefined : Array.from({ length: n }, () => pt());
+        const opacity = num();
+        g = { kind, p, width, height, rotation };
+        if (mirror) g.mirror = true;
+        if (asset !== undefined) g.asset = asset;
+        if (file !== undefined) g.file = file;
+        if (clip) g.clip = clip;
+        if (!Number.isNaN(opacity)) g.opacity = opacity;
         break;
       }
       case 'table': {

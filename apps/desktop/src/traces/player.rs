@@ -134,6 +134,16 @@ impl Seen {
             Entity::Leader(l) => (l.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             // A hatch's outer ring (docs/adr/0186 §6: it follows its objects).
             Entity::Hatch(h) => (h.ring.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            // A picture's part shown: its clip's corners, else its frame's (docs/adr/0192).
+            Entity::Image(i) => (
+                kentos_geometry_core::geom::image::shown(
+                    &kentos_native_application::geometry::core_image(&i.image),
+                )
+                .iter()
+                .map(|v| [v.x, v.y])
+                .collect(),
+                Vec::new(),
+            ),
             Entity::Arc(a) => (
                 [a.a0, a.a1]
                     .iter()

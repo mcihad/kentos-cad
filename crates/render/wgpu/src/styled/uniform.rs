@@ -179,6 +179,26 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
                 s.set(24, &[*offset, total, on, *dash_offset]);
                 s.u[0] = unit(*u);
             }
+            // A picture (docs/adr/0192 §3): a = (corner, width, height), b = (cos, sin, opacity, mirror).
+            FillPaintBatch::Image {
+                corner,
+                size,
+                angle,
+                mirror,
+                opacity,
+                ..
+            } => {
+                s.set(20, &[corner[0], corner[1], size[0], size[1]]);
+                s.set(
+                    24,
+                    &[
+                        angle.cos(),
+                        angle.sin(),
+                        *opacity,
+                        if *mirror { 1.0 } else { 0.0 },
+                    ],
+                );
+            }
             FillPaintBatch::Gradient {
                 color,
                 color2,

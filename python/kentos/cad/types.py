@@ -146,6 +146,7 @@ class CreateOperation(_StrEnum):
     - ``coordinates``: Koordinat yaz (docs/adr/0185): coordinate labels (texts and their
     - ``stations``: Km yaz (docs/adr/0189): a route's stations: their ticks, km texts,
     - ``centerline``: Orta hat (docs/adr/0190): the axis between two sides, a polyline.
+    - ``image``: Resim ekle (docs/adr/0192): a picture placed.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -171,9 +172,10 @@ class CreateOperation(_StrEnum):
     COORDINATES = "coordinates"
     STATIONS = "stations"
     CENTERLINE = "centerline"
+    IMAGE = "image"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -320,6 +322,7 @@ class EditOperation(_StrEnum):
     - ``table``: Tabloyu düzenle's Kaydet (docs/adr/0184 §4): a table's cells, rows,
     - ``tableUpdate``: Tabloyu güncelle (docs/adr/0184 §5): tables written again from their source.
     - ``edgeShift``: Paralel kaydır (docs/adr/0191): an area's or a polyline's straight
+    - ``imageClip``: Resmi kırp (docs/adr/0192 §5): a picture's clip boundary set or
     """
     OFFSET = "offset"
     TRIM = "trim"
@@ -364,9 +367,10 @@ class EditOperation(_StrEnum):
     TABLE = "table"
     TABLE_UPDATE = "tableUpdate"
     EDGE_SHIFT = "edgeShift"
+    IMAGE_CLIP = "imageClip"
 
 
-EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift"]
+EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "break", "join", "explode", "lengthen", "vertexAdd", "vertexRemove", "stretch", "properties", "areaUnion", "areaIntersect", "areaSubtract", "areaSplit", "toArea", "toPolyline", "grip", "straightEdge", "arcEdge", "split", "reverse", "simplify", "cleanup", "elevation", "partsJoin", "partsSplit", "readable", "replaceText", "topology", "edgematch", "reshape", "continue", "holeAdd", "holeRemove", "holeFill", "textStyle", "dimensionStyle", "table", "tableUpdate", "edgeShift", "imageClip"]
 """The names of :class:`EditOperation`, for a plain string."""
 
 
@@ -852,6 +856,7 @@ class Entity(_Union):
     - :class:`InsertEntity` (``kind: insert``)
     - :class:`LeaderEntity` (``kind: leader``)
     - :class:`TableEntity` (``kind: table``)
+    - :class:`ImageEntity` (``kind: image``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -924,6 +929,7 @@ class EntityGeometry(_Union):
     - :class:`InsertEntityGeometry` (``kind: insert``)
     - :class:`LeaderEntityGeometry` (``kind: leader``)
     - :class:`TableEntityGeometry` (``kind: table``)
+    - :class:`ImageEntityGeometry` (``kind: image``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -1021,6 +1027,9 @@ _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity
 
 
 _GeographicDefinitionT = TypeVar("_GeographicDefinitionT", bound="GeographicDefinition")
+
+
+_ImageFieldsT = TypeVar("_ImageFieldsT", bound="ImageFields")
 
 
 _LocalDefinitionT = TypeVar("_LocalDefinitionT", bound="LocalDefinition")
@@ -3759,6 +3768,160 @@ class Helmert(_Model):
             scale=float(data["scale"]),
             convention=_enum_in(Convention, data["convention"]),
             accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImageEntity(Entity):
+    """A picture (docs/adr/0192 §1).
+    Attributes:
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        p: Its lower left corner.
+        width: Along its bottom edge, metres, over 0.
+        height: Along its left edge, metres, over 0.
+        rotation: Radians, counter-clockwise from east, about `p`.
+        asset: The project library's PNG or JPEG asset its bytes are (embedded);
+            exactly one of `asset` and `file` is given.
+        clip: The part shown, in the picture's own fractions (0,0 its lower left,
+            1,1 its upper right): at least three corners inside the unit square;
+            absent: the whole picture.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139).
+        mirror: The picture mirrored in its own x axis (Aynala), before the turn.
+        opacity: 0.1 to 1; absent: opaque.
+        symbol: Library symbol overriding the layer's style.
+    """
+    TAG_VALUE: ClassVar[str] = "image"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    p: Vec2
+    width: float
+    height: float
+    rotation: float
+    asset: str | None | Unset = UNSET
+    clip: list[Vec2] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mirror: bool | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "image"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["p"] = _vec2_out(self.p)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["rotation"] = float(self.rotation)
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.clip is not UNSET:
+            out["clip"] = None if self.clip is None else [_vec2_out(e0) for e0 in self.clip]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImageEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            p=Vec2.from_json(data["p"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            rotation=float(data["rotation"]),
+            asset=data.get("asset", UNSET),
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else [Vec2.from_json(e0) for e0 in data["clip"]],
+            color=data.get("color", UNSET),
+            file=data.get("file", UNSET),
+            label=data.get("label", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mirror=data.get("mirror", UNSET),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImageFields(_Model):
+    """What places and shows a picture: the image object's own fields, and its
+    geometry in the commands (`EntityGeometry::Image`).
+    Attributes:
+        p: Its lower left corner.
+        width: Along its bottom edge, metres, over 0.
+        height: Along its left edge, metres, over 0.
+        rotation: Radians, counter-clockwise from east, about `p`.
+        asset: The project library's PNG or JPEG asset its bytes are (embedded);
+            exactly one of `asset` and `file` is given.
+        clip: The part shown, in the picture's own fractions (0,0 its lower left,
+            1,1 its upper right): at least three corners inside the unit square;
+            absent: the whole picture.
+        file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        mirror: The picture mirrored in its own x axis (Aynala), before the turn.
+        opacity: 0.1 to 1; absent: opaque.
+    """
+    p: Vec2
+    width: float
+    height: float
+    rotation: float
+    asset: str | None | Unset = UNSET
+    clip: list[Vec2] | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    mirror: bool | Unset = UNSET
+    opacity: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["p"] = _vec2_out(self.p)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        out["rotation"] = float(self.rotation)
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.clip is not UNSET:
+            out["clip"] = None if self.clip is None else [_vec2_out(e0) for e0 in self.clip]
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.mirror is not UNSET:
+            out["mirror"] = self.mirror
+        if self.opacity is not UNSET:
+            out["opacity"] = None if self.opacity is None else float(self.opacity)
+        return out
+
+    @classmethod
+    def from_json(cls: type[_ImageFieldsT], data: Mapping[str, Any]) -> _ImageFieldsT:
+        return cls(
+            p=Vec2.from_json(data["p"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            rotation=float(data["rotation"]),
+            asset=data.get("asset", UNSET),
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else [Vec2.from_json(e0) for e0 in data["clip"]],
+            file=data.get("file", UNSET),
+            mirror=data.get("mirror", UNSET),
+            opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
         )
 
 
@@ -7790,6 +7953,21 @@ class TableEntityGeometry(EntityGeometry):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImageEntityGeometry(ImageFields, EntityGeometry):
+    """A picture (docs/adr/0192 §1): its lower left corner `p`, its width
+    and height (metres, over 0), turned by `rotation` (radians,
+    counter-clockwise) about `p` and mirrored in its own x axis when
+    `mirror`; its bytes the project library's asset `asset` or the file
+    `file`, exactly one; clipped to `clip` in its own fractions; drawn at
+    `opacity`.
+    """
+    TAG_VALUE: ClassVar[str] = "image"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "image", **ImageFields.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
 class CreateFeatureChange(FeatureChange):
     """A new object; the client picks the UUID so a retry cannot create it twice."""
     TAG_VALUE: ClassVar[str] = "create"
@@ -8176,13 +8354,13 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry}
 
 
 _FEATURE_CHANGE: dict[str, type[FeatureChange]] = {"create": CreateFeatureChange, "update": UpdateFeatureChange, "delete": DeleteFeatureChange}
@@ -8317,6 +8495,9 @@ __all__ = [
     "HatchPatternType",
     "HatchPatternTypeName",
     "Helmert",
+    "ImageEntity",
+    "ImageEntityGeometry",
+    "ImageFields",
     "InsertEntity",
     "InsertEntityGeometry",
     "InvitationChange",

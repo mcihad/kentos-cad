@@ -471,6 +471,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Hatch(h) => h.ring.clone(),
         Entity::Insert(i) => vec![i.p],
         Entity::Table(t) => crate::blocks::table_corners(t),
+        Entity::Image(i) => crate::blocks::image_corners(i),
     }
 }
 

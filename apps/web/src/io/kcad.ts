@@ -199,6 +199,8 @@ export const OBJECT_FIELDS: Record<string, ReadonlySet<string>> = Object.fromEnt
       'oblique',
       'source',
     ],
+    // docs/adr/0192: its frame, mirror, one source, clip and opacity.
+    image: ['p', 'width', 'height', 'rotation', 'mirror', 'asset', 'file', 'clip', 'opacity'],
   }).map(([k, f]) => [k, new Set([...COMMON, ...f])]),
 );
 

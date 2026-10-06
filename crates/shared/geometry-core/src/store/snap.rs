@@ -817,6 +817,17 @@ fn shape_snaps(
         }
         // Its boundary is snapped through the outline object itself.
         Shape::Hatch { .. } => return,
+        // The part shown's corners and its sides' middles (docs/adr/0192 §4).
+        Shape::Image { .. } => {
+            let ring = crate::geom::image::shown(e);
+            for (i, &a) in ring.iter().enumerate() {
+                let b = ring[(i + 1) % ring.len()];
+                ch.consider(SnapKind::Endpoint, a, id);
+                if !box_out_of_reach(a, b, p, tol) {
+                    ch.consider(SnapKind::Midpoint, segment_mid(a, b, 0.0), id);
+                }
+            }
+        }
         // Its corners and its lines' ends; its lines give nearest points and crossings below
         // (docs/adr/0184 §2).
         Shape::Table { .. } => {

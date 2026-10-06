@@ -3,7 +3,7 @@ import type { Bounds, Vec2 } from './geometry';
 import type { DimensionStyle } from './geom/dimension';
 import type { DimensionLook, TextFace } from './annotationStyles';
 
-export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table';
+export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 'arc' | 'ellipse' | 'spline' | 'xline' | 'ray' | 'text' | 'dimension' | 'hatch' | 'insert' | 'leader' | 'table' | 'image';
 
 /**
  * Half-length (1000 km) used when an infinite line meets finite geometry on
@@ -477,6 +477,25 @@ export interface TableEntity extends EntityBase, TextFace {
   source?: TableSource;
 }
 
+/**
+ * A picture (docs/adr/0192 §1): its frame from its lower left corner `p`, `width` along and `height` up (metres), turned
+ * `rotation` radians counter-clockwise about `p`, the picture upside down in it when `mirror`; its bytes the project
+ * library's PNG or JPEG image `asset` (embedded) or the file `file` (linked), exactly one; `clip` the part shown in its
+ * own fractions (0,0 its lower left, 1,1 its upper right); `opacity` 0.1–1.
+ */
+export interface ImageEntity extends EntityBase {
+  kind: 'image';
+  p: Vec2;
+  width: number;
+  height: number;
+  rotation: number;
+  mirror?: boolean;
+  asset?: string;
+  file?: string;
+  clip?: Vec2[];
+  opacity?: number;
+}
+
 export type Entity =
   | PointEntity
   | LineEntity
@@ -491,7 +510,8 @@ export type Entity =
   | HatchEntity
   | InsertEntity
   | LeaderEntity
-  | TableEntity;
+  | TableEntity
+  | ImageEntity;
 
 /** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
 export type DrawingEntity = Entity & { uid: string };
@@ -516,6 +536,7 @@ export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   insert: 'Blok',
   leader: 'Kılavuz',
   table: 'Tablo',
+  image: 'Resim',
 };
 
 export const HATCH_PATTERN_LABEL: Record<HatchPatternType, string> = {
@@ -591,7 +612,8 @@ export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' |
  * hatch or a block (docs/adr/0139; the desktop's `Entity::draws_lines`).
  */
 export function drawsLines(e: { kind: Entity['kind'] }): boolean {
-  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch' && e.kind !== 'insert';
+  // A picture draws its frame as a hairline (docs/adr/0192 §3).
+  return e.kind !== 'point' && e.kind !== 'text' && e.kind !== 'dimension' && e.kind !== 'hatch' && e.kind !== 'insert' && e.kind !== 'image';
 }
 
 /** Geometry-only view of an entity (drops ids, layer, colour, attributes, label, symbol and line weight). */

@@ -889,6 +889,8 @@ pub enum Entity {
     Leader(LeaderEntity),
     /// Rows and columns of cells (docs/adr/0184).
     Table(crate::TableEntity),
+    /// A picture (docs/adr/0192).
+    Image(crate::ImageEntity),
 }
 
 impl Entity {
@@ -903,6 +905,7 @@ impl Entity {
                 | Entity::Dimension(_)
                 | Entity::Hatch(_)
                 | Entity::Insert(_)
+                | Entity::Image(_)
         )
     }
 
@@ -923,6 +926,7 @@ impl Entity {
             Entity::Insert(e) => &e.base,
             Entity::Leader(e) => &e.base,
             Entity::Table(e) => &e.base,
+            Entity::Image(e) => &e.base,
         }
     }
 
@@ -944,6 +948,7 @@ impl Entity {
             Entity::Insert(e) => &mut e.base,
             Entity::Leader(e) => &mut e.base,
             Entity::Table(e) => &mut e.base,
+            Entity::Image(e) => &mut e.base,
         }
     }
 
@@ -966,6 +971,7 @@ impl Entity {
             Entity::Insert(_) => "insert",
             Entity::Leader(_) => "leader",
             Entity::Table(_) => "table",
+            Entity::Image(_) => "image",
         }
     }
 }

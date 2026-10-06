@@ -249,6 +249,21 @@ export class Atlas implements AtlasSource {
     return entry;
   }
 
+  picture(key: string, url: string | null): HTMLImageElement | null {
+    if (!url) return null;
+    const d = this.decoded.get(`picture|${key}`);
+    if (d instanceof HTMLImageElement) return d;
+    if (d) return null;
+    this.decoded.set(`picture|${key}`, 'loading');
+    decodeUrl(url)
+      .then((img) => {
+        this.decoded.set(`picture|${key}`, img);
+        this.onChange?.();
+      })
+      .catch(() => this.decoded.set(`picture|${key}`, 'failed'));
+    return null;
+  }
+
   /** The decoded picture of an SVG or raster image, or null while it loads (the view redraws when it arrives). */
   private decode(image: Extract<AtlasImage, { kind: 'svg' | 'raster' }>): HTMLImageElement | null {
     const d = this.decoded.get(image.key);

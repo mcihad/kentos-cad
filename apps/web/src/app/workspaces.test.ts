@@ -106,9 +106,11 @@ describe('project types (docs/adr/0165)', () => {
     expect(panels('survey')).toEqual(expect.arrayContaining(['Poligon', 'Nokta alımı', 'Kestirme', 'Noktalar']));
     expect(panels('analysis')).toEqual(expect.arrayContaining(['İşlemler', 'Modeller', 'Arazi analizi']));
     expect(panels('map')).toEqual(expect.arrayContaining(['Koordinat sistemi', 'Parsel', 'Ölçme', 'Stil']));
-    // Blocks are the drawing's library, on Veri: Düzenle keeps to creating and changing objects.
-    expect(panels('data')).toEqual(['Katman', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok']);
+    // Blocks are the drawing's library, on Veri, its pictures beside them (docs/adr/0192 §5): Düzenle keeps to
+    // creating and changing objects.
+    expect(panels('data')).toEqual(['Katman', 'Ara', 'Dosya alışverişi', 'Koordinatlar', 'Öznitelik', 'Blok', 'Resim']);
     expect(panels('edit')).not.toContain('Blok');
+    expect(panels('edit')).not.toContain('Resim');
   });
 
   it('gives each type’s panels a title once a tab, a command once a tab and an icon that is drawn', () => {

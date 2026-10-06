@@ -1203,6 +1203,18 @@ fn shape(entity: &Entity) -> Shape {
         },
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         // Its lines are what the scene draws (docs/adr/0184 §2); its words are labels.
+        // A picture (docs/adr/0192): its frame, its source, clip and opacity.
+        Entity::Image(i) => Shape::Image {
+            p: v(&i.image.p),
+            width: i.image.width,
+            height: i.image.height,
+            rotation: i.image.rotation,
+            mirror: i.image.mirror.then_some(true),
+            asset: i.image.asset.clone(),
+            file: i.image.file.clone(),
+            clip: i.image.clip.as_deref().map(points),
+            opacity: i.image.opacity,
+        },
         Entity::Table(t) => Shape::Table {
             p: v(&t.p),
             rotation: t.rotation,

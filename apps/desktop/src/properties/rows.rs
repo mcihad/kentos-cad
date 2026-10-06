@@ -908,6 +908,50 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 Row::text("Aynalı", yes_no(i.mirror)).editor(edit(mirror)),
             ]);
         }
+        // A picture's source, place, size, turn, see-through share, clip and mirror (docs/adr/0192 §4).
+        Entity::Image(im) => {
+            let i = &im.image;
+            let (source, linked) = match (&i.asset, &i.file) {
+                (Some(a), _) => (crate::pictures::asset_words(&doc.model, a), false),
+                (None, Some(path)) => {
+                    (crate::pictures::file_words(path, doc.path.as_deref()), true)
+                }
+                _ => ("—".to_owned(), false),
+            };
+            let embed = (linked && !locked).then(|| Editor::Select {
+                text: source.clone(),
+                swatch: None,
+                icon: None,
+                items: vec![Choice::Pick {
+                    label: "Göm".to_owned(),
+                    swatch: None,
+                    icon: None,
+                    wide: false,
+                    chosen: false,
+                    enabled: true,
+                    message: Message::Properties(Event::EmbedImage(slot)),
+                }],
+            });
+            let yes_no = |m: bool| if m { "Evet" } else { "Hayır" };
+            geo.extend([
+                Row::text("Kaynak", source).editor(embed),
+                len("Konum Y", i.p.x).editor(number(Field::ImageX(slot))),
+                len("Konum X", i.p.y).editor(number(Field::ImageY(slot))),
+                metres("Genişlik", i.width).editor(number(Field::ImageWidth(slot))),
+                metres("Yükseklik", i.height).editor(number(Field::ImageHeight(slot))),
+                Row::figure("Dönüş", degrees(i.rotation))
+                    .unit("°")
+                    .editor(number(Field::ImageTurn(slot))),
+                Row::figure(
+                    "Saydamlık",
+                    fixed((1.0 - i.opacity.unwrap_or(1.0)) * 100.0, 0),
+                )
+                .unit("%")
+                .editor(number(Field::ImageClear(slot))),
+                Row::text("Kırpma", if i.clip.is_some() { "Var" } else { "Yok" }),
+                Row::text("Aynalı", yes_no(i.mirror)),
+            ]);
+        }
         // Its note, height, turn, arrowhead and mask, its corners and length (docs/adr/0146 §7).
         Entity::Leader(l) => {
             geo.extend(leader_rows(&[l], &ids, locked, &f));

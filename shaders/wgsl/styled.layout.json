@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 4,
+  "version": 5,
   "module": "styled",
-  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does). Version 3 (docs/adr/0157) packs a batch's positions from its tile: the frame carries the camera centre's low part (offsetLo) and each style block its tile's origin. Version 4 (docs/adr/0186) adds the gradient pipeline (gradientFs: the first colour in color, the second in stroke, a = (dir, from, to), b = (centre, radius), flags.y the shape, flags.z inverted) and packs a hatch family's stagger in rect.x; a drawn dash under a pixel before a gap is a dot of one pixel.",
+  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version. Version 2 binds the atlas in group 0 beside the frame: a native wgpu device may offer only two bind groups (Iced’s does). Version 3 (docs/adr/0157) packs a batch's positions from its tile: the frame carries the camera centre's low part (offsetLo) and each style block its tile's origin. Version 4 (docs/adr/0186) adds the gradient pipeline (gradientFs: the first colour in color, the second in stroke, a = (dir, from, to), b = (centre, radius), flags.y the shape, flags.z inverted) and packs a hatch family's stagger in rect.x; a drawn dash under a pixel before a gap is a dot of one pixel. Version 5 (docs/adr/0192) adds the image pipeline (imageFs: a picture over its frame, a = (corner, width, height) from the batch's tile, b = (cos, sin, opacity, mirror); group 0 then holds the picture's own texture, premultiplied with its mip levels, and a mip-filtering sampler instead of the atlas).",
   "sources": [
     "styled/common.wgsl",
     "styled/shapes.wgsl",
@@ -139,6 +139,16 @@
       "fragment": "gradientFs",
       "topology": "triangle-list",
       "blend": "alpha",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
+      ]
+    },
+    {
+      "name": "image",
+      "vertex": "areaVs",
+      "fragment": "imageFs",
+      "topology": "triangle-list",
+      "blend": "premultiplied",
       "buffers": [
         { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
       ]

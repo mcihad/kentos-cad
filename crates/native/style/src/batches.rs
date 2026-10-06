@@ -287,6 +287,18 @@ pub enum FillPaintBatch {
         opacity: f64,
         unit: Unit,
     },
+    /// A picture over its frame (docs/adr/0192 §3): `image` names its
+    /// pixels (`asset:<id>`, `file:<path>`); its frame's lower left corner
+    /// (metres from the batch's tile once folded), width and height, turn
+    /// (radians) and whether the picture is upside down in it.
+    Image {
+        image: String,
+        corner: [f64; 2],
+        size: [f64; 2],
+        angle: f64,
+        mirror: bool,
+        opacity: f64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -676,6 +688,14 @@ impl Looks<'_> {
                     unit: Unit::read(p.get("unit")),
                 }
             }
+            "image" => FillPaintBatch::Image {
+                image: s(p, "image").to_owned(),
+                corner: pair(p, "corner"),
+                size: pair(p, "size"),
+                angle: n(p, "angle"),
+                mirror: p.get("mirror").and_then(Value::as_bool) == Some(true),
+                opacity: n(p, "opacity"),
+            },
             "tile" => {
                 let tile = p.get("tile").unwrap_or(&Value::Null);
                 let stagger = s(tile, "kind") == "markers"
@@ -1182,6 +1202,22 @@ fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
                 radius,
             }
         }
+        // A picture's frame from the tile (docs/adr/0192 §3).
+        FillPaintBatch::Image {
+            image,
+            corner,
+            size,
+            angle,
+            mirror,
+            opacity,
+        } => FillPaintBatch::Image {
+            image,
+            corner: [corner[0] - o[0], corner[1] - o[1]],
+            size,
+            angle,
+            mirror,
+            opacity,
+        },
         FillPaintBatch::Tile {
             image,
             size,
@@ -1520,6 +1556,22 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             "to": to,
             "centre": centre,
             "radius": radius,
+        }),
+        FillPaintBatch::Image {
+            image,
+            corner,
+            size,
+            angle,
+            mirror,
+            opacity,
+        } => json!({
+            "kind": "image",
+            "image": image,
+            "corner": corner,
+            "size": size,
+            "angle": angle,
+            "mirror": mirror,
+            "opacity": opacity,
         }),
         FillPaintBatch::Pattern {
             shape,

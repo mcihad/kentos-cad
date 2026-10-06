@@ -82,6 +82,9 @@ def made(obj, slot, layer_id="yapi"):
     # And a dimension's (docs/adr/0147).
     if out["kind"] == "dimension" and out.get("mask") is not True:
         out.pop("mask", None)
+    # A picture's (docs/adr/0192 §1): not mirrored is no field.
+    if out["kind"] == "image" and out.get("mirror") is not True:
+        out.pop("mirror", None)
     # A table's (docs/adr/0184 §1): no ranges, no heading row.
     if out["kind"] == "table":
         if out.get("merges") == []:
@@ -1126,6 +1129,74 @@ cases.append({
          "expect": {"ids": IDS + [3], "entities": {"3": made(axis[0], 3)}, "uids": {"3": "new"}, "revision": "changed"}},
         {"op": "undo", "returns": "Orta hat", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
         {"op": "redo", "returns": "Orta hat", "expect": {"ids": IDS + [3]}},
+    ],
+})
+
+
+# ── Resim ekle (docs/adr/0192 §6) ───────────────────────────────────────
+
+PICTURE_ID = "resim-0011223344556677"
+PICTURE = {"kind": "asset", "id": PICTURE_ID, "name": "logo", "path": ["Resimler"], "format": "png", "data": "data:image/png;base64,iVBORw0KGgo=", "width": 4, "height": 3}
+I_SETUP = {**SETUP, "styles": {"items": [PICTURE, {**PICTURE, "id": "cizim-1", "format": "svg", "data": "<svg/>"}], "categories": []}}
+IMAGE = {"kind": "image", "p": P(487000, 4420010), "width": 8, "height": 6, "rotation": 0.5235987755982988, "asset": PICTURE_ID}
+images = [
+    O(IMAGE),
+    O({"kind": "image", "p": P(487020, 4420010), "width": 12, "height": 9, "rotation": 0, "mirror": True, "file": "foto/saha.jpg",
+       "clip": [P(0.1, 0.1), P(0.9, 0.1), P(0.9, 0.8), P(0.1, 0.8)], "opacity": 0.6}, attrs={"Not": "saha"}),
+    O({**IMAGE, "mirror": False}),
+]
+
+
+def image_message(kind, given=None):
+    return {
+        "size": "Resmin genişliği ve yüksekliği sıfırdan büyük ve en çok 10000000 m olmalı.",
+        "both": "Resmin kaynağı ya gömülü varlık (asset) ya bağlı dosya (file) olmalı, ikisi birden değil.",
+        "none": "Resmin kaynağı yok: gömülü varlığın kimliğini (asset) ya da bağlı dosyanın yolunu (file) verin.",
+        "path": "Bağlı dosyanın yolu en çok 4096 harf olmalı ve denetim karakteri içermemeli.",
+        "clip": "Resmin kırpma sınırı en az 3, en çok 10000 köşe olmalı, köşeleri resmin kesirleriyle 0 ile 1 arasında.",
+        "opacity": f"Resmin donukluğu 0.1 ile 1 arasında olmalı; {given} verildi.",
+    }[kind]
+
+
+def unknown_asset(asset):
+    return f"“{asset}” kimlikli görüntü projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir. Projenin kitaplığındaki bir PNG ya da JPEG görüntünün kimliğini verin."
+
+
+cases.append({
+    "name": "Resim ekle: gömülü ve bağlı resim, kırpması, donukluğu ve aynasıyla tek adımda yazılır, adı “Resim ekle”; aynasızlık alan değildir (ADR 0192 §6)",
+    "setup": I_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "image", "objects": images}, "result": done([3, 4, 5]),
+         "expect": {"ids": IDS + [3, 4, 5], "entities": {str(3 + i): made(o, 3 + i) for i, o in enumerate(images)}, "uids": {"3": "new", "4": "new", "5": "new"},
+                    "revision": "changed"}},
+        {"op": "undo", "returns": "Resim ekle", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Resim ekle", "expect": {"ids": IDS + [3, 4, 5]}},
+    ],
+})
+cases.append({
+    "name": "resmin kuralları sırayla: invalid_image, yolu nesnenin geometrisi; sonlu olmayan önce not_finite; gömülü resmin görüntüsü projenin kitaplığında PNG ya da JPEG olmalı: unknown_asset (ADR 0192 §6)",
+    "setup": I_SETUP,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(IMAGE), O({**IMAGE, "width": 0})]},
+         "result": failed("invalid_image", image_message("size"), "objects[1].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "file": "logo.png"})]},
+         "result": failed("invalid_image", image_message("both"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in IMAGE.items() if k != "asset"}})]},
+         "result": failed("invalid_image", image_message("none"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "asset": "  "})]},
+         "result": failed("invalid_image", image_message("none"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**{k: v for k, v in IMAGE.items() if k != "asset"}, "file": "foto/\tsaha.jpg"})]},
+         "result": failed("invalid_image", image_message("path"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "clip": [P(0, 0), P(1.5, 0), P(1, 1)]})]},
+         "result": failed("invalid_image", image_message("clip"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "clip": [P(0, 0), P(1, 1)]})]},
+         "result": failed("invalid_image", image_message("clip"), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "opacity": 0.05})]},
+         "result": failed("invalid_image", image_message("opacity", 0.05), "objects[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(IMAGE), O({**IMAGE, "asset": "resim-ffffffffffffffff"})]},
+         "result": failed("unknown_asset", unknown_asset("resim-ffffffffffffffff"), "objects[1].geometry.asset"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**IMAGE, "asset": "cizim-1"})]},
+         "result": failed("unknown_asset", unknown_asset("cizim-1"), "objects[0].geometry.asset"), "expect": NOTHING},
     ],
 })
 

@@ -9,9 +9,9 @@ use kentos_contracts::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, EntityId,
     GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern as ContractPattern,
-    HatchPatternType, InsertEntity, LeaderArrow, LeaderEntity, LineEntity, PathEntity, PatternLine,
-    PointEntity, RingGeometry, SplineEntity, TableAlign, TableEntity, TableGrid, TableSource,
-    TextEntity, Vec2 as Point,
+    HatchPatternType, ImageEntity, ImageFields, InsertEntity, LeaderArrow, LeaderEntity,
+    LineEntity, PathEntity, PatternLine, PointEntity, RingGeometry, SplineEntity, TableAlign,
+    TableEntity, TableGrid, TableSource, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json;
@@ -434,6 +434,49 @@ pub fn drawing_font(font: Option<DrawingFont>) -> Font {
     })
 }
 
+/// A picture's fields as the geometry core takes them (docs/adr/0192).
+pub fn core_image(i: &ImageFields) -> Shape {
+    Shape::Image {
+        p: v(&i.p),
+        width: i.width,
+        height: i.height,
+        rotation: i.rotation,
+        mirror: i.mirror.then_some(true),
+        asset: i.asset.clone(),
+        file: i.file.clone(),
+        clip: i.clip.as_deref().map(points),
+        opacity: i.opacity,
+    }
+}
+
+/// A picture the core computed as the contract holds it; none for another shape.
+pub fn contract_image(shape: Shape) -> Option<ImageFields> {
+    match shape {
+        Shape::Image {
+            p: at,
+            width,
+            height,
+            rotation,
+            mirror,
+            asset,
+            file,
+            clip,
+            opacity,
+        } => Some(ImageFields {
+            p: p(at),
+            width,
+            height,
+            rotation,
+            mirror: mirror == Some(true),
+            asset,
+            file,
+            clip: clip.map(back),
+            opacity,
+        }),
+        _ => None,
+    }
+}
+
 /// An object's geometry as the geometry core takes it.
 pub fn shape(entity: &Entity) -> Shape {
     match entity {
@@ -470,6 +513,7 @@ pub fn shape(entity: &Entity) -> Shape {
             mask: l.mask.then_some(true),
         },
         Entity::Table(t) => core_table(t),
+        Entity::Image(i) => core_image(&i.image),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -869,6 +913,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.grid = grid.as_deref().and_then(TableGrid::from_name);
             e.frame = frame;
         }
+        (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
         _ => return None,
     }
     Some(out)
@@ -1122,6 +1167,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             source,
         }),
+        EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
     }
 }
 
@@ -1342,6 +1388,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             face: contract_face(face),
             source: contract_source(source),
         },
+        s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
     })
 }
 

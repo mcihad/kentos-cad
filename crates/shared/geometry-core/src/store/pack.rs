@@ -26,6 +26,7 @@
 //! | 15 leader | points, height, rotation, text?, arrow?, mask |
 //! | 16 multi-part polyline | path, holes, part count, then per part: path, holes |
 //! | 17 multi-point object | x, y, hasZ, z, point count, then per point: x, y, hasZ, z |
+//! | 19 image | p.x, p.y, width, height, rotation, mirror, asset?, file?, clip (count, −1 none, then x, y each), opacity (NaN none) |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -194,7 +195,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 18.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 19.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -540,6 +541,31 @@ impl Reader<'_> {
                 arrow: self.string()?,
                 mask: self.flag()?.then_some(true),
             },
+            // docs/adr/0192: the frame, the mirror, the source, the clip (−1 none) and the
+            // opacity (NaN none).
+            19 => {
+                let p = self.pt()?;
+                let (width, height, rotation) = (self.num()?, self.num()?, self.num()?);
+                let mirror = self.flag()?.then_some(true);
+                let asset = self.string()?;
+                let file = self.string()?;
+                let clip = match self.int()? {
+                    None => None,
+                    Some(n) => Some((0..n).map(|_| self.pt()).collect::<Result<Vec<_>, _>>()?),
+                };
+                let opacity = self.num()?;
+                Shape::Image {
+                    p,
+                    width,
+                    height,
+                    rotation,
+                    mirror,
+                    asset,
+                    file,
+                    clip,
+                    opacity: (!opacity.is_nan()).then_some(opacity),
+                }
+            }
             // docs/adr/0184: the corner, turn and height; the rows' heights and the columns'
             // widths; each cell's words, row by row; the merged ranges; the alignments (−1
             // none); the heading flag; the lines (−1 all, else `TABLE_GRIDS`); the frame's
@@ -1007,6 +1033,37 @@ impl Packer {
                 let a = self.maybe_string(arrow.as_deref());
                 self.put(&[*height, *rotation, t, a, flag(*mask == Some(true))]);
             }
+            // docs/adr/0192, as the reader's kind 19 says.
+            Shape::Image {
+                p,
+                width,
+                height,
+                rotation,
+                mirror,
+                asset,
+                file,
+                clip,
+                opacity,
+            } => {
+                let a = self.maybe_string(asset.as_deref());
+                let f = self.maybe_string(file.as_deref());
+                self.put(&[
+                    19.0,
+                    p.x,
+                    p.y,
+                    *width,
+                    *height,
+                    *rotation,
+                    flag(*mirror == Some(true)),
+                    a,
+                    f,
+                ]);
+                match clip {
+                    Some(c) => self.points(c),
+                    None => self.put(&[-1.0]),
+                }
+                self.put(&[opacity.unwrap_or(f64::NAN)]);
+            }
             // docs/adr/0184, as the reader's kind 18 says.
             Shape::Table {
                 p,
@@ -1355,6 +1412,9 @@ mod tests {
         r#"{"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
         r#"{"kind":"leader","pts":[{"x":486520,"y":4420200},{"x":486528,"y":4420206}],"text":"Ø150 PVC","height":2,"rotation":30,"arrow":"open","mask":true}"#,
         r#"{"kind":"leader","pts":[{"x":-0,"y":0},{"x":4,"y":3},{"x":9,"y":3}],"height":0.5,"rotation":0}"#,
+        // docs/adr/0192: pictures, embedded and linked, mirrored, clipped and see-through.
+        r#"{"kind":"image","p":{"x":486520,"y":4420200},"width":40,"height":30,"rotation":0.5,"asset":"resim-0011223344556677"}"#,
+        r#"{"kind":"image","p":{"x":-0,"y":20},"width":12,"height":9,"rotation":-2,"mirror":true,"file":"foto/saha.jpg","clip":[{"x":0.1,"y":0.1},{"x":0.9,"y":0.1},{"x":0.5,"y":0.8}],"opacity":0.6}"#,
     ];
 
     #[test]

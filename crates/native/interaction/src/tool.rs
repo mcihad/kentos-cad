@@ -108,6 +108,9 @@ pub enum ViewChange {
     /// Metin dosyası yerleştir's file ([`crate::text_file`], docs/adr/0145 §6):
     /// the host picks one and gives back its name and bytes with [`Tool::file_given`].
     OpenTextFile,
+    /// Resim ekle's picture ([`crate::image_insert`], docs/adr/0192 §5): the
+    /// host picks a PNG or JPEG and gives it back read with [`Tool::image_given`].
+    OpenImageFile,
     /// A table to place from the cursor, its top left corner at the origin
     /// (Köşelere koordinat yaz's Çizelge, docs/adr/0185 §1): the host runs
     /// Tablo ekle's placement ([`crate::table_place::TablePlace`]) with it
@@ -689,6 +692,23 @@ pub struct Memory {
     /// (metres) and Zincir.
     pub centerline_step: f64,
     pub centerline_chain: bool,
+    /// Resim ekle's Bağlı and Resmi kırp's Çokgen (docs/adr/0192 §5).
+    pub image_linked: bool,
+    pub image_clip_polygon: bool,
+}
+
+/// A picture file the host read for Resim ekle (docs/adr/0192 §5): its
+/// name, its path (to link it; none where the host has none), its project
+/// library image (`library`'s one item) and that item's id (to embed it),
+/// its size in pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ImageFile {
+    pub name: String,
+    pub path: Option<String>,
+    pub id: String,
+    pub library: kentos_contracts::ProjectStyles,
+    pub width: u32,
+    pub height: u32,
 }
 
 /// A short text kept in [`Memory`], which is `Copy`: at most
@@ -894,6 +914,8 @@ impl Default for Memory {
             station_ends: true,
             centerline_step: crate::centerline::FIRST_STEP,
             centerline_chain: true,
+            image_linked: false,
+            image_clip_polygon: false,
         }
     }
 }
@@ -1293,6 +1315,9 @@ pub trait Tool {
     /// The file it asked for ([`ViewChange::OpenTextFile`]): its name and
     /// bytes, or none (the picker cancelled).
     fn file_given(&mut self, _file: Option<(&str, &[u8])>, _cx: &mut Context<'_>) {}
+    /// The picture it asked for ([`ViewChange::OpenImageFile`]), read; none
+    /// when the picker was cancelled or the file could not be read (said).
+    fn image_given(&mut self, _file: Option<ImageFile>, _cx: &mut Context<'_>) {}
     /// The answer of the values it asked for ([`ViewChange::AttributeValues`]):
     /// the attributes to write (Yerleştir), or none (Vazgeç, Esc).
     fn values_given(

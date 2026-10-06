@@ -448,6 +448,28 @@ fn defs(shape: &Shape) -> Defs {
             others.extend(aligns.iter().flatten().map(|a| Other::Text(a.clone())));
             others.extend([Other::Flag(*header == Some(true)), text(grid.as_deref())]);
         }
+        // Its frame's corners, its source, clip and opacity (docs/adr/0192).
+        Shape::Image {
+            mirror,
+            asset,
+            file,
+            clip,
+            opacity,
+            ..
+        } => {
+            if let Some(frame) = crate::geom::image::Frame::of(shape) {
+                comps.push(Comp::Fixed(frame.corners().to_vec()));
+            }
+            others.extend([
+                Other::Flag(*mirror == Some(true)),
+                text(asset.as_deref()),
+                text(file.as_deref()),
+                Other::Num(opacity.unwrap_or(1.0)),
+            ]);
+            for q in clip.iter().flatten() {
+                others.extend([Other::Num(q.x), Other::Num(q.y)]);
+            }
+        }
     }
     Defs {
         comps,

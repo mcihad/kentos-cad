@@ -194,12 +194,24 @@ fn base_mut(e: &mut Entity) -> &mut EntityBase {
         Entity::Insert(x) => &mut x.base,
         Entity::Leader(x) => &mut x.base,
         Entity::Table(x) => &mut x.base,
+        Entity::Image(x) => &mut x.base,
     }
 }
 
 /// None of the objects a block is defined from is a table: a block holds no
 /// table (docs/adr/0184 §1), `table_in_block` at the first one's id.
 pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(), Stop> {
+    // Nor a picture (docs/adr/0192 §1), `image_in_block`.
+    if let Some((i, ..)) = named
+        .iter()
+        .find(|(_, _, e, _)| matches!(e, Entity::Image(_)))
+    {
+        return Err(Stop::Failed(error(
+            codes::IMAGE_IN_BLOCK,
+            "Seçilenlerde resim var; resim bloğa konamaz. Resmi seçimden çıkarın.".into(),
+            Some(format!("uids[{i}]")),
+        )));
+    }
     match named
         .iter()
         .find(|(_, _, e, _)| matches!(e, Entity::Table(_)))

@@ -136,6 +136,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         // Km yaz (docs/adr/0189 §5).
         Some(CreateOperation::Stations) => "Km yaz",
         Some(CreateOperation::Centerline) => "Orta hat",
+        Some(CreateOperation::Image) => "Resim ekle",
     }
 }
 

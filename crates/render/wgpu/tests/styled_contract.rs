@@ -1,5 +1,5 @@
 //! The styled drawing's shared WGSL and its layout contract
-//! (`shaders/wgsl/styled.layout.json`, version 4, docs/STYLE.md §6,
+//! (`shaders/wgsl/styled.layout.json`, version 5, docs/STYLE.md §6,
 //! docs/adr/0090): naga, the compiler wgpu runs, parses and validates the
 //! shared module, which the desktop builds as it is (two bind groups: the
 //! frame with the atlas, then the style; Iced's device takes two); the
@@ -113,7 +113,7 @@ fn the_shared_module_validates_and_the_desktop_builds_it_as_it_is() {
     let c = contract();
     assert_eq!(
         (c.format.as_str(), c.version, c.module.as_str()),
-        ("kentos.wgsl-layout", 4, "styled")
+        ("kentos.wgsl-layout", 5, "styled")
     );
     assert_eq!(shader::source(), shader::shared_source());
     let module = validate(&shader::shared_source());

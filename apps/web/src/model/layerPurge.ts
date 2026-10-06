@@ -16,6 +16,8 @@ export interface PurgeObject {
   readonly layer: string;
   readonly symbol?: string;
   readonly block?: string;
+  /** The library image a picture shows (docs/adr/0192 §2). */
+  readonly asset?: string;
 }
 
 /** A block definition and its objects. */
@@ -115,6 +117,7 @@ function usedByStaying(src: PurgeSource, going: Set<string>): Set<string> {
       used.add(key('layers', o.layer));
       if (o.symbol) used.add(key('symbols', o.symbol));
       if (o.block) used.add(key('blocks', o.block));
+      if (o.asset) used.add(key('assets', o.asset));
     }
   };
   objects(src.objects);

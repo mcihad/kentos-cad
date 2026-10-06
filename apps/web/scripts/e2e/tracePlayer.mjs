@@ -640,7 +640,16 @@ const observe = (mark) =>
     };
     const along = (e, t) => [e.c.x + e.major.x * Math.cos(t) - e.major.y * e.ratio * Math.sin(t), e.c.y + e.major.y * Math.cos(t) + e.major.x * e.ratio * Math.sin(t)];
     const ellipse = (e) => (e.t0 === e.t1 ? [0, 1, 2, 3].map((i) => along(e, (i * Math.PI) / 2)) : [along(e, e.t0), along(e, e.t1)]);
-    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' || e.kind === 'table' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : e.kind === 'hatch' ? e.ring.map((p) => [p.x, p.y]) : null);
+    // A picture's part shown (docs/adr/0192): its clip's corners in the world, counter-clockwise, else its frame's.
+    const image = (e) => {
+      const [c, s] = [Math.cos(e.rotation), Math.sin(e.rotation)];
+      const at = (a, b) => [e.p.x + e.width * c * a - e.height * s * b, e.p.y + e.width * s * a + e.height * c * b];
+      if (!e.clip) return [[0, 0], [1, 0], [1, 1], [0, 1]].map(([a, b]) => at(a, b));
+      const ring = e.clip.map((q) => at(q.x, e.mirror ? 1 - q.y : q.y));
+      const twice = ring.reduce((sum, [x, y], i) => sum + x * ring[(i + 1) % ring.length][1] - ring[(i + 1) % ring.length][0] * y, 0);
+      return twice < 0 ? ring.reverse() : ring;
+    };
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' || e.kind === 'table' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : e.kind === 'insert' ? placed(e) : e.kind === 'text' ? [[e.p.x, e.p.y]] : e.kind === 'hatch' ? e.ring.map((p) => [p.x, p.y]) : e.kind === 'image' ? image(e) : null);
     const shape = (e) => ({
       kind: e.kind,
       pts: pts(e),

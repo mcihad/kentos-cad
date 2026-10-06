@@ -207,6 +207,8 @@ export const CAD_RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Ekle',
     sources: [
       { menu: 'draw', sections: ['Blok'] },
+      // Resim (docs/adr/0192 §5): AutoCAD's Insert › Reference.
+      { menu: 'draw', sections: ['Resim'] },
       { pick: 'İçe aktar', icon: 'import', commands: IMPORTS },
       { pick: 'Metin', icon: 'textFile', commands: ['tool.placeTextFile'] },
     ],
@@ -303,8 +305,8 @@ export const GIS_RIBBON_TABS: readonly RibbonTabSpec[] = [
       { menu: 'file', sections: ['Dosya alışverişi'] },
       { menu: 'crs', sections: ['Koordinatlar'] },
       { pick: 'Öznitelik', icon: 'fieldCalc', commands: [processingCommandId('attributes.calculate'), processingCommandId('selection.byExpression')] },
-      // The drawing's block definitions are its library, as its layers and attributes are.
-      { menu: 'draw', sections: ['Blok'] },
+      // The drawing's block definitions are its library, as its layers and attributes are; its pictures beside them (docs/adr/0192 §5).
+      { menu: 'draw', sections: ['Blok', 'Resim'] },
     ],
     lead: ['tool.blockInsert'],
   },

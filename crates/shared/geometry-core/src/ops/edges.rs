@@ -48,6 +48,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         Shape::Polyline { pts, bulges, .. } => bulge_path_edges(pts, bulges.as_deref(), false),
         // Its line from the arrow's tip on to its landing's end (docs/adr/0146 §4).
         Shape::Leader { .. } => path_edges(&entity_outline(e, 72.0), false),
+        // The part shown's sides (docs/adr/0192 §4).
+        Shape::Image { .. } => path_edges(&crate::geom::image::shown(e), true),
         // The lines it draws (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::lines_of(e)
             .into_iter()

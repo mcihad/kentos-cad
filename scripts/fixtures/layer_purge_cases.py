@@ -8,7 +8,8 @@ definitions, and the project library's symbols and assets. Something stays when 
 - a definition, when an insert of the drawing places it, or an insert in a definition that stays;
 - a symbol, when an object of the drawing or of a definition that stays draws with it, a layer that stays names it in
   its style (`ref`), or a template of any library names it (`symbol`, its members' too);
-- an asset, when a symbol that stays (of any library) draws with it, or a layer that stays does in its style (`asset`).
+- an asset, when a symbol that stays (of any library) draws with it, a layer that stays does in its style (`asset`), or
+  a picture of the drawing shows it (its `asset`, docs/adr/0192 §2).
 
 Found is the largest set of those that nothing staying uses: start with all of them and give back, round after round,
 what something staying uses. Locked empty layers are listed too, to be unlocked first; they stay. Removing the checked
@@ -107,6 +108,8 @@ def used_by_staying(doc, going):
                 used.add(("symbols", o["symbol"]))
             if o.get("block"):
                 used.add(("blocks", o["block"]))
+            if o.get("asset"):
+                used.add(("assets", o["asset"]))
 
     objects(doc["objects"])
     for b in doc["blocks"]:
@@ -256,6 +259,8 @@ def drawing():
         {"layer": "yol", "block": AGAC},
         {"layer": "cizim", "symbol": "p-agac"},
         {"layer": "isaret"},
+        # A picture shows its image (docs/adr/0192 §2).
+        {"layer": "cizim", "asset": "p-foto"},
     ]
     blocks = [
         {"id": AGAC, "name": "Ağaç", "objects": [{"layer": "bitki", "symbol": "p-yaprak"}]},
@@ -280,6 +285,7 @@ def drawing():
         {"id": "p-isaret", "kind": "asset", "source": "project", "name": "işaret.svg"},
         {"id": "p-logo", "kind": "asset", "source": "project", "name": "logo.svg"},
         {"id": "p-yalniz", "kind": "asset", "source": "project", "name": "yalnız.svg"},
+        {"id": "p-foto", "kind": "asset", "source": "project", "name": "saha.jpg"},
         {"id": "u-logo", "kind": "symbol", "source": "user", "name": "Logo", "symbol": marker("p-logo")},
         {"id": "u-sablon", "kind": "template", "source": "user", "name": "Yol şablonu",
          "template": {"tool": "polyline", "layer": {"path": ["Yol"]}, "symbol": "p-ok",

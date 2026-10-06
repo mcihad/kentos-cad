@@ -1,0 +1,122 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Resimler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 500.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "resim",
+      "name": "Resim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#5B6B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "resim",
+  "entities": [
+    {
+      "kind": "image",
+      "id": 1,
+      "layerId": "resim",
+      "attrs": {},
+      "p": {
+        "x": 499990.0,
+        "y": 4399990.0
+      },
+      "width": 8.0,
+      "height": 6.0,
+      "rotation": 0.0,
+      "asset": "resim-00c1f77f23c38466"
+    },
+    {
+      "kind": "image",
+      "id": 2,
+      "layerId": "resim",
+      "attrs": {
+        "Not": "saha fotoğrafı"
+      },
+      "p": {
+        "x": 500010.0,
+        "y": 4399990.0
+      },
+      "width": 12.0,
+      "height": 9.0,
+      "rotation": 0.5235987755982988,
+      "mirror": true,
+      "file": "foto/saha.jpg",
+      "clip": [
+        {
+          "x": 0.1,
+          "y": 0.1
+        },
+        {
+          "x": 0.9,
+          "y": 0.1
+        },
+        {
+          "x": 0.9,
+          "y": 0.8
+        },
+        {
+          "x": 0.1,
+          "y": 0.8
+        }
+      ],
+      "opacity": 0.6
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2402"
+  ],
+  "styles": {
+    "items": [
+      {
+        "kind": "asset",
+        "id": "resim-00c1f77f23c38466",
+        "name": "logo",
+        "path": [
+          "Resimler"
+        ],
+        "format": "png",
+        "data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAJ0lEQVR42mO4Y2P0YYuG24IojbwTDL9+/ZKTk4OQDEABoDBQEqgEAGfSEfkTTndFAAAAAElFTkSuQmCC",
+        "width": 4,
+        "height": 3
+      }
+    ],
+    "categories": []
+  }
+}

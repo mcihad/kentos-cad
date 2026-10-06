@@ -518,7 +518,7 @@ impl Viewport {
             hairlines: !s.line_weights,
             origin: scene::scene_origin(doc),
         };
-        self.styled.borrow_mut().scene(
+        let scene = self.styled.borrow_mut().scene(
             self.generation,
             &doc.model,
             s.spatial.store(),
@@ -527,7 +527,22 @@ impl Viewport {
             &self.camera.visible_bounds(),
             // Over the grid, under the highlights.
             1,
-        )
+        );
+        // The pictures the scene draws, decoded once each (docs/adr/0192 §3).
+        let folder = doc.path.as_deref().and_then(std::path::Path::parent);
+        for part in &scene.layers {
+            for b in &part.layer.batches {
+                if let kentos_native_style::batches::BatchKind::Fill {
+                    paint: kentos_native_style::batches::FillPaintBatch::Image { image, .. },
+                } = &b.kind
+                    && !s.styles.images.has_bitmap(image)
+                {
+                    let bitmap = crate::pictures::fetch(image, &doc.model, folder);
+                    s.styles.images.put_bitmap(image.clone(), bitmap);
+                }
+            }
+        }
+        scene
     }
 
     /// The scale paper-mm symbols are built at: the project's plot scale, or
@@ -719,6 +734,7 @@ impl Viewport {
             | ViewChange::DefineBlock(_)
             | ViewChange::AttributeValues(_)
             | ViewChange::OpenTextFile
+            | ViewChange::OpenImageFile
             | ViewChange::PlaceTable(..) => {}
         }
         self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));

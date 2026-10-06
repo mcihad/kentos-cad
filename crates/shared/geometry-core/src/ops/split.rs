@@ -355,7 +355,8 @@ fn anchor(s: &Shape) -> Option<f64> {
         Shape::Point { p, .. }
         | Shape::Text { p, .. }
         | Shape::Insert { p, .. }
-        | Shape::Table { p, .. } => p.x,
+        | Shape::Table { p, .. }
+        | Shape::Image { p, .. } => p.x,
         Shape::Polyline { pts, .. }
         | Shape::Polygon { pts, .. }
         | Shape::Spline { pts, .. }

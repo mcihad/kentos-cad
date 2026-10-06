@@ -240,6 +240,18 @@ pub fn core_table(t: &TableEntity) -> Shape {
     }
 }
 
+/// A picture's frame's corners (docs/adr/0192 §1), for what it covers.
+pub fn image_corners(i: &kentos_contracts::ImageEntity) -> Vec<Vec2> {
+    let f = kentos_geometry_core::geom::image::Frame::new(
+        core(i.image.p),
+        i.image.width,
+        i.image.height,
+        i.image.rotation,
+        i.image.mirror,
+    );
+    f.corners().iter().map(|p| back(*p)).collect()
+}
+
 /// A table's four corners (docs/adr/0184 §2): top left, top right, bottom
 /// right, bottom left.
 pub fn table_corners(t: &TableEntity) -> Vec<Vec2> {
@@ -527,6 +539,22 @@ fn shape(e: &Entity) -> Shape {
             assoc: None,
         },
         Entity::Table(t) => core_table(t),
+        // A picture is no block's piece (docs/adr/0192 §1); its frame for what it covers.
+        Entity::Image(i) => Shape::Image {
+            p: core(i.image.p),
+            width: i.image.width,
+            height: i.image.height,
+            rotation: i.image.rotation,
+            mirror: i.image.mirror.then_some(true),
+            asset: i.image.asset.clone(),
+            file: i.image.file.clone(),
+            clip: i
+                .image
+                .clip
+                .as_ref()
+                .map(|c| c.iter().map(|q| core(*q)).collect()),
+            opacity: i.image.opacity,
+        },
         // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
             block: i.block.to_text(),
@@ -749,7 +777,7 @@ fn entity(s: &Shape) -> Option<Entity> {
             assoc: None,
         }),
         // A block holds no table (docs/adr/0184 §1); the core opens inserts.
-        Shape::Insert { .. } | Shape::Table { .. } => return None,
+        Shape::Insert { .. } | Shape::Table { .. } | Shape::Image { .. } => return None,
     })
 }
 

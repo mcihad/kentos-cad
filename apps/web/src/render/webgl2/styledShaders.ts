@@ -222,6 +222,29 @@ void main() {
   outColor = mix(u_color, u_color2, t);
 }`;
 
+/**
+ * A picture over its frame (docs/adr/0192 §3), twin of fill.wgsl's imageFs: its own texture, premultiplied with its
+ * mip levels; the frame's lower left corner (from the batch's tile), width and height, its turn's cosine and sine,
+ * and whether the picture is upside down in it. Premultiplied output.
+ */
+export const IMAGE_FS = /* glsl */ `#version 300 es
+precision highp float;
+precision highp int;
+in vec2 v_world;
+uniform sampler2D u_picture;
+uniform vec4 u_frame;    // corner x, y, width, height
+uniform vec2 u_rot;      // cos, sin of its turn
+uniform float u_opacity;
+uniform int u_mirror;
+out vec4 outColor;
+void main() {
+  vec2 d = v_world - u_frame.xy;
+  float s = (d.x * u_rot.x + d.y * u_rot.y) / u_frame.z;
+  float t = (d.y * u_rot.x - d.x * u_rot.y) / u_frame.w;
+  if (u_mirror == 1) t = 1.0 - t;
+  outColor = texture(u_picture, vec2(s, 1.0 - t)) * u_opacity;
+}`;
+
 /** An atlas tile repeated over the area (premultiplied output). */
 export const TILE_FS = /* glsl */ `#version 300 es
 precision highp float;

@@ -226,8 +226,14 @@ pub const SCHEMA_WITH_TABLES: u32 = 22;
 /// rather than draw another pattern.
 pub const SCHEMA_WITH_HATCH_PATTERNS: u32 = 23;
 
+/// Document schema 24 (docs/specs/kcad-v2.md §6.1): schema 23 and the
+/// `image` kind (docs/adr/0192 §1), in the drawing only. A writer writes it
+/// only when the drawing has a picture: any other drawing stays 23 or older,
+/// byte for byte; a reader of those refuses a picture rather than lose it.
+pub const SCHEMA_WITH_IMAGES: u32 = 24;
+
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 22] = [
+pub const SCHEMAS: [u32; 23] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -250,6 +256,7 @@ pub const SCHEMAS: [u32; 22] = [
     SCHEMA_WITH_STYLES,
     SCHEMA_WITH_TABLES,
     SCHEMA_WITH_HATCH_PATTERNS,
+    SCHEMA_WITH_IMAGES,
 ];
 
 /// The file a drawing is saved as.

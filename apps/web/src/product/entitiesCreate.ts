@@ -63,6 +63,8 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   stations: 'Km yaz',
   // Orta hat (docs/adr/0190 §3).
   centerline: 'Orta hat',
+  // Resim ekle (docs/adr/0192 §6).
+  image: 'Resim ekle',
 };
 
 /**

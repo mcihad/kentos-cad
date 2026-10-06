@@ -45,7 +45,7 @@ export type DrawingHead = Omit<DocumentSnapshotV2, 'entities' | 'uids'>;
 export type PageEntity = ContractEntity & { uid?: string };
 
 /** The kinds, numbered as `kinds` holds them. */
-export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table'] as const;
+export const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch', 'insert', 'leader', 'table', 'image'] as const;
 const KIND = new Map<string, number>(KINDS.map((k, i) => [k, i]));
 /** The dimension's kinds in the contract's order (`DimensionStyle::ALL`); KCAD schema 9 added the last five (docs/adr/0147). */
 const DIMENSION_STYLES = ['aligned', 'linear', 'angular', 'radius', 'diameter', 'ordinate', 'arcLength', 'jogged', 'azimuth', 'slope'] as const;
@@ -579,6 +579,20 @@ class Packer {
         if (e.mirror === true) flags |= OPT[0];
         else if (e.mirror !== undefined) throw unwritable('bad_value', `${this.where}/mirror`, 'aynalama yalnız true yazılır; aynalı olmayanda alan yoktur');
         break;
+      // docs/adr/0192: p, width, height, turn; the mirror a flag (only true is written); the asset and the file texts;
+      // the clip's corners; the opacity.
+      case 'image':
+        this.point(e.p, 'p', kind);
+        this.float(e.width, 'width');
+        this.float(e.height, 'height');
+        this.float(e.rotation, 'rotation');
+        if (e.mirror === true) flags |= OPT[0];
+        else if (e.mirror !== undefined) throw unwritable('bad_value', `${this.where}/mirror`, 'aynalama yalnız true yazılır; aynalı olmayanda alan yoktur');
+        if (e.asset !== undefined) (flags |= OPT[1]), this.text(e.asset, 'asset');
+        if (e.file !== undefined) (flags |= OPT[2]), this.text(e.file, 'file');
+        if (e.clip !== undefined) (flags |= OPT[3]), this.points(e.clip, 'clip', kind);
+        if (e.opacity !== undefined) (flags |= OPT[4]), this.float(e.opacity, 'opacity');
+        break;
       // docs/adr/0146: the vertices, height and turn; the note a text, the arrowhead its place in LEADER_ARROWS, the mask a flag.
       case 'leader':
         this.points(e.pts, 'pts', kind);
@@ -1006,6 +1020,17 @@ export class ColumnsReader {
         e.rotation = this.num();
         e.block = this.readText();
         if (has(0)) e.mirror = true;
+        break;
+      case 'image':
+        e.p = this.pt();
+        e.width = this.num();
+        e.height = this.num();
+        e.rotation = this.num();
+        if (has(0)) e.mirror = true;
+        if (has(1)) e.asset = this.readText();
+        if (has(2)) e.file = this.readText();
+        if (has(3)) e.clip = this.pts();
+        if (has(4)) e.opacity = this.num();
         break;
       case 'leader':
         e.pts = this.pts();
